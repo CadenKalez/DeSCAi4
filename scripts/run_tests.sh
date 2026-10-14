@@ -16,6 +16,7 @@ declare -a TESTS=(
  "rz_fastcompression:$T/rz_fastcompression_test.cpp $S/rz/cRZFastCompression3.cpp $S/rz/cRZString.cpp $S/dbpf/DBPFReader.cpp"
  "rz_variant:$T/rz_variant_test.cpp $S/rz/cRZVariant.cpp $S/rz/cRZString.cpp"
  "sc4_property:$T/sc4_property_test.cpp $S/sc4/SCProperty.cpp $S/rz/cRZUnknownList.cpp $S/rz/cRZStream.cpp $S/rz/cRZVariant.cpp $S/rz/cRZString.cpp"
+ "sc4_propertyhelp:$T/sc4_propertyhelp_test.cpp $S/sc4/SCPropertyHelp.cpp $S/sc4/SCProperty.cpp $S/rz/cRZUnknownList.cpp $S/rz/cRZVariant.cpp $S/rz/cRZString.cpp $S/rz/cRZStream.cpp"
  "rz_file:$T/rz_file_test.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp"
  "rz_support:$T/rz_support_test.cpp $S/rz/cRZRandom.cpp $S/rz/cRZCriticalSection.cpp $S/rz/cRZCallbackTimer.cpp"
  "streams:$T/rz_stream_test.cpp $S/rz/cRZStream.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp"
