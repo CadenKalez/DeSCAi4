@@ -2247,3 +2247,39 @@ address,symbol,unique_name,source,status,evidence
 0x1006a2ad8,"cRZPath::SetFileName(cRZString const&, bool)",SetFileName,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
 0x1006a2bb2,"cRZPath::SetExtension(cRZString const&, bool)",SetExtension,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
 0x1006a2cb0,cRZPath::FileName(),FileName,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x10043b468,cHitSegmentTrackCreator::cHitSegmentTrackCreator(),Construct,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b588,"cHitSegmentTrackCreator::QueryInterface(unsigned int, void**)",QueryInterface,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b5d0,cHitSegmentTrackCreator::AddRef(),AddRef,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b5de,cHitSegmentTrackCreator::Release(),Release,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b602,"cHitSegmentTrackCreator::Create(unsigned int, unsigned int, cIGZVariant*, unsigned int, void**)",Create,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b82a,cHitSegmentTrackCreator::~cHitSegmentTrackCreator(),Destruct,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b834,cHitSegmentTrackCreator::~cHitSegmentTrackCreator(),DestructAndDelete,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b862,"cHitSegmentTrackCreator::RegisterSoundDef(unsigned int, cIGZString const&, unsigned int, cIGZVariant const*)",RegisterSoundDef,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b8a8,cHitSegmentTrackCreator::RegisterTrackDefParser(cIGZSndDefParser*),RegisterTrackDefParser,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b916,"non-virtual thunk to cHitSegmentTrackCreator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_b916,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b924,non-virtual thunk to cHitSegmentTrackCreator::AddRef(),AddRefThunk_b924,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b932,non-virtual thunk to cHitSegmentTrackCreator::Release(),ReleaseThunk_b932,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b95a,"non-virtual thunk to cHitSegmentTrackCreator::RegisterSoundDef(unsigned int, cIGZString const&, unsigned int, cIGZVariant const*)",RegisterSoundDefThunk,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b9a0,"non-virtual thunk to cHitSegmentTrackCreator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_b9a0,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b9ae,non-virtual thunk to cHitSegmentTrackCreator::AddRef(),AddRefThunk_b9ae,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b9bc,non-virtual thunk to cHitSegmentTrackCreator::Release(),ReleaseThunk_b9bc,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b9e4,non-virtual thunk to cHitSegmentTrackCreator::RegisterTrackDefParser(cIGZSndDefParser*),RegisterTrackDefParserThunk,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043b9f6,cHitSegmentTrackCreator::~cHitSegmentTrackCreator(),DestructBody,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043ba86,cHitSegmentDataSourceChannelCreator::cHitSegmentDataSourceChannelCreator(),Construct,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043bc30,"cHitSegmentDataSourceChannelCreator::QueryInterface(unsigned int, void**)",QueryInterface,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043bc78,cHitSegmentDataSourceChannelCreator::AddRef(),AddRef,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043bc86,cHitSegmentDataSourceChannelCreator::Release(),Release,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043bcaa,"cHitSegmentDataSourceChannelCreator::Create(unsigned int, unsigned int, cIGZVariant*, unsigned int, void**)",Create,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043bdec,cHitSegmentDataSourceChannelCreator::~cHitSegmentDataSourceChannelCreator(),Destruct,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043bdf6,cHitSegmentDataSourceChannelCreator::~cHitSegmentDataSourceChannelCreator(),DestructAndDelete,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043be24,"cHitSegmentDataSourceChannelCreator::RegisterSoundDef(unsigned int, cIGZString const&, unsigned int, cIGZVariant const*)",RegisterSoundDef,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043be6a,cHitSegmentDataSourceChannelCreator::RegisterTrackDefParser(cIGZSndDefParser*),RegisterTrackDefParser,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043bed8,"non-virtual thunk to cHitSegmentDataSourceChannelCreator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_bed8,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043bee6,non-virtual thunk to cHitSegmentDataSourceChannelCreator::AddRef(),AddRefThunk_bee6,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043bef4,non-virtual thunk to cHitSegmentDataSourceChannelCreator::Release(),ReleaseThunk_bef4,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043bf1c,"non-virtual thunk to cHitSegmentDataSourceChannelCreator::RegisterSoundDef(unsigned int, cIGZString const&, unsigned int, cIGZVariant const*)",RegisterSoundDefThunk,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043bf62,"non-virtual thunk to cHitSegmentDataSourceChannelCreator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_bf62,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043bf70,non-virtual thunk to cHitSegmentDataSourceChannelCreator::AddRef(),AddRefThunk_bf70,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043bf7e,non-virtual thunk to cHitSegmentDataSourceChannelCreator::Release(),ReleaseThunk_bf7e,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043bfa6,non-virtual thunk to cHitSegmentDataSourceChannelCreator::RegisterTrackDefParser(cIGZSndDefParser*),RegisterTrackDefParserThunk,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
+0x10043bfb6,cHitSegmentDataSourceChannelCreator::~cHitSegmentDataSourceChannelCreator(),DestructBody,src/audio/HitSegmentCreators.cpp,recovered,scripts/tests/audio_hitcreators_test.cpp
