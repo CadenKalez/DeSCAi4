@@ -1,4 +1,4 @@
-// cIGZSndUpdateTarget — receives periodic ticks. Slot 3 (+0x18). Id 0xaa11a64f (cHitTrackPlayer QI).
+// cIGZSndUpdateTarget — receives periodic ticks. Slot 3 (+0x18). Id 0x5b34f0af (cHitTrackPlayer QI -> +0x28).
 #pragma once
 #include <cstdint>
 
@@ -9,4 +9,4 @@ public:
     virtual void Update(std::int32_t elapsedMs) = 0;  // [3]
 };
 
-constexpr std::uint32_t kGZIID_cIGZSndUpdateTarget = 0xaa11a64f;
+constexpr std::uint32_t kGZIID_cIGZSndUpdateTarget = 0x5b34f0af;

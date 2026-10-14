@@ -5,15 +5,27 @@ usage: scripts/ledger_add.py --source 'src/x.cpp|h' --status recovered --evidenc
           0x1004c2688 0x1004c26aa:ConstructFoo ...      (addr[:unique_name])
 The symbol comes from notes/symbols-functions-demangled.txt; unique_name defaults to the method name.
 """
-import argparse, csv, pathlib
+import argparse, csv, json, pathlib, urllib.request
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 ap = argparse.ArgumentParser()
 ap.add_argument("--source", required=True); ap.add_argument("--status", default="recovered")
-ap.add_argument("--evidence", required=True); ap.add_argument("items", nargs="+")
+ap.add_argument("--evidence", required=True)
+ap.add_argument("--no-ghidra", action="store_true", help="do not rename in the running Ghidra backend")
+ap.add_argument("items", nargs="+")
 a = ap.parse_args()
 sym = {}
 for line in (ROOT/"notes/symbols-functions-demangled.txt").read_text(errors="replace").splitlines():
     k, _, n = line.partition(" "); sym.setdefault(int(k, 16), n)
+def ghidra_rename(addr, new_name):
+    body = json.dumps({"old_name": f"0x{addr:x}", "new_name": new_name, "strict_mode": "off"}).encode()
+    req = urllib.request.Request("http://127.0.0.1:8089/rename_function", body, {"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.load(r).get("status") == "success"
+    except Exception as e:
+        print("  ghidra rename failed:", e)
+        return False
+
 led = ROOT/"notes/ledger.csv"
 have = {r["address"] for r in csv.DictReader(led.open())}
 with led.open("a", newline="") as f:
@@ -25,4 +37,7 @@ with led.open("a", newline="") as f:
         s = sym.get(v)
         if s is None: print("unknown symbol for", key); continue
         w.writerow([key, s, uname or s.split("(")[0].split("::")[-1], a.source, a.status, a.evidence])
-        print("added", key, uname or s)
+        note = ""
+        if uname and not a.no_ghidra:
+            note = " [renamed]" if ghidra_rename(v, uname) else " [RENAME FAILED]"
+        print("added", key, uname or s, note)

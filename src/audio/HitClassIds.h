@@ -43,6 +43,9 @@ inline constexpr std::uint32_t kIidHitList                             = 0xdb1ac
 inline constexpr std::uint32_t kIidHitTrackDataBlock                   = 0x9b82eae7;
 inline constexpr std::uint32_t kIidHitResourceFactory                  = 0xa56b8f17;
 inline constexpr std::uint32_t kIidPersistResource                     = 0x3b93c5e7;
+inline constexpr std::uint32_t kIidHitTrackPlayer                      = 0xbb1be367;  // cIHitTrackPlayer (object start)
+inline constexpr std::uint32_t kIidSndMultipleSources                  = 0xdd583e2d;  // cHitTrackPlayer +0x30
+inline constexpr std::uint32_t kIidSndCompletionNotification            = 0xe9d00a9a;  // cHitTrackPlayer +0x38
 inline constexpr std::uint32_t kIidRecordAccess                        = 0xc56b8f08;  // sized-record view used by ReadResource
 
 }  // namespace HitIds

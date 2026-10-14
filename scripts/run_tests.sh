@@ -16,6 +16,7 @@ declare -a TESTS=(
  "hitlist:$T/audio_hitlist_test.cpp $S/audio/HitList.cpp $S/rz/RZConvert.cpp $S/rz/cRZString.cpp"
  "hitresource:$T/audio_hitresource_test.cpp $S/audio/HitList.cpp $S/rz/RZConvert.cpp $S/rz/cRZString.cpp"
  "freshcell:$T/audio_freshcell_test.cpp $S/audio/FreshCell.cpp $S/rz/cRZString.cpp"
+ "freshplayer:$T/audio_freshplayer_test.cpp $S/audio/FreshPlayer.cpp $S/audio/FreshCellPlayer.cpp $S/audio/FreshScore.cpp $S/audio/FreshCell.cpp $S/audio/FreshHost.cpp $S/rz/cRZRandom.cpp $S/rz/cRZCriticalSection.cpp $S/rz/cRZCallbackTimer.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp $S/rz/RZConvert.cpp $S/rz/cRZString.cpp $S/rz/cRZDate.cpp"
 )
 fail=0
 for entry in "${TESTS[@]}"; do

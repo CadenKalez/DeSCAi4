@@ -23,4 +23,4 @@ public:
     virtual float GetRegisterFloat(std::uint32_t id) const = 0;
 };
 
-constexpr std::uint32_t kGZIID_cIGZSndRegisterSet = 0xbb1be367;  // from cHitTrackPlayer/cHitChannel QueryInterface
+constexpr std::uint32_t kGZIID_cIGZSndRegisterSet = 0xfd584467;  // cHitTrackPlayer::QueryInterface -> sub-object at +8

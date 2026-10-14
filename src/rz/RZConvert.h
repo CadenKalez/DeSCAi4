@@ -9,4 +9,9 @@ namespace RZ {
 // base 16, otherwise base 10 (strtoul semantics, truncated to 32 bits).
 std::uint32_t ConvertToUint(const char* text) noexcept;
 
+// RZAtoUint32HexA(char const*) @ 0x100019fcf
+// Skips leading whitespace, an optional "0x"/"0X", then accumulates up to eight hex digits
+// (stopping at the first non-hex character). Returns 0 when there are no digits.
+std::uint32_t ConvertHexToUint(const char* text) noexcept;
+
 }  // namespace RZ

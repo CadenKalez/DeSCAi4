@@ -10,6 +10,9 @@
 #include "audio/interfaces/cIHitSem.h"
 #include "audio/interfaces/cIHitTrackDataBlock.h"
 #include "audio/interfaces/cIFreshCell.h"
+#include "audio/interfaces/cIFreshCellPlayer.h"
+#include "audio/interfaces/cIFreshPlayer.h"
+#include "audio/interfaces/cIFreshScore.h"
 #include "audio/interfaces/cIHitList.h"
 #include "gz/cIGZString.h"
 #include "gz/cIGZIStream.h"
@@ -76,6 +79,12 @@ int main() {
     EXPECT(cIHitTrackDataBlock::DataStartAddress, 0x18); EXPECT(cIHitTrackDataBlock::AddEntryPoint, 0x40);
     EXPECT(cIFreshCell::GetSndId, 0x18); EXPECT(cIFreshCell::GetStereoSample, 0xb0);
     EXPECT(cIFreshCell::SetSndId, 0xb8); EXPECT(cIFreshCell::SetStereoSample, 0x150);
+    EXPECT(cIFreshScore::GetCell, 0x18);
+    EXPECT(cIFreshCellPlayer::GetCell, 0x18); EXPECT(cIFreshCellPlayer::Start, 0x28);
+    EXPECT(cIFreshCellPlayer::Kill, 0x40);    EXPECT(cIFreshCellPlayer::Get3DPosZ, 0xb0);
+    EXPECT(cIFreshPlayer::InitializeFromLoadedScore, 0x18); EXPECT(cIFreshPlayer::Play, 0x40);
+    EXPECT(cIFreshPlayer::FadeVolume, 0x60);     EXPECT(cIFreshPlayer::GetCellPlayer, 0xd0);
+    EXPECT(cIFreshPlayer::SetDivision3DPosition, 0x108); EXPECT(cIFreshPlayer::SetExternalSoundSystemInterface, 0x120);
     EXPECT(cIHitList::AddValue, 0x18); EXPECT(cIHitList::Choose, 0x40); EXPECT(cIHitList::RemoveByIndex, 0x80);
     // cIGZString: slots 5..29 (+0x28..+0xe8) from cRZString's vtable
     EXPECT(cIGZString::AssignFromCString, 0x28); EXPECT(cIGZString::ToChar, 0x38); EXPECT(cIGZString::Data, 0x40);
