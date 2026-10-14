@@ -5,6 +5,8 @@
 #include <vector>
 
 #include "gz/cIGZSerializable.h"
+#include "rz/cRZString.h"
+#include "rz/cRZVariant.h"
 
 namespace {
 
@@ -228,6 +230,118 @@ bool cGZPersistDBSerialRecord::GetFieldString(cIGZString& out) {
     return true;
 }
 
-bool cGZPersistDBSerialRecord::GetFieldVariant(cIGZVariant**) { return false; }
-bool cGZPersistDBSerialRecord::SetFieldVariant(const cIGZVariant*) { return false; }
+namespace {
+// kRZToDBTable (0x100a1e180): cIGZVariant type (low 15 bits) -> stored type code.
+constexpr std::uint32_t kRZToDB[20] = {0, 11, 1, 5, 2, 6, 3, 7, 4, 8, 9, 10, 17, 16, 12, 18, 13, 14, 15, 19};
+constexpr std::uint32_t kStoredArrayFlag = 0x8000;
+}  // namespace
+
+// Stored form: u32 type (kRZToDB code | 0x8000 for arrays), then for scalars the value in its own
+// width, for arrays u32 count and the elements (strings: a length-prefixed string field).
+bool cGZPersistDBSerialRecord::GetFieldVariant(cIGZVariant** out) {
+    std::uint32_t type = 0;
+    if (!GetFieldUint32(type)) return false;
+    auto* variant = new cRZVariant();
+    variant->AddRef();
+    auto fail = [&] { variant->Release(); return false; };
+    auto commit = [&] { *out = variant; return true; };
+    std::uint32_t count = 0;
+    if (type & kStoredArrayFlag) {
+        if (type == 0x800d || type == 0x800e || type == 0x800f) return fail();
+        if (type == 0x800c) {
+            cRZString text;
+            if (!GetFieldString(text)) return fail();
+            variant->RefRZChar(text.Data(), text.Strlen());
+            return commit();
+        }
+        if (!GetFieldUint32(count)) return fail();
+        switch (type) {
+            case 0x8000: { std::vector<char> b(count); bool ok = GetFieldVoid(b.data(), count); variant->RefVoid(b.data(), count); if (!ok) return fail(); return commit(); }
+            case 0x8001: case 0x800b: case 0x8011: { std::vector<std::uint8_t> b(count); bool ok = GetFieldUint8(b.data(), count);
+                if (type == 0x800b) variant->RefBool(reinterpret_cast<const bool*>(b.data()), count);
+                else if (type == 0x8011) variant->RefChar(reinterpret_cast<const char*>(b.data()), count);
+                else variant->RefUint8(b.data(), count);
+                return ok ? commit() : fail(); }
+            case 0x8002: case 0x8010: { std::vector<std::uint16_t> b(count); bool ok = GetFieldUint16(b.data(), count);
+                if (type == 0x8010) variant->RefRZUnicodeChar(b.data(), count); else variant->RefUint16(b.data(), count);
+                return ok ? commit() : fail(); }
+            case 0x8003: { std::vector<std::uint32_t> b(count); bool ok = GetFieldUint32(b.data(), count); variant->RefUint32(b.data(), count); return ok ? commit() : fail(); }
+            case 0x8004: { std::vector<std::uint64_t> b(count); bool ok = GetFieldUint64(b.data(), count); variant->RefUint64(b.data(), count); return ok ? commit() : fail(); }
+            case 0x8005: { std::vector<std::int8_t> b(count); bool ok = GetFieldSint8(b.data(), count); variant->RefSint8(b.data(), count); return ok ? commit() : fail(); }
+            case 0x8006: { std::vector<std::int16_t> b(count); bool ok = GetFieldSint16(b.data(), count); variant->RefSint16(b.data(), count); return ok ? commit() : fail(); }
+            case 0x8007: { std::vector<std::int32_t> b(count); bool ok = GetFieldSint32(b.data(), count); variant->RefSint32(b.data(), count); return ok ? commit() : fail(); }
+            case 0x8008: { std::vector<std::int64_t> b(count); bool ok = GetFieldSint64(b.data(), count); variant->RefSint64(b.data(), count); return ok ? commit() : fail(); }
+            case 0x8009: { std::vector<float> b(count); bool ok = GetFieldFloat32(b.data(), count); variant->RefFloat32(b.data(), count); return ok ? commit() : fail(); }
+            case 0x800a: { std::vector<double> b(count); bool ok = GetFieldFloat64(b.data(), count); variant->RefFloat64(b.data(), count); return ok ? commit() : fail(); }
+            default: return fail();
+        }
+    }
+    switch (type) {
+        case 0: return commit();
+        case 1: { std::uint8_t v; if (!GetFieldUint8(v)) return fail(); variant->SetValUint8(v); return commit(); }
+        case 2: { std::uint16_t v; if (!GetFieldUint16(v)) return fail(); variant->SetValUint16(v); return commit(); }
+        case 3: { std::uint32_t v; if (!GetFieldUint32(v)) return fail(); variant->SetValUint32(v); return commit(); }
+        case 4: { std::uint64_t v; if (!GetFieldUint64(v)) return fail(); variant->SetValUint64(v); return commit(); }
+        case 5: { std::int8_t v; if (!GetFieldSint8(v)) return fail(); variant->SetValSint8(v); return commit(); }
+        case 6: { std::int16_t v; if (!GetFieldSint16(v)) return fail(); variant->SetValSint16(v); return commit(); }
+        case 7: { std::int32_t v; if (!GetFieldSint32(v)) return fail(); variant->SetValSint32(v); return commit(); }
+        case 8: { std::int64_t v; if (!GetFieldSint64(v)) return fail(); variant->SetValSint64(v); return commit(); }
+        case 9: { float v; if (!GetFieldFloat32(v)) return fail(); variant->SetValFloat32(v); return commit(); }
+        case 10: { double v; if (!GetFieldFloat64(v)) return fail(); variant->SetValFloat64(v); return commit(); }
+        case 11: { std::uint8_t v; if (!GetFieldUint8(v)) return fail(); variant->SetValBool(v != 0); return commit(); }
+        case 12: { std::uint8_t v; if (!GetFieldUint8(v)) return fail(); variant->SetValRZChar(static_cast<char>(v)); return commit(); }
+        default: return fail();
+    }
+}
+
+bool cGZPersistDBSerialRecord::SetFieldVariant(const cIGZVariant* v) {
+    const std::uint32_t raw = v->GetType();
+    const std::uint32_t base = raw & 0x7fff;
+    const std::uint32_t type = (raw & kStoredArrayFlag) | (base < 20 ? kRZToDB[base] : 0);
+    if (!SetFieldUint32(type)) return false;
+    if (type & kStoredArrayFlag) {
+        if (type == 0x800c) {
+            const char* data = reinterpret_cast<const char*>(v->RefRZChar());
+            cRZString text;
+            text.AssignFromChars(data, v->GetCount());
+            return SetFieldString(text);
+        }
+        const std::uint32_t count = v->GetCount();
+        if (!SetFieldUint32(count)) return false;
+        switch (type) {
+            case 0x8000: return SetFieldVoid(v->RefVoid(), count);
+            case 0x8001: return SetFieldUint8(v->RefUint8(), count);
+            case 0x800b: return SetFieldUint8(reinterpret_cast<const std::uint8_t*>(v->RefBool()), count);
+            case 0x8011: return SetFieldUint8(reinterpret_cast<const std::uint8_t*>(v->RefChar()), count);
+            case 0x8002: return SetFieldUint16(v->RefUint16(), count);
+            case 0x8010: return SetFieldUint16(v->RefRZUnicodeChar(), count);
+            case 0x8003: return SetFieldUint32(v->RefUint32(), count);
+            case 0x8004: return SetFieldUint64(v->RefUint64(), count);
+            case 0x8005: return SetFieldSint8(v->RefSint8(), count);
+            case 0x8006: return SetFieldSint16(v->RefSint16(), count);
+            case 0x8007: return SetFieldSint32(v->RefSint32(), count);
+            case 0x8008: return SetFieldSint64(v->RefSint64(), count);
+            case 0x8009: return SetFieldFloat32(v->RefFloat32(), count);
+            case 0x800a: return SetFieldFloat64(v->RefFloat64(), count);
+            default: return false;
+        }
+    }
+    switch (type) {
+        case 0: return true;
+        case 1: return SetFieldUint8(v->AsUint8());
+        case 2: return SetFieldUint16(v->AsUint16());
+        case 3: return SetFieldUint32(v->AsUint32());
+        case 4: return SetFieldUint64(v->AsUint64());
+        case 5: return SetFieldSint8(v->AsSint8());
+        case 6: return SetFieldSint16(v->AsSint16());
+        case 7: return SetFieldSint32(v->AsSint32());
+        case 8: return SetFieldSint64(v->AsSint64());
+        case 9: return SetFieldFloat32(v->AsFloat32());
+        case 10: return SetFieldFloat64(v->AsFloat64());
+        case 11: return SetFieldUint8(v->AsBool() ? 1 : 0);
+        case 12: case 17: return SetFieldUint8(static_cast<std::uint8_t>(v->AsRZChar()));
+        case 16: return SetFieldUint16(v->AsRZUnicodeChar());
+        default: return false;
+    }
+}
 
