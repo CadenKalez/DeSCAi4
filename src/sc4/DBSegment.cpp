@@ -859,4 +859,12 @@ bool SC4ReadGZPersistRef(cIGZIStream& stream, std::uint32_t iid, void** out) {
     return result;
 }
 
+bool SC4ReadBinaryRecord(cIGZPersistDBSegment* segment, const cGZPersistResourceKey& key,
+                         std::vector<std::uint8_t>& data, std::uint32_t maxSize) {
+    std::uint32_t size = segment->GetRecordSize(key);
+    if (maxSize < size) return false;
+    data.resize(size);
+    return segment->ReadRecord(key, data.data(), size) == size;
+}
+
 }  // namespace sc4

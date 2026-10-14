@@ -295,5 +295,9 @@ bool SC4WriteGZPersistRef(cISC4DBSegmentOStream* stream, const cIGZUnknown* reso
 bool SC4WriteGZPersistRef(cIGZOStream& stream, const cIGZUnknown* resource);
 bool SC4ReadGZPersistRef(cISC4DBSegmentIStream& stream, std::uint32_t iid, void** out);
 bool SC4ReadGZPersistRef(cIGZIStream& stream, std::uint32_t iid, void** out);
+// SC4ReadBinaryRecord @ 0x1001e91f5: whole record into `data` (false when absent, larger than
+// maxSize, or short).
+bool SC4ReadBinaryRecord(cIGZPersistDBSegment* segment, const cGZPersistResourceKey& key,
+                         std::vector<std::uint8_t>& data, std::uint32_t maxSize);
 
 }  // namespace sc4
