@@ -18,6 +18,7 @@ declare -a TESTS=(
  "sc4_property:$T/sc4_property_test.cpp $S/sc4/SCProperty.cpp $S/rz/cRZUnknownList.cpp $S/rz/cRZStream.cpp $S/rz/cRZVariant.cpp $S/rz/cRZString.cpp"
  "sc4_propertyhelp:$T/sc4_propertyhelp_test.cpp $S/sc4/SCPropertyHelp.cpp $S/sc4/SCProperty.cpp $S/rz/cRZUnknownList.cpp $S/rz/cRZVariant.cpp $S/rz/cRZString.cpp $S/rz/cRZStream.cpp"
  "sc4_dbsegment:$T/sc4_dbsegment_test.cpp $S/sc4/DBSegment.cpp $S/gz/cGZDBSegmentPackedFile.cpp $S/gz/cGZDBRecords.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/gz/cGZPersistDBSegment.cpp $S/gz/cGZPersistResourceKeyList.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp $S/rz/cRZFastCompression3.cpp $S/rz/cRZMessage2Standard.cpp $S/rz/cRZVariant.cpp $S/rz/nRZHash.cpp"
+ "sc4_flammability:$T/sc4_flammability_test.cpp $S/sc4/cSC4FlammabilitySimulator.cpp $S/sc4/RandomIterator.cpp $S/sc4/DBSegment.cpp $S/sc4/SCProperty.cpp $S/sc4/SCPropertyHelp.cpp $S/sc4/cSC4ResponseCurve.cpp $S/sc4/cSC4SimGrid.cpp $S/rz/cRZRandom.cpp $S/rz/cRZUnknownList.cpp $S/gz/cGZDBSegmentPackedFile.cpp $S/gz/cGZDBRecords.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/gz/cGZPersistDBSegment.cpp $S/gz/cGZPersistResourceKeyList.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp $S/rz/cRZFastCompression3.cpp $S/rz/cRZMessage2Standard.cpp $S/rz/cRZVariant.cpp $S/rz/nRZHash.cpp"
  "rz_file:$T/rz_file_test.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp"
  "rz_support:$T/rz_support_test.cpp $S/rz/cRZRandom.cpp $S/rz/cRZCriticalSection.cpp $S/rz/cRZCallbackTimer.cpp"
  "streams:$T/rz_stream_test.cpp $S/rz/cRZStream.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp"
