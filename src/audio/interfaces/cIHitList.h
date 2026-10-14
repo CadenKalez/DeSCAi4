@@ -5,8 +5,8 @@
 #include <cstdint>
 
 #include "gz/cIGZString.h"
+#include "gz/cIGZVariant.h"
 
-class cIGZVariant;  // not recovered yet
 
 class cIHitList : public cIGZUnknown {
 public:
