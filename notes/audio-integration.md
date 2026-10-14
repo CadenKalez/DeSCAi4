@@ -241,3 +241,29 @@ tracks 32 33 5a; app data 48 59; global properties 56 57; random 18; callbacks 2
 - `scripts/ledger_class.py`, `ledger_rename.py`, `check_unique_names.py`: every recovered function has
   a class-unique descriptive name in Ghidra and in `notes/ledger.csv`.
 - `scripts/run_tests.sh` must pass before every commit.
+
+## 10. SC4 audio layer: sound manager (src/sc4audio/SoundManager.*)
+
+`cSC4AudioSoundManager` (+ `tSound`) sits between the game and the sound system.
+
+**Seams** (`SC4Audio::GetServices()` in `SC4AudioHost.h`, fill before `Init()`): `soundSystem`
+(cIGZSndSys), `soundManager` (cIGZSndMgr), `messageServer`, `game` (audio options, simulation
+paused, listener eye/target) and `exemplars` (tuning exemplar 6534284a/ca25875d/6a359c5c).
+`SC4Audio::SetViewUtilities` must also provide `GetCameraEye/Target`. Register
+`manager->AsMasterVolume()` with `SC4Audio::SetSoundManager` for the emanation models.
+
+**Public API**: StartSound(soundId, instanceId=0 → generated), StopAllSounds, SetMasterVolume,
+SetSoundPosition (ints, truncated), UpdateAllSounds; each posts a synchronous event to the sound
+system which comes back through `DoEvent`.
+
+**Behaviour to rely on**: same instance id restarts; a non-looping retrigger of one sound id within
+50 ms is dropped; per-id (default 3) and total (default 10) limits apply only when that id is already
+playing; looping sounds of one id become master/slaves (one voice, volume-weighted average
+position, never played themselves); losing focus kills all voices and mutes, regaining restarts
+them and bounces volumes for 50 ticks; loops farther than 4x min distance pause until the camera
+returns (3D model only); flag 1 on start = pause with the simulation.
+
+**Deviations**: no listener / zero weight → own position instead of NaN registers; no game
+context → master volume stays 1024; Resume releases the track-player reference the original leaks;
+loops that call out iterate over a referenced snapshot; a sound missing from the id map is dropped
+from the list during StopAll (original could spin).

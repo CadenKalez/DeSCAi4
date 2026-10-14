@@ -1409,3 +1409,83 @@ address,symbol,unique_name,source,status,evidence
 0x1003f48f6,"non-virtual thunk to cSC4AudioEmanationModel3DEffects::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/sc4audio/EmanationModels.cpp|h + src/sc4audio/SemManager.cpp|h,recovered,decompile + disassembly (constants read from the binary); scripts/tests/sc4audio_sems_test.cpp
 0x1003f4904,non-virtual thunk to cSC4AudioEmanationModel3DEffects::AddRef(),AddRefThunk,src/sc4audio/EmanationModels.cpp|h + src/sc4audio/SemManager.cpp|h,recovered,decompile + disassembly (constants read from the binary); scripts/tests/sc4audio_sems_test.cpp
 0x1003f4912,non-virtual thunk to cSC4AudioEmanationModel3DEffects::Release(),ReleaseThunk,src/sc4audio/EmanationModels.cpp|h + src/sc4audio/SemManager.cpp|h,recovered,decompile + disassembly (constants read from the binary); scripts/tests/sc4audio_sems_test.cpp
+0x1003b7880,cSC4AudioSoundManager::cSC4AudioSoundManager(),Construct,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b79cc,cSC4AudioSoundManager::cSC4AudioSoundManager(),ConstructWrapper,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b79d6,cSC4AudioSoundManager::~cSC4AudioSoundManager(),Destruct,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b7ac0,cSC4AudioSoundManager::Init(),Init,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b7d2a,cSC4AudioSoundManager::_ReadTuningValues(),_ReadTuningValues,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b7f62,cSC4AudioSoundManager::Shutdown(),Shutdown,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b80dc,cSC4AudioSoundManager::StopAllSounds(bool),StopAllSounds,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b817c,cSC4AudioSoundManager::SetMasterVolume(unsigned int),SetMasterVolume,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b821e,cSC4AudioSoundManager::GetMasterVolume(),GetMasterVolume,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b8236,"cSC4AudioSoundManager::StartSound(unsigned int, unsigned int)",StartSound,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b82da,"cSC4AudioSoundManager::SetSoundPosition(unsigned int, float, float, float)",SetSoundPosition,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b8388,cSC4AudioSoundManager::UpdateAllSounds(),UpdateAllSounds,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b8426,cSC4AudioSoundManager::Update(int),Update,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b84b8,non-virtual thunk to cSC4AudioSoundManager::Update(int),UpdateThunk,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b84c6,cSC4AudioSoundManager::DoEvent(cIGZSndEventStd*),DoEvent,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b8622,cSC4AudioSoundManager::_HandleStartSound(cIGZSndEventStd*),_HandleStartSound,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b86ca,cSC4AudioSoundManager::_HandleStopSound(cIGZSndEventStd*),_HandleStopSound,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b8754,cSC4AudioSoundManager::_HandleSetSoundPosition(cIGZSndEventStd*),_HandleSetSoundPosition,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b880a,cSC4AudioSoundManager::_HandleSetSoundVolume(cIGZSndEventStd*),_HandleSetSoundVolume,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b888e,cSC4AudioSoundManager::_HandleResetSound(cIGZSndEventStd*),_HandleResetSound,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b88fa,cSC4AudioSoundManager::_HandleEnumerateSounds(cIGZSndEventStd*),_HandleEnumerateSounds,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b8a00,cSC4AudioSoundManager::_HandleSetMasterVolume(cIGZSndEventStd*),_HandleSetMasterVolume,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b8a6a,cSC4AudioSoundManager::_UpdateAllSounds(),_UpdateAllSounds,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b8ab6,cSC4AudioSoundManager::_StopAllSounds(bool),_StopAllSounds,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b8af4,cSC4AudioSoundManager::_HandleFocusChangeEvent(cIGZSndEventStd*),_HandleFocusChangeEvent,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b8bec,cSC4AudioSoundManager::DoCompletionFunction(cIGZSnd*),DoCompletionFunction,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b8cac,"cSC4AudioSoundManager::_StopSound(unsigned int, bool)",_StopSound,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b8e2c,non-virtual thunk to cSC4AudioSoundManager::DoCompletionFunction(cIGZSnd*),DoCompletionFunctionThunk,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b8e3a,cSC4AudioSoundManager::DoMessage(cIGZMessage2*),DoMessage,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b8ef4,cSC4AudioSoundManager::_HandleFocusChangeMessage(cIGZMessage2*),_HandleFocusChangeMessage,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b8ff0,non-virtual thunk to cSC4AudioSoundManager::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b8ffe,"cSC4AudioSoundManager::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9020,"non-virtual thunk to cSC4AudioSoundManager::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_9020,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9046,"non-virtual thunk to cSC4AudioSoundManager::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_9046,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b906c,"non-virtual thunk to cSC4AudioSoundManager::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_906c,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9092,cSC4AudioSoundManager::AddRef(),AddRef,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b90a0,non-virtual thunk to cSC4AudioSoundManager::AddRef(),AddRefThunk_90a0,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b90ae,non-virtual thunk to cSC4AudioSoundManager::AddRef(),AddRefThunk_90ae,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b90bc,non-virtual thunk to cSC4AudioSoundManager::AddRef(),AddRefThunk_90bc,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b90ca,cSC4AudioSoundManager::Release(),Release,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b910e,non-virtual thunk to cSC4AudioSoundManager::Release(),ReleaseThunk_910e,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b911c,non-virtual thunk to cSC4AudioSoundManager::Release(),ReleaseThunk_911c,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b912a,non-virtual thunk to cSC4AudioSoundManager::Release(),ReleaseThunk_912a,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9146,cSC4AudioSoundManager::_ResetSound(unsigned int),_ResetSound,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b925e,"cSC4AudioSoundManager::_StartSound(unsigned int, unsigned int, unsigned int)",_StartSound,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9828,"cSC4AudioSoundManager::_SetSoundPosition(unsigned int, float, float, float)",_SetSoundPosition,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b98d2,"cSC4AudioSoundManager::_SetSoundVolume(unsigned int, unsigned int)",_SetSoundVolume,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9a74,"cSC4AudioSoundManager::_GetPlayingSoundMinPlayTime(unsigned int, tSound**, int&)",_GetPlayingSoundMinPlayTime,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9ae0,cSC4AudioSoundManager::GenerateNewInstanceId(),GenerateNewInstanceId,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9d82,cSC4AudioSoundManager::_RemoveFromSoundList(tSound*),_RemoveFromSoundList,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003dee5e,cSC4AudioSoundManager::Create(),Create,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9952,tSound::Pause(bool),Pause,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b999c,tSound::Resume(),Resume,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9b08,tSound::EnableCompletionNotification(bool),EnableCompletionNotification,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9c2a,tSound::AddSlave(tSound*),AddSlave,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9cf0,tSound::StartStopSoundForSimulationPause(),StartStopSoundForSimulationPause,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9dc8,tSound::TransferSlaves(),TransferSlaves,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9edc,tSound::RemoveSlave(tSound*),RemoveSlave,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9f32,tSound::Release(),Release,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9f74,tSound::SetPosition(cS3DVector3 const&),SetPosition,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003b9fb2,tSound::SetVolume(int),SetVolume,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003ba002,tSound::Update(unsigned int),Update,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003ba068,tSound::StartStopSoundForDistance(),StartStopSoundForDistance,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003ba19c,tSound::~tSound(),Destruct,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003ba226,tSound::UpdatePosition(),UpdatePosition,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003ba2dc,tSound::UpdateVolPan3D(),UpdateVolPan3D,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003ba376,tSound::UpdateVolPanEffects(),UpdateVolPanEffects,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003ba3f4,tSound::ShouldPauseForDistance(),ShouldPauseForDistance,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x1003ba4fc,"tSound::UpdateAveragePosition(cS3DVector3&, cS3DVector3&)",UpdateAveragePosition,src/sc4audio/SoundManager.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp
+0x100076770,cSC4ResponseCurve::~cSC4ResponseCurve(),Destruct,src/sc4/cSC4ResponseCurve.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp TestResponseCurve
+0x1000ac10e,cSC4ResponseCurve::cSC4ResponseCurve(),Construct,src/sc4/cSC4ResponseCurve.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp TestResponseCurve
+0x1000ac128,cSC4ResponseCurve::cSC4ResponseCurve(cSC4ResponseCurve const&),Construct_cSC4ResponseCurve_constWrapper,src/sc4/cSC4ResponseCurve.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp TestResponseCurve
+0x1000ac17e,cSC4ResponseCurve::cSC4ResponseCurve(cSC4ResponseCurve const&),Construct_cSC4ResponseCurve_const,src/sc4/cSC4ResponseCurve.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp TestResponseCurve
+0x1000ac188,cSC4ResponseCurve::operator=(cSC4ResponseCurve const&),operator=,src/sc4/cSC4ResponseCurve.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp TestResponseCurve
+0x1000ac1b8,"cSC4ResponseCurve::GetResponseCurveData(std::__1::vector<SC4Point<float>, std::__1::allocator<SC4Point<float>>>&) const",GetResponseCurveData,src/sc4/cSC4ResponseCurve.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp TestResponseCurve
+0x1000ac220,"cSC4ResponseCurve::SetResponseCurveData(std::__1::vector<SC4Point<float>, std::__1::allocator<SC4Point<float>>> const&)",SetResponseCurveData_std_1_vector_SC4Point_float_std_1_allocator_SC4Point_float_const,src/sc4/cSC4ResponseCurve.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp TestResponseCurve
+0x1000ac37a,cSC4ResponseCurve::SetResponseCurveData(cISCProperty const*),SetResponseCurveData_cISCProperty_const,src/sc4/cSC4ResponseCurve.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp TestResponseCurve
+0x1000ac47e,"cSC4ResponseCurve::SetResponseCurveData(cGZPersistResourceKey const&, unsigned int)",SetResponseCurveData_cGZPersistResourceKey_const_uint,src/sc4/cSC4ResponseCurve.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp TestResponseCurve
+0x1000ac4f6,cSC4ResponseCurve::GetOutputValue(float) const,GetOutputValue,src/sc4/cSC4ResponseCurve.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp TestResponseCurve
+0x1000ac578,cSC4ResponseCurve::GetMaxInputValue(float&) const,GetMaxInputValue,src/sc4/cSC4ResponseCurve.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp TestResponseCurve

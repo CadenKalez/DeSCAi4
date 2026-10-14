@@ -35,6 +35,8 @@ struct View final : SC4Audio::cIViewport {
     void ProjectPointToViewportCoordinates2D(float p[3]) override { p[0] = px; p[1] = py; }
     std::int32_t ViewportWidth() const override { return 1000; }
     std::int32_t ViewportHeight() const override { return 600; }
+    void GetCameraEye(float out[3]) const override { out[0] = out[1] = out[2] = 0; }
+    void GetCameraTarget(float out[3]) const override { out[0] = out[1] = out[2] = 0; }
     float px = 500, py = 300;
 };
 

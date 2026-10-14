@@ -13,4 +13,9 @@ cIViewport* ViewUtilities() { return g_viewport; }
 void SetViewUtilities(cIViewport* viewport) { g_viewport = viewport; }
 float* ZoomDistances() { return g_zoomDistances; }
 
+Services& GetServices() {
+    static Services services;
+    return services;
+}
+
 }  // namespace SC4Audio
