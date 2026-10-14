@@ -41,22 +41,48 @@ def vtables():
         out[n.replace("vtable for ", "")] = int(a, 16)
     return out
 
+_ti_names = None
+def typeinfo_name(addr):
+    global _ti_names
+    if _ti_names is None:
+        _ti_names = {}
+        for line in (ROOT/"notes/typeinfo-demangled.txt").read_text().splitlines():
+            a, _, n = line.partition(" "); _ti_names[int(a, 16)] = n.replace("typeinfo for ", "")
+    return _ti_names.get(addr, f"?{addr:#x}")
+
+_all_syms = None
+def vtable_end(base):
+    """Address where the vtable symbol ends = next symbol of any kind (from nm)."""
+    global _all_syms
+    if _all_syms is None:
+        _all_syms = sorted({int(l.split()[0], 16) for l in (ROOT/"notes/symbols-nm.txt").read_text().splitlines() if l.strip()})
+    i = bisect.bisect_right(_all_syms, base)
+    return _all_syms[i] if i < len(_all_syms) else base + 0x400
+
 def dump(cls, vt):
-    base = vt[cls]
-    print(f"== {cls}  vtable @ {base:#x}  (vptr -> {base+16:#x})")
-    off = read_u64(base); ti = read_u64(base + 8)
-    print(f"   offset-to-top={off:#x} typeinfo={ti:#x}")
-    slot = 0; p = base + 16
-    while True:
-        t = read_u64(p)
-        if t is None or not (TEXT[1] <= t < TEXT[1] + TEXT[2]):
-            break
-        nm = names.get(t)
-        if nm is None:
-            i = bisect.bisect_right(addrs, t) - 1
-            nm = f"<{names[addrs[i]]} +{t-addrs[i]:#x}>" if i >= 0 else "?"
-        print(f"   [{slot:3d}] +{slot*8:#05x}  {t:#x}  {nm}")
-        slot += 1; p += 8
+    """Dumps every sub-vtable group (primary + secondary bases, each preceded by
+    offset-to-top and a typeinfo pointer)."""
+    base = vt[cls]; end = vtable_end(base)
+    print(f"== {cls}  vtable @ {base:#x} .. {end:#x}")
+    p = base; group = 0
+    while p < end:
+        off = read_u64(p); ti = read_u64(p + 8)
+        if ti is None: break
+        sgn = off - (1 << 64) if off >= (1 << 63) else off
+        print(f"  -- group {group}: offset-to-top={sgn} typeinfo={typeinfo_name(ti)}  (vptr -> {p+16:#x})")
+        p += 16; slot = 0
+        while p < end:
+            t = read_u64(p)
+            if t is None or not (TEXT[1] <= t < TEXT[1] + TEXT[2]):
+                break
+            nm = names.get(t)
+            if nm is None:
+                i = bisect.bisect_right(addrs, t) - 1
+                nm = f"<{names[addrs[i]]} +{t-addrs[i]:#x}>" if i >= 0 else "?"
+            print(f"     [{slot:3d}] +{slot*8:#05x}  {t:#x}  {nm}")
+            slot += 1; p += 8
+        group += 1
+        if slot == 0: break
 
 if __name__ == "__main__":
     vt = vtables()

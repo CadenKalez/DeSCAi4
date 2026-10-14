@@ -35,3 +35,6 @@ notes/vtables-demangled.txt
 .DS_Store
 .mcp.json
 build/
+
+# bulk decompiler exports (derived from the game binary)
+work/
