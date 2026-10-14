@@ -2,6 +2,7 @@
 #include <cstring>
 
 #include "gz/SoftBlit.h"
+#include "gz/SpanRender.h"
 
 using namespace nGZDrawSoftRender;
 static int failures = 0;
@@ -64,6 +65,22 @@ int main() {
         const std::uint32_t span[2] = {0, 5};
         cBlitter<RGB565, ARGB4444, false>::BltTiled(span, 1, d, s, info);
         CHECK(dst[0] == dst[2] && dst[2] == dst[4] && dst[1] == dst[3] && dst[0] != dst[1]);
+    }
+    // span renderers: solid fill and the format-id dispatch of RenderBlt
+    {
+        std::uint16_t px[8] = {};
+        cGZBufferSurfaceDesc d{reinterpret_cast<std::uint8_t*>(px), 16, 8, 1, {}};
+        const std::uint32_t span[2] = {2, 5};
+        cSpanRender565 r;
+        r.RenderSolid(span, 1, d, 0xabcd);
+        CHECK(px[1] == 0 && px[2] == 0xabcd && px[4] == 0xabcd && px[5] == 0);
+        std::uint16_t src4444[8] = {0xF123, 0xFFFF};
+        cGZBufferSurfaceDesc s{reinterpret_cast<std::uint8_t*>(src4444), 16, 8, 1, {}};
+        cBltInfo info{};
+        info.srcFormatId = kSrcARGB4444;
+        const std::uint32_t one[2] = {0, 2};
+        r.RenderBlt(one, 1, d, s, info, 0);          // method 0 = Blt
+        CHECK(px[0] == 0x1106 && px[1] == 0xffff);
     }
     std::puts(failures ? "gz_softblit: FAILED" : "gz_softblit ok");
     return failures != 0;

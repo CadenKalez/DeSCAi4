@@ -9,3 +9,8 @@ python3 scripts/gen_blitter_harness.py
 cc -std=gnu11 -O1 -w -c work/blit/oracle.c -o work/blit/oracle.o
 c++ -std=c++20 -O2 -Isrc work/blit/harness.cpp work/blit/oracle.o -o work/blit/harness
 work/blit/harness
+
+python3 scripts/gen_spanrender_oracle.py
+cc -std=gnu11 -O1 -w -c work/blit/span_oracle.c -o work/blit/span_oracle.o
+c++ -std=c++20 -O1 -Isrc work/blit/span_harness.cpp work/blit/span_oracle.o -o work/blit/span_harness
+work/blit/span_harness

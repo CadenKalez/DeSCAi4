@@ -43,9 +43,10 @@ struct cBltInfo {
     std::int32_t startY;     // +0x4c
     std::int32_t stepX;      // +0x50 source step per destination pixel (16.16)
     std::int32_t stepY;      // +0x54
-    std::uint32_t unused;    // +0x58
-    std::uint32_t colour;    // +0x5c modulate colour / constant alpha (A in the top byte)
-    std::uint32_t key;       // +0x60 colour key (or enable flag for solid sources)
+    std::uint32_t srcFormatId;   // +0x58 source format id (only the span renderers' dispatch reads it)
+    std::uint32_t colour;        // +0x5c modulate colour / constant alpha (A in the top byte)
+    std::uint32_t key;           // +0x60 colour key (or enable flag for solid / alpha-only sources)
+    std::uint8_t keyed;          // +0x64 colour key enabled (selects the keyed blitter in the dispatch table)
 };
 
 namespace detail {

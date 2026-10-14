@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
             info.startY = (trial % 3 == 0) ? Rnd() % H : (Rnd() % 8) << 16;
             info.stepX = 0x8000 + Rnd() % 0x8000;
             info.stepY = 0x8000 + Rnd() % 0x8000;
-            info.unused = Rnd();
+            info.srcFormatId = Rnd();
             info.colour = Rnd() * 257u ^ Rnd();
             info.key = Rnd() & kColourMask[c.src];
             if (trial % 2 == 0) {   // make the key hit
