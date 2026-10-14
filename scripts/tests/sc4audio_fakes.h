@@ -263,6 +263,38 @@ struct FakeSndMgr : cIGZSndMgr {
     bool UnregisterSndDataSourceById(std::uint32_t) override { return false; }
 };
 
+// ---- listener --------------------------------------------------------------------------------
+struct FakeListener final : cIGZSnd3DListener, cIGZSnd3DListenerEx {
+    float position[3] = {};
+    float orientation[6] = {};
+    float rolloff = -1;
+    int positionSets = 0, orientationSets = 0;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return 2; }
+    std::uint32_t Release() override { return 1; }
+    bool Init() override { return true; }
+    bool Shutdown() override { return true; }
+    bool CommitDeferredSettings() override { return true; }
+    bool GetPosition(float*, float*, float*) const override { return true; }
+    bool SetPosition(float x, float y, float z) override { position[0] = x; position[1] = y; position[2] = z; ++positionSets; return true; }
+    bool GetOrientation(float*, float*, float*, float*, float*, float*) const override { return true; }
+    bool SetOrientation(float a, float b, float c, float d, float e, float f) override {
+        orientation[0] = a; orientation[1] = b; orientation[2] = c; orientation[3] = d; orientation[4] = e; orientation[5] = f;
+        ++orientationSets; return true;
+    }
+    cIGZSnd3DListenerEx* AsIGZSnd3DListenerEx() override { return this; }
+    bool GetVelocity(float*, float*, float*) const override { return true; }
+    bool SetVelocity(float, float, float) override { return true; }
+    bool GetAll(float*, float*, float*, float*, float*, float*, float*, float*, float*, float*, float*, float*) const override { return true; }
+    bool SetAll(float, float, float, float, float, float, float, float, float, float, float, float) override { return true; }
+    bool GetDopplerFactor(float*) const override { return true; }
+    bool SetDopplerFactor(float) override { return true; }
+    bool GetRolloffFactor(float*) const override { return true; }
+    bool SetRolloffFactor(float f) override { rolloff = f; return true; }
+    bool GetDistanceFactor(float*) const override { return true; }
+    bool SetDistanceFactor(float) override { return true; }
+};
+
 // ---- sound system ----------------------------------------------------------------------------
 struct FakeSndSys : cIGZSndSys {
     std::vector<cIGZSndEventHandler*> handlers;
@@ -271,6 +303,8 @@ struct FakeSndSys : cIGZSndSys {
     std::vector<std::uint32_t> events;   // ids passed to DoEvent
     int panics = 0;
     std::vector<FakeEvent*> allocated;
+    FakeListener listener;
+    std::vector<std::uint32_t> posted;
 
     bool QueryInterface(std::uint32_t, void**) override { return false; }
     std::uint32_t AddRef() override { return 2; }
@@ -317,12 +351,12 @@ struct FakeSndSys : cIGZSndSys {
     void Panic() override { ++panics; }
 
     // Unused slots
-    cIGZSnd3DListener* AsIGZSnd3DListener() override { return nullptr; }
-    cIGZSnd3DListenerEx* AsIGZSnd3DListenerEx() override { return nullptr; }
+    cIGZSnd3DListener* AsIGZSnd3DListener() override { return &listener; }
+    cIGZSnd3DListenerEx* AsIGZSnd3DListenerEx() override { return &listener; }
     bool DoEventIds(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t) override { return false; }
     bool DoEventUnknown(std::uint32_t, cIGZUnknown*, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t) override { return false; }
     bool DoEventString(std::uint32_t, cIGZString*, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t) override { return false; }
-    bool PostEvent(cIGZSndEventStd*) override { return false; }
+    bool PostEvent(cIGZSndEventStd* e) override { posted.push_back(e->GetEventId()); return true; }
     bool PostEventIds(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t) override { return false; }
     bool PostEventUnknown(std::uint32_t, cIGZUnknown*, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t) override { return false; }
     bool PostEventString(std::uint32_t, cIGZString*, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t) override { return false; }
@@ -365,7 +399,20 @@ struct FakeServer : cIGZMessageServer2 {
     std::uint32_t AddRef() override { return 2; }
     std::uint32_t Release() override { return 1; }
     bool MessageSend(cIGZMessage2*) override { return false; }
-    bool MessagePost(cIGZMessage2*, bool) override { return false; }
+    std::vector<std::uint32_t> posted;
+    std::vector<cIGZUnknown*> postedUnknown;
+    std::vector<void*> postedData1;
+    bool MessagePost(cIGZMessage2* m, bool) override {
+        posted.push_back(m->GetType());
+        void* raw = nullptr;
+        if (m->QueryInterface(kGZIID_cIGZMessage2Standard, &raw)) {
+            auto* s = static_cast<cIGZMessage2Standard*>(raw);
+            postedUnknown.push_back(s->GetIGZUnknown());
+            postedData1.push_back(s->GetVoid1());
+            s->Release();
+        }
+        return true;
+    }
     bool AddNotification(cIGZMessageTarget2* t, std::uint32_t id) override { added.push_back({t, id}); return true; }
     bool RemoveNotification(cIGZMessageTarget2* t, std::uint32_t id) override { removed.push_back({t, id}); return true; }
     bool GeneralMessagePostToTarget(cIGZMessage2*, cIGZMessageTarget2*) override { return false; }
@@ -382,6 +429,11 @@ struct FakeGame : SC4Audio::cIGameAudioContext {
     bool paused = false;
     bool haveListener = true;
     SC4Audio::ListenerView view;
+    bool hasOccupants = true;
+    float cityX = 0, cityZ = 0, seaLevel = 0;
+    bool HasOccupantManager() override { return hasOccupants; }
+    void GetCityExtentMeters(float& x, float& z) override { x = cityX; z = cityZ; }
+    float GetSeaLevel() override { return seaLevel; }
     SC4Audio::AudioPreferences GetAudioPreferences() override { return prefs; }
     bool IsSimulationPaused() override { return paused; }
     bool GetListenerView(SC4Audio::ListenerView& out) override { out = view; return haveListener; }
@@ -399,7 +451,17 @@ struct FakeExemplars : SC4Audio::cIExemplarSource {
         out = it->second;
         return true;
     }
+    std::map<std::uint32_t, float> floats;
+    std::map<std::uint32_t, std::vector<float>> arrays;
+    bool GetFloatProperty(const cGZPersistResourceKey&, std::uint32_t id, float& out) override {
+        const auto it = floats.find(id);
+        if (it == floats.end()) return false;
+        out = it->second;
+        return true;
+    }
     bool GetFloatArrayProperty(const cGZPersistResourceKey&, std::uint32_t id, std::vector<float>& out) override {
+        const auto it = arrays.find(id);
+        if (it != arrays.end()) { out = it->second; return true; }
         if (id != 0x6a946a50 || curve.empty()) return false;
         out = curve;
         return true;

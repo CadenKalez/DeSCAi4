@@ -18,6 +18,7 @@ declare -a TESTS=(
  "freshcell:$T/audio_freshcell_test.cpp $S/audio/FreshCell.cpp $S/rz/cRZString.cpp"
  "sc4_sems:$T/sc4audio_sems_test.cpp $S/sc4audio/EmanationModels.cpp $S/sc4audio/SemManager.cpp $S/sc4audio/SC4AudioHost.cpp $S/audio/HitMan.cpp $S/audio/HitServices.cpp $S/audio/HitControlGroup.cpp $S/audio/HitSem.cpp $S/audio/HitRegisters.cpp $S/audio/HitTrackDataBlock.cpp $S/rz/cRZRandom.cpp $S/rz/cRZString.cpp"
  "sc4_soundmanager:$T/sc4audio_soundmanager_test.cpp $S/sc4audio/SoundManager.cpp $S/sc4audio/SC4AudioHost.cpp $S/sc4/cSC4ResponseCurve.cpp"
+ "sc4_listener:$T/sc4audio_listener_test.cpp $S/sc4audio/Listener.cpp $S/sc4audio/EaseSound.cpp $S/sc4audio/SC4AudioHost.cpp $S/rz/cRZMessage2Standard.cpp $S/sc4/SC4GeometryUtilities.cpp"
  "propertyset_io:$T/gz_propertyset_io_test.cpp $S/audio/HitPropertySetResource.cpp $S/gz/cGZPropertySet.cpp $S/gz/cGZPropertySetSerializers.cpp $S/gz/XmlSax.cpp $S/rz/nRZHash.cpp $S/rz/RZConvert.cpp $S/rz/cRZString.cpp $S/rz/cRZStream.cpp"
  "propertyset:$T/gz_propertyset_test.cpp $S/gz/cGZPropertySet.cpp $S/rz/cRZString.cpp"
  "hitchannel:$T/audio_hitchannel_test.cpp $S/audio/HitChannel.cpp $S/audio/HitServices.cpp $S/audio/HitRegisters.cpp $S/gz/cGZPropertySet.cpp $S/rz/cRZString.cpp"

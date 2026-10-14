@@ -36,6 +36,9 @@ public:
     // Camera eye and look-at point in world space (+0x44..0x4c and +0x50..0x58 of the original).
     virtual void GetCameraEye(float out[3]) const = 0;
     virtual void GetCameraTarget(float out[3]) const = 0;
+    // Zoom level 0 (farthest) .. 4 (closest) at +0x14, and the camera up vector at +0x74.
+    virtual std::int32_t GetZoomLevel() const { return 0; }
+    virtual void GetCameraUp(float out[3]) const { out[0] = 0; out[1] = 1; out[2] = 0; }
 };
 cIViewport* ViewUtilities();   // SL::spViewUtilities
 void SetViewUtilities(cIViewport* viewport);
@@ -67,6 +70,15 @@ public:
     virtual bool IsSimulationPaused() = 0;
     // False when no listener exists (the original dereferences null in some of those paths).
     virtual bool GetListenerView(ListenerView& out) = 0;
+
+    // World queries used by cSC4AudioListener::UpdateListener.
+    // SL::OccupantManager() != null
+    virtual bool HasOccupantManager() { return false; }
+    // SL::OccupantManager()->slot 0x90(cityWidthCells, cityHeightCells, &x, &z): the city's extent
+    // in metres.
+    virtual void GetCityExtentMeters(float& x, float& z) { x = z = 0.0f; }
+    // SL::Terrain()->GetSeaLevel() (slot 0xe8)
+    virtual float GetSeaLevel() { return 0.0f; }
 };
 
 // SL::spRM + cISCPropertyHolder: read-only access to tuning exemplars.
@@ -75,6 +87,7 @@ public:
     virtual ~cIExemplarSource() = default;
     virtual bool ExemplarExists(const cGZPersistResourceKey& key) = 0;
     virtual bool GetUint32Property(const cGZPersistResourceKey& key, std::uint32_t propertyId, std::uint32_t& out) = 0;
+    virtual bool GetFloatProperty(const cGZPersistResourceKey& key, std::uint32_t propertyId, float& out) = 0;
     virtual bool GetFloatArrayProperty(const cGZPersistResourceKey& key, std::uint32_t propertyId, std::vector<float>& out) = 0;
 };
 

@@ -4,12 +4,11 @@
 #pragma once
 #include <cstdint>
 
+#include "audio/interfaces/cIGZSnd3DListener.h"
 #include "audio/interfaces/cIGZSndEventStd.h"
 #include "audio/interfaces/cIGZSndUpdateTarget.h"
 #include "gz/cIGZString.h"
 
-class cIGZSnd3DListener;
-class cIGZSnd3DListenerEx;
 class cIGZSndRenderer;
 class cIGZSndPropertyCache;
 class cIGZSndInstanceCache;

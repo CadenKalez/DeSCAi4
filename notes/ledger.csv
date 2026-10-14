@@ -1489,3 +1489,73 @@ address,symbol,unique_name,source,status,evidence
 0x1000ac47e,"cSC4ResponseCurve::SetResponseCurveData(cGZPersistResourceKey const&, unsigned int)",SetResponseCurveData_cGZPersistResourceKey_const_uint,src/sc4/cSC4ResponseCurve.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp TestResponseCurve
 0x1000ac4f6,cSC4ResponseCurve::GetOutputValue(float) const,GetOutputValue,src/sc4/cSC4ResponseCurve.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp TestResponseCurve
 0x1000ac578,cSC4ResponseCurve::GetMaxInputValue(float&) const,GetMaxInputValue,src/sc4/cSC4ResponseCurve.cpp,recovered,scripts/tests/sc4audio_soundmanager_test.cpp TestResponseCurve
+0x1003dee96,cSC4AudioListener::Create(),Create,src/sc4audio/Listener.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003f4af0,cSC4AudioListener::cSC4AudioListener(),Construct,src/sc4audio/Listener.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003f55f0,cSC4AudioListener::cSC4AudioListener(),ConstructWrapper,src/sc4audio/Listener.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003f5610,cSC4AudioListener::~cSC4AudioListener(),Destruct,src/sc4audio/Listener.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003f57b0,cSC4AudioListener::~cSC4AudioListener(),DestructAndDelete,src/sc4audio/Listener.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003f57d0,cSC4AudioListener::Init(),Init,src/sc4audio/Listener.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003f5a60,cSC4AudioListener::Shutdown(),Shutdown,src/sc4audio/Listener.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003f5c00,cSC4AudioListener::DoMessage(cIGZMessage2*),DoMessage,src/sc4audio/Listener.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003f5e80,cSC4AudioListener::HandleCheatCodeMessage(cIGZMessage2*),HandleCheatCodeMessage,src/sc4audio/Listener.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003f5f80,cSC4AudioListener::HandleCityInitShutdownMessages(cIGZMessage2*),HandleCityInitShutdownMessages,src/sc4audio/Listener.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003f62c0,cSC4AudioListener::UpdateListener(),UpdateListener,src/sc4audio/Listener.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003f6b30,cSC4AudioListener::_ReadTuningValues(),_ReadTuningValues,src/sc4audio/Listener.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003f7330,cSC4AudioListener::_CalculateZoomValues(),_CalculateZoomValues,src/sc4audio/Listener.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003f7b70,cSC4AudioListener::AddRef(),AddRef,src/sc4audio/Listener.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003f7b90,cSC4AudioListener::Release(),Release,src/sc4audio/Listener.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003f7c30,"cSC4AudioListener::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4audio/Listener.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x100041290,cRZMessage2Standard::operator new(unsigned long),operator new,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000412ce,cRZMessage2Standard::cRZMessage2Standard(),Construct,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x100041306,cRZMessage2Standard::operator delete(void*),operator delete,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x10004136a,cRZMessage2Standard::cRZMessage2Standard(),ConstructWrapper,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000413a2,cRZMessage2Standard::~cRZMessage2Standard(),Destruct,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x100041422,cRZMessage2Standard::~cRZMessage2Standard(),DestructAndDelete,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x10004142c,cRZMessage2Standard::~cRZMessage2Standard(),DestructBody,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x100041468,"cRZMessage2Standard::QueryInterface(unsigned int, void**)",QueryInterface,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x100041492,cRZMessage2Standard::AddRef(),AddRef,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000414a0,cRZMessage2Standard::Release(),Release,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000414cc,cRZMessage2Standard::GetType() const,GetType,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000414d6,cRZMessage2Standard::SetType(unsigned int),SetType,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000414f0,cRZMessage2Standard::GetHasData1() const,GetHasData1,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000414fe,cRZMessage2Standard::GetData1() const,GetData1,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x100041508,cRZMessage2Standard::SetData1(unsigned long),SetData1,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x100041516,cRZMessage2Standard::GetHasData2() const,GetHasData2,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x100041524,cRZMessage2Standard::GetData2() const,GetData2,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x10004152e,cRZMessage2Standard::SetData2(unsigned long),SetData2,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x10004153c,cRZMessage2Standard::GetHasData3() const,GetHasData3,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x10004154a,cRZMessage2Standard::GetData3() const,GetData3,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x100041554,cRZMessage2Standard::SetData3(unsigned long),SetData3,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x100041562,cRZMessage2Standard::GetHasData4() const,GetHasData4,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x100041570,cRZMessage2Standard::GetData4() const,GetData4,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x10004157a,cRZMessage2Standard::SetData4(unsigned long),SetData4,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x100041588,cRZMessage2Standard::GetVoid1() const,GetVoid1,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x100041592,cRZMessage2Standard::SetVoid1(void*),SetVoid1,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000415a0,cRZMessage2Standard::GetVoid2() const,GetVoid2,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000415aa,cRZMessage2Standard::SetVoid2(void*),SetVoid2,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000415b8,cRZMessage2Standard::GetVoid3() const,GetVoid3,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000415c2,cRZMessage2Standard::SetVoid3(void*),SetVoid3,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000415d0,cRZMessage2Standard::GetVoid4() const,GetVoid4,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000415da,cRZMessage2Standard::SetVoid4(void*),SetVoid4,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000415e8,cRZMessage2Standard::GetHasString() const,GetHasString,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000415f6,"cRZMessage2Standard::GetString(unsigned int, void**)",GetString,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x100041640,cRZMessage2Standard::SetString(cIGZString*),SetString,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000416a2,cRZMessage2Standard::GetHasIGZUnknown() const,GetHasIGZUnknown,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000416ae,cRZMessage2Standard::GetIGZUnknown(),GetIGZUnknown,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000416b8,cRZMessage2Standard::SetIGZUnknown(cIGZUnknown*),SetIGZUnknown,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x10004171a,cRZMessage2Standard::GetHasExtra() const,GetHasExtra,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x100041728,"cRZMessage2Standard::GetExtra(unsigned int, void**)",GetExtra,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x100041772,cRZMessage2Standard::SetExtra(cIGZSerializable*),SetExtra,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000417d4,"cRZMessage2Standard::Create(unsigned int, void**) const",Create,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x10004189c,cRZMessage2Standard::operator==(cIGZMessage2 const&) const,operator==,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000418ba,cRZMessage2Standard::operator<(cIGZMessage2 const&) const,operator<,src/rz/cRZMessage2Standard.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003ba976,cEaseSound::cEaseSound(),Construct,src/sc4audio/EaseSound.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003ba9a4,cEaseSound::~cEaseSound(),Destruct,src/sc4audio/EaseSound.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003ba9aa,"cEaseSound::SetPosition(cS3DVector3&, bool)",SetPosition,src/sc4audio/EaseSound.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003ba9dc,cEaseSound::GetPosition(cS3DVector3&),GetPosition,src/sc4audio/EaseSound.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003ba9f4,"cEaseSound::SetVolume(int, bool)",SetVolume,src/sc4audio/EaseSound.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003baa0a,cEaseSound::GetVolume(),GetVolume,src/sc4audio/EaseSound.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003baa14,cEaseSound::Update(float),Update,src/sc4audio/EaseSound.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1003baaec,"cEaseSound::SetDelta(float, float)",SetDelta,src/sc4audio/EaseSound.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000d6644,"SC4GeometryUtilities::RayIntersectsPlane(float const*, float const*, float const*, float*)",RayIntersectsPlane,src/sc4/SC4GeometryUtilities.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
+0x1000d6b5c,"SC4GeometryUtilities::LengthOfLineSquared(float const*, float const*)",LengthOfLineSquared,src/sc4/SC4GeometryUtilities.cpp,recovered,scripts/tests/sc4audio_listener_test.cpp
