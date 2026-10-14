@@ -1,12 +1,14 @@
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <random>
 #include <string>
 #include <vector>
 
 #include "dbpf/DBPFReader.h"
 #include "gz/cGZDBSegmentPackedFile.h"
+#include "gz/cGZPersistDBSegmentMultiPackedFiles.h"
 #include "gz/cGZPersistResourceKeyList.h"
 #include "rz/cRZString.h"
 
@@ -222,6 +224,45 @@ int main(int argc, char** argv) {
         seg->Close();
         seg->Shutdown();
         seg->Release();
+    }
+
+    // directory union: later (alphabetical) packages override earlier ones
+    {
+        std::filesystem::path root = dir / "plugins";
+        std::filesystem::create_directories(root / "sub");
+        auto build = [&](const std::filesystem::path& file, std::uint32_t instance, std::uint8_t fill) {
+            auto* seg = NewSegment(file.string());
+            CHECK(seg->Open(true, true));
+            std::vector<std::uint8_t> data(64, fill);
+            CHECK(seg->WriteRecord({5, 5, instance}, data.data(), 64));
+            CHECK(seg->WriteRecord({6, 6, 77}, data.data(), 64));
+            seg->Close();
+            seg->Shutdown();
+            seg->Release();
+        };
+        build(root / "a.dat", 1, 0xaa);
+        build(root / "sub" / "b.DAT", 2, 0xbb);
+        build(root / "c.dat", 3, 0xcc);
+        std::ofstream(root / "ignored.txt") << "x";
+        auto* multi = new cGZPersistDBSegmentMultiPackedFiles();
+        multi->AddRef();
+        multi->Init();
+        CHECK(!multi->Open(true, true));                       // write is refused
+        cRZString rootStr(root.string().c_str());
+        multi->SetPath(rootStr);
+        CHECK(multi->Open(true, false));
+        CHECK(multi->GetSegmentCount() == 3);
+        CHECK(multi->TestForRecord({5, 5, 1}) && multi->TestForRecord({5, 5, 3}) && !multi->TestForRecord({5, 5, 9}));
+        std::vector<std::uint8_t> out(64);
+        std::uint32_t cap = 64;
+        CHECK(multi->ReadRecord({6, 6, 77}, out.data(), cap) == 64 && out[0] == 0xbb);  // sub/b.DAT sorts last and wins
+        CHECK(multi->GetRecordSize({5, 5, 2}) == 64);
+        CHECK(multi->GetRecordSize({5, 5, 99}) == 0);
+        CHECK(!multi->WriteRecord({1, 1, 1}, out.data(), 64) && !multi->DeleteRecord({5, 5, 1}));
+        CHECK(multi->GetRecordCount(nullptr) == 4);
+        multi->Close();
+        multi->Shutdown();
+        multi->Release();
     }
 
     std::filesystem::remove_all(dir);

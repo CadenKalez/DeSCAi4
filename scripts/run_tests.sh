@@ -7,7 +7,7 @@ FLAGS=(-std=c++20 -Wall -Wextra -O1 -fsanitize=address,undefined -Isrc -Iscripts
 T=scripts/tests; S=src
 declare -a TESTS=(
  "layout:$T/audio_snd_layout_test.cpp"
- "gz_packedfile:$T/gz_packedfile_test.cpp $S/gz/cGZDBSegmentPackedFile.cpp $S/gz/cGZDBRecords.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/gz/cGZPersistDBSegment.cpp $S/gz/cGZPersistResourceKeyList.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp $S/rz/cRZFastCompression3.cpp $S/dbpf/DBPFReader.cpp"
+ "gz_packedfile:$T/gz_packedfile_test.cpp $S/gz/cGZPersistDBSegmentMultiPackedFiles.cpp $S/gz/cGZDBSegmentPackedFile.cpp $S/gz/cGZDBRecords.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/gz/cGZPersistDBSegment.cpp $S/gz/cGZPersistResourceKeyList.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp $S/rz/cRZFastCompression3.cpp $S/dbpf/DBPFReader.cpp"
  "rz_fastcompression:$T/rz_fastcompression_test.cpp $S/rz/cRZFastCompression3.cpp $S/rz/cRZString.cpp $S/dbpf/DBPFReader.cpp"
  "rz_file:$T/rz_file_test.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp"
  "rz_support:$T/rz_support_test.cpp $S/rz/cRZRandom.cpp $S/rz/cRZCriticalSection.cpp $S/rz/cRZCallbackTimer.cpp"
