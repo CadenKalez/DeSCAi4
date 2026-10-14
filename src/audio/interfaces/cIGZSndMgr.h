@@ -5,12 +5,12 @@
 #include <cstdint>
 
 #include "audio/interfaces/cIGZSnd.h"
+#include "audio/interfaces/cIGZSndDataSourceCreator.h"
+#include "audio/interfaces/cIGZSoundCreator.h"
 #include "gz/cGZPersistResourceKey.h"
+#include "audio/interfaces/cIGZSndDataSource.h"
 #include "gz/cIGZVariant.h"
 
-class cIGZSoundCreator;
-class cIGZSndDataSourceCreator;
-class cIGZSndDataSource;
 
 class cIGZSndMgr : public cIGZUnknown {
 public:
@@ -23,9 +23,9 @@ public:
     virtual bool GetDefaultSndDataSourcePlayer2DClassId(std::uint32_t& classId) const = 0;          // [9]  +0x48
     virtual bool SetDefaultSndDataSourcePlayer3DClassId(std::uint32_t classId) = 0;                 // [10] +0x50
     virtual bool GetDefaultSndDataSourcePlayer3DClassId(std::uint32_t& classId) const = 0;          // [11] +0x58
-    virtual bool RegisterSnd(cIGZSnd* snd, std::uint32_t id) = 0;                                   // [12] +0x60
-    virtual bool UnregisterSndByPointer(cIGZSnd* snd) = 0;                                          // [13] +0x68
-    virtual bool UnregisterSndById(std::uint32_t id) = 0;                                           // [14] +0x70
+    virtual void RegisterSnd(cIGZSnd* snd, std::uint32_t id) = 0;                                   // [12] +0x60
+    virtual void UnregisterSndByPointer(cIGZSnd* snd) = 0;                                          // [13] +0x68
+    virtual void UnregisterSndById(std::uint32_t id) = 0;                                           // [14] +0x70
     virtual bool RegisterSndCreator(cIGZSoundCreator* creator) = 0;                                 // [15] +0x78
     virtual bool RemoveSndCreator(cIGZSoundCreator* creator) = 0;                                   // [16] +0x80
     // [17] +0x88: creates (or fetches) the sound registered under `id` and returns the interface
@@ -42,9 +42,9 @@ public:
     virtual bool RemoveSndDataSourceCreatorByPointer(cIGZSndDataSourceCreator* creator) = 0;        // [26] +0xd0
     virtual bool RemoveSndDataSourceCreatorById(std::uint32_t id) = 0;                              // [27] +0xd8
     virtual bool GetSndDataSourceCreator(std::uint32_t id, std::uint32_t iid, void** out) = 0;      // [28] +0xe0
-    virtual bool RegisterSndDataSource(cIGZSndDataSource* source, std::uint32_t id) = 0;            // [29] +0xe8
-    virtual bool UnregisterSndDataSourceByPointer(cIGZSndDataSource* source) = 0;                   // [30] +0xf0
-    virtual bool UnregisterSndDataSourceById(std::uint32_t id) = 0;                                 // [31] +0xf8
+    virtual void RegisterSndDataSource(cIGZSndDataSource* source, std::uint32_t id) = 0;            // [29] +0xe8
+    virtual void UnregisterSndDataSourceByPointer(cIGZSndDataSource* source) = 0;                   // [30] +0xf0
+    virtual void UnregisterSndDataSourceById(std::uint32_t id) = 0;                                 // [31] +0xf8
 };
 
 constexpr std::uint32_t kGZSID_cGZSndMgr = 0x1af85bfb;

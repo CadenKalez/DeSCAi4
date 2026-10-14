@@ -32,6 +32,9 @@ constexpr std::uint32_t kGZIID_cIGZPersistRecordAccess = 0xc56b8f08;
 // data sources use.
 class cIGZPersistRecordService : public cIGZUnknown {
 public:
+    // +0x18: loads the persisted resource `key` as interface `iid` (the last two arguments are
+    // flags the audio code always passes as 0).
+    virtual bool GetResource(const cGZPersistResourceKey& key, std::uint32_t iid, void** out, std::uint32_t flags1, std::uint32_t flags2) = 0;
     // +0xf8: finds a record by key (returns an AddRef'd record on success).
     virtual bool FindRecord(const cGZPersistResourceKey& key, cIGZPersistDBRecord** out) = 0;
     // +0x128: opens a record; `flags` 0 = read.

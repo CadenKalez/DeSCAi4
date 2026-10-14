@@ -21,6 +21,7 @@ declare -a TESTS=(
  "sc4_listener:$T/sc4audio_listener_test.cpp $S/sc4audio/Listener.cpp $S/sc4audio/EaseSound.cpp $S/sc4audio/SC4AudioHost.cpp $S/rz/cRZMessage2Standard.cpp $S/sc4/SC4GeometryUtilities.cpp"
  "gzsnd:$T/audio_gzsnd_test.cpp $S/audio/GZSnd.cpp $S/audio/GZSnd3D.cpp $S/audio/PCMPlayer.cpp $S/audio/AudioServices.cpp $S/audio/platform/AudioPlatform.cpp $S/audio/SegmentDataSources.cpp $S/sc4audio/SC4AudioHost.cpp $S/rz/cRZString.cpp $S/rz/RZConvert.cpp"
  "sndeventstd:$T/audio_sndeventstd_test.cpp $S/audio/GZSndEventStd.cpp $S/rz/cRZMessage2Standard.cpp"
+ "gzsndmgr:$T/audio_gzsndmgr_test.cpp $S/audio/GZSndMgr.cpp $S/audio/AudioServices.cpp $S/rz/cRZString.cpp $S/rz/nRZHash.cpp"
  "propertyset_io:$T/gz_propertyset_io_test.cpp $S/audio/HitPropertySetResource.cpp $S/gz/cGZPropertySet.cpp $S/gz/cGZPropertySetSerializers.cpp $S/gz/XmlSax.cpp $S/rz/nRZHash.cpp $S/rz/RZConvert.cpp $S/rz/cRZString.cpp $S/rz/cRZStream.cpp"
  "propertyset:$T/gz_propertyset_test.cpp $S/gz/cGZPropertySet.cpp $S/rz/cRZString.cpp"
  "hitchannel:$T/audio_hitchannel_test.cpp $S/audio/HitChannel.cpp $S/audio/HitServices.cpp $S/audio/HitRegisters.cpp $S/gz/cGZPropertySet.cpp $S/rz/cRZString.cpp"

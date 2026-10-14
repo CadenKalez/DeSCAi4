@@ -118,7 +118,8 @@ struct FakeSnd final : cIGZSnd, cIGZSndRegisterSet, cIGZSndCompletionNotificatio
     // cIGZSnd
     bool Init() override { return true; }
     bool Shutdown() override { return true; }
-    bool PlayWithVolumeAndLoop(std::int32_t, bool, SndDup) override { return false; }
+    std::int32_t autoVolume = -1;
+    bool PlayWithVolumeAndLoop(std::int32_t volume, bool, SndDup) override { autoVolume = volume; ++plays; playing = true; return true; }
     bool PlayWithScriptArguments(std::int32_t a, std::int32_t b, std::int32_t c, std::int32_t d) override {
         if (!playResult) return false;
         playArgs[0] = a; playArgs[1] = b; playArgs[2] = c; playArgs[3] = d;
@@ -242,9 +243,9 @@ struct FakeSndMgr : cIGZSndMgr {
     bool GetDefaultSndDataSourcePlayer2DClassId(std::uint32_t&) const override { return false; }
     bool SetDefaultSndDataSourcePlayer3DClassId(std::uint32_t) override { return false; }
     bool GetDefaultSndDataSourcePlayer3DClassId(std::uint32_t&) const override { return false; }
-    bool RegisterSnd(cIGZSnd*, std::uint32_t) override { return false; }
-    bool UnregisterSndByPointer(cIGZSnd*) override { return false; }
-    bool UnregisterSndById(std::uint32_t) override { return false; }
+    void RegisterSnd(cIGZSnd*, std::uint32_t) override {}
+    void UnregisterSndByPointer(cIGZSnd*) override {}
+    void UnregisterSndById(std::uint32_t) override {}
     bool RegisterSndCreator(cIGZSoundCreator*) override { return false; }
     bool RemoveSndCreator(cIGZSoundCreator*) override { return false; }
     bool GetSoundByName(cIGZString&, std::uint32_t, cIGZVariant*, std::uint32_t, void**) override { return false; }
@@ -258,9 +259,9 @@ struct FakeSndMgr : cIGZSndMgr {
     bool RemoveSndDataSourceCreatorByPointer(cIGZSndDataSourceCreator*) override { return false; }
     bool RemoveSndDataSourceCreatorById(std::uint32_t) override { return false; }
     bool GetSndDataSourceCreator(std::uint32_t, std::uint32_t, void**) override { return false; }
-    bool RegisterSndDataSource(cIGZSndDataSource*, std::uint32_t) override { return false; }
-    bool UnregisterSndDataSourceByPointer(cIGZSndDataSource*) override { return false; }
-    bool UnregisterSndDataSourceById(std::uint32_t) override { return false; }
+    void RegisterSndDataSource(cIGZSndDataSource*, std::uint32_t) override {}
+    void UnregisterSndDataSourceByPointer(cIGZSndDataSource*) override {}
+    void UnregisterSndDataSourceById(std::uint32_t) override {}
 };
 
 // ---- listener --------------------------------------------------------------------------------
