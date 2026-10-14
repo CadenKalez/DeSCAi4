@@ -14,6 +14,8 @@ declare -a TESTS=(
  "sc4_terrain:$T/sc4_terrain_test.cpp $S/sc4/cSTETerrain.cpp $S/gz/cGZDBSegmentPackedFile.cpp $S/gz/cGZDBRecords.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/gz/cGZPersistDBSegment.cpp $S/gz/cGZPersistResourceKeyList.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp $S/rz/cRZFastCompression3.cpp"
  "sc4_simgrid:$T/sc4_simgrid_test.cpp $S/sc4/cSC4SimGrid.cpp $S/rz/cRZStream.cpp $S/rz/cRZString.cpp"
  "rz_fastcompression:$T/rz_fastcompression_test.cpp $S/rz/cRZFastCompression3.cpp $S/rz/cRZString.cpp $S/dbpf/DBPFReader.cpp"
+ "rz_variant:$T/rz_variant_test.cpp $S/rz/cRZVariant.cpp $S/rz/cRZString.cpp"
+ "sc4_property:$T/sc4_property_test.cpp $S/sc4/SCProperty.cpp $S/rz/cRZUnknownList.cpp $S/rz/cRZStream.cpp $S/rz/cRZVariant.cpp $S/rz/cRZString.cpp"
  "rz_file:$T/rz_file_test.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp"
  "rz_support:$T/rz_support_test.cpp $S/rz/cRZRandom.cpp $S/rz/cRZCriticalSection.cpp $S/rz/cRZCallbackTimer.cpp"
  "streams:$T/rz_stream_test.cpp $S/rz/cRZStream.cpp $S/rz/cRZString.cpp"
