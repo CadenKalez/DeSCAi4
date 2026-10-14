@@ -1,0 +1,16 @@
+#include "sc4audio/SC4AudioHost.h"
+
+namespace SC4Audio {
+namespace {
+cIMasterVolume* g_soundManager = nullptr;
+cIViewport* g_viewport = nullptr;
+float g_zoomDistances[5] = {};
+}  // namespace
+
+cIMasterVolume* SoundManager() { return g_soundManager; }
+void SetSoundManager(cIMasterVolume* manager) { g_soundManager = manager; }
+cIViewport* ViewUtilities() { return g_viewport; }
+void SetViewUtilities(cIViewport* viewport) { g_viewport = viewport; }
+float* ZoomDistances() { return g_zoomDistances; }
+
+}  // namespace SC4Audio
