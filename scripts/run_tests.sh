@@ -7,6 +7,7 @@ FLAGS=(-std=c++20 -Wall -Wextra -O1 -fsanitize=address,undefined -Isrc -Iscripts
 T=scripts/tests; S=src
 declare -a TESTS=(
  "layout:$T/audio_snd_layout_test.cpp"
+ "rz_fastcompression:$T/rz_fastcompression_test.cpp $S/rz/cRZFastCompression3.cpp $S/rz/cRZString.cpp $S/dbpf/DBPFReader.cpp"
  "rz_file:$T/rz_file_test.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp"
  "rz_support:$T/rz_support_test.cpp $S/rz/cRZRandom.cpp $S/rz/cRZCriticalSection.cpp $S/rz/cRZCallbackTimer.cpp"
  "streams:$T/rz_stream_test.cpp $S/rz/cRZStream.cpp $S/rz/cRZString.cpp"
