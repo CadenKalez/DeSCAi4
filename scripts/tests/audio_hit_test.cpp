@@ -26,6 +26,7 @@ struct FakeHM final : RZ::cHitManRegisterView {
     std::int32_t GetRegisterValue(std::int32_t id) const override {
         return id == static_cast<std::int32_t>(nsHitReg::kPropDuckPriority) ? duckThreshold : 0;
     }
+    std::int32_t Random(std::int32_t, std::int32_t) override { return 0; }
 };
 FakeHM g_hm;
 }  // namespace
