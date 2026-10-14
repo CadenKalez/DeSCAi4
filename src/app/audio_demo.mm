@@ -22,7 +22,9 @@
 #include "audio/SegmentDataSources.h"
 #include "audio/platform/AudioPlatform.h"
 #include "gz/cGZDBSegmentPackedFile.h"
+#include "gz/AudioPersistAdapter.h"
 #include "gz/cGZPersistResourceKeyList.h"
+#include "gz/cGZPersistResourceManager.h"
 
 namespace {
 
@@ -78,30 +80,6 @@ public:
     }
     std::uint32_t AddTimer(std::uint32_t, AudioPlatform::TimerCallback, void*) override { return 0; }
     void RemoveTimer(std::uint32_t) override {}
-};
-
-// Persistence service backed by one packed database.
-class SegmentPersist final : public cIGZPersistRecordService {
-public:
-    explicit SegmentPersist(cGZDBSegmentPackedFile* segment) : segment_(segment) {}
-    bool QueryInterface(std::uint32_t, void**) override { return false; }
-    std::uint32_t AddRef() override { return ++refs_; }
-    std::uint32_t Release() override { return --refs_; }
-    bool GetResource(const cGZPersistResourceKey&, std::uint32_t, void**, std::uint32_t, std::uint32_t) override { return false; }
-    bool CreateResource(const cGZPersistResourceKey&, std::uint32_t, void**, std::uint32_t, std::uint32_t) override { return false; }
-    bool RegisterResource(cIGZUnknown*) override { return false; }
-    bool RemoveResource(const cGZPersistResourceKey&) override { return false; }
-    bool HasResource(const cGZPersistResourceKey& key) override { return segment_->TestForRecord(key); }
-    bool FindRecord(const cGZPersistResourceKey& key, cIGZPersistDBRecord** out) override {
-        return segment_->OpenRecord(key, out, 1);
-    }
-    bool OpenRecord(const cGZPersistResourceKey& key, cIGZPersistDBRecord** out, std::uint32_t flags) override {
-        return segment_->OpenRecord(key, out, flags ? flags : 1);
-    }
-
-private:
-    cGZDBSegmentPackedFile* segment_;
-    std::uint32_t refs_ = 1;
 };
 
 struct Decoded {
@@ -176,7 +154,11 @@ int main(int argc, char** argv) {
 
         static AVBackend backend;
         AudioPlatform::SetBackend(&backend);
-        SegmentPersist persist(segment);
+        // the real resource manager owns the package; the sound classes reach it through an adapter
+        auto* manager = new cGZPersistResourceManager();
+        manager->AddRef();
+        manager->RegisterDBSegment(*segment);
+        AudioPersistAdapter persist(manager);
         Audio::SetPersistService(&persist);
         auto* creator = cGZSndSegmentDataSourceCreator::Create();
         creator->AddRef();
@@ -233,6 +215,7 @@ int main(int argc, char** argv) {
             delete voice;
         }
         std::printf("played %d sound(s)\n", played);
+        manager->Shutdown();
         segment->Close();
     }
     return 0;
