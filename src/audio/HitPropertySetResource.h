@@ -20,7 +20,7 @@
 #include "gz/cIStreamRemaining.h"
 
 template <bool kTrack>
-class cHitPropertySetResourceT : public cGZPropertySet, public cIGZPersistResource {
+class cHitPropertySetResourceT : public cGZPropertySet, public cIHitPersistResource {
 public:
     cHitPropertySetResourceT() = default;
     explicit cHitPropertySetResourceT(const cGZPersistResourceKey& key) : key_(key) {}   // @ 0x1004c2d94 (track)
@@ -31,7 +31,7 @@ public:
     std::uint32_t AddRef() override { return cGZPropertySet::AddRef(); }
     std::uint32_t Release() override { return cGZPropertySet::Release(); }
 
-    // --- cIGZPersistResource ---
+    // --- cIHitPersistResource ---
     cGZPersistResourceKey GetKey() const override { return key_; }           // @ 0x100472c02
     bool SetKey(const cGZPersistResourceKey& key) override { key_ = key; return true; }  // @ 0x100472c1c
     std::uint32_t GetType() const override { return key_.type; }

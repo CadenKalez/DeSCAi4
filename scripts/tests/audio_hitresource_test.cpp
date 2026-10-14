@@ -25,7 +25,7 @@ int main() {
         // persist-resource ids return the resource sub-object, others go to the payload
         void* p = nullptr;
         assert(res->QueryInterface(HitIds::kIidPersistResource, &p));
-        assert(p == static_cast<cIGZPersistResource*>(res) && p != static_cast<void*>(res));
+        assert(p == static_cast<cIHitPersistResource*>(res) && p != static_cast<void*>(res));
         void* q = nullptr;
         assert(res->QueryInterface(kGZIID_cIHitList, &q) && q == static_cast<cIHitList*>(res));
         assert(!res->QueryInterface(0xdeadbeef, &q));
@@ -34,7 +34,7 @@ int main() {
         // private copy: same payload and key, independent object
         void* c = nullptr;
         assert(res->CreatePrivateCopy(HitIds::kIidPersistResource, &c));
-        auto* copy = static_cast<cIGZPersistResource*>(c);
+        auto* copy = static_cast<cIHitPersistResource*>(c);
         assert(copy->GetType() == HitIds::kResTypeHitList && copy->GetInstance() == 0x33);
         assert(copy->GetRefCount() == 3);      // refcount copied (2) + the query reference
         res->AddValue(7); assert(res->NumItems() == 3);

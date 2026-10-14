@@ -1,5 +1,5 @@
 // cHitResource<T> — adapts a Hit payload type T (cHitList, cHitTrackPlayer, ...) to the persistent
-// resource system by adding a (type, group, instance) key and the cIGZPersistResource interface.
+// resource system by adding a (type, group, instance) key and the cIHitPersistResource interface.
 // Recovered from the cHitResource<cHitList> instantiation @ 0x1004754ea..0x1004757bc.
 //
 // Layout (cHitList case, 0x60 bytes): T at +0x00, resource sub-object vptr at +sizeof(T)=+0x48,
@@ -12,7 +12,7 @@
 #include "audio/HitClassIds.h"
 #include "gz/cIGZPersistResource.h"
 
-using cIHitResource = cIGZPersistResource;  // cIHitResource adds nothing beyond the persist interface
+using cIHitResource = cIHitPersistResource;  // cIHitResource adds nothing beyond the persist interface
 
 template <class T>
 class cHitResource : public T, public cIHitResource {
@@ -32,7 +32,7 @@ public:
     std::uint32_t AddRef() override { return T::AddRef(); }
     std::uint32_t Release() override { return T::Release(); }
 
-    // cIGZPersistResource
+    // cIHitPersistResource
     cGZPersistResourceKey GetKey() const override { return key_; }
     bool SetKey(const cGZPersistResourceKey& key) override { key_ = key; return true; }
     std::uint32_t GetType() const override { return key_.type; }

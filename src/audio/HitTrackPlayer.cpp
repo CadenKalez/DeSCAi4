@@ -75,7 +75,7 @@ bool EnumKillStop(cIGZSndUpdateTarget* target, std::uint32_t id, bool kill) {
     bool matched = false;
     void* res = nullptr;
     if (player->GetTrackDef(kIidHitResource, &res) && res != nullptr) {
-        auto* resource = static_cast<cIGZPersistResource*>(res);
+        auto* resource = static_cast<cIHitPersistResource*>(res);
         if (resource->GetInstance() == id) {
             cIGZSnd* snd = player->AsIGZSnd();
             if (kill) snd->Kill(); else snd->Stop();
@@ -322,8 +322,8 @@ bool cHitTrackPlayer::SetTrackDef(cIGZPropertySet* trackDef) {
         if (cIHitMan* hm = HitMan()) sem_ = hm->GetSem(static_cast<std::uint32_t>(semId));
     }
     void* res = nullptr;
-    if (trackDef != nullptr && trackDef->QueryInterface(kGZIID_cIGZPersistResource, &res) && res != nullptr) {
-        auto* resource = static_cast<cIGZPersistResource*>(res);
+    if (trackDef != nullptr && trackDef->QueryInterface(kGZIID_cIHitPersistResource, &res) && res != nullptr) {
+        auto* resource = static_cast<cIHitPersistResource*>(res);
         SetID(resource->GetInstance());   // the binary calls SetID(key.instance)
         resource->Release();
     }

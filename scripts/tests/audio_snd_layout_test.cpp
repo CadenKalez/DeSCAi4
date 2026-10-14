@@ -119,8 +119,8 @@ int main() {
     EXPECT(cIGZIStream::GetError, 0x90); EXPECT(cIGZIStream::GetUserData, 0xa0);
     EXPECT(cIGZOStream::Flush, 0x18);  EXPECT(cIGZOStream::SetUint32, 0x48); EXPECT(cIGZOStream::SetVoid, 0x88);
     EXPECT(cIGZOStream::GetUserData, 0xa0);
-    EXPECT(cIGZPersistResource::GetKey, 0x18); EXPECT(cIGZPersistResource::GetRefCount, 0x58);
-    EXPECT(cIGZPersistResource::Read, 0x60); EXPECT(cIGZPersistResource::CreatePrivateCopy, 0x70);
+    EXPECT(cIHitPersistResource::GetKey, 0x18); EXPECT(cIHitPersistResource::GetRefCount, 0x58);
+    EXPECT(cIHitPersistResource::Read, 0x60); EXPECT(cIHitPersistResource::CreatePrivateCopy, 0x70);
     EXPECT(cIGZSerializable::Write, 0x18); EXPECT(cIGZSerializable::Read, 0x20); EXPECT(cIGZSerializable::GetGZCLSID, 0x28);
     std::puts("interface layouts match the binary");
 }

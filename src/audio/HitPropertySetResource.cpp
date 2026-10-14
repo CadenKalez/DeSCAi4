@@ -48,7 +48,7 @@ std::int32_t cHitPropertySetResourceT<kTrack>::refCountValue() const {
 template <bool kTrack>
 bool cHitPropertySetResourceT<kTrack>::QueryInterface(std::uint32_t iid, void** out) {
     if (iid == kIidPersistResource || iid == kIidHitResource) {
-        *out = static_cast<cIGZPersistResource*>(this);
+        *out = static_cast<cIHitPersistResource*>(this);
         AddRef();
         return true;
     }

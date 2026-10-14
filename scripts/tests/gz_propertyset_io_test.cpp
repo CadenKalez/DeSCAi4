@@ -107,7 +107,7 @@ int main() {
         cHitPropertySetTrackResource* r = new cHitPropertySetTrackResource(cGZPersistResourceKey{0x0b8d821a, 0xfc45caf7, 0x77});
         r->AddRef();
         void* p = nullptr;
-        assert(r->QueryInterface(0x456b8f1d, &p) && p == static_cast<cIGZPersistResource*>(r));
+        assert(r->QueryInterface(0x456b8f1d, &p) && p == static_cast<cIHitPersistResource*>(r));
         assert(r->QueryInterface(0xebb10cdd, &p) && p == static_cast<cIGZPropertySet*>(r));
         assert(!r->QueryInterface(0x1234, &p));
         r->Release(); r->Release();
@@ -141,8 +141,8 @@ int main() {
         // private copy: same contents and key, independent object
         void* cp = nullptr;
         assert(r->CreatePrivateCopy(0x456b8f1d, &cp) && cp != nullptr);
-        auto* copy = static_cast<cIGZPersistResource*>(cp);
-        assert(copy->GetInstance() == 0x77 && copy != static_cast<cIGZPersistResource*>(r));
+        auto* copy = static_cast<cIHitPersistResource*>(cp);
+        assert(copy->GetInstance() == 0x77 && copy != static_cast<cIHitPersistResource*>(r));
         copy->Release();
         r->Release();
     }
