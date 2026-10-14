@@ -323,3 +323,18 @@ the objects keep their own references.
 | cSC4SoundDescription / cSC4SoundEffect | 22 | part of the effects framework (cSC4EffectDescription) |
 | cSC4AudioAEMS* (engine sound), IDirectSound*_Mac | ~180 | wrappers over the EA SND library (`_SNDSYS_*`, `_SNDfx*`), counted with the C libs |
 | cSC4AudioPreferencesWinProc | 25 | GUI window procedures (needs the UI toolkit) |
+
+## 13. Audio demo (real game data)
+
+`scripts/build_audio_demo.sh` builds `build/sc4audio`: it opens the game's `Sound.dat` through the
+recovered persistence layer (`cGZDBSegmentPackedFile`), exposes it to the sound classes through
+`Audio::SetPersistService`, creates data sources with `cGZSndSegmentDataSourceCreator` (EA XA ADPCM
+and RIFF wav decoders as recovered), and plays the PCM through an `AudioPlatform::IBackend` built on
+AVAudioPlayer.
+
+    build/sc4audio --list 20            # sound records (1680 in 41 groups in the Steam install)
+    build/sc4audio --sample 6           # play six sounds spread over the file
+    build/sc4audio --wav out.wav 0a28b095   # decode one sound to a file
+    build/sc4audio 3ee77108 bececfe8    # play specific instances
+
+UTalk speech records need the EA SND library codec (not recovered, see section 12) and are skipped.

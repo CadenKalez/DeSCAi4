@@ -9,9 +9,12 @@
 //  * Reference counts are 16-bit in the original (AddRef returns the new count).
 //  * GetFieldVariant/SetFieldVariant need cRZVariant (not recovered yet): they fail.
 #pragma once
+#include <algorithm>
 #include <cstdint>
+#include <cstring>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "gz/cIGZIStream.h"
 #include "gz/cIGZOStream.h"
@@ -135,3 +138,27 @@ private:
     class OStreamView;
     class AudioAccessView;
 };
+
+namespace persist_detail {
+template <class T> T SwapBytes(T value) {
+    std::uint8_t raw[sizeof(T)];
+    std::memcpy(raw, &value, sizeof(T));
+    std::reverse(raw, raw + sizeof(T));
+    std::memcpy(&value, raw, sizeof(T));
+    return value;
+}
+}  // namespace persist_detail
+
+template <class T> bool cGZPersistDBSerialRecord::GetScalars(T* values, std::uint32_t count) {
+    bool ok = GetFieldVoid(values, count * static_cast<std::uint32_t>(sizeof(T)));
+    if (!littleEndian_)
+        for (std::uint32_t i = 0; i < count; ++i) values[i] = persist_detail::SwapBytes(values[i]);
+    return ok;
+}
+
+template <class T> bool cGZPersistDBSerialRecord::SetScalars(const T* values, std::uint32_t count) {
+    if (littleEndian_) return SetFieldVoid(values, count * static_cast<std::uint32_t>(sizeof(T)));
+    std::vector<T> tmp(values, values + count);   // swapped copy
+    for (T& v : tmp) v = persist_detail::SwapBytes(v);
+    return SetFieldVoid(tmp.data(), count * static_cast<std::uint32_t>(sizeof(T)));
+}

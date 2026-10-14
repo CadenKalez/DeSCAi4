@@ -8,14 +8,6 @@
 
 namespace {
 
-template <class T> T SwapBytes(T value) {
-    std::uint8_t raw[sizeof(T)];
-    std::memcpy(raw, &value, sizeof(T));
-    std::reverse(raw, raw + sizeof(T));
-    std::memcpy(&value, raw, sizeof(T));
-    return value;
-}
-
 // Narrow-to-UTF8 view of UTF-16 code units (no surrogate pairing beyond the BMP pairs).
 void AppendUtf8(std::string& out, std::uint32_t cp) {
     if (cp < 0x80) out.push_back(static_cast<char>(cp));
@@ -157,21 +149,6 @@ bool cGZPersistDBSerialRecord::Close() {
     return ok;
 }
 
-template <class T> bool cGZPersistDBSerialRecord::GetScalars(T* values, std::uint32_t count) {
-    bool ok = GetFieldVoid(values, count * static_cast<std::uint32_t>(sizeof(T)));
-    if (!littleEndian_)
-        for (std::uint32_t i = 0; i < count; ++i) values[i] = SwapBytes(values[i]);
-    return ok;
-}
-
-template <class T> bool cGZPersistDBSerialRecord::SetScalars(const T* values, std::uint32_t count) {
-    if (littleEndian_) return SetFieldVoid(values, count * static_cast<std::uint32_t>(sizeof(T)));
-    // Swapped copy; the original swaps in place in a stack buffer for small counts.
-    std::vector<T> tmp(values, values + count);
-    for (T& v : tmp) v = SwapBytes(v);
-    return SetFieldVoid(tmp.data(), count * static_cast<std::uint32_t>(sizeof(T)));
-}
-
 bool cGZPersistDBSerialRecord::GetFieldResKey(cGZPersistResourceKey& v) {
     return GetFieldUint32(v.type) && GetFieldUint32(v.group) && GetFieldUint32(v.instance);
 }
@@ -234,12 +211,12 @@ bool cGZPersistDBSerialRecord::GetFieldString(cIGZString& out) {
     for (std::uint32_t i = 0; i < units; ++i) {
         std::uint16_t u;
         std::memcpy(&u, &data[i * 2], 2);
-        if (!littleEndian_) u = SwapBytes(u);
+        if (!littleEndian_) u = persist_detail::SwapBytes(u);
         std::uint32_t cp = u;
         if (u >= 0xd800 && u < 0xdc00 && i + 1 < units) {
             std::uint16_t lo;
             std::memcpy(&lo, &data[(i + 1) * 2], 2);
-            if (!littleEndian_) lo = SwapBytes(lo);
+            if (!littleEndian_) lo = persist_detail::SwapBytes(lo);
             if (lo >= 0xdc00 && lo < 0xe000) {
                 cp = 0x10000 + ((u - 0xd800u) << 10) + (lo - 0xdc00u);
                 ++i;
@@ -254,4 +231,3 @@ bool cGZPersistDBSerialRecord::GetFieldString(cIGZString& out) {
 bool cGZPersistDBSerialRecord::GetFieldVariant(cIGZVariant**) { return false; }
 bool cGZPersistDBSerialRecord::SetFieldVariant(const cIGZVariant*) { return false; }
 
-template bool cGZPersistDBSerialRecord::GetScalars<std::uint16_t>(std::uint16_t*, std::uint32_t);
