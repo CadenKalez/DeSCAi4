@@ -1,10 +1,13 @@
 // Freshness engine: score parsing -> cFreshPlayer -> cFreshCellPlayer -> fake sound system.
 #include <cassert>
+#include <filesystem>
+#include <fstream>
 #include <cstdio>
 #include <set>
 #include <string>
 #include <vector>
 
+#include "audio/FreshDimensionPlayer.h"
 #include "audio/FreshHost.h"
 #include "audio/FreshPlayer.h"
 #include "audio/FreshScore.h"
@@ -68,6 +71,8 @@ private:
 class FakeHost final : public Fresh::cIFreshHost {
 public:
     bool HasSoundSystem() const override { return true; }
+    bool IsSoundSystemInTestMode() const override { return testMode; }
+    cIFreshPlayer* CreateFreshPlayerInstance() override { auto* p = cFreshPlayer::Create(); p->AddRef(); return p; }
     cIGZSnd* CreateSndByFileName(const cIGZString& f) override {
         names.insert(f.ToChar());
         return new FakeSnd(live);
@@ -81,6 +86,7 @@ public:
     std::set<std::string> names;
     std::vector<std::uint32_t> ids;
     int adds = 0, removes = 0;
+    bool testMode = false;
     std::string text;
 };
 
@@ -184,6 +190,51 @@ int main() {
     assert(q->InitializeFromResourceKey(key));
     assert(q->GetScore(0) != nullptr && q->cellPlayerAt(2, 2) != nullptr);
     assert(q->Release() == 0);
+
+    // --- dimension player: pools the cell players of every enabled score ---
+    const auto path = (std::filesystem::temp_directory_path() / "sc4_fresh_dim_test.txt").string();
+    { std::ofstream f(path, std::ios::binary); f << MakeScore(false); }
+    cIFreshPlayer* dim = cFreshDimensionPlayer::Create();
+    dim->AddRef();
+    void* dp = nullptr;
+    assert(dim->QueryInterface(kGZIID_cIFreshPlayer, &dp) && dp == dim);
+    dim->Release();
+    assert(dim->QueryInterface(kGZIID_cIFreshDimensionPlayer, &dp));
+    auto* dimIface = static_cast<cIFreshDimensionPlayer*>(dp);
+    assert(dimIface->AsIFreshPlayer() == dim);
+    dimIface->Release();
+    assert(!dim->QueryInterface(0x1234, &dp));
+    assert(dim->InitializeFromLoadedScore());
+    assert(!dim->InitializeFromResourceKey(key) && dim->SetTempo(100) == false);
+    cRZString scoreFile(path.c_str());
+    assert(dim->LoadScore(scoreFile, 3) && dim->LoadScore(scoreFile, 7));
+    assert(dim->GetScore(3) != nullptr && dim->GetScore(7) != nullptr && dim->GetScore(4) == nullptr);
+    auto* dimImpl = static_cast<cFreshDimensionPlayer*>(dim);
+    assert(dimImpl->pooledCellCount() == 0);   // nothing enabled yet
+    dimIface = static_cast<cIFreshDimensionPlayer*>(dimImpl);
+    dimIface->SetScoreEnabled(3, true);
+    dim->SetXPos(500);
+    dim->SetYPos(500);
+    assert(dimImpl->enabledScoreCount() == 1);
+    // the 3x3 score is non-discrete: every cell of the 9 is in the area (radius 1 around centre)
+    assert(dimImpl->pooledCellCount() == 9 && dimImpl->totalProbabilityWeight() == 9 * 20);
+    dimIface->SetScoreEnabled(7, true);
+    assert(dimImpl->enabledScoreCount() == 2 && dimImpl->pooledCellCount() == 18);
+    dimIface->SetScoreEnabled(0, true);        // id 0 is never pooled
+    assert(dimImpl->pooledCellCount() == 18);
+    assert(dim->SetNumDivisionsX(2) && !dim->SetNumDivisionsX(3));
+    assert(!dim->SetDivisionEnabled(3, 0, true) && dim->SetDivisionEnabled(0, 0, true));
+    assert(dim->SetVolume(800));
+    assert(dim->Play() && dim->IsPlaying());
+    dimImpl->Update(0);                         // too early to start a cell: nothing yet
+    assert(dimImpl->activeCellPlayerCount() == 0);
+    host.testMode = true;
+    dimImpl->UpdateCellPlayerMap();            // test mode: the pool is left untouched
+    assert(dimImpl->pooledCellCount() == 18);
+    host.testMode = false;
+    assert(dim->Stop() && !dim->IsPlaying());
+    assert(dim->Release() == 0);
+    std::filesystem::remove(path);
 
     Fresh::SetHost(nullptr);
     std::puts("freshplayer ok");

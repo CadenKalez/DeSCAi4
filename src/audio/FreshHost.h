@@ -4,6 +4,7 @@
 #pragma once
 #include <cstdint>
 
+#include "audio/interfaces/cIFreshPlayer.h"
 #include "audio/interfaces/cIGZSnd.h"
 #include "audio/interfaces/cIGZSndUpdateTarget.h"
 #include <string>
@@ -22,6 +23,10 @@ public:
     virtual cIGZSnd* CreateSndByFileName(const cIGZString& fileName) = 0;
     // Sound manager slot +0x88: creates a sound for a resource id (taken from a "...GUID" filename).
     virtual cIGZSnd* CreateSndByResourceId(std::uint32_t resourceId) = 0;
+    // Sound system slot +0x188 (cGZSndSys::GetTestMode): the dimension player does nothing in test mode.
+    virtual bool IsSoundSystemInTestMode() const = 0;
+    // GZCOM()->CreateInstance(kClsidFreshPlayer, kGZIID_cIFreshPlayer): a fresh, AddRef'd cFreshPlayer.
+    virtual cIFreshPlayer* CreateFreshPlayerInstance() = 0;
     // Sound system slot +0xf0 / +0xf8: periodic Update(int) registration (the engine uses 250 ms).
     virtual void AddUpdateTarget(cIGZSndUpdateTarget* target, std::uint32_t intervalMs) = 0;
     virtual void RemoveUpdateTarget(cIGZSndUpdateTarget* target) = 0;

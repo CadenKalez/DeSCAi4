@@ -11,6 +11,7 @@
 #include "audio/interfaces/cIHitTrackDataBlock.h"
 #include "audio/interfaces/cIFreshCell.h"
 #include "audio/interfaces/cIFreshCellPlayer.h"
+#include "audio/interfaces/cIFreshDimensionPlayer.h"
 #include "audio/interfaces/cIFreshPlayer.h"
 #include "audio/interfaces/cIFreshScore.h"
 #include "audio/interfaces/cIHitList.h"
@@ -79,6 +80,7 @@ int main() {
     EXPECT(cIHitTrackDataBlock::DataStartAddress, 0x18); EXPECT(cIHitTrackDataBlock::AddEntryPoint, 0x40);
     EXPECT(cIFreshCell::GetSndId, 0x18); EXPECT(cIFreshCell::GetStereoSample, 0xb0);
     EXPECT(cIFreshCell::SetSndId, 0xb8); EXPECT(cIFreshCell::SetStereoSample, 0x150);
+    EXPECT(cIFreshDimensionPlayer::AsIFreshPlayer, 0x18); EXPECT(cIFreshDimensionPlayer::SetScoreEnabled, 0x20);
     EXPECT(cIFreshScore::GetCell, 0x18);
     EXPECT(cIFreshCellPlayer::GetCell, 0x18); EXPECT(cIFreshCellPlayer::Start, 0x28);
     EXPECT(cIFreshCellPlayer::Kill, 0x40);    EXPECT(cIFreshCellPlayer::Get3DPosZ, 0xb0);

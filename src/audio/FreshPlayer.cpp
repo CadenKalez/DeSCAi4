@@ -94,8 +94,14 @@ bool cFreshPlayer::InitializeFromDirectoryAndFile(const cRZString& directory, co
 // cFreshPlayer::Init(cFreshScore*, cRZString const&) @ 0x1004cd720
 bool cFreshPlayer::InitializeWithScoreAndDataDir(cFreshScore* score, const cRZString& dataDir) {
     SectionGuard guard(Section());
-    if (score_ != nullptr && score_ != score && !initialized_) delete score_;  // the original leaks it
-    score_ = score;
+    if (score_ != score) {
+        // Port deviation: the player keeps its own reference on the score. The original stores the raw
+        // pointer and deletes it directly, which double-frees when another holder (e.g. the dimension
+        // player's score map) releases first.
+        if (score != nullptr) score->AddRef();
+        if (score_ != nullptr && !initialized_) score_->Release();  // the original leaks it
+        score_ = score;
+    }
     dataDir_ = dataDir;
     return InitializeFromLoadedScore();
 }
@@ -109,7 +115,8 @@ bool cFreshPlayer::InitializeFromResourceKey(const cGZPersistResourceKey& key) {
     auto* score = cFreshScore::Create();
     cRZString textString(text.c_str());
     score->ParseScore(textString);
-    if (score_ != nullptr && !initialized_) delete score_;
+    score->AddRef();  // the player's own reference (see InitializeWithScoreAndDataDir)
+    if (score_ != nullptr && !initialized_) score_->Release();
     score_ = score;
     return InitializeFromLoadedScore();
 }
@@ -155,7 +162,7 @@ bool cFreshPlayer::InitializeFromLoadedScore() {
 
 void cFreshPlayer::DestroyCellPlayersAndScore() {
     if (score_ != nullptr) {
-        delete score_;  // the original calls the deleting destructor directly
+        score_->Release();  // the original calls the deleting destructor directly
         score_ = nullptr;
     }
     for (auto& row : grid_) {
