@@ -28,12 +28,12 @@ public:
     bool IsTimerRunning() const noexcept { return startTick_ != 0; }
 
     // Returns elapsed time truncated to 32 bits; 0 for unsupported units.
-    std::uint32_t GetElapsedTime() const noexcept;
-    void GetElapsedTime(std::uint64_t& out) const noexcept;  // leaves `out` untouched for unsupported units
-    void GetElapsedTime(float& out) const noexcept;          // 0.0f for unsupported units
+    std::uint32_t GetElapsedTimeU32() const noexcept;
+    void GetElapsedTimeU64(std::uint64_t& out) const noexcept;  // leaves `out` untouched for unsupported units
+    void GetElapsedTimeFloat(float& out) const noexcept;          // 0.0f for unsupported units
 
-    void SetElapsedTime(float value) noexcept;
-    void SetElapsedTime(std::uint64_t value) noexcept;
+    void SetElapsedTimeFloat(float value) noexcept;
+    void SetElapsedTimeU64(std::uint64_t value) noexcept;
 
     void Restart() noexcept;  // zero accumulated, start now
     void Start() noexcept;    // start now without clearing accumulated

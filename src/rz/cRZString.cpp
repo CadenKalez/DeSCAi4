@@ -50,32 +50,32 @@ std::uint32_t cRZString::Release() {
     return 0;
 }
 
-// cRZString::FromChar(char const*) @ 0x1000170b6, FromChar(char const*, unsigned int) @ 0x1000170fe
-void cRZString::FromChar(const char* s) {
+// cRZString::FromChar(char const*) @ 0x1000170b6 [AssignFromCString], FromChar(char const*, unsigned int) @ 0x1000170fe [AssignFromChars]
+void cRZString::AssignFromCString(const char* s) {
     if (s == nullptr) str_.clear(); else str_.assign(s);
 }
-void cRZString::FromChar(const char* s, std::uint32_t length) {
+void cRZString::AssignFromChars(const char* s, std::uint32_t length) {
     if (s == nullptr) str_.clear(); else str_.assign(s, length);
 }
 
 // cRZString::IsEqual(...) @ 0x100017174 / 0x1000173ba / 0x1000173cc
-bool cRZString::IsEqual(const cIGZString& other, bool caseSensitive) const {
+bool cRZString::IsEqualToStringRef(const cIGZString& other, bool caseSensitive) const {
     const std::uint32_t n = other.Strlen();
     if (str_.size() != n) return false;
     return caseSensitive ? std::strncmp(str_.data(), other.Data(), n) == 0
                          : CompareFolded(str_.data(), other.Data(), n) == 0;
 }
-bool cRZString::IsEqual(const char* s, std::uint32_t length, bool caseSensitive) const {
+bool cRZString::IsEqualToChars(const char* s, std::uint32_t length, bool caseSensitive) const {
     const std::size_t n = (length == kUseStrlen) ? std::strlen(s) : length;
     if (str_.size() != n) return false;
     return caseSensitive ? std::strncmp(str_.data(), s, n) == 0 : CompareFolded(str_.data(), s, n) == 0;
 }
 
 // cRZString::CompareTo(...) @ 0x1000175d4 / 0x100017824
-int cRZString::CompareTo(const cIGZString& other, bool caseSensitive) const {
-    return CompareTo(other.Data(), other.Strlen(), caseSensitive);
+int cRZString::CompareToString(const cIGZString& other, bool caseSensitive) const {
+    return CompareToChars(other.Data(), other.Strlen(), caseSensitive);
 }
-int cRZString::CompareTo(const char* s, std::uint32_t length, bool caseSensitive) const {
+int cRZString::CompareToChars(const char* s, std::uint32_t length, bool caseSensitive) const {
     const std::uint32_t otherLen = (length == kUseStrlen) ? static_cast<std::uint32_t>(std::strlen(s)) : length;
     const auto myLen = static_cast<std::uint32_t>(str_.size());
     const std::size_t common = myLen < otherLen ? myLen : otherLen;
@@ -87,7 +87,7 @@ int cRZString::CompareTo(const char* s, std::uint32_t length, bool caseSensitive
 }
 
 // cRZString::Find(...) @ 0x100017be2 / 0x100017f0a
-std::size_t cRZString::Find(const char* s, std::size_t pos, bool caseSensitive) const {
+std::size_t cRZString::FindChars(const char* s, std::size_t pos, bool caseSensitive) const {
     if (caseSensitive) return str_.find(s, pos);
     const std::string hay = Lowered(str_.data(), str_.size());
     const std::string needle = Lowered(s, std::strlen(s));
@@ -95,7 +95,7 @@ std::size_t cRZString::Find(const char* s, std::size_t pos, bool caseSensitive) 
 }
 
 // cRZString::RFind(...) @ 0x100018230 / 0x1000185f6
-std::size_t cRZString::RFind(const char* s, std::size_t pos, bool caseSensitive) const {
+std::size_t cRZString::ReverseFindChars(const char* s, std::size_t pos, bool caseSensitive) const {
     if (caseSensitive) return str_.rfind(s, pos);
     const std::string hay = Lowered(str_.data(), str_.size());
     const std::string needle = Lowered(s, std::strlen(s));
@@ -137,7 +137,7 @@ cRZString cRZString::SplitToken(const char* delimiters) {
 }
 
 // cRZString::SplitTokenDelimited(char) @ 0x100016782
-bool cRZString::SplitTokenDelimited(char delimiter) {
+bool cRZString::DiscardThroughDelimiter(char delimiter) {
     const std::size_t pos = str_.find(delimiter);
     if (pos == std::string::npos) {
         str_.clear();
@@ -148,7 +148,7 @@ bool cRZString::SplitTokenDelimited(char delimiter) {
 }
 
 // cRZString::SplitTokenDelimited(char, cRZString&) @ 0x1000167d2
-bool cRZString::SplitTokenDelimited(char delimiter, cRZString& token) {
+bool cRZString::SplitTokenAtDelimiter(char delimiter, cRZString& token) {
     const std::size_t pos = str_.find(delimiter);
     if (pos == std::string::npos) {
         token.str_.clear();

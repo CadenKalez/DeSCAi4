@@ -31,30 +31,30 @@ public:
     std::uint32_t Release() override;
 
     // --- cIGZString ---
-    void FromChar(const char* s) override;
-    void FromChar(const char* s, std::uint32_t length) override;
+    void AssignFromCString(const char* s) override;
+    void AssignFromChars(const char* s, std::uint32_t length) override;
     const char* ToChar() const override { return str_.c_str(); }
     const char* Data() const override { return str_.c_str(); }
     std::uint32_t Strlen() const override { return static_cast<std::uint32_t>(str_.size()); }
-    bool IsEqual(const cIGZString* other, bool caseSensitive) const override { return IsEqual(*other, caseSensitive); }
-    bool IsEqual(const cIGZString& other, bool caseSensitive) const override;
-    bool IsEqual(const char* s, std::uint32_t length, bool caseSensitive) const override;
-    int CompareTo(const cIGZString& other, bool caseSensitive) const override;
-    int CompareTo(const char* s, std::uint32_t length, bool caseSensitive) const override;
-    cIGZString& operator=(const cIGZString& other) override { Copy(other); return *this; }
-    void Copy(const cIGZString& other) override { FromChar(other.Data(), other.Strlen()); }
+    bool IsEqualToStringPointer(const cIGZString* other, bool caseSensitive) const override { return IsEqualToStringRef(*other, caseSensitive); }
+    bool IsEqualToStringRef(const cIGZString& other, bool caseSensitive) const override;
+    bool IsEqualToChars(const char* s, std::uint32_t length, bool caseSensitive) const override;
+    int CompareToString(const cIGZString& other, bool caseSensitive) const override;
+    int CompareToChars(const char* s, std::uint32_t length, bool caseSensitive) const override;
+    cIGZString& AssignFromIGZString(const cIGZString& other) override { Copy(other); return *this; }
+    void Copy(const cIGZString& other) override { AssignFromChars(other.Data(), other.Strlen()); }
     void Resize(std::uint32_t newLength) override { str_.resize(newLength, '\0'); }
-    cIGZString& Append(const char* s, std::uint32_t length) override { str_.append(s, length); return *this; }
-    cIGZString& Append(const cIGZString& other) override { str_.append(other.ToChar(), other.Strlen()); return *this; }
-    cIGZString& Insert(std::uint32_t pos, const char* s, std::uint32_t length) override { str_.insert(pos, s, length); return *this; }
-    cIGZString& Insert(std::uint32_t pos, const cIGZString& other) override { str_.insert(pos, other.ToChar(), other.Strlen()); return *this; }
-    cIGZString& Replace(std::size_t pos, const char* s, std::size_t removeCount) override { str_.replace(pos, removeCount, s); return *this; }
-    cIGZString& Replace(std::size_t pos, const cIGZString& other) override { str_.replace(pos, other.Strlen(), other.ToChar()); return *this; }
+    cIGZString& AppendChars(const char* s, std::uint32_t length) override { str_.append(s, length); return *this; }
+    cIGZString& AppendString(const cIGZString& other) override { str_.append(other.ToChar(), other.Strlen()); return *this; }
+    cIGZString& InsertChars(std::uint32_t pos, const char* s, std::uint32_t length) override { str_.insert(pos, s, length); return *this; }
+    cIGZString& InsertString(std::uint32_t pos, const cIGZString& other) override { str_.insert(pos, other.ToChar(), other.Strlen()); return *this; }
+    cIGZString& ReplaceRangeWithChars(std::size_t pos, const char* s, std::size_t removeCount) override { str_.replace(pos, removeCount, s); return *this; }
+    cIGZString& ReplaceRangeWithString(std::size_t pos, const cIGZString& other) override { str_.replace(pos, other.Strlen(), other.ToChar()); return *this; }
     cIGZString& Erase(std::uint32_t pos, std::uint32_t count) override { str_.erase(pos, count); return *this; }
-    std::size_t Find(const char* s, std::size_t pos, bool caseSensitive) const override;
-    std::size_t Find(const cIGZString& s, std::size_t pos, bool caseSensitive) const override { return Find(s.ToChar(), pos, caseSensitive); }
-    std::size_t RFind(const char* s, std::size_t pos, bool caseSensitive) const override;
-    std::size_t RFind(const cIGZString& s, std::size_t pos, bool caseSensitive) const override { return RFind(s.ToChar(), pos, caseSensitive); }
+    std::size_t FindChars(const char* s, std::size_t pos, bool caseSensitive) const override;
+    std::size_t FindString(const cIGZString& s, std::size_t pos, bool caseSensitive) const override { return FindChars(s.ToChar(), pos, caseSensitive); }
+    std::size_t ReverseFindChars(const char* s, std::size_t pos, bool caseSensitive) const override;
+    std::size_t ReverseFindString(const cIGZString& s, std::size_t pos, bool caseSensitive) const override { return ReverseFindChars(s.ToChar(), pos, caseSensitive); }
     cIGZString* Sprintf(const char* format, ...) override;
 
     // --- non-virtual helpers ---
@@ -63,10 +63,10 @@ public:
     // `delimiters` returns a copy of the whole string.
     cRZString SplitToken(const char* delimiters);
     // Discards through the first `delimiter`; false (and clears the string) if none.
-    bool SplitTokenDelimited(char delimiter);
+    bool DiscardThroughDelimiter(char delimiter);
     // Moves the token before `delimiter` into `token` and removes it plus the delimiter. If
     // there is no delimiter the whole remainder goes to `token`, *this becomes empty, false.
-    bool SplitTokenDelimited(char delimiter, cRZString& token);
+    bool SplitTokenAtDelimiter(char delimiter, cRZString& token);
     // Like the above but skips runs of consecutive delimiters; false when nothing is left.
     bool SplitTokenSeparated(char delimiter, cRZString& token);
 

@@ -23,7 +23,7 @@ std::uint64_t cRZTimer::ElapsedMilliseconds() const noexcept {
 }
 
 // cRZTimer::GetElapsedTime() const @ 0x1007b6d54
-std::uint32_t cRZTimer::GetElapsedTime() const noexcept {
+std::uint32_t cRZTimer::GetElapsedTimeU32() const noexcept {
     const std::uint64_t ms = ElapsedMilliseconds();
     switch (units_) {
         case kMicroseconds: return static_cast<std::uint32_t>(ms * 1000);
@@ -35,7 +35,7 @@ std::uint32_t cRZTimer::GetElapsedTime() const noexcept {
 }
 
 // cRZTimer::GetElapsedTime(unsigned long long&) const @ 0x1007b6df0
-void cRZTimer::GetElapsedTime(std::uint64_t& out) const noexcept {
+void cRZTimer::GetElapsedTimeU64(std::uint64_t& out) const noexcept {
     const std::uint64_t ms = ElapsedMilliseconds();
     switch (units_) {
         case kMicroseconds: out = ms * 1000; break;
@@ -47,7 +47,7 @@ void cRZTimer::GetElapsedTime(std::uint64_t& out) const noexcept {
 }
 
 // cRZTimer::GetElapsedTime(float&) const @ 0x1007b6e94
-void cRZTimer::GetElapsedTime(float& out) const noexcept {
+void cRZTimer::GetElapsedTimeFloat(float& out) const noexcept {
     const auto ms = static_cast<float>(ElapsedMilliseconds());
     switch (units_) {
         case kMicroseconds: out = ms * 1000.0f; break;
@@ -59,7 +59,7 @@ void cRZTimer::GetElapsedTime(float& out) const noexcept {
 }
 
 // cRZTimer::SetElapsedTime(float) @ 0x1007b6fa4
-void cRZTimer::SetElapsedTime(float value) noexcept {
+void cRZTimer::SetElapsedTimeFloat(float value) noexcept {
     switch (units_) {
         case kMicroseconds: value /= 1000.0f; break;
         case kMilliseconds: break;
@@ -72,7 +72,7 @@ void cRZTimer::SetElapsedTime(float value) noexcept {
 }
 
 // cRZTimer::SetElapsedTime(unsigned long long) @ 0x1007b7024
-void cRZTimer::SetElapsedTime(std::uint64_t value) noexcept {
+void cRZTimer::SetElapsedTimeU64(std::uint64_t value) noexcept {
     switch (units_) {
         case kNanoseconds:  value /= 1'000'000; break;
         case kMicroseconds: value /= 1000; break;
@@ -108,7 +108,7 @@ void cRZTimer::Stop() noexcept {
 void cRZTimer::Delay(std::uint32_t duration) const noexcept {
     cRZTimer local(units_);
     local.Start();
-    while (local.GetElapsedTime() < duration) {
+    while (local.GetElapsedTimeU32() < duration) {
         MacTools::Sleep(duration / 1000);
     }
 }
