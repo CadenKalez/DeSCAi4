@@ -220,7 +220,24 @@ tracks 32 33 5a; app data 48 59; global properties 56 57; random 18; callbacks 2
 - `HasRegisterValue` looks only at layers 0 and 1; `GetRegisterFloat` does not translate legacy ids.
 
 ---------------------------------------------------------------------------------------------------
-## 7. Tooling invariants
+## 8. Property-set persistence — `src/gz/cGZPropertySetSerializers.*`, `src/audio/HitPropertySetResource.*`
+- The readers take the whole record as bytes. Streams handed to `Read(...)` must implement
+  `cIStreamRemaining` (port-only; `PortMemoryIStream` does). The original asks the record-access view.
+- Auto-detection: first dword `0x2bea4862` or `0xcbe750e0` -> binary reader (which only accepts
+  `0x2bea4862`); anything else -> XML reader. XML parsing uses the port's `xml::Parse` (no expat).
+- Binary: types handled are Uint32/Float32/Boolean/String; Sint32 and unknown types are skipped
+  *without* consuming a payload, so a file containing them desynchronises (as in the binary).
+  Writing an empty set or a Sint32 value fails.
+- XML: root `<cGZPropertySetUint32>`; the reader's nesting counter starts at 0, so the closing root tag
+  is processed like an entry (a document with no entries therefore fails).
+- Legacy name-hashed XML (`Property{Uint32Uint32,Uint32Float32,Uint32String,StringString}`): key =
+  `CRC24(Name)|0xff000000`; numeric values must start with a digit (negative numbers are rejected).
+- Track resources: type `0x0b8d821a` reads/writes the comma-separated legacy text; reading records the
+  resource's own instance in register `0xff6f9546` and rejects a sound id equal to that instance.
+- `CreatePrivateCopy` also copies the source's reference count into the copy (binary behaviour).
+
+---------------------------------------------------------------------------------------------------
+## 9. Tooling invariants
 - `scripts/ledger_class.py`, `ledger_rename.py`, `check_unique_names.py`: every recovered function has
   a class-unique descriptive name in Ghidra and in `notes/ledger.csv`.
 - `scripts/run_tests.sh` must pass before every commit.

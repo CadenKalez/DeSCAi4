@@ -32,6 +32,7 @@ public:
 
     // Number of values, usable without the interface.
     std::size_t size() const { return values_.size(); }
+    std::int32_t refCount() const { return refCount_; }
 
 private:
     struct Slot {

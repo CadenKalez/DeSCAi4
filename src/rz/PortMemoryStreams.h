@@ -4,10 +4,11 @@
 #include <cstring>
 #include <vector>
 
+#include "gz/cIStreamRemaining.h"
 #include "rz/cRZIStream.h"
 #include "rz/cRZOStream.h"
 
-class PortMemoryIStream final : public cRZIStream {
+class PortMemoryIStream final : public cRZIStream, public cIStreamRemaining {
 public:
     PortMemoryIStream(const void* data, std::size_t size, bool dataIsLittleEndian = true)
         : cRZIStream(dataIsLittleEndian), data_(static_cast<const unsigned char*>(data)), size_(size) {}
@@ -24,6 +25,7 @@ public:
     }
     bool GetError() const override { return error_; }
     std::size_t Position() const { return pos_; }
+    std::size_t RemainingBytes() const override { return size_ - pos_; }
 
 private:
     const unsigned char* data_;

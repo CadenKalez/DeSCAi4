@@ -16,6 +16,7 @@ declare -a TESTS=(
  "hitlist:$T/audio_hitlist_test.cpp $S/audio/HitList.cpp $S/rz/RZConvert.cpp $S/rz/cRZString.cpp"
  "hitresource:$T/audio_hitresource_test.cpp $S/audio/HitList.cpp $S/rz/RZConvert.cpp $S/rz/cRZString.cpp"
  "freshcell:$T/audio_freshcell_test.cpp $S/audio/FreshCell.cpp $S/rz/cRZString.cpp"
+ "propertyset_io:$T/gz_propertyset_io_test.cpp $S/audio/HitPropertySetResource.cpp $S/gz/cGZPropertySet.cpp $S/gz/cGZPropertySetSerializers.cpp $S/gz/XmlSax.cpp $S/rz/nRZHash.cpp $S/rz/RZConvert.cpp $S/rz/cRZString.cpp $S/rz/cRZStream.cpp"
  "propertyset:$T/gz_propertyset_test.cpp $S/gz/cGZPropertySet.cpp $S/rz/cRZString.cpp"
  "hitchannel:$T/audio_hitchannel_test.cpp $S/audio/HitChannel.cpp $S/audio/HitServices.cpp $S/audio/HitRegisters.cpp $S/gz/cGZPropertySet.cpp $S/rz/cRZString.cpp"
  "hittrackplayer:$T/audio_hittrackplayer_test.cpp $S/audio/HitTrackPlayer.cpp $S/audio/HitChannel.cpp $S/audio/HitMan.cpp $S/audio/HitServices.cpp $S/audio/HitControlGroup.cpp $S/audio/HitSem.cpp $S/audio/HitRegisters.cpp $S/audio/HitTrackDataBlock.cpp $S/gz/cGZPropertySet.cpp $S/rz/cRZRandom.cpp $S/rz/cRZString.cpp"
