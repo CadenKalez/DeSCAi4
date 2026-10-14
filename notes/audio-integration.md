@@ -125,7 +125,62 @@ surface as stubs; only id, volume (default 1024), name and the track set are rea
 `Release()` destroys it when the count is < 2.
 
 ---------------------------------------------------------------------------------------------------
-## 4. Tooling invariants
+## 4. Property sets and typed values — `src/gz/cGZAny.h`, `cGZPropertySet.*`
+`cIGZAny` value classes (`AnyUint32` id `0xeb61e4f7`, `AnyFloat32` `0xabc78708`, `AnyBoolean`
+`0xcba908e1`, `AnySint32` `0x0c264712`, `AnyString` `0x0b8bea18`; object size 16) and the uint32-keyed
+property set (iid `0xebb10cdd`).
+- **No type conversion:** `Value(key, &any)` fails (and leaves `any` untouched) when the stored type
+  differs from `any`'s type. Hit registers are written with `AnyUint32` (`SetRegisterValue`) or
+  `AnyFloat32` (`SetRegisterFloat`); reading a float register with `GetRegisterValue` returns 0.
+  Engine code that stores audio properties must use the same type the reader uses.
+- `SetValue` replaces the stored value even when the type changes; iteration is in key order.
+- `AnyString` copies share one reference-counted `cRZString`.
+- `CompareTo` compares the 8 payload bytes as signed chars (padding included; the port zeroes it).
+
+---------------------------------------------------------------------------------------------------
+## 5. Channels — `src/audio/HitChannel.*`
+One voice. Created through `cHitMan::AllocChannel` (host `CreateChannel`), released with
+`FreeChannel`. Object layout asserted in `audio_hitchannel_test.cpp` (`sizeof == 0x78`, interface
+offsets `+0/+8/+0x10/+0x18/+0x20/+0x28`). `QueryInterface` answers six iids and **not** id 1.
+
+### Host services used (via `Hit::cIHitManServices`)
+`GetDefaultSndPlayerClassId(is3D)`, `CreateComInstance(classId, 0x206077d2)` (underlying sound),
+`GetPersistResource(key{0xebfee345,0xfc45caf7,instance}, 0xebb10cdd)` (parent property sets).
+
+### Register file
+- Layers: own set first, then inherited parents (built when register `0xff4c97be` is written: its
+  value is the *instance* of the parent property set in group `0xfc45caf7`, chained until a parent has
+  no link or is missing). Reads search layers front to back; writes/`Has`/`Clear` use the own layer.
+- Legacy numbers (< 0x100) are translated through `nsHitReg`; **`ClearRegisterValue` does not translate**
+  (binary bug, kept) so clearing a legacy number clears the untranslated key.
+- Writing a register notifies unless the caller passes `suppressNotification = true`:
+  `0xff90aac8/0xff53dbf3` volume & scale, `0xff3ec880` pan, positions/velocities, min/max distance
+  -> `UpdateVolPan`; `0xff099db2` frequency, `0xff3071b9` pitch multiplier -> `UpdatePitch`;
+  `0xff0150f2` rolloff; `0xff734343/0xffd3d39b` dry/effect level; `0xffbdb196/0xffa42951` low/high
+  pass; `0xff86fe79` time multiplier; `0xffb36659` pause the underlying sound; `0xffaec905` drops the
+  data source; `0xff0ad592` is forced to 0 while no note plays.
+- Effective volume = `volume * volumeScale / 1024` truncating toward zero (`+0x34`).
+
+### Quirks kept
+- `Init()` **resets the reference count to 0** (it is not a no-op) — call it before the first AddRef.
+- `SetAll` writes the *velocity-z* value into position-z (binary bug); `Get/SetAll` otherwise sane.
+- `GetMinimumDistance/GetMaximumDistance(float*)` do not write the pointer; they return the register's
+  low byte. Use `GetRegisterValue(0xffaab623 / 0xffa6a614)` for the value.
+- `SetPosition/SetVelocity` truncate floats to int registers.
+- `UpdatePitch` returns the *inverse* of the sound's `SetFrequency` result when a frequency register
+  exists (as compiled); it needs the sound to be loaded.
+- `Stop()` is `Kill()`; `FadeVolume`, `SetEffects*`, `SetName`, `GetName`, `SetSoundFile*`,
+  `StopAllInstances`, `GetUseCount` are stubs.
+
+### Deviations
+1. `0xff0ad592`: the binary re-enters its own notification forever when the value is non-zero and no
+   note plays; the port clears it once.
+2. Parent-chain walk is limited to 64 hops (the binary has no limit; a cyclic chain would hang).
+3. A channel whose sound could not be created tolerates the missing data-source holder (the binary
+   dereferences it).
+
+---------------------------------------------------------------------------------------------------
+## 6. Tooling invariants
 - `scripts/ledger_class.py`, `ledger_rename.py`, `check_unique_names.py`: every recovered function has
   a class-unique descriptive name in Ghidra and in `notes/ledger.csv`.
 - `scripts/run_tests.sh` must pass before every commit.

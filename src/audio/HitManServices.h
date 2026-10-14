@@ -43,6 +43,12 @@ public:
     virtual bool ReadPersistRecord(const cGZPersistResourceKey& key, std::vector<std::uint8_t>& bytes,
                                    std::string& name) = 0;
 
+    // --- sound manager (service 0x1af85bfb / 0x3af85bb7) and COM ---
+    // cIGZSndMgr slots +0x48 / +0x58: default class id of the 2D / 3D sound player.
+    virtual bool GetDefaultSndPlayerClassId(bool positional3D, std::uint32_t& classId) = 0;
+    // GZCOM()->CreateInstance(classId, iid, out) (slot +0x18); the object comes back AddRef'd.
+    virtual bool CreateComInstance(std::uint32_t classId, std::uint32_t iid, void** out) = 0;
+
     // --- plain files / directories ---
     virtual bool ReadFileBytes(const std::string& path, std::vector<std::uint8_t>& bytes) = 0;
     virtual std::string ApplicationDirectory() const = 0;  // RZ::ADir()

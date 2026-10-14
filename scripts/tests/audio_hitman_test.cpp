@@ -111,6 +111,8 @@ struct FakeServices final : Hit::cIHitManServices {
         name = "record.hit";
         return true;
     }
+    bool GetDefaultSndPlayerClassId(bool, std::uint32_t&) override { return false; }
+    bool CreateComInstance(std::uint32_t, std::uint32_t, void**) override { return false; }
     bool ReadFileBytes(const std::string& path, std::vector<std::uint8_t>& bytes) override {
         const auto it = files.find(path);
         if (it == files.end()) return false;

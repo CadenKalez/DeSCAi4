@@ -14,7 +14,9 @@
 #include "audio/interfaces/cIFreshDimensionPlayer.h"
 #include "audio/interfaces/cIFreshPlayer.h"
 #include "audio/interfaces/cIFreshScore.h"
+#include "audio/HitChannel.h"
 #include "audio/HitControlGroup.h"
+#include "audio/HitMan.h"
 #include "audio/interfaces/cIHitControlGroup.h"
 #include "audio/interfaces/cIHitList.h"
 #include "gz/cIGZString.h"
@@ -86,6 +88,16 @@ int main() {
     EXPECT(cIHitControlGroup::AddTrack, 0x18); EXPECT(cIHitControlGroup::AsIGZSnd, 0x20);
     EXPECT(cHitControlGroup::SetVolume, 0x60); EXPECT(cHitControlGroup::Update, 0xf0);
     EXPECT(cHitControlGroup::SetName, 0x1e8); EXPECT(cHitControlGroup::SetSoundFileFromChars, 0x200);
+    EXPECT(cHitChannel::AsIGZSndUpdateTarget, 0x138); EXPECT(cHitChannel::SetDataSource, 0x150);
+    EXPECT(cHitChannel::GetRegisterValue, 0x168);     EXPECT(cHitChannel::NoteOn, 0x200);
+    EXPECT(cHitChannel::UpdatePitch, 0x228);          EXPECT(cHitChannel::UpdateVolPan, 0x230);
+    EXPECT(cHitChannel::SetRolloffFactor, 0x240);     EXPECT(cHitChannel::SetTimeMultiplier, 0x270);
+    EXPECT(cIHitMan::Init, 0x18);       EXPECT(cIHitMan::LoadHitFile, 0x48);   EXPECT(cIHitMan::GetHitList, 0x80);
+    EXPECT(cIHitMan::RegisterSem, 0x98); EXPECT(cIHitMan::Random, 0xd0);       EXPECT(cIHitMan::GetRegisterVal, 0xf8);
+    EXPECT(cIHitMan::ControlGroup, 0x118); EXPECT(cIHitMan::DuckMapRemoveAll, 0x150);
+    EXPECT(cIHitMan::AddTypeToGroupAssociation, 0x170);
+    EXPECT(cHitMan::Pause, 0x80);       EXPECT(cHitMan::ControlGroup, 0x1f8);  EXPECT(cHitMan::DuckMapSetSndobPri, 0x140);
+    EXPECT(cHitMan::SetRegisterVal, 0x1b0); EXPECT(cHitMan::UpdateView, 0x130);
     EXPECT(cIFreshScore::GetCell, 0x18);
     EXPECT(cIFreshCellPlayer::GetCell, 0x18); EXPECT(cIFreshCellPlayer::Start, 0x28);
     EXPECT(cIFreshCellPlayer::Kill, 0x40);    EXPECT(cIFreshCellPlayer::Get3DPosZ, 0xb0);
