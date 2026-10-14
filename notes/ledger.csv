@@ -2196,3 +2196,54 @@ address,symbol,unique_name,source,status,evidence
 0x10047a200,"cGZSndDefaultEventHandler::QueryInterface(unsigned int, void**)",QueryInterface,src/audio/GZSndDefaultEventHandler.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
 0x10047a222,cGZSndDefaultEventHandler::AddRef(),AddRef,src/audio/GZSndDefaultEventHandler.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
 0x10047a230,cGZSndDefaultEventHandler::Release(),Release,src/audio/GZSndDefaultEventHandler.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100484b40,cHitDebugInfo::cHitDebugInfo(),Construct,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484bec,cHitDebugInfo::cHitDebugInfo(),ConstructWrapper,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484bf6,cHitDebugInfo::~cHitDebugInfo(),Destruct,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484cd6,cHitDebugInfo::~cHitDebugInfo(),DestructAndDelete,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484ce0,non-virtual thunk to cHitDebugInfo::~cHitDebugInfo(),DestructThunk,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484cee,non-virtual thunk to cHitDebugInfo::~cHitDebugInfo(),DestructAndDeleteThunk,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484cfc,cHitDebugInfo::~cHitDebugInfo(),DestructBody,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484d2a,non-virtual thunk to cHitDebugInfo::~cHitDebugInfo(),DestructBodyThunk_4d2a,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484d38,non-virtual thunk to cHitDebugInfo::~cHitDebugInfo(),DestructBodyThunk_4d38,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484d46,"cHitDebugInfo::QueryInterface(unsigned int, void**)",QueryInterface,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484d88,"non-virtual thunk to cHitDebugInfo::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_4d88,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484d96,"non-virtual thunk to cHitDebugInfo::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_4d96,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484da4,cHitDebugInfo::Init(),Init,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484dac,non-virtual thunk to cHitDebugInfo::Init(),InitThunk,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484db4,cHitDebugInfo::Shutdown(),Shutdown,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484dbc,non-virtual thunk to cHitDebugInfo::Shutdown(),ShutdownThunk,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484dc4,"cHitDebugInfo::AddSourceFile(cIGZString&, unsigned char*, int)",AddSourceFile,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484ea4,"cHitDebugInfo::AddSourceLine(int, int)",AddSourceLine,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484ef6,"cHitDebugInfo::GetDataAddressFromFilenameAndLineNum(cIGZString&, int, unsigned char**)",GetDataAddressFromFilenameAndLineNum,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100484fec,"cHitDebugInfo::GetFilenameAndLineNumFromDataAddress(unsigned char*, cIGZString&, int&)",GetFilenameAndLineNumFromDataAddress,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100485082,"cHitDebugInfo::GetDataAddressFromEntryPoint(unsigned int, unsigned char**)",GetDataAddressFromEntryPoint,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100485146,"cHitDebugInfo::GetHitFilenameFromEntryPoint(unsigned int, cIGZString&)",GetHitFilenameFromEntryPoint,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1004851fe,"cHitDebugInfo::LoadDebugInfo(cIGZString&, unsigned char*, int)",LoadDebugInfo,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1004858b6,cHitDebugInfo::LoadSymbolFile(cIGZString&),LoadSymbolFile,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100485c20,cHitDebugInfo::AddRef(),AddRef,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100485c2e,cHitDebugInfo::Release(),Release,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100485c4a,cHitDebugInfo::GetServicePriority() const,GetServicePriority,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100485c56,non-virtual thunk to cHitDebugInfo::AddRef(),AddRefThunk_5c56,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100485c64,non-virtual thunk to cHitDebugInfo::Release(),ReleaseThunk_5c64,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100485c84,non-virtual thunk to cHitDebugInfo::GetServicePriority() const,GetServicePriorityThunk,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100485c98,non-virtual thunk to cHitDebugInfo::AddRef(),AddRefThunk_5c98,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100485ca6,non-virtual thunk to cHitDebugInfo::Release(),ReleaseThunk_5ca6,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100485a74,"cSourceFileDebugInfo::cSourceFileDebugInfo(cIGZString&, unsigned char*, int)",Construct_cIGZString_uchar_int,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100485b02,cSourceFileDebugInfo::~cSourceFileDebugInfo(),Destruct,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x100485bcc,cSourceFileDebugInfo::LineNumFromOffset(int),LineNumFromOffset,src/audio/HitDebugInfo.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1006a24a0,cRZPath::cRZPath(cRZString const&),Construct_cRZString_const,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1006a25d0,cRZPath::SetPath(cRZString const&),SetPath,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1006a2750,cRZPath::cRZPath(cRZString const&),Construct_cRZString_constWrapper,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1006a275a,cRZPath::GetDrive() const,GetDrive,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1006a2790,cRZPath::GetDirectory() const,GetDirectory,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1006a27b0,cRZPath::FixDirectoryString(cRZString&) const,FixDirectoryString,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1006a2830,cRZPath::GetFileName() const,GetFileName,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1006a283a,cRZPath::GetExtension() const,GetExtension,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1006a285a,cRZPath::FixExtensionString(cRZString&) const,FixExtensionString,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1006a28a2,cRZPath::GetPath() const,GetPath,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1006a2906,cRZPath::SetBuffer(unsigned char) const,SetBuffer,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1006a2a10,cRZPath::GetDriveAndDirectory() const,GetDriveAndDirectory,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1006a2a74,cRZPath::GetFileNameAndExtension() const,GetFileNameAndExtension,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1006a2ad8,"cRZPath::SetFileName(cRZString const&, bool)",SetFileName,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1006a2bb2,"cRZPath::SetExtension(cRZString const&, bool)",SetExtension,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
+0x1006a2cb0,cRZPath::FileName(),FileName,src/rz/cRZPath.cpp,recovered,scripts/tests/audio_hitdebuginfo_test.cpp
