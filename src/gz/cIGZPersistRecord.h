@@ -35,6 +35,13 @@ public:
     // +0x18: loads the persisted resource `key` as interface `iid` (the last two arguments are
     // flags the audio code always passes as 0).
     virtual bool GetResource(const cGZPersistResourceKey& key, std::uint32_t iid, void** out, std::uint32_t flags1, std::uint32_t flags2) = 0;
+    // +0x28: creates a new resource object for `key` (the factory registered for the key's type);
+    // the result is returned as interface `iid` and is not yet known to the manager.
+    virtual bool CreateResource(const cGZPersistResourceKey& key, std::uint32_t iid, void** out, std::uint32_t flags1, std::uint32_t flags2) = 0;
+    // +0x40 / +0x48 / +0x50: make a created resource known to the manager, remove it, test for it.
+    virtual bool RegisterResource(cIGZUnknown* resource) = 0;
+    virtual bool RemoveResource(const cGZPersistResourceKey& key) = 0;
+    virtual bool HasResource(const cGZPersistResourceKey& key) = 0;
     // +0xf8: finds a record by key (returns an AddRef'd record on success).
     virtual bool FindRecord(const cGZPersistResourceKey& key, cIGZPersistDBRecord** out) = 0;
     // +0x128: opens a record; `flags` 0 = read.

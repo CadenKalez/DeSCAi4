@@ -362,7 +362,7 @@ struct FakeSndSys : cIGZSndSys {
     bool PostEventUnknown(std::uint32_t, cIGZUnknown*, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t) override { return false; }
     bool PostEventString(std::uint32_t, cIGZString*, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t) override { return false; }
     bool EventCreate(std::uint32_t, void**) override { return false; }
-    void Update(std::uint32_t) override {}
+    bool Update(std::uint32_t) override { return true; }
     bool GetInitFlag() const override { return true; }
     void SetDataDirectory(const cIGZString&) override {}
     cIGZString* DataDirectory() override { return nullptr; }

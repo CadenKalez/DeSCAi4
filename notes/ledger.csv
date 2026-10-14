@@ -1950,3 +1950,239 @@ address,symbol,unique_name,source,status,evidence
 0x1004ae870,non-virtual thunk to cGZSndMgr::SetDefaultSndDataSourcePlayer3DClassId(unsigned int),SetDefaultSndDataSourcePlayer3DClassIdThunk,src/audio/GZSndMgr.cpp,recovered,scripts/tests/audio_gzsndmgr_test.cpp
 0x1004ae890,cGZSndMgr::GetDefaultSndDataSourcePlayer3DClassId(unsigned int&) const,GetDefaultSndDataSourcePlayer3DClassId,src/audio/GZSndMgr.cpp,recovered,scripts/tests/audio_gzsndmgr_test.cpp
 0x1004ae8c0,non-virtual thunk to cGZSndMgr::GetDefaultSndDataSourcePlayer3DClassId(unsigned int&) const,GetDefaultSndDataSourcePlayer3DClassIdThunk,src/audio/GZSndMgr.cpp,recovered,scripts/tests/audio_gzsndmgr_test.cpp
+0x10043ca1a,cGZSndSys::Create(),Create,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100485d80,cGZSndSys::GetElapsedTime(),GetElapsedTime,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100485db0,cGZSndSys::HandleTimerCallback(unsigned int),HandleTimerCallback,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100485de0,"cGZSndSys::QueryInterface(unsigned int, void**)",QueryInterface,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100485f80,"non-virtual thunk to cGZSndSys::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_5f80,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100485fb0,"non-virtual thunk to cGZSndSys::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_5fb0,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100485fe0,"non-virtual thunk to cGZSndSys::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_5fe0,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100486010,"non-virtual thunk to cGZSndSys::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_6010,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100486040,"non-virtual thunk to cGZSndSys::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_6040,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100486070,cGZSndSys::AddRef(),AddRef,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100486090,non-virtual thunk to cGZSndSys::AddRef(),AddRefThunk_6090,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1004860b0,non-virtual thunk to cGZSndSys::AddRef(),AddRefThunk_60b0,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1004860d0,non-virtual thunk to cGZSndSys::AddRef(),AddRefThunk_60d0,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1004860f0,non-virtual thunk to cGZSndSys::AddRef(),AddRefThunk_60f0,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100486110,non-virtual thunk to cGZSndSys::AddRef(),AddRefThunk_6110,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100486130,cGZSndSys::Release(),Release,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1004861a0,non-virtual thunk to cGZSndSys::Release(),ReleaseThunk_61a0,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1004861c0,non-virtual thunk to cGZSndSys::Release(),ReleaseThunk_61c0,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1004861e0,non-virtual thunk to cGZSndSys::Release(),ReleaseThunk_61e0,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100486200,non-virtual thunk to cGZSndSys::Release(),ReleaseThunk_6200,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100486220,non-virtual thunk to cGZSndSys::Release(),ReleaseThunk_6220,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100486240,cGZSndSys::cGZSndSys(),Construct,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100487b30,cGZSndSys::cGZSndSys(),ConstructWrapper,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100487b50,cGZSndSys::~cGZSndSys(),Destruct,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100488120,cGZSndSys::~cGZSndSys(),DestructAndDelete,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100488140,cGZSndSys::~cGZSndSys(),DestructBody,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100488190,cGZSndSys::SetDataDirectory(cIGZString const&),SetDataDirectory,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1004881d0,cGZSndSys::DataDirectory(),DataDirectory,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1004881f0,cGZSndSys::Init(),Init,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1004889c0,non-virtual thunk to cGZSndSys::Init(),InitThunk_89c0,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1004889e0,non-virtual thunk to cGZSndSys::Init(),InitThunk_89e0,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100488a00,cGZSndSys::Panic(),Panic,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048a0e0,cGZSndSys::Shutdown(),Shutdown,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048b040,non-virtual thunk to cGZSndSys::Shutdown(),ShutdownThunk_b040,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048b060,non-virtual thunk to cGZSndSys::Shutdown(),ShutdownThunk_b060,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048b080,cGZSndSys::RegisterRenderer(cIGZSndRenderer*),RegisterRenderer,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048bb50,cGZSndSys::UnregisterRenderer(cIGZSndRenderer*),UnregisterRenderer,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048c1d0,cGZSndSys::IsRegisteredRenderer(cIGZSndRenderer*),IsRegisteredRenderer,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048c550,cGZSndSys::NumRenderers(),NumRenderers,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048c590,cGZSndSys::CommitDeferredSettings(),CommitDeferredSettings,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048cb00,non-virtual thunk to cGZSndSys::CommitDeferredSettings(),CommitDeferredSettingsThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048cb20,"cGZSndSys::GetPosition(float*, float*, float*) const",GetPosition,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048cb70,"non-virtual thunk to cGZSndSys::GetPosition(float*, float*, float*) const",GetPositionThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048cbb0,"cGZSndSys::SetPosition(float, float, float)",SetPosition,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048d0d0,"non-virtual thunk to cGZSndSys::SetPosition(float, float, float)",SetPositionThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048d110,"cGZSndSys::GetOrientation(float*, float*, float*, float*, float*, float*) const",GetOrientation,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048d1a0,"non-virtual thunk to cGZSndSys::GetOrientation(float*, float*, float*, float*, float*, float*) const",GetOrientationThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048d210,"cGZSndSys::SetOrientation(float, float, float, float, float, float)",SetOrientation,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048d790,"non-virtual thunk to cGZSndSys::SetOrientation(float, float, float, float, float, float)",SetOrientationThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048d7f0,"cGZSndSys::GetVelocity(float*, float*, float*) const",GetVelocity,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048d840,"non-virtual thunk to cGZSndSys::GetVelocity(float*, float*, float*) const",GetVelocityThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048d880,"cGZSndSys::SetVelocity(float, float, float)",SetVelocity,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048ddf0,"non-virtual thunk to cGZSndSys::SetVelocity(float, float, float)",SetVelocityThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048de30,"cGZSndSys::GetAll(float*, float*, float*, float*, float*, float*, float*, float*, float*, float*, float*, float*) const",GetAll,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048df60,"non-virtual thunk to cGZSndSys::GetAll(float*, float*, float*, float*, float*, float*, float*, float*, float*, float*, float*, float*) const",GetAllThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048e0a0,"cGZSndSys::SetAll(float, float, float, float, float, float, float, float, float, float, float, float)",SetAll,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048e810,"non-virtual thunk to cGZSndSys::SetAll(float, float, float, float, float, float, float, float, float, float, float, float)",SetAllThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048e8f0,cGZSndSys::GetDopplerFactor(float*) const,GetDopplerFactor,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048e920,non-virtual thunk to cGZSndSys::GetDopplerFactor(float*) const,GetDopplerFactorThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048e950,cGZSndSys::SetDopplerFactor(float),SetDopplerFactor,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048ee30,non-virtual thunk to cGZSndSys::SetDopplerFactor(float),SetDopplerFactorThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048ee50,cGZSndSys::GetRolloffFactor(float*) const,GetRolloffFactor,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048ee80,non-virtual thunk to cGZSndSys::GetRolloffFactor(float*) const,GetRolloffFactorThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048eeb0,cGZSndSys::SetRolloffFactor(float),SetRolloffFactor,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048f390,non-virtual thunk to cGZSndSys::SetRolloffFactor(float),SetRolloffFactorThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048f3b0,cGZSndSys::GetDistanceFactor(float*) const,GetDistanceFactor,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048f3e0,non-virtual thunk to cGZSndSys::GetDistanceFactor(float*) const,GetDistanceFactorThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048f410,cGZSndSys::SetDistanceFactor(float),SetDistanceFactor,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048f8f0,non-virtual thunk to cGZSndSys::SetDistanceFactor(float),SetDistanceFactorThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048f910,cGZSndSys::GetMasterVolume() const,GetMasterVolume,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048f930,cGZSndSys::SetMasterVolume(int),SetMasterVolume,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048fd30,cGZSndSys::EnableUpdates(),EnableUpdates,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048fd50,cGZSndSys::DisableUpdates(),DisableUpdates,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10048fd70,cGZSndSys::AddToMainlineReleaseList(cIGZUnknown*),AddToMainlineReleaseList,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100490830,"cGZSndSys::RegisterTarget(cIGZSndUpdateTarget*, cIGZSndSys::SndCallbackInterval)",RegisterTarget,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100491410,cGZSndSys::UnregisterTarget(cIGZSndUpdateTarget*),UnregisterTarget,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100491e50,cGZSndSys::RegisterEventHandler(cIGZSndEventHandler*),RegisterEventHandler,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1004928f0,cGZSndSys::UnregisterEventHandler(cIGZSndEventHandler*),UnregisterEventHandler,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100493900,cGZSndSys::OnTick(unsigned int),OnTick,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100493920,non-virtual thunk to cGZSndSys::OnTick(unsigned int),OnTickThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100493940,cGZSndSys::OnIdle(unsigned int),OnIdle,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100493960,non-virtual thunk to cGZSndSys::OnIdle(unsigned int),OnIdleThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100493b10,"cGZSndSys::FindPlayingGZSnd(unsigned int, unsigned int, void**)",FindPlayingGZSnd,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100493ba0,cGZSndSys::IsSndPlaying(unsigned int),IsSndPlaying,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100493c10,cGZSndSys::Update(unsigned int),Update,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100493de0,"cGZSndSys::UpdateTargets(bool (*)(cIGZSndUpdateTarget*, unsigned int, void*), unsigned int, void*)",UpdateTargets,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100494d00,"cGZSndSys::EnumerateTargets(bool (*)(cIGZSndUpdateTarget*, unsigned int, void*), unsigned int, void*)",EnumerateTargets,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100495450,cGZSndSys::DoMessage(cIGZMessage2*),DoMessage,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1004955f0,non-virtual thunk to cGZSndSys::DoMessage(cIGZMessage2*),DoMessageThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100495620,cGZSndSys::PostEvent(cIGZSndEventStd*),PostEvent_cIGZSndEventStd,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100495680,"cGZSndSys::PostEvent(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int)",PostEvent_uint_uint_uint_uint_uint,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100495980,"cGZSndSys::PostEvent(unsigned int, cIGZUnknown*, unsigned int, unsigned int, unsigned int, unsigned int)",PostEvent_uint_cIGZUnknown_uint_uint_uint_uint,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100495cd0,"cGZSndSys::PostEvent(unsigned int, cIGZString*, unsigned int, unsigned int, unsigned int, unsigned int)",PostEvent_uint_cIGZString_uint_uint_uint_uint,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100495ed0,"cGZSndSys::DoEvent(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int)",DoEvent_uint_uint_uint_uint_uint,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100496200,"cGZSndSys::DoEvent(unsigned int, cIGZString*, unsigned int, unsigned int, unsigned int, unsigned int)",DoEvent_uint_cIGZString_uint_uint_uint_uint,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100496460,"cGZSndSys::DoEvent(unsigned int, cIGZUnknown*, unsigned int, unsigned int, unsigned int, unsigned int)",DoEvent_uint_cIGZUnknown_uint_uint_uint_uint,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100496800,cGZSndSys::DoEvent(cIGZSndEventStd*),DoEvent_cIGZSndEventStd,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1004972f0,"cGZSndSys::EventCreate(unsigned int, void**)",EventCreate_uint_void,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100497400,"cGZSndSys::EventCreate(unsigned int, unsigned int, void**, unsigned int, unsigned int, unsigned int, unsigned int)",EventCreate_uint_uint_void_uint_uint_uint_uint,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100497520,cGZSndSys::GetSndPropertyCache(cIGZSndPropertyCache**),GetSndPropertyCache_cIGZSndPropertyCache,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1004975f0,cGZSndSys::GetSndInstanceCache(cIGZSndInstanceCache**),GetSndInstanceCache_cIGZSndInstanceCache,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1004976c0,"cGZSndSys::SetExtensionDefaultDataSourceClassId(cIGZString const&, unsigned int)",SetExtensionDefaultDataSourceClassId,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100498740,"cGZSndSys::GetExtensionDefaultDataSourceClassId(cIGZString const&, unsigned int&)",GetExtensionDefaultDataSourceClassId,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100498d50,cGZSndSys::GetNumExtensionDefaultDataSourceClassIdMappings(),GetNumExtensionDefaultDataSourceClassIdMappings,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100498d90,"cGZSndSys::GetExtensionDefaultDataSourceClassIdMappingClassId(unsigned int, unsigned int&)",GetExtensionDefaultDataSourceClassIdMappingClassId,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100499400,"cGZSndSys::GetExtensionDefaultDataSourceClassIdMappingExtension(unsigned int, cIGZString&)",GetExtensionDefaultDataSourceClassIdMappingExtension,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100499b00,"cGZSndSys::InitializeEffectsBus(int, float, int, int, int)",InitializeEffectsBus,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a0c0,"non-virtual thunk to cGZSndSys::InitializeEffectsBus(int, float, int, int, int)",InitializeEffectsBusThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a100,"cGZSndSys::SetEffectMasterLevel(int, float)",SetEffectMasterLevel,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a5b0,"non-virtual thunk to cGZSndSys::SetEffectMasterLevel(int, float)",SetEffectMasterLevelThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a5e0,cGZSndSys::GetSoundSystemThreadId(),GetSoundSystemThreadId,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a5f0,cGZSndSys::AsIGZSnd3DListener(),AsIGZSnd3DListener,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a610,cGZSndSys::AsIGZSnd3DListenerEx(),AsIGZSnd3DListenerEx,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a630,cGZSndSys::GetInitFlag() const,GetInitFlag,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a650,cGZSndSys::GetEnabledFlag() const,GetEnabledFlag,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a670,cGZSndSys::SetEnabledFlag(bool),SetEnabledFlag,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a690,cGZSndSys::GetCriticalSection(),GetCriticalSection,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a6b0,cGZSndSys::GetSndPropertyCache(),GetSndPropertyCache_void,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a6e0,cGZSndSys::GetSndInstanceCache(),GetSndInstanceCache_void,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a710,cGZSndSys::SetTestMode(bool),SetTestMode,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a740,cGZSndSys::GetTestMode(),GetTestMode,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a760,cGZSndSys::SetInitFlag(bool),SetInitFlag,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a780,cGZSndSys::GetServiceID() const,GetServiceID,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a7a0,cGZSndSys::SetServiceID(unsigned int),SetServiceID,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a7c0,cGZSndSys::GetServicePriority() const,GetServicePriority,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a7d0,cGZSndSys::IsServiceRunning() const,IsServiceRunning,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a7f0,cGZSndSys::SetServiceRunning(bool),SetServiceRunning,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a810,cGZSndSys::GetServiceTickPriority() const,GetServiceTickPriority,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a820,non-virtual thunk to cGZSndSys::GetServiceID() const,GetServiceIDThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a840,non-virtual thunk to cGZSndSys::SetServiceID(unsigned int),SetServiceIDThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a860,non-virtual thunk to cGZSndSys::GetServicePriority() const,GetServicePriorityThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a880,non-virtual thunk to cGZSndSys::IsServiceRunning() const,IsServiceRunningThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a8a0,non-virtual thunk to cGZSndSys::SetServiceRunning(bool),SetServiceRunningThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10049a8d0,non-virtual thunk to cGZSndSys::AsIGZSnd3DListenerEx(),AsIGZSnd3DListenerExThunk,src/audio/GZSndSys.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100624fa0,cGZSndSysMac::Create(),Create,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100628bd0,cGZSndSysMac::GetListener(),GetListener,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100635e70,cGZSndSysMac::cGZSndSysMac(),Construct,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100635f20,cGZSndSysMac::cGZSndSysMac(),ConstructWrapper,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100635f40,cGZSndSysMac::~cGZSndSysMac(),Destruct,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100635f80,cGZSndSysMac::~cGZSndSysMac(),DestructAndDelete,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100635fa0,cGZSndSysMac::~cGZSndSysMac(),DestructBody,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100635ff0,"cGZSndSysMac::QueryInterface(unsigned int, void**)",QueryInterface,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1006360c0,"non-virtual thunk to cGZSndSysMac::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1006360f0,cGZSndSysMac::AddRef(),AddRef,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100636110,non-virtual thunk to cGZSndSysMac::AddRef(),AddRefThunk,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100636130,cGZSndSysMac::Release(),Release,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100636190,non-virtual thunk to cGZSndSysMac::Release(),ReleaseThunk,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1006361b0,cGZSndSysMac::Init(),Init,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100636320,cGZSndSysMac::Shutdown(),Shutdown,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100636420,cGZSndSysMac::OnTick(unsigned int),OnTick,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100636440,cGZSndSysMac::OnIdle(unsigned int),OnIdle,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100636460,cGZSndSysMac::SetMasterVolume(int),SetMasterVolume,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100636480,non-virtual thunk to cGZSndSysMac::SetMasterVolume(int),SetMasterVolumeThunk,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1006364a0,cGZSndSysMac::GetMasterVolume(),GetMasterVolume,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1006364b0,non-virtual thunk to cGZSndSysMac::GetMasterVolume(),GetMasterVolumeThunk,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1006364d0,cGZSndSysMac::GetServiceID() const,GetServiceID,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1006364f0,cGZSndSysMac::SetServiceID(unsigned int),SetServiceID,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100636510,cGZSndSysMac::GetServicePriority() const,GetServicePriority,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100636520,cGZSndSysMac::IsServiceRunning() const,IsServiceRunning,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100636540,cGZSndSysMac::SetServiceRunning(bool),SetServiceRunning,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100636560,cGZSndSysMac::OnInstall(),OnInstall,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100636580,cGZSndSysMac::Pause(bool),Pause,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1006365b0,cGZSndSysMac::Unpause(),Unpause,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1006365d0,cGZSndSysMac::IsPaused() const,IsPaused,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1006365f0,non-virtual thunk to cGZSndSysMac::Pause(bool),PauseThunk,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100636620,non-virtual thunk to cGZSndSysMac::Unpause(),UnpauseThunk,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100636640,non-virtual thunk to cGZSndSysMac::IsPaused() const,IsPausedThunk,src/audio/GZSndSysMac.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10043cac2,cGZSndPropertyCache::Create(),Create,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a260,cGZSndPropertyCache::cGZSndPropertyCache(),Construct,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a34c,cGZSndPropertyCache::cGZSndPropertyCache(),ConstructWrapper,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a356,cGZSndPropertyCache::~cGZSndPropertyCache(),Destruct,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a392,cGZSndPropertyCache::~cGZSndPropertyCache(),DestructAndDelete,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a39c,cGZSndPropertyCache::~cGZSndPropertyCache(),DestructBody,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a3ca,cGZSndPropertyCache::AddRef(),AddRef,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a3d8,cGZSndPropertyCache::Release(),Release,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a3f4,"cGZSndPropertyCache::QueryInterface(unsigned int, void**)",QueryInterface,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a416,cGZSndPropertyCache::AddInstance(unsigned int),AddInstance,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a5e6,cGZSndPropertyCache::RemoveInstance(unsigned int),RemoveInstance,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a656,cGZSndPropertyCache::HasInstance(unsigned int),HasInstance,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a686,"cGZSndPropertyCache::SetInstanceProperty(unsigned int, unsigned int, cIGZAny const&)",SetInstanceProperty_uint_uint_cIGZAny_const,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a726,"cGZSndPropertyCache::GetInstanceProperty(unsigned int, unsigned int, cIGZAny*)",GetInstanceProperty,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a7c6,"cGZSndPropertyCache::HasInstanceProperty(unsigned int, unsigned int)",HasInstanceProperty,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a85c,"cGZSndPropertyCache::RemoveInstanceProperty(unsigned int, unsigned int)",RemoveInstanceProperty,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a8f2,"cGZSndPropertyCache::SetGlobalProperty(unsigned int, cIGZAny const&)",SetGlobalProperty_uint_cIGZAny_const,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a940,"cGZSndPropertyCache::GetGlobalProperty(unsigned int, cIGZAny*)",GetGlobalProperty,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a95e,cGZSndPropertyCache::HasGlobalProperty(unsigned int),HasGlobalProperty,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a976,cGZSndPropertyCache::RemoveGlobalProperty(unsigned int),RemoveGlobalProperty,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a9b4,"cGZSndPropertyCache::PostPropertyCacheMessage(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int)",PostPropertyCacheMessage,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047aa8c,"cGZSndPropertyCache::SetInstanceProperty(unsigned int, unsigned int, unsigned int)",SetInstanceProperty_uint_uint_uint,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047aac0,"cGZSndPropertyCache::SetGlobalProperty(unsigned int, unsigned int)",SetGlobalProperty_uint_uint,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10043cb32,cGZSndInstanceCache::Create(),Create,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100478b2c,cGZSndInstanceCache::cGZSndInstanceCache(),Construct,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100478b56,cGZSndInstanceCache::~cGZSndInstanceCache(),Destruct,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100478bee,cGZSndInstanceCache::~cGZSndInstanceCache(),DestructAndDelete,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100478bf8,cGZSndInstanceCache::~cGZSndInstanceCache(),DestructBody,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100478c26,cGZSndInstanceCache::AddRef(),AddRef,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100478c34,cGZSndInstanceCache::Release(),Release,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100478c50,"cGZSndInstanceCache::QueryInterface(unsigned int, void**)",QueryInterface,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100478c72,cGZSndInstanceCache::AddObject(unsigned int),AddObject,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100478d80,cGZSndInstanceCache::RemoveObject(unsigned int),RemoveObject,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100478df4,cGZSndInstanceCache::HasObject(unsigned int),HasObject,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100478e34,cGZSndInstanceCache::GetObjectInstanceIdList(unsigned int),GetObjectInstanceIdList,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100478e74,"cGZSndInstanceCache::AddInstance(unsigned int, unsigned int)",AddInstance,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100478f08,"cGZSndInstanceCache::RemoveInstance(unsigned int, unsigned int)",RemoveInstance,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100478f7e,"cGZSndInstanceCache::HasInstance(unsigned int, unsigned int)",HasInstance,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100478f9a,cGZSndInstanceCache::RemoveAllInstances(unsigned int),RemoveAllInstances,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047901e,"cGZSndInstanceCache::FindFirstObjectFromInstance(unsigned int, unsigned int&)",FindFirstObjectFromInstance,src/audio/GZSndCaches.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100052468,cGZMessageQueue2::cGZMessageQueue2(),Construct,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10005247e,cGZMessageQueue2::cGZMessageQueue2(),ConstructWrapper,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10005250c,cGZMessageQueue2::~cGZMessageQueue2(),Destruct,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100052570,cGZMessageQueue2::~cGZMessageQueue2(),DestructAndDelete,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10005257a,cGZMessageQueue2::~cGZMessageQueue2(),DestructBody,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1000525a8,"cGZMessageQueue2::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1000525ca,cGZMessageQueue2::AddRef(),AddRef,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1000525d8,cGZMessageQueue2::Release(),Release,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1000525f8,cGZMessageQueue2::GetMessageCount(),GetMessageCount,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100052630,cGZMessageQueue2::PushBack(cIGZMessage2*),PushBack,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1000526e0,cGZMessageQueue2::PushFront(cIGZMessage2*),PushFront,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1000527f2,cGZMessageQueue2::RemoveFirstFound(cIGZMessage2 const&),RemoveFirstFound_cIGZMessage2_const,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1000528c0,cGZMessageQueue2::RemoveLastFound(cIGZMessage2 const&),RemoveLastFound_cIGZMessage2_const,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100052956,cGZMessageQueue2::RemoveAllFound(cIGZMessage2 const&),RemoveAllFound_cIGZMessage2_const,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1000529f2,cGZMessageQueue2::RemoveFirstFound(unsigned int),RemoveFirstFound_uint,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100052a7c,cGZMessageQueue2::RemoveLastFound(unsigned int),RemoveLastFound_uint,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100052b10,cGZMessageQueue2::RemoveAllFound(unsigned int),RemoveAllFound_uint,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100052baa,cGZMessageQueue2::RemoveAll(),RemoveAll,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100052bea,cGZMessageQueue2::PeekFrontType(),PeekFrontType,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100052c56,cGZMessageQueue2::PeekBackType(),PeekBackType,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100052cc2,cGZMessageQueue2::PeekAnywhereType(unsigned int),PeekAnywhereType,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100052d3c,cGZMessageQueue2::PeekFrontMessage(cIGZMessage2**),PeekFrontMessage,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100052db4,cGZMessageQueue2::PeekBackMessage(cIGZMessage2**),PeekBackMessage,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100052e2c,"cGZMessageQueue2::PeekAnywhereMessage(cIGZMessage2 const&, cIGZMessage2**)",PeekAnywhereMessage,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100052ec8,cGZMessageQueue2::GetFrontMessage(cIGZMessage2**),GetFrontMessage,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100052f4c,cGZMessageQueue2::GetBackMessage(cIGZMessage2**),GetBackMessage,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100053010,"cGZMessageQueue2::GetAnywhereMessage(cIGZMessage2 const&, cIGZMessage2**)",GetAnywhereMessage,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x1000530bc,cGZMessageQueue2::GetFrontMessageBlock(cIGZMessage2**),GetFrontMessageBlock,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10005310a,cGZMessageQueue2::GetBackMessageBlock(cIGZMessage2**),GetBackMessageBlock,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp

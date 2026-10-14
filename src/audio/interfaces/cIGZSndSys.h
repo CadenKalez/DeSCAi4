@@ -5,13 +5,14 @@
 #include <cstdint>
 
 #include "audio/interfaces/cIGZSnd3DListener.h"
+#include "audio/interfaces/cIGZSndEaRendererEffects.h"
 #include "audio/interfaces/cIGZSndEventStd.h"
+#include "audio/interfaces/cIGZSndInstanceCache.h"
+#include "audio/interfaces/cIGZSndPropertyCache.h"
+#include "audio/interfaces/cIGZSndRenderer.h"
 #include "audio/interfaces/cIGZSndUpdateTarget.h"
 #include "gz/cIGZString.h"
 
-class cIGZSndRenderer;
-class cIGZSndPropertyCache;
-class cIGZSndInstanceCache;
 class cIGZCriticalSection;
 
 class cIGZSndSys : public cIGZUnknown {
@@ -35,7 +36,7 @@ public:
                                      std::uint32_t data1, std::uint32_t data2, std::uint32_t data3, std::uint32_t data4) = 0;
     virtual bool RegisterEventHandler(cIGZSndEventHandler* handler) = 0;     // [15] +0x78
     virtual bool UnregisterEventHandler(cIGZSndEventHandler* handler) = 0;   // [16] +0x80
-    virtual void Update(std::uint32_t elapsedMs) = 0;              // [17] +0x88
+    virtual bool Update(std::uint32_t elapsedMs) = 0;              // [17] +0x88
     virtual bool GetInitFlag() const = 0;                          // [18] +0x90
     virtual void SetDataDirectory(const cIGZString& directory) = 0;   // [19] +0x98
     virtual cIGZString* DataDirectory() = 0;                       // [20] +0xa0
