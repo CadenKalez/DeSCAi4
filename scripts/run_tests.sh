@@ -18,7 +18,7 @@ declare -a TESTS=(
  "sc4_property:$T/sc4_property_test.cpp $S/sc4/SCProperty.cpp $S/rz/cRZUnknownList.cpp $S/rz/cRZStream.cpp $S/rz/cRZVariant.cpp $S/rz/cRZString.cpp"
  "rz_file:$T/rz_file_test.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp"
  "rz_support:$T/rz_support_test.cpp $S/rz/cRZRandom.cpp $S/rz/cRZCriticalSection.cpp $S/rz/cRZCallbackTimer.cpp"
- "streams:$T/rz_stream_test.cpp $S/rz/cRZStream.cpp $S/rz/cRZString.cpp"
+ "streams:$T/rz_stream_test.cpp $S/rz/cRZStream.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp"
  "string:$T/cRZString_test.cpp $S/rz/cRZString.cpp $S/rz/cRZDate.cpp"
  "date:$T/cRZDate_test.cpp $S/rz/cRZDate.cpp"
  "timer:$T/cRZTimer_test.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp"

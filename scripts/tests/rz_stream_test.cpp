@@ -1,5 +1,6 @@
 #include "rz/PortMemoryStreams.h"
 #include "rz/cRZString.h"
+#include "rz/cRZVariant.h"
 #include "gz/cIGZSerializable.h"
 #include "gz/cIGZVariant.h"
 
@@ -16,12 +17,6 @@ struct Point final : cIGZSerializable {
     bool Write(cIGZOStream& s) const override { return s.SetSint32(x) && s.SetSint32(y); }
     bool Read(cIGZIStream& s) override { return s.GetSint32(x) && s.GetSint32(y); }
     std::uint32_t GetGZCLSID() const override { return 0x1234; }
-};
-struct CountedVariant final : cIGZVariant {
-    int refs = 0;
-    bool QueryInterface(std::uint32_t, void**) override { return false; }
-    std::uint32_t AddRef() override { return ++refs; }
-    std::uint32_t Release() override { return --refs; }
 };
 }  // namespace
 
@@ -94,13 +89,13 @@ int main() {
         auto* o = new PortMemoryOStream; void* p = nullptr;
         assert(o->QueryInterface(kGZIID_cIGZOStream, &p) && p == o);
         assert(!o->QueryInterface(kGZIID_cIGZIStream, &p));
-        CountedVariant var;
-        o->SetUserData(&var); assert(var.refs == 1 && o->GetUserData() == &var);
-        o->SetUserData(&var); assert(var.refs == 1);                       // same pointer: no change
+        auto* var = new cRZVariant; var->AddRef();                          // test's own reference
+        o->SetUserData(var); assert(o->GetUserData() == var);
+        o->SetUserData(var);                                               // same pointer: no change
         o->AddRef();
         assert(o->Release() == 1);
         assert(o->Release() == 0);                                          // deleted -> user data released
-        assert(var.refs == 0);
+        assert(var->Release() == 0);                                       // only the test's reference was left
     }
     std::puts("streams ok");
 }
