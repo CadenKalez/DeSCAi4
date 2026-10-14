@@ -14,6 +14,8 @@
 #include "audio/interfaces/cIFreshDimensionPlayer.h"
 #include "audio/interfaces/cIFreshPlayer.h"
 #include "audio/interfaces/cIFreshScore.h"
+#include "audio/HitControlGroup.h"
+#include "audio/interfaces/cIHitControlGroup.h"
 #include "audio/interfaces/cIHitList.h"
 #include "gz/cIGZString.h"
 #include "gz/cIGZIStream.h"
@@ -81,6 +83,9 @@ int main() {
     EXPECT(cIFreshCell::GetSndId, 0x18); EXPECT(cIFreshCell::GetStereoSample, 0xb0);
     EXPECT(cIFreshCell::SetSndId, 0xb8); EXPECT(cIFreshCell::SetStereoSample, 0x150);
     EXPECT(cIFreshDimensionPlayer::AsIFreshPlayer, 0x18); EXPECT(cIFreshDimensionPlayer::SetScoreEnabled, 0x20);
+    EXPECT(cIHitControlGroup::AddTrack, 0x18); EXPECT(cIHitControlGroup::AsIGZSnd, 0x20);
+    EXPECT(cHitControlGroup::SetVolume, 0x60); EXPECT(cHitControlGroup::Update, 0xf0);
+    EXPECT(cHitControlGroup::SetName, 0x1e8); EXPECT(cHitControlGroup::SetSoundFileFromChars, 0x200);
     EXPECT(cIFreshScore::GetCell, 0x18);
     EXPECT(cIFreshCellPlayer::GetCell, 0x18); EXPECT(cIFreshCellPlayer::Start, 0x28);
     EXPECT(cIFreshCellPlayer::Kill, 0x40);    EXPECT(cIFreshCellPlayer::Get3DPosZ, 0xb0);
