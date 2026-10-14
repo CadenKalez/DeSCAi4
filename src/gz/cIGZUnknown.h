@@ -9,7 +9,11 @@ public:
     virtual bool QueryInterface(std::uint32_t iid, void** out) = 0;
     virtual std::uint32_t AddRef() = 0;
     virtual std::uint32_t Release() = 0;
-    virtual ~cIGZUnknown() = default;
+
+protected:
+    // Deliberately non-virtual: in the original the (complete/deleting) destructors are declared by
+    // the concrete classes, so they occupy the slots right after the interface's methods.
+    ~cIGZUnknown() = default;
 };
 
 // Interface ids (GZIID_*) seen so far.

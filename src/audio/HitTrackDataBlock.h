@@ -30,7 +30,7 @@ public:
     void SetFilename(const cIGZString& filename, const std::string& applicationDirectory);
 
 private:
-    ~cHitTrackDataBlock() override = default;
+    virtual ~cHitTrackDataBlock() = default;
 
     std::int32_t refCount_ = 0;
     const std::uint8_t* data_ = nullptr;

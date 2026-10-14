@@ -11,7 +11,7 @@
 class cRZIStream : public cIGZIStream {
 public:
     explicit cRZIStream(bool dataIsLittleEndian) : dataIsLittleEndian_(dataIsLittleEndian) {}
-    ~cRZIStream() override;
+    virtual ~cRZIStream();
 
     bool QueryInterface(std::uint32_t iid, void** out) override;  // cIGZUnknown(1) or cIGZIStream
     std::uint32_t AddRef() override { return ++refCount_; }

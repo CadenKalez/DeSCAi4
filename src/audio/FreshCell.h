@@ -73,7 +73,7 @@ public:
 
 private:
     cFreshCell() = default;
-    ~cFreshCell() override = default;
+    virtual ~cFreshCell() = default;
 
     std::int32_t refCount_ = 0;
     std::uint32_t sndId_ = 0;

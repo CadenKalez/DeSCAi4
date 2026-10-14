@@ -8,7 +8,7 @@
 class cRZOStream : public cIGZOStream {
 public:
     explicit cRZOStream(bool dataIsLittleEndian) : dataIsLittleEndian_(dataIsLittleEndian) {}
-    ~cRZOStream() override;
+    virtual ~cRZOStream();
 
     bool QueryInterface(std::uint32_t iid, void** out) override;  // cIGZUnknown(1) or cIGZOStream
     std::uint32_t AddRef() override { return ++refCount_; }

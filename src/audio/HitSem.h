@@ -19,7 +19,7 @@ public:
 
 protected:
     cHitSem() = default;
-    ~cHitSem() override = default;
+    virtual ~cHitSem() = default;
 
     std::int32_t refCount_ = 0;
     cRZString name_;
