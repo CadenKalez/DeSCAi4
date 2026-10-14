@@ -129,6 +129,10 @@ struct Persist final : cIGZPersistRecordService {
     bool QueryInterface(std::uint32_t, void**) override { return false; }
     std::uint32_t AddRef() override { return 2; }
     std::uint32_t Release() override { return 1; }
+    bool CreateResource(const cGZPersistResourceKey&, std::uint32_t, void**, std::uint32_t, std::uint32_t) override { return false; }
+    bool RegisterResource(cIGZUnknown*) override { return false; }
+    bool RemoveResource(const cGZPersistResourceKey&) override { return false; }
+    bool HasResource(const cGZPersistResourceKey&) override { return false; }
     bool GetResource(const cGZPersistResourceKey&, std::uint32_t, void**, std::uint32_t, std::uint32_t) override { return false; }
     bool FindRecord(const cGZPersistResourceKey& key, cIGZPersistDBRecord** out) override {
         if (key.type != 0x2026960b || !data.count({key.group, key.instance})) return false;
