@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <string>
 
+#include "audio/interfaces/cIGZSndMgr.h"
 #include "audio/interfaces/cIGZSndSys.h"
 #include "gz/cIGZMessage2.h"
 #include "gz/cIGZPersistRecord.h"
@@ -14,6 +15,8 @@ namespace Audio {
 
 cIGZSndSys* SoundSystem();                     // service 0x23cecba0 / iid 0x106077d2
 void SetSoundSystem(cIGZSndSys* system);
+cIGZSndMgr* SoundManagerService();             // service 0x1af85bfb / iid 0x3af85bb7
+void SetSoundManagerService(cIGZSndMgr* manager);
 cIGZMessageServer2* MessageServer();           // service 0x04fa845b / iid 0x652294c7 (RZ::MS2())
 void SetMessageServer(cIGZMessageServer2* server);
 // The data directory the file system service reports (cIGZFileSystem slot +0x38); empty = none.

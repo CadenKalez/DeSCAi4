@@ -11,6 +11,7 @@
 
 #include "audio/AudioServices.h"
 #include "audio/GZSndCaches.h"
+#include "audio/GZSndDefaultEventHandler.h"
 #include "audio/GZSndSys.h"
 #include "audio/GZSndSysMac.h"
 #include "audio/interfaces/cIGZSnd.h"
@@ -467,6 +468,63 @@ void TestSysMac() {
     sys->Release();
 }
 
+void TestDefaultEventHandler() {
+    Persist persist;
+    fakes::FakeSndMgr mgr;
+    cGZSndSys* sys = cGZSndSys::Create();
+    sys->AddRef();
+    Audio::SetPersistService(&persist);
+    Audio::SetSoundSystem(sys);
+    Audio::SetSoundManagerService(&mgr);
+    g_ticks = 5000;
+    Audio::SetMessageServer(nullptr);
+    assert(sys->Init());
+    auto* h = cGZSndDefaultEventHandler::Create();
+    h->AddRef();
+    void* p = nullptr;
+    assert(h->QueryInterface(0xbb523bb2, &p) && !h->QueryInterface(2, &p));
+    h->Release();
+
+    const auto event = [](std::uint32_t id, std::uint32_t d1, std::uint32_t d2 = 0, std::uint32_t d3 = 0) {
+        auto* e = new fakes::FakeEvent();
+        e->id = id;
+        e->message.SetData1(d1); e->message.SetData2(d2); e->message.SetData3(d3);
+        return e;
+    };
+    // start: plays at 0x400 once; unknown ids are not consumed
+    fakes::FakeEvent* e = event(1, 7);
+    assert(h->DoEvent(e));
+    fakes::FakeSnd* snd = mgr.sounds.at(7);
+    assert(snd->plays == 1 && snd->autoVolume == 0x400);
+    assert(!h->DoEvent(event(1, 0)));
+    // stop / kill
+    assert(!h->DoEvent(event(2, 7)) && mgr.sounds.at(7)->stops == 1);    // each lookup builds a new fake
+    assert(!h->DoEvent(event(4, 7)) && mgr.sounds.at(7)->kills == 1);
+    assert(!h->DoEvent(event(3, 7)));
+    // property cache events
+    assert(!h->DoEvent(event(0xca3553d6, 21)));
+    assert(sys->GetSndPropertyCache()->HasInstance(21));
+    assert(!h->DoEvent(event(0xea355407, 21, 0x30, 99)));
+    AnyUint32 got;
+    assert(sys->GetSndPropertyCache()->GetInstanceProperty(21, 0x30, &got) && got.get() == 99);
+    assert(!h->DoEvent(event(0x0a35540c, 21, 0x30)));
+    assert(!sys->GetSndPropertyCache()->HasInstanceProperty(21, 0x30));
+    assert(!h->DoEvent(event(0xca3553e7, 21)));
+    assert(!sys->GetSndPropertyCache()->HasInstance(21));
+    assert(sys->GetSndPropertyCache()->AddInstance(0xcc3014ee));
+    assert(!h->DoEvent(event(0x0a355411, 5, 6)));
+    assert(sys->GetSndPropertyCache()->GetGlobalProperty(5, &got) && got.get() == 6);
+    assert(!h->DoEvent(event(0x0a355417, 5)));
+    assert(!sys->GetSndPropertyCache()->HasGlobalProperty(5));
+    assert(!h->DoEvent(event(0x1234, 5)));
+    assert(h->Release() == 0);
+    sys->Shutdown();
+    Audio::SetSoundManagerService(nullptr);
+    Audio::SetSoundSystem(nullptr);
+    Audio::SetPersistService(nullptr);
+    sys->Release();
+}
+
 }  // namespace
 
 int main() {
@@ -474,5 +532,6 @@ int main() {
     TestCaches();
     TestSystem();
     TestSysMac();
+    TestDefaultEventHandler();
     std::puts("gzsndsys ok");
 }

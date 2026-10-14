@@ -2186,3 +2186,13 @@ address,symbol,unique_name,source,status,evidence
 0x100053010,"cGZMessageQueue2::GetAnywhereMessage(cIGZMessage2 const&, cIGZMessage2**)",GetAnywhereMessage,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
 0x1000530bc,cGZMessageQueue2::GetFrontMessageBlock(cIGZMessage2**),GetFrontMessageBlock,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
 0x10005310a,cGZMessageQueue2::GetBackMessageBlock(cIGZMessage2**),GetBackMessageBlock,src/gz/cGZMessageQueue2.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10043cafa,cGZSndDefaultEventHandler::Create(),Create,src/audio/GZSndDefaultEventHandler.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100479bf0,cGZSndDefaultEventHandler::cGZSndDefaultEventHandler(),Construct,src/audio/GZSndDefaultEventHandler.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100479d4c,cGZSndDefaultEventHandler::cGZSndDefaultEventHandler(),ConstructWrapper,src/audio/GZSndDefaultEventHandler.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100479d56,cGZSndDefaultEventHandler::~cGZSndDefaultEventHandler(),Destruct,src/audio/GZSndDefaultEventHandler.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100479df6,cGZSndDefaultEventHandler::~cGZSndDefaultEventHandler(),DestructAndDelete,src/audio/GZSndDefaultEventHandler.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100479e00,cGZSndDefaultEventHandler::~cGZSndDefaultEventHandler(),DestructBody,src/audio/GZSndDefaultEventHandler.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x100479e2e,cGZSndDefaultEventHandler::DoEvent(cIGZSndEventStd*),DoEvent,src/audio/GZSndDefaultEventHandler.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a200,"cGZSndDefaultEventHandler::QueryInterface(unsigned int, void**)",QueryInterface,src/audio/GZSndDefaultEventHandler.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a222,cGZSndDefaultEventHandler::AddRef(),AddRef,src/audio/GZSndDefaultEventHandler.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
+0x10047a230,cGZSndDefaultEventHandler::Release(),Release,src/audio/GZSndDefaultEventHandler.cpp,recovered,scripts/tests/audio_gzsndsys_test.cpp
