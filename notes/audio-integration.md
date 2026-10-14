@@ -267,3 +267,59 @@ returns (3D model only); flag 1 on start = pause with the simulation.
 context → master volume stays 1024; Resume releases the track-player reference the original leaks;
 loops that call out iterate over a referenced snapshot; a sound missing from the id map is dropped
 from the list during StopAll (original could spin).
+
+## 11. Sound system (cGZSnd family) — what the engine integration must provide
+
+Everything below is recovered, ASan/UBSan-tested (`scripts/run_tests.sh`) and ledgered.
+
+### 11.1 Service wiring (`src/audio/AudioServices.h`)
+| Setter | Original lookup | Used by |
+|---|---|---|
+| `Audio::SetSoundSystem` | service `0x23cecba0` / iid `0x106077d2` | cGZSnd, cGZSndMgr, cGZSndPropertyCache, cGZSndDefaultEventHandler, cGZSndSysMac |
+| `Audio::SetSoundManagerService` | service `0x1af85bfb` / iid `0x3af85bb7` | cGZSndDefaultEventHandler, cHitSegment*Creator |
+| `Audio::SetPersistService` | service `0x056b906e` / iid `0x656b8efc` | data sources, property cache, creators, cGZSndMgr |
+| `Audio::SetMessageServer` | service `0x04fa845b` / iid `0x652294c7` | cGZSndSys (event type `0xdb53383b`) |
+| `Audio::SetUTalkCodec` | SND library `_utalkinit/_utalkdecode` | cGZSndSegmentDataSourceUTalk |
+| `AudioPlatform::SetBackend` | AVAudioPlayer + SDL timers | CPCMPlayer, CQTRemotePlayer, cGZSnd fades |
+
+Create in this order: `cGZSndSys::Create()` (Init), `cGZSndMgr::Create()` (Init), `cGZSndSysMac::Create()` (Init: registers the
+renderer and creates the listener), then the creators / default event handler. Services are non-owning pointers;
+the objects keep their own references.
+
+### 11.2 Behaviour the game code relies on
+* **Events**: `DoEvent*` dispatch synchronously to handlers (first consumer wins); `PostEvent*` queue and are drained by
+  `Update` (every 20 ms from the callback timer, 26 ms budget) and only executed while a renderer is registered.
+  Handlers/targets (un)registered from inside a callback are deferred until the loop ends.
+* **Targets**: interval 20 ms ticks every update, anything else every >250 ms. `Panic`/`Shutdown` kill every target that is a sound.
+* **Listener**: `cGZSndSys::SetPosition/Orientation/...` store the values and forward them to every renderer exposing
+  `0x406077d2` / `0x5b30e7b3`. Platform listener stores positions remapped `(x,y,z) -> (-y, z, x)`.
+  `cGZSnd3D::Update3DSound` distance model: full volume below the minimum distance, `max(min,1)/dist` above, split
+  between ears by `dot(cross(up, front), dir)`; closer than 0.1 → `0.8125 * master volume` per ear (clamped to 1).
+* **Master volume**: `cGZSndSys::SetMasterVolume(v)` ignores `v` (original bug) — scale volumes in the caller
+  (cSC4AudioSoundManager already does).
+* **cGZSnd**: volume `0..1024` scaled by the sound system master volume; `QueryInterface(1)` is *not* accepted (use
+  `0x206077d2`); `IsPlaying()` of PCM sounds stays true after `Stop()`; completion notifications do not exist
+  (`SetCompletionNotification` returns false — the SC4 sound manager's callback is therefore never invoked by cGZSnd; hit
+  channels/track players do call it).
+* **Data sources**: record lookup tries XA (`'XA'` header), UTalk (`UTM0`), then RIFF wav, per group registered with
+  `AddSndDataSourceDef`. Locked reads of wav sources return zeroed memory (original: uninitialised).
+* **Property cache**: global properties live in instance `0xcc3014ee`; the instance must be created with `AddInstance` first
+  (otherwise Set/Get fail like the original). Instance cache `HasInstance/RemoveInstance` ignore the instance id.
+
+### 11.3 Deviations from the binary (all deliberate)
+| Where | Original | Port |
+|---|---|---|
+| cGZSnd::Load | double `delete[]` of the PCM buffer on open failure | single ownership |
+| cGZSnd::FadeVolume | division by zero for durations < 20 ms | applies the target immediately |
+| cGZSnd3D listener getters | never write their outputs | return false |
+| cGZSndSys::PostEvent without queue | null deref | returns true, drops the event |
+| cRZIniFile / cHitIniFile, cSC4AudioCOMDirector | not recovered | **blocked on the persistence layer** (see §12) |
+
+## 12. Audio items intentionally deferred (and why)
+| Item | Functions | Blocker |
+|---|---|---|
+| cHitIniFile + cRZIniFile, cSC4AudioCOMDirector | 26 + 22 + 8 | needs cIGZFile / persistence DB segments (`cGZDBSegmentPackedFile`, `SC4GetResourceAsFile`) and the COM class registry |
+| cSC4AudioAmbienceManager/Layer, ~85 `cAmbience*Filter*`, cSC4AudioScapeManager, cSC4AudioEventHandler(+DisasterFire) | ~330 | need the world model: occupants, lots, city, lighting, view3d, simulator, vehicle manager |
+| cSC4SoundDescription / cSC4SoundEffect | 22 | part of the effects framework (cSC4EffectDescription) |
+| cSC4AudioAEMS* (engine sound), IDirectSound*_Mac | ~180 | wrappers over the EA SND library (`_SNDSYS_*`, `_SNDfx*`), counted with the C libs |
+| cSC4AudioPreferencesWinProc | 25 | GUI window procedures (needs the UI toolkit) |
