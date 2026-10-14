@@ -8,6 +8,10 @@
 
 class cIGZString : public cIGZUnknown {
 public:
+    // [3],[4] complete/deleting destructors: unlike the other interfaces, cIGZString declares its
+    // own (cIGZString::~cIGZString @ 0x10049aa20/0x10049aa30), which is why FromChar is slot 5.
+    virtual ~cIGZString() = default;
+
     // [5] +0x28, [6] +0x30. A null `s` clears the string.
     virtual void AssignFromCString(const char* s) = 0;
     virtual void AssignFromChars(const char* s, std::uint32_t length) = 0;

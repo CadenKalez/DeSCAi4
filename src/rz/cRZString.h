@@ -23,7 +23,7 @@ public:
     // Substring constructor: (source, pos, count); count may be npos.
     cRZString(const cRZString& src, std::size_t pos, std::size_t count) : str_(src.str_, pos, count) {}
     cRZString& operator=(const cRZString& other) { str_ = other.str_; return *this; }
-    virtual ~cRZString() = default;  // vtable slots [3],[4] in the original
+    ~cRZString() override = default;
 
     // --- cIGZUnknown ---
     bool QueryInterface(std::uint32_t iid, void** out) override;
