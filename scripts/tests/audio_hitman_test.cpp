@@ -295,7 +295,7 @@ int main() {
     assert(seq->refs == 2);
     seq->Release();
 
-    struct Seg final : cIGZPersistDBSegment {
+    struct Seg final : cIGZPersistDBSegmentStub {
         std::uint32_t refs = 0;
         bool QueryInterface(std::uint32_t iid, void** out) override { if (iid == 0x77) { *out = this; return true; } return false; }
         std::uint32_t AddRef() override { return ++refs; }

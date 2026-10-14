@@ -99,13 +99,13 @@ struct PcmSource final : cIGZSndDataSource {
 };
 
 // ---- persistence records ------------------------------------------------------------------------
-struct Record final : cIGZPersistDBRecord, cIGZPersistRecordAccess {
+struct Record final : cIGZPersistDBRecord, cIGZPersistDBSerialRecordStub {
     std::vector<std::uint8_t> bytes;
     std::size_t cursor = 0;
     int refs = 0;
     bool closed = false;
     bool QueryInterface(std::uint32_t iid, void** out) override {
-        if (iid == kGZIID_cIGZPersistRecordAccess) { *out = static_cast<cIGZPersistRecordAccess*>(this); ++refs; return true; }
+        if (iid == kGZIID_cIGZPersistDBSerialRecord) { *out = static_cast<cIGZPersistDBSerialRecord*>(this); ++refs; return true; }
         return false;
     }
     std::uint32_t AddRef() override { return ++refs; }
@@ -113,14 +113,15 @@ struct Record final : cIGZPersistDBRecord, cIGZPersistRecordAccess {
     cGZPersistResourceKey GetKey() const override { return {}; }
     std::uint32_t GetAccessFlags() const override { return 0; }
     bool Close() override { closed = true; return true; }
-    bool ReadUint32s(std::uint32_t* dst, std::uint32_t count) override { return ReadBytes(dst, count * 4); }
-    bool ReadBytes(void* dst, std::uint32_t n) override {
+    using cIGZPersistDBSerialRecordStub::GetFieldUint32;
+    bool GetFieldUint32(std::uint32_t* dst, std::uint32_t count) override { return GetFieldVoid(dst, count * 4); }
+    bool GetFieldVoid(void* dst, std::uint32_t n) override {
         if (cursor + n > bytes.size()) return false;
         std::memcpy(dst, bytes.data() + cursor, n);
         cursor += n;
         return true;
     }
-    std::uint32_t GetSize() const override { return static_cast<std::uint32_t>(bytes.size()); }
+    std::uint32_t GetSize() override { return static_cast<std::uint32_t>(bytes.size()); }
 };
 
 struct Persist final : cIGZPersistRecordService {

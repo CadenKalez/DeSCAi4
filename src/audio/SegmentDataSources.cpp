@@ -114,13 +114,13 @@ bool cGZSndSegmentWavDataSource::FindChunk(std::uint32_t fourCC, std::uint32_t& 
     if (fourCC != 0) {
         bool ok;
         do {
-            ok = access_->ReadUint32s(&word, 1);
+            ok = access_->GetFieldUint32(&word, 1);
             if (word == fourCC) break;
         } while (ok);
         if (!ok) return false;
     }
     std::uint32_t chunkSize = 0;
-    if (!access_->ReadUint32s(&chunkSize, 1)) return false;
+    if (!access_->GetFieldUint32(&chunkSize, 1)) return false;
     size = chunkSize;
     return true;
 }
@@ -134,11 +134,11 @@ bool cGZSndSegmentWavDataSource::Open() {
     if (!OpenRecord()) return false;
     open_ = true;
     void* raw = nullptr;
-    if (!record_->QueryInterface(kGZIID_cIGZPersistRecordAccess, &raw)) {
+    if (!record_->QueryInterface(kGZIID_cIGZPersistDBSerialRecord, &raw)) {
         Close();
         return false;
     }
-    access_ = static_cast<cIGZPersistRecordAccess*>(raw);
+    access_ = static_cast<cIGZPersistDBSerialRecord*>(raw);
     access_->Release();
 
     std::uint32_t formatSize = 0;
@@ -146,7 +146,7 @@ bool cGZSndSegmentWavDataSource::Open() {
     // The original reads `formatSize` bytes into its 20-byte format block without bounds check.
     std::uint8_t formatBytes[256] = {};
     const std::uint32_t toRead = formatSize < sizeof(formatBytes) ? formatSize : sizeof(formatBytes);
-    access_->ReadBytes(formatBytes, toRead);
+    access_->GetFieldVoid(formatBytes, toRead);
     std::memset(&format_, 0, sizeof(format_));
     std::memcpy(&format_, formatBytes, toRead < sizeof(format_) ? toRead : sizeof(format_));
     format_.extra = 0;
@@ -190,7 +190,7 @@ std::int32_t cGZSndSegmentWavDataSource::ReadPart(std::uint8_t* destination, std
     if (!open_ && !Open()) return 0;
     std::uint32_t count = dataSize_ - position_;
     if (static_cast<std::uint32_t>(byteCount) <= count) count = static_cast<std::uint32_t>(byteCount);
-    if (lockCount_ == 0) access_->ReadBytes(destination, count);
+    if (lockCount_ == 0) access_->GetFieldVoid(destination, count);
     else std::memcpy(destination, lockBuffer_.get() + position_, count);
     position_ += count;
     return static_cast<std::int32_t>(count);
@@ -216,17 +216,17 @@ bool cGZSndSegmentDataSourceXA::Open() {
     if (!OpenRecord()) return false;
     open_ = true;
     void* raw = nullptr;
-    if (!record_->QueryInterface(kGZIID_cIGZPersistRecordAccess, &raw)) return false;   // stays "open", like the original
-    access_ = static_cast<cIGZPersistRecordAccess*>(raw);
+    if (!record_->QueryInterface(kGZIID_cIGZPersistDBSerialRecord, &raw)) return false;   // stays "open", like the original
+    access_ = static_cast<cIGZPersistDBSerialRecord*>(raw);
     access_->Release();
 
     std::uint8_t header[8];
-    if (!access_->ReadBytes(header, 8)) { lastError_ = 4; Close(); return false; }
+    if (!access_->GetFieldVoid(header, 8)) { lastError_ = 4; Close(); return false; }
     if (header[0] != 'X' || header[1] != 'A') { lastError_ = 3; Close(); return false; }
     std::memcpy(&dataSize_, header + 4, 4);
 
     std::uint8_t fmt[16];
-    if (!access_->ReadBytes(fmt, 16)) { lastError_ = 4; Close(); return false; }
+    if (!access_->GetFieldVoid(fmt, 16)) { lastError_ = 4; Close(); return false; }
     std::uint16_t tag;
     std::memcpy(&tag, fmt, 2);
     if (tag != 1) { lastError_ = 3; Close(); return false; }
@@ -267,7 +267,7 @@ bool cGZSndSegmentDataSourceXA::Lock(std::uint8_t** data, std::uint32_t* size) {
             Unlock();
             return false;
         }
-        if (!access_->ReadBytes(lockBuffer_.get(), dataSize_)) {
+        if (!access_->GetFieldVoid(lockBuffer_.get(), dataSize_)) {
             Unlock();
             return false;
         }
@@ -296,7 +296,7 @@ bool cGZSndSegmentDataSourceXA::DecompressFrameMono() {
     if (compressedIndex_ > 0xeff) {
         std::int32_t count = 0xf00;
         if (recordSize_ < consumed_ + 0xf00u) count = static_cast<std::int32_t>(recordSize_ - consumed_);
-        if (!access_->ReadBytes(compressed_, static_cast<std::uint32_t>(count))) {
+        if (!access_->GetFieldVoid(compressed_, static_cast<std::uint32_t>(count))) {
             lastError_ = 4;
             return false;
         }
@@ -331,7 +331,7 @@ bool cGZSndSegmentDataSourceXA::DecompressFrameStereo() {
     if (compressedIndex_ > 0xeff) {
         std::int32_t count = 0xf00;
         if (recordSize_ < consumed_ + 0xf00u) count = static_cast<std::int32_t>(recordSize_ - consumed_);
-        if (!access_->ReadBytes(compressed_, static_cast<std::uint32_t>(count))) {
+        if (!access_->GetFieldVoid(compressed_, static_cast<std::uint32_t>(count))) {
             lastError_ = 4;
             return false;
         }
@@ -417,20 +417,20 @@ bool cGZSndSegmentDataSourceUTalk::OpenRecords() {
     }
     access_ = nullptr;
     void* raw = nullptr;
-    if (!record_->QueryInterface(kGZIID_cIGZPersistRecordAccess, &raw)) {
+    if (!record_->QueryInterface(kGZIID_cIGZPersistDBSerialRecord, &raw)) {
         CloseRecords();
         return false;
     }
-    access_ = static_cast<cIGZPersistRecordAccess*>(raw);
+    access_ = static_cast<cIGZPersistDBSerialRecord*>(raw);
     access_->Release();
 
     std::uint32_t word = 0;
-    if (!access_->ReadUint32s(&word, 1) || word != 0x304d5455) { CloseRecords(); return false; }
-    if (!access_->ReadUint32s(&dataSize_, 1)) { CloseRecords(); return false; }
+    if (!access_->GetFieldUint32(&word, 1) || word != 0x304d5455) { CloseRecords(); return false; }
+    if (!access_->GetFieldUint32(&dataSize_, 1)) { CloseRecords(); return false; }
     word = 0;
-    access_->ReadUint32s(&word, 1);
+    access_->GetFieldUint32(&word, 1);
     if (word != 0x14) { CloseRecords(); return false; }
-    if (!access_->ReadBytes(&format_, 0x14)) { CloseRecords(); return false; }
+    if (!access_->GetFieldVoid(&format_, 0x14)) { CloseRecords(); return false; }
     const std::uint32_t total = access_->GetSize();
     if (total == 0) { CloseRecords(); return false; }
     compressedSize_ = (total - 0xc) - word;
@@ -451,7 +451,7 @@ bool cGZSndSegmentDataSourceUTalk::Open() {
     dataSize_ = 0;
     if (OpenRecords()) {
         compressed_ = std::make_unique<std::uint8_t[]>(compressedSize_);
-        access_->ReadBytes(compressed_.get(), compressedSize_);
+        access_->GetFieldVoid(compressed_.get(), compressedSize_);
         if (Audio::IUTalkCodec* codec = Audio::UTalkCodec()) codec->Init(compressed_.get(), state_);
         position_ = 0;
         SetDataIsValid(true);
@@ -473,7 +473,7 @@ bool cGZSndSegmentDataSourceUTalk::Lock(std::uint8_t** data, std::uint32_t* size
             return false;
         }
         lockBuffer_ = std::make_unique<std::uint8_t[]>(dataSize_);
-        if (!access_->ReadBytes(lockBuffer_.get(), access_->GetSize())) {
+        if (!access_->GetFieldVoid(lockBuffer_.get(), access_->GetSize())) {
             Unlock();
             return false;
         }

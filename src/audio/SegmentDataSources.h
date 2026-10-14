@@ -12,6 +12,7 @@
 #include <memory>
 
 #include "audio/AudioServices.h"
+#include "gz/cIGZPersistDBSerialRecord.h"
 #include "audio/interfaces/cIGZSndDataSource.h"
 #include "audio/interfaces/cIGZSndDataSourceCreator.h"
 #include "rz/cRZAutoRefCount.h"
@@ -44,7 +45,7 @@ protected:
     std::int32_t refCount_ = 0;                                    // +8
     cGZPersistResourceKey key_;
     cRZAutoRefCount<cIGZPersistDBRecord> record_;
-    cRZAutoRefCount<cIGZPersistRecordAccess> access_;
+    cRZAutoRefCount<cIGZPersistDBSerialRecord> access_;
     GZSndWaveFormat format_;
     std::uint32_t position_ = 0;
     std::uint32_t dataSize_ = 0;

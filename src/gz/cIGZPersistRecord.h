@@ -8,25 +8,26 @@
 #include "gz/cGZPersistResourceKey.h"
 #include "gz/cIGZUnknown.h"
 
-// An opened database record (cGZPersistDBRecord). Slot 5 (+0x28) closes it.
+// (The record-access view with iid 0xc56b8f08 is cIGZPersistDBSerialRecord, see
+// gz/cIGZPersistDBSerialRecord.h.)
+
+// An opened database record (cGZPersistDBRecord). Slots 3..12 are the raw-access view of the
+// record; the destructors follow (slots 13/14 of the original, declared by the concrete class).
+// Slots 6..12 have no-op defaults so that minimal test doubles keep working.
 class cIGZPersistDBRecord : public cIGZUnknown {
 public:
     virtual cGZPersistResourceKey GetKey() const = 0;     // [3] +0x18
-    virtual std::uint32_t GetAccessFlags() const = 0;     // [4] +0x20
+    virtual std::uint32_t GetAccessFlags() const = 0;     // [4] +0x20 (bit0 read, bit1 write)
     virtual bool Close() = 0;                             // [5] +0x28
+    virtual bool GetFieldVoid(void*, std::uint32_t) { return false; }          // [6] +0x30
+    virtual bool SetFieldVoid(const void*, std::uint32_t) { return false; }    // [7] +0x38
+    virtual std::uint32_t GetSize() { return 0; }                              // [8] +0x40
+    virtual bool SetSize(std::uint32_t) { return false; }                      // [9] +0x48
+    virtual std::uint32_t GetPosition() { return 0; }                          // [10] +0x50
+    virtual bool SeekAbsolute(std::uint32_t) { return false; }                 // [11] +0x58
+    virtual bool SeekRelative(std::int32_t) { return false; }                  // [12] +0x60
 };
-
-// Sequential access view of a record (interface id 0xc56b8f08).
-class cIGZPersistRecordAccess : public cIGZUnknown {
-public:
-    // +0x68: reads `count` 32-bit words (little endian) into `destination`.
-    virtual bool ReadUint32s(std::uint32_t* destination, std::uint32_t count) = 0;
-    // +0xd8: reads exactly `byteCount` bytes.
-    virtual bool ReadBytes(void* destination, std::uint32_t byteCount) = 0;
-    // +0x1a0: the record's total size in bytes.
-    virtual std::uint32_t GetSize() const = 0;
-};
-constexpr std::uint32_t kGZIID_cIGZPersistRecordAccess = 0xc56b8f08;
+constexpr std::uint32_t kGZIID_cIGZPersistDBRecord = 0xe56b8f03;
 
 // The part of the persistence resource manager (service 0x056b906e, iid 0x656b8efc) the sound
 // data sources use.
