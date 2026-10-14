@@ -10,6 +10,7 @@ declare -a TESTS=(
  "gz_packedfile:$T/gz_packedfile_test.cpp $S/gz/cGZPersistDBSegmentMultiPackedFiles.cpp $S/gz/cGZDBSegmentPackedFile.cpp $S/gz/cGZDBRecords.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/gz/cGZPersistDBSegment.cpp $S/gz/cGZPersistResourceKeyList.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp $S/rz/cRZFastCompression3.cpp $S/dbpf/DBPFReader.cpp"
  "gz_resourcemanager:$T/gz_resourcemanager_test.cpp $S/gz/cGZPersistResourceManager.cpp $S/gz/cGZDBSegmentPackedFile.cpp $S/gz/cGZDBRecords.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/gz/cGZPersistDBSegment.cpp $S/gz/cGZPersistResourceKeyList.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp $S/rz/cRZFastCompression3.cpp"
  "sc4_clock:$T/sc4_clock_test.cpp $S/sc4/cSC424HourClock.cpp $S/rz/cRZTimer.cpp $S/rz/cRZStream.cpp $S/rz/cRZString.cpp $S/platform/MacTools.cpp"
+ "sc4_demand:$T/sc4_demand_test.cpp $S/sc4/cSC4Demand.cpp $S/rz/cRZStream.cpp $S/rz/cRZString.cpp"
  "sc4_simgrid:$T/sc4_simgrid_test.cpp $S/sc4/cSC4SimGrid.cpp $S/rz/cRZStream.cpp $S/rz/cRZString.cpp"
  "rz_fastcompression:$T/rz_fastcompression_test.cpp $S/rz/cRZFastCompression3.cpp $S/rz/cRZString.cpp $S/dbpf/DBPFReader.cpp"
  "rz_file:$T/rz_file_test.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp"
