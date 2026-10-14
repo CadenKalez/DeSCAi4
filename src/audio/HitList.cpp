@@ -16,6 +16,12 @@ std::atomic<std::int32_t> g_numHitLists{0};
 // cHitList::cHitList() @ 0x100481d20 / 0x100481d7c (two identical copies in the binary)
 cHitList::cHitList() { ++g_numHitLists; }
 
+cHitList::cHitList(const cHitList& other)
+    : cIHitList(), refCount_(other.refCount_), available_(other.available_), recent_(other.recent_),
+      criterion_(other.criterion_), criterionExplicit_(other.criterionExplicit_) {
+    ++g_numHitLists;
+}
+
 // cHitList::~cHitList() @ 0x100481dca / 0x100481e02 / 0x100481e3a
 cHitList::~cHitList() { --g_numHitLists; }
 

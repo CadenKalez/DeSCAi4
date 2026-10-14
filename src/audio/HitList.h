@@ -19,6 +19,7 @@
 class cHitList : public cIHitList {
 public:
     cHitList();
+    cHitList(const cHitList& other);  // copies lists, criterion and refcount, like the resource copy path
     ~cHitList() override;
 
     bool QueryInterface(std::uint32_t iid, void** out) override;
