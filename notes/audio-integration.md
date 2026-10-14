@@ -180,7 +180,47 @@ offsets `+0/+8/+0x10/+0x18/+0x20/+0x28`). `QueryInterface` answers six iids and 
    dereferences it).
 
 ---------------------------------------------------------------------------------------------------
-## 6. Tooling invariants
+## 6. Track players — `src/audio/HitTrackPlayer.*`
+One running Hit track (a bytecode program). Created with `cHitMan::CreateTrackPlayer` (host
+`CreateTrackPlayer`), driven by the sound system's update target (`Update(ms)` every 20 ms while
+playing). Subobject offsets asserted in `audio_hittrackplayer_test.cpp`; `QueryInterface` accepts id 1
+and `0xbb1be367` for the primary pointer, plus the seven other interface ids.
+
+### Host services (in addition to section 2)
+`GetSoundById(id, iid)` (sound manager GetSound), `RegisterUpdateTarget(target, ms)` /
+`UnregisterUpdateTarget`, `SetGlobalProperty/GetGlobalProperty/SetInstanceProperty` (property
+cache), `EnumerateUpdateTargets` (used by "kill/stop track by id").
+
+### Rules
+- `PlayPause()` takes one reference that the track releases when it ends (`end`, `Kill`); callers
+  must hold their own reference while the track plays.
+- Starting needs register `0xff5f15e1` (entry point key) to resolve through
+  `cHitMan::GetTrackDataBlockAndOffset`; otherwise `PlayPause` returns false.
+- Execution: instructions run until one waits; a single tick executes at most 101 instructions
+  without a wait before "Too many instructions..." is reported (and execution continues).
+- Registers: own layer [0], the track definition [1] and its parent chain [2..9]. Writes go to layer 0
+  and are copied to dependent sounds that do not define the register themselves.
+- Errors are delivered through `cIHitMan::HandleTrackFlowError`; the default handler kills the track
+  and sets its error flag (`GetErrorCondition`).
+
+### Opcode set (byte codes; register operands 0..0x4a, immediates little endian 32 bit)
+Loads/moves 04 05 06 4a 60 61 1f; arithmetic 10 add, 11 sub, 12 div, 13 mul, 19 abs, 2f inc, 30 dec;
+logic 17 not, 29 nand, 2a or, 2b nor, 2c xor, 15/16/28 compare-to-register; compare 0e 14 55;
+clamp 2d/2e; flow 07 call, 0a call by entry key, 08 return, 0c end, 0d jump, 20/21 mark jump/save,
+3e..43 conditional jumps, 4d..52 wait-until-condition, 09 wait, 0b wait-for-note, 1b stop, 1c
+stop-if-zero; notes 01 02 03 0.. 5b 5c; hit lists 23..27 44 5f; groups/ducking 45 46 47 49 53 54;
+tracks 32 33 5a; app data 48 59; global properties 56 57; random 18; callbacks 22; throw 58.
+
+### Deviations / quirks
+- `AddSource` never adds (the binary's insertion is unreachable); `SourceList()` stays empty.
+- Division by zero is reported ("Divide by zero") and yields 0 instead of faulting.
+- `0xffc6e666` (target sound) asks the dependent for iid `0xebb10cdd`, which sounds never expose,
+  so it always reports "no register interface" — as in the binary.
+- `CompletionTime()` returns 0 until the sound data sources are recovered; `operator=` is not ported.
+- `HasRegisterValue` looks only at layers 0 and 1; `GetRegisterFloat` does not translate legacy ids.
+
+---------------------------------------------------------------------------------------------------
+## 7. Tooling invariants
 - `scripts/ledger_class.py`, `ledger_rename.py`, `check_unique_names.py`: every recovered function has
   a class-unique descriptive name in Ghidra and in `notes/ledger.csv`.
 - `scripts/run_tests.sh` must pass before every commit.

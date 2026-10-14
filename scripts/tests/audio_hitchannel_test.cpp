@@ -110,6 +110,12 @@ struct Services final : Hit::cIHitManServices {
     }
     cIGZUnknown* CreatePropertySetResource(const cGZPersistResourceKey&, const Hit::DefaultProperty*, std::size_t, bool) override { return nullptr; }
     bool ReadPersistRecord(const cGZPersistResourceKey&, std::vector<std::uint8_t>&, std::string&) override { return false; }
+    bool GetSoundById(std::uint32_t, std::uint32_t, void**) override { return false; }
+    void RegisterUpdateTarget(cIGZSndUpdateTarget*, std::uint32_t) override {}
+    void UnregisterUpdateTarget(cIGZSndUpdateTarget*) override {}
+    bool SetGlobalProperty(std::uint32_t, const cIGZAny&) override { return false; }
+    bool GetGlobalProperty(std::uint32_t, cIGZAny*) override { return false; }
+    bool SetInstanceProperty(std::uint32_t, std::uint32_t, const cIGZAny&) override { return false; }
     bool GetDefaultSndPlayerClassId(bool is3D, std::uint32_t& id) override { last3D = is3D; id = is3D ? 0x33 : 0x22; return true; }
     bool CreateComInstance(std::uint32_t, std::uint32_t, void** out) override {
         snd = new FakeSnd();

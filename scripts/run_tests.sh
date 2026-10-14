@@ -18,6 +18,7 @@ declare -a TESTS=(
  "freshcell:$T/audio_freshcell_test.cpp $S/audio/FreshCell.cpp $S/rz/cRZString.cpp"
  "propertyset:$T/gz_propertyset_test.cpp $S/gz/cGZPropertySet.cpp $S/rz/cRZString.cpp"
  "hitchannel:$T/audio_hitchannel_test.cpp $S/audio/HitChannel.cpp $S/audio/HitServices.cpp $S/audio/HitRegisters.cpp $S/gz/cGZPropertySet.cpp $S/rz/cRZString.cpp"
+ "hittrackplayer:$T/audio_hittrackplayer_test.cpp $S/audio/HitTrackPlayer.cpp $S/audio/HitChannel.cpp $S/audio/HitMan.cpp $S/audio/HitServices.cpp $S/audio/HitControlGroup.cpp $S/audio/HitSem.cpp $S/audio/HitRegisters.cpp $S/audio/HitTrackDataBlock.cpp $S/gz/cGZPropertySet.cpp $S/rz/cRZRandom.cpp $S/rz/cRZString.cpp"
  "hitman:$T/audio_hitman_test.cpp $S/audio/HitMan.cpp $S/audio/HitServices.cpp $S/audio/HitControlGroup.cpp $S/audio/HitSem.cpp $S/audio/HitRegisters.cpp $S/audio/HitTrackDataBlock.cpp $S/rz/cRZRandom.cpp $S/rz/cRZString.cpp"
  "hitcontrolgroup:$T/audio_hitcontrolgroup_test.cpp $S/audio/HitControlGroup.cpp $S/rz/cRZString.cpp"
  "freshplayer:$T/audio_freshplayer_test.cpp $S/audio/FreshPlayer.cpp $S/audio/FreshDimensionPlayer.cpp $S/audio/FreshCellPlayer.cpp $S/audio/FreshScore.cpp $S/audio/FreshCell.cpp $S/audio/FreshHost.cpp $S/rz/cRZRandom.cpp $S/rz/cRZCriticalSection.cpp $S/rz/cRZCallbackTimer.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp $S/rz/RZConvert.cpp $S/rz/cRZString.cpp $S/rz/cRZDate.cpp"

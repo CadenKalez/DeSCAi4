@@ -111,6 +111,12 @@ struct FakeServices final : Hit::cIHitManServices {
         name = "record.hit";
         return true;
     }
+    bool GetSoundById(std::uint32_t, std::uint32_t, void**) override { return false; }
+    void RegisterUpdateTarget(cIGZSndUpdateTarget*, std::uint32_t) override {}
+    void UnregisterUpdateTarget(cIGZSndUpdateTarget*) override {}
+    bool SetGlobalProperty(std::uint32_t, const cIGZAny&) override { return false; }
+    bool GetGlobalProperty(std::uint32_t, cIGZAny*) override { return false; }
+    bool SetInstanceProperty(std::uint32_t, std::uint32_t, const cIGZAny&) override { return false; }
     bool GetDefaultSndPlayerClassId(bool, std::uint32_t&) override { return false; }
     bool CreateComInstance(std::uint32_t, std::uint32_t, void**) override { return false; }
     bool ReadFileBytes(const std::string& path, std::vector<std::uint8_t>& bytes) override {
