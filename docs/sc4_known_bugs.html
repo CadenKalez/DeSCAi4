@@ -1,0 +1,95 @@
+<!doctype html><meta charset="utf-8"><title>SimCity 4 Known Bugs and Why They Happen</title>
+<style>
+body{font:11pt/1.45 -apple-system,Helvetica,Arial;margin:0;color:#1b1f24}
+@page{size:A4;margin:18mm}
+h1{font-size:22pt;margin:0 0 4px}h2{font-size:14pt;border-bottom:2px solid #2b6cb0;padding-bottom:3px;margin-top:22px;page-break-after:avoid}
+.meta{color:#555;font-size:9.5pt}.tag{display:inline-block;font-size:8.5pt;padding:1px 7px;border-radius:9px;background:#e6eef7;color:#1d4e89;margin-right:4px}
+.conf-h{background:#dff3e3;color:#17612b}.conf-m{background:#fdf1d6;color:#7a5200}.conf-l{background:#fbe0e0;color:#8a1c1c}
+table{border-collapse:collapse;width:100%;font-size:9.5pt}td,th{border:1px solid #c8d1dc;padding:4px 6px;vertical-align:top}th{background:#f1f5f9;text-align:left}
+.box{background:#f6f8fa;border-left:4px solid #2b6cb0;padding:6px 10px;margin:8px 0}section{page-break-inside:avoid}
+</style>
+<h1>SimCity 4: Known Bugs and Why They Happen</h1>
+<div class="meta">Compiled for the SC4-Decomp native Metal port &middot; 14 Oct 2026 &middot; Game: SimCity 4 Deluxe (Aspyr macOS v1.2.1)</div>
+<div class="box"><b>How to read this.</b> Each entry gives symptom, cause, fix known to the community, and a confidence tag.
+<span class="tag conf-h">sourced</span> = stated by the cited source with a mechanism;
+<span class="tag conf-m">partial</span> = symptom and fix are sourced, mechanism is inferred;
+<span class="tag conf-l">unverified</span> = anecdotal. Causes marked "inferred" are my reasoning from data/behaviour, not from decompiled code, because most of the relevant simulator code in this port has not been recovered yet. Sources are listed at the end.</div>
+
+<section><h2>1. Sims take the shortest route, not the fastest <span class="tag conf-m">partial</span></h2>
+<p><b>Symptom.</b> Commuters pile onto a single short road next to a highway; gridlock while parallel capacity sits idle. Rush Hour did not change it.</p>
+<p><b>Cause.</b> The route search weighs path length and not travel time or congestion, so every agent between the same endpoints chooses the same edge. Because all agents reach the same decision independently, road capacity is never used as feedback. Community write-ups state this behaviour; the choice of a length-only cost is the inference.</p>
+<p><b>Fix.</b> Network Addon Mod (NAM) replaces the pathing with a speed-aware search. <b>Port note:</b> our traffic pathfinder will expose the edge cost as a function so a time-weighted option can be A/B tested without changing results by default.</p></section>
+
+<section><h2>2. "Eternal Commuter" regional loop <span class="tag conf-m">partial</span></h2>
+<p><b>Symptom.</b> Sims bounce between cities looking for work without ever taking a job. Zone demand collapses, traffic grows without bound, economy decays.</p>
+<p><b>Cause.</b> Regional pathfinding across city boundaries, in particular layouts, lets a commuter be rejected at the destination and re-queued toward another neighbour with no memory that it already tried. No termination condition exists in a cycle of cities. (Stated mechanism: regional pathfinding across city boundaries in certain layouts. The "no memory / no termination" detail is inferred.)</p>
+<p><b>Fix.</b> NAM update 50 (August 2026) blocks specific neighbour-to-neighbour routes. Before it, the only workaround was to avoid layouts that allow loops.</p></section>
+
+<section><h2>3. Industrial High-Tech cannot employ top-wealth Sims <span class="tag conf-h">sourced</span></h2>
+<p><b>Symptom.</b> High-tech industry creates demand for $$$ workers, yet almost no $$$ jobs are filled.</p>
+<p><b>Cause.</b> The job table gives the three wealth bands the ratio 10:80:10. Two entries have identical values, and the game ignores one of the equal values, so the $$$ share is dropped. This is a tie-handling error in the ratio data, not a missing building.</p>
+<p><b>Fix.</b> <code>IH_census_10_78_12.dat</code> changes the numbers so no two are equal.</p></section>
+
+<section><h2>4. Medical clinic, solar plant and nuclear plant jobs <span class="tag conf-h">sourced</span></h2>
+<p><b>Symptom.</b> Same as #3: a wealth bracket's jobs never fill.</p>
+<p><b>Cause.</b> Same duplicate-value defect in &ldquo;Demand Created&rdquo;: clinic $1/$$6/$$$1, solar $10/$$12/$$$10, nuclear $20/$$20/$$$8.</p>
+<p><b>Fix.</b> <code>HT_DemandFix.dat</code>: clinic 2/5/1, solar 11/12/9, nuclear 22/18/8.</p></section>
+
+<section><h2>5. Opera House lowers education when the city grows <span class="tag conf-h">sourced</span></h2>
+<p><b>Symptom.</b> A growing city sees its education rating fall after an Opera House is built.</p>
+<p><b>Cause.</b> The building's capacity is fixed at 1,200 and the building is counted as &ldquo;underfunded&rdquo; once usage exceeds it, which feeds a negative term into city-wide education, and there is no way to give it extra funding.</p>
+<p><b>Fix.</b> The Bugfix Bundle raises the cap to 25,000 and scales cost with capacity. Existing Opera Houses must be bulldozed first or the game may crash.</p></section>
+
+<section><h2>6. Private Schools overcrowding <span class="tag conf-m">partial</span></h2>
+<p><b>Symptom.</b> Education falls when a private school exceeds about 1,000 students within its radius.</p>
+<p><b>Cause.</b> Same over-capacity penalty mechanism as the Opera House (#5).</p></section>
+
+<section><h2>7. Space Port promises a High-Tech boost that was never implemented <span class="tag conf-h">sourced</span></h2>
+<p><b>Cause.</b> The description text promises the effect, but no High-Tech Industry cap effect exists in the building data; it only adds cost and slight commercial desirability.</p>
+<p><b>Fix.</b> Plugin adds 150,000 High-Tech Industry cap relief.</p></section>
+
+<section><h2>8. Crime does not drop with more police <span class="tag conf-m">partial</span></h2>
+<p><b>Symptom.</b> Crime stays high even with police stations everywhere.</p>
+<p><b>Cause.</b> Not documented by the source; the plugin changes the data so additional stations reduce crime. Mechanism unknown.</p></section>
+
+<section><h2>9. Farley's Foundry: unlimited industrial zone from one road <span class="tag conf-m">partial</span></h2>
+<p><b>Symptom.</b> A 2x1 seed building plus 1x1 additions lets an industrial block grow far beyond the normal road-connection range; fires inside it may get no truck response.</p>
+<p><b>Cause.</b> Road adjacency appears to be tested for the seed lot only, and the additions inherit the seed's type and are treated as one large building. (Described by the discoverer; the exact check is inferred.)</p></section>
+
+<section><h2>10. Mayor rating oddities <span class="tag conf-l">unverified</span></h2>
+<p><b>Symptom.</b> Ratings stuck near 60% or swinging by large amounts; negative ratings unreachable.</p>
+<p><b>Cause.</b> Forum evidence points to lots categorised wrongly (a mod's seawall lots counted as Transportation/Water and carrying a large rating effect). The floor on negative ratings is reported but not explained.</p></section>
+
+<section><h2>11. Rush Hour path and commute reporting bugs <span class="tag conf-m">partial</span></h2>
+<table><tr><th>Symptom</th><th>Cause / fix in v1.1.638</th></tr>
+<tr><td>Intercity commute time misreported</td><td>Fixed in patch 638.</td></tr>
+<tr><td>Intercity commute: bus traffic treated as car traffic periodically</td><td>Vehicle-class classification fixed in 638.</td></tr>
+<tr><td>Networks loaded from a saved city did not re-initialise their connection bitmap</td><td>Fixed in 638: load path now rebuilds the bitmap.</td></tr>
+<tr><td>Moving vans created on tiles with complex paths misbehaved</td><td>Fixed in 638.</td></tr>
+<tr><td>Cars appear to jump off highways onto buildings</td><td>Route-query tool shows impossible paths; cause not documented.</td></tr></table></section>
+
+<section><h2>12. Save-file graphics corruption at custom resolutions <span class="tag conf-l">unverified</span></h2>
+<p>CodeWeavers reports corruption along the lower edges of the city when saving at higher custom resolutions (also on Windows). The save thumbnail/preview is probably rendered from the live framebuffer at the active size, which would explain it; this is inferred.</p></section>
+
+<h2>Recurring root causes</h2>
+<table><tr><th>Pattern</th><th>Bugs</th></tr>
+<tr><td>Data tables with tied values handled as keys</td><td>#3, #4</td></tr>
+<tr><td>Capacity thresholds that turn into penalties</td><td>#5, #6</td></tr>
+<tr><td>Features described but not implemented</td><td>#7</td></tr>
+<tr><td>Agent decisions made without shared state or termination</td><td>#1, #2</td></tr>
+<tr><td>Validation done on a seed object only</td><td>#9</td></tr></table>
+
+<h2>What this means for the port</h2>
+<ul><li>Keep <b>original behaviour</b> as the default so saved cities match; expose each fix as a switch (bundle data patches, pathing cost, loop guard).</li>
+<li>As the traffic, job and capacity code is recovered, each entry's inferred mechanism will be replaced with the verified code path.</li>
+<li>The data-only bugs (#3, #4, #5, #7) can be reproduced and verified right now by reading the exemplar tables from the game's DBPF files.</li></ul>
+
+<h2>Sources</h2>
+<ul style="font-size:9.5pt">
+<li>SimCity 4 Bugfix Bundle: https://simcity4.hippotank.com/</li>
+<li>Slashdot / PCGamesN, Eternal Commuter fixed: https://games.slashdot.org/story/26/08/23/0417243/</li>
+<li>4Gamers, Farley's Foundry: https://www.4gamers.com.tw/news/detail/69740/</li>
+<li>SimCity 4 Rush Hour v1.1.638 update notes: https://www.sc4evermore.com/index.php/downloads/download/40-maxis/74-update-for-simcity-4-rush-hour-deluxe-sku2</li>
+<li>Simtropolis mayor rating threads: https://community.simtropolis.com/forums/topic/761777-potential-bug-of-mayor-rating/</li>
+<li>Steam discussion on route choice: https://steamcommunity.com/app/24780/discussions/0/1736595227858767455/</li>
+<li>CodeWeavers compatibility entry: https://www.codeweavers.com/compatibility/crossover/simcity-4</li></ul>
