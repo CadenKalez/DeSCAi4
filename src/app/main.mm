@@ -9,11 +9,14 @@
 #include <cstring>
 #include <string>
 
+#include "app/GameAudio.h"
 #include "render/MetalRenderer.h"
 #include "render/Terrain.h"
 
 static render::MetalRenderer gRenderer;
 static render::Camera gCamera;
+static GameAudio gAudio;
+static std::string gCityName;
 
 @interface SC4View : NSView
 @end
@@ -28,6 +31,10 @@ static render::Camera gCamera;
     else if ([c isEqualToString:@"e"]) gCamera.yawDegrees += 90;
     else if ([c isEqualToString:@"="]) gCamera.distance *= 1.25f;
     else if ([c isEqualToString:@"-"]) gCamera.distance /= 1.25f;
+    else if ([c isEqualToString:@"m"]) gAudio.SetMuted(!gAudio.Muted());
+    else if ([c isEqualToString:@"n"]) gAudio.NextAmbient();
+    else return;
+    gAudio.PlayClick();
 }
 @end
 
@@ -35,6 +42,9 @@ static render::Camera gCamera;
 @property(strong) NSWindow* window;
 @property(strong) NSTimer* timer;
 @property(strong) SC4View* view;
+@property(strong) NSTextField* hud;
+@property(strong) NSDate* started;
+@property(assign) int frames;
 @end
 @implementation AppDelegate
 - (void)applicationDidFinishLaunching:(NSNotification*)n {
@@ -52,11 +62,71 @@ static render::Camera gCamera;
     [self.window makeKeyAndOrderFront:nil];
     [self.window makeFirstResponder:self.view];
     [NSApp activateIgnoringOtherApps:YES];
+    [self buildOverlay];
+    self.started = [NSDate date];
+    gAudio.NextAmbient();
     self.timer = [NSTimer scheduledTimerWithTimeInterval:1.0 / 60 repeats:YES block:^(NSTimer*) {
         NSSize s = [self.view convertSizeToBacking:self.view.bounds.size];
         gRenderer.DrawToLayer(gCamera, uint32_t(s.width), uint32_t(s.height));
+        gAudio.Tick();
+        ++self.frames;
+        double t = -[self.started timeIntervalSinceNow];
+        if (t >= 0.5) {
+            self.hud.stringValue = [NSString stringWithFormat:
+                @"SimCity 4  \u2014  %s\n%.0f fps   yaw %.0f\u00b0   zoom %.2f\nMusic: %s%s",
+                gCityName.c_str(), self.frames / t, gCamera.yawDegrees, gCamera.distance,
+                gAudio.CurrentName().c_str(), gAudio.Muted() ? "  [muted]" : ""];
+            self.frames = 0;
+            self.started = [NSDate date];
+        }
     }];
 }
+
+- (NSButton*)button:(NSString*)title action:(SEL)sel x:(CGFloat)x w:(CGFloat)w parent:(NSView*)parent {
+    NSButton* b = [NSButton buttonWithTitle:title target:self action:sel];
+    b.frame = NSMakeRect(x, 8, w, 28);
+    b.bezelStyle = NSBezelStyleRounded;
+    [parent addSubview:b];
+    return b;
+}
+
+- (void)buildOverlay {
+    NSView* content = self.window.contentView;
+    // status readout, top left
+    NSVisualEffectView* top = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(12, content.bounds.size.height - 12 - 64, 460, 64)];
+    top.material = NSVisualEffectMaterialHUDWindow;
+    top.blendingMode = NSVisualEffectBlendingModeWithinWindow;
+    top.state = NSVisualEffectStateActive;
+    top.wantsLayer = YES;
+    top.layer.cornerRadius = 8;
+    top.autoresizingMask = NSViewMinYMargin;
+    self.hud = [NSTextField labelWithString:@""];
+    self.hud.frame = NSMakeRect(10, 4, 440, 56);
+    self.hud.font = [NSFont monospacedSystemFontOfSize:12 weight:NSFontWeightRegular];
+    self.hud.maximumNumberOfLines = 3;
+    [top addSubview:self.hud];
+    [content addSubview:top];
+    // control bar, bottom centre
+    NSVisualEffectView* bar = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(12, 12, 480, 44)];
+    bar.material = NSVisualEffectMaterialHUDWindow;
+    bar.blendingMode = NSVisualEffectBlendingModeWithinWindow;
+    bar.state = NSVisualEffectStateActive;
+    bar.wantsLayer = YES;
+    bar.layer.cornerRadius = 8;
+    [self button:@"\u21b6 Rotate" action:@selector(rotLeft:) x:8 w:90 parent:bar];
+    [self button:@"Rotate \u21b7" action:@selector(rotRight:) x:102 w:90 parent:bar];
+    [self button:@"Zoom +" action:@selector(zoomIn:) x:196 w:70 parent:bar];
+    [self button:@"Zoom \u2212" action:@selector(zoomOut:) x:270 w:70 parent:bar];
+    [self button:@"Music \u25b6" action:@selector(nextMusic:) x:344 w:70 parent:bar];
+    [self button:@"Mute" action:@selector(toggleMute:) x:418 w:56 parent:bar];
+    [content addSubview:bar];
+}
+- (void)rotLeft:(id)s { gCamera.yawDegrees -= 90; gAudio.PlayClick(); }
+- (void)rotRight:(id)s { gCamera.yawDegrees += 90; gAudio.PlayClick(); }
+- (void)zoomIn:(id)s { gCamera.distance /= 1.25f; gAudio.PlayClick(); }
+- (void)zoomOut:(id)s { gCamera.distance *= 1.25f; gAudio.PlayClick(); }
+- (void)nextMusic:(id)s { gAudio.NextAmbient(); }
+- (void)toggleMute:(id)s { gAudio.SetMuted(!gAudio.Muted()); }
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)a { return YES; }
 @end
 
@@ -73,6 +143,13 @@ int main(int argc, char** argv) {
         else city = argv[i];
     }
     std::string err;
+    {
+        size_t slash = city.find_last_of('/');
+        gCityName = slash == std::string::npos ? city : city.substr(slash + 1);
+        std::string sound = "/Users/fernandojosesampaio/Library/Application Support/Steam/steamapps/common/"
+            "SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/GameData/Sound.dat";
+        if (shot.empty() && !gAudio.Open(sound, err)) std::fprintf(stderr, "audio: %s\n", err.c_str());
+    }
     render::HeightGrid grid;
     if (!render::LoadCityTerrain(city, grid, err)) { std::fprintf(stderr, "terrain: %s\n", err.c_str()); return 1; }
     if (!gRenderer.Init(err) || !gRenderer.SetTerrain(grid, err)) { std::fprintf(stderr, "metal: %s\n", err.c_str()); return 1; }
