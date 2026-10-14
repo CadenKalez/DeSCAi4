@@ -1,0 +1,36 @@
+# --- copyrighted game material: never commit ---
+game-binaries/
+game-assets-index/sha256.txt
+game-assets-index/ls-lR.txt
+*.dat
+*.dylib
+*.mov
+*.mp3
+*.mp4
+*.sgr
+*.mxf
+
+# --- Ghidra project databases & caches ---
+ghidra/
+*.gpr
+*.rep
+*.lock
+*.lock~
+*.prp
+
+# --- third-party repos / downloads / environments (reproducible, not ours) ---
+mcp/
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# --- derived dumps of the copyrighted binary (regenerate with scripts/dump-symbols.sh) ---
+notes/symbols-nm.txt
+notes/symbols-functions-demangled.txt
+notes/typeinfo-demangled.txt
+notes/vtables-demangled.txt
+
+# --- misc ---
+.DS_Store
+.mcp.json

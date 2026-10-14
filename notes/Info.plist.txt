@@ -1,0 +1,55 @@
+{
+  "ATSApplicationFontsPath" => "Fonts"
+  "BuildMachineOSBuild" => "18E226"
+  "CFBundleDevelopmentRegion" => "English"
+  "CFBundleDisplayName" => "Sim City 4 Deluxe Edition"
+  "CFBundleExecutable" => "Sim City 4 Deluxe Edition"
+  "CFBundleGetInfoString" => "1.2.1 (185949 steam)
+© 2020 Aspyr Media, Inc.
+All rights reserved."
+  "CFBundleIconFile" => "AppIcon"
+  "CFBundleIdentifier" => "com.aspyr.simcity4.steam"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "Sim City 4 Deluxe Edition"
+  "CFBundlePackageType" => "APPL"
+  "CFBundleShortVersionString" => "1.2.1"
+  "CFBundleSignature" => "SC4K"
+  "CFBundleSupportedPlatforms" => [
+    0 => "MacOSX"
+  ]
+  "CFBundleVersion" => "185949"
+  "DTCompiler" => "com.apple.compilers.llvm.clang.1_0"
+  "DTPlatformBuild" => "9F2000"
+  "DTPlatformVersion" => "GM"
+  "DTSDKBuild" => "17E189"
+  "DTSDKName" => "macosx10.13"
+  "DTXcode" => "0941"
+  "DTXcodeBuild" => "9F2000"
+  "GameGuide" => {
+    "AppStorePlayExecutable" => "/Contents/MacOS/Sim City 4 Deluxe Editionsub"
+    "BundleID" => "com.aspyr.simcity4.steam"
+    "companyLogos" => [
+    ]
+    "disableMultiMonitorSetup" => true
+    "FullScreenValue" => "1"
+    "gameLogoImage" => "SC4-GG3-game-logo.png"
+    "gameTextColor" => "10,60,103"
+    "launchButtonColor" => "231,6,24"
+    "offlineBackImage" => "SC4-GG3-Background-Offline.jpg"
+    "PreferenceWindowedKey" => "fullscreen-mode"
+    "SteamAltPlayExecutable" => "/Contents/MacOS/Sim City 4 Deluxe Editionsub"
+    "SteamDefaultPlayExecutable" => "/Contents/MacOS/Sim City 4 Deluxe Editionsub"
+    "tabButtonColor" => "0,0,0"
+    "tabButtonSelectColor" => "255,255,255"
+    "windowBackImage" => "SC4-GG3-Background-Main.jpg"
+    "WindowedValue" => "0"
+    "windowFullBackImage" => "SC4-GG3-Background-Popup.jpg"
+  }
+  "LSApplicationCategoryType" => "public.app-category.simulation-games"
+  "LSMinimumSystemVersion" => "10.12.6"
+  "LSRequiresCarbon" => false
+  "NSHumanReadableCopyright" => "© 2020 Aspyr Media, Inc.
+All rights reserved."
+  "NSSupportsAutomaticGraphicsSwitching" => true
+  "VersionWithBuildString" => "1.2.1 (185949 steam)"
+}
