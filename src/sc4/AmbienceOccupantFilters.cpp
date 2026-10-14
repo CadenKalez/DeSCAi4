@@ -69,7 +69,7 @@ bool BuildingZone(cISC4Occupant* occupant, std::int32_t& zone) {
     void* raw = nullptr;
     if (!occupant->QueryInterface(kGZIID_cISC4BuildingOccupant, &raw)) return false;
     auto* building = static_cast<cISC4BuildingOccupant*>(raw);
-    zone = building->GetZoneType();
+    zone = building->GetBuildingProfile().zoneType;
     building->Release();
     return true;
 }

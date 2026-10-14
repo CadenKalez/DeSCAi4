@@ -25,18 +25,21 @@ public:
     ISC4LotInfo* LotOfOccupant(cISC4Occupant*) override { lot.AddRef(); return &lot; }
     Lot lot{4, 3};
 };
-class Bld final : public cSC4Occupant, public cISC4BuildingOccupant {
+class Development final : public IBuildingDevelopmentHost {
 public:
-    explicit Bld(int zone) : zone_(zone) {}
-    bool QueryInterface(std::uint32_t iid, void** out) override {
-        if (iid == kGZIID_cISC4BuildingOccupant) { *out = static_cast<cISC4BuildingOccupant*>(this); AddRef(); return true; }
-        return cSC4Occupant::QueryInterface(iid, out);
-    }
-    std::uint32_t AddRef() override { return cSC4Occupant::AddRef(); }
-    std::uint32_t Release() override { return cSC4Occupant::Release(); }
-    std::int32_t GetZoneType() override { return zone_; }
-    int zone_;
+    const cRZString& ExemplarName(std::uint32_t) override { return name; }
+    const cRZString& BuildingName(std::uint32_t) override { return name; }
+    const BuildingProfile& Profile(std::uint32_t) override { return profile; }
+    cRZString name;
+    BuildingProfile profile;
 };
+Development gDevelopment;
+cSC4BuildingOccupant* NewBuilding(int zone) {
+    gDevelopment.profile.zoneType = zone;
+    auto* b = new cSC4BuildingOccupant();
+    b->AddRef();
+    return b;
+}
 }  // namespace
 
 int main() {
@@ -64,11 +67,13 @@ int main() {
     auto* distressed = cAmbienceOccupantFilterIsDistressed::Create(); distressed->AddRef();
     world.lot.state = 5;
     CHECK(distressed->IsTrueOccupant(o));
-    auto* b = new Bld(2); b->AddRef();
+    SetBuildingDevelopment(&gDevelopment);
+    auto* b = NewBuilding(2);
+    cISC4Occupant* bo = static_cast<cSC4Occupant*>(b);
     auto* comm = cAmbienceOccupantFilterIsCommercial::Create(); comm->AddRef();
     auto* res = cAmbienceOccupantFilterIsResidential::Create(); res->AddRef();
     auto* building = cAmbienceOccupantFilterIsBuilding::Create(); building->AddRef();
-    CHECK(comm->IsTrueOccupant(b) && !res->IsTrueOccupant(b) && building->IsTrueOccupant(b));
+    CHECK(comm->IsTrueOccupant(bo) && !res->IsTrueOccupant(bo) && building->IsTrueOccupant(bo));
     void* raw = nullptr;
     CHECK(bus->QueryInterface(kGZIID_cIAmbienceOccupantFilter, &raw));
     static_cast<cIAmbienceOccupantFilter*>(raw)->Release();

@@ -20,6 +20,7 @@
 namespace sc4 {
 
 constexpr std::uint32_t kGZIID_cISC4Occupant = 0x26bb767e;
+constexpr std::uint32_t kGZIID_cISC4BuildingOccupant = 0x87dda3a9;
 constexpr std::uint32_t kGZCLSID_cSC4Occupant = 0xa9bc9ab6;
 constexpr std::uint32_t kOccupantDefaultType = 0x74758925;
 constexpr std::uint32_t kPropertyOccupantGroups = 0xaa1dd396;
@@ -27,6 +28,8 @@ constexpr std::uint32_t kPropertyOccupantGroups = 0xaa1dd396;
 // messages posted by occupants
 constexpr std::uint32_t kMessageOccupantInitialized = 0x99ef1140;
 constexpr std::uint32_t kMessageOccupantShutdown = 0x99ef1141;
+constexpr std::uint32_t kMessageOccupantInserted = 0x99ef1142;           // by the occupant manager
+constexpr std::uint32_t kMessageOccupantRemovedFromManager = 0x99ef1143;
 constexpr std::uint32_t kMessageOccupantChanged = 0x99ef1145;
 constexpr std::uint32_t kMessageOccupantRemoved = 0x99ef1146;
 constexpr std::uint32_t kMessageOccupantHighlight = 0xe6e85114;

@@ -7,21 +7,13 @@
 #pragma once
 #include <cstdint>
 
-#include "sc4/Occupant.h"
+#include "sc4/BuildingOccupant.h"
 
 namespace sc4 {
 
 constexpr std::uint32_t kGZIID_cIAmbienceOccupantFilter = 0xca400753;
 constexpr std::uint32_t kGZIID_cIAmbienceOccupantFilterAlt = 0x4a40074c;
-constexpr std::uint32_t kGZIID_cISC4BuildingOccupant = 0x87dda3a9;
 constexpr std::uint32_t kGZIID_cISC4NatureOccupant = 0xc83dd057;
-
-// QI-only interface on building occupants. The original reads a record from slot 11 whose first dword
-// is the building's zone type (1 residential, 2 commercial, 5 agriculture, 6/7 dirty industry, 8 clean).
-class cISC4BuildingOccupant : public cIGZUnknown {
-public:
-    virtual std::int32_t GetZoneType() = 0;
-};
 
 // What a lot looks like to the ambience filters.
 class ISC4LotInfo : public cIGZUnknown {

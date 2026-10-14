@@ -310,8 +310,12 @@ public:
     virtual bool Read(cIGZIStream& stream);
     void SetDefaultExemplar(cISCResExemplar* exemplar) override;
     cISCResExemplar* GetDefaultExemplar() const override { return defaultExemplar_.get(); }
+    // The key read from a stream, kept even when no resource manager could resolve it (port addition:
+    // lets tools identify a building's exemplar without loading it). Write still follows the exemplar.
+    const cGZPersistResourceKey& DefaultExemplarKey() const { return defaultExemplarKey_; }
 
 private:
+    cGZPersistResourceKey defaultExemplarKey_;
     cRZAutoRefCount<cISCResExemplar> defaultExemplar_;     // +0x30
 };
 

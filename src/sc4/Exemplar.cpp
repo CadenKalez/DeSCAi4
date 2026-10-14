@@ -984,6 +984,7 @@ bool cSCExemplarPropertyHolder::Read(cIGZIStream& stream) {
     stream.GetUint32(key.group);
     stream.GetUint32(key.type);
     stream.GetUint32(key.instance);
+    defaultExemplarKey_ = key;
     if (key.group == 0 && key.type == 0 && key.instance == 0) {
         defaultExemplar_ = nullptr;
     } else if (cIGZPersistResourceManager* manager = PersistResourceManagerService()) {

@@ -26,8 +26,6 @@ constexpr std::uint32_t kGZCLSID_cSC4OccupantFilter = 0xa9c74dc9;
 constexpr std::uint32_t kGZCLSID_cSC4OccupantTypeFilter = 0xe9c75ed1;
 constexpr std::uint32_t kGZCLSID_cSC4DefaultOccupantFilter = 0xc9c75eae;
 
-constexpr std::uint32_t kMessageOccupantInserted = 0x99ef1142;
-constexpr std::uint32_t kMessageOccupantRemovedFromManager = 0x99ef1143;
 
 constexpr int kWorldCells = 192;
 constexpr float kWorldCellSize = 64.0f;
