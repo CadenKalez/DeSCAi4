@@ -11421,3 +11421,64 @@ address,symbol,unique_name,source,status,evidence
 0x100293b66,cSC4RenderProperties::cProperties::cRegkMaxVehiclePct::cRegkMaxVehiclePct(),cRegkMaxVehiclePct,src/sc4/RenderProperties.cpp|h|RenderPropertyDefaults.inc,recovered,RenderProperties: property registry (cRegk ctors via scripts/gen_renderprops.py) + name/shortcut lookup; test sc4_renderproperties
 0x100293c8c,cSC4RenderProperties::cProperties::cRegkMaxPedPct::cRegkMaxPedPct(),cRegkMaxPedPct,src/sc4/RenderProperties.cpp|h|RenderPropertyDefaults.inc,recovered,RenderProperties: property registry (cRegk ctors via scripts/gen_renderprops.py) + name/shortcut lookup; test sc4_renderproperties
 0x100293db2,cSC4RenderProperties::cProperties::cRegkOpaqueUIAlphaValue::cRegkOpaqueUIAlphaValue(),cRegkOpaqueUIAlphaValue,src/sc4/RenderProperties.cpp|h|RenderPropertyDefaults.inc,recovered,RenderProperties: property registry (cRegk ctors via scripts/gen_renderprops.py) + name/shortcut lookup; test sc4_renderproperties
+0x100072e24,cSC4NeighborDeal::cSC4NeighborDeal(),Construct,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075156,cSC4NeighborDeal::cSC4NeighborDeal(),ConstructWrapper,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x10007522e,cSC4NeighborDeal::~cSC4NeighborDeal(),Destruct,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075268,non-virtual thunk to cSC4NeighborDeal::~cSC4NeighborDeal(),DestructThunk,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x10007529e,cSC4NeighborDeal::~cSC4NeighborDeal(),DestructAndDelete,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x1000752fc,non-virtual thunk to cSC4NeighborDeal::~cSC4NeighborDeal(),DestructAndDeleteThunk,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x10007530a,cSC4NeighborDeal::SetIncAmount2(int),SetIncAmount2,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075314,cSC4NeighborDeal::SetIncAmount(int),SetIncAmount,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x10007531e,cSC4NeighborDeal::SetLastAmount(int),SetLastAmount,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075328,cSC4NeighborDeal::SetLastIncAmount(int),SetLastIncAmount,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075332,cSC4NeighborDeal::SetAmount(int),SetAmount,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x1000754ac,"cSC4NeighborDeal::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x1000754e0,"non-virtual thunk to cSC4NeighborDeal::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_54e0,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x1000754ee,"non-virtual thunk to cSC4NeighborDeal::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_54ee,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x1000754fc,cSC4NeighborDeal::AddRef(),AddRef,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x10007550a,non-virtual thunk to cSC4NeighborDeal::AddRef(),AddRefThunk_550a,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075518,non-virtual thunk to cSC4NeighborDeal::AddRef(),AddRefThunk_5518,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075526,cSC4NeighborDeal::Release(),Release,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075546,non-virtual thunk to cSC4NeighborDeal::Release(),ReleaseThunk_5546,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x10007556a,non-virtual thunk to cSC4NeighborDeal::Release(),ReleaseThunk_556a,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x10007558e,cSC4NeighborDeal::Copy(cISC4NeighborDeal const&),Copy,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075712,cSC4NeighborDeal::Write(cIGZOStream&) const,Write,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075828,non-virtual thunk to cSC4NeighborDeal::Write(cIGZOStream&) const,WriteThunk_5828,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075836,non-virtual thunk to cSC4NeighborDeal::Write(cIGZOStream&) const,WriteThunk_5836,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075844,cSC4NeighborDeal::Read(cIGZIStream&),Read,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x1000759bc,non-virtual thunk to cSC4NeighborDeal::Read(cIGZIStream&),ReadThunk_59bc,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x1000759ca,non-virtual thunk to cSC4NeighborDeal::Read(cIGZIStream&),ReadThunk_59ca,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x1000759d8,cSC4NeighborDeal::GetCityOnOtherSideOfConnection() const,GetCityOnOtherSideOfConnection,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075a1c,cSC4NeighborDeal::UpdateCost(),UpdateCost,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075ad8,"cSC4NeighborDeal::SetFlags(int, bool)",SetFlags,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075b46,cSC4NeighborDeal::UpdateState(),UpdateState,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075be4,cSC4NeighborDeal::Cancel(),Cancel,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075c28,cSC4NeighborDeal::Activate(),Activate,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075ca2,"cSC4NeighborDeal::Clone(cISC4NeighborDeal**, bool) const",Clone,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075f98,"cSC4NeighborDeal::SetRegionCellOnCitySideOfConnection(int, int)",SetRegionCellOnCitySideOfConnection,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075fa4,"cSC4NeighborDeal::GetRegionCellOnCitySideOfConnection(int&, int&) const",GetRegionCellOnCitySideOfConnection,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075fb4,"cSC4NeighborDeal::SetRegionCellOnOtherSideOfConnection(int, int)",SetRegionCellOnOtherSideOfConnection,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075fc0,"cSC4NeighborDeal::GetRegionCellOnOtherSideOfConnection(int&, int&) const",GetRegionCellOnOtherSideOfConnection,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075fd0,cSC4NeighborDeal::GetType() const,GetType,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075fda,cSC4NeighborDeal::SetType(int),SetType,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075fe4,cSC4NeighborDeal::GetAmount() const,GetAmount,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075fee,cSC4NeighborDeal::GetLastAmount() const,GetLastAmount,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100075ff8,cSC4NeighborDeal::GetLastIncAmount() const,GetLastIncAmount,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100076002,cSC4NeighborDeal::GetIncAmount() const,GetIncAmount,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x10007600c,cSC4NeighborDeal::GetIncAmount2() const,GetIncAmount2,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100076016,cSC4NeighborDeal::GetAmountUsed() const,GetAmountUsed,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100076020,cSC4NeighborDeal::SetAmountUsed(int),SetAmountUsed,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x10007602a,cSC4NeighborDeal::GetCost() const,GetCost,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100076034,cSC4NeighborDeal::GetStartDate(cIGZDate&) const,GetStartDate,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x10007604a,cSC4NeighborDeal::SetStartDate(cIGZDate const&),SetStartDate,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100076074,cSC4NeighborDeal::GetExpirationDate(cIGZDate&) const,GetExpirationDate,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x10007608e,cSC4NeighborDeal::SetExpirationDate(cIGZDate const&),SetExpirationDate,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x1000760b8,cSC4NeighborDeal::GetCurrentDate(cIGZDate&) const,GetCurrentDate,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x1000760d2,cSC4NeighborDeal::SetCurrentDate(cIGZDate const&),SetCurrentDate,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x1000760fe,cSC4NeighborDeal::GetSuspensionDate(cIGZDate&) const,GetSuspensionDate,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100076118,cSC4NeighborDeal::SetSuspensionDate(cIGZDate const&),SetSuspensionDate,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100076144,cSC4NeighborDeal::GetFlags() const,GetFlags,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100076150,cSC4NeighborDeal::CheckFlagsAnd(int) const,CheckFlagsAnd,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100076164,cSC4NeighborDeal::CheckFlagsOr(int) const,CheckFlagsOr,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100076174,cSC4NeighborDeal::GetGZCLSID() const,GetGZCLSID,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x100076180,non-virtual thunk to cSC4NeighborDeal::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
