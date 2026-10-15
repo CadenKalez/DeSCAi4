@@ -1,0 +1,250 @@
+#include "s3d/S3DMath.h"
+
+#include <cmath>
+
+#pragma STDC FP_CONTRACT OFF
+
+namespace nS3D {
+
+float Sqrt(float v) { return std::sqrt(v); }
+
+int CeilPow2(int v) {
+    int p = 1, next = 1;
+    do {
+        p = next;
+        next = p * 2;
+    } while (p < v);
+    return p;
+}
+
+void MakeBoxCorners(const cS3DBoundingBox& b, cS3DVector3 out[8]) {
+    const float x[2] = {b.min[0], b.max[0]}, y[2] = {b.min[1], b.max[1]}, z[2] = {b.min[2], b.max[2]};
+    for (int i = 0; i < 8; ++i) out[i] = {x[i & 1], y[(i >> 1) & 1], z[i >> 2]};
+}
+
+void TriangleDoubleAreaNormal(const cS3DVector3& a, const cS3DVector3& b, const cS3DVector3& c, cS3DVector3& out) {
+    const float x = (a.z + c.z) * (c.y - a.y) + (b.z + c.z) * (b.y - c.y) + (a.z + b.z) * (a.y - b.y);
+    const float y = (a.x + c.x) * (c.z - a.z) + (b.x + c.x) * (b.z - c.z) + (a.x + b.x) * (a.z - b.z);
+    const float z = (a.y + c.y) * (c.x - a.x) + (b.y + c.y) * (b.x - c.x) + (a.y + b.y) * (a.x - b.x);
+    out = {x, y, z};
+}
+
+void AlignZToDirWithYUp(const cS3DVector3& d, Matrix3& o) {
+    float* m = o.m;
+    m[2] = d.x; m[5] = d.y; m[8] = d.z;
+    float x = d.x;
+    float z = d.z;
+    const float len = std::sqrt(x * x + z * z + 0.0f);
+    float f6, f2, f1;
+    if (len <= -0.0f) {
+        m[0] = 0; m[3] = 0; m[6] = 1.0f;
+        x = 0.0f; f6 = 1.0f; f1 = 0.0f;
+        m[1] = f6; m[4] = x; m[7] = f1;
+        return;
+    }
+    const float k = -1.0f / len;
+    const float a = -(z * k);
+    const float b = k * 0.0f;
+    x = x * k;
+    m[0] = a; m[3] = b; m[6] = x;
+    f6 = x * d.y - b * d.z;
+    f2 = a * d.z - x * d.x;
+    f1 = z * k * d.y + b * d.x;
+    m[1] = f6; m[4] = f2; m[7] = f1;
+}
+
+void AlignXToDirWithYUp(const cS3DVector3& d, Matrix3& o) {
+    float* m = o.m;
+    m[0] = d.x; m[3] = d.y; m[6] = d.z;
+    const float x = d.x, z = d.z;
+    const float len = std::sqrt(x * x + z * z + 0.0f);
+    if (len <= 0.0f) {
+        m[1] = 0.0f; m[2] = 1.0f;       // the original writes 0x3f80000000000000 over (+4, +8)
+        m[4] = 0.0f; m[5] = 0.0f;       // and zero over (+0x10, +0x14)
+        m[7] = 1.0f;
+        m[8] = 0.0f;
+        return;
+    }
+    const float k = 1.0f / len;
+    const float a = -(z * k);
+    const float b = k * 0.0f;
+    const float xn = x * k;
+    m[2] = a; m[5] = b; m[8] = xn;
+    const float f7 = a * d.y - b * x;
+    m[1] = b * d.z - xn * d.y;
+    m[4] = z * k * d.z + xn * x;
+    m[7] = f7;
+}
+
+void AlignYToDir(const cS3DVector3& d, Matrix3& o) {
+    float* m = o.m;
+    m[1] = d.x; m[4] = d.y; m[7] = d.z;
+    const float x = d.x, y = d.y, z = d.z;
+    if (std::fabs(x) <= std::fabs(z)) {
+        const float k = 1.0f / std::sqrt(y * y + z * z + 0.0f);
+        const float f8 = k * -0.0f;
+        const float f7 = -(z * k);
+        const float f5 = k * y;
+        m[0] = z * k * z + y * f5;
+        m[3] = z * f8 - x * f5;
+        m[6] = f7 * x - y * f8;
+        m[2] = f8;
+        m[5] = f7;
+        m[8] = f5;
+        return;
+    }
+    const float k = 1.0f / std::sqrt(x * x + y * y + 0.0f);
+    const float f8 = y * k;
+    const float f6 = -x * k;
+    const float f5 = k * 0.0f;
+    const float f7 = x * f5 - z * f8;
+    m[2] = z * f6 - y * f5;
+    m[8] = y * f8 - x * f6;
+    m[0] = f8;
+    m[3] = f6;
+    m[5] = f7;
+    m[6] = f5;
+}
+
+void AlignDirToZWithYUp(const cS3DVector3& d, Matrix3& o) {
+    float* m = o.m;
+    m[6] = d.x; m[7] = d.y; m[8] = d.z;
+    const float x = d.x, z = d.z;
+    const float len = std::sqrt(x * x + z * z + 0.0f);
+    float f6, f2, f1;
+    if (len <= -0.0f) {
+        m[0] = 0; m[1] = 0; m[2] = 1.0f;
+        f2 = 0.0f; f6 = 1.0f; f1 = 0.0f;
+    } else {
+        const float k = -1.0f / len;
+        const float a = -(z * k);
+        const float b = k * 0.0f;
+        const float xn = x * k;
+        m[0] = a; m[1] = b; m[2] = xn;
+        f6 = xn * d.y - b * d.z;
+        f2 = a * d.z - xn * d.x;
+        f1 = z * k * d.y + b * d.x;
+    }
+    m[3] = f6; m[4] = f2; m[5] = f1;
+}
+
+void AlignDirToXWithYUp(const cS3DVector3& d, Matrix3& o) {
+    float* m = o.m;
+    m[0] = d.x; m[1] = d.y; m[2] = d.z;
+    const float x = d.x, z = d.z;
+    const float len = std::sqrt(x * x + z * z + 0.0f);
+    if (len <= 0.0f) {
+        m[3] = 0.0f; m[4] = 0.0f; m[5] = 1.0f;
+        m[6] = 1.0f; m[7] = 0.0f; m[8] = 0.0f;
+        return;
+    }
+    const float k = 1.0f / len;
+    const float a = -(z * k);
+    const float b = k * 0.0f;
+    const float xn = x * k;
+    m[6] = a; m[7] = b; m[8] = xn;
+    m[3] = b * d.z - xn * d.y;
+    m[4] = z * k * d.z + xn * d.x;
+    m[5] = a * d.y - b * d.x;
+}
+
+cS3DVector2 RandomDirection2(cRZRandom& random) {
+    float x, y, d;
+    do {
+        x = float(random.RandomDoubleRangeUniform(-1.0, 1.0));
+        y = float(random.RandomDoubleRangeUniform(-1.0, 1.0));
+        d = y * y + x * x;
+        if (d <= 1.0f) break;
+    } while (d < 0.0001f);
+    const float inv = 1.0f / std::sqrt(d);
+    return {x * inv, inv * y};
+}
+
+cS3DVector3 RandomDirection3(cRZRandom& random) {
+    float x, y, z, d;
+    do {
+        do {
+            x = float(random.RandomDoubleRangeUniform(-1.0, 1.0));
+            y = float(random.RandomDoubleRangeUniform(-1.0, 1.0));
+            z = float(random.RandomDoubleRangeUniform(-1.0, 1.0));
+            d = z * z + y * y + x * x;
+        } while (1.0f < d);
+    } while (d < 0.0001f);
+    const float inv = 1.0f / std::sqrt(d);
+    return {x * inv, y * inv, inv * z};
+}
+
+float GetLength(const cS3DVector3& v) { return Sqrt(v.x * v.x + v.y * v.y + v.z * v.z); }
+
+void Normalize(cS3DVector3& v) {
+    const float k = 1.0f / GetLength(v);
+    v.x = k * v.x;
+    v.y = k * v.y;
+    v.z = k * v.z;
+}
+
+void ScaleBy(cS3DVector3& v, float s) {
+    v.x = s * v.x;
+    v.y = s * v.y;
+    v.z = s * v.z;
+}
+
+void TransformPoints(const cS3DTransform& t, const cS3DVector3* in, cS3DVector3* out, int count) {
+    const float(*r)[3] = t.rotation;
+    const float* tr = t.translation;
+    const float s = t.scale;
+    for (; count > 0; --count, ++in, ++out) {
+        const float x = in->x, y = in->y, z = in->z;
+        switch (t.flags) {
+            case 0: *out = *in; break;
+            case 1: *out = {x + tr[0], y + tr[1], z + tr[2]}; break;
+            case 2: *out = {x * s, y * s, s * z}; break;
+            case 3: *out = {x * s + tr[0], y * s + tr[1], s * z + tr[2]}; break;
+            case 4:
+                *out = {r[0][2] * z + r[0][1] * y + r[0][0] * x, r[1][2] * z + r[1][1] * y + r[1][0] * x,
+                        z * r[2][2] + y * r[2][1] + x * r[2][0]};
+                break;
+            case 5:
+                *out = {r[0][2] * z + r[0][1] * y + r[0][0] * x + tr[0], r[1][2] * z + r[1][1] * y + r[1][0] * x + tr[1],
+                        z * r[2][2] + y * r[2][1] + x * r[2][0] + tr[2]};
+                break;
+            default:
+                *out = {(r[0][2] * z + r[0][1] * y + r[0][0] * x) * s + tr[0], (r[1][2] * z + r[1][1] * y + r[1][0] * x) * s + tr[1],
+                        (z * r[2][2] + y * r[2][1] + x * r[2][0]) * s + tr[2]};
+                break;
+        }
+    }
+}
+
+void AssignTransform(cS3DTransform& dst, const cS3DTransform& src) {
+    const std::uint8_t counter = std::uint8_t(dst.changeCounter + 1);
+    dst = src;
+    dst.changeCounter = counter;
+}
+
+void MultiplyTransform(cS3DTransform& self, const cS3DTransform& other) {
+    if (other.flags == 0) return;
+    if (self.flags == 0) {
+        AssignTransform(self, other);
+        return;
+    }
+    const float(*t)[3] = self.rotation;
+    const float(*o)[3] = other.rotation;
+    const float s = self.scale;
+    float tx = self.translation[0], ty = self.translation[1], tz = self.translation[2];
+    const float ox = other.translation[0], oy = other.translation[1], oz = other.translation[2];
+    tx = (t[0][2] * oz + t[0][1] * oy + t[0][0] * ox) * s + tx;
+    ty = (t[1][2] * oz + t[1][1] * oy + t[1][0] * ox) * s + ty;
+    tz = (t[2][2] * oz + t[2][1] * oy + t[2][0] * ox) * s + tz;
+    float n[3][3];
+    for (int row = 0; row < 3; ++row)
+        for (int col = 0; col < 3; ++col) n[row][col] = o[2][col] * t[row][2] + o[1][col] * t[row][1] + o[0][col] * t[row][0];
+    for (int row = 0; row < 3; ++row)
+        for (int col = 0; col < 3; ++col) self.rotation[row][col] = n[row][col];
+    self.translation[0] = tx; self.translation[1] = ty; self.translation[2] = tz;
+    self.scale = s * other.scale;
+    self.flags = std::uint8_t(self.flags | other.flags);
+    self.changeCounter = std::uint8_t(self.changeCounter + 1);
+}
+
+}  // namespace nS3D
