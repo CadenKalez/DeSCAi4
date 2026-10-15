@@ -50,7 +50,7 @@ class IBudgetHost {
 public:
     virtual ~IBudgetHost() = default;
     virtual bool GetBudgetItemForPurpose(cISCPropertyHolder* holder, std::uint32_t purpose, BudgetItem& item) = 0;   // sim 0x198
-    virtual void GetBudgetItemInfo(cISCPropertyHolder* holder, std::vector<BudgetItem>& items) = 0;                 // sim 0x190
+    virtual bool GetBudgetItemInfo(cISCPropertyHolder* holder, std::vector<BudgetItem>& items) = 0;                 // sim 0x190
     virtual void ChangeBudgetItemCost(cISCPropertyHolder* holder, std::uint32_t purpose, std::int64_t cost) = 0;     // sim 0x1a8
     virtual void ChangeBudgetItemLocalFunding(cISCPropertyHolder* holder, std::uint32_t purpose, float funding) = 0; // sim 0x1b0
     virtual void NeededFundingChanged(cSC4DepartmentBudget* department) = 0;                                          // sim 0x100

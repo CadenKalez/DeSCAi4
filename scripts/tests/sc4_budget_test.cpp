@@ -18,8 +18,9 @@ public:
         item = it->second;
         return true;
     }
-    void GetBudgetItemInfo(cISCPropertyHolder* h, std::vector<BudgetItem>& out) override {
+    bool GetBudgetItemInfo(cISCPropertyHolder* h, std::vector<BudgetItem>& out) override {
         for (auto& e : items) if (e.first.first == h) out.push_back(e.second);
+        return !out.empty();
     }
     void ChangeBudgetItemCost(cISCPropertyHolder* h, std::uint32_t purpose, std::int64_t cost) override {
         items[{h, purpose}].cost = cost;

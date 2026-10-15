@@ -327,8 +327,8 @@ distributed:
     for (const ObjectFunding& of : objects) {
         g_host->ChangeBudgetItemLocalFunding(of.object, of.item.purpose,
                                              static_cast<float>(of.amount) / static_cast<float>(of.cost));
-        cSC4LineItem* line = lineItems_[static_cast<std::uint32_t>(of.item.lineItemId)];
-        line->SetCurrentExpenses(NonNegative(line->GetCurrentExpenses() + of.amount));
+        cSC4LineItem* line = GetLineItem(static_cast<std::uint32_t>(of.item.lineItemId));   // (original: map[] -> null deref)
+        if (line) line->SetCurrentExpenses(NonNegative(line->GetCurrentExpenses() + of.amount));
     }
 }
 
@@ -337,11 +337,13 @@ void cSC4DepartmentBudget::AddLocallyFundedObject(cISCPropertyHolder* object, st
     if (g_host) g_host->GetBudgetItemForPurpose(object, purpose, item);
     object->AddRef();
     locallyFunded_.insert({object, purpose});
-    cSC4LineItem* line = lineItems_[static_cast<std::uint32_t>(item.lineItemId)];
-    line->AddToFullExpenses(item.cost);
-    const std::int64_t current = line->GetCurrentExpenses() +
-                                 static_cast<std::int64_t>(fundingPercentage_ * static_cast<float>(item.cost));
-    line->SetCurrentExpenses(NonNegative(current));
+    cSC4LineItem* line = GetLineItem(static_cast<std::uint32_t>(item.lineItemId));
+    if (line) {
+        line->AddToFullExpenses(item.cost);
+        const std::int64_t current = line->GetCurrentExpenses() +
+                                     static_cast<std::int64_t>(fundingPercentage_ * static_cast<float>(item.cost));
+        line->SetCurrentExpenses(NonNegative(current));
+    }
     if (g_host) {
         g_host->ChangeBudgetItemLocalFunding(object, item.purpose, fundingPercentage_);
         g_host->FundingPercentageChanged(this);
@@ -362,8 +364,8 @@ bool cSC4DepartmentBudget::IsLocallyFundedObjectInDepartment(cISCPropertyHolder*
 }
 
 void cSC4DepartmentBudget::RecalculateLineItemCurrentExpenses(std::uint32_t lineItemId) {
-    cSC4LineItem* line = lineItems_[lineItemId];
-    if (!line->IsLocalFundingItem() || line->GetType() != 0 || !g_host) return;
+    cSC4LineItem* line = GetLineItem(lineItemId);
+    if (!line || !line->IsLocalFundingItem() || line->GetType() != 0 || !g_host) return;
     std::int64_t sum = 0;
     for (const auto& funded : locallyFunded_) {
         std::vector<BudgetItem> items;
@@ -400,7 +402,8 @@ void cSC4DepartmentBudget::RecalculateAllLineItemCurrentExpenses() {
             }
         }
     }
-    for (auto& total : totals) lineItems_[total.first]->SetCurrentExpenses(NonNegative(total.second / 100));
+    for (auto& total : totals)
+        if (cSC4LineItem* line = GetLineItem(total.first)) line->SetCurrentExpenses(NonNegative(total.second / 100));
     if (lineItems_.empty()) return;
     std::int64_t currentSum = 0, idealSum = 0;
     for (auto& entry : lineItems_) {
@@ -471,9 +474,11 @@ void cSC4DepartmentBudget::SetLocalFullFunding(cISCPropertyHolder* object, std::
         percentage = (static_cast<float>(static_cast<std::int64_t>(current) + amountDelta) /
                       static_cast<float>(ideal + delta)) * 0.01f;
     }
-    cSC4LineItem* line = lineItems_[static_cast<std::uint32_t>(item.lineItemId)];
-    line->AddToFullExpenses(delta);
-    line->SetCurrentExpenses(NonNegative(static_cast<std::int64_t>(amountDelta) / 100 + line->GetCurrentExpenses()));
+    cSC4LineItem* line = GetLineItem(static_cast<std::uint32_t>(item.lineItemId));
+    if (line) {
+        line->AddToFullExpenses(delta);
+        line->SetCurrentExpenses(NonNegative(static_cast<std::int64_t>(amountDelta) / 100 + line->GetCurrentExpenses()));
+    }
     SendBudgetChangeMessage(kBudgetMessageNeededFundingChanged, 0);
     SetFundingPercentage(percentage, 0, false);
 }
