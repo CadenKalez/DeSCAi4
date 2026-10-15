@@ -10733,3 +10733,15 @@ address,symbol,unique_name,source,status,evidence
 0x10026b404,"void convertStringToSignedValue<long long>(cRZString, long long*, unsigned int)",ConvertStringToSignedValues64,src/gz/VariantTextValues.cpp|h,recovered,"scripts/tests/gz_varianttext_test.cpp (type names, space separated lists, defaults, unquoted tokens)"
 0x10026b569,"void convertStringToFloatValue<float>(cRZString, float*, unsigned int)",ConvertStringToFloatValues,src/gz/VariantTextValues.cpp|h,recovered,"scripts/tests/gz_varianttext_test.cpp (type names, space separated lists, defaults, unquoted tokens)"
 0x10026b8d4,getUnquotedString(cRZString&),GetUnquotedString,src/gz/VariantTextValues.cpp|h,recovered,"scripts/tests/gz_varianttext_test.cpp (type names, space separated lists, defaults, unquoted tokens)"
+0x100565174,"script_tag_hex(cRZString&, cRZString const&, unsigned int)",ScriptTagHex,src/gz/WinScriptTags.cpp|h,recovered,scripts/tests/gz_winscripttags_test.cpp (exact attribute text)
+0x10056522f,"script_tag_quad(cRZString&, cRZString const&, int, int, int, int)",ScriptTagQuad,src/gz/WinScriptTags.cpp|h,recovered,scripts/tests/gz_winscripttags_test.cpp (exact attribute text)
+0x1005652f7,"script_tag_color(cRZString&, cRZString const&, unsigned char, unsigned char, unsigned char)",ScriptTagColor,src/gz/WinScriptTags.cpp|h,recovered,scripts/tests/gz_winscripttags_test.cpp (exact attribute text)
+0x1005653c5,"script_tag_quoted(cRZString&, cRZString const&, cRZString const&)",ScriptTagQuoted,src/gz/WinScriptTags.cpp|h,recovered,scripts/tests/gz_winscripttags_test.cpp (exact attribute text)
+0x1005654fc,"script_tag_textkey(cRZString&, cRZString const&, unsigned int, unsigned int)",ScriptTagTextKey,src/gz/WinScriptTags.cpp|h,recovered,scripts/tests/gz_winscripttags_test.cpp (exact attribute text)
+0x1005655ba,"script_tag_binary(cRZString&, cRZString const&, bool)",ScriptTagBinary,src/gz/WinScriptTags.cpp|h,recovered,scripts/tests/gz_winscripttags_test.cpp (exact attribute text)
+0x10056568a,"script_tag_symbol(cRZString&, cRZString const&, cRZString const&)",ScriptTagSymbol,src/gz/WinScriptTags.cpp|h,recovered,scripts/tests/gz_winscripttags_test.cpp (exact attribute text)
+0x1005657d0,"script_tag_pair(cRZString&, cRZString const&, int, int)",ScriptTagPair,src/gz/WinScriptTags.cpp|h,recovered,scripts/tests/gz_winscripttags_test.cpp (exact attribute text)
+0x10056588e,"script_tag_simple(cRZString&, cRZString const&)",ScriptTagSimple,src/gz/WinScriptTags.cpp|h,recovered,scripts/tests/gz_winscripttags_test.cpp (exact attribute text)
+0x1005658da,"script_tag_int(cRZString&, cRZString const&, int)",ScriptTagInt,src/gz/WinScriptTags.cpp|h,recovered,scripts/tests/gz_winscripttags_test.cpp (exact attribute text)
+0x100565995,"script_tag_imagekey(cRZString&, cRZString const&, unsigned int, unsigned int)",ScriptTagImageKey,src/gz/WinScriptTags.cpp|h,recovered,scripts/tests/gz_winscripttags_test.cpp (exact attribute text)
+0x100565f60,"script_tag_optgrpopt(cRZString&, cRZString const&, unsigned int, int, int)",ScriptTagOptionGroupOption,src/gz/WinScriptTags.cpp|h,recovered,scripts/tests/gz_winscripttags_test.cpp (exact attribute text)
