@@ -10931,3 +10931,106 @@ address,symbol,unique_name,source,status,evidence
 0x100223060,cSC4BudgetSimulator::GetLoanTimeInMonths() const,GetLoanTimeInMonths,src/sc4/BudgetSimulator.cpp|h,recovered,"scripts/tests/sc4_budgetsimulator_test.cpp (funds, taxes, bonds, groups, budget items, monthly roll-up, stream round trip)"
 0x10022306c,cSC4BudgetSimulator::GetGZCLSID() const,GetGZCLSID,src/sc4/BudgetSimulator.cpp|h,recovered,"scripts/tests/sc4_budgetsimulator_test.cpp (funds, taxes, bonds, groups, budget items, monthly roll-up, stream round trip)"
 0x100223078,non-virtual thunk to cSC4BudgetSimulator::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/BudgetSimulator.cpp|h,recovered,"scripts/tests/sc4_budgetsimulator_test.cpp (funds, taxes, bonds, groups, budget items, monthly roll-up, stream round trip)"
+0x100795fb0,cSC4OrdinanceSimple::GetYearFirstAvailable() const,GetYearFirstAvailable,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100795fbc,cSC4OrdinanceSimple::GetChanceAvailability() const,GetChanceAvailability,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100795fd4,cSC4OrdinanceSimple::GetMonthlyIncomeFactor() const,GetMonthlyIncomeFactor,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100795fe4,cSC4OrdinanceSimple::IsOn() const,IsOn,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079600c,cSC4OrdinanceSimple::IsIncomeOrdinance() const,IsIncomeOrdinance,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100796480,cSC4OrdinanceSimple::GetID() const,GetID,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100796494,cSC4OrdinanceSimple::GetDescription() const,GetDescription,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007964ac,cSC4OrdinanceSimple::GetEnactmentIncome() const,GetEnactmentIncome,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007964c4,cSC4OrdinanceSimple::GetAdvisorID() const,GetAdvisorID,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007964d0,cSC4OrdinanceSimple::GetMiscProperties() const,GetMiscProperties,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007964e4,cSC4OrdinanceSimple::IsEnabled() const,IsEnabled,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007964f0,cSC4OrdinanceSimple::GetMonthlyAdjustedIncome() const,GetMonthlyAdjustedIncome,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100797370,cSC4OrdinanceSimple::GetName() const,GetName,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100797380,cSC4OrdinanceSimple::GetRetracmentIncome() const,GetRetracmentIncome,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100797390,cSC4OrdinanceSimple::IsAvailable() const,IsAvailable,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007973a0,cSC4OrdinanceSimple::SetEnabled(bool),SetEnabled,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007973b0,cSC4OrdinanceSimple::ForceAvailable(bool),ForceAvailable,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007973c0,cSC4OrdinanceSimple::ForceOn(bool),ForceOn,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007973d0,cSC4OrdinanceSimple::ForceMonthlyAdjustedIncome(long long),ForceMonthlyAdjustedIncome,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100797ad0,cSC4OrdinanceSimple::GetMonthlyConstantIncome() const,GetMonthlyConstantIncome,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100797e6e,cSC4OrdinanceSimple::cSC4OrdinanceSimple(),Construct,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100797f7c,cSC4OrdinanceSimple::~cSC4OrdinanceSimple(),Destruct,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798002,cSC4OrdinanceSimple::~cSC4OrdinanceSimple(),DestructAndDelete,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079800c,non-virtual thunk to cSC4OrdinanceSimple::~cSC4OrdinanceSimple(),DestructThunk,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079801a,cSC4OrdinanceSimple::~cSC4OrdinanceSimple(),DestructBody,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798048,non-virtual thunk to cSC4OrdinanceSimple::~cSC4OrdinanceSimple(),DestructAndDeleteThunk,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798056,"cSC4OrdinanceSimple::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007980a0,"non-virtual thunk to cSC4OrdinanceSimple::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_80a0,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007980ae,"non-virtual thunk to cSC4OrdinanceSimple::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_80ae,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007980bc,"non-virtual thunk to cSC4OrdinanceSimple::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_80bc,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007980ca,cSC4OrdinanceSimple::AddRef(),AddRef,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007980d8,non-virtual thunk to cSC4OrdinanceSimple::AddRef(),AddRefThunk_80d8,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007980e6,non-virtual thunk to cSC4OrdinanceSimple::AddRef(),AddRefThunk_80e6,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007980f4,non-virtual thunk to cSC4OrdinanceSimple::AddRef(),AddRefThunk_80f4,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798102,cSC4OrdinanceSimple::Release(),Release,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798122,non-virtual thunk to cSC4OrdinanceSimple::Release(),ReleaseThunk_8122,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798146,non-virtual thunk to cSC4OrdinanceSimple::Release(),ReleaseThunk_8146,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079816a,non-virtual thunk to cSC4OrdinanceSimple::Release(),ReleaseThunk_816a,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079818e,cSC4OrdinanceSimple::Init(),Init,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007981b4,cSC4OrdinanceSimple::Shutdown(),Shutdown,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007981ce,cSC4OrdinanceSimple::SetKey(cGZPersistResourceKey const&),SetKey,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007981e8,cSC4OrdinanceSimple::FromData(cGZPersistResourceKey const&),FromData,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798566,cSC4OrdinanceSimple::SetAvailable(bool),SetAvailable,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798590,cSC4OrdinanceSimple::SetOn(bool),SetOn,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007985fc,cSC4OrdinanceSimple::CheckConditions(),CheckConditions,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079865a,cSC4OrdinanceSimple::GetCurrentMonthlyIncome(),GetCurrentMonthlyIncome,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007986b0,cSC4OrdinanceSimple::Simulate(),Simulate,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007986d0,cSC4OrdinanceSimple::Write(cIGZOStream&) const,Write,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079880c,non-virtual thunk to cSC4OrdinanceSimple::Write(cIGZOStream&) const,WriteThunk_880c,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079881a,non-virtual thunk to cSC4OrdinanceSimple::Write(cIGZOStream&) const,WriteThunk_881a,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798828,cSC4OrdinanceSimple::Read(cIGZIStream&),Read,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798b14,non-virtual thunk to cSC4OrdinanceSimple::Read(cIGZIStream&),ReadThunk_8b14,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798b22,non-virtual thunk to cSC4OrdinanceSimple::Read(cIGZIStream&),ReadThunk_8b22,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798b30,cSC4OrdinanceSimple::GetGZCLSID() const,GetGZCLSID,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798b3c,non-virtual thunk to cSC4OrdinanceSimple::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798bc4,cSC4OrdinanceSimulator::~cSC4OrdinanceSimulator(),Destruct,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798c02,cSC4OrdinanceSimulator::~cSC4OrdinanceSimulator(),DestructAndDelete,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798c52,"cSC4OrdinanceSimulator::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798c9c,"non-virtual thunk to cSC4OrdinanceSimulator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_8c9c,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798caa,"non-virtual thunk to cSC4OrdinanceSimulator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_8caa,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798cb8,cSC4OrdinanceSimulator::AddRef(),AddRef,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798cc6,non-virtual thunk to cSC4OrdinanceSimulator::AddRef(),AddRefThunk_8cc6,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798cd4,non-virtual thunk to cSC4OrdinanceSimulator::AddRef(),AddRefThunk_8cd4,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798ce2,cSC4OrdinanceSimulator::Release(),Release,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798d26,non-virtual thunk to cSC4OrdinanceSimulator::Release(),ReleaseThunk_8d26,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798d60,non-virtual thunk to cSC4OrdinanceSimulator::Release(),ReleaseThunk_8d60,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798d9e,cSC4OrdinanceSimulator::StaticShutdown(void*),StaticShutdown,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798db6,cSC4OrdinanceSimulator::Init(),Init,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798ecc,cSC4OrdinanceSimulator::LoadAllStandardOrdinances(),LoadAllStandardOrdinances,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798f26,cSC4OrdinanceSimulator::Shutdown(),Shutdown,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100798f6e,cSC4OrdinanceSimulator::Write(cIGZOStream&) const,Write,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079902c,non-virtual thunk to cSC4OrdinanceSimulator::Write(cIGZOStream&) const,WriteThunk,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079903a,cSC4OrdinanceSimulator::Read(cIGZIStream&),Read,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007992ac,non-virtual thunk to cSC4OrdinanceSimulator::Read(cIGZIStream&),ReadThunk,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007992c6,cSC4OrdinanceSimulator::DoMessage(cIGZMessage2*),DoMessage,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100799302,cSC4OrdinanceSimulator::DoMonthlySimulation(),DoMonthlySimulation,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007994d0,cSC4OrdinanceSimulator::SimulationBegin(),SimulationBegin,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007995f0,non-virtual thunk to cSC4OrdinanceSimulator::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100799602,cSC4OrdinanceSimulator::AddOrdinance(cISC4Ordinance*),AddOrdinance,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079981c,cSC4OrdinanceSimulator::RemoveOrdinance(cISC4Ordinance*),RemoveOrdinance,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x1007998e0,cSC4OrdinanceSimulator::CreateStandardOrdinance(cGZPersistResourceKey const&),CreateStandardOrdinance,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100799aa4,"cSC4OrdinanceSimulator::AddOrdinanceDataStatic(cGZPersistResourceKey const&, void*)",AddOrdinanceDataStatic,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100799b24,cSC4OrdinanceSimulator::IsOrdinanceEnabled(unsigned int),IsOrdinanceEnabled,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100799b48,"cSC4OrdinanceSimulator::SetOrdinanceEnabled(unsigned int, bool)",SetOrdinanceEnabled,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100799b7a,cSC4OrdinanceSimulator::IsOrdinanceAvailable(unsigned int),IsOrdinanceAvailable,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100799b9e,cSC4OrdinanceSimulator::IsOrdinanceOn(unsigned int),IsOrdinanceOn,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100799bc2,cSC4OrdinanceSimulator::IsOrdinanceAvailableButOff(unsigned int),IsOrdinanceAvailableButOff,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100799c02,"cSC4OrdinanceSimulator::SetOrdinanceAvailable(unsigned int, bool)",SetOrdinanceAvailable,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100799d9a,cSC4OrdinanceSimulator::GetOrdinanceAvailableCount(),GetOrdinanceAvailableCount,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100799e14,"cSC4OrdinanceSimulator::GetOrdinanceAvailableArray(unsigned int*, unsigned int&)",GetOrdinanceAvailableArray,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x100799edc,"cSC4OrdinanceSimulator::SetOrdinanceOn(unsigned int, bool)",SetOrdinanceOn,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079a01e,cSC4OrdinanceSimulator::GetOrdinanceOnCount(),GetOrdinanceOnCount,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079a098,"cSC4OrdinanceSimulator::GetOrdinanceOnArray(unsigned int*, unsigned int&)",GetOrdinanceOnArray,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079a160,"cSC4OrdinanceSimulator::GetOrdinanceIDArray(unsigned int*, unsigned int&)",GetOrdinanceIDArray,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079a206,cSC4OrdinanceSimulator::GetOrdinanceIDByName(cIGZString const&),GetOrdinanceIDByName,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079a226,cSC4OrdinanceSimulator::GetOrdinanceByID(unsigned int),GetOrdinanceByID,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079a266,cSC4OrdinanceSimulator::GetOrdinanceByName(cIGZString const&),GetOrdinanceByName,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079a580,cSC4OrdinanceSimulator::GetOrdinanceMonthlyExpense(),GetOrdinanceMonthlyExpense,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079a58a,cSC4OrdinanceSimulator::GetOrdinanceMonthlyIncome(),GetOrdinanceMonthlyIncome,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079a594,"cSC4OrdinanceSimulator::GetCumulativeOffset(unsigned int, unsigned int)",GetCumulativeOffset,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079a712,"cSC4OrdinanceSimulator::GetCumulativeFactor(unsigned int, unsigned int)",GetCumulativeFactor,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079a87a,cSC4OrdinanceSimulator::GetGZCLSID() const,GetGZCLSID,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
+0x10079a886,non-virtual thunk to cSC4OrdinanceSimulator::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/Ordinance.cpp,recovered,scripts/tests/sc4_ordinance_test.cpp
