@@ -1,0 +1,51 @@
+#include <cstdio>
+
+#include "audio/HitClassIds.h"
+#include "audio/HitList.h"
+#include "audio/HitManAccess.h"
+#include "audio/HitResourceFactory.h"
+#include "gz/cIGZPersistRecord.h"
+#include "gz/cGZAny.h"
+#include "gz/cGZPropertySet.h"
+#include "gz/cIGZIStream.h"
+
+static int failures = 0;
+#define CHECK(c) do { if (!(c)) { std::printf("FAIL line %d: %s\n", __LINE__, #c); ++failures; } } while (0)
+
+using namespace sc4audio;
+
+int main() {
+    cHitResourceFactory* factory = new cHitResourceFactory();
+    factory->AddRef();
+    void* any = nullptr;
+    CHECK(factory->QueryInterface(kGZIID_cIGZPersistResourceFactory, &any) && any == factory);
+    CHECK(!factory->QueryInterface(0x1234, &any));
+    factory->Release();
+
+    for (std::uint32_t type : {0xa3cd96cfu, 0x7b1acfcdu, 0xebfee345u, 0xebfee349u, 0x0b8d821au, 0x0b9eb87eu}) {
+        cIHitPersistResource* resource = nullptr;
+        CHECK(factory->CreateInstance(type, kGZIID_cIHitPersistResource, reinterpret_cast<void**>(&resource)));
+        CHECK(resource && resource->GetType() == type && resource->GetGroup() == 0 && resource->GetInstance() == 0);
+        if (resource) CHECK(resource->GetRefCount() == 1);     // the creation reference was dropped
+        if (resource) resource->Release();
+    }
+    void* none = nullptr;
+    CHECK(!factory->CreateInstance(0x12345678u, kGZIID_cIHitPersistResource, &none));
+
+    // track property sets start with the default parent sound and the "Track" type name
+    cIHitPersistResource* track = nullptr;
+    CHECK(factory->CreateInstance(0x0b8d821au, kGZIID_cIHitPersistResource, reinterpret_cast<void**>(&track)));
+    cIGZPropertySet* set = nullptr;
+    CHECK(track && track->QueryInterface(0xebb10cdd, reinterpret_cast<void**>(&set)) && set);
+    if (set) {
+        AnyUint32 parent;
+        CHECK(set->Value(0xff4c97be, &parent) && parent.get() == 0xab903a1b);
+        AnyString name;
+        CHECK(set->Value(0xff1cdf6a, &name) && name.string() && name.string()->str() == "Track");
+        set->Release();
+    }
+    if (track) track->Release();
+    factory->Release();
+    std::printf(failures ? "FAILED\n" : "audio_hitresourcefactory: all passed\n");
+    return failures ? 1 : 0;
+}

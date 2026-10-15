@@ -25,7 +25,7 @@
 #include "rz/cRZAutoRefCount.h"
 #include "rz/cRZString.h"
 
-class cHitTrackPlayer final : public cIHitTrackPlayer,
+class cHitTrackPlayer : public cIHitTrackPlayer,
                               public cIGZSndRegisterSet,
                               public cIGZSnd3D,
                               public cIGZSnd,

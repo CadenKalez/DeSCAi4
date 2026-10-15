@@ -4,6 +4,7 @@
 #include "audio/interfaces/cIGZSndSys.h"
 #include "audio/interfaces/cIHitMan.h"
 #include "gz/cIGZPersistResourceManager.h"
+#include "audio/interfaces/cIHitDebugInfo.h"
 
 class cIGZSndMgrStub : public cIGZSndMgr {
 public:
@@ -193,5 +194,23 @@ public:
     bool IsGarbageCollectionActive() override { return {}; }
     void SetGarbageCollectionActive(bool active) override { }
     bool ForceGarbageCollection() override { return {}; }
+    std::uint32_t refs_ = 1;
+};
+class cIHitDebugInfoStub : public cIHitDebugInfo {
+public:
+    std::uint32_t AddRef() override { return ++refs_; }
+    std::uint32_t Release() override { return --refs_; }
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    bool Shutdown() override { return {}; }
+    void AddSourceFile(cIGZString& fileName, const std::uint8_t* data, std::int32_t size) override { }
+    bool GetDataAddressFromFilenameAndLineNum(cIGZString& fileName, std::int32_t line, const std::uint8_t** out) override { return {}; }
+    bool GetFilenameAndLineNumFromDataAddress(const std::uint8_t* address, cIGZString& fileName, std::int32_t& line) override { return {}; }
+    bool GetDataAddressFromEntryPoint(std::uint32_t entryPoint, const std::uint8_t** out) override { return {}; }
+    bool GetHitFilenameFromEntryPoint(std::uint32_t entryPoint, cIGZString& fileName) override { return {}; }
+    bool LoadDebugInfo(cIGZString& hitFileName, const std::uint8_t* data, std::int32_t size) override { return {}; }
+    bool LoadSymbolFile(cIGZString& fileName) override { return {}; }
+    bool Init() override { return {}; }
+    std::int32_t GetServicePriority() const override { return {}; }
+    void AddSourceLine(std::int32_t line, std::int32_t offset) override { }
     std::uint32_t refs_ = 1;
 };
