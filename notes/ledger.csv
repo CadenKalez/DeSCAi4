@@ -11882,3 +11882,48 @@ address,symbol,unique_name,source,status,evidence
 0x1003e7118,cAmbienceFilterIsZoom5::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
 0x1003e7134,cAmbienceFilterIsZoom5::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
 0x1003e713c,cAmbienceFilterIsZoom5::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x10061be96,cGZKeyMessage::cGZKeyMessage(),Construct,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061beb8,cGZKeyMessage::~cGZKeyMessage(),Destruct,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bebe,cGZKeyMessage::~cGZKeyMessage(),DestructAndDelete,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bed0,"cGZKeyMessage::Initialize(cIGZKeyMessage::KeyEvent, unsigned int, unsigned int, unsigned int)",Initialize,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bee4,"cGZKeyMessage::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bf0e,cGZKeyMessage::AddRef(),AddRef,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bf1c,cGZKeyMessage::Release(),Release,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bf38,"cGZKeyMessage::Create(unsigned int, void**) const",Create,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061c080,cGZKeyMessage::GetType() const,GetType,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061c08a,cGZKeyMessage::SetType(unsigned int),SetType,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061c094,cGZKeyMessage::operator==(cIGZMessage2 const&) const,operator==,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061c0b2,cGZKeyMessage::operator<(cIGZMessage2 const&) const,operator<,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061c0d0,cGZKeyMessage::EventType() const,EventType,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061c0da,cGZKeyMessage::Key() const,Key,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061c0e4,cGZKeyMessage::KeyFlags() const,KeyFlags,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061c0ee,cGZKeyMessage::RepeatCount() const,RepeatCount,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bd6a,cGZMouseMessage::cGZMouseMessage(),Construct,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bd9a,cGZMouseMessage::~cGZMouseMessage(),Destruct,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bda0,cGZMouseMessage::~cGZMouseMessage(),DestructAndDelete,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bdb2,"cGZMouseMessage::Initialize(cIGZMouseMessage::MouseEvent, cRZPoint const&, unsigned int, int)",Initialize,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bdca,"cGZMouseMessage::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bdf4,cGZMouseMessage::AddRef(),AddRef,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061be02,cGZMouseMessage::Release(),Release,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061be1e,"cGZMouseMessage::Create(unsigned int, void**) const",Create,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061c008,cGZMouseMessage::GetType() const,GetType,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061c012,cGZMouseMessage::SetType(unsigned int),SetType,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061c01c,cGZMouseMessage::operator==(cIGZMessage2 const&) const,operator==,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061c03a,cGZMouseMessage::operator<(cIGZMessage2 const&) const,operator<,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061c058,cGZMouseMessage::EventType() const,EventType,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061c062,cGZMouseMessage::Position() const,Position,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061c06c,cGZMouseMessage::WheelDelta() const,WheelDelta,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061c076,cGZMouseMessage::KeyFlags() const,KeyFlags,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bc6a,cGZCanvasMessage::cGZCanvasMessage(),Construct,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bc90,cGZCanvasMessage::~cGZCanvasMessage(),Destruct,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bc96,cGZCanvasMessage::~cGZCanvasMessage(),DestructAndDelete,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bca8,"cGZCanvasMessage::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bcd2,cGZCanvasMessage::AddRef(),AddRef,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bce0,cGZCanvasMessage::Release(),Release,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bcfc,"cGZCanvasMessage::Create(unsigned int, void**) const",Create,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bfa4,cGZCanvasMessage::GetType() const,GetType,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bfae,cGZCanvasMessage::SetType(unsigned int),SetType,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bfb8,cGZCanvasMessage::operator==(cIGZMessage2 const&) const,operator==,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bfd6,cGZCanvasMessage::operator<(cIGZMessage2 const&) const,operator<,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bff4,cGZCanvasMessage::Initialize(cIGZCanvasMessage::CanvasEvent),Initialize,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x10061bffe,cGZCanvasMessage::EventType() const,EventType,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
