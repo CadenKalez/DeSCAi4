@@ -11961,3 +11961,82 @@ address,symbol,unique_name,source,status,evidence
 0x1003faf46,cRZExceptionNotification::AddRef(),AddRef,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
 0x1003faf54,cRZExceptionNotification::Release(),Release,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
 0x1003faf70,"cRZExceptionNotification::Notify(char const*, int)",Notify,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x10064edbe,cGZDrawContext::cGZDrawContext(),Construct,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064ee1c,cGZDrawContext::~cGZDrawContext(),Destruct,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064efca,cGZDrawContext::AddRef(),AddRef,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064efde,cGZDrawContext::Release(),Release,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f02c,"cGZDrawContext::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f04e,cGZDrawContext::PushTransform(),PushTransform,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f094,cGZDrawContext::ClipReset(),ClipReset,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f0aa,cGZDrawContext::Clip(cRZRect const&),Clip,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f17e,cGZDrawContext::RecomputeClipRect(),RecomputeClipRect,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f242,cGZDrawContext::ClipAbsolute(cRZRect const&),ClipAbsolute,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f2ca,cGZDrawContext::Offset(cRZPoint const&),Offset,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f2f0,cGZDrawContext::OffsetAbsolute(cRZPoint const&),OffsetAbsolute,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f30c,cGZDrawContext::PopTransform(),PopTransform,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f35a,cGZDrawContext::PushState(),PushState,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f398,cGZDrawContext::PopState(),PopState,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f40a,cGZDrawContext::GetCanvasArea(),GetCanvasArea,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f418,cGZDrawContext::GetOrigin(),GetOrigin,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f430,cGZDrawContext::GetClipRect(),GetClipRect,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f43e,cGZDrawContext::GetTransformStackDepth(),GetTransformStackDepth,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f45c,cGZDrawContext::IsTargetAttached(),IsTargetAttached,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f46a,cGZDrawContext::SetTarget(cIGZBuffer*),SetTarget,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f648,cGZDrawContext::GetEngine(),GetEngine,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f652,cGZDrawContext::ResetToDefaultState(),ResetToDefaultState,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f6c0,cGZDrawContext::SetColor(unsigned int),SetColor_uint,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f6d8,"cGZDrawContext::SetColor(unsigned int, unsigned int)",SetColor_uint_uint,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f734,cGZDrawContext::SetAlphaBlend(int),SetAlphaBlend,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f756,cGZDrawContext::SetBltModulate(bool),SetBltModulate,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f780,cGZDrawContext::SetAntialiasing(bool),SetAntialiasing,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f7aa,cGZDrawContext::SetLineThickness(float),SetLineThickness,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f812,cGZDrawContext::ClearGradient(),ClearGradient,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f82c,"cGZDrawContext::SetGradientTransform(float const (*) [4], float, float)",SetGradientTransform,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f83e,cGZDrawContext::ClearBlt(),ClearBlt,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f87c,"cGZDrawContext::SetBlt(cIGZUnknown*, float, float, float, float)",SetBlt,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f8b2,cGZDrawContext::ClearBltTiling(),ClearBltTiling,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f8da,cGZDrawContext::SetBltTiling(cRZRect const&),SetBltTiling,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f902,cGZDrawContext::IsSuspended(),IsSuspended,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f912,cGZDrawContext::Suspend(),Suspend,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f942,cGZDrawContext::Resume(),Resume,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f96a,cGZDrawContext::Flush(),Flush,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f97c,cGZDrawContext::Clear(),Clear,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064f9ac,"cGZDrawContext::Point(int, int)",Point,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064fa1a,"cGZDrawContext::Line(int, int, int, int)",Line,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064fa64,"cGZDrawContext::Ellipse(int, int, int, int)",Ellipse,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064fade,cGZDrawContext::Fill(cRZRect const&),Fill,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064fb0c,"cGZDrawContext::FillEllipse(int, int, int, int)",FillEllipse,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064fb86,"cGZDrawContext::Blt(cIGZBuffer*, cRZRect const&, cRZRect const&)",Blt,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064fc40,"cGZDrawContext::BltTiled(cIGZBuffer*, cRZRect const&, cRZRect const&, int, int)",BltTiled,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064fcea,"cGZDrawContext::Draw(cIGZDrawContext::eDrawingOp, float const*, int)",Draw,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064fd86,"cGZDrawContext::DrawNoTransform(cIGZDrawContext::eDrawingOp, float const*, int)",DrawNoTransform,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10064fe64,"cGZDrawContext::DirectDrawPoint(float const*, int)",DirectDrawPoint,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x10064fed2,"cGZDrawContext::DirectDrawLine(float const*, int)",DirectDrawLine,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x10064ff42,"cGZDrawContext::DirectDrawCubicBezier(float const*, int)",DirectDrawCubicBezier,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x10064ffb2,"cGZDrawContext::DirectFillRect(float const*, int)",DirectFillRect,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x100650022,"cGZDrawContext::DirectDrawEllipse(float const*, int)",DirectDrawEllipse,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x100650092,"cGZDrawContext::DirectFillEllipse(float const*, int)",DirectFillEllipse,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x100650102,"cGZDrawContext::DirectFillTri(float const*, int)",DirectFillTri,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x100650156,"cGZDrawContext::DirectFillPolygon(float const*, int)",DirectFillPolygon,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x1006501c6,"cGZDrawContext::DirectFillQuad(float const*, int)",DirectFillQuad,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x100650236,"cGZDrawContext::Lock(cGZBufferSurfaceDesc&, bool)",Lock,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x10065024e,cGZDrawContext::Unlock(),Unlock,src/gz/DrawContext.h,recovered,scripts/tests/gz_drawcontext_test.cpp
+0x100650260,"cGZDrawContext::TesselateDrawPoint(float const*, int)",TesselateDrawPoint,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x10065031a,"cGZDrawContext::RasterizeDrawPoint(float const*, int)",RasterizeDrawPoint,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x1006503d0,"cGZDrawContext::TesselateLine(float const*, int)",TesselateLine,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x100650460,"cGZDrawContext::RasterizeLine(float const*, int)",RasterizeLine,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x100650620,cGZDrawContext::TesselateLineAdd(float const*),TesselateLineAdd,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x100650860,"cGZDrawContext::RasterizeLineFixedPt(int, int, int, int)",RasterizeLineFixedPt,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x100650e0e,"cGZDrawContext::TesselateCubicBezier(float const*, int)",TesselateCubicBezier,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x100650f80,"cGZDrawContext::RasterizeCubicBezier(float const*, int)",RasterizeCubicBezier,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x1006512de,"cGZDrawContext::TesselateEllipse(float const*, int)",TesselateEllipse,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x100651a6e,"cGZDrawContext::RasterizeEllipse(float const*, int)",RasterizeEllipse,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x100651c72,"cGZDrawContext::TesselateFillRect(float const*, int)",TesselateFillRect,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x100651d18,"cGZDrawContext::RasterizeFillRect(float const*, int)",RasterizeFillRect,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x100651ece,"cGZDrawContext::TesselateFillEllipse(float const*, int)",TesselateFillEllipse,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x100652076,"cGZDrawContext::RasterizeFillEllipse(float const*, int)",RasterizeFillEllipse,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x10065235a,"cGZDrawContext::RasterizeFillTri(float const*, int)",RasterizeFillTri,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x10065250a,"cGZDrawContext::TesselateFillQuad(float const*, int)",TesselateFillQuad,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x1006525c6,"cGZDrawContext::RasterizeFillQuad(float const*, int)",RasterizeFillQuad,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x10065275e,"cGZDrawContext::TesselateFillPolygon(float const*, int)",TesselateFillPolygon,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x1006527fc,"cGZDrawContext::RasterizeFillPolygon(float const*, int)",RasterizeFillPolygon,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
