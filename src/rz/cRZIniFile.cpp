@@ -62,6 +62,9 @@ cRZIniFile::~cRZIniFile() {
 void cRZIniFile::SetPath(const cRZString& path) {
     if (indexed_) Close();
     path_ = path;
+    // port: keep the backing file pointing at the same path (the original callers always followed SetPath with a
+    // file bound to that path)
+    file_->SetPath(path);
 }
 
 bool cRZIniFile::SetFile(cIGZFile* file) {
