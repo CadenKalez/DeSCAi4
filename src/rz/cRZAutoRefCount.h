@@ -31,6 +31,7 @@ public:
     }
 
     T* get() const noexcept { return ptr_; }
+    operator T*() const noexcept { return ptr_; }     // cRZAutoRefCount<T>::operator T*() const (all instantiations)
     T* operator->() const noexcept { return ptr_; }
     explicit operator bool() const noexcept { return ptr_ != nullptr; }
 
