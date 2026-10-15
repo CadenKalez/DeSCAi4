@@ -11770,3 +11770,115 @@ address,symbol,unique_name,source,status,evidence
 0x100611c78,"cSGLDX7Direct3DDevice7Stub::SetClipPlane(unsigned int, float*)",SetClipPlane,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
 0x100611c80,"cSGLDX7Direct3DDevice7Stub::GetClipPlane(unsigned int, float*)",GetClipPlane,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
 0x100611c8c,"cSGLDX7Direct3DDevice7Stub::GetInfo(unsigned int, void*, unsigned int)",GetInfo,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x1003df04a,cAmbienceFilterIsAlways::Create(),Create,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e49b4,cAmbienceFilterIsAlways::IsTrue(),IsTrue,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e72c4,"cAmbienceFilterIsAlways::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e72ea,cAmbienceFilterIsAlways::AddRef(),AddRef,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e72f8,cAmbienceFilterIsAlways::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7314,cAmbienceFilterIsAlways::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e731c,cAmbienceFilterIsAlways::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003def40,cAmbienceFilterIsDay::Create(),Create,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e48b6,cAmbienceFilterIsDay::IsTrue(),IsTrue,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7024,"cAmbienceFilterIsDay::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e704a,cAmbienceFilterIsDay::AddRef(),AddRef,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7058,cAmbienceFilterIsDay::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7074,cAmbienceFilterIsDay::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e707c,cAmbienceFilterIsDay::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003def66,cAmbienceFilterIsNight::Create(),Create,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e48a0,cAmbienceFilterIsNight::IsTrue(),IsTrue,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7084,"cAmbienceFilterIsNight::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e70aa,cAmbienceFilterIsNight::AddRef(),AddRef,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e70b8,cAmbienceFilterIsNight::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e70d4,cAmbienceFilterIsNight::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e70dc,cAmbienceFilterIsNight::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003df17a,cAmbienceFilterIsDrivingMode::Create(),Create,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e4ab0,cAmbienceFilterIsDrivingMode::IsTrue(),IsTrue,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e75c4,"cAmbienceFilterIsDrivingMode::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e75ea,cAmbienceFilterIsDrivingMode::AddRef(),AddRef,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e75f8,cAmbienceFilterIsDrivingMode::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7614,cAmbienceFilterIsDrivingMode::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e761c,cAmbienceFilterIsDrivingMode::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003df0bc,cAmbienceFilterIsSurfaceView::Create(),Create,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e49fc,cAmbienceFilterIsSurfaceView::IsTrue(),IsTrue,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e73e4,"cAmbienceFilterIsSurfaceView::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e740a,cAmbienceFilterIsSurfaceView::AddRef(),AddRef,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7418,cAmbienceFilterIsSurfaceView::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7434,cAmbienceFilterIsSurfaceView::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e743c,cAmbienceFilterIsSurfaceView::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003df096,cAmbienceFilterIsSubwayView::Create(),Create,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e49dc,cAmbienceFilterIsSubwayView::IsTrue(),IsTrue,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7384,"cAmbienceFilterIsSubwayView::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e73aa,cAmbienceFilterIsSubwayView::AddRef(),AddRef,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e73b8,cAmbienceFilterIsSubwayView::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e73d4,cAmbienceFilterIsSubwayView::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e73dc,cAmbienceFilterIsSubwayView::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003df070,cAmbienceFilterIsPipeView::Create(),Create,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e49bc,cAmbienceFilterIsPipeView::IsTrue(),IsTrue,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7324,"cAmbienceFilterIsPipeView::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e734a,cAmbienceFilterIsPipeView::AddRef(),AddRef,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7358,cAmbienceFilterIsPipeView::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7374,cAmbienceFilterIsPipeView::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e737c,cAmbienceFilterIsPipeView::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003df0e2,cAmbienceFilterIsSimSpeedPaused::Create(),Create,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e4a1c,cAmbienceFilterIsSimSpeedPaused::IsTrue(),IsTrue,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7444,"cAmbienceFilterIsSimSpeedPaused::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e746a,cAmbienceFilterIsSimSpeedPaused::AddRef(),AddRef,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7478,cAmbienceFilterIsSimSpeedPaused::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7494,cAmbienceFilterIsSimSpeedPaused::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e749c,cAmbienceFilterIsSimSpeedPaused::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003df108,cAmbienceFilterIsSimSpeedSlow::Create(),Create,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e4a52,cAmbienceFilterIsSimSpeedSlow::IsTrue(),IsTrue,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e74a4,"cAmbienceFilterIsSimSpeedSlow::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e74ca,cAmbienceFilterIsSimSpeedSlow::AddRef(),AddRef,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e74d8,cAmbienceFilterIsSimSpeedSlow::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e74f4,cAmbienceFilterIsSimSpeedSlow::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e74fc,cAmbienceFilterIsSimSpeedSlow::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003df12e,cAmbienceFilterIsSimSpeedMedium::Create(),Create,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e4a70,cAmbienceFilterIsSimSpeedMedium::IsTrue(),IsTrue,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7504,"cAmbienceFilterIsSimSpeedMedium::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e752a,cAmbienceFilterIsSimSpeedMedium::AddRef(),AddRef,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7538,cAmbienceFilterIsSimSpeedMedium::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7554,cAmbienceFilterIsSimSpeedMedium::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e755c,cAmbienceFilterIsSimSpeedMedium::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003df154,cAmbienceFilterIsSimSpeedFast::Create(),Create,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e4a90,cAmbienceFilterIsSimSpeedFast::IsTrue(),IsTrue,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7564,"cAmbienceFilterIsSimSpeedFast::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e758a,cAmbienceFilterIsSimSpeedFast::AddRef(),AddRef,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7598,cAmbienceFilterIsSimSpeedFast::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e75b4,cAmbienceFilterIsSimSpeedFast::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e75bc,cAmbienceFilterIsSimSpeedFast::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003df024,cAmbienceFilterIsZoom1::Create(),Create,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e4986,cAmbienceFilterIsZoom1::IsTrue(),IsTrue,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7264,"cAmbienceFilterIsZoom1::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e728a,cAmbienceFilterIsZoom1::AddRef(),AddRef,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7298,cAmbienceFilterIsZoom1::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e72b4,cAmbienceFilterIsZoom1::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e72bc,cAmbienceFilterIsZoom1::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003deffe,cAmbienceFilterIsZoom2::Create(),Create,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e4958,cAmbienceFilterIsZoom2::IsTrue(),IsTrue,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7204,"cAmbienceFilterIsZoom2::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e722a,cAmbienceFilterIsZoom2::AddRef(),AddRef,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7238,cAmbienceFilterIsZoom2::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7254,cAmbienceFilterIsZoom2::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e725c,cAmbienceFilterIsZoom2::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003defd8,cAmbienceFilterIsZoom3::Create(),Create,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e492a,cAmbienceFilterIsZoom3::IsTrue(),IsTrue,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e71a4,"cAmbienceFilterIsZoom3::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e71ca,cAmbienceFilterIsZoom3::AddRef(),AddRef,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e71d8,cAmbienceFilterIsZoom3::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e71f4,cAmbienceFilterIsZoom3::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e71fc,cAmbienceFilterIsZoom3::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003defb2,cAmbienceFilterIsZoom4::Create(),Create,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e48fc,cAmbienceFilterIsZoom4::IsTrue(),IsTrue,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7144,"cAmbienceFilterIsZoom4::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e716a,cAmbienceFilterIsZoom4::AddRef(),AddRef,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7178,cAmbienceFilterIsZoom4::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7194,cAmbienceFilterIsZoom4::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e719c,cAmbienceFilterIsZoom4::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003def8c,cAmbienceFilterIsZoom5::Create(),Create,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e48ce,cAmbienceFilterIsZoom5::IsTrue(),IsTrue,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e70e4,"cAmbienceFilterIsZoom5::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e710a,cAmbienceFilterIsZoom5::AddRef(),AddRef,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7118,cAmbienceFilterIsZoom5::Release(),Release,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e7134,cAmbienceFilterIsZoom5::Init(),Init,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
+0x1003e713c,cAmbienceFilterIsZoom5::Shutdown(),Shutdown,src/sc4/AmbienceStateFilters.h,recovered,scripts/tests/sc4_ambiencestatefilters_test.cpp
