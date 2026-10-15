@@ -12372,3 +12372,44 @@ address,symbol,unique_name,source,status,evidence
 0x1006a786f,"RZDrawRaisedRect(cIGZDrawContext*, cRZRect const&, unsigned char, unsigned char, unsigned char, bool, bool)",RZDrawRaisedRectRGB,src/gz/RZDraw.cpp|h,recovered,scripts/tests/gz_rzdraw_test.cpp
 0x1006a79ba,"RZDraw3DRectangleOutline(cIGZDrawContext*, cRZRect const&, unsigned int, unsigned int)",RZDraw3DRectangleOutline,src/gz/RZDraw.cpp|h,recovered,scripts/tests/gz_rzdraw_test.cpp
 0x1006a7ac5,"RZDrawRectangleOutline(cIGZDrawContext*, cRZRect const&, unsigned int, unsigned int)",RZDrawRectangleOutline,src/gz/RZDraw.cpp|h,recovered,scripts/tests/gz_rzdraw_test.cpp
+0x100330480,cGZWinBMP::cGZWinBMP(),Construct,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x1003304ec,cGZWinBMP::cGZWinBMP(),ConstructWrapper,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x10033054c,cGZWinBMP::~cGZWinBMP(),Destruct,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x1003305ba,cGZWinBMP::~cGZWinBMP(),DestructAndDelete,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x1003305c4,cGZWinBMP::~cGZWinBMP(),DestructBody,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x1003305f2,"cGZWinBMP::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330616,"non-virtual thunk to cGZWinBMP::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330642,cGZWinBMP::AddRef(),AddRef,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x10033064c,non-virtual thunk to cGZWinBMP::AddRef(),AddRefThunk,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x10033065e,cGZWinBMP::Release(),Release,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330668,non-virtual thunk to cGZWinBMP::Release(),ReleaseThunk,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x10033067a,cGZWinBMP::Init(),Init,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x1003306e2,cGZWinBMP::SetSourceBufferAreaFromWindowArea(cRZRect const&),SetSourceBufferAreaFromWindowArea,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x10033076a,cGZWinBMP::Shutdown(),Shutdown,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x10033079e,cGZWinBMP::GZPaint(),GZPaint,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x10033096c,"cGZWinBMP::SetArea(int, int, int, int)",SetArea,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330976,cGZWinBMP::SetBMP(cIGZBuffer*),SetBMP,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x1003309e2,non-virtual thunk to cGZWinBMP::SetBMP(cIGZBuffer*),SetBMPThunk,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x1003309f4,"cGZWinBMP::GetBMP(unsigned int, void**) const",GetBMP,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330a12,"non-virtual thunk to cGZWinBMP::GetBMP(unsigned int, void**) const",GetBMPThunk,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330a2c,"cGZWinBMP::SetAlphaBlending(bool, float)",SetAlphaBlending,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330a4a,"non-virtual thunk to cGZWinBMP::SetAlphaBlending(bool, float)",SetAlphaBlendingThunk,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330a6c,"cGZWinBMP::GetAlphaBlending(bool&, float&) const",GetAlphaBlending,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330a82,"non-virtual thunk to cGZWinBMP::GetAlphaBlending(bool&, float&) const",GetAlphaBlendingThunk,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330a92,cGZWinBMP::SetImageArea(cRZRect&),SetImageArea,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330b38,non-virtual thunk to cGZWinBMP::SetImageArea(cRZRect&),SetImageAreaThunk,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330b4a,cGZWinBMP::GetImageArea(cRZRect&) const,GetImageArea,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330b66,non-virtual thunk to cGZWinBMP::GetImageArea(cRZRect&) const,GetImageAreaThunk,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330b7c,cGZWinBMP::AsIGZWin(),AsIGZWin,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330b86,non-virtual thunk to cGZWinBMP::AsIGZWin(),AsIGZWinThunk,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330b94,cGZWinBMP::GetWinBMPFlag(int) const,GetWinBMPFlag,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330ba4,non-virtual thunk to cGZWinBMP::GetWinBMPFlag(int) const,GetWinBMPFlagThunk,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330bb0,"cGZWinBMP::SetWinBMPFlag(int, bool)",SetWinBMPFlag,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330bca,"non-virtual thunk to cGZWinBMP::SetWinBMPFlag(int, bool)",SetWinBMPFlagThunk,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330bde,cGZWinBMP::DoMessage(cGZMessage&),DoMessage,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330cb4,"cGZWinBMP::GZOnKeyDown(unsigned int, unsigned int)",GZOnKeyDown,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330cda,"cGZWinBMP::GZOnKeyUp(unsigned int, unsigned int)",GZOnKeyUp,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330d00,"cGZWinBMP::IsPointInWindowScreenCoordinates(int, int) const",IsPointInWindowScreenCoordinates,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330d4a,"cGZWinBMP::GZOnMouseMove(int, int, unsigned int)",GZOnMouseMove,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330d9c,"cGZWinBMP::GZOnMouseDownL(int, int, unsigned int)",GZOnMouseDownL,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x100330dee,"cGZWinBMP::GZOnMouseUpL(int, int, unsigned int)",GZOnMouseUpL,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
