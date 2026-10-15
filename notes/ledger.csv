@@ -7465,3 +7465,51 @@ address,symbol,unique_name,source,status,evidence
 0x100153912,cSC4BuildingDevelopmentSimulator::CheatCoffeeBar() const,CheatCoffeeBar,src/sc4/BuildingDevelopmentSimulator.cpp|h,recovered,"decompiled in Ghidra; catalogue, profiles, zone capacity, construction resources and persisted state tested (scripts/tests/sc4_buildingdevelopment_test.cpp)"
 0x10015391e,cSC4BuildingDevelopmentSimulator::GetGZCLSID() const,GetGZCLSID,src/sc4/BuildingDevelopmentSimulator.cpp|h,recovered,"decompiled in Ghidra; catalogue, profiles, zone capacity, construction resources and persisted state tested (scripts/tests/sc4_buildingdevelopment_test.cpp)"
 0x10015392a,non-virtual thunk to cSC4BuildingDevelopmentSimulator::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/BuildingDevelopmentSimulator.cpp|h,recovered,"decompiled in Ghidra; catalogue, profiles, zone capacity, construction resources and persisted state tested (scripts/tests/sc4_buildingdevelopment_test.cpp)"
+0x100019aac,RZStruprAImp(char*),RZStruprAImp,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x100019ade,RZToupperWImp(int),RZToupperWImp,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x100019af0,RZStrlwrAImp(char*),RZStrlwrAImp,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x100019b22,RZTolowerWImp(int),RZTolowerWImp,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x100019b34,RZAtofA(char const*),RZAtofA,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x100019b4c,RZAtofEnglishA(char const*),RZAtofEnglishA,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x100019b63,"RZStrtodEnglishA(char const*, char**)",RZStrtodEnglishA,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x100019d39,"RZFtoaEnglishA(double, char*, int, int)",RZFtoaEnglishA,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x100019f30,RZAtoi64A(char const*),RZAtoi64A,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x10001a367,"RZItoaAImp(int, char*, int)",RZItoaAImp,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x10001a374,"RZLtoaAImp(long, char*, int)",RZLtoaAImp,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x10001a429,"RZParseDelimitedText(char const*, unsigned int, char, cRZString*, unsigned int&)",RZParseDelimitedText,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x10001a918,"ConvertBinaryDataToASCIIArray(unsigned char const*, unsigned int, char*)",ConvertBinaryDataToASCIIArray,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x10001a95e,"ConvertASCIIArrayToBinaryData(char const*, unsigned int, unsigned char*)",ConvertASCIIArrayToBinaryData,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x10001ac1b,"memset8(void*, unsigned char, unsigned int)",memset8,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x10001ac27,"memset16(void*, unsigned short, unsigned int)",memset16,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x10001ac86,"memset32(void*, unsigned int, unsigned int)",memset32,src/rz/RZStringUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp
+0x100019fcf,RZAtoUint32HexA(char const*),RZAtoUint32HexA,src/rz/RZConvert.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp (hex parsing through RZ::ConvertHexToUint[64])
+0x10001a0d1,RZAtoUint64HexA(char const*),RZAtoUint64HexA,src/rz/RZConvert.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp (hex parsing through RZ::ConvertHexToUint[64])
+0x10001a1ec,RZAtoLongHexA(char const*),RZAtoLongHexA,src/rz/RZConvert.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_stringutils_test.cpp (hex parsing through RZ::ConvertHexToUint[64])
+0x10001aca3,GetCurrentSystemCodePage(),GetCurrentSystemCodePage,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001ad26,GetCurrentFrameworkCodePage(),GetCurrentFrameworkCodePage,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001ad31,"ConvertStringEncoding(void const*, unsigned int, int, void*, unsigned int&, int)",ConvertStringEncoding_raw,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001b2e3,"ConvertStringEncoding_via_UTF16(void const*, unsigned int, int, void*, unsigned int&, int)",ConvertStringEncoding_via_UTF16,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001b7fa,"MBCSIsLeadByte(char, int)",MBCSIsLeadByte,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001b867,"GetPreviousCharLength(void const*, unsigned int, int)",GetPreviousCharLength,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001b90c,"GetComposedCharLength(void const*, unsigned int, int)",GetComposedCharLength,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001ba10,UTF16IsThaiChar(unsigned int),UTF16IsThaiChar,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001ba22,"UTF16ThaiCharGroupLength(unsigned short const*, unsigned int)",UTF16ThaiCharGroupLength,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001baad,"LengthFromGlyphCount(void const*, unsigned int, int)",LengthFromGlyphCount,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001bb28,"GetPreviousComposedCharLength(void const*, unsigned int, int)",GetPreviousComposedCharLength,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001bc3d,UTF16IsThaiDecorationChar(unsigned int),UTF16IsThaiDecorationChar,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001da13,"GetUTF16Character(void const*, unsigned int&, int)",GetUTF16Character,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001da70,"GetPreviousUTF16Character(void const*, unsigned int&, int)",GetPreviousUTF16Character,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001db00,"GetGlyphCountFromString(void const*, unsigned int, int)",GetGlyphCountFromString,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001dbaf,"IsLeadByte(char, int)",IsLeadByte,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001dbf6,"GetFollowByteCount(char, int)",GetFollowByteCount,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001dc3b,UTF8GetFollowByteCount(unsigned char),UTF8GetFollowByteCount,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001dc97,"IsStringValid(void const*, unsigned int, int)",IsStringValid,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x10001dd1a,"UTF8IsStringValid(unsigned char const*, unsigned int)",UTF8IsStringValid,src/rz/TextEncoding.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_textencoding_test.cpp
+0x100034ed8,"Fullpath(char*, char const*, unsigned long, char const*)",Fullpath_cstr_base,src/rz/PathUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_pathutils_test.cpp
+0x1000352b1,"Fullpath(cRZString&, cRZString const&, cRZString const*)",Fullpath_rzstring_base,src/rz/PathUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_pathutils_test.cpp
+0x10003544f,IsFullPath(cRZString const&),IsFullPath,src/rz/PathUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_pathutils_test.cpp
+0x10003548e,"ResolvePath(cRZString&, cRZString const&, cRZString const*)",ResolvePath,src/rz/PathUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_pathutils_test.cpp
+0x100035500,"IsFileNameValid(cRZString const&, cRZString const*)",IsFileNameValid,src/rz/PathUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_pathutils_test.cpp
+0x100035802,"MakeFileNameValid(cRZString const&, cRZString&, cRZString const*)",MakeFileNameValid,src/rz/PathUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_pathutils_test.cpp
+0x100035a56,"MatchPattern(char const*, char const*)",MatchPattern,src/rz/PathUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_pathutils_test.cpp
+0x100035ac1,"WildcardMatch(cRZString const&, cRZString const&, bool)",WildcardMatch,src/rz/PathUtils.cpp|h,recovered,decompiled in Ghidra; scripts/tests/rz_pathutils_test.cpp
