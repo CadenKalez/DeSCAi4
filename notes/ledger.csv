@@ -10228,3 +10228,43 @@ address,symbol,unique_name,source,status,evidence
 0x10003c882,cRZRefCount::RefCount(),RefCount,src/rz/cRZRefCount.h,recovered,cRZRefCount: refcount base (Release deletes at <=1); used by sc4_regionalterrainmap
 0x10003c88c,cRZRefCount::AddRef(),AddRef,src/rz/cRZRefCount.h,recovered,cRZRefCount: refcount base (Release deletes at <=1); used by sc4_regionalterrainmap
 0x10003c89a,cRZRefCount::RemoveRef(),RemoveRef,src/rz/cRZRefCount.h,recovered,cRZRefCount: refcount base (Release deletes at <=1); used by sc4_regionalterrainmap
+0x100013840,non-virtual thunk to cGZApp::AsIGZSystemService(),AsIGZSystemServiceThunk,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x100049086,cGZApp::cGZApp(char const*),Construct_char_const,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x10004919e,cGZApp::~cGZApp(),Destruct,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000491f0,cGZApp::~cGZApp(),DestructAndDelete,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000491fa,non-virtual thunk to cGZApp::~cGZApp(),DestructThunk,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x100049208,cGZApp::~cGZApp(),DestructBody,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x100049236,non-virtual thunk to cGZApp::~cGZApp(),DestructAndDeleteThunk,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x100049244,"cGZApp::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x100049262,"non-virtual thunk to cGZApp::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_9262,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x100049284,"non-virtual thunk to cGZApp::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_9284,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000492a6,cGZApp::AddRef(),AddRef,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000492b0,non-virtual thunk to cGZApp::AddRef(),AddRefThunk_92b0,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000492be,non-virtual thunk to cGZApp::AddRef(),AddRefThunk_92be,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000492cc,cGZApp::Release(),Release,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000492dc,non-virtual thunk to cGZApp::Release(),ReleaseThunk_92dc,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000492e8,non-virtual thunk to cGZApp::Release(),ReleaseThunk_92e8,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000492f8,cGZApp::Shutdown(),Shutdown,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x100049300,cGZApp::FrameWork(),FrameWork,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x10004930a,non-virtual thunk to cGZApp::FrameWork(),FrameWorkThunk,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x100049314,cGZApp::ModuleName(),ModuleName,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x100049330,non-virtual thunk to cGZApp::ModuleName(),ModuleNameThunk,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x100049350,cGZApp::AddApplicationService(cIGZSystemService*),AddApplicationService,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x100049378,non-virtual thunk to cGZApp::AddApplicationService(cIGZSystemService*),AddApplicationServiceThunk,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000493a4,cGZApp::PreFrameWorkInit(),PreFrameWorkInit,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000493ac,non-virtual thunk to cGZApp::PreFrameWorkInit(),PreFrameWorkInitThunk,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000493b4,cGZApp::PostFrameWorkInit(),PostFrameWorkInit,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000493bc,non-virtual thunk to cGZApp::PostFrameWorkInit(),PostFrameWorkInitThunk,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000493c4,cGZApp::PreFrameWorkShutdown(),PreFrameWorkShutdown,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000493cc,non-virtual thunk to cGZApp::PreFrameWorkShutdown(),PreFrameWorkShutdownThunk,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000493d4,cGZApp::GZRun(),GZRun,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000493dc,non-virtual thunk to cGZApp::GZRun(),GZRunThunk,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000493e4,cGZApp::LoadRegistry(),LoadRegistry,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000493ec,non-virtual thunk to cGZApp::LoadRegistry(),LoadRegistryThunk,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000493f4,cGZApp::AddDynamicLibrariesHere(),AddDynamicLibrariesHere,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x1000493fa,non-virtual thunk to cGZApp::AddDynamicLibrariesHere(),AddDynamicLibrariesHereThunk,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x100049400,cGZApp::AddApplicationServicesHere(),AddApplicationServicesHere,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x100049406,non-virtual thunk to cGZApp::AddApplicationServicesHere(),AddApplicationServicesHereThunk,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x10004940c,cGZApp::AddCOMDirectorsHere(),AddCOMDirectorsHere,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x100049412,non-virtual thunk to cGZApp::AddCOMDirectorsHere(),AddCOMDirectorsHereThunk,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x100049420,cGZApp::AsIGZSystemService(),AsIGZSystemService,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
