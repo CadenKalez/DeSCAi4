@@ -6,6 +6,9 @@
 #include <cstdint>
 #include <string>
 
+#include <vector>
+
+#include "render/BuildingMeshes.h"
 #include "render/Terrain.h"
 
 namespace render {
@@ -23,6 +26,8 @@ public:
     ~MetalRenderer();
     bool Init(std::string& error);                       // device, queue, pipelines
     bool SetTerrain(const HeightGrid& grid, std::string& error);
+    // Upload the textured building batches (see BuildBuildingBatches).
+    bool SetBuildings(const std::vector<BuildingBatch>& batches, std::string& error);
     // Render one frame into an offscreen target and write a PNG. Used by the screenshot survey.
     bool RenderToPng(const std::string& path, uint32_t width, uint32_t height, const Camera& cam,
                      std::string& error);

@@ -1,6 +1,7 @@
 // Parses every S3D resource of a game package and reports failures. usage: s3d_realdata_test <package.dat> [max]
 #include <cstdio>
 #include <cstdlib>
+#include <map>
 #include <vector>
 
 #include "gz/cGZDBSegmentPackedFile.h"
@@ -23,6 +24,7 @@ int main(int argc, char** argv) {
     seg->GetResourceKeyList(keys, &filter);
     const unsigned limit = argc > 2 ? unsigned(std::atoi(argv[2])) : 0xffffffffu;
     unsigned ok = 0, bad = 0, total = 0, shown = 0;
+    std::map<std::uint32_t, unsigned> formats;
     for (std::uint32_t i = 0; i < keys->Size() && total < limit; ++i, ++total) {
         const auto* k = keys->GetKey(i);
         cIGZPersistDBRecord* raw = nullptr;
@@ -35,6 +37,7 @@ int main(int argc, char** argv) {
         s3d::Model m;
         if (m.Parse(bytes.data(), bytes.size())) {
             ++ok;
+            for (auto& g : m.vertexGroups) formats[(g.format << 8) | g.stride]++;
             if (shown < 3) {
                 float lo[3], hi[3];
                 m.GetBounds(lo, hi);
@@ -52,6 +55,7 @@ int main(int argc, char** argv) {
         seg->CloseRecord(raw);
         raw->Release();
     }
+    for (auto& kv : formats) std::printf("  vertex format %08x stride %u: %u groups\n", kv.first >> 8, kv.first & 0xff, kv.second);
     std::printf("S3D models: %u parsed, %u failed of %u\n", ok, bad, total);
     return bad != 0;
 }

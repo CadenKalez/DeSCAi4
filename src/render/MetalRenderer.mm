@@ -58,6 +58,24 @@ vertex VOut terrain_vs(uint vid [[vertex_id]],
     return o;
 }
 
+struct BIn { float3 position [[attribute(0)]]; float2 uv [[attribute(1)]]; };
+struct BOut { float4 position [[position]]; float2 uv; };
+
+vertex BOut building_vs(uint vid [[vertex_id]], const device float* v [[buffer(1)]], constant Uniforms& u [[buffer(0)]]) {
+    uint o = vid * 5;
+    BOut r;
+    r.position = u.viewProj * float4(v[o], v[o + 1], v[o + 2], 1.0);
+    r.uv = float2(v[o + 3], v[o + 4]);
+    return r;
+}
+
+fragment float4 building_fs(BOut in [[stage_in]], texture2d<float> tex [[texture(0)]]) {
+    constexpr sampler s(filter::linear, address::repeat);
+    float4 c = tex.sample(s, in.uv);
+    if (c.a < 0.4) discard_fragment();
+    return float4(c.rgb, 1.0);
+}
+
 fragment float4 terrain_fs(VOut in [[stage_in]], constant Uniforms& u [[buffer(0)]]) {
     float sea = u.params.y;
     float3 base;
@@ -87,6 +105,9 @@ struct MetalRenderer::Impl {
     id<MTLDevice> device = nil;
     id<MTLCommandQueue> queue = nil;
     id<MTLRenderPipelineState> pipeline = nil;
+    id<MTLRenderPipelineState> buildingPipeline = nil;
+    struct GpuBatch { id<MTLBuffer> vertices; id<MTLBuffer> indices; id<MTLTexture> texture; NSUInteger indexCount; };
+    std::vector<GpuBatch> batches;
     id<MTLDepthStencilState> depthState = nil;
     id<MTLTexture> heightTex = nil;
     CAMetalLayer* layer = nil;
@@ -156,6 +177,13 @@ bool MetalRenderer::Init(std::string& error) {
         d.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
         impl_->pipeline = [impl_->device newRenderPipelineStateWithDescriptor:d error:&err];
         if (!impl_->pipeline) { error = std::string("pipeline failed: ") + err.localizedDescription.UTF8String; return false; }
+        MTLRenderPipelineDescriptor* bd = [MTLRenderPipelineDescriptor new];
+        bd.vertexFunction = [lib newFunctionWithName:@"building_vs"];
+        bd.fragmentFunction = [lib newFunctionWithName:@"building_fs"];
+        bd.colorAttachments[0].pixelFormat = impl_->colorFormat;
+        bd.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
+        impl_->buildingPipeline = [impl_->device newRenderPipelineStateWithDescriptor:bd error:&err];
+        if (!impl_->buildingPipeline) { error = std::string("building pipeline failed: ") + err.localizedDescription.UTF8String; return false; }
         MTLDepthStencilDescriptor* ds = [MTLDepthStencilDescriptor new];
         ds.depthCompareFunction = MTLCompareFunctionLess;
         ds.depthWriteEnabled = YES;
@@ -176,6 +204,25 @@ bool MetalRenderer::SetTerrain(const HeightGrid& grid, std::string& error) {
     impl_->info.n = grid.n;
     impl_->info.minHeight = grid.minHeight;
     impl_->info.maxHeight = grid.maxHeight;
+    return true;
+}
+
+bool MetalRenderer::SetBuildings(const std::vector<BuildingBatch>& batches, std::string& error) {
+    if (!impl_->device) { error = "renderer not initialised"; return false; }
+    impl_->batches.clear();
+    for (const BuildingBatch& b : batches) {
+        if (b.indices.empty() || b.rgba.empty()) continue;
+        Impl::GpuBatch g;
+        g.vertices = [impl_->device newBufferWithBytes:b.vertices.data() length:b.vertices.size() * 4 options:MTLResourceStorageModeShared];
+        g.indices = [impl_->device newBufferWithBytes:b.indices.data() length:b.indices.size() * 4 options:MTLResourceStorageModeShared];
+        MTLTextureDescriptor* td = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
+                                                                                       width:b.texW height:b.texH mipmapped:NO];
+        td.usage = MTLTextureUsageShaderRead;
+        g.texture = [impl_->device newTextureWithDescriptor:td];
+        [g.texture replaceRegion:MTLRegionMake2D(0, 0, b.texW, b.texH) mipmapLevel:0 withBytes:b.rgba.data() bytesPerRow:b.texW * 4];
+        g.indexCount = b.indices.size();
+        impl_->batches.push_back(g);
+    }
     return true;
 }
 
@@ -212,6 +259,16 @@ void MetalRenderer::Impl::Encode(id<MTLCommandBuffer> cb, id<MTLTexture> color, 
     [enc setVertexTexture:heightTex atIndex:0];
     NSUInteger verts = NSUInteger(info.n - 1) * (info.n - 1) * 6;
     [enc drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:verts];
+    if (!batches.empty()) {
+        [enc setRenderPipelineState:buildingPipeline];
+        [enc setCullMode:MTLCullModeNone];
+        for (const GpuBatch& g : batches) {
+            [enc setVertexBuffer:g.vertices offset:0 atIndex:1];
+            [enc setFragmentTexture:g.texture atIndex:0];
+            [enc drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:g.indexCount indexType:MTLIndexTypeUInt32
+                           indexBuffer:g.indices indexBufferOffset:0];
+        }
+    }
     [enc endEncoding];
 }
 

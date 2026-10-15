@@ -17,7 +17,10 @@
 #include "app/GameAudio.h"
 #include "sc4/OccupantManager.h"
 #include "render/MetalRenderer.h"
+#include "game/GameData.h"
+#include "render/BuildingMeshes.h"
 #include "render/Terrain.h"
+#include "sc4/CityBuildings.h"
 
 static render::MetalRenderer gRenderer;
 static render::Camera gCamera;
@@ -230,6 +233,21 @@ int main(int argc, char** argv) {
     if (!render::LoadCityTerrain(city, grid, err)) { std::fprintf(stderr, "terrain: %s\n", err.c_str()); return 1; }
     if (!gRenderer.Init(err) || !gRenderer.SetTerrain(grid, err)) { std::fprintf(stderr, "metal: %s\n", err.c_str()); return 1; }
     grid.heights.clear(); grid.heights.shrink_to_fit();  // heights now live only in the GPU texture
+    {   // buildings: the city's occupants resolved through exemplars to S3D models and FSH textures
+        std::string dir = "/Users/fernandojosesampaio/Library/Application Support/Steam/steamapps/common/"
+            "SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/GameData";
+        static game::GameData data;
+        std::vector<sc4::BuildingRecord> buildings;
+        std::vector<render::BuildingBatch> batches;
+        render::BuildingSceneStats stats;
+        if (data.Open(dir, err) && sc4::LoadCityBuildings(city, buildings, err) &&
+            render::BuildBuildingBatches(data, buildings, 4, batches, stats) && gRenderer.SetBuildings(batches, err)) {
+            std::printf("buildings: %zu in city, %zu drawn, %zu triangles in %zu texture batches (missing: %zu exemplars, %zu models, %zu textures)\n",
+                        stats.buildings, stats.placed, stats.triangles, batches.size(), stats.missingExemplar, stats.missingModel, stats.missingTexture);
+        } else {
+            std::fprintf(stderr, "buildings: %s\n", err.c_str());
+        }
+    }
     if (!shot.empty()) {
         if (!gRenderer.RenderToPng(shot, w, h, gCamera, err)) { std::fprintf(stderr, "render: %s\n", err.c_str()); return 1; }
         std::printf("wrote %s (%ux%u)\n", shot.c_str(), w, h);
