@@ -10,11 +10,14 @@ while "--table" in argv:  # --table SYMBOL:0xADDR:BYTES  (raw data referenced as
 subs = []
 while "--sub" in argv:  # --sub 'REGEX=>REPLACEMENT' applied to every body (fix lost call arguments, rename callees)
     i = argv.index("--sub"); subs.append(argv[i+1].split("=>", 1)); del argv[i:i+2]
+floatlits = set()
+while "--floatlits" in argv:  # --floatlits 0xADDR: type every floating literal of that function as float (all-SSE-single code)
+    i = argv.index("--floatlits"); floatlits.add(int(argv[i+1], 16)); del argv[i:i+2]
 src, out, addrs = argv[0], argv[1], [int(a, 16) for a in argv[2:]]
 text = pathlib.Path(src).read_text()
 blocks = re.split(r"(?m)^(?=//==== )", text)
-res = ["#include <stdint.h>", "#include <string.h>", "#include <stdbool.h>",
-       "typedef unsigned char undefined, undefined1, byte, uchar, sVF_V3F, sVF_V3F_C4UB, sVF_V3F_T2F, sVF_V3F_2T2F, sVF_V3F_C4UB_T2F, sVF_V3F_C4UB_2T2F, eGDElementType;",
+res = ["#include <stdint.h>", "#include <string.h>", "#include <stdbool.h>", "#include <math.h>", "#define ABS(x) fabs(x)", "#define NAN(x) isnan(x)",
+       "typedef unsigned char undefined, undefined1, byte, uchar, sVF_V3F, sVF_V3F_C4UB, sVF_V3F_T2F, sVF_V3F_2T2F, sVF_V3F_C4UB_T2F, sVF_V3F_C4UB_2T2F, eGDElementType, cGZGraphicSystem;",
        "typedef unsigned short undefined2, ushort;", "typedef unsigned int undefined4, uint;",
        "typedef unsigned long undefined8, ulong;", "typedef long longlong;", "static long guard_val__; static long *PTR____stack_chk_guard_100a657c8 = &guard_val__;", "static void ___stack_chk_fail(void) { __builtin_trap(); }", "#define _memcpy memcpy", "#define __thiscall", "typedef void code();", "typedef unsigned char int7; typedef unsigned long ulong_;\n#define CONCAT71(a,b) ((unsigned long)(unsigned char)(b)) ", "#define CONCAT44(a,b) ((unsigned long)(unsigned)(b))"]
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
@@ -32,6 +35,8 @@ for b in blocks:
     body = re.sub(r"\b(?:[A-Za-z_]\w*::)+~?\w+", f"oracle_{a}", body, count=1)
     for rx, rep in subs:
         body = re.sub(rx, rep, body)
+    if int(a, 16) in floatlits:
+        body = re.sub(r"(?<![\w.])(\d+\.\d+)(?![\w.])", r"\1f", body)
     body = re.sub(r"&(kVF\w+|vLookup\w+)", r"\1", body)
     body = re.sub(r"&(DAT_\w+)", r"\1", body)  # data blobs are byte arrays; keep byte-offset arithmetic
     res.append(body)
