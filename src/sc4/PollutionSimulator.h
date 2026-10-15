@@ -1,0 +1,246 @@
+// cSC4PollutionSimulator — air / water / garbage / radiation pollution grids and the city's garbage economy
+// (117 functions, 0x10009469e..0x10009afde, class id 0x8990c065, interfaces 0x452294aa message target,
+// 0x89c498be, 0xe4fda3d4 serializable). This port covers the value grids and their accessors, the tunables
+// loaded from the simulator exemplar, the per-building capacity helpers, the garbage disposal priority chain
+// (eatGarbage), the recycling-centre effect and the end-of-month roll-over. The daily diffusion, monthly
+// budget and visual-effect passes need the traffic / building / effects simulators and stay unrecovered.
+//
+// Original layout used here: +0x78 four per-type value grids (tract size 2), +0x98 four per-type "source" grids
+// (tract size 2, garbage 1), +0x90 is the value grid of type 3 (radiation), lists +0xc0 water treatment,
+// +0xd8 incinerators, +0xf0 waste-to-energy plants, +0x108 recycling centres, counts at +0xd0/+0xe8/+0x100/
+// +0x118, averages +0x20c/+0x210/+0x234, month accumulators +0x214.., recycling effect +0x240, garbage
+// counters +0x260..+0x2cc, efficiency +0x348, supply +0x34c, capacity +0x350.
+#pragma once
+#include <cstdint>
+#include <list>
+#include <memory>
+#include <vector>
+
+#include "sc4/SCPropertyHelp.h"
+#include "sc4/cSC4ResponseCurve.h"
+#include "sc4/cSC4SimGrid.h"
+
+namespace sc4 {
+
+constexpr std::uint32_t kGZCLSID_cSC4PollutionSimulator = 0x8990c065;
+constexpr std::uint32_t kPollutionRequesterSatisfactionId = 0xe9a4300b;
+constexpr std::uint32_t kPollutionGridInstanceValueBase = 0x89d5bbf0;     // + type (-0x762a4410)
+constexpr std::uint32_t kPollutionGridInstanceSourceBase = 0x49d5bc40;    // + type
+
+enum PollutionType : std::uint32_t { kPollutionAir = 0, kPollutionWater = 1, kPollutionGarbage = 2, kPollutionRadiation = 3 };
+
+// exemplar {type 0x6534284a, group 0xe7e2c2db, instance 0xc911e35b}
+constexpr std::uint32_t kPollutionPropTrafficAirFactor = 0x69501944;
+constexpr std::uint32_t kPollutionPropMaxGarbageForUI = 0x49134bd4;
+constexpr std::uint32_t kPollutionPropMaxAirForUI = 0x49134bdd;
+constexpr std::uint32_t kPollutionPropMaxWaterForUI = 0x09134be2;
+constexpr std::uint32_t kPollutionPropMaxRadiationForUI = 0x89135044;
+constexpr std::uint32_t kPollutionPropMaxAirDelta = 0x6a406201;
+constexpr std::uint32_t kPollutionPropMaxWaterDelta = 0x8a40620b;
+constexpr std::uint32_t kPollutionPropGarbageThreshold = 0x0913519b;
+constexpr std::uint32_t kPollutionPropAirThreshold = 0xa91351a6;
+constexpr std::uint32_t kPollutionPropWaterThreshold = 0x091351ae;
+constexpr std::uint32_t kPollutionPropRadiationThreshold = 0x291351b5;
+constexpr std::uint32_t kPollutionPropAbductionAmount = 0x09135479;
+constexpr std::uint32_t kPollutionPropGarbageScaling = 0x09135482;
+constexpr std::uint32_t kPollutionPropFloat2e0 = 0xaa1f8ab7;
+constexpr std::uint32_t kPollutionPropMaxGarbageOnValve = 0x4a652679;
+constexpr std::uint32_t kPollutionPropLandfillTileCapacity = 0x4a65267a;
+
+// occupant property ids
+constexpr std::uint32_t kPollutionOccGarbageCapacity = 0x48ee7a44;
+constexpr std::uint32_t kPollutionOccRecyclingMax = 0x88ed1059;
+constexpr std::uint32_t kPollutionOccIncinerator = 0xa8ebcf0c;
+constexpr std::uint32_t kPollutionOccWasteToEnergy = 0x48ebd0b1;
+constexpr std::uint32_t kPollutionOccWaterTreatment = 0xc8ebd131;
+constexpr std::uint32_t kPollutionOccWaterTreatmentUsed = 0x28ecf510;
+constexpr std::uint32_t kPollutionOccIncineratorUsed = 0xe8ecf641;
+constexpr std::uint32_t kPollutionOccWasteToEnergyUsed = 0x88ecf76c;
+constexpr std::uint32_t kPollutionOccAge = 0xc910b4cf;
+constexpr std::uint32_t kPollutionOccAgeCurve = 0x8a1e07ee;
+constexpr std::uint32_t kPollutionOccMaintenanceBase = 0x2a58d350;
+constexpr std::uint32_t kPollutionOccMaintenanceCurve = 0x0911e2e7;
+constexpr std::uint32_t kPollutionOccRecyclingFactor = 0x68ed1736;
+constexpr std::uint32_t kPollutionOccWasteToEnergyRate = 0x08fd1613;
+constexpr std::uint32_t kPollutionOccWasteToEnergyProduced = 0x27812852;
+constexpr std::uint32_t kPollutionPropFundingEfficiencyCurve = 0x6911e2df;
+
+struct PollutionTunables {
+    float trafficAirFactor = 8.0f;
+    std::uint32_t maxGarbageForUI = 27000, maxAirForUI = 27000, maxWaterForUI = 32000, maxRadiationForUI = 32000;
+    std::uint32_t maxAirDelta = 50, maxWaterDelta = 50;
+    std::uint32_t airThreshold = 16000, waterThreshold = 16000, garbageThreshold = 16000, radiationThreshold = 1;
+    std::uint32_t abductionAmount = 5000;
+    float garbageScalingFactor = 0.125f;          // 0x3e000000
+    std::uint32_t landfillTileCapacity = 0x7fff;
+    std::uint32_t maxGarbageOnValve = 0x9ffec;
+    float value2e0 = 0.0f;
+};
+
+class IPollutionOccupant {
+public:
+    virtual ~IPollutionOccupant() = default;
+    virtual cISCPropertyHolder* PropertyHolder() = 0;                  // vslot 0x30
+    virtual void Position(float xyz[3]) = 0;                           // vslot 0x40
+};
+
+class IPollutionHost {
+public:
+    virtual ~IPollutionHost() = default;
+    virtual bool PowerAvailable() = 0;                                 // power simulator vslot 0xf8
+    virtual bool OccupantPowered(IPollutionOccupant* occupant) = 0;    // this+0x60 vslot 0xf8
+    virtual float SanitationFunding() = 0;                             // budget department +0x50 -> float
+    virtual void LandfillRange(int& low, int& high) = 0;               // landfill developer vslot 0x50
+    virtual int LandfillTransportLoad() = 0;                           // landfill developer vslot 0x58
+    virtual void PostMessage(std::uint32_t message, std::uint32_t arg) = 0;   // SC4PostMessage2
+    virtual void AddHistory(std::uint32_t historyId, std::int64_t value) = 0; // history warehouse vslot 0x60
+    virtual float RecyclingCapacitySlots() = 0;                        // this+0x50 vslot 0x80
+};
+
+class cSC4PollutionSimulator {
+public:
+    explicit cSC4PollutionSimulator(IPollutionHost* host);
+
+    // tunables + curves (ReadSimulatorTunableValues)
+    void ReadSimulatorTunableValues(const cISCPropertyHolder* exemplar);
+    const PollutionTunables& Tunables() const { return tunables_; }
+    cSC4ResponseCurve& PropRequestCurve() { return propRequestCurve_; }
+    cSC4ResponseCurve& GarbageTransportCapacityCurve() { return garbageTransportCapacity_; }
+    cSC4ResponseCurve& AgeCurve() { return ageCurve_; }                 // +0x1c8
+    cSC4ResponseCurve& EfficiencyCurve() { return efficiencyCurve_; }   // +0x1e8
+    cSC4ResponseCurve& FundingEfficiencyCurve() { return fundingEfficiencyCurve_; }   // property 0x6911e2df
+
+    // grids
+    void CreateGrids();
+    cSC4SimGrid<std::int16_t>* GetPollutionGrid(PollutionType type) const;
+    std::int16_t GetPollutionValue(PollutionType type, int x, int z) const;
+    bool IsRadioactive(unsigned x, unsigned z) const;
+    void GetAirValue(unsigned x, unsigned z, int& out) const;
+    void GetWaterValue(unsigned x, unsigned z, int& out) const;
+    void GetGarbageValue(unsigned x, unsigned z, int& out) const;
+    bool IsAirPolluted(unsigned x, unsigned z) const;
+    bool IsWaterPolluted(unsigned x, unsigned z) const;
+    bool IsGarbageAccumulated(unsigned x, unsigned z) const;
+    void SetIsRadioactive(unsigned x, unsigned z, bool on);
+    void SetAirValue(unsigned x, unsigned z, int value);
+    void SetWaterValue(unsigned x, unsigned z, int value);
+    void SetGarbageValue(unsigned x, unsigned z, int value);
+    bool IsActiveLandfill(unsigned x, unsigned z) const;
+    void SetIsActiveLandfill(unsigned x, unsigned z, bool on, std::uint32_t zoneTypeAtCell);
+
+    // summary accessors
+    bool IsGarbageUncollected() const { return garbageUncollected_; }
+    std::uint32_t GetTotalGarbageUncollected() const { return totalGarbageUncollected_; }
+    std::int32_t GetAverageAirValue() const { return averageAir_; }
+    std::int32_t GetAverageWaterValue() const { return averageWater_; }
+    std::int16_t GetAverageGarbageValue() const { return averageGarbage_; }
+    std::uint32_t GetMonthlyIncineratorCapacity() const { return monthlyIncineratorCapacity_; }
+    std::uint32_t GetMonthlyWasteToEnergyCapacity() const { return monthlyWasteToEnergyCapacity_; }
+    float GetRecyclingCenterEffect() const { return recyclingEffect_; }
+    std::int32_t GetBuildingGarbageCapacity(cISCPropertyHolder* occupant) const;
+    float GetGarbageScalingFactor() const { return tunables_.garbageScalingFactor; }
+    void GarbagePutInLandfill(int amount) { landfilledThisMonth_ += amount; }
+    void AddToGarbageSupply(int amount);
+    int GetGarbageSupply();
+    float GetEfficiency() const { return efficiency_; }
+    void SetEfficiency(float value) { efficiency_ = value; }
+    std::int64_t GetGarbageProducedPrevMonth() const { return producedPrev_; }
+    std::int64_t GetGarbageImportedPrevMonth() const { return importedPrev_; }
+    std::int64_t GetGarbageExportedPrevMonth() const { return exportedPrev_; }
+    std::int64_t GetGarbageRecycledPrevMonth() const { return static_cast<std::int64_t>(recycledPrev_); }
+    std::int64_t GetGarbageIncineratedPrevMonth() const { return incineratedPrev_; }
+    std::int64_t GetGarbageConvertedToEnergyPrevMonth() const { return convertedPrev_; }
+    std::int64_t GetGarbageLandfilledPrevMonth() const { return landfilledPrev_; }
+    std::int32_t GetGarbageAbductedPrevMonth() const { return abductedPrev_; }
+    int GetIncineratorCount() const { return static_cast<int>(incinerators_.size()) ; }
+    int GetGarbageCapacity() const { return garbageCapacity_; }
+    void SetGarbageCapacity(int value) { garbageCapacity_ = value; }
+    std::uint32_t GetMaxAirPollutionLevelForUI() const { return tunables_.maxAirForUI; }
+    std::uint32_t GetMaxWaterPollutionLevelForUI() const { return tunables_.maxWaterForUI; }
+    std::uint32_t GetMaxGarbagePollutionLevelForUI() const { return tunables_.maxGarbageForUI; }
+    std::uint32_t GetMaxRadiationPollutionLevelForUI() const { return tunables_.maxRadiationForUI; }
+    std::uint32_t GetGZCLSID() const { return kGZCLSID_cSC4PollutionSimulator; }
+    std::uint32_t GetRequesterSatisfactionId() const { return kPollutionRequesterSatisfactionId; }
+    bool UsesCustomPropSelector() const { return false; }
+    int GetRequestedShare(int x0, int z0, int x1, int z1) const;
+
+    // worst tracts (x, z, value)
+    struct WorstTract { std::uint16_t x = 0, z = 0; std::int32_t value = 0; };
+    WorstTract worstAir, worstWater, worstGarbage;
+
+    // occupant lists
+    std::list<IPollutionOccupant*>& WaterTreatmentList() { return waterTreatment_; }
+    std::list<IPollutionOccupant*>& IncineratorList() { return incinerators_; }
+    std::list<IPollutionOccupant*>& WasteToEnergyList() { return wasteToEnergy_; }
+    std::list<IPollutionOccupant*>& RecyclingList() { return recyclingCenters_; }
+    static bool AddOrRemoveOccupant(std::list<IPollutionOccupant*>& list, IPollutionOccupant* occupant, bool add);
+    int GetWaterTreatmentPlantCount() const { return static_cast<int>(waterTreatment_.size()); }
+    int GetWasteToEnergyBuildingCount() const { return static_cast<int>(wasteToEnergy_.size()); }
+    int GetRecyclingCenterCount() const { return static_cast<int>(recyclingCenters_.size()); }
+    std::uint32_t recyclingCenterCountSnapshot = 0;                     // +0x208 (copy of the list size at Init)
+
+    // per-occupant capacity helpers (all read the occupant's exemplar)
+    void GetRecyclingCenterMaxCapacity(IPollutionOccupant* occupant, float& percentage) const;
+    void GetRecyclingCenterCurrentCapacity(IPollutionOccupant* occupant, float& percentage) const;
+    void GetMaxCapacity(std::uint32_t property, IPollutionOccupant* occupant, std::uint32_t& out) const;
+    bool GetCurrentCapacity(std::uint32_t property, IPollutionOccupant* occupant, std::uint32_t& out) const;
+    void GetIncineratorCurrentCapacity(IPollutionOccupant* occupant, std::uint32_t& out) const;
+    void GetWasteToEnergyCurrentCapacity(IPollutionOccupant* occupant, std::uint32_t& out) const;
+    void GetWaterTreatmentMaxCapacity(IPollutionOccupant* occupant, std::uint32_t& out) const;
+    void GetWaterTreatmentCurrentCapacity(IPollutionOccupant* occupant, std::uint32_t& out) const;
+    void GetWaterTreatmentUsedCapacity(IPollutionOccupant* occupant, std::uint32_t& out) const;
+    bool GetCurrentOccupantCondition(IPollutionOccupant* occupant, float& percentage) const;
+    bool GetCurrentOccupantEfficiency(IPollutionOccupant* occupant, float& percentage) const;
+    bool GetUnusedCapacity(std::uint32_t maxProperty, std::uint32_t usedProperty, IPollutionOccupant* occupant,
+                           std::uint32_t& out) const;
+    void GetIncineratorUsedCapacity(IPollutionOccupant* occupant, std::uint32_t& out) const;
+    void GetWasteToEnergyUsedCapacity(IPollutionOccupant* occupant, std::uint32_t& out) const;
+    bool CalcOccupantMaintenanceCost(IPollutionOccupant* occupant, std::int64_t& out) const;
+    void ResetOccupantListCapacityUsedProperty(std::list<IPollutionOccupant*>& list, std::uint32_t currentProperty,
+                                               std::uint32_t savedProperty) const;
+    void ComputeWasteToEnergyListCurrentCapacity();
+    void CalculateRecyclingCenterEffect();
+
+    // garbage disposal chain: returns the amount actually consumed
+    float eatGarbage(float amount, std::uint32_t& wasteToEnergyBudget, std::uint32_t& incineratorBudget);
+    void EndOfCycle();
+
+    // monthly counters
+    std::int64_t recycledThisMonth_ = 0;      // +0x260
+    std::int64_t wasteToEnergyThisMonth_ = 0; // +0x270
+    std::int64_t incineratedThisMonth_ = 0;   // +0x278
+    std::int64_t landfilledThisMonth_ = 0;    // +0x280
+    std::int32_t recyclingAllowance_ = 0;     // +0x2c0 garbage the recycling centres can take this month
+    std::uint32_t abductedThisMonth_ = 0;     // +0x2c4
+    std::int32_t abductedPrev_ = 0;           // +0x2c8
+    std::int32_t activeLandfillCount_ = 0;    // +0x2cc
+    // end-of-cycle accumulators (filled by the daily sweep)
+    std::uint32_t airSum = 0, waterSum = 0;                             // +0x214, +0x218
+    std::uint32_t periodValue21c[2] = {}, periodValue224[2] = {};       // +0x21c/+0x220 -> +0x224/+0x228 at the end
+    std::uint32_t cellCount = 0;                                        // +0x22c
+    std::uint32_t radiationCount = 0;                                   // +0x230
+    void SetTotalGarbageUncollected(std::uint32_t total) { totalGarbageUncollected_ = total; }
+    bool dirtyRadiation = false, dirtyAir = false, dirtyWater = false, dirtyGarbage = false;   // +0x328..+0x32b
+
+private:
+    IPollutionHost* host_;
+    PollutionTunables tunables_;
+    std::unique_ptr<cSC4SimGrid<std::int16_t>> valueGrids_[4];          // +0x78
+    std::unique_ptr<cSC4SimGrid<std::int16_t>> sourceGrids_[4];         // +0x98
+    cSC4ResponseCurve propRequestCurve_, garbageTransportCapacity_, ageCurve_, efficiencyCurve_, fundingEfficiencyCurve_;
+    std::list<IPollutionOccupant*> waterTreatment_, incinerators_, wasteToEnergy_, recyclingCenters_;
+    bool garbageUncollected_ = false;                                   // +0x244
+    std::uint32_t totalGarbageUncollected_ = 0;                         // +0x248
+    std::int32_t averageAir_ = 0, averageWater_ = 0;                    // +0x20c, +0x210
+    std::int16_t averageGarbage_ = 0;                                   // +0x234
+    std::uint32_t monthlyIncineratorCapacity_ = 0, monthlyWasteToEnergyCapacity_ = 0;   // +0x238, +0x23c
+    float recyclingEffect_ = 0.0f;                                      // +0x240
+    float efficiency_ = 1.0f;                                           // +0x348
+    int garbageSupply_ = 0;                                             // +0x34c
+    int garbageCapacity_ = 0;                                           // +0x350
+    std::int64_t producedPrev_ = 0, importedPrev_ = 0, exportedPrev_ = 0;   // +0x288..+0x298
+    double recycledPrev_ = 0;                                           // +0x2a0
+    std::int64_t incineratedPrev_ = 0, convertedPrev_ = 0, landfilledPrev_ = 0;   // +0x2a8..+0x2b8
+};
+
+}  // namespace sc4
