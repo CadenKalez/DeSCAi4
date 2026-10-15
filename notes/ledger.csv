@@ -12302,3 +12302,65 @@ address,symbol,unique_name,source,status,evidence
 0x1006fcf94,non-virtual thunk to cSC4DisasterInstanceToxic::Shutdown(),ShutdownThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
 0x1006fcfa6,cSC4DisasterInstanceToxic::GetID() const,GetID,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
 0x1006fcfb2,non-virtual thunk to cSC4DisasterInstanceToxic::GetID() const,GetIDThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004118bc,cGZBuffer::cGZBuffer(),Construct,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x10041192c,cGZBuffer::cGZBuffer(),ConstructWrapper,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411992,cGZBuffer::~cGZBuffer(),Destruct,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x1004119f2,cGZBuffer::~cGZBuffer(),DestructAndDelete,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x1004119fc,cGZBuffer::~cGZBuffer(),DestructBody,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411a2a,"cGZBuffer::Init(unsigned int, unsigned int, cGZBufferColorType)",Init,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411a76,cGZBuffer::Uninitialize(),Uninitialize,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411a96,cGZBuffer::Shutdown(),Shutdown,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411ab6,"cGZBuffer::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411aea,"non-virtual thunk to cGZBuffer::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411af8,cGZBuffer::AddRef(),AddRef,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411b06,non-virtual thunk to cGZBuffer::AddRef(),AddRefThunk,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411b14,cGZBuffer::Release(),Release,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411b38,non-virtual thunk to cGZBuffer::Release(),ReleaseThunk,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411b60,"cGZBuffer::Fill(unsigned int, cRZRect*)",Fill_uint_cRZRect,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411b9a,"cGZBuffer::Fill(unsigned int, int, int, int, int, cRZRect*)",Fill_uint_int_int_int_int_cRZRect,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411bd0,cGZBuffer::SetTransparency(unsigned int),SetTransparency,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411bee,cGZBuffer::RemoveTransparency(),RemoveTransparency,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411c08,"cGZBuffer::ConvertRGBValueToNative(unsigned char, unsigned char, unsigned char)",ConvertRGBValueToNative,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411cc4,"cGZBuffer::ConvertRGBAValueToNative(unsigned char, unsigned char, unsigned char, unsigned char)",ConvertRGBAValueToNative,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411d8c,"cGZBuffer::ConvertNativeValueToRGB(unsigned int, unsigned char&, unsigned char&, unsigned char&)",ConvertNativeValueToRGB,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411e74,"cGZBuffer::ConvertNativeValueToRGBA(unsigned int, unsigned char&, unsigned char&, unsigned char&, unsigned char&)",ConvertNativeValueToRGBA,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100411fac,"cGZBuffer::GenericBufferClip(cIGZBuffer*, cRZRect&, cRZRect&, cRZRect const*)",GenericBufferClip,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x1004120da,"cGZBuffer::DrawLine(int, int, int, int, int, unsigned int)",DrawLine,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100412720,"cGZBuffer::ClipRect(int*, int*, int*, int*, int, int, int, int)",ClipRect,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x10041292a,cGZBuffer::GetMemoryUsage() const,GetMemoryUsage,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100412952,cGZBuffer::CreateSurfaces(),CreateSurfaces,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x10041297e,cGZBuffer::InitializeSurfaces(),InitializeSurfaces,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x1004129e4,cGZBuffer::SetDirty(),SetDirty,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x1004129ee,cGZBuffer::DestroySurfaces(),DestroySurfaces,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100412a16,cGZBuffer::DeterminePixelFormat(),DeterminePixelFormat,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100412af0,cGZBuffer::Lock(cIGZBuffer::eLockFlags),Lock,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100412b12,cGZBuffer::Unlock(cIGZBuffer::eLockFlags),Unlock,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100412b24,cGZBuffer::IsReady(),IsReady,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100412b2e,"cGZBuffer::Blt(cIGZBuffer*, cRZRect const&, cRZRect const&, cRZRect const*)",Blt,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100412c38,"cGZBuffer::BltNoClip(cIGZBuffer*, cRZRect const&, cRZRect const&)",BltNoClip,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x10041301e,"cGZBuffer::Fill(unsigned int, cRZRect const&, cRZRect*)",Fill_uint_cRZRect_const_cRZRect,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x1004131ca,"cGZBuffer::GetPixel(unsigned int, unsigned int) const",GetPixel,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x10041321a,"cGZBuffer::SetPixel(unsigned int, unsigned int, unsigned int)",SetPixel,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x10041325e,cGZBuffer::GetColorSurfaceBits(),GetColorSurfaceBits,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100413268,cGZBuffer::GetColorSurfaceStride(),GetColorSurfaceStride,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100413272,cGZBuffer::GetChangeCounter(),GetChangeCounter,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x10041327c,"cGZBuffer::IsPixelTransparent(unsigned int, unsigned int)",IsPixelTransparent,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x1004132d2,cGZBuffer::GetTransparentColor(unsigned int&) const,GetTransparentColor,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x1004132ea,"cGZBuffer::SetShadeColor(unsigned char, unsigned char, unsigned char, unsigned char)",SetShadeColor,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100413308,"non-virtual thunk to cGZBuffer::SetShadeColor(unsigned char, unsigned char, unsigned char, unsigned char)",SetShadeColorThunk,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100413326,"cGZBuffer::GetShadeColor(unsigned char&, unsigned char&, unsigned char&, unsigned char&) const",GetShadeColor,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x10041334c,"non-virtual thunk to cGZBuffer::GetShadeColor(unsigned char&, unsigned char&, unsigned char&, unsigned char&) const",GetShadeColorThunk,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100413372,cGZBuffer::IsLocked() const,IsLocked,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100413382,cGZBuffer::Height() const,Height,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x10041338c,cGZBuffer::GetBufferArea() const,GetBufferArea_void,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100413396,cGZBuffer::GetBufferArea(cRZRect&) const,GetBufferArea_cRZRect,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x1004133ac,cGZBuffer::GetColorType() const,GetColorType_void,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x1004133b8,cGZBuffer::GetBitsPerPixel() const,GetBitsPerPixel,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x1004133c4,cGZBuffer::GetHardwareCache(),GetHardwareCache,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100620c70,cGZBuffer::Width() const,Width,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100620cb0,cGZBuffer::GetColorType(cGZBufferColorType&) const,GetColorType_cGZBufferColorType,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100620cc8,cGZBuffer::GetBytesPerPixel() const,GetBytesPerPixel,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100620cd4,cGZBuffer::GetTransparency() const,GetTransparency,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100620cec,cGZBuffer::SetHardwareCache(cIGZBufferHardwareCache*),SetHardwareCache,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100412bad,"GetPixelBlitter(cGZBufferColorType&, cGZBufferColorType&)",GetPixelBlitterForColorTypes,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x100412bf2,"GetPixelBlitterColorKey(cGZBufferColorType&, cGZBufferColorType&)",GetPixelBlitterColorKeyForColorTypes,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
