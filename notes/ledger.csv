@@ -11927,3 +11927,37 @@ address,symbol,unique_name,source,status,evidence
 0x10061bfd6,cGZCanvasMessage::operator<(cIGZMessage2 const&) const,operator<,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
 0x10061bff4,cGZCanvasMessage::Initialize(cIGZCanvasMessage::CanvasEvent),Initialize,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
 0x10061bffe,cGZCanvasMessage::EventType() const,EventType,src/gz/cGZInputMessages.h,recovered,scripts/tests/gz_inputmessages_test.cpp
+0x1002884ee,cGZDefaultAllocator::Allocate(unsigned int),Allocate,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1002884fa,cGZDefaultAllocator::Deallocate(void*),Deallocate,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x100288508,"cGZDefaultAllocator::Reallocate(void*, unsigned int)",Reallocate,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x10028851a,"cGZDefaultAllocator::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x10028853c,cGZDefaultAllocator::AddRef(),AddRef,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x10028854a,cGZDefaultAllocator::Release(),Release,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x100288566,cGZDefaultAllocator::~cGZDefaultAllocator(),Destruct,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x10028871e,cGZDefaultAllocator::~cGZDefaultAllocator(),DestructAndDelete,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x10028856c,cGZAllocatorService::cGZAllocatorService(),Construct,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1002885c4,cGZAllocatorService::~cGZAllocatorService(),Destruct,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1002885d2,non-virtual thunk to cGZAllocatorService::~cGZAllocatorService(),DestructThunk,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1002885dc,non-virtual thunk to cGZAllocatorService::~cGZAllocatorService(),DestructAndDeleteThunk,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1002885ea,cGZAllocatorService::~cGZAllocatorService(),DestructAndDelete,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x10028861c,non-virtual thunk to cGZAllocatorService::~cGZAllocatorService(),DestructBodyThunk_861c,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x10028862a,non-virtual thunk to cGZAllocatorService::~cGZAllocatorService(),DestructBodyThunk_862a,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x100288638,"cGZAllocatorService::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x10028865a,"non-virtual thunk to cGZAllocatorService::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_865a,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x100288680,"non-virtual thunk to cGZAllocatorService::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_8680,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1002886a6,cGZAllocatorService::AddRef(),AddRef,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1002886b4,non-virtual thunk to cGZAllocatorService::AddRef(),AddRefThunk_86b4,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1002886be,non-virtual thunk to cGZAllocatorService::AddRef(),AddRefThunk_86be,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1002886cc,cGZAllocatorService::Release(),Release,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1002886da,non-virtual thunk to cGZAllocatorService::Release(),ReleaseThunk_86da,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1002886e4,non-virtual thunk to cGZAllocatorService::Release(),ReleaseThunk_86e4,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1002886f2,cGZAllocatorService::Allocate(unsigned int),Allocate,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1002886fe,cGZAllocatorService::Deallocate(void*),Deallocate,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x10028870c,"cGZAllocatorService::Reallocate(void*, unsigned int)",Reallocate,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1003faefc,cRZExceptionNotification::cRZExceptionNotification(),Construct,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1003faf14,cRZExceptionNotification::~cRZExceptionNotification(),Destruct,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1003faf1a,cRZExceptionNotification::~cRZExceptionNotification(),DestructAndDelete,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1003faf24,"cRZExceptionNotification::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1003faf46,cRZExceptionNotification::AddRef(),AddRef,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1003faf54,cRZExceptionNotification::Release(),Release,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
+0x1003faf70,"cRZExceptionNotification::Notify(char const*, int)",Notify,src/gz/cGZAllocator.h,recovered,scripts/tests/gz_allocator_test.cpp
