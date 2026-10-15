@@ -12040,3 +12040,52 @@ address,symbol,unique_name,source,status,evidence
 0x1006525c6,"cGZDrawContext::RasterizeFillQuad(float const*, int)",RasterizeFillQuad,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
 0x10065275e,"cGZDrawContext::TesselateFillPolygon(float const*, int)",TesselateFillPolygon,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
 0x1006527fc,"cGZDrawContext::RasterizeFillPolygon(float const*, int)",RasterizeFillPolygon,src/gz/DrawContext.h,recovered-partial,scripts/tests/gz_drawcontext_test.cpp
+0x1002942de,cGZWinFlatRect::cGZWinFlatRect(),Construct,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294324,cGZWinFlatRect::cGZWinFlatRect(),ConstructWrapper,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x10029436a,cGZWinFlatRect::~cGZWinFlatRect(),Destruct,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x1002943cc,cGZWinFlatRect::~cGZWinFlatRect(),DestructAndDelete,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x1002943d6,cGZWinFlatRect::~cGZWinFlatRect(),DestructBody,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294404,"cGZWinFlatRect::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294428,"non-virtual thunk to cGZWinFlatRect::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294454,cGZWinFlatRect::AddRef(),AddRef,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x10029445e,non-virtual thunk to cGZWinFlatRect::AddRef(),AddRefThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294470,cGZWinFlatRect::Release(),Release,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x10029447a,non-virtual thunk to cGZWinFlatRect::Release(),ReleaseThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x10029448c,cGZWinFlatRect::DoMessage(cGZMessage&),DoMessage,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x10029450a,cGZWinFlatRect::GZPaint(),GZPaint,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x10029467e,"cGZWinFlatRect::GZOnKeyDown(unsigned int, unsigned int)",GZOnKeyDown,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x1002946b4,"cGZWinFlatRect::GZOnKeyUp(unsigned int, unsigned int)",GZOnKeyUp,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x1002946ea,cGZWinFlatRect::AsIGZWin(),AsIGZWin,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x1002946f4,non-virtual thunk to cGZWinFlatRect::AsIGZWin(),AsIGZWinThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294702,cGZWinFlatRect::SetOutlineFlags(int),SetOutlineFlags,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294884,non-virtual thunk to cGZWinFlatRect::SetOutlineFlags(int),SetOutlineFlagsThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294898,cGZWinFlatRect::GetOutlineFlags(),GetOutlineFlags,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x1002948a6,non-virtual thunk to cGZWinFlatRect::GetOutlineFlags(),GetOutlineFlagsThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x1002948b0,cGZWinFlatRect::GetOutlineFlag(int),GetOutlineFlag,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x1002948c2,non-virtual thunk to cGZWinFlatRect::GetOutlineFlag(int),GetOutlineFlagThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x1002948d2,cGZWinFlatRect::SetFillColor(unsigned int),SetFillColor_uint,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x1002948dc,non-virtual thunk to cGZWinFlatRect::SetFillColor(unsigned int),SetFillColor_uintThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x1002948ee,"cGZWinFlatRect::SetFillColor(unsigned char, unsigned char, unsigned char)",SetFillColor_uchar_uchar_uchar,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x1002948f8,"non-virtual thunk to cGZWinFlatRect::SetFillColor(unsigned char, unsigned char, unsigned char)",SetFillColor_uchar_uchar_ucharThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x10029490a,cGZWinFlatRect::GetFillColor() const,GetFillColor_void,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294914,non-virtual thunk to cGZWinFlatRect::GetFillColor() const,GetFillColor_voidThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294926,"cGZWinFlatRect::GetFillColor(unsigned char&, unsigned char&, unsigned char&) const",GetFillColor_uchar_uchar_uchar,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294930,"non-virtual thunk to cGZWinFlatRect::GetFillColor(unsigned char&, unsigned char&, unsigned char&) const",GetFillColor_uchar_uchar_ucharThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294942,cGZWinFlatRect::SetOutlineColor(unsigned int),SetOutlineColor_uint,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x1002949aa,non-virtual thunk to cGZWinFlatRect::SetOutlineColor(unsigned int),SetOutlineColor_uintThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x1002949bc,"cGZWinFlatRect::SetOutlineColor(unsigned char, unsigned char, unsigned char)",SetOutlineColor_uchar_uchar_uchar,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x1002949de,"non-virtual thunk to cGZWinFlatRect::SetOutlineColor(unsigned char, unsigned char, unsigned char)",SetOutlineColor_uchar_uchar_ucharThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x1002949fc,"cGZWinFlatRect::SetOutlineColors(unsigned int, unsigned int, unsigned int, unsigned int)",SetOutlineColors,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294b2a,"non-virtual thunk to cGZWinFlatRect::SetOutlineColors(unsigned int, unsigned int, unsigned int, unsigned int)",SetOutlineColorsThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294b3c,"cGZWinFlatRect::GetOutlineColors(unsigned int&, unsigned int&, unsigned int&, unsigned int&)",GetOutlineColors,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294c16,"non-virtual thunk to cGZWinFlatRect::GetOutlineColors(unsigned int&, unsigned int&, unsigned int&, unsigned int&)",GetOutlineColorsThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294c28,"cGZWinFlatRect::SetOutlineColor(int, unsigned char, unsigned char, unsigned char)",SetOutlineColor_int_uchar_uchar_uchar,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294cc8,"non-virtual thunk to cGZWinFlatRect::SetOutlineColor(int, unsigned char, unsigned char, unsigned char)",SetOutlineColor_int_uchar_uchar_ucharThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294cda,"cGZWinFlatRect::GetOutlineColor(int, unsigned char&, unsigned char&, unsigned char&) const",GetOutlineColor,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294d38,"non-virtual thunk to cGZWinFlatRect::GetOutlineColor(int, unsigned char&, unsigned char&, unsigned char&) const",GetOutlineColorThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294da0,cGZWinFlatRect::SetSizeMode(int),SetSizeMode,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294db0,non-virtual thunk to cGZWinFlatRect::SetSizeMode(int),SetSizeModeThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294dbc,cGZWinFlatRect::GetSizeMode(),GetSizeMode,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294dca,non-virtual thunk to cGZWinFlatRect::GetSizeMode(),GetSizeModeThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294dd4,cGZWinFlatRect::AutoSize(cRZRect const&),AutoSize,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100294e90,non-virtual thunk to cGZWinFlatRect::AutoSize(cRZRect const&),AutoSizeThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
