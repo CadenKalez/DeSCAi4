@@ -10745,3 +10745,16 @@ address,symbol,unique_name,source,status,evidence
 0x1005658da,"script_tag_int(cRZString&, cRZString const&, int)",ScriptTagInt,src/gz/WinScriptTags.cpp|h,recovered,scripts/tests/gz_winscripttags_test.cpp (exact attribute text)
 0x100565995,"script_tag_imagekey(cRZString&, cRZString const&, unsigned int, unsigned int)",ScriptTagImageKey,src/gz/WinScriptTags.cpp|h,recovered,scripts/tests/gz_winscripttags_test.cpp (exact attribute text)
 0x100565f60,"script_tag_optgrpopt(cRZString&, cRZString const&, unsigned int, int, int)",ScriptTagOptionGroupOption,src/gz/WinScriptTags.cpp|h,recovered,scripts/tests/gz_winscripttags_test.cpp (exact attribute text)
+0x10008c2fd,"SetTripCapacity(cISCPropertyHolder*, unsigned int, unsigned int)",SetTripCapacity,src/sc4/SC4Utilities.cpp|h,recovered,scripts/tests/sc4_utilities_test.cpp
+0x10008c46b,"GetTripCapacity(cISCPropertyHolder*, unsigned int)",GetTripCapacity,src/sc4/SC4Utilities.cpp|h,recovered,scripts/tests/sc4_utilities_test.cpp
+0x10030b05a,"GetPropertyAsSint32(cISCPropertyHolder*, unsigned int, int&)",GetPropertyAsSint32,src/sc4/SC4Utilities.cpp|h,recovered,scripts/tests/sc4_utilities_test.cpp
+0x10030af8d,"GetFloatProperty(cISCPropertyHolder*, unsigned int, float&)",GetFloatProperty,src/sc4/SC4Utilities.cpp|h,recovered,scripts/tests/sc4_utilities_test.cpp
+0x1005e3337,IsStaticBuilding(cISC4Occupant*),IsStaticBuilding,src/sc4/SC4Utilities.cpp|h,recovered,scripts/tests/sc4_utilities_test.cpp
+0x100130758,IsConnectable(cISC4NetworkOccupant*),IsConnectable,src/sc4/SC4Utilities.cpp|h,recovered,scripts/tests/sc4_utilities_test.cpp
+0x1001a92df,"IsStraight(cSC4NetworkCellInfo*, cISC4NetworkManager::eNetworkType)",IsStraight,src/sc4/SC4Utilities.cpp|h,recovered,scripts/tests/sc4_utilities_test.cpp
+0x100039ca4,"SC4ZoomAndRotationToIndex(int, int)",SC4ZoomAndRotationToIndex,src/sc4/SC4Utilities.cpp|h,recovered,scripts/tests/sc4_utilities_test.cpp
+0x100039659,"SC4LimitStringLength(cIGZString const&, cIGZString&, unsigned int)",SC4LimitStringLengthCopy,src/sc4/SC4Utilities.cpp|h,recovered,scripts/tests/sc4_utilities_test.cpp
+0x1000394a1,"SC4SanitizeFileName(cIGZString const&, cIGZString&)",SC4SanitizeFileName,src/sc4/SC4Utilities.cpp|h,recovered,scripts/tests/sc4_utilities_test.cpp
+0x1000392b0,"SC4MakeMoneyString(long long, cIGZString&)",SC4MakeMoneyString,src/sc4/SC4Utilities.cpp|h,recovered,scripts/tests/sc4_utilities_test.cpp
+0x100039355,"SC4MakeFormattedMoneyString(double, cIGZString&, cIGZString const&)",SC4MakeFormattedMoneyString,src/sc4/SC4Utilities.cpp|h,recovered,scripts/tests/sc4_utilities_test.cpp
+0x100358485,"SC4InsertNumberIntoString(cRZString&, long long)",SC4InsertNumberIntoString,src/sc4/SC4Utilities.cpp|h,recovered,scripts/tests/sc4_utilities_test.cpp
