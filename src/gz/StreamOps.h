@@ -49,6 +49,9 @@ cIGZOStream& operator<<(cIGZOStream& s, const cS3DMatrix4& v);
 cIGZIStream& operator>>(cIGZIStream& s, cS3DMatrix4& v);
 cIGZOStream& operator<<(cIGZOStream& s, const cS3DTransform& v);
 cIGZIStream& operator>>(cIGZIStream& s, cS3DTransform& v);
+// Pre-version-5 network occupant records: 3x3 rotation, translation, scale and the change counter as plain
+// fields (S3DTransformLegacyLoad, 0x1000cf954).
+void LoadLegacyS3DTransform(cIGZIStream& s, cS3DTransform& v);
 cIGZOStream& operator<<(cIGZOStream& s, const std::vector<float>& v);
 cIGZIStream& operator>>(cIGZIStream& s, std::vector<float>& v);
 cIGZOStream& operator<<(cIGZOStream& s, const std::vector<std::uint8_t>& v);

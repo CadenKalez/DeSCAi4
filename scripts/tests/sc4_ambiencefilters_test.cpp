@@ -35,7 +35,7 @@ public:
 };
 Development gDevelopment;
 cSC4BuildingOccupant* NewBuilding(int zone) {
-    gDevelopment.profile.zoneType = zone;
+    gDevelopment.profile.purpose = zone;
     auto* b = new cSC4BuildingOccupant();
     b->AddRef();
     return b;

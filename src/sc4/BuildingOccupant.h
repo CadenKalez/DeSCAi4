@@ -5,6 +5,8 @@
 // Layout: +0 cISC4BuildingOccupant, +8 cSC4Occupant (type id default 0x278128a0).
 #pragma once
 #include <cstdint>
+#include <map>
+#include <vector>
 
 #include "rz/cRZString.h"
 #include "sc4/Occupant.h"
@@ -20,11 +22,22 @@ constexpr std::uint32_t kPropertyBuildingCustomName = 0x899afbad;
 constexpr std::uint32_t kPropertyExemplarNameKey = 0x8a416a99;     // localized name key
 constexpr std::uint32_t kPropertyExemplarName = 0x20;
 
-// cISC4BuildingOccupant::BuildingProfile as far as recovered: the zone type leads the record
-// (1..3 residential, 4..6 commercial, 5 is also agriculture in the ambience tests, 6/7 dirty industry,
-// 8 clean industry — see cAmbienceZoneFilter); the capacity tables follow in the original.
+// cISC4BuildingOccupant::BuildingProfile (0x50 bytes), built from a building exemplar by the building
+// development simulator (LoadBuildingProperties): purpose (property 0x27812833), wealth (0x27812832, 0..3),
+// the capacity of the building's own developer type, the growth stage, capacities per developer type
+// (property 0x27812834 pairs, stored as one map), a partial-capacity flag (0x27812836), category flags from
+// the occupant groups, the footprint size (0x27812810), construction cost and summed maintenance cost.
 struct BuildingProfile {
-    std::int32_t zoneType = 0;
+    std::uint32_t purpose = 0;                                               // +0
+    std::uint32_t wealth = 0;                                                // +4
+    std::uint16_t capacity = 0;                                              // +8
+    std::uint8_t growthStage = 0;                                            // +0xa
+    std::vector<std::map<std::uint32_t, std::uint16_t>> capacities;          // +0x10
+    bool allowPartialCapacity = false;                                       // +0x28
+    std::uint32_t categoryFlags = 0;                                         // +0x2c
+    float size[3] = {};                                                      // +0x30
+    std::int64_t cost = 0;                                                   // +0x40
+    std::int64_t maintenance = 0;                                            // +0x48
 };
 
 class cISC4BuildingOccupant : public cIGZUnknown {

@@ -275,9 +275,9 @@ void cSC4Lot::SetState(std::uint32_t state, std::uint32_t wealthArg, std::uint8_
     if (old == kLotStateOccupied && buildingType_ != 0 && host) {
         const LotBuildingProfile* profile = host->BuildingProfile(buildingType_);
         if (profile && profile->purpose != 0) {
-            host->OnDeveloperLotAbandoned(static_cast<std::uint16_t>(profile->buildingCapacity));
+            host->OnDeveloperLotAbandoned(static_cast<std::uint16_t>(profile->capacity));
             if (state_ == kLotStateLivable) {
-                const std::uint32_t devType = host->DeveloperType(profile->purpose, profile->wealthLevels);
+                const std::uint32_t devType = host->DeveloperType(profile->purpose, profile->wealth);
                 SetPopulation(devType, GetCapacity(devType, true));
             }
         }
@@ -342,10 +342,10 @@ void cSC4Lot::UpdatePrimaryOccupantWealth() {
     bool keep = false;
     if (wealth_ != 0)
         keep = occupancy.count(DeveloperTypeFor(profile->purpose, wealth_)) != 0;
-    if (!keep) wealth_ = static_cast<std::uint8_t>(profile->wealthLevels);
-    if (profile->wealthLevels > 0) {
+    if (!keep) wealth_ = static_cast<std::uint8_t>(profile->wealth);
+    if (profile->wealth > 0) {
         float best = 0.0f;
-        for (int level = profile->wealthLevels; level >= 1; --level) {
+        for (int level = profile->wealth; level >= 1; --level) {
             auto it = occupancy.find(DeveloperTypeFor(profile->purpose, level));
             if (it != occupancy.end() && best < it->second) {
                 wealth_ = static_cast<std::uint8_t>(level);

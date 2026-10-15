@@ -60,7 +60,7 @@ public:
 int main() {
     Host host;
     host.profile.purpose = 2;
-    host.profile.wealthLevels = 2;
+    host.profile.wealth = 2;
     host.profile.capacities = {{{0x201, 10}, {0x202, 20}}, {{0x201, 30}}};
     host.profile.allowPartialCapacity = true;
     SetLotHost(&host);

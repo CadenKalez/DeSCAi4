@@ -30,8 +30,8 @@ public:
     virtual const cIGZVariant* GetPropertyValue() const = 0;               // [5]
     virtual cIGZVariant* GetPropertyValue() = 0;                           // [6]
     virtual bool SetPropertyValue(const cIGZVariant& value) = 0;           // [7]
-    virtual bool Write(cIGZOStream& stream) const = 0;                     // [8] writes the id only
-    virtual bool Read(cIGZIStream& stream) = 0;                            // [9] reads the id only
+    virtual bool Write(cIGZOStream& stream) const = 0;                     // [8] writes the id, then the value when the stream is a DB segment stream
+    virtual bool Read(cIGZIStream& stream) = 0;                            // [9] reads the id, then the value (DB segment streams)
     virtual ~cISCProperty() = default;                                     // [10],[11]
 };
 

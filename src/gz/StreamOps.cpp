@@ -213,3 +213,19 @@ cIGZIStream& operator>>(cIGZIStream& s, std::vector<std::vector<bool>>& v) {
     }
     return s;
 }
+
+void LoadLegacyS3DTransform(cIGZIStream& s, cS3DTransform& v) {
+    for (int row = 0; row < 3; ++row)
+        for (int col = 0; col < 3; ++col) s.GetFloat32(v.rotation[row][col]);
+    v.flags |= 4;
+    ++v.changeCounter;
+    for (int i = 0; i < 3; ++i) s.GetFloat32(v.translation[i]);
+    v.flags |= 1;
+    ++v.changeCounter;
+    s.GetFloat32(v.scale);
+    if (v.scale == 1.0f) v.flags &= ~2; else v.flags |= 2;
+    ++v.changeCounter;
+    std::uint32_t counter = 0;
+    s.GetUint32(counter);
+    v.changeCounter = static_cast<std::uint8_t>(counter);
+}

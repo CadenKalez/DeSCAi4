@@ -1,4 +1,5 @@
 #include "sc4/SCProperty.h"
+#include "sc4/DBSegment.h"
 
 #include <algorithm>
 
@@ -26,13 +27,27 @@ std::uint32_t cSCProperty::Release() {
     return 0;
 }
 
+// operator<<(cIGZOStream&, cIGZVariant const&) / operator>>(cIGZIStream&, cIGZVariant&) (0x1000ce6eb /
+// 0x1000ce660): the value is only transferred when the stream is a DB segment stream.
 bool cSCProperty::Write(cIGZOStream& stream) const {
     stream.SetUint32(id_);
+    void* raw = nullptr;
+    if (stream.QueryInterface(kGZIID_cISC4DBSegmentOStream, &raw) && raw) {
+        auto* segmentStream = static_cast<cISC4DBSegmentOStream*>(raw);
+        segmentStream->WriteVariant(value_);
+        segmentStream->Release();
+    }
     return !stream.GetError();
 }
 
 bool cSCProperty::Read(cIGZIStream& stream) {
     stream.GetUint32(id_);
+    void* raw = nullptr;
+    if (stream.QueryInterface(kGZIID_cISC4DBSegmentIStream, &raw) && raw) {
+        auto* segmentStream = static_cast<cISC4DBSegmentIStream*>(raw);
+        segmentStream->ReadVariant(value_);
+        segmentStream->Release();
+    }
     return !stream.GetError();
 }
 
