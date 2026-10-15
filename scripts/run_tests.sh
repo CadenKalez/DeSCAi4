@@ -7,6 +7,7 @@ FLAGS=(-std=c++20 -Wall -Wextra -O1 -fsanitize=address,undefined -Isrc -Iscripts
 T=scripts/tests; S=src
 declare -a TESTS=(
  "layout:$T/audio_snd_layout_test.cpp"
+ "gz_date:$T/gz_date_test.cpp $S/gz/cGZDate.cpp $S/rz/cRZDate.cpp"
  "gz_softblit:$T/gz_softblit_test.cpp"
  "gz_packedfile:$T/gz_packedfile_test.cpp $S/gz/cGZPersistDBSegmentMultiPackedFiles.cpp $S/gz/cGZDBSegmentPackedFile.cpp $S/gz/cGZDBRecords.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/gz/cGZPersistDBSegment.cpp $S/gz/cGZPersistResourceKeyList.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp $S/rz/cRZFastCompression3.cpp $S/dbpf/DBPFReader.cpp $S/rz/cRZVariant.cpp"
  "gz_resourcemanager:$T/gz_resourcemanager_test.cpp $S/gz/cGZPersistResourceManager.cpp $S/gz/cGZDBSegmentPackedFile.cpp $S/gz/cGZDBRecords.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/gz/cGZPersistDBSegment.cpp $S/gz/cGZPersistResourceKeyList.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp $S/rz/cRZFastCompression3.cpp $S/rz/cRZVariant.cpp"
