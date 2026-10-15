@@ -12549,3 +12549,9 @@ address,symbol,unique_name,source,status,evidence
 0x100711498,cSC4TextDecalOccupant::operator delete(void*),SC4TextDecalOccupantOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
 0x1008f56c8,SND::CEAXABLKDecf::operator new(unsigned long),CEAXABLKDecfOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
 0x1008f56d6,SND::CEAXABLKDecf::operator delete(void*),CEAXABLKDecfOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x10001decb,UTF16GetThaiCharType(unsigned int),UTF16GetThaiCharType,src/rz/UTF16Text.cpp|h,recovered,scripts/tests/rz_utf16text_test.cpp
+0x10002234e,"UTF16GetThaiCharLevel(unsigned int, unsigned int, unsigned int)",UTF16GetThaiCharLevel,src/rz/UTF16Text.cpp|h,recovered,scripts/tests/rz_utf16text_test.cpp
+0x1000224ae,UTF16IsAllowedToBeginLine(unsigned int),UTF16IsAllowedToBeginLine,src/rz/UTF16Text.cpp|h,recovered,scripts/tests/rz_utf16text_test.cpp
+0x1000230ac,UTF16IsAllowedToEndLine(unsigned int),UTF16IsAllowedToEndLine,src/rz/UTF16Text.cpp|h,recovered,scripts/tests/rz_utf16text_test.cpp
+0x100023cba,"UTF16GetWord(unsigned short*, unsigned int)",UTF16GetWord,src/rz/UTF16Text.cpp|h,recovered,scripts/tests/rz_utf16text_test.cpp
+0x100023ea0,IsCharWordBreaking(unsigned short),IsCharWordBreaking,src/rz/UTF16Text.cpp|h,recovered,scripts/tests/rz_utf16text_test.cpp
