@@ -1,7 +1,7 @@
 // cSC4PropOccupant — a prop (small decoration: street lights, signs, chimney smoke, ...) placed in the city.
 // 76 functions at 0x10015e4b4..0x100163330. Class id 0x2977aa47, version 6 record:
 //   occupant data, u32 prop type (stored through a global type table), bbox, s8 orientation, u8 state,
-//   u8 timeOfDay start (x10), u8 end, bool hasDateRange {u32 duration, u32 span, date, date},
+//   u8 timeOfDay start (x10), u8 end, bool hasDateRange {u32 period, u32 span, date, date},
 //   u8 random chance, u8 usage, u32 lot tag, u8 timer bitfield (version >= 6).
 #pragma once
 #include <cstdint>
@@ -70,7 +70,7 @@ public:
     std::uint32_t GetState() const { return state_; }
     void SetTimeOfDayRange(float start, float end);
     void GetTimeOfDayRange(float& start, float& end) const;
-    void SetSimulatorDateRange(std::uint32_t duration, std::uint32_t span, std::uint8_t month, std::uint8_t day);
+    void SetSimulatorDateRange(std::uint32_t period, std::uint32_t span, std::uint8_t month, std::uint8_t day);
     void TickSimulatorDate(const cIGZDate& today);
     void SetRandomChance(std::uint8_t percent) { randomChance_ = percent; }
     std::uint8_t GetRandomChance() const { return randomChance_; }
@@ -86,10 +86,10 @@ public:
 
 private:
     struct DateRange {
-        std::uint32_t duration = 0;      // days the prop shows (365 = a year)
-        std::uint32_t span = 1;
-        cGZDate startDate, startDateNext;   // +0x08 (visible from), +0x28 (hidden from)... see Set/Tick
-        cGZDate endDate;
+        std::uint32_t period = 0;        // days between appearances (365 = every year on the same date)
+        std::uint32_t span = 1;          // days the prop stays visible
+        cGZDate showDate;                // +0x08 next date it appears
+        cGZDate hideDate;                // +0x28 next date it disappears (showDate + span)
     };
     float min_[3] = {}, max_[3] = {};       // +0x70
     std::unique_ptr<DateRange> dateRange_;  // +0x88
