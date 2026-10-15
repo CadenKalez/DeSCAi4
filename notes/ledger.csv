@@ -11721,3 +11721,52 @@ address,symbol,unique_name,source,status,evidence
 0x10079711c,non-virtual thunk to cSC4OrdinanceLegalizeGambling::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
 0x100797128,non-virtual thunk to cSC4OrdinanceLegalizeGambling::~cSC4OrdinanceLegalizeGambling(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
 0x100797136,non-virtual thunk to cSC4OrdinanceLegalizeGambling::~cSC4OrdinanceLegalizeGambling(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100611a64,"cSGLDX7Direct3DDevice7Stub::QueryInterface(_GUID const&, void**)",QueryInterface,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611ac8,cSGLDX7Direct3DDevice7Stub::AddRef(),AddRef,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611ad6,cSGLDX7Direct3DDevice7Stub::Release(),Release,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611afc,cSGLDX7Direct3DDevice7Stub::GetCaps(_D3DDeviceDesc7*),GetCaps,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b04,"cSGLDX7Direct3DDevice7Stub::EnumTextureFormats(int (*)(_DDPIXELFORMAT*, void*), void*)",EnumTextureFormats,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b0c,cSGLDX7Direct3DDevice7Stub::BeginScene(),BeginScene,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b14,cSGLDX7Direct3DDevice7Stub::EndScene(),EndScene,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b1c,cSGLDX7Direct3DDevice7Stub::GetDirect3D(IDirect3D7**),GetDirect3D,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b24,"cSGLDX7Direct3DDevice7Stub::SetRenderTarget(IDirectDrawSurface7*, unsigned int)",SetRenderTarget,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b2c,cSGLDX7Direct3DDevice7Stub::GetRenderTarget(IDirectDrawSurface7**),GetRenderTarget,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b34,"cSGLDX7Direct3DDevice7Stub::Clear(unsigned int, _D3DRECT*, unsigned int, unsigned int, float, unsigned int)",Clear,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b3c,"cSGLDX7Direct3DDevice7Stub::SetTransform(_D3DTRANSFORMSTATETYPE, _D3DMATRIX*)",SetTransform,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b44,"cSGLDX7Direct3DDevice7Stub::GetTransform(_D3DTRANSFORMSTATETYPE, _D3DMATRIX*)",GetTransform,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b4c,cSGLDX7Direct3DDevice7Stub::SetViewport(_D3DVIEWPORT7*),SetViewport,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b54,"cSGLDX7Direct3DDevice7Stub::MultiplyTransform(_D3DTRANSFORMSTATETYPE, _D3DMATRIX*)",MultiplyTransform,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b5c,cSGLDX7Direct3DDevice7Stub::GetViewport(_D3DVIEWPORT7*),GetViewport,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b64,cSGLDX7Direct3DDevice7Stub::SetMaterial(_D3DMATERIAL7*),SetMaterial,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b6c,cSGLDX7Direct3DDevice7Stub::GetMaterial(_D3DMATERIAL7*),GetMaterial,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b78,"cSGLDX7Direct3DDevice7Stub::SetLight(unsigned int, _D3DLIGHT7*)",SetLight,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b80,"cSGLDX7Direct3DDevice7Stub::GetLight(unsigned int, _D3DLIGHT7*)",GetLight,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b8c,"cSGLDX7Direct3DDevice7Stub::SetRenderState(_D3DRENDERSTATETYPE, unsigned int)",SetRenderState,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611b94,"cSGLDX7Direct3DDevice7Stub::GetRenderState(_D3DRENDERSTATETYPE, unsigned int*)",GetRenderState,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611ba0,cSGLDX7Direct3DDevice7Stub::BeginStateBlock(),BeginStateBlock,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611ba8,cSGLDX7Direct3DDevice7Stub::EndStateBlock(unsigned int*),EndStateBlock,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611bb0,cSGLDX7Direct3DDevice7Stub::PreLoad(IDirectDrawSurface7*),PreLoad,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611bb8,"cSGLDX7Direct3DDevice7Stub::DrawPrimitive(_D3DPRIMITIVETYPE, unsigned int, void*, unsigned int, unsigned int)",DrawPrimitive,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611bc0,"cSGLDX7Direct3DDevice7Stub::DrawIndexedPrimitive(_D3DPRIMITIVETYPE, unsigned int, void*, unsigned int, unsigned short*, unsigned int, unsigned int)",DrawIndexedPrimitive,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611bc8,cSGLDX7Direct3DDevice7Stub::SetClipStatus(_D3DCLIPSTATUS*),SetClipStatus,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611bd0,cSGLDX7Direct3DDevice7Stub::GetClipStatus(_D3DCLIPSTATUS*),GetClipStatus,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611bdc,"cSGLDX7Direct3DDevice7Stub::DrawPrimitiveStrided(_D3DPRIMITIVETYPE, unsigned int, _D3DDRAWPRIMITIVESTRIDEDDATA*, unsigned int, unsigned int)",DrawPrimitiveStrided,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611be4,"cSGLDX7Direct3DDevice7Stub::DrawIndexedPrimitiveStrided(_D3DPRIMITIVETYPE, unsigned int, _D3DDRAWPRIMITIVESTRIDEDDATA*, unsigned int, unsigned short*, unsigned int, unsigned int)",DrawIndexedPrimitiveStrided,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611bec,"cSGLDX7Direct3DDevice7Stub::DrawPrimitiveVB(_D3DPRIMITIVETYPE, IDirect3DVertexBuffer7*, unsigned int, unsigned int, unsigned int)",DrawPrimitiveVB,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611bf4,"cSGLDX7Direct3DDevice7Stub::DrawIndexedPrimitiveVB(_D3DPRIMITIVETYPE, IDirect3DVertexBuffer7*, unsigned int, unsigned int, unsigned short*, unsigned int, unsigned int)",DrawIndexedPrimitiveVB,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611bfc,"cSGLDX7Direct3DDevice7Stub::ComputeSphereVisibility(_D3DVECTOR*, float*, unsigned int, unsigned int, unsigned int*)",ComputeSphereVisibility,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611c04,"cSGLDX7Direct3DDevice7Stub::GetTexture(unsigned int, IDirectDrawSurface7**)",GetTexture,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611c10,"cSGLDX7Direct3DDevice7Stub::SetTexture(unsigned int, IDirectDrawSurface7*)",SetTexture,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611c18,"cSGLDX7Direct3DDevice7Stub::GetTextureStageState(unsigned int, _D3DTEXTURESTAGESTATETYPE, unsigned int*)",GetTextureStageState,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611c24,"cSGLDX7Direct3DDevice7Stub::SetTextureStageState(unsigned int, _D3DTEXTURESTAGESTATETYPE, unsigned int)",SetTextureStageState,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611c2c,cSGLDX7Direct3DDevice7Stub::ValidateDevice(unsigned int*),ValidateDevice,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611c34,cSGLDX7Direct3DDevice7Stub::ApplyStateBlock(unsigned int),ApplyStateBlock,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611c3c,cSGLDX7Direct3DDevice7Stub::CaptureStateBlock(unsigned int),CaptureStateBlock,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611c48,cSGLDX7Direct3DDevice7Stub::DeleteStateBlock(unsigned int),DeleteStateBlock,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611c54,"cSGLDX7Direct3DDevice7Stub::CreateStateBlock(_D3DSTATEBLOCKTYPE, unsigned int*)",CreateStateBlock,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611c60,"cSGLDX7Direct3DDevice7Stub::Load(IDirectDrawSurface7*, tagPOINT*, IDirectDrawSurface7*, tagRECT*, unsigned int)",Load,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611c68,"cSGLDX7Direct3DDevice7Stub::LightEnable(unsigned int, int)",LightEnable,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611c70,"cSGLDX7Direct3DDevice7Stub::GetLightEnable(unsigned int, int*)",GetLightEnable,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611c78,"cSGLDX7Direct3DDevice7Stub::SetClipPlane(unsigned int, float*)",SetClipPlane,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611c80,"cSGLDX7Direct3DDevice7Stub::GetClipPlane(unsigned int, float*)",GetClipPlane,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
+0x100611c8c,"cSGLDX7Direct3DDevice7Stub::GetInfo(unsigned int, void*, unsigned int)",GetInfo,src/render/D3D7Stub.h,recovered,scripts/tests/render_d3d7stub_test.cpp
