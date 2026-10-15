@@ -28,12 +28,24 @@ Paste this as your first message / system prompt:
 5. Commit; periodically `python3 scripts/progress.py`.
 
 ## Current state / next targets
-- Done: FloraSimulator, LotDeveloper, PollutionSimulator. Next targets below (skip these).
-  FloraOccupant.h: halfExtent +0x38, height +0x44).
-- Next: cSC4TrafficSimulator, cSC4PoliceSimulator,
-  cSC4ResidentialSimulator, growth planner of cSC4BuildingDevelopmentSimulator, cSC4ZoneDeveloper,
-  cSC4PowerPoleOccupant, cGZWin* UI family, cSCLua, free utilities.
-- Partials in ledger: network occupant Draw/Pick/GetPathInfo family, PropManager::DoMessage.
-- Playable client: src/app/main.mm (Metal, build with scripts/build_app.sh, `build/sc4 [--screenshot f.png]`).
-  Missing for real gameplay: zoning/placement, click-to-inspect, simulators driving growth.
-- Status at handoff: 7,342 / 28,371 game functions recovered (25.9%).
+- Status at handoff: 10,146 / 28,371 game functions recovered (35.76%); 89/89 tests pass
+  (run via a repo-local snapshot copy of scripts/run_tests.sh, delete it afterwards; full run takes ~5 min).
+- Shortcuts: `/tmp/show.py` and `/tmp/first.py` were session-temporary helpers (print decompile blocks by
+  address / first body of each function from work/<g>/<Class>.txt); recreate if needed. Disassembly for ambiguous
+  float/SIMD code: `otool -arch x86_64 -tV <game binary>`. zsh does not word-split `$var`; use `${=var}`.
+- Seams used: Lua C API (`src/lua/Lua5Thread.h` ILuaApi, test fake `scripts/tests/lua_minilua.h`), protection
+  simulators (IProtectionHost), occupants over `cSC4Occupant` (`src/sc4/Occupant.h`), stream helpers in
+  `gz/StreamOps.h`, `SC4Read/WriteGZSerializable` (needs a DB segment stream; plain memory streams skip nested objects).
+- Done this session: Lua stack (cGZLua5Thread, cGZLua5, thread registry/coroutine lib, Lua4 compat, cSCLua),
+  cSC4FireProtectionSimulator, Foundation/Landfill/PowerLine/Toxic occupants, cGZAlphaBlt, cSC4RegionalTerrainMap,
+  cRZRefCount, cGZApp, cSC4AdviceSubject.
+- Partials left: cSCLua Game Data Registry bridge (needs cISC4GameDataRegistry), Fire sim Init/streams/DoMessage,
+  cGZLua5::default_error_reporter (output compiled out), nsGZLua5ThreadLib needs the patched Lua (state[-1] slot).
+- Skipped for missing bases: cSC4SeaportDeveloper (cSC4PortDeveloper/cPortLot), cSC4DisasterManagerFire
+  (cSC4DisasterManager), Pipe/Subway/UndergroundConnection (cSC4UndergroundOccupant), NetworkTunnelOccupant
+  (cSC4NetworkOccupantWithPreBuiltModel). Recovering those bases unlocks ~300 functions.
+- Good next targets (by remaining count): cGZWin* UI family (TextEdit 235, Grid 210, cGZWin 183, ListBox 165),
+  cSC4App 223, cSC4MySim 211, cSC4Automaton 189, cSC4NetworkTool 196, cSC4FireOccupant 61, cSC4TextDecalOccupant 69,
+  cSC4TrafficNetworkMap 97, cSC4BudgetSimulator 87, cGZDBSegmentDirectoryFiles 88, free utilities (5.7k "(free)").
+- Playable client: src/app/main.mm (Metal, scripts/build_app.sh). Still missing: zoning/placement, click-to-inspect,
+  simulators driving growth. Skip DX7 emulation per notes/graphics_scope.md.
