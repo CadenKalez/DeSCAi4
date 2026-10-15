@@ -11274,3 +11274,44 @@ address,symbol,unique_name,source,status,evidence
 0x1003db53c,"cGZCommandParameterSet::ValidateParameter(unsigned int, unsigned int)",ValidateParameter,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
 0x1003db562,cGZCommandParameterSet::GetFirstParameterID() const,GetFirstParameterID,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
 0x1003db57e,cGZCommandParameterSet::GetNextParameterID(unsigned int) const,GetNextParameterID,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x100527e6e,cSCResKeyTable::~cSCResKeyTable(),Destruct,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100527ebc,cSCResKeyTable::~cSCResKeyTable(),DestructAndDelete,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100527ec6,non-virtual thunk to cSCResKeyTable::~cSCResKeyTable(),DestructThunk,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100527ed4,cSCResKeyTable::~cSCResKeyTable(),DestructBody,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100527f02,non-virtual thunk to cSCResKeyTable::~cSCResKeyTable(),DestructAndDeleteThunk,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100527f10,"cSCResKeyTable::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100527f46,cSCResKeyTable::AddRef(),AddRef,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100527f54,non-virtual thunk to cSCResKeyTable::AddRef(),AddRefThunk,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100527f5e,cSCResKeyTable::Release(),Release,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100527f6c,non-virtual thunk to cSCResKeyTable::Release(),ReleaseThunk,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100527f76,cSCResKeyTable::Create(),Create,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100527fe6,"cSCResKeyTable::GetEntry(unsigned int, cGZPersistResourceKey&) const",GetEntry,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x10052800a,"cSCResKeyTable::SetEntry(unsigned int, cGZPersistResourceKey const&)",SetEntry,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100528062,cSCResKeyTable::AddEntries(cISCProperty const*),AddEntries,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100528108,cSCResKeyTable::AddEntry(cGZPersistResourceKey const&),AddEntry,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100528138,cSCResKeyTable::RemoveEntry(unsigned int),RemoveEntry_uint,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100528190,cSCResKeyTable::RemoveEntry(cGZPersistResourceKey const&),RemoveEntry_cGZPersistResourceKey_const,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x1005281f6,"cSCResKeyTable::EnumEntries(void (*)(cGZPersistResourceKey const&, void*), void*)",EnumEntries,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100528230,cSCResKeyTable::CreateEnumerator(cISCResKeyEnumerator**),CreateEnumerator,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100528298,cSCResKeyTable::Size() const,Size,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x1005282b0,cSCResKeyTable::Resize(unsigned int),Resize,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x1005282fe,cSCResKeyTable::Clear(),Clear,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x10052830c,cSCResKeyTable::IsExplicit() const,IsExplicit,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100528314,cSCResKeyTable::Write(cIGZOStream&) const,Write,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x10052838e,cSCResKeyTable::Read(cIGZIStream&),Read,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x10052843c,cSCResKeyTable::GetGZCLSID() const,GetGZCLSID,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable; test sc4_reskeytable
+0x100528454,"cSCResKeyEnumerator::cSCResKeyEnumerator(std::__1::vector<cGZPersistResourceKey, cRZFastSTLAllocator<cGZPersistResourceKey>> const&)",Construct_std_1_vector_cGZPersistResourceKey_cRZFastSTLAllocator_cGZPersistResourceKey_const,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable enumerator; test sc4_reskeytable
+0x1005284d0,cSCResKeyEnumerator::~cSCResKeyEnumerator(),Destruct,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable enumerator; test sc4_reskeytable
+0x10052851e,cSCResKeyEnumerator::~cSCResKeyEnumerator(),DestructAndDelete,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable enumerator; test sc4_reskeytable
+0x100528528,non-virtual thunk to cSCResKeyEnumerator::~cSCResKeyEnumerator(),DestructThunk,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable enumerator; test sc4_reskeytable
+0x100528536,cSCResKeyEnumerator::~cSCResKeyEnumerator(),DestructBody,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable enumerator; test sc4_reskeytable
+0x100528564,non-virtual thunk to cSCResKeyEnumerator::~cSCResKeyEnumerator(),DestructAndDeleteThunk,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable enumerator; test sc4_reskeytable
+0x100528572,cSCResKeyEnumerator::AddRef(),AddRef,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable enumerator; test sc4_reskeytable
+0x100528580,non-virtual thunk to cSCResKeyEnumerator::AddRef(),AddRefThunk,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable enumerator; test sc4_reskeytable
+0x10052858a,cSCResKeyEnumerator::Release(),Release,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable enumerator; test sc4_reskeytable
+0x100528598,non-virtual thunk to cSCResKeyEnumerator::Release(),ReleaseThunk,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable enumerator; test sc4_reskeytable
+0x1005285a2,"cSCResKeyEnumerator::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable enumerator; test sc4_reskeytable
+0x1005285d0,"cSCResKeyEnumerator::Next(unsigned int, cGZPersistResourceKey**, unsigned int&)",Next,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable enumerator; test sc4_reskeytable
+0x10052860e,cSCResKeyEnumerator::Skip(unsigned int),Skip,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable enumerator; test sc4_reskeytable
+0x100528632,cSCResKeyEnumerator::Reset(),Reset,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable enumerator; test sc4_reskeytable
+0x100528640,cSCResKeyEnumerator::Clone(cISCResKeyEnumerator**),Clone,src/sc4/ResKeyTable.cpp|h,recovered,ResKeyTable enumerator; test sc4_reskeytable
