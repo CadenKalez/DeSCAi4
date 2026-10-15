@@ -11576,3 +11576,148 @@ address,symbol,unique_name,source,status,evidence
 0x1002dbeac,cSC4QueriableOccupantFilter::IsPropertyHolderIncluded(cISCPropertyHolder*),IsPropertyHolderIncluded,src/sc4/OccupantFilters.h,recovered,scripts/tests/sc4_occupantfilters_test.cpp
 0x1002dbeb4,cSC4QueriableOccupantFilter::~cSC4QueriableOccupantFilter(),Destruct,src/sc4/OccupantFilters.h,recovered,scripts/tests/sc4_occupantfilters_test.cpp
 0x1002dbebe,cSC4QueriableOccupantFilter::~cSC4QueriableOccupantFilter(),DestructAndDelete,src/sc4/OccupantFilters.h,recovered,scripts/tests/sc4_occupantfilters_test.cpp
+0x100795b96,cSC4OrdinanceCarpoolIncentive::~cSC4OrdinanceCarpoolIncentive(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795ba0,cSC4OrdinanceCarpoolIncentive::~cSC4OrdinanceCarpoolIncentive(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795bce,cSC4OrdinanceCarpoolIncentive::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795bda,non-virtual thunk to cSC4OrdinanceCarpoolIncentive::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795be6,non-virtual thunk to cSC4OrdinanceCarpoolIncentive::~cSC4OrdinanceCarpoolIncentive(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795bf4,non-virtual thunk to cSC4OrdinanceCarpoolIncentive::~cSC4OrdinanceCarpoolIncentive(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795ca2,cSC4OrdinanceCleanAir::~cSC4OrdinanceCleanAir(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795cac,cSC4OrdinanceCleanAir::~cSC4OrdinanceCleanAir(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795cda,cSC4OrdinanceCleanAir::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795ce6,non-virtual thunk to cSC4OrdinanceCleanAir::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795cf2,non-virtual thunk to cSC4OrdinanceCleanAir::~cSC4OrdinanceCleanAir(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795d00,non-virtual thunk to cSC4OrdinanceCleanAir::~cSC4OrdinanceCleanAir(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795dae,cSC4OrdinanceCommunityCPRTraining::~cSC4OrdinanceCommunityCPRTraining(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795db8,cSC4OrdinanceCommunityCPRTraining::~cSC4OrdinanceCommunityCPRTraining(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795de6,cSC4OrdinanceCommunityCPRTraining::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795df2,non-virtual thunk to cSC4OrdinanceCommunityCPRTraining::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795dfe,non-virtual thunk to cSC4OrdinanceCommunityCPRTraining::~cSC4OrdinanceCommunityCPRTraining(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795e0c,non-virtual thunk to cSC4OrdinanceCommunityCPRTraining::~cSC4OrdinanceCommunityCPRTraining(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007971e4,cSC4OrdinanceMandatorySmokeDetectors::~cSC4OrdinanceMandatorySmokeDetectors(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007971ee,cSC4OrdinanceMandatorySmokeDetectors::~cSC4OrdinanceMandatorySmokeDetectors(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079721c,cSC4OrdinanceMandatorySmokeDetectors::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797228,non-virtual thunk to cSC4OrdinanceMandatorySmokeDetectors::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797234,non-virtual thunk to cSC4OrdinanceMandatorySmokeDetectors::~cSC4OrdinanceMandatorySmokeDetectors(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797242,non-virtual thunk to cSC4OrdinanceMandatorySmokeDetectors::~cSC4OrdinanceMandatorySmokeDetectors(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797688,cSC4OrdinanceNuclearFreeZone::~cSC4OrdinanceNuclearFreeZone(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797692,cSC4OrdinanceNuclearFreeZone::~cSC4OrdinanceNuclearFreeZone(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007976c0,cSC4OrdinanceNuclearFreeZone::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007976cc,non-virtual thunk to cSC4OrdinanceNuclearFreeZone::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007976d8,non-virtual thunk to cSC4OrdinanceNuclearFreeZone::~cSC4OrdinanceNuclearFreeZone(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007976e6,non-virtual thunk to cSC4OrdinanceNuclearFreeZone::~cSC4OrdinanceNuclearFreeZone(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797794,cSC4OrdinancePaperReductionAct::~cSC4OrdinancePaperReductionAct(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079779e,cSC4OrdinancePaperReductionAct::~cSC4OrdinancePaperReductionAct(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007977cc,cSC4OrdinancePaperReductionAct::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007977d8,non-virtual thunk to cSC4OrdinancePaperReductionAct::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007977e4,non-virtual thunk to cSC4OrdinancePaperReductionAct::~cSC4OrdinancePaperReductionAct(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007977f2,non-virtual thunk to cSC4OrdinancePaperReductionAct::~cSC4OrdinancePaperReductionAct(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007978a0,cSC4OrdinancePowerConservation::~cSC4OrdinancePowerConservation(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007978aa,cSC4OrdinancePowerConservation::~cSC4OrdinancePowerConservation(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007978d8,cSC4OrdinancePowerConservation::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007978e4,non-virtual thunk to cSC4OrdinancePowerConservation::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007978f0,non-virtual thunk to cSC4OrdinancePowerConservation::~cSC4OrdinancePowerConservation(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007978fe,non-virtual thunk to cSC4OrdinancePowerConservation::~cSC4OrdinancePowerConservation(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797d8a,cSC4OrdinanceShuttleService::~cSC4OrdinanceShuttleService(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797d94,cSC4OrdinanceShuttleService::~cSC4OrdinanceShuttleService(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797dc2,cSC4OrdinanceShuttleService::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797dce,non-virtual thunk to cSC4OrdinanceShuttleService::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797dda,non-virtual thunk to cSC4OrdinanceShuttleService::~cSC4OrdinanceShuttleService(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797de8,non-virtual thunk to cSC4OrdinanceShuttleService::~cSC4OrdinanceShuttleService(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079aa84,cSC4OrdinanceTireRecycling::~cSC4OrdinanceTireRecycling(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079aa8e,cSC4OrdinanceTireRecycling::~cSC4OrdinanceTireRecycling(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079aabc,cSC4OrdinanceTireRecycling::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079aac8,non-virtual thunk to cSC4OrdinanceTireRecycling::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079aad4,non-virtual thunk to cSC4OrdinanceTireRecycling::~cSC4OrdinanceTireRecycling(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079aae2,non-virtual thunk to cSC4OrdinanceTireRecycling::~cSC4OrdinanceTireRecycling(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b3ba,cSC4OrdinanceVehicleEmissionStandard::~cSC4OrdinanceVehicleEmissionStandard(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b3c4,cSC4OrdinanceVehicleEmissionStandard::~cSC4OrdinanceVehicleEmissionStandard(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b3f2,cSC4OrdinanceVehicleEmissionStandard::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b3fe,non-virtual thunk to cSC4OrdinanceVehicleEmissionStandard::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b40a,non-virtual thunk to cSC4OrdinanceVehicleEmissionStandard::~cSC4OrdinanceVehicleEmissionStandard(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b418,non-virtual thunk to cSC4OrdinanceVehicleEmissionStandard::~cSC4OrdinanceVehicleEmissionStandard(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b4c6,cSC4OrdinanceWaterConservation::~cSC4OrdinanceWaterConservation(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b4d0,cSC4OrdinanceWaterConservation::~cSC4OrdinanceWaterConservation(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b4fe,cSC4OrdinanceWaterConservation::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b50a,non-virtual thunk to cSC4OrdinanceWaterConservation::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b516,non-virtual thunk to cSC4OrdinanceWaterConservation::~cSC4OrdinanceWaterConservation(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b524,non-virtual thunk to cSC4OrdinanceWaterConservation::~cSC4OrdinanceWaterConservation(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b5d2,cSC4OrdinanceYouthCurfew::~cSC4OrdinanceYouthCurfew(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b5dc,cSC4OrdinanceYouthCurfew::~cSC4OrdinanceYouthCurfew(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b60a,cSC4OrdinanceYouthCurfew::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b616,non-virtual thunk to cSC4OrdinanceYouthCurfew::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b622,non-virtual thunk to cSC4OrdinanceYouthCurfew::~cSC4OrdinanceYouthCurfew(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b630,non-virtual thunk to cSC4OrdinanceYouthCurfew::~cSC4OrdinanceYouthCurfew(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795ed4,cSC4OrdinanceFreeClinics::Init(),Init,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795ede,cSC4OrdinanceFreeClinics::Shutdown(),Shutdown,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100795f12,cSC4OrdinanceFreeClinics::GetCurrentMonthlyIncome(),GetCurrentMonthlyIncome,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100796018,cSC4OrdinanceFreeClinics::~cSC4OrdinanceFreeClinics(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100796092,cSC4OrdinanceFreeClinics::~cSC4OrdinanceFreeClinics(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100796120,cSC4OrdinanceFreeClinics::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079612c,non-virtual thunk to cSC4OrdinanceFreeClinics::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100796138,non-virtual thunk to cSC4OrdinanceFreeClinics::~cSC4OrdinanceFreeClinics(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007961b6,non-virtual thunk to cSC4OrdinanceFreeClinics::~cSC4OrdinanceFreeClinics(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007962d4,cSC4OrdinanceJuniorSportsLeague::Shutdown(),Shutdown,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100796308,cSC4OrdinanceJuniorSportsLeague::GetCurrentMonthlyIncome(),GetCurrentMonthlyIncome,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007963d4,cSC4OrdinanceJuniorSportsLeague::CheckConditions(),CheckConditions,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079650a,cSC4OrdinanceJuniorSportsLeague::~cSC4OrdinanceJuniorSportsLeague(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100796584,cSC4OrdinanceJuniorSportsLeague::~cSC4OrdinanceJuniorSportsLeague(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100796612,cSC4OrdinanceJuniorSportsLeague::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079661e,non-virtual thunk to cSC4OrdinanceJuniorSportsLeague::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079662a,non-virtual thunk to cSC4OrdinanceJuniorSportsLeague::~cSC4OrdinanceJuniorSportsLeague(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007966a8,non-virtual thunk to cSC4OrdinanceJuniorSportsLeague::~cSC4OrdinanceJuniorSportsLeague(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007967c8,cSC4OrdinanceLandfillGasRecovery::Init(),Init,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079685a,cSC4OrdinanceLandfillGasRecovery::Shutdown(),Shutdown,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007968ac,cSC4OrdinanceLandfillGasRecovery::Simulate(),Simulate,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007968cc,cSC4OrdinanceLandfillGasRecovery::GetCurrentMonthlyIncome(),GetCurrentMonthlyIncome,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079693a,cSC4OrdinanceLandfillGasRecovery::CheckConditions(),CheckConditions,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007969c8,cSC4OrdinanceLandfillGasRecovery::~cSC4OrdinanceLandfillGasRecovery(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100796a6a,cSC4OrdinanceLandfillGasRecovery::~cSC4OrdinanceLandfillGasRecovery(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100796a98,cSC4OrdinanceLandfillGasRecovery::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100796aa4,non-virtual thunk to cSC4OrdinanceLandfillGasRecovery::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100796ab0,non-virtual thunk to cSC4OrdinanceLandfillGasRecovery::~cSC4OrdinanceLandfillGasRecovery(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100796b56,non-virtual thunk to cSC4OrdinanceLandfillGasRecovery::~cSC4OrdinanceLandfillGasRecovery(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797304,cSC4OrdinanceNeighborhoodWatch::CheckConditions(),CheckConditions,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007973e0,cSC4OrdinanceNeighborhoodWatch::~cSC4OrdinanceNeighborhoodWatch(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079745a,cSC4OrdinanceNeighborhoodWatch::~cSC4OrdinanceNeighborhoodWatch(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007974e8,cSC4OrdinanceNeighborhoodWatch::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007974f4,non-virtual thunk to cSC4OrdinanceNeighborhoodWatch::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797500,non-virtual thunk to cSC4OrdinanceNeighborhoodWatch::~cSC4OrdinanceNeighborhoodWatch(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079757e,non-virtual thunk to cSC4OrdinanceNeighborhoodWatch::~cSC4OrdinanceNeighborhoodWatch(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007979c4,cSC4OrdinanceProReadingCampaign::Shutdown(),Shutdown,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007979f8,cSC4OrdinanceProReadingCampaign::GetCurrentMonthlyIncome(),GetCurrentMonthlyIncome,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797ae2,cSC4OrdinanceProReadingCampaign::~cSC4OrdinanceProReadingCampaign(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797b5c,cSC4OrdinanceProReadingCampaign::~cSC4OrdinanceProReadingCampaign(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797bea,cSC4OrdinanceProReadingCampaign::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797bf6,non-virtual thunk to cSC4OrdinanceProReadingCampaign::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797c02,non-virtual thunk to cSC4OrdinanceProReadingCampaign::~cSC4OrdinanceProReadingCampaign(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797c80,non-virtual thunk to cSC4OrdinanceProReadingCampaign::~cSC4OrdinanceProReadingCampaign(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079aba4,cSC4OrdinanceTouristPromotion::Init(),Init,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079abae,cSC4OrdinanceTouristPromotion::Shutdown(),Shutdown,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079abe2,cSC4OrdinanceTouristPromotion::Simulate(),Simulate,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079ac02,cSC4OrdinanceTouristPromotion::GetCurrentMonthlyIncome(),GetCurrentMonthlyIncome,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079acaa,cSC4OrdinanceTouristPromotion::~cSC4OrdinanceTouristPromotion(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079ad24,cSC4OrdinanceTouristPromotion::~cSC4OrdinanceTouristPromotion(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079adb2,cSC4OrdinanceTouristPromotion::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079adbe,non-virtual thunk to cSC4OrdinanceTouristPromotion::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079adca,non-virtual thunk to cSC4OrdinanceTouristPromotion::~cSC4OrdinanceTouristPromotion(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079ae48,non-virtual thunk to cSC4OrdinanceTouristPromotion::~cSC4OrdinanceTouristPromotion(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079af68,cSC4OrdinanceTrashPresort::Init(),Init,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079af72,cSC4OrdinanceTrashPresort::Shutdown(),Shutdown,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079afc4,cSC4OrdinanceTrashPresort::Simulate(),Simulate,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079afe4,cSC4OrdinanceTrashPresort::GetCurrentMonthlyIncome(),GetCurrentMonthlyIncome,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b07c,cSC4OrdinanceTrashPresort::CheckConditions(),CheckConditions,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b0f8,cSC4OrdinanceTrashPresort::~cSC4OrdinanceTrashPresort(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b19a,cSC4OrdinanceTrashPresort::~cSC4OrdinanceTrashPresort(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b1c8,cSC4OrdinanceTrashPresort::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b1d4,non-virtual thunk to cSC4OrdinanceTrashPresort::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b1e0,non-virtual thunk to cSC4OrdinanceTrashPresort::~cSC4OrdinanceTrashPresort(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079b286,non-virtual thunk to cSC4OrdinanceTrashPresort::~cSC4OrdinanceTrashPresort(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100796e88,cSC4OrdinanceLegalizeGambling::GetCurrentMonthlyIncome(),GetCurrentMonthlyIncome,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100796e96,cSC4OrdinanceLegalizeGambling::SetOn(bool),SetOn,src/sc4/OrdinanceTypes.h,recovered-partial,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007970d8,cSC4OrdinanceLegalizeGambling::~cSC4OrdinanceLegalizeGambling(),Destruct,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x1007970e2,cSC4OrdinanceLegalizeGambling::~cSC4OrdinanceLegalizeGambling(),DestructAndDelete,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797110,cSC4OrdinanceLegalizeGambling::GetGZCLSID() const,GetGZCLSID,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x10079711c,non-virtual thunk to cSC4OrdinanceLegalizeGambling::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797128,non-virtual thunk to cSC4OrdinanceLegalizeGambling::~cSC4OrdinanceLegalizeGambling(),DestructThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp
+0x100797136,non-virtual thunk to cSC4OrdinanceLegalizeGambling::~cSC4OrdinanceLegalizeGambling(),DestructAndDeleteThunk,src/sc4/OrdinanceTypes.h,recovered,scripts/tests/sc4_ordinancetypes_test.cpp

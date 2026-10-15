@@ -81,18 +81,18 @@ public:
 class cSC4OrdinanceSimple : public cIGZSerializable, public cISC4Ordinance {
 public:
     cSC4OrdinanceSimple() = default;
-    ~cSC4OrdinanceSimple();
+    virtual ~cSC4OrdinanceSimple();
 
     bool QueryInterface(std::uint32_t iid, void** out) override;
     std::uint32_t AddRef() override { return ++refCount_; }
     std::uint32_t Release() override;
 
-    bool Init();
-    bool Shutdown();
+    virtual bool Init();
+    virtual bool Shutdown();
     bool SetKey(const cGZPersistResourceKey& key) { key_ = key; return true; }
     bool FromData(const cGZPersistResourceKey& key);
-    std::int64_t GetCurrentMonthlyIncome();
-    bool Simulate();
+    virtual std::int64_t GetCurrentMonthlyIncome();
+    virtual bool Simulate();
 
     std::uint32_t GetID() const override { return id_; }
     const cRZString& GetName() const override { return name_; }
@@ -127,7 +127,7 @@ public:
     bool Read(cIGZIStream& stream) override;
     std::uint32_t GetGZCLSID() const override { return kGZCLSID_cSC4OrdinanceSimple; }
 
-private:
+protected:
     cSCExemplarPropertyHolder properties_;                  // +0x10
     std::uint32_t refCount_ = 0;                            // +0x48
     bool initialised_ = false;                              // +0x4c
