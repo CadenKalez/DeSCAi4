@@ -32,6 +32,6 @@ going, and give a progress report whenever you stop.
 - Stack-allocated COM-style objects must not be `Release()`d to zero — heap-allocate them in tests.
 
 ## Next targets (largest unrecovered game-logic classes)
-cSC4TrafficSimulator, cSC4LotDeveloper, cSC4PollutionSimulator, cSC4PoliceSimulator, cSC4ResidentialSimulator,
+cSC4TrafficSimulator, cSC4PoliceSimulator, cSC4ResidentialSimulator,
 growth planner of cSC4BuildingDevelopmentSimulator, cSC4ZoneDeveloper, cSC4PowerPoleOccupant, cGZWin* UI family,
 cSCLua, remaining free utilities (SC4 helper functions, GZCOM factories, UTF16/Thai line-break tables).

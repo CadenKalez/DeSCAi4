@@ -28,9 +28,9 @@ Paste this as your first message / system prompt:
 5. Commit; periodically `python3 scripts/progress.py`.
 
 ## Current state / next targets
-- Uncommitted-in-progress: src/sc4/FloraSimulator.h (needs .cpp, test, ledger; unify static flora data with
+- Done: FloraSimulator, LotDeveloper, PollutionSimulator. Next targets below (skip these).
   FloraOccupant.h: halfExtent +0x38, height +0x44).
-- Next: cSC4TrafficSimulator, cSC4LotDeveloper, cSC4PollutionSimulator, cSC4PoliceSimulator,
+- Next: cSC4TrafficSimulator, cSC4PoliceSimulator,
   cSC4ResidentialSimulator, growth planner of cSC4BuildingDevelopmentSimulator, cSC4ZoneDeveloper,
   cSC4PowerPoleOccupant, cGZWin* UI family, cSCLua, free utilities.
 - Partials in ledger: network occupant Draw/Pick/GetPathInfo family, PropManager::DoMessage.
