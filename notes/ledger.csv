@@ -12364,3 +12364,11 @@ address,symbol,unique_name,source,status,evidence
 0x100620cec,cGZBuffer::SetHardwareCache(cIGZBufferHardwareCache*),SetHardwareCache,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
 0x100412bad,"GetPixelBlitter(cGZBufferColorType&, cGZBufferColorType&)",GetPixelBlitterForColorTypes,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
 0x100412bf2,"GetPixelBlitterColorKey(cGZBufferColorType&, cGZBufferColorType&)",GetPixelBlitterColorKeyForColorTypes,src/gz/Buffer.cpp|h,recovered,scripts/tests/gz_buffer_test.cpp
+0x1006a2d10,"RZDrawBltEdge(cIGZBuffer*, cIGZBuffer*, cRZRect const&, cRZRect const&, bool)",RZDrawBltEdgeBuffer,src/gz/RZDraw.cpp|h,recovered,scripts/tests/gz_rzdraw_test.cpp
+0x1006a3062,"RZDrawBltTiled(cIGZBuffer*, cIGZBuffer*, cRZRect const&, cRZRect const&, int, int, cRZRect const*)",RZDrawBltTiledBuffer,src/gz/RZDraw.cpp|h,recovered,scripts/tests/gz_rzdraw_test.cpp
+0x1006a355a,"RZDrawBltEdge(cIGZDrawContext*, cIGZBuffer*, cRZRect const&, cRZRect const&, bool)",RZDrawBltEdgeContext,src/gz/RZDraw.cpp|h,recovered,scripts/tests/gz_rzdraw_test.cpp
+0x1006a391b,"RZDrawBltStretch(cIGZBuffer*, cIGZBuffer*, cRZRect const&, cRZRect const&, cRZRect const*)",RZDrawBltStretchBuffer,src/gz/RZDraw.cpp|h,recovered,scripts/tests/gz_rzdraw_test.cpp
+0x1006a7840,"RZDrawRaisedRect(cIGZDrawContext*, cRZRect const&, unsigned int, bool, bool)",RZDrawRaisedRectPackedColor,src/gz/RZDraw.cpp|h,recovered,scripts/tests/gz_rzdraw_test.cpp
+0x1006a786f,"RZDrawRaisedRect(cIGZDrawContext*, cRZRect const&, unsigned char, unsigned char, unsigned char, bool, bool)",RZDrawRaisedRectRGB,src/gz/RZDraw.cpp|h,recovered,scripts/tests/gz_rzdraw_test.cpp
+0x1006a79ba,"RZDraw3DRectangleOutline(cIGZDrawContext*, cRZRect const&, unsigned int, unsigned int)",RZDraw3DRectangleOutline,src/gz/RZDraw.cpp|h,recovered,scripts/tests/gz_rzdraw_test.cpp
+0x1006a7ac5,"RZDrawRectangleOutline(cIGZDrawContext*, cRZRect const&, unsigned int, unsigned int)",RZDrawRectangleOutline,src/gz/RZDraw.cpp|h,recovered,scripts/tests/gz_rzdraw_test.cpp

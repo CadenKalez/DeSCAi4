@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <memory>
 
+#include "gz/DrawContext.h"
 #include "gz/SoftBlit.h"
 #include "gz/StreamOps.h"
 #include "gz/cIGZUnknown.h"
@@ -51,7 +52,7 @@ public:
     virtual void Invalidate() = 0;                               // +0x40 (colour key changed)
 };
 
-class cIGZBuffer : public cIGZUnknown {
+class cIGZBuffer : public gz::IDrawTargetBuffer {
 public:
     enum eLockFlags : std::uint32_t { kLockRead = 1, kLockWrite = 0x8000 };
 
@@ -63,7 +64,7 @@ public:
     virtual bool IsLocked() const = 0;                                                             // [10]
     virtual std::uint32_t Width() const = 0;                                                       // [11]
     virtual std::uint32_t Height() const = 0;                                                      // [12]
-    virtual const cRZRect* GetBufferArea() const = 0;                                              // [13]
+    const cRZRect* GetBufferArea() const override = 0;                                             // [13]
     virtual void GetBufferArea(cRZRect& out) const = 0;                                            // [14]
     virtual std::uint32_t GetMemoryUsage() const = 0;                                              // [15]
     virtual cGZBufferColorType GetColorType() const = 0;                                           // [16]
@@ -82,7 +83,7 @@ public:
     virtual void RemoveTransparency() = 0;                                                         // [29]
     virtual bool DrawLine(int x0, int y0, int x1, int y1, int color, std::uint32_t thickness) = 0; // [30]
     virtual bool Blt(cIGZBuffer* source, const cRZRect& sourceRect, const cRZPoint& destination, const cRZRect* clip) = 0;   // [31]
-    virtual std::uint32_t ConvertRGBValueToNative(std::uint8_t r, std::uint8_t g, std::uint8_t b) = 0;      // [32]
+    std::uint32_t ConvertRGBValueToNative(std::uint8_t r, std::uint8_t g, std::uint8_t b) override = 0;     // [32]
     virtual bool ConvertNativeValueToRGB(std::uint32_t native, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b) = 0;   // [33]
     virtual std::uint32_t ConvertRGBAValueToNative(std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t a) = 0;   // [34]
     virtual bool ConvertNativeValueToRGBA(std::uint32_t native, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b, std::uint8_t& a) = 0;   // [35]
@@ -92,6 +93,15 @@ public:
     virtual cIGZBufferHardwareCache* GetHardwareCache() = 0;                                       // [39]
     virtual bool SetHardwareCache(cIGZBufferHardwareCache* cache) = 0;                             // [40]
     virtual bool IsReady() = 0;                                                                    // [41]
+};
+
+// Buffers that can be drawn into through a draw context (iid 0xab300b2b): the hardware path of RZDrawBltTiled /
+// RZDrawBltStretch.
+constexpr std::uint32_t kGZIID_cIGZBufferDrawTarget = 0xab300b2b;
+class cIGZBufferDrawTarget : public cIGZUnknown {
+public:
+    virtual gz::cIGZDrawContext* GetDrawContext() = 0;                       // +0x20
+    virtual void SetBlitSource(cIGZBuffer* source) = 0;                      // +0x48
 };
 
 // What DeterminePixelFormat asks the graphics system (RZ::GS()).
