@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -55,7 +56,7 @@ struct FakeApi : ILuaApi {
     void getfenv(lua_State*, int) override {}
     int getmetatable(lua_State*, int) override { return 0; }
     void settable(lua_State*, int i) override { rec("settable" + std::to_string(i)); }
-    void rawset(lua_State*, int) override {}
+    void rawset(lua_State*, int i) override { rec("rawset" + std::to_string(i)); }
     void rawseti(lua_State*, int, int) override {}
     int setfenv(lua_State*, int) override { return 0; }
     int setmetatable(lua_State*, int) override { return 0; }
@@ -74,6 +75,25 @@ struct FakeApi : ILuaApi {
     void unref(lua_State*, int t, int r) override { rec("unref" + std::to_string(t) + "," + std::to_string(r)); }
     int yield(lua_State*, int n) override { return n + 1; }
     void* userdata = nullptr;
+    // slots / library management are not exercised here
+    std::map<lua_State*, cGZLua5Thread*> slots;
+    lua_State* open() override { return nullptr; }
+    void close(lua_State*) override {}
+    void openlib(lua_State*, int) override {}
+    int getgccount(lua_State*) override { return 0; }
+    int getgcthreshold(lua_State*) override { return 0; }
+    void setgcthreshold(lua_State*, int) override {}
+    lua_State* newthread(lua_State*) override { return nullptr; }
+    int resume(lua_State*, int) override { return 0; }
+    bool getstack(lua_State*, int) override { return false; }
+    int ccalls(lua_State*) override { return 0; }
+    lua_State* main_state(lua_State* l) override { return l; }
+    cGZLua5Thread* get_thread_slot(lua_State* l) override { auto it = slots.find(l); return it == slots.end() ? nullptr : it->second; }
+    void set_thread_slot(lua_State* l, cGZLua5Thread* t) override { slots[l] = t; }
+    void pushfstring(lua_State*, const char*, int) override {}
+    void lerror(lua_State*, const char*) override {}
+    void checktype(lua_State*, int, int) override {}
+    void typerror(lua_State*, int, const char*) override {}
 };
 
 static int g_cbCount = 0, g_cbStatus = 0;
@@ -86,6 +106,7 @@ struct Owner : ILua5Owner {
     void AddRef() override { ++refs; }
     void Release() override { --refs; }
     LuaErrorCallback GetErrorCallback() override { return cb; }
+    cGZLua5Thread* AsThread() override { return nullptr; }
 };
 
 static int fnAlert(lua_State*) { return 0; }
@@ -117,12 +138,14 @@ int main() {
     FakeApi api; Compat compat; Owner owner;
     cGZLua5Thread* t = new cGZLua5Thread(api, compat);
     lua_State* st = reinterpret_cast<lua_State*>(0x1000);
-    CHECK(!t->IsValid(t));
+    CHECK(!t->IsValid());
     CHECK(t->OnCreate(&owner, st, 3));
     CHECK(owner.refs == 2);
-    CHECK(api.str() == "pushstring_ALERT;pushcclosure0;settable-10001;");
+    CHECK(api.str() == "pushstring_ALERT;pushcclosure0;rawset-10001;");
     CHECK(t->GetID() == 3 && t->GetContext() == st && t->GetLua() == &owner);
-    CHECK(t->IsValid(t) && !t->IsValid(&owner));
+    CHECK(!t->IsValid());                      // no slot back-pointer yet
+    api.set_thread_slot(st, t);
+    CHECK(t->IsValid());
     CHECK(t->Status() == 30);
     CHECK(t->Destroy() && compat.reg.destroyed == 3);
     compat.haveReg = false;
@@ -195,7 +218,7 @@ int main() {
 
     // destroy
     CHECK(t->OnDestroy());
-    CHECK(owner.refs == 1 && t->GetID() == -1 && t->GetContext() == nullptr && !t->IsValid(t));
+    CHECK(owner.refs == 1 && t->GetID() == -1 && t->GetContext() == nullptr && !t->IsValid());
     t->OnCreate(&owner, st, 1);
     delete t;
     CHECK(owner.refs == 1);

@@ -4,6 +4,10 @@
 
 namespace lua5 {
 
+static ILuaApi* g_api = nullptr;
+void SetLuaApi(ILuaApi* api) { g_api = api; }
+ILuaApi& LuaApi() { return *g_api; }
+
 cGZLua5Thread::cGZLua5Thread(ILuaApi& api, ILuaCompat& compat) : api_(api), compat_(compat) {}
 
 cGZLua5Thread::~cGZLua5Thread() {
@@ -21,10 +25,10 @@ bool cGZLua5Thread::OnCreate(ILua5Owner* owner, lua_State* state, int id) {
         owner_ = owner;
         if (old) old->Release();
     }
-    // globals._ALERT = alert hook
+    // rawset(globals, "_ALERT", alert hook)
     PushString("_ALERT");
     PushCClosure(compat_.AlertExtension(), 0);
-    SetTable(kGlobalsIndex);
+    RawSet(kGlobalsIndex);
     return true;
 }
 
@@ -39,8 +43,14 @@ bool cGZLua5Thread::OnDestroy() {
     return true;
 }
 
-bool cGZLua5Thread::IsValid(const void* stateBackPointer) const {
-    if (!state_ || stateBackPointer != static_cast<const void*>(this)) return false;
+std::uint32_t cGZLua5Thread::Release() {
+    if (refCount_ > 1) return --refCount_;
+    delete this;
+    return 0;
+}
+
+bool cGZLua5Thread::IsValid() const {
+    if (!state_ || api_.get_thread_slot(state_) != this) return false;
     return id_ != -1;
 }
 
@@ -129,7 +139,7 @@ int cGZLua5Thread::Tag(int index) {
     PushCClosure(compat_.TagFn(), 0);
     api_.replace(state_, -3);
     if (CallProtected(1, 1, 0, true) == 0) {
-        int tag = static_cast<int>(api_.tonumber(state_, -1));
+        int tag = CvtTrunc32(api_.tonumber(state_, -1));
         api_.settop(state_, -2);
         if (tag != 0) return tag;
     }
@@ -155,7 +165,7 @@ void cGZLua5Thread::SetTagMethod(int tag, const char* event) {
 int cGZLua5Thread::NewTag() {
     PushCClosure(compat_.NewTagFn(), 0);
     if (CallProtected(0, 1, 0, true) != 0) return -1;
-    int tag = static_cast<int>(api_.tonumber(state_, 1));
+    int tag = CvtTrunc32(api_.tonumber(state_, 1));
     api_.settop(state_, -2);
     return tag > 0 ? tag : -1;
 }

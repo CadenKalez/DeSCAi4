@@ -8,11 +8,23 @@
 // A thread is valid only while the pointer stored just before the lua_State (state[-1]) is its interface pointer.
 #pragma once
 #include <cstddef>
+#include <climits>
 #include <cstdint>
 
 namespace lua5 {
 
 struct lua_State;
+class cGZLua5Thread;
+class ThreadRegistry;
+
+// cvttsd2si semantics: NaN and out-of-range values give the "integer indefinite" value.
+inline std::int32_t CvtTrunc32(double d) {
+    return (d >= -2147483648.0 && d < 2147483648.0) ? static_cast<std::int32_t>(d) : INT32_MIN;
+}
+inline std::int64_t CvtTrunc64(double d) {
+    return (d >= -9223372036854775808.0 && d < 9223372036854775808.0) ? static_cast<std::int64_t>(d) : INT64_MIN;
+}
+
 using lua_CFunction = int (*)(lua_State*);
 using lua_Chunkreader = const char* (*)(lua_State*, void*, std::size_t*);
 
@@ -82,11 +94,36 @@ public:
     virtual int ref(lua_State*, int t) = 0;                 // luaL_ref
     virtual void unref(lua_State*, int t, int ref) = 0;     // luaL_unref
     virtual int yield(lua_State*, int nresults) = 0;
+
+    // Library / state management (lua_open, lua_close, luaopen_*, GC tuning)
+    virtual lua_State* open() = 0;
+    virtual void close(lua_State*) = 0;
+    virtual void openlib(lua_State*, int lib) = 0;          // 0 base, 1 io, 2 string, 3 math, 4 debug, 5 table
+    virtual int getgccount(lua_State*) = 0;
+    virtual int getgcthreshold(lua_State*) = 0;
+    virtual void setgcthreshold(lua_State*, int) = 0;
+    // Coroutines
+    virtual lua_State* newthread(lua_State*) = 0;
+    virtual int resume(lua_State*, int nargs) = 0;
+    virtual bool getstack(lua_State*, int level) = 0;       // lua_getstack with a scratch lua_Debug
+    virtual int ccalls(lua_State*) = 0;                     // lua_State::nCcalls
+    virtual lua_State* main_state(lua_State*) = 0;          // G(L)->mainthread
+    // The game's patched Lua keeps one extra pointer just before every lua_State (state[-1]).
+    virtual cGZLua5Thread* get_thread_slot(lua_State*) = 0;
+    virtual void set_thread_slot(lua_State*, cGZLua5Thread*) = 0;
+    // Auxiliary library
+    virtual void pushfstring(lua_State*, const char* fmt, int arg) = 0;
+    virtual void lerror(lua_State*, const char* msg) = 0;   // luaL_error
+    virtual void checktype(lua_State*, int narg, int type) = 0;
+    virtual void typerror(lua_State*, int narg, const char* tname) = 0;
 };
+
+// The API instance used by the C functions the library installs into Lua (they only receive a lua_State*).
+void SetLuaApi(ILuaApi* api);
+ILuaApi& LuaApi();
 
 // Callback the owner exposes (vtable slot 0x70 of cIGZLua5): called with the thread interface, the Lua status
 // code and the error message on top of the stack.
-class cGZLua5Thread;
 using LuaErrorCallback = void (*)(cGZLua5Thread* thread, int status, const char* message);
 
 // Owner (cIGZLua5): reference counted, hands out the error callback (slot 0x70; CallProtected also uses a
@@ -97,14 +134,15 @@ public:
     virtual void AddRef() = 0;
     virtual void Release() = 0;
     virtual LuaErrorCallback GetErrorCallback() = 0;
+    virtual cGZLua5Thread* AsThread() = 0;                  // main-thread view (slot 0x18)
 };
 
 // Thread registry (nsGZLua5ThreadLib), keyed by lua_State.
 class IThreadRegistry {
 public:
     virtual ~IThreadRegistry() = default;
-    virtual bool DestroyThread(lua_State*, int id) = 0;
-    virtual int GetThreadStatus(int id) = 0;
+    virtual bool DestroyThread(lua_State* caller, int id) = 0;
+    virtual int GetThreadStatus(int id) = 0;                // 0 dead, 1 suspended, 2 running, -1 invalid
 };
 
 // Host-side C functions the wrapper installs (nsGZLua5CompatWithLua4 and the _ALERT hook) and the two Lua-4
@@ -126,15 +164,21 @@ public:
 class cGZLua5Thread {
 public:
     cGZLua5Thread(ILuaApi& api, ILuaCompat& compat);
-    ~cGZLua5Thread();
+    virtual ~cGZLua5Thread();
+
+    // cRZUnknown counting: Release deletes once the count is 0 or 1.
+    std::uint32_t AddRef() { return ++refCount_; }
+    std::uint32_t Release();
+    // Only the main thread (cGZLua5) owns a registry.
+    virtual ThreadRegistry* GetRegistry() { return nullptr; }
 
     ILua5Owner* GetLua() const { return owner_; }
     int Pause(int nresults);
     bool OnCreate(ILua5Owner* owner, lua_State* state, int id);
     bool OnDestroy();
     int GetID() const { return id_; }
-    // `selfTag` is the interface pointer the thread registry stores before the state; see header comment.
-    bool IsValid(const void* stateBackPointer) const;
+    // Valid while the slot before the state still points back at this thread and an id is assigned.
+    bool IsValid() const;
     bool Destroy();
     int Status();
     lua_State* GetContext() const { return state_; }
@@ -166,8 +210,8 @@ public:
     bool Equal(int a, int b) { return api_.equal(state_, a, b) != 0; }
     bool RawEqual(int a, int b) { return api_.rawequal(state_, a, b) != 0; }
     bool LessThan(int a, int b) { return api_.lessthan(state_, a, b) != 0; }
-    std::int64_t ToUint32(int i) { return static_cast<std::int64_t>(api_.tonumber(state_, i)); }  // returns long
-    std::int32_t ToSint32(int i) { return static_cast<std::int32_t>(api_.tonumber(state_, i)); }
+    std::int64_t ToUint32(int i) { return CvtTrunc64(api_.tonumber(state_, i)); }  // returns long
+    std::int32_t ToSint32(int i) { return CvtTrunc32(api_.tonumber(state_, i)); }
     double ToNumber(int i) { return api_.tonumber(state_, i); }
     bool ToBoolean(int i) { return api_.toboolean(state_, i) != 0; }
     const char* ToString(int i) { return api_.tostring(state_, i); }
@@ -230,7 +274,7 @@ public:
     void PushUserTag(void* ud, int tag) { compat_.PushUserTag(state_, ud, tag); }
     std::uint64_t ToUserTag(int index) { return *static_cast<std::uint64_t*>(ToUserData(index)); }
 
-private:
+protected:
     void ReportLoadError(int status);
 
     ILuaApi& api_;
@@ -239,6 +283,7 @@ private:
     lua_State* state_ = nullptr;
     ILua5Owner* owner_ = nullptr;
     void* userContext_ = nullptr;
+    std::uint32_t refCount_ = 0;
 };
 
 }  // namespace lua5

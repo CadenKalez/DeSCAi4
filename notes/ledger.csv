@@ -9507,3 +9507,316 @@ address,symbol,unique_name,source,status,evidence
 0x10069478a,non-virtual thunk to cGZLua5Thread::AddRef(),AddRefThunk,src/lua/Lua5Thread.cpp|h,recovered,Lua5Thread: ILuaApi-seam wrapper; forwards verified against decompile; fake-API test lua_lua5thread
 0x100694798,cGZLua5Thread::Release(),Release,src/lua/Lua5Thread.cpp|h,recovered,Lua5Thread: ILuaApi-seam wrapper; forwards verified against decompile; fake-API test lua_lua5thread
 0x1006947a2,non-virtual thunk to cGZLua5Thread::Release(),ReleaseThunk,src/lua/Lua5Thread.cpp|h,recovered,Lua5Thread: ILuaApi-seam wrapper; forwards verified against decompile; fake-API test lua_lua5thread
+0x1005e8710,cGZLua5::AsIGZLua5Thread(),AsIGZLua5Thread,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x1005e8724,non-virtual thunk to cGZLua5::AsIGZLua5Thread(),AsIGZLua5ThreadThunk,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x1006947b0,cGZLua5::cGZLua5(),Construct,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100694830,"cGZLua5::default_error_reporter(cIGZLua5Thread*, int, char const*)",default_error_reporter,src/lua/Lua5.cpp|h,recovered-partial,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100694e2e,cGZLua5::~cGZLua5(),Destruct,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100694ea6,cGZLua5::~cGZLua5(),DestructAndDelete,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100694eb0,cGZLua5::~cGZLua5(),DestructBody,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100694ede,cGZLua5::Open(int),Open,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100694fa0,non-virtual thunk to cGZLua5::Open(int),OpenThunk,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100694fae,cGZLua5::Close(),Close,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100694fd8,non-virtual thunk to cGZLua5::Close(),CloseThunk,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100694fea,"cGZLua5::CreateThread(cIGZLua5Thread**, int, unsigned int)",CreateThread,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100695040,"non-virtual thunk to cGZLua5::CreateThread(cIGZLua5Thread**, int, unsigned int)",CreateThreadThunk,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x10069504e,cGZLua5::GetThread(int),GetThread,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x10069506a,non-virtual thunk to cGZLua5::GetThread(int),GetThreadThunk,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100695086,cGZLua5::DestroyThread(int),DestroyThread,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x10069509c,non-virtual thunk to cGZLua5::DestroyThread(int),DestroyThreadThunk,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x1006950b2,"cGZLua5::ResumeThread(int, int, int*)",ResumeThread,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x10069517c,"non-virtual thunk to cGZLua5::ResumeThread(int, int, int*)",ResumeThreadThunk,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x10069518a,cGZLua5::GetGCCount(),GetGCCount,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100695198,non-virtual thunk to cGZLua5::GetGCCount(),GetGCCountThunk,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x1006951a6,cGZLua5::GetGCThreshold(),GetGCThreshold,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x1006951b4,non-virtual thunk to cGZLua5::GetGCThreshold(),GetGCThresholdThunk,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x1006951c2,cGZLua5::SetGCThreshold(int),SetGCThreshold,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x1006951d0,non-virtual thunk to cGZLua5::SetGCThreshold(int),SetGCThresholdThunk,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x1006951de,"cGZLua5::QueryInterface(unsigned int, void**)",QueryInterface,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x10069521e,"non-virtual thunk to cGZLua5::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_521e,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x10069522c,"non-virtual thunk to cGZLua5::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_522c,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x10069523a,cGZLua5::AddRef(),AddRef,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100695244,non-virtual thunk to cGZLua5::AddRef(),AddRefThunk_5244,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100695252,non-virtual thunk to cGZLua5::AddRef(),AddRefThunk_5252,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100695260,cGZLua5::Release(),Release,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x10069526a,non-virtual thunk to cGZLua5::Release(),ReleaseThunk_526a,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100695278,non-virtual thunk to cGZLua5::Release(),ReleaseThunk_5278,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100695286,"cGZLua5::SetErrorReporter(void (*)(cIGZLua5Thread*, int, char const*), bool)",SetErrorReporter,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x1006952a4,"non-virtual thunk to cGZLua5::SetErrorReporter(void (*)(cIGZLua5Thread*, int, char const*), bool)",SetErrorReporterThunk,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x1006952c2,cGZLua5::GetErrorReporter(),GetErrorReporter,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x1006952cc,non-virtual thunk to cGZLua5::GetErrorReporter(),GetErrorReporterThunk,src/lua/Lua5.cpp|h,recovered,Lua5: main-thread host over ILuaApi; test lua_luasystem
+0x100697760,nsGZLua5ThreadLib::OpenLib(cIGZLua5*),OpenLib,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x1006979cf,nsGZLua5ThreadLib::Resume(lua_State*),Resume,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100697a81,nsGZLua5ThreadLib::Create(lua_State*),Create,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100697bec,nsGZLua5ThreadLib::Wrap(lua_State*),Wrap,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100697c1a,nsGZLua5ThreadLib::Destroy(lua_State*),Destroy,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100697d17,nsGZLua5ThreadLib::Valid(lua_State*),Valid,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100697d67,nsGZLua5ThreadLib::ID(lua_State*),ID,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100697da1,nsGZLua5ThreadLib::Status(lua_State*),Status,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100697e00,nsGZLua5ThreadLib::Class(lua_State*),Class,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100697e61,nsGZLua5ThreadLib::Parent(lua_State*),Parent,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100697eab,nsGZLua5ThreadLib::get_thread_registry(lua_State*),get_thread_registry,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100697ecc,"nsGZLua5ThreadLib::cThreadRegistry::ResumeThread(lua_State*, int, int)",ResumeThread,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100697fc8,nsGZLua5ThreadLib::wrap_internal(lua_State*),wrap_internal,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100698058,"nsGZLua5ThreadLib::cThreadRegistry::CreateThread(lua_State*, int, int)",CreateThread,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100698288,nsGZLua5ThreadLib::thread_id_param(lua_State*),thread_id_param,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x1006982f4,nsGZLua5ThreadLib::cThreadRegistry::IsValidThread(int),IsValidThread,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100698332,"nsGZLua5ThreadLib::cThreadRegistry::DestroyThread(lua_State*, int)",DestroyThread,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x1006984ac,nsGZLua5ThreadLib::cThreadRegistry::GetThreadStatus(int),GetThreadStatus,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100698546,nsGZLua5ThreadLib::cThreadRegistry::GetParentID(int),GetParentID,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x1006985bc,nsGZLua5ThreadLib::cThreadRegistry::cThreadRegistry(),cThreadRegistry,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x1006985f0,nsGZLua5ThreadLib::cThreadRegistry::~cThreadRegistry(),~cThreadRegistry_85f0,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100698630,nsGZLua5ThreadLib::cThreadRegistry::~cThreadRegistry(),~cThreadRegistry_8630,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x10069863a,"nsGZLua5ThreadLib::cThreadRegistry::Init(cIGZLua5*, lua_State*)",Init,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100698820,nsGZLua5ThreadLib::cThreadRegistry::Shutdown(),Shutdown,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x10069886e,nsGZLua5ThreadLib::cThreadRegistry::GetThreadContext(int),GetThreadContext,src/lua/LuaLibs.cpp|ThreadRegistry.cpp,recovered,ThreadRegistry + coroutine lib over ILuaApi; test lua_luasystem
+0x100696ee0,nsGZLua5CompatWithLua4::NewTag(lua_State*),NewTag,src/lua/LuaLibs.cpp,recovered,Lua4 tag compat over ILuaApi; test lua_luasystem
+0x100696f16,nsGZLua5CompatWithLua4::SetTag(lua_State*),SetTag,src/lua/LuaLibs.cpp,recovered,Lua4 tag compat over ILuaApi; test lua_luasystem
+0x100696f6b,"nsGZLua5CompatWithLua4::PushTagMetaTable(lua_State*, int)",PushTagMetaTable,src/lua/LuaLibs.cpp,recovered,Lua4 tag compat over ILuaApi; test lua_luasystem
+0x100697035,"nsGZLua5CompatWithLua4::lua_SetTag(lua_State*, int)",lua_SetTag,src/lua/LuaLibs.cpp,recovered,Lua4 tag compat over ILuaApi; test lua_luasystem
+0x10069707f,nsGZLua5CompatWithLua4::SetTagMethod(lua_State*),SetTagMethod,src/lua/LuaLibs.cpp,recovered,Lua4 tag compat over ILuaApi; test lua_luasystem
+0x10069715a,nsGZLua5CompatWithLua4::Lua4EventToMetaMehod(char const*),Lua4EventToMetaMehod,src/lua/LuaLibs.cpp,recovered,Lua4 tag compat over ILuaApi; test lua_luasystem
+0x100697311,nsGZLua5CompatWithLua4::GetTagMethod(lua_State*),GetTagMethod,src/lua/LuaLibs.cpp,recovered,Lua4 tag compat over ILuaApi; test lua_luasystem
+0x1006973d2,nsGZLua5CompatWithLua4::PushTagMetaTableMap(lua_State*),PushTagMetaTableMap,src/lua/LuaLibs.cpp,recovered,Lua4 tag compat over ILuaApi; test lua_luasystem
+0x100697453,nsGZLua5CompatWithLua4::Tag(lua_State*),Tag,src/lua/LuaLibs.cpp,recovered,Lua4 tag compat over ILuaApi; test lua_luasystem
+0x1006974d8,nsGZLua5CompatWithLua4::CopyTagMethods(lua_State*),CopyTagMethods,src/lua/LuaLibs.cpp,recovered,Lua4 tag compat over ILuaApi; test lua_luasystem
+0x1006975e2,nsGZLua5CompatWithLua4::Globals(lua_State*),Globals,src/lua/LuaLibs.cpp,recovered,Lua4 tag compat over ILuaApi; test lua_luasystem
+0x1006975f7,"nsGZLua5CompatWithLua4::lua_PushUserTag(lua_State*, void*, int)",lua_PushUserTag,src/lua/LuaLibs.cpp,recovered,Lua4 tag compat over ILuaApi; test lua_luasystem
+0x100697639,nsGZLua5CompatWithLua4::OpenLib(cIGZLua5*),OpenLib,src/lua/LuaLibs.cpp,recovered,Lua4 tag compat over ILuaApi; test lua_luasystem
+0x1005e669c,cSCLua::cSCLua(),Construct,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6728,cSCLua::~cSCLua(),Destruct,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e67e4,cSCLua::~cSCLua(),DestructAndDelete,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e67ee,cSCLua::~cSCLua(),DestructBody,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e681c,cSCLua::Open(int),Open,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e694a,non-virtual thunk to cSCLua::Open(int),OpenThunk_694a,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6958,non-virtual thunk to cSCLua::Open(int),OpenThunk_6958,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6966,cSCLua::Close(),Close,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6a34,non-virtual thunk to cSCLua::Close(),CloseThunk_6a34,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6a46,non-virtual thunk to cSCLua::Close(),CloseThunk_6a46,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6a58,cSCLua::GetTop(),GetTop,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6a62,non-virtual thunk to cSCLua::GetTop(),GetTopThunk_6a62,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6a70,non-virtual thunk to cSCLua::GetTop(),GetTopThunk_6a70,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6a7e,cSCLua::SetTop(int),SetTop,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6a88,non-virtual thunk to cSCLua::SetTop(int),SetTopThunk_6a88,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6a96,non-virtual thunk to cSCLua::SetTop(int),SetTopThunk_6a96,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6aa4,cSCLua::PushValue(int),PushValue,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6aae,non-virtual thunk to cSCLua::PushValue(int),PushValueThunk_6aae,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6abc,non-virtual thunk to cSCLua::PushValue(int),PushValueThunk_6abc,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6aca,cSCLua::Remove(int),Remove,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6ad4,non-virtual thunk to cSCLua::Remove(int),RemoveThunk_6ad4,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6ae2,non-virtual thunk to cSCLua::Remove(int),RemoveThunk_6ae2,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6af0,cSCLua::Insert(int),Insert,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6afa,non-virtual thunk to cSCLua::Insert(int),InsertThunk_6afa,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6b08,non-virtual thunk to cSCLua::Insert(int),InsertThunk_6b08,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6b16,cSCLua::Pop(int),Pop,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6b20,non-virtual thunk to cSCLua::Pop(int),PopThunk_6b20,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6b2e,non-virtual thunk to cSCLua::Pop(int),PopThunk_6b2e,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6b3c,cSCLua::Type(int),Type,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6b46,non-virtual thunk to cSCLua::Type(int),TypeThunk_6b46,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6b54,non-virtual thunk to cSCLua::Type(int),TypeThunk_6b54,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6b62,cSCLua::TypeName(int),TypeName,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6b6c,non-virtual thunk to cSCLua::TypeName(int),TypeNameThunk_6b6c,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6b7a,non-virtual thunk to cSCLua::TypeName(int),TypeNameThunk_6b7a,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6b88,cSCLua::IsNumber(int),IsNumber,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6b92,non-virtual thunk to cSCLua::IsNumber(int),IsNumberThunk_6b92,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6ba0,non-virtual thunk to cSCLua::IsNumber(int),IsNumberThunk_6ba0,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6bae,cSCLua::IsBoolean(int),IsBoolean,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6bb8,non-virtual thunk to cSCLua::IsBoolean(int),IsBooleanThunk_6bb8,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6bc6,non-virtual thunk to cSCLua::IsBoolean(int),IsBooleanThunk_6bc6,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6bd4,cSCLua::IsString(int),IsString,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6bde,non-virtual thunk to cSCLua::IsString(int),IsStringThunk_6bde,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6bec,non-virtual thunk to cSCLua::IsString(int),IsStringThunk_6bec,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6bfa,cSCLua::IsCFunction(int),IsCFunction,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6c04,non-virtual thunk to cSCLua::IsCFunction(int),IsCFunctionThunk_6c04,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6c12,non-virtual thunk to cSCLua::IsCFunction(int),IsCFunctionThunk_6c12,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6c20,cSCLua::Tag(int),Tag,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6c2a,non-virtual thunk to cSCLua::Tag(int),TagThunk_6c2a,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6c38,non-virtual thunk to cSCLua::Tag(int),TagThunk_6c38,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6c46,"cSCLua::Equal(int, int)",Equal,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6c50,"non-virtual thunk to cSCLua::Equal(int, int)",EqualThunk_6c50,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6c5e,"non-virtual thunk to cSCLua::Equal(int, int)",EqualThunk_6c5e,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6c6c,"cSCLua::LessThan(int, int)",LessThan,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6c76,"non-virtual thunk to cSCLua::LessThan(int, int)",LessThanThunk_6c76,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6c84,"non-virtual thunk to cSCLua::LessThan(int, int)",LessThanThunk_6c84,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6c92,cSCLua::ToUint32(int),ToUint32,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6c9c,non-virtual thunk to cSCLua::ToUint32(int),ToUint32Thunk_6c9c,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6caa,non-virtual thunk to cSCLua::ToUint32(int),ToUint32Thunk_6caa,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6cb8,cSCLua::ToSint32(int),ToSint32,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6cc2,non-virtual thunk to cSCLua::ToSint32(int),ToSint32Thunk_6cc2,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6cd0,non-virtual thunk to cSCLua::ToSint32(int),ToSint32Thunk_6cd0,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6cde,cSCLua::ToNumber(int),ToNumber,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6ce8,non-virtual thunk to cSCLua::ToNumber(int),ToNumberThunk_6ce8,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6cf6,non-virtual thunk to cSCLua::ToNumber(int),ToNumberThunk_6cf6,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6d04,cSCLua::ToString(int),ToString,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6d0e,non-virtual thunk to cSCLua::ToString(int),ToStringThunk_6d0e,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6d1c,non-virtual thunk to cSCLua::ToString(int),ToStringThunk_6d1c,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6d2a,cSCLua::Strlen(int),Strlen,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6d34,non-virtual thunk to cSCLua::Strlen(int),StrlenThunk_6d34,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6d42,non-virtual thunk to cSCLua::Strlen(int),StrlenThunk_6d42,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6d50,cSCLua::ToCFunction(int),ToCFunction,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6d5a,non-virtual thunk to cSCLua::ToCFunction(int),ToCFunctionThunk_6d5a,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6d68,non-virtual thunk to cSCLua::ToCFunction(int),ToCFunctionThunk_6d68,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6d76,cSCLua::ToUserData(int),ToUserData,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6d80,non-virtual thunk to cSCLua::ToUserData(int),ToUserDataThunk_6d80,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6d8e,non-virtual thunk to cSCLua::ToUserData(int),ToUserDataThunk_6d8e,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6d9c,cSCLua::ToUserTag(int),ToUserTag,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6da6,non-virtual thunk to cSCLua::ToUserTag(int),ToUserTagThunk_6da6,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6db4,non-virtual thunk to cSCLua::ToUserTag(int),ToUserTagThunk_6db4,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6dc2,cSCLua::ToBoolean(int),ToBoolean,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6dcc,non-virtual thunk to cSCLua::ToBoolean(int),ToBooleanThunk_6dcc,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6dda,non-virtual thunk to cSCLua::ToBoolean(int),ToBooleanThunk_6dda,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6de8,cSCLua::PushNil(),PushNil,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6df2,non-virtual thunk to cSCLua::PushNil(),PushNilThunk_6df2,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6e00,non-virtual thunk to cSCLua::PushNil(),PushNilThunk_6e00,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6e0e,cSCLua::PushNumber(double),PushNumber,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6e18,non-virtual thunk to cSCLua::PushNumber(double),PushNumberThunk_6e18,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6e26,non-virtual thunk to cSCLua::PushNumber(double),PushNumberThunk_6e26,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6e34,"cSCLua::PushLString(char const*, int)",PushLString,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6e3e,"non-virtual thunk to cSCLua::PushLString(char const*, int)",PushLStringThunk_6e3e,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6e4c,"non-virtual thunk to cSCLua::PushLString(char const*, int)",PushLStringThunk_6e4c,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6e5a,cSCLua::PushString(char const*),PushString,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6e64,non-virtual thunk to cSCLua::PushString(char const*),PushStringThunk_6e64,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6e72,non-virtual thunk to cSCLua::PushString(char const*),PushStringThunk_6e72,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6e80,"cSCLua::PushCClosure(int (*)(lua_State*), int)",PushCClosure,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6e8a,"non-virtual thunk to cSCLua::PushCClosure(int (*)(lua_State*), int)",PushCClosureThunk_6e8a,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6e98,"non-virtual thunk to cSCLua::PushCClosure(int (*)(lua_State*), int)",PushCClosureThunk_6e98,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6ea6,"cSCLua::PushUserTag(void*, int)",PushUserTag,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6eb0,"non-virtual thunk to cSCLua::PushUserTag(void*, int)",PushUserTagThunk_6eb0,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6ebe,"non-virtual thunk to cSCLua::PushUserTag(void*, int)",PushUserTagThunk_6ebe,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6ecc,cSCLua::PushBoolean(bool),PushBoolean,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6eda,non-virtual thunk to cSCLua::PushBoolean(bool),PushBooleanThunk_6eda,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6eec,non-virtual thunk to cSCLua::PushBoolean(bool),PushBooleanThunk_6eec,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6efe,cSCLua::GetGlobal(char const*),GetGlobal,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6f08,non-virtual thunk to cSCLua::GetGlobal(char const*),GetGlobalThunk_6f08,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6f16,non-virtual thunk to cSCLua::GetGlobal(char const*),GetGlobalThunk_6f16,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6f24,cSCLua::GetTable(int),GetTable,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6f2e,non-virtual thunk to cSCLua::GetTable(int),GetTableThunk_6f2e,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6f3c,non-virtual thunk to cSCLua::GetTable(int),GetTableThunk_6f3c,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6f4a,cSCLua::RawGet(int),RawGet,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6f54,non-virtual thunk to cSCLua::RawGet(int),RawGetThunk_6f54,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6f62,non-virtual thunk to cSCLua::RawGet(int),RawGetThunk_6f62,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6f70,"cSCLua::RawGetI(int, int)",RawGetI,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6f7a,"non-virtual thunk to cSCLua::RawGetI(int, int)",RawGetIThunk_6f7a,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6f88,"non-virtual thunk to cSCLua::RawGetI(int, int)",RawGetIThunk_6f88,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6f96,cSCLua::GetGlobals(),GetGlobals,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6fa0,non-virtual thunk to cSCLua::GetGlobals(),GetGlobalsThunk,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6fae,"cSCLua::GetTagMethod(int, char const*)",GetTagMethod,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6fb8,"non-virtual thunk to cSCLua::GetTagMethod(int, char const*)",GetTagMethodThunk_6fb8,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6fc6,"non-virtual thunk to cSCLua::GetTagMethod(int, char const*)",GetTagMethodThunk_6fc6,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6fd4,cSCLua::GetRef(int),GetRef,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6fde,non-virtual thunk to cSCLua::GetRef(int),GetRefThunk_6fde,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6fec,non-virtual thunk to cSCLua::GetRef(int),GetRefThunk_6fec,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e6ffa,cSCLua::NewTable(),NewTable,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7004,non-virtual thunk to cSCLua::NewTable(),NewTableThunk,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7012,cSCLua::SetGlobal(char const*),SetGlobal,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e701c,non-virtual thunk to cSCLua::SetGlobal(char const*),SetGlobalThunk_701c,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e702a,non-virtual thunk to cSCLua::SetGlobal(char const*),SetGlobalThunk_702a,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7038,cSCLua::SetTable(int),SetTable,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7042,non-virtual thunk to cSCLua::SetTable(int),SetTableThunk_7042,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7050,non-virtual thunk to cSCLua::SetTable(int),SetTableThunk_7050,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e705e,cSCLua::RawSet(int),RawSet,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7068,non-virtual thunk to cSCLua::RawSet(int),RawSetThunk_7068,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7076,non-virtual thunk to cSCLua::RawSet(int),RawSetThunk_7076,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7084,"cSCLua::RawSetI(int, int)",RawSetI,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e708e,"non-virtual thunk to cSCLua::RawSetI(int, int)",RawSetIThunk_708e,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e709c,"non-virtual thunk to cSCLua::RawSetI(int, int)",RawSetIThunk_709c,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e70aa,"cSCLua::SetTagMethod(int, char const*)",SetTagMethod,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e70b4,"non-virtual thunk to cSCLua::SetTagMethod(int, char const*)",SetTagMethodThunk_70b4,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e70c2,"non-virtual thunk to cSCLua::SetTagMethod(int, char const*)",SetTagMethodThunk_70c2,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e70d0,cSCLua::Ref(int),Ref,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e70da,non-virtual thunk to cSCLua::Ref(int),RefThunk,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e70e8,"cSCLua::CallProtected(int, int)",CallProtected,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e70fa,"non-virtual thunk to cSCLua::CallProtected(int, int)",CallProtectedThunk,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7110,"cSCLua::RawCall(int, int)",RawCall,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e711a,"non-virtual thunk to cSCLua::RawCall(int, int)",RawCallThunk,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7128,cSCLua::DoFile(char const*),DoFile,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7132,non-virtual thunk to cSCLua::DoFile(char const*),DoFileThunk_7132,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7140,non-virtual thunk to cSCLua::DoFile(char const*),DoFileThunk_7140,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e714e,cSCLua::DoString(char const*),DoString,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7158,non-virtual thunk to cSCLua::DoString(char const*),DoStringThunk_7158,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7166,non-virtual thunk to cSCLua::DoString(char const*),DoStringThunk_7166,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7174,"cSCLua::DoBuffer(char const*, int, char const*)",DoBuffer,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e717e,"non-virtual thunk to cSCLua::DoBuffer(char const*, int, char const*)",DoBufferThunk_717e,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e718c,"non-virtual thunk to cSCLua::DoBuffer(char const*, int, char const*)",DoBufferThunk_718c,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e719a,cSCLua::GetGCCount(),GetGCCount,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e71a4,non-virtual thunk to cSCLua::GetGCCount(),GetGCCountThunk_71a4,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e71b2,non-virtual thunk to cSCLua::GetGCCount(),GetGCCountThunk_71b2,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e71c0,cSCLua::GetGCThreshold(),GetGCThreshold,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e71ca,non-virtual thunk to cSCLua::GetGCThreshold(),GetGCThresholdThunk_71ca,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e71d8,non-virtual thunk to cSCLua::GetGCThreshold(),GetGCThresholdThunk_71d8,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e71e6,cSCLua::SetGCThreshold(int),SetGCThreshold,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e71f0,non-virtual thunk to cSCLua::SetGCThreshold(int),SetGCThresholdThunk_71f0,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e71fe,non-virtual thunk to cSCLua::SetGCThreshold(int),SetGCThresholdThunk_71fe,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e720c,cSCLua::NewTag(),NewTag,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7216,non-virtual thunk to cSCLua::NewTag(),NewTagThunk_7216,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7224,non-virtual thunk to cSCLua::NewTag(),NewTagThunk_7224,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7232,"cSCLua::CopyTagMethods(int, int)",CopyTagMethods,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e723c,"non-virtual thunk to cSCLua::CopyTagMethods(int, int)",CopyTagMethodsThunk_723c,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e724a,"non-virtual thunk to cSCLua::CopyTagMethods(int, int)",CopyTagMethodsThunk_724a,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7258,cSCLua::SetTag(int),SetTag,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7262,non-virtual thunk to cSCLua::SetTag(int),SetTagThunk_7262,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7270,non-virtual thunk to cSCLua::SetTag(int),SetTagThunk_7270,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e727e,cSCLua::Unref(int),Unref,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7288,non-virtual thunk to cSCLua::Unref(int),UnrefThunk_7288,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7296,non-virtual thunk to cSCLua::Unref(int),UnrefThunk_7296,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e72a4,cSCLua::Next(int),Next,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e72ae,non-virtual thunk to cSCLua::Next(int),NextThunk_72ae,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e72bc,non-virtual thunk to cSCLua::Next(int),NextThunk_72bc,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e72ca,cSCLua::GetN(int),GetN,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7386,non-virtual thunk to cSCLua::GetN(int),GetNThunk,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7394,cSCLua::Error(char const*),Error,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e739e,non-virtual thunk to cSCLua::Error(char const*),ErrorThunk_739e,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e73ac,non-virtual thunk to cSCLua::Error(char const*),ErrorThunk_73ac,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e73ba,cSCLua::Concat(int),Concat,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e73c4,non-virtual thunk to cSCLua::Concat(int),ConcatThunk_73c4,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e73d2,non-virtual thunk to cSCLua::Concat(int),ConcatThunk_73d2,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e73e0,cSCLua::NewUserData(int),NewUserData,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e73ea,non-virtual thunk to cSCLua::NewUserData(int),NewUserDataThunk,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e73f8,"cSCLua::Register(int (*)(lua_State*), char const*)",Register,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7402,"non-virtual thunk to cSCLua::Register(int (*)(lua_State*), char const*)",RegisterThunk_7402,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7410,"non-virtual thunk to cSCLua::Register(int (*)(lua_State*), char const*)",RegisterThunk_7410,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e741e,"cSCLua::PushUserData(void*, int)",PushUserData,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7428,"non-virtual thunk to cSCLua::PushUserData(void*, int)",PushUserDataThunk,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7436,cSCLua::CloneTag(int),CloneTag,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7440,non-virtual thunk to cSCLua::CloneTag(int),CloneTagThunk_7440,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e744e,non-virtual thunk to cSCLua::CloneTag(int),CloneTagThunk_744e,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e745c,cSCLua::IsFunction(int),IsFunction,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7466,non-virtual thunk to cSCLua::IsFunction(int),IsFunctionThunk_7466,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7474,non-virtual thunk to cSCLua::IsFunction(int),IsFunctionThunk_7474,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7482,cSCLua::IsTable(int),IsTable,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e748c,non-virtual thunk to cSCLua::IsTable(int),IsTableThunk_748c,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e749a,non-virtual thunk to cSCLua::IsTable(int),IsTableThunk_749a,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e74a8,cSCLua::IsUserData(int),IsUserData,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e74b2,non-virtual thunk to cSCLua::IsUserData(int),IsUserDataThunk_74b2,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e74c0,non-virtual thunk to cSCLua::IsUserData(int),IsUserDataThunk_74c0,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e74ce,cSCLua::IsNil(int),IsNil,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e74d8,non-virtual thunk to cSCLua::IsNil(int),IsNilThunk_74d8,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e74e6,non-virtual thunk to cSCLua::IsNil(int),IsNilThunk_74e6,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e74f4,"cSCLua::QueryInterface(unsigned int, void**)",QueryInterface,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7520,"non-virtual thunk to cSCLua::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_7520,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7550,"non-virtual thunk to cSCLua::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_7550,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7580,"non-virtual thunk to cSCLua::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_7580,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e75b0,"non-virtual thunk to cSCLua::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_75b0,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e75e2,cSCLua::AddRef(),AddRef,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e75ec,non-virtual thunk to cSCLua::AddRef(),AddRefThunk_75ec,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e75fa,non-virtual thunk to cSCLua::AddRef(),AddRefThunk_75fa,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7608,non-virtual thunk to cSCLua::AddRef(),AddRefThunk_7608,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7616,non-virtual thunk to cSCLua::AddRef(),AddRefThunk_7616,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7628,cSCLua::Release(),Release,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7632,non-virtual thunk to cSCLua::Release(),ReleaseThunk_7632,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7640,non-virtual thunk to cSCLua::Release(),ReleaseThunk_7640,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e764e,non-virtual thunk to cSCLua::Release(),ReleaseThunk_764e,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e765c,non-virtual thunk to cSCLua::Release(),ReleaseThunk_765c,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e766e,"cSCLua::OnGameDataRegistryNotification(cISC4GameDataRegistry*, cISC4GameDataRegistry::eNotficationType, unsigned long)",OnGameDataRegistryNotification,src/lua/SCLua.cpp|h,recovered-partial,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e7a92,cSCLua::GDRCallExtention(lua_State*),GDRCallExtention,src/lua/SCLua.cpp|h,recovered-partial,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e8074,cSCLua::GDRExchangeExtention(lua_State*),GDRExchangeExtention,src/lua/SCLua.cpp|h,recovered-partial,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e852c,"cSCLua::GDRUnregisterNodeVisitor(unsigned long, void*)",GDRUnregisterNodeVisitor,src/lua/SCLua.cpp|h,recovered-partial,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e8592,"non-virtual thunk to cSCLua::OnGameDataRegistryNotification(cISC4GameDataRegistry*, cISC4GameDataRegistry::eNotficationType, unsigned long)",OnGameDataRegistryNotificationThunk,src/lua/SCLua.cpp|h,recovered-partial,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e85a4,"cSCLua::ToDataRegistryEntryID(cISC4GameDataRegistry*, int)",ToDataRegistryEntryID,src/lua/SCLua.cpp|h,recovered-partial,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e864a,"non-virtual thunk to cSCLua::ToDataRegistryEntryID(cISC4GameDataRegistry*, int)",ToDataRegistryEntryIDThunk,src/lua/SCLua.cpp|h,recovered-partial,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e8658,"cSCLua::ToDataRegistryNode(cISC4GameDataRegistry*, int)",ToDataRegistryNode,src/lua/SCLua.cpp|h,recovered-partial,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e86ae,"non-virtual thunk to cSCLua::ToDataRegistryNode(cISC4GameDataRegistry*, int)",ToDataRegistryNodeThunk,src/lua/SCLua.cpp|h,recovered-partial,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e86bc,"cSCLua::ToDataRegistryValue(cISC4GameDataRegistry*, int)",ToDataRegistryValue,src/lua/SCLua.cpp|h,recovered-partial,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e8702,"non-virtual thunk to cSCLua::ToDataRegistryValue(cISC4GameDataRegistry*, int)",ToDataRegistryValueThunk,src/lua/SCLua.cpp|h,recovered-partial,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e871a,cSCLua::AsIGZLua5(),AsIGZLua5,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
+0x1005e872e,non-virtual thunk to cSCLua::AsIGZLua5(),AsIGZLua5Thunk,src/lua/SCLua.cpp|h,recovered,SCLua adapter; GDR bridge not recovered; test lua_luasystem
