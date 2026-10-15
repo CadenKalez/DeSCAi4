@@ -16,3 +16,22 @@ port replaces that layer entirely, so only behaviour the game can observe is rec
 - CDirectDraw7, CDirectDrawSurface7, CDirect3D7, CDirect3DDevice7, CDirect3DVertexBuffer7,
   cSGLDX7Direct3DDevice7Stub, cSGLDX7D3DX, DX7 COM calls inside the managers.
 - nRZSimGL::ConvertTextureDXT*, nsTexelOp::Convert_DXT*: Metal samples BC1/BC2/BC3 natively on Apple silicon.
+
+## Status (end of the first graphics pass)
+Done, each verified bit-for-bit (or call-for-call) against the Ghidra output by an oracle script:
+- nsTexelOp (scripts/run_texel_oracle.sh), nSGLDX7 index/vertex/format helpers (run_gdindex_oracle.sh),
+  nRZSimGL vertex formats / colour key / tint (run_simgl_oracle.sh), nSGLDX7::cTextureStageData (run_texstage_oracle.sh).
+- scripts/gen_block_oracle.py turns any set of Ghidra function bodies into a C oracle (`--table`, `--sub` for
+  data blobs and lost call arguments); reuse it for further classes.
+
+Deliberately not ported (replaced by the Metal backend, listed as `pending`/`recovered-partial` in the ledger):
+- cGDriver (D3D7 device state, viewports, video modes, buffer regions): the Metal driver should implement the
+  cIGZGDriver contract directly. Re-read the matching cGDriver function when a call's exact behaviour matters
+  (defaults are visible in its constructor and Init).
+- cTextureManager / cPrimitiveManager / cVertexBuffer: DX7 surface and vertex-buffer plumbing. The Metal path
+  needs its own texture table and vertex ring; the index/vertex conversion they call is already recovered.
+- CDirectDraw7, CDirectDrawSurface7, CDirect3D7, CDirect3DDevice7, CDirect3DVertexBuffer7, cSGLDX7*.
+- DXT decoders (Metal samples BC1/BC2/BC3 natively).
+Quirks preserved on purpose because they change output: nsTexelOp ARGB8->RGB8 is a 4-byte copy, ARGB4->ARGB8
+packs A,R,G,B bytes, the 16-bit tinters advance rows by stride-2*width, DXT2345 tint reads its index word from
+offset 4 and never swaps endpoints, min-filter mode 5 falls through into mode 6.
