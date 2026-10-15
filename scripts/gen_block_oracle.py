@@ -7,13 +7,16 @@ argv = sys.argv[1:]
 tables = []
 while "--table" in argv:  # --table SYMBOL:0xADDR:BYTES  (raw data referenced as DAT_*, read from the Mach-O)
     i = argv.index("--table"); tables.append(argv[i+1]); del argv[i:i+2]
+subs = []
+while "--sub" in argv:  # --sub 'REGEX=>REPLACEMENT' applied to every body (fix lost call arguments, rename callees)
+    i = argv.index("--sub"); subs.append(argv[i+1].split("=>", 1)); del argv[i:i+2]
 src, out, addrs = argv[0], argv[1], [int(a, 16) for a in argv[2:]]
 text = pathlib.Path(src).read_text()
 blocks = re.split(r"(?m)^(?=//==== )", text)
 res = ["#include <stdint.h>", "#include <string.h>", "#include <stdbool.h>",
-       "typedef unsigned char undefined, undefined1, byte, uchar, sVF_V3F, sVF_V3F_C4UB, sVF_V3F_T2F, sVF_V3F_2T2F, sVF_V3F_C4UB_T2F, sVF_V3F_C4UB_2T2F;",
+       "typedef unsigned char undefined, undefined1, byte, uchar, sVF_V3F, sVF_V3F_C4UB, sVF_V3F_T2F, sVF_V3F_2T2F, sVF_V3F_C4UB_T2F, sVF_V3F_C4UB_2T2F, eGDElementType;",
        "typedef unsigned short undefined2, ushort;", "typedef unsigned int undefined4, uint;",
-       "typedef unsigned long undefined8, ulong;", "typedef long longlong;"]
+       "typedef unsigned long undefined8, ulong;", "typedef long longlong;", "static long guard_val__; static long *PTR____stack_chk_guard_100a657c8 = &guard_val__;", "static void ___stack_chk_fail(void) { __builtin_trap(); }", "#define _memcpy memcpy"]
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 for t in tables:
     import macho_read
@@ -26,7 +29,10 @@ for b in blocks:
         continue
     a = m.group(1)
     body = "\n".join(l for l in b.splitlines() if not l.startswith("//"))
-    body = re.sub(r"\bnSGLDX7::\w+", f"oracle_{a}", body, count=1)
+    body = re.sub(r"\b[A-Za-z_]\w*::\w+", f"oracle_{a}", body, count=1)
+    for rx, rep in subs:
+        body = re.sub(rx, rep, body)
+    body = re.sub(r"&(kVF\w+)", r"\1", body)
     body = re.sub(r"&(DAT_\w+)", r"\1", body)  # data blobs are byte arrays; keep byte-offset arithmetic
     res.append(body)
 pathlib.Path(out).write_text("\n".join(res) + "\n")
