@@ -12089,3 +12089,216 @@ address,symbol,unique_name,source,status,evidence
 0x100294dca,non-virtual thunk to cGZWinFlatRect::GetSizeMode(),GetSizeModeThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
 0x100294dd4,cGZWinFlatRect::AutoSize(cRZRect const&),AutoSize,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
 0x100294e90,non-virtual thunk to cGZWinFlatRect::AutoSize(cRZRect const&),AutoSizeThunk,src/gz/WinFlatRect.h,recovered,scripts/tests/gz_winflatrect_test.cpp
+0x100461a62,cSC4DisasterLayer::AddRef(),AddRef,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100461a6c,non-virtual thunk to cSC4DisasterLayer::AddRef(),AddRefThunk_1a6c,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100461a7a,non-virtual thunk to cSC4DisasterLayer::AddRef(),AddRefThunk_1a7a,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100461a88,cSC4DisasterLayer::cSC4DisasterLayer(),Construct,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100461bac,cSC4DisasterLayer::~cSC4DisasterLayer(),Destruct,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100461cd4,cSC4DisasterLayer::~cSC4DisasterLayer(),DestructAndDelete,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100461cde,cSC4DisasterLayer::~cSC4DisasterLayer(),DestructBody,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100461d0c,cSC4DisasterLayer::DisasterHasBegun(cISC4DisasterInstance*),DisasterHasBegun,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100461e68,cSC4DisasterLayer::StartDamageAssessment(),StartDamageAssessment,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100461ef8,non-virtual thunk to cSC4DisasterLayer::DisasterHasBegun(cISC4DisasterInstance*),DisasterHasBegunThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100461f06,cSC4DisasterLayer::DisasterHasEnded(),DisasterHasEnded,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100461f82,cSC4DisasterLayer::EndDamageAssessment(),EndDamageAssessment,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10046200a,"cSC4DisasterLayer::PostMessageA(unsigned int, unsigned long, unsigned long, unsigned long)",PostMessageA,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004620d8,non-virtual thunk to cSC4DisasterLayer::DisasterHasEnded(),DisasterHasEndedThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004620e6,cSC4DisasterLayer::DisastersEnabled() const,DisastersEnabled,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004620f4,non-virtual thunk to cSC4DisasterLayer::DisastersEnabled() const,DisastersEnabledThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462102,cSC4DisasterLayer::DoMessage(cIGZMessage2*),DoMessage,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10046215a,cSC4DisasterLayer::DoOnOccupantRemoval(cIGZMessage2Standard*),DoOnOccupantRemoval,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462412,cSC4DisasterLayer::DoDispatchMessage(cIGZMessage2Standard*),DoDispatchMessage,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462558,non-virtual thunk to cSC4DisasterLayer::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10046256a,cSC4DisasterLayer::ClearDispatchTimers(),ClearDispatchTimers,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10046269a,cSC4DisasterLayer::StartDispatchTimers(),StartDispatchTimers,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004626d0,cSC4DisasterLayer::EndDispatchTimers(),EndDispatchTimers,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10046295a,cSC4DisasterLayer::EnableDisasters(bool),EnableDisasters,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462980,non-virtual thunk to cSC4DisasterLayer::EnableDisasters(bool),EnableDisastersThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004629ac,cSC4DisasterLayer::GetDisasterManager(unsigned int) const,GetDisasterManager,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004629f2,non-virtual thunk to cSC4DisasterLayer::GetDisasterManager(unsigned int) const,GetDisasterManagerThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462a38,cSC4DisasterLayer::Init(),Init,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462bbc,cSC4DisasterLayer::ResetDisasterCost(),ResetDisasterCost,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462c4e,non-virtual thunk to cSC4DisasterLayer::Init(),InitThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462c60,cSC4DisasterLayer::IsADisasterOngoing() const,IsADisasterOngoing,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462c6e,non-virtual thunk to cSC4DisasterLayer::IsADisasterOngoing() const,IsADisasterOngoingThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462c7c,"cSC4DisasterLayer::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462cb8,"non-virtual thunk to cSC4DisasterLayer::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_2cb8,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462cc6,"non-virtual thunk to cSC4DisasterLayer::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_2cc6,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462cd4,cSC4DisasterLayer::Release(),Release,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462cde,non-virtual thunk to cSC4DisasterLayer::Release(),ReleaseThunk_2cde,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462cec,non-virtual thunk to cSC4DisasterLayer::Release(),ReleaseThunk_2cec,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462cfa,cSC4DisasterLayer::Shutdown(),Shutdown,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462dc8,non-virtual thunk to cSC4DisasterLayer::Shutdown(),ShutdownThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462dda,"cSC4DisasterLayer::GetNextDisasterLocation(int*, int*, int*)",GetNextDisasterLocation,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462e90,cSC4DisasterLayer::ResolveDisasterLocation(cSC4DisasterLayer::tDisasterLocation*),ResolveDisasterLocation,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462f66,"cSC4DisasterLayer::GetMostRecentDisasterLocation(cISC4DisasterInstance*, int*, int*)",GetMostRecentDisasterLocation,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100462ff8,"non-virtual thunk to cSC4DisasterLayer::GetMostRecentDisasterLocation(cISC4DisasterInstance*, int*, int*)",GetMostRecentDisasterLocationThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463006,cSC4DisasterLayer::GoToNextDisaster(),GoToNextDisaster,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10046312e,non-virtual thunk to cSC4DisasterLayer::GoToNextDisaster(),GoToNextDisasterThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10046313c,"cSC4DisasterLayer::RegisterDisasterLocation(cISC4DisasterInstance*, int, int, cISC4Occupant*, int, bool)",RegisterDisasterLocation,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463208,"non-virtual thunk to cSC4DisasterLayer::RegisterDisasterLocation(cISC4DisasterInstance*, int, int, cISC4Occupant*, int, bool)",RegisterDisasterLocationThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463228,cSC4DisasterLayer::UnregisterDisasterLocations(cISC4DisasterInstance*),UnregisterDisasterLocations,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004632fa,non-virtual thunk to cSC4DisasterLayer::UnregisterDisasterLocations(cISC4DisasterInstance*),UnregisterDisasterLocationsThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463308,cSC4DisasterLayer::GetDisasterLocationCount() const,GetDisasterLocationCount,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463320,non-virtual thunk to cSC4DisasterLayer::GetDisasterLocationCount() const,GetDisasterLocationCountThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463338,"cSC4DisasterLayer::GetDisasterLocationByIndex(int, cISC4DisasterInstance**, int*, int*) const",GetDisasterLocationByIndex,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004633aa,"non-virtual thunk to cSC4DisasterLayer::GetDisasterLocationByIndex(int, cISC4DisasterInstance**, int*, int*) const",GetDisasterLocationByIndexThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004633b8,"cSC4DisasterLayer::UnregisterDisasterLocationByOccupant(cISC4DisasterInstance*, cISC4Occupant*)",UnregisterDisasterLocationByOccupant,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463490,"non-virtual thunk to cSC4DisasterLayer::UnregisterDisasterLocationByOccupant(cISC4DisasterInstance*, cISC4Occupant*)",UnregisterDisasterLocationByOccupantThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004639f2,cSC4DisasterLayer::GetDisasterCost(),GetDisasterCost,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004639fc,non-virtual thunk to cSC4DisasterLayer::GetDisasterCost(),GetDisasterCostThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10046349e,cSC4DisasterManager::AddInstanceToList(cISC4DisasterInstance*),AddInstanceToList,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463544,non-virtual thunk to cSC4DisasterManager::AddInstanceToList(cISC4DisasterInstance*),AddInstanceToListThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463552,cSC4DisasterManager::AddRef(),AddRef,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10046355c,non-virtual thunk to cSC4DisasterManager::AddRef(),AddRefThunk_355c,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10046356a,non-virtual thunk to cSC4DisasterManager::AddRef(),AddRefThunk_356a,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463578,cSC4DisasterManager::cSC4DisasterManager(),Construct,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004635f0,cSC4DisasterManager::~cSC4DisasterManager(),Destruct,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463690,cSC4DisasterManager::~cSC4DisasterManager(),DestructAndDelete,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463696,cSC4DisasterManager::~cSC4DisasterManager(),DestructBody,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10046369c,cSC4DisasterManager::DoMessage(cIGZMessage2*),DoMessage,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10046370a,non-virtual thunk to cSC4DisasterManager::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463718,cSC4DisasterManager::GetActiveInstanceCount() const,GetActiveInstanceCount,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463768,non-virtual thunk to cSC4DisasterManager::GetActiveInstanceCount() const,GetActiveInstanceCountThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004637b8,cSC4DisasterManager::GetInstances() const,GetInstances,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004637c2,non-virtual thunk to cSC4DisasterManager::GetInstances() const,GetInstancesThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004637cc,cSC4DisasterManager::Init(),Init,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004637d8,non-virtual thunk to cSC4DisasterManager::Init(),InitThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004637e4,cSC4DisasterManager::ProcessTempAddRemoveLists(),ProcessTempAddRemoveLists,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10046384c,"cSC4DisasterManager::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463888,"non-virtual thunk to cSC4DisasterManager::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_3888,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463896,"non-virtual thunk to cSC4DisasterManager::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_3896,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004638a4,cSC4DisasterManager::Release(),Release,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004638ae,non-virtual thunk to cSC4DisasterManager::Release(),ReleaseThunk_38ae,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004638bc,non-virtual thunk to cSC4DisasterManager::Release(),ReleaseThunk_38bc,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004638ca,cSC4DisasterManager::RemoveInstanceFromList(cISC4DisasterInstance*),RemoveInstanceFromList,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463968,non-virtual thunk to cSC4DisasterManager::RemoveInstanceFromList(cISC4DisasterInstance*),RemoveInstanceFromListThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x100463976,cSC4DisasterManager::Shutdown(),Shutdown,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1004639e0,non-virtual thunk to cSC4DisasterManager::Shutdown(),ShutdownThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c174,cSC4DisasterManagerEffect::~cSC4DisasterManagerEffect(),Destruct,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c1b4,cSC4DisasterManagerEffect::~cSC4DisasterManagerEffect(),DestructAndDelete,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c218,cSC4DisasterManagerEffect::AddRef(),AddRef,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c222,non-virtual thunk to cSC4DisasterManagerEffect::AddRef(),AddRefThunk_c222,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c230,non-virtual thunk to cSC4DisasterManagerEffect::AddRef(),AddRefThunk_c230,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c23e,non-virtual thunk to cSC4DisasterManagerEffect::AddRef(),AddRefThunk_c23e,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c24c,cSC4DisasterManagerEffect::Release(),Release,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c256,non-virtual thunk to cSC4DisasterManagerEffect::Release(),ReleaseThunk_c256,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c264,non-virtual thunk to cSC4DisasterManagerEffect::Release(),ReleaseThunk_c264,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c272,non-virtual thunk to cSC4DisasterManagerEffect::Release(),ReleaseThunk_c272,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c280,"cSC4DisasterManagerEffect::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c2a8,"non-virtual thunk to cSC4DisasterManagerEffect::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_c2a8,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c2d4,"non-virtual thunk to cSC4DisasterManagerEffect::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_c2d4,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c300,"non-virtual thunk to cSC4DisasterManagerEffect::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_c300,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c32c,cSC4DisasterManagerEffect::AsISC4DisasterManager(),AsISC4DisasterManager,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c336,cSC4DisasterManagerEffect::AttemptDisasterStart(),AttemptDisasterStart_void,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c33e,non-virtual thunk to cSC4DisasterManagerEffect::AttemptDisasterStart(),AttemptDisasterStart_voidThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c346,"cSC4DisasterManagerEffect::AttemptDisasterStart(int, int)",AttemptDisasterStart_int_int,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c34e,"non-virtual thunk to cSC4DisasterManagerEffect::AttemptDisasterStart(int, int)",AttemptDisasterStart_int_intThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c356,"cSC4DisasterManagerEffect::StartDisasterEffect(cISC4VisualEffect*, cS3DVector3&, unsigned int)",StartDisasterEffect,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c4cc,"non-virtual thunk to cSC4DisasterManagerEffect::StartDisasterEffect(cISC4VisualEffect*, cS3DVector3&, unsigned int)",StartDisasterEffectThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c4d8,cSC4DisasterManagerEffect::AttractDisasterEffect(float*),AttractDisasterEffect,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c518,non-virtual thunk to cSC4DisasterManagerEffect::AttractDisasterEffect(float*),AttractDisasterEffectThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c560,cSC4DisasterManagerEffect::CancelAttract(),CancelAttract,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c59a,non-virtual thunk to cSC4DisasterManagerEffect::CancelAttract(),CancelAttractThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c5dc,cSC4DisasterManagerEffect::GetGZCLSID() const,GetGZCLSID,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c5e8,cSC4DisasterManagerEffect::GetID() const,GetID,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c5f4,non-virtual thunk to cSC4DisasterManagerEffect::GetID() const,GetIDThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c600,cSC4DisasterManagerEffect::Init(),Init,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c60a,non-virtual thunk to cSC4DisasterManagerEffect::Init(),InitThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c618,cSC4DisasterManagerEffect::Shutdown(),Shutdown,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c622,non-virtual thunk to cSC4DisasterManagerEffect::Shutdown(),ShutdownThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c630,cSC4DisasterManagerEffect::OnStandardMessage(cIGZMessage2Standard*),OnStandardMessage,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c3c6,cSC4DisasterInstanceEffect::Init(),Init,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c638,cSC4DisasterInstanceEffect::AddRef(),AddRef,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c642,non-virtual thunk to cSC4DisasterInstanceEffect::AddRef(),AddRefThunk_c642,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c650,non-virtual thunk to cSC4DisasterInstanceEffect::AddRef(),AddRefThunk_c650,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c65e,cSC4DisasterInstanceEffect::AsISC4DisasterInstance(),AsISC4DisasterInstance,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c668,"cSC4DisasterInstanceEffect::cSC4DisasterInstanceEffect(cISC4VisualEffect*, unsigned int)",Construct_cISC4VisualEffect_uint,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c70c,cSC4DisasterInstanceEffect::~cSC4DisasterInstanceEffect(),Destruct,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c780,cSC4DisasterInstanceEffect::~cSC4DisasterInstanceEffect(),DestructAndDelete,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c78a,cSC4DisasterInstanceEffect::~cSC4DisasterInstanceEffect(),DestructBody,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c7b8,cSC4DisasterInstanceEffect::DoMessage(cIGZMessage2*),DoMessage,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c828,non-virtual thunk to cSC4DisasterInstanceEffect::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c83a,"cSC4DisasterInstanceEffect::GetLocation(int&, int&) const",GetLocation,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c84c,"non-virtual thunk to cSC4DisasterInstanceEffect::GetLocation(int&, int&) const",GetLocationThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c85e,cSC4DisasterInstanceEffect::GetManager() const,GetManager,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c874,non-virtual thunk to cSC4DisasterInstanceEffect::GetManager() const,GetManagerThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c88a,cSC4DisasterInstanceEffect::GetPhase() const,GetPhase,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c896,non-virtual thunk to cSC4DisasterInstanceEffect::GetPhase() const,GetPhaseThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c8a2,"cSC4DisasterInstanceEffect::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c8ca,"non-virtual thunk to cSC4DisasterInstanceEffect::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_c8ca,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c8f6,"non-virtual thunk to cSC4DisasterInstanceEffect::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_c8f6,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c922,cSC4DisasterInstanceEffect::Release(),Release,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c92c,non-virtual thunk to cSC4DisasterInstanceEffect::Release(),ReleaseThunk_c92c,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c93a,non-virtual thunk to cSC4DisasterInstanceEffect::Release(),ReleaseThunk_c93a,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044c948,cSC4DisasterInstanceEffect::Shutdown(),Shutdown,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044ca26,non-virtual thunk to cSC4DisasterInstanceEffect::Shutdown(),ShutdownThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044ca38,cSC4DisasterInstanceEffect::SetLocation(float*),SetLocation,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044ca8e,cSC4DisasterInstanceEffect::Stop(),Stop,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044ca9a,non-virtual thunk to cSC4DisasterInstanceEffect::Stop(),StopThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044caaa,cSC4DisasterInstanceEffect::CancelAttract(),CancelAttract,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044cad6,cSC4DisasterInstanceEffect::GetID() const,GetID,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x10044cae0,non-virtual thunk to cSC4DisasterInstanceEffect::GetID() const,GetIDThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc2f4,cSC4DisasterManagerToxic::~cSC4DisasterManagerToxic(),Destruct,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc334,cSC4DisasterManagerToxic::~cSC4DisasterManagerToxic(),DestructAndDelete,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc398,cSC4DisasterManagerToxic::AddRef(),AddRef,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc3a2,non-virtual thunk to cSC4DisasterManagerToxic::AddRef(),AddRefThunk_c3a2,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc3b0,non-virtual thunk to cSC4DisasterManagerToxic::AddRef(),AddRefThunk_c3b0,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc3be,non-virtual thunk to cSC4DisasterManagerToxic::AddRef(),AddRefThunk_c3be,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc3cc,cSC4DisasterManagerToxic::Release(),Release,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc3d6,non-virtual thunk to cSC4DisasterManagerToxic::Release(),ReleaseThunk_c3d6,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc3e4,non-virtual thunk to cSC4DisasterManagerToxic::Release(),ReleaseThunk_c3e4,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc3f2,non-virtual thunk to cSC4DisasterManagerToxic::Release(),ReleaseThunk_c3f2,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc400,"cSC4DisasterManagerToxic::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc428,"non-virtual thunk to cSC4DisasterManagerToxic::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_c428,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc454,"non-virtual thunk to cSC4DisasterManagerToxic::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_c454,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc480,"non-virtual thunk to cSC4DisasterManagerToxic::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_c480,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc4ac,cSC4DisasterManagerToxic::AsISC4DisasterManager(),AsISC4DisasterManager,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc4b6,non-virtual thunk to cSC4DisasterManagerToxic::AsISC4DisasterManager(),AsISC4DisasterManagerThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc4c0,cSC4DisasterManagerToxic::GetToxicCountInCellRect(SC4Rect<int>&),GetToxicCountInCellRect,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc532,cSC4DisasterManagerToxic::GetInstance(),GetInstance,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc63c,non-virtual thunk to cSC4DisasterManagerToxic::GetToxicCountInCellRect(SC4Rect<int>&),GetToxicCountInCellRectThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc64a,cSC4DisasterManagerToxic::GetToxicCount(),GetToxicCount,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc69c,non-virtual thunk to cSC4DisasterManagerToxic::GetToxicCount(),GetToxicCountThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc6aa,cSC4DisasterManagerToxic::AttemptDisasterStart(),AttemptDisasterStart_void,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc6b2,non-virtual thunk to cSC4DisasterManagerToxic::AttemptDisasterStart(),AttemptDisasterStart_voidThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc6ba,"cSC4DisasterManagerToxic::AttemptDisasterStart(int, int)",AttemptDisasterStart_int_int,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc854,"non-virtual thunk to cSC4DisasterManagerToxic::AttemptDisasterStart(int, int)",AttemptDisasterStart_int_intThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc866,cSC4DisasterManagerToxic::GetGZCLSID() const,GetGZCLSID,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc872,cSC4DisasterManagerToxic::GetID() const,GetID,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc87e,non-virtual thunk to cSC4DisasterManagerToxic::GetID() const,GetIDThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc88a,cSC4DisasterManagerToxic::Init(),Init,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc8dc,non-virtual thunk to cSC4DisasterManagerToxic::Init(),InitThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc8ea,cSC4DisasterManagerToxic::Shutdown(),Shutdown,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc930,non-virtual thunk to cSC4DisasterManagerToxic::Shutdown(),ShutdownThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc978,cSC4DisasterManagerToxic::OnStandardMessage(cIGZMessage2Standard*),OnStandardMessage,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc5ae,cSC4DisasterInstanceToxic::GetToxicCountInCellRect(SC4Rect<int>&),GetToxicCountInCellRect,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fc730,"cSC4DisasterInstanceToxic::SpillToxicWaste(int, int, int)",SpillToxicWaste,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fca74,cSC4DisasterInstanceToxic::Init(),Init,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fcb1c,cSC4DisasterInstanceToxic::AddRef(),AddRef,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fcb26,non-virtual thunk to cSC4DisasterInstanceToxic::AddRef(),AddRefThunk_cb26,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fcb34,non-virtual thunk to cSC4DisasterInstanceToxic::AddRef(),AddRefThunk_cb34,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fcb42,cSC4DisasterInstanceToxic::AsISC4DisasterInstance(),AsISC4DisasterInstance,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fcb4c,cSC4DisasterInstanceToxic::cSC4DisasterInstanceToxic(),Construct,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fcbde,cSC4DisasterInstanceToxic::~cSC4DisasterInstanceToxic(),Destruct,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fcc72,cSC4DisasterInstanceToxic::~cSC4DisasterInstanceToxic(),DestructAndDelete,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fcc7c,cSC4DisasterInstanceToxic::~cSC4DisasterInstanceToxic(),DestructBody,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fccaa,cSC4DisasterInstanceToxic::DoMessage(cIGZMessage2*),DoMessage,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fccd4,cSC4DisasterInstanceToxic::Update(),Update,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fce04,non-virtual thunk to cSC4DisasterInstanceToxic::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fce32,"cSC4DisasterInstanceToxic::GetLocation(int&, int&) const",GetLocation,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fce3a,"non-virtual thunk to cSC4DisasterInstanceToxic::GetLocation(int&, int&) const",GetLocationThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fce42,cSC4DisasterInstanceToxic::GetManager() const,GetManager,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fce58,non-virtual thunk to cSC4DisasterInstanceToxic::GetManager() const,GetManagerThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fce6e,cSC4DisasterInstanceToxic::GetPhase() const,GetPhase,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fce7a,non-virtual thunk to cSC4DisasterInstanceToxic::GetPhase() const,GetPhaseThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fce86,"cSC4DisasterInstanceToxic::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fcebe,"non-virtual thunk to cSC4DisasterInstanceToxic::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_cebe,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fcecc,"non-virtual thunk to cSC4DisasterInstanceToxic::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_cecc,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fceda,cSC4DisasterInstanceToxic::Release(),Release,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fcee4,non-virtual thunk to cSC4DisasterInstanceToxic::Release(),ReleaseThunk_cee4,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fcef2,non-virtual thunk to cSC4DisasterInstanceToxic::Release(),ReleaseThunk_cef2,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fcf00,cSC4DisasterInstanceToxic::Shutdown(),Shutdown,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fcf94,non-virtual thunk to cSC4DisasterInstanceToxic::Shutdown(),ShutdownThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fcfa6,cSC4DisasterInstanceToxic::GetID() const,GetID,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp
+0x1006fcfb2,non-virtual thunk to cSC4DisasterInstanceToxic::GetID() const,GetIDThunk,src/sc4/Disaster.cpp|h,recovered,scripts/tests/sc4_disaster_test.cpp

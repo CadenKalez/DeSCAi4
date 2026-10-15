@@ -55,6 +55,10 @@ public:
     void SetCell(int cellX, int cellZ);
     cSC4Occupant* AsOccupant() { return this; }
     std::uint32_t GetHosed() const { return hosed_; }
+    std::uint32_t GetAmount() const { return value68_; }           // +0x68 (set by the toxic disaster)
+    void SetAmount(std::uint32_t amount) { value68_ = amount; }
+    int GetCellX() const { return cellX_; }
+    int GetCellZ() const { return cellZ_; }
     bool IsActive() const { return active_; }
 
 private:
