@@ -12413,3 +12413,37 @@ address,symbol,unique_name,source,status,evidence
 0x100330d4a,"cGZWinBMP::GZOnMouseMove(int, int, unsigned int)",GZOnMouseMove,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
 0x100330d9c,"cGZWinBMP::GZOnMouseDownL(int, int, unsigned int)",GZOnMouseDownL,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
 0x100330dee,"cGZWinBMP::GZOnMouseUpL(int, int, unsigned int)",GZOnMouseUpL,src/gz/WinBMP.cpp|h,recovered,scripts/tests/gz_winbmp_test.cpp
+0x10075897c,cGZWinKnob::cGZWinKnob(),Construct,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758a0a,cGZWinKnob::~cGZWinKnob(),Destruct,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758ac0,cGZWinKnob::~cGZWinKnob(),DestructAndDelete,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758aca,non-virtual thunk to cGZWinKnob::~cGZWinKnob(),DestructThunk,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758ad8,cGZWinKnob::~cGZWinKnob(),DestructBody,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758b06,non-virtual thunk to cGZWinKnob::~cGZWinKnob(),DestructAndDeleteThunk,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758b14,cGZWinKnob::AddRef(),AddRef,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758b22,non-virtual thunk to cGZWinKnob::AddRef(),AddRefThunk,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758b2c,cGZWinKnob::Release(),Release,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758b3a,non-virtual thunk to cGZWinKnob::Release(),ReleaseThunk,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758b44,"cGZWinKnob::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758b66,"non-virtual thunk to cGZWinKnob::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758b8c,cGZWinKnob::AsIGZWin(),AsIGZWin,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758b96,cGZWinKnob::Init(),Init,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758c8e,non-virtual thunk to cGZWinKnob::Init(),InitThunk,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758ca0,cGZWinKnob::Shutdown(),Shutdown,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758d08,non-virtual thunk to cGZWinKnob::Shutdown(),ShutdownThunk,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758d16,cGZWinKnob::SetKnobImage(cIGZBuffer*),SetKnobImage,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758db8,cGZWinKnob::GetKnobImage() const,GetKnobImage,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758dc6,cGZWinKnob::SetFontStyle(unsigned int),SetFontStyle,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758e46,cGZWinKnob::GetFontStyle() const,GetFontStyle,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758e52,cGZWinKnob::SetFrameCount(unsigned int),SetFrameCount,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758e6c,cGZWinKnob::RecalcCurrentFrame(),RecalcCurrentFrame,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758f1e,cGZWinKnob::GetFrameCount() const,GetFrameCount,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758f2a,cGZWinKnob::SetMinValue(float),SetMinValue,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758f78,cGZWinKnob::GetMinValue() const,GetMinValue,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758f86,cGZWinKnob::SetMaxValue(float),SetMaxValue,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758fd4,cGZWinKnob::GetMaxValue() const,GetMaxValue,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100758fe2,cGZWinKnob::SetValue(float),SetValue,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x10075902a,cGZWinKnob::GetValue() const,GetValue,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100759038,"cGZWinKnob::SetKnobFlag(unsigned int, bool)",SetKnobFlag,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100759052,cGZWinKnob::GetKnobFlag(unsigned int),GetKnobFlag,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100759062,cGZWinKnob::GZPaint(),GZPaint,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x100759124,non-virtual thunk to cGZWinKnob::GZPaint(),GZPaintThunk,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
