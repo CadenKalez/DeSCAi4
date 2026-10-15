@@ -247,4 +247,115 @@ void MultiplyTransform(cS3DTransform& self, const cS3DTransform& other) {
     self.changeCounter = std::uint8_t(self.changeCounter + 1);
 }
 
+
+void SetTranslation(cS3DTransform& t, const cS3DVector3& p) {
+    t.translation[0] = p.x;
+    t.translation[1] = p.y;
+    t.translation[2] = p.z;
+    t.flags = std::uint8_t(t.flags | kTransformTranslation);
+    t.changeCounter = std::uint8_t(t.changeCounter + 1);
+}
+
+namespace {
+inline bool IsSet(float v) { return v != kOrientationUnset || v != v; }
+
+void ResetRotation(cS3DTransform& t) {
+    for (int r = 0; r < 3; ++r)
+        for (int c = 0; c < 3; ++c) t.rotation[r][c] = r == c ? 1.0f : 0.0f;
+}
+}  // namespace
+
+bool SetOrientationEuler(cS3DTransform& t, const cS3DVector3& a) {
+    const bool hasX = IsSet(a.x), hasY = IsSet(a.y), hasZ = IsSet(a.z);
+    if (!hasX && !hasY && !hasZ) return false;
+    float (*m)[3] = t.rotation;
+    if (hasX && hasY && hasZ) {
+        const float sx = std::sin(a.x), cx = std::cos(a.x);
+        const float sy = std::sin(a.y), cy = std::cos(a.y);
+        const float sz = std::sin(a.z), cz = std::cos(a.z);
+        m[0][0] = cy * cz;
+        m[0][1] = -(cy * sz);
+        m[0][2] = sy;
+        m[1][0] = cx * sz + sy * sx * cz;
+        m[1][1] = cx * cz - sy * sx * sz;
+        m[1][2] = -(sx * cy);
+        m[2][0] = sx * sz - cx * sy * cz;
+        m[2][1] = sx * cz + cx * sy * sz;
+        m[2][2] = cx * cy;
+        t.flags = std::uint8_t(t.flags | kTransformRotation);
+        t.changeCounter = std::uint8_t(t.changeCounter + 1);
+        return true;
+    }
+    if (t.flags & kTransformRotation) {
+        ResetRotation(t);
+        t.flags = std::uint8_t(t.flags & ~kTransformRotation);
+        t.changeCounter = std::uint8_t(t.changeCounter + 1);
+    }
+    if (hasX) {                           // columns 1 and 2 turn about the x axis
+        const float s = std::sin(a.x), c = std::cos(a.x);
+        for (int row = 0; row < 3; ++row) {
+            const float c1 = m[row][1], c2 = m[row][2];
+            m[row][1] = s * c2 + c * c1;
+            m[row][2] = c2 * c - c1 * s;
+        }
+    }
+    if (hasY) {                           // columns 0 and 2 about the y axis
+        const float s = std::sin(a.y), c = std::cos(a.y);
+        for (int row = 0; row < 3; ++row) {
+            const float c0 = m[row][0], c2 = m[row][2];
+            m[row][0] = c * c0 - s * c2;
+            m[row][2] = c2 * c + c0 * s;
+        }
+    }
+    if (hasZ) {                           // columns 0 and 1 about the z axis
+        const float s = std::sin(a.z), c = std::cos(a.z);
+        for (int row = 0; row < 3; ++row) {
+            const float c0 = m[row][0], c1 = m[row][1];
+            m[row][0] = s * c1 + c * c0;
+            m[row][1] = c1 * c - c0 * s;
+        }
+    }
+    t.flags = std::uint8_t(t.flags | kTransformRotation);
+    t.changeCounter = std::uint8_t(t.changeCounter + 1);
+    return true;
+}
+
+void SetOrientationForwardUp(cS3DTransform& t, const cS3DVector3& forward, const cS3DVector3& up) {
+    float fx = forward.x, fy = forward.y, fzRaw = forward.z;
+    float k = 1.0f / std::sqrt(fzRaw * fzRaw + fy * fy + fx * fx);
+    fx = fx * k;
+    fy = fy * k;
+    const float fz = k * fzRaw;
+    float sx = up.y * fz - up.z * fy;
+    float sy = up.z * fx - fz * up.x;
+    float szRaw = up.x * fy - up.y * fx;
+    const float k2 = 1.0f / std::sqrt(szRaw * szRaw + sy * sy + sx * sx);
+    sx = sx * k2;
+    sy = sy * k2;
+    const float sz = k2 * szRaw;
+    float (*m)[3] = t.rotation;
+    m[0][0] = sx; m[1][0] = sy; m[2][0] = sz;
+    m[0][1] = fy * sz - fz * sy;
+    m[1][1] = fz * sx - fx * sz;
+    m[2][1] = fx * sy - fy * sx;
+    m[0][2] = fx; m[1][2] = fy; m[2][2] = fz;
+    t.flags = std::uint8_t(t.flags | kTransformRotation);
+    t.changeCounter = std::uint8_t(t.changeCounter + 1);
+}
+
+void ModelVectorToWorldVector(const cS3DTransform& t, cS3DVector3& v) {
+    const float(*m)[3] = t.rotation;
+    const float x = v.x, y = v.y, z = v.z;
+    v.x = m[0][2] * z + m[0][1] * y + m[0][0] * x;
+    v.y = m[1][2] * z + m[1][1] * y + m[1][0] * x;
+    v.z = z * m[2][2] + y * m[2][1] + x * m[2][0];
+}
+
+void ModelPointToWorldPoint(const cS3DTransform& t, cS3DVector3& p) {
+    ModelVectorToWorldVector(t, p);
+    p.x = p.x * t.scale + t.translation[0];
+    p.y = p.y * t.scale + t.translation[1];
+    p.z = p.z * t.scale + t.translation[2];
+}
+
 }  // namespace nS3D

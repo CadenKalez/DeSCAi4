@@ -46,4 +46,17 @@ void AssignTransform(cS3DTransform& dst, const cS3DTransform& src);   // bumps d
 // this = this * other (other is applied first): translation, rotation and scale compose; a transform with no
 // flags simply takes `other`.
 void MultiplyTransform(cS3DTransform& self, const cS3DTransform& other);
+
+// ---- model-instance placement helpers (cS3DModelInstanceAnimated::SetPosition / SetOrientation /
+// ModelPointToWorldPoint / ModelVectorToWorldVector, 0x1001a2db8..0x1001a3eac) -------------------------------
+constexpr float kOrientationUnset = -100.0f;     // an Euler angle equal to this is left out
+void SetTranslation(cS3DTransform& t, const cS3DVector3& position);          // marks the translation flag
+// Euler angles (x, y, z in radians) applied in x, y, z order starting from the identity rotation; unset angles
+// are skipped. Returns false when no angle is set.
+bool SetOrientationEuler(cS3DTransform& t, const cS3DVector3& angles);
+// Orients the +Z axis along `forward` with `up` as the up hint (columns: side, up', forward).
+void SetOrientationForwardUp(cS3DTransform& t, const cS3DVector3& forward, const cS3DVector3& up);
+void ModelPointToWorldPoint(const cS3DTransform& t, cS3DVector3& p);
+void ModelVectorToWorldVector(const cS3DTransform& t, cS3DVector3& v);
+
 }  // namespace nS3D

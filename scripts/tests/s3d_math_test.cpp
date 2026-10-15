@@ -60,6 +60,53 @@ int main() {
         if (flags & 1 || flags == 6) { x += 5; y += -2; z += 1; }
         CHECK(Near(out.x, x) && Near(out.y, y) && Near(out.z, z));
     }
+    // ---- model-instance placement
+    {
+        auto mul = [](const float a[3][3], const float b[3][3], float out[3][3]) {
+            for (int r = 0; r < 3; ++r) for (int c = 0; c < 3; ++c) out[r][c] = a[r][0] * b[0][c] + a[r][1] * b[1][c] + a[r][2] * b[2][c];
+        };
+        const float ax = 0.4f, ay = -0.9f, az = 1.3f;
+        const float sx = std::sin(ax), cx = std::cos(ax), sy = std::sin(ay), cy = std::cos(ay), sz = std::sin(az), cz = std::cos(az);
+        const float Rx[3][3] = {{1, 0, 0}, {0, cx, -sx}, {0, sx, cx}}, Ry[3][3] = {{cy, 0, sy}, {0, 1, 0}, {-sy, 0, cy}}, Rz[3][3] = {{cz, -sz, 0}, {sz, cz, 0}, {0, 0, 1}};
+        float t1[3][3], full[3][3], xy[3][3], xz[3][3], yz[3][3];
+        mul(Rx, Ry, xy); mul(xy, Rz, full); mul(Rx, Rz, xz); mul(Ry, Rz, yz);
+        (void)t1;
+        auto same = [&](const cS3DTransform& t, const float e[3][3]) {
+            for (int r = 0; r < 3; ++r) for (int c = 0; c < 3; ++c) if (!Near(t.rotation[r][c], e[r][c], 1e-5f)) return false;
+            return true;
+        };
+        cS3DTransform t;
+        CHECK(nS3D::SetOrientationEuler(t, {ax, ay, az}) && t.flags == 4 && t.changeCounter == 1 && same(t, full));
+        CHECK(nS3D::SetOrientationEuler(t, {ax, nS3D::kOrientationUnset, nS3D::kOrientationUnset}) && same(t, Rx));
+        CHECK(t.flags == 4 && t.changeCounter == 3);           // reset + apply
+        CHECK(nS3D::SetOrientationEuler(t, {nS3D::kOrientationUnset, ay, nS3D::kOrientationUnset}) && same(t, Ry));
+        CHECK(nS3D::SetOrientationEuler(t, {nS3D::kOrientationUnset, nS3D::kOrientationUnset, az}) && same(t, Rz));
+        CHECK(nS3D::SetOrientationEuler(t, {ax, ay, nS3D::kOrientationUnset}) && same(t, xy));
+        CHECK(nS3D::SetOrientationEuler(t, {ax, nS3D::kOrientationUnset, az}) && same(t, xz));
+        CHECK(nS3D::SetOrientationEuler(t, {nS3D::kOrientationUnset, ay, az}) && same(t, yz));
+        cS3DTransform untouched;
+        CHECK(!nS3D::SetOrientationEuler(untouched, {-100.0f, -100.0f, -100.0f}) && untouched.flags == 0 && untouched.changeCounter == 0);
+        // forward / up
+        cS3DTransform f;
+        nS3D::SetOrientationForwardUp(f, {0, 0, 2}, {0, 1, 0});
+        CHECK(Near(f.rotation[0][2], 0) && Near(f.rotation[2][2], 1) && Near(f.rotation[1][1], 1) && f.flags == 4 && f.changeCounter == 1);
+        // side = up x forward
+        CHECK(Near(f.rotation[0][0], 1) || Near(f.rotation[0][0], -1));
+        // placement
+        cS3DTransform placed;
+        nS3D::SetTranslation(placed, {1, 2, 3});
+        CHECK(placed.flags == 1 && placed.changeCounter == 1 && placed.translation[2] == 3);
+        placed.scale = 2.0f;
+        cS3DVector3 p{1, 0, 0}, v{1, 0, 0};
+        nS3D::ModelPointToWorldPoint(placed, p);
+        nS3D::ModelVectorToWorldVector(placed, v);
+        CHECK(p.x == 3 && p.y == 2 && p.z == 3);      // scale applies to points only
+        CHECK(v.x == 1 && v.y == 0 && v.z == 0);
+        nS3D::SetOrientationEuler(placed, {nS3D::kOrientationUnset, 1.5707964f, nS3D::kOrientationUnset});   // yaw 90 degrees
+        cS3DVector3 q{1, 0, 0};
+        nS3D::ModelVectorToWorldVector(placed, q);
+        CHECK(Near(q.x, 0, 1e-5f) && Near(q.z, -1, 1e-5f));
+    }
     if (failures) return 1;
     std::printf("s3d_math: all passed\n");
 }
