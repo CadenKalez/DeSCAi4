@@ -11254,3 +11254,23 @@ address,symbol,unique_name,source,status,evidence
 0x1001ea180,cSC4ViewInputControl::Activate(),Activate,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
 0x10038fc70,cSC4ViewInputControl::Deactivate(),Deactivate,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
 0x1006c8560,cSC4ViewInputControl::IsSelfScrollingView(),IsSelfScrollingView,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1003daf30,cGZCommandParameterSet::cGZCommandParameterSet(),Construct,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003daf9c,cGZCommandParameterSet::cGZCommandParameterSet(),ConstructWrapper,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003dafa6,cGZCommandParameterSet::~cGZCommandParameterSet(),Destruct,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003daff2,cGZCommandParameterSet::~cGZCommandParameterSet(),DestructAndDelete,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003daffc,cGZCommandParameterSet::~cGZCommandParameterSet(),DestructBody,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003db02a,"cGZCommandParameterSet::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003db054,cGZCommandParameterSet::AddRef(),AddRef,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003db062,cGZCommandParameterSet::Release(),Release,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003db082,cGZCommandParameterSet::GetParameterCount() const,GetParameterCount,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003db08c,cGZCommandParameterSet::SetParameterCount(unsigned int),SetParameterCount,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003db146,cGZCommandParameterSet::operator[](unsigned int),operator[],src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003db18e,cGZCommandParameterSet::GetParameter(unsigned int),GetParameter,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003db1ce,"cGZCommandParameterSet::SetParameter(unsigned int, cIGZVariant const&)",SetParameter,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003db2e4,cGZCommandParameterSet::AppendParameter(cIGZVariant const&),AppendParameter,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003db330,cGZCommandParameterSet::RemoveParameter(unsigned int),RemoveParameter,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003db374,cGZCommandParameterSet::SetStatusParameterValue(int),SetStatusParameterValue,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003db3d6,"cGZCommandParameterSet::CompareParameterString(unsigned int, char const*, bool)",CompareParameterString,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003db53c,"cGZCommandParameterSet::ValidateParameter(unsigned int, unsigned int)",ValidateParameter,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003db562,cGZCommandParameterSet::GetFirstParameterID() const,GetFirstParameterID,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
+0x1003db57e,cGZCommandParameterSet::GetNextParameterID(unsigned int) const,GetNextParameterID,src/gz/CommandParameterSet.cpp|h,recovered,CommandParameterSet: sparse variant parameter bag; test gz_commandparameterset
