@@ -11217,3 +11217,40 @@ address,symbol,unique_name,source,status,evidence
 0x10016d3d4,"cGZWin::SetFadeEffectPeriod(int, int)",SetFadeEffectPeriod,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
 0x10016d3e6,"cGZWin::GetFadeEffectPeriod(int&, int&) const",GetFadeEffectPeriod,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
 0x1002748a0,cGZWin::GetAreaToDrawTo(),GetAreaToDrawTo,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
+0x1000a94a4,cSC4ViewInputControl::cSC4ViewInputControl(),Construct,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a94ce,cSC4ViewInputControl::~cSC4ViewInputControl(),Destruct,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a94de,cSC4ViewInputControl::~cSC4ViewInputControl(),DestructAndDelete,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a94ee,cSC4ViewInputControl::~cSC4ViewInputControl(),DestructBody,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a94f8,cSC4ViewInputControl::Init(),Init,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a95a4,cSC4ViewInputControl::Shutdown(),Shutdown,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a9606,cSC4ViewInputControl::GetID(),GetID,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a9610,cSC4ViewInputControl::SetID(unsigned int),SetID,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a961a,cSC4ViewInputControl::GetCursor(),GetCursor,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a9624,cSC4ViewInputControl::SetCursor(cIGZCursor*),SetCursor_cIGZCursor,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a968e,cSC4ViewInputControl::SetCursor(unsigned int),SetCursor_uint,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a96de,cSC4ViewInputControl::SetWindow(cIGZWin*),SetWindow,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a96e8,cSC4ViewInputControl::EndInput(),EndInput,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a9702,cSC4ViewInputControl::OnCharacter(char),OnCharacter,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a970a,"cSC4ViewInputControl::OnKeyDown(unsigned int, unsigned int)",OnKeyDown,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a9712,"cSC4ViewInputControl::OnKeyUp(unsigned int, unsigned int)",OnKeyUp,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a971a,"cSC4ViewInputControl::OnMouseDownL(int, int, unsigned int)",OnMouseDownL,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a9722,"cSC4ViewInputControl::OnMouseDownR(int, int, unsigned int)",OnMouseDownR,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a972a,"cSC4ViewInputControl::OnMouseUpL(int, int, unsigned int)",OnMouseUpL,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a9732,"cSC4ViewInputControl::OnMouseUpR(int, int, unsigned int)",OnMouseUpR,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a973a,"cSC4ViewInputControl::OnMouseMove(int, int, unsigned int)",OnMouseMove,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a9742,cSC4ViewInputControl::OnMouseExit(),OnMouseExit,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a974a,"cSC4ViewInputControl::OnMouseWheel(int, int, unsigned int, int)",OnMouseWheel,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a9752,cSC4ViewInputControl::PlayResultSound(int),PlayResultSound,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a9784,cSC4ViewInputControl::ShouldStack(),ShouldStack,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a978c,cSC4ViewInputControl::AddRef(),AddRef,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a979a,cSC4ViewInputControl::Release(),Release,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a97ba,cSC4ViewInputControl::FinalRelease(),FinalRelease,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a97e8,"cSC4ViewInputControl::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a980a,cSC4ViewInputControl::SetCapture(),SetCapture,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a982c,cSC4ViewInputControl::ReleaseCapture(),ReleaseCapture,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a984e,cSC4ViewInputControl::AmCapturing(),AmCapturing,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a987e,cSC4ViewInputControl::IsOnTop(),IsOnTop,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1000a98a2,"cSC4ViewInputControl::IsKeyToBePassed(unsigned int, unsigned int) const",IsKeyToBePassed,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1001ea180,cSC4ViewInputControl::Activate(),Activate,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x10038fc70,cSC4ViewInputControl::Deactivate(),Deactivate,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
+0x1006c8560,cSC4ViewInputControl::IsSelfScrollingView(),IsSelfScrollingView,src/sc4/ViewInputControl.cpp|h,recovered,ViewInputControl: tool base class over IViewInputHost; test sc4_viewinputcontrol
