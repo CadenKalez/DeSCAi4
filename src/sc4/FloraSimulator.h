@@ -16,7 +16,8 @@
 
 namespace sc4 {
 
-constexpr std::uint32_t kGZCLSID_cSC4FloraSimulator = 0x06c66177;
+constexpr std::uint32_t kFloraSimulatorClassId = 0xc990c034;           // GZCOM_cSC4FloraSimulatorCLSID
+constexpr std::uint32_t kFloraSimulatorInterfaceId = 0x06c66177;       // cISC4FloraSimulator
 constexpr std::uint32_t kFloraDirectoryTypeId = 0x6534284a;            // resource-directory id scanned by StaticInit
 constexpr std::uint32_t kFloraExemplarTypeValue = 0xf;                 // exemplar type (property 0x10) of a flora type
 

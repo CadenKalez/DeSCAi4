@@ -10309,3 +10309,391 @@ address,symbol,unique_name,source,status,evidence
 0x10044c0b2,non-virtual thunk to cSC4AdviceSubject::Read(cIGZIStream&),ReadThunk,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
 0x10044c0c0,cSC4AdviceSubject::GetGZCLSID() const,GetGZCLSID,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
 0x10044c0cc,non-virtual thunk to cSC4AdviceSubject::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10004135b,GZCOM_cRZMessage2StandardCLSID(),GZCOM_cRZMessage2StandardCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100047732,GZCOM_cSC4CityCLSID(),GZCOM_cSC4CityCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10005319e,GZCOM_cGZMessageQueueManager2CLSID(),GZCOM_cGZMessageQueueManager2CLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100053a24,GZCOM_cGZMessageServer2CLSID(),GZCOM_cGZMessageServer2CLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10005f0c8,GZCOM_cSC4TutorialSystemCLSID(),GZCOM_cSC4TutorialSystemCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000609df,GZCOM_cSC4LandfillDeveloperCLSID(),GZCOM_cSC4LandfillDeveloperCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10006e612,GZCOM_cSC4NeighborsSimulatorCLSID(),GZCOM_cSC4NeighborsSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000747ca,GZCOM_cSC4NeighborConnectionCLSID(),GZCOM_cSC4NeighborConnectionCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10007514b,GZCOM_cSC4NeighborDealCLSID(),GZCOM_cSC4NeighborDealCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000767cc,GZCOM_cSC4TrafficSimulatorCLSID(),GZCOM_cSC4TrafficSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100094692,GZCOM_cSC4PollutionSimulatorCLSID(),GZCOM_cSC4PollutionSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10009bc92,GZCOM_cSC4PlumbingSimulatorCLSID(),GZCOM_cSC4PlumbingSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000a2372,GZCOM_cSC4PoliceSimulatorCLSID(),GZCOM_cSC4PoliceSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000a5cd5,GZCOM_cSC4OccupantFilterCLSID(),GZCOM_cSC4OccupantFilterCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000a5f49,GZCOM_cSC4DefaultOccupantFilterCLSID(),GZCOM_cSC4DefaultOccupantFilterCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000a6198,GZCOM_cSC4OccupantTypeFilterCLSID(),GZCOM_cSC4OccupantTypeFilterCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000a62eb,GZCOM_cSC4OccupantTypesFilterCLSID(),GZCOM_cSC4OccupantTypesFilterCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000a650c,GZCOM_cSC4OccupantTypesFilterHashedCLSID(),GZCOM_cSC4OccupantTypesFilterHashedCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000a68eb,GZCOM_cSC4RealisticOccupantFilterCLSID(),GZCOM_cSC4RealisticOccupantFilterCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000a6c32,GZCOM_cSC4NetworkOccupantFilterCLSID(),GZCOM_cSC4NetworkOccupantFilterCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000a6dce,GZCOM_cSC4ViewLevelOccupantFilterCLSID(),GZCOM_cSC4ViewLevelOccupantFilterCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000a715e,GZCOM_cSC4StringSpecificationOccupantFilterCLSID(),GZCOM_cSC4StringSpecificationOccupantFilterCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000b2ecb,GZCOM_cSC4LandfillOccupantCLSID(),GZCOM_cSC4LandfillOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000b379b,GZCOM_cSC4LotBaseTextureOccupantCLSID(),GZCOM_cSC4LotBaseTextureOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000bc5b1,GZCOM_cSC4OccupantCLSID(),GZCOM_cSC4OccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000bd5da,GZCOM_cSC4FloraSimulatorCLSID(),GZCOM_cSC4FloraSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000c2a62,GZCOM_cSC4FlammabilitySimulatorCLSID(),GZCOM_cSC4FlammabilitySimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000c4f02,GZCOM_cSC4LandValueSimulatorCLSID(),GZCOM_cSC4LandValueSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000c80d3,GZCOM_cSC4AirportDeveloperCLSID(),GZCOM_cSC4AirportDeveloperCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000c8f72,GZCOM_cSC4ParkManagerCLSID(),GZCOM_cSC4ParkManagerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000ca012,GZCOM_cSC4SeaportDeveloperCLSID(),GZCOM_cSC4SeaportDeveloperCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000cb77b,GZCOM_cSC4FloraOccupantCLSID(),GZCOM_cSC4FloraOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000e3202,GZCOM_cSC4WeatherSimulatorCLSID(),GZCOM_cSC4WeatherSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000e8dd9,GZCOM_cSC4CivicBuildingSimulatorCLSID(),GZCOM_cSC4CivicBuildingSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000eaf58,GZCOM_cSC4DemolitionCLSID(),GZCOM_cSC4DemolitionCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000eee91,GZCOM_cSC4HistoryWarehouseCLSID(),GZCOM_cSC4HistoryWarehouseCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1001217c2,GZCOM_cSC4PropDeveloperCLSID(),GZCOM_cSC4PropDeveloperCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1001261e6,GZCOM_cSC4WealthRequesterCLSID(),GZCOM_cSC4WealthRequesterCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10012808c,GZCOM_cSC4ZoneDeveloperCLSID(),GZCOM_cSC4ZoneDeveloperCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100134bd2,GZCOM_cSC4TractDeveloperCLSID(),GZCOM_cSC4TractDeveloperCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10013eb12,GZCOM_cSC4LotDeveloperCLSID(),GZCOM_cSC4LotDeveloperCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10014bdd0,GZCOM_cSC4BuildingDevelopmentSimulatorCLSID(),GZCOM_cSC4BuildingDevelopmentSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100156062,GZCOM_cSC4GrowthDeveloperCLSID(),GZCOM_cSC4GrowthDeveloperCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10015caeb,GZCOM_cSC4LotRetainingWallOccupantCLSID(),GZCOM_cSC4LotRetainingWallOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10015e451,GZCOM_cSC4PropPlacementPropertiesFactoryCLSID(),GZCOM_cSC4PropPlacementPropertiesFactoryCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10015e4db,GZCOM_cSC4PropOccupantCLSID(),GZCOM_cSC4PropOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10015f91f,GZCOM_cSC4PropOccupantTerrainDecalCLSID(),GZCOM_cSC4PropOccupantTerrainDecalCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1001607d7,GZCOM_cSC4PropOccupantVisualEffectCLSID(),GZCOM_cSC4PropOccupantVisualEffectCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100161897,GZCOM_cSC4PropOccupantBurntBuildingCLSID(),GZCOM_cSC4PropOccupantBurntBuildingCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100162597,GZCOM_cSC4PropOccupantAutomataControllerCLSID(),GZCOM_cSC4PropOccupantAutomataControllerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100163b08,GZCOM_cS3DCameraCLSID(),GZCOM_cS3DCameraCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10016d9bd,GZCOM_cSC4FoundationOccupantCLSID(),GZCOM_cSC4FoundationOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10016dff2,GZCOM_cSC4NetworkManagerCLSID(),GZCOM_cSC4NetworkManagerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10017761b,GZCOM_cSC4ConstructionOccupantCLSID(),GZCOM_cSC4ConstructionOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10017ed6b,GZCOM_cSC4LotCLSID(),GZCOM_cSC4LotCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1001835f2,GZCOM_cSC4BusinessUnitCLSID(),GZCOM_cSC4BusinessUnitCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100184c52,GZCOM_cSC424HourClockCLSID(),GZCOM_cSC424HourClockCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10019383e,GZCOM_cSC4PropManagerCLSID(),GZCOM_cSC4PropManagerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1001971f9,GZCOM_cSC4CityDetailManagerCLSID(),GZCOM_cSC4CityDetailManagerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1001980fc,GZCOM_cSC4ZoneManagerCLSID(),GZCOM_cSC4ZoneManagerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10019ae3b,GZCOM_cSC4BuildingOccupantCLSID(),GZCOM_cSC4BuildingOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10019be4b,GZCOM_cSC4NetworkOccupantCLSID(),GZCOM_cSC4NetworkOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1001a0f61,GZCOM_cSC4PipeOccupantCLSID(),GZCOM_cSC4PipeOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1001a1637,GZCOM_cSC4SubwayOccupantCLSID(),GZCOM_cSC4SubwayOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1001a239b,GZCOM_cSC4NetworkTunnelOccupantCLSID(),GZCOM_cSC4NetworkTunnelOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1001a94ae,GZCOM_cSC4PipeCustomViewCLSID(),GZCOM_cSC4PipeCustomViewCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1001a953a,GZCOM_cSC4SubwayCustomViewCLSID(),GZCOM_cSC4SubwayCustomViewCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1001ba0db,GZCOM_cSC4NetworkOccupantWithPreBuiltModelCLSID(),GZCOM_cSC4NetworkOccupantWithPreBuiltModelCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1001d26bb,GZCOM_cSC4NetworkBridgeOccupantCLSID(),GZCOM_cSC4NetworkBridgeOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1001ef292,GZCOM_cSC4SimulatorCLSID(),GZCOM_cSC4SimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1001fbf0d,GZCOM_cSC4CommercialSimulatorCLSID(),GZCOM_cSC4CommercialSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1001fcadc,GZCOM_cSC4CrimeSimulatorCLSID(),GZCOM_cSC4CrimeSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100200ab9,GZCOM_cSC4DemandCLSID(),GZCOM_cSC4DemandCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100201582,GZCOM_cSC4ResidentialSimulatorCLSID(),GZCOM_cSC4ResidentialSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10020e212,GZCOM_cSC4PowerSimulatorCLSID(),GZCOM_cSC4PowerSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10021543e,GZCOM_cSC4IndustrialSimulatorCLSID(),GZCOM_cSC4IndustrialSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1002157ae,GZCOM_cSC4DispatchManagerCLSID(),GZCOM_cSC4DispatchManagerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100218012,GZCOM_cSC4AuraSimulatorCLSID(),GZCOM_cSC4AuraSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10021dd62,GZCOM_cSC4BudgetSimulatorCLSID(),GZCOM_cSC4BudgetSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100223f5e,GZCOM_cSC4DemandSimulatorCLSID(),GZCOM_cSC4DemandSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10022e0d2,GZCOM_cSC4PylonOccupantCLSID(),GZCOM_cSC4PylonOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10024351a,GZCOM_cSC4DepartmentBudgetCLSID(),GZCOM_cSC4DepartmentBudgetCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100245911,GZCOM_cSC4LineItemCLSID(),GZCOM_cSC4LineItemCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100246b84,GZCOM_cSC4OccupantManagerCLSID(),GZCOM_cSC4OccupantManagerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10029503c,GZCOM_cSC4AdvisorSystemCLSID(),GZCOM_cSC4AdvisorSystemCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1002989b2,GZCOM_cSC4TrafficNetworkMapCLSID(),GZCOM_cSC4TrafficNetworkMapCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1002fa4c2,GZCOM_cSC4FireProtectionSimulatorCLSID(),GZCOM_cSC4FireProtectionSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100306552,GZCOM_cS3DTextureBindingFactoryCLSID(),GZCOM_cS3DTextureBindingFactoryCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100309380,GZCOM_cGZWinDebugDisplayCLSID(),GZCOM_cGZWinDebugDisplayCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10030c5f2,GZCOM_cSC4ModelMakerCLSID(),GZCOM_cSC4ModelMakerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100320ee7,GZCOM_cSC4PowerPoleOccupantCLSID(),GZCOM_cSC4PowerPoleOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1003244cb,GZCOM_cSC4PowerLineOccupantCLSID(),GZCOM_cSC4PowerLineOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1003511af,GZCOM_cSC4ComplexViewOccupantFilterCLSID(),GZCOM_cSC4ComplexViewOccupantFilterCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100364ac2,GZCOM_cSC4AnimationTickManagerCLSID(),GZCOM_cSC4AnimationTickManagerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1003ad93c,GZCOM_cSC4RegionalCityCLSID(),GZCOM_cSC4RegionalCityCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1003ddede,GZCOM_cSC4PipeConnectionOccupantCLSID(),GZCOM_cSC4PipeConnectionOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1003de28e,GZCOM_cSC4SubwayConnectionOccupantCLSID(),GZCOM_cSC4SubwayConnectionOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100400a69,GZCOM_cSC4AdvisorCityPlanningCLSID(),GZCOM_cSC4AdvisorCityPlanningCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100404dc2,GZCOM_cSC4NetworkLotManagerCLSID(),GZCOM_cSC4NetworkLotManagerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100411921,GZCOM_cGZBufferCLSID(),GZCOM_cGZBufferCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10042fc0b,GZCOM_cGZRealtimeDebugDisplayCLSID(),GZCOM_cGZRealtimeDebugDisplayCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10043ce92,GZCOM_cSC4AdviceCLSID(),GZCOM_cSC4AdviceCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10043ecba,GZCOM_cSC4AdvisorUtilityCLSID(),GZCOM_cSC4AdvisorUtilityCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1004411dc,GZCOM_cSC4AdviceNeghborDealCLSID(),GZCOM_cSC4AdviceNeghborDealCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100441936,GZCOM_cSC4AdvisorCLSID(),GZCOM_cSC4AdvisorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100444c90,GZCOM_cSC4AdvisorBaseCLSID(),GZCOM_cSC4AdvisorBaseCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100445a06,GZCOM_cSC4AdvisorHQCLSID(),GZCOM_cSC4AdvisorHQCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1004479dc,GZCOM_cSC4AdvisorFinanceCLSID(),GZCOM_cSC4AdvisorFinanceCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100447fa6,GZCOM_cSC4AdvisorTrafficCLSID(),GZCOM_cSC4AdvisorTrafficCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100449ce1,GZCOM_cSC4AdvisorSafetyCLSID(),GZCOM_cSC4AdvisorSafetyCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10044ba3d,GZCOM_cSC4AdviceSubjectCLSID(),GZCOM_cSC4AdviceSubjectCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10044c15d,GZCOM_cSC4DisasterManagerEffectCLSID(),GZCOM_cSC4DisasterManagerEffectCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10044cb7f,GZCOM_cSC4DisasterManagerRiotCLSID(),GZCOM_cSC4DisasterManagerRiotCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10044d4b5,GZCOM_cSC4DisasterInstanceRiotCLSID(),GZCOM_cSC4DisasterInstanceRiotCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10044f020,GZCOM_cSC4DisasterManagerFireCLSID(),GZCOM_cSC4DisasterManagerFireCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10044f6dd,GZCOM_cSC4DisasterInstanceFireCLSID(),GZCOM_cSC4DisasterInstanceFireCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100452bd6,GZCOM_cSC4DisasterManagerEarthquakeCLSID(),GZCOM_cSC4DisasterManagerEarthquakeCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100452fdc,GZCOM_cSC4DisasterInstanceEarthquakeCLSID(),GZCOM_cSC4DisasterInstanceEarthquakeCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1004550d6,GZCOM_cSC4DisasterManagerPipeBurstCLSID(),GZCOM_cSC4DisasterManagerPipeBurstCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1004558c7,GZCOM_cSC4DisasterInstancePipeBurstCLSID(),GZCOM_cSC4DisasterInstancePipeBurstCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100456e1d,GZCOM_cSC4DisasterManagerVolcanoCLSID(),GZCOM_cSC4DisasterManagerVolcanoCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100457369,GZCOM_cSC4DisasterInstanceVolcanoCLSID(),GZCOM_cSC4DisasterInstanceVolcanoCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100458231,GZCOM_cSC4PathInfoFactoryCLSID(),GZCOM_cSC4PathInfoFactoryCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10045ebd4,GZCOM_cSC4FireOccupantCLSID(),GZCOM_cSC4FireOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100461a56,GZCOM_cSC4DisasterLayerCLSID(),GZCOM_cSC4DisasterLayerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100466111,GZCOM_cS3DFSHTextureFactoryCLSID(),GZCOM_cS3DFSHTextureFactoryCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1004667f1,GZCOM_cS3DResModelFactoryCLSID(),GZCOM_cS3DResModelFactoryCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10046ce42,GZCOM_cSC4RewardAdviceCLSID(),GZCOM_cSC4RewardAdviceCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1004d8f1c,GZCOM_cGZWinTestServiceCLSID(),GZCOM_cGZWinTestServiceCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100566a28,GZCOM_cGZWinHTMLCLSID(),GZCOM_cGZWinHTMLCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100569e68,GZCOM_cS3DMaterialManagerCLSID(),GZCOM_cS3DMaterialManagerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10056a112,GZCOM_cSC4EffectsResourceCLSID(),GZCOM_cSC4EffectsResourceCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10056a16d,GZCOM_cSC4EffectsResourceFactoryCLSID(),GZCOM_cSC4EffectsResourceFactoryCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1005c3331,GZCOM_cSC4WinTextCLSID(),GZCOM_cSC4WinTextCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1005c3cf8,GZCOM_cSC4WinAlertBorderCLSID(),GZCOM_cSC4WinAlertBorderCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1005c4188,GZCOM_cSC4WinAuraBarCLSID(),GZCOM_cSC4WinAuraBarCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1005c4658,GZCOM_cSC4WinMiniMapCLSID(),GZCOM_cSC4WinMiniMapCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1005c7902,GZCOM_cSC4WinAdviceListCLSID(),GZCOM_cSC4WinAdviceListCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1005c90bc,GZCOM_cSC4EffectsParserCLSID(),GZCOM_cSC4EffectsParserCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1005dad32,GZCOM_cSC4EffectsManagerCLSID(),GZCOM_cSC4EffectsManagerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100603686,GZCOM_cSGLDriverDX7CLSID(),GZCOM_cSGLDriverDX7CLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100643fd2,GZCOM_cGZLuaScriptServerCLSID(),GZCOM_cGZLuaScriptServerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1006479df,GZCOM_cGZWinLuaScriptConsoleCLSID(),GZCOM_cGZWinLuaScriptConsoleCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100648ea4,GZCOM_cGZWinLuaScriptViewCLSID(),GZCOM_cGZWinLuaScriptViewCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10064bb8b,GZCOM_cGZWinLuaScriptViewCallStackCLSID(),GZCOM_cGZWinLuaScriptViewCallStackCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10064c12b,GZCOM_cGZWinLuaScriptViewVariablesCLSID(),GZCOM_cGZWinLuaScriptViewVariablesCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10064c8cb,GZCOM_cGZWinLuaScriptViewBreakpointsCLSID(),GZCOM_cGZWinLuaScriptViewBreakpointsCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10064ee0e,GZCOM_cGZDrawContextCLSID(),GZCOM_cGZDrawContextCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100652ea0,GZCOM_cGZDrawContextAsBufferCLSID(),GZCOM_cGZDrawContextAsBufferCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1006572c2,GZCOM_cGZDrawFontRendererCLSID(),GZCOM_cGZDrawFontRendererCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100659492,GZCOM_cGZDrawSystemCLSID(),GZCOM_cGZDrawSystemCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1006a7c9d,GZCOM_cSC4AdvisorCitySituationsCLSID(),GZCOM_cSC4AdvisorCitySituationsCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1006a81e6,GZCOM_cSC4CitySituationAdviceCLSID(),GZCOM_cSC4CitySituationAdviceCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1006aa0a8,GZCOM_cSC4MySimBalloonAdviceCLSID(),GZCOM_cSC4MySimBalloonAdviceCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1006acb46,GZCOM_cSC4MySimDispatchCLSID(),GZCOM_cSC4MySimDispatchCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1006b9ad8,GZCOM_cSC4MyStreetSimCLSID(),GZCOM_cSC4MyStreetSimCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1006c302e,GZCOM_cSC4LotConfigurationManagerCLSID(),GZCOM_cSC4LotConfigurationManagerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1006fc2dd,GZCOM_cSC4DisasterManagerToxicCLSID(),GZCOM_cSC4DisasterManagerToxicCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10070e93b,GZCOM_cSC4SignpostOccupantCLSID(),GZCOM_cSC4SignpostOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1007114bb,GZCOM_cSC4TextDecalOccupantCLSID(),GZCOM_cSC4TextDecalOccupantCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1007129c9,GZCOM_cSC4NetworkLayoutCustomViewCLSID(),GZCOM_cSC4NetworkLayoutCustomViewCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100722ed0,GZCOM_cSC4FirePlaneDispatchSourceCLSID(),GZCOM_cSC4FirePlaneDispatchSourceCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10072472a,GZCOM_cSC4PoliceHelicopterDispatchSourceCLSID(),GZCOM_cSC4PoliceHelicopterDispatchSourceCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10072e104,GZCOM_cSTESurfaceWaterCLSID(),GZCOM_cSTESurfaceWaterCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1007312f2,GZCOM_cSTETerrainCLSID(),GZCOM_cSTETerrainCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100746086,GZCOM_cSTETerrainView3DCLSID(),GZCOM_cSTETerrainView3DCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10075f3b2,GZCOM_cSC43DRenderCLSID(),GZCOM_cSC43DRenderCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10076aff2,GZCOM_cSC4CameraControlCLSID(),GZCOM_cSC4CameraControlCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10076ce82,GZCOM_cSC4ConfigRuleManagerCLSID(),GZCOM_cSC4ConfigRuleManagerCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100795b8b,GZCOM_cSC4OrdinanceCarpoolIncentiveCLSID(),GZCOM_cSC4OrdinanceCarpoolIncentiveCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100795c97,GZCOM_cSC4OrdinanceCleanAirCLSID(),GZCOM_cSC4OrdinanceCleanAirCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100795da3,GZCOM_cSC4OrdinanceCommunityCPRTrainingCLSID(),GZCOM_cSC4OrdinanceCommunityCPRTrainingCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100795ec8,GZCOM_cSC4OrdinanceFreeClinicsCLSID(),GZCOM_cSC4OrdinanceFreeClinicsCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1007962c8,GZCOM_cSC4OrdinanceJuniorSportsLeagueCLSID(),GZCOM_cSC4OrdinanceJuniorSportsLeagueCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1007967bd,GZCOM_cSC4OrdinanceLandfillGasRecoveryCLSID(),GZCOM_cSC4OrdinanceLandfillGasRecoveryCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100796e7d,GZCOM_cSC4OrdinanceLegalizeGamblingCLSID(),GZCOM_cSC4OrdinanceLegalizeGamblingCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1007971d9,GZCOM_cSC4OrdinanceMandatorySmokeDetectorsCLSID(),GZCOM_cSC4OrdinanceMandatorySmokeDetectorsCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1007972f8,GZCOM_cSC4OrdinanceNeighborhoodWatchCLSID(),GZCOM_cSC4OrdinanceNeighborhoodWatchCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10079767d,GZCOM_cSC4OrdinanceNuclearFreeZoneCLSID(),GZCOM_cSC4OrdinanceNuclearFreeZoneCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100797789,GZCOM_cSC4OrdinancePaperReductionActCLSID(),GZCOM_cSC4OrdinancePaperReductionActCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100797895,GZCOM_cSC4OrdinancePowerConservationCLSID(),GZCOM_cSC4OrdinancePowerConservationCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1007979b8,GZCOM_cSC4OrdinanceProReadingCampaignCLSID(),GZCOM_cSC4OrdinanceProReadingCampaignCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100797d7f,GZCOM_cSC4OrdinanceShuttleServiceCLSID(),GZCOM_cSC4OrdinanceShuttleServiceCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100797e62,GZCOM_cSC4OrdinanceSimpleCLSID(),GZCOM_cSC4OrdinanceSimpleCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x100798baa,GZCOM_cSC4OrdinanceSimulatorCLSID(),GZCOM_cSC4OrdinanceSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10079aa79,GZCOM_cSC4OrdinanceTireRecyclingCLSID(),GZCOM_cSC4OrdinanceTireRecyclingCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10079ab98,GZCOM_cSC4OrdinanceTouristPromotionCLSID(),GZCOM_cSC4OrdinanceTouristPromotionCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10079af5d,GZCOM_cSC4OrdinanceTrashPresortCLSID(),GZCOM_cSC4OrdinanceTrashPresortCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10079b3af,GZCOM_cSC4OrdinanceVehicleEmissionStandardCLSID(),GZCOM_cSC4OrdinanceVehicleEmissionStandardCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10079b4bb,GZCOM_cSC4OrdinanceWaterConservationCLSID(),GZCOM_cSC4OrdinanceWaterConservationCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10079b5c7,GZCOM_cSC4OrdinanceYouthCurfewCLSID(),GZCOM_cSC4OrdinanceYouthCurfewCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10079eb07,GZCOM_cSC4MySimAdviceCLSID(),GZCOM_cSC4MySimAdviceCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x10079ebc0,GZCOM_cSC4MySimCLSID(),GZCOM_cSC4MySimCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1007ab822,GZCOM_cSC4MySimAgentSimulatorCLSID(),GZCOM_cSC4MySimAgentSimulatorCLSID,src/gz/GZCOM.cpp|h,recovered,decompile: constant class id; scripts/tests/gz_gzcom_test.cpp
+0x1000a5c90,GZCOM_CreatecSC4OccupantFilter(),GZCOM_CreatecSC4OccupantFilter,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x1000a5f12,GZCOM_CreatecSC4DefaultOccupantFilter(),GZCOM_CreatecSC4DefaultOccupantFilter,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x1000a6160,GZCOM_CreatecSC4OccupantTypeFilter(),GZCOM_CreatecSC4OccupantTypeFilter,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x1000b2dc0,GZCOM_CreatecSC4LandfillOccupant(),GZCOM_CreatecSC4LandfillOccupant,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x1000bc500,GZCOM_CreatecSC4Occupant(),GZCOM_CreatecSC4Occupant,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x1000bd598,GZCOM_CreatecSC4FloraSimulator(),GZCOM_CreatecSC4FloraSimulator,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x1000cb700,GZCOM_CreatecSC4FloraOccupant(),GZCOM_CreatecSC4FloraOccupant,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x10014bd8e,GZCOM_CreatecSC4BuildingDevelopmentSimulator(),GZCOM_CreatecSC4BuildingDevelopmentSimulator,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x10015e467,GZCOM_CreatecSC4PropOccupant(),GZCOM_CreatecSC4PropOccupant,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x10016d84e,GZCOM_CreatecSC4FoundationOccupant(),GZCOM_CreatecSC4FoundationOccupant,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x10017ecf0,GZCOM_CreatecSC4Lot(),GZCOM_CreatecSC4Lot,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x100184c10,GZCOM_CreatecSC424HourClock(),GZCOM_CreatecSC424HourClock,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x1001937e0,GZCOM_CreatecSC4PropManager(),GZCOM_CreatecSC4PropManager,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x10019acc0,GZCOM_CreatecSC4BuildingOccupant(),GZCOM_CreatecSC4BuildingOccupant,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x10019bbc8,GZCOM_CreatecSC4NetworkOccupant(),GZCOM_CreatecSC4NetworkOccupant,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x1002009e0,GZCOM_CreatecSC4Demand(),GZCOM_CreatecSC4Demand,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x100246b42,GZCOM_CreatecSC4OccupantManager(),GZCOM_CreatecSC4OccupantManager,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x10032434b,GZCOM_CreatecSC4PowerLineOccupant(),GZCOM_CreatecSC4PowerLineOccupant,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x10044b9c0,GZCOM_CreatecSC4AdviceSubject(),GZCOM_CreatecSC4AdviceSubject,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x1006c2fc0,GZCOM_CreatecSC4LotConfigurationManager(),GZCOM_CreatecSC4LotConfigurationManager,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x1007312b0,GZCOM_CreatecSTETerrain(),GZCOM_CreatecSTETerrain,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
+0x100041220,GZCOM_CreatecRZMessage2Standard(),GZCOM_CreatecRZMessage2Standard,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000476f0,GZCOM_CreatecSC4City(),GZCOM_CreatecSC4City,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100053158,GZCOM_CreatecGZMessageQueueManager2(),GZCOM_CreatecGZMessageQueueManager2,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000539df,GZCOM_CreatecGZMessageServer2(),GZCOM_CreatecGZMessageServer2,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10005f086,GZCOM_CreatecSC4TutorialSystem(),GZCOM_CreatecSC4TutorialSystem,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100060940,GZCOM_CreatecSC4LandfillDeveloper(),GZCOM_CreatecSC4LandfillDeveloper,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10006e5d0,GZCOM_CreatecSC4NeighborsSimulator(),GZCOM_CreatecSC4NeighborsSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100074710,GZCOM_CreatecSC4NeighborConnection(),GZCOM_CreatecSC4NeighborConnection,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100075114,GZCOM_CreatecSC4NeighborDeal(),GZCOM_CreatecSC4NeighborDeal,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10007678b,GZCOM_CreatecSC4TrafficSimulator(),GZCOM_CreatecSC4TrafficSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100094650,GZCOM_CreatecSC4PollutionSimulator(),GZCOM_CreatecSC4PollutionSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10009bc50,GZCOM_CreatecSC4PlumbingSimulator(),GZCOM_CreatecSC4PlumbingSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000a2330,GZCOM_CreatecSC4PoliceSimulator(),GZCOM_CreatecSC4PoliceSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000a62a6,GZCOM_CreatecSC4OccupantTypesFilter(),GZCOM_CreatecSC4OccupantTypesFilter,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000a64bc,GZCOM_CreatecSC4OccupantTypesFilterHashed(),GZCOM_CreatecSC4OccupantTypesFilterHashed,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000a68aa,GZCOM_CreatecSC4RealisticOccupantFilter(),GZCOM_CreatecSC4RealisticOccupantFilter,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000a6bf4,GZCOM_CreatecSC4NetworkOccupantFilter(),GZCOM_CreatecSC4NetworkOccupantFilter,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000a6d90,GZCOM_CreatecSC4ViewLevelOccupantFilter(),GZCOM_CreatecSC4ViewLevelOccupantFilter,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000a711c,GZCOM_CreatecSC4StringSpecificationOccupantFilter(),GZCOM_CreatecSC4StringSpecificationOccupantFilter,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000b360a,GZCOM_CreatecSC4LotBaseTextureOccupant(),GZCOM_CreatecSC4LotBaseTextureOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000c2a20,GZCOM_CreatecSC4FlammabilitySimulator(),GZCOM_CreatecSC4FlammabilitySimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000c4e10,GZCOM_CreatecSC4LandValueSimulator(),GZCOM_CreatecSC4LandValueSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000c8034,GZCOM_CreatecSC4AirportDeveloper(),GZCOM_CreatecSC4AirportDeveloper,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000c8f30,GZCOM_CreatecSC4ParkManager(),GZCOM_CreatecSC4ParkManager,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000c9fd0,GZCOM_CreatecSC4SeaportDeveloper(),GZCOM_CreatecSC4SeaportDeveloper,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000e31c0,GZCOM_CreatecSC4WeatherSimulator(),GZCOM_CreatecSC4WeatherSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000e8d20,GZCOM_CreatecSC4CivicBuildingSimulator(),GZCOM_CreatecSC4CivicBuildingSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000eaeea,GZCOM_CreatecSC4Demolition(),GZCOM_CreatecSC4Demolition,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000eee30,GZCOM_CreatecSC4HistoryWarehouse(),GZCOM_CreatecSC4HistoryWarehouse,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100121780,GZCOM_CreatecSC4PropDeveloper(),GZCOM_CreatecSC4PropDeveloper,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001261af,GZCOM_CreatecSC4WealthRequester(),GZCOM_CreatecSC4WealthRequester,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10012804a,GZCOM_CreatecSC4ZoneDeveloper(),GZCOM_CreatecSC4ZoneDeveloper,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100134b90,GZCOM_CreatecSC4TractDeveloper(),GZCOM_CreatecSC4TractDeveloper,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10013ead0,GZCOM_CreatecSC4LotDeveloper(),GZCOM_CreatecSC4LotDeveloper,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100156020,GZCOM_CreatecSC4GrowthDeveloper(),GZCOM_CreatecSC4GrowthDeveloper,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10015caa0,GZCOM_CreatecSC4LotRetainingWallOccupant(),GZCOM_CreatecSC4LotRetainingWallOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10015e410,GZCOM_CreatecSC4PropPlacementPropertiesFactory(),GZCOM_CreatecSC4PropPlacementPropertiesFactory,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10015f8af,GZCOM_CreatecSC4PropOccupantTerrainDecal(),GZCOM_CreatecSC4PropOccupantTerrainDecal,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001605d4,GZCOM_CreatecSC4PropOccupantVisualEffect(),GZCOM_CreatecSC4PropOccupantVisualEffect,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100161712,GZCOM_CreatecSC4PropOccupantBurntBuilding(),GZCOM_CreatecSC4PropOccupantBurntBuilding,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001623b0,GZCOM_CreatecSC4PropOccupantAutomataController(),GZCOM_CreatecSC4PropOccupantAutomataController,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100163ac6,GZCOM_CreatecS3DCamera(),GZCOM_CreatecS3DCamera,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10016dfb0,GZCOM_CreatecSC4NetworkManager(),GZCOM_CreatecSC4NetworkManager,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001772db,GZCOM_CreatecSC4ConstructionOccupant(),GZCOM_CreatecSC4ConstructionOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001834e0,GZCOM_CreatecSC4BusinessUnit(),GZCOM_CreatecSC4BusinessUnit,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001971b0,GZCOM_CreatecSC4CityDetailManager(),GZCOM_CreatecSC4CityDetailManager,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001980ba,GZCOM_CreatecSC4ZoneManager(),GZCOM_CreatecSC4ZoneManager,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001a0e00,GZCOM_CreatecSC4PipeOccupant(),GZCOM_CreatecSC4PipeOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001a14ea,GZCOM_CreatecSC4SubwayOccupant(),GZCOM_CreatecSC4SubwayOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001a2200,GZCOM_CreatecSC4NetworkTunnelOccupant(),GZCOM_CreatecSC4NetworkTunnelOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001a942d,GZCOM_CreatecSC4PipeCustomView(),GZCOM_CreatecSC4PipeCustomView,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001a94b9,GZCOM_CreatecSC4SubwayCustomView(),GZCOM_CreatecSC4SubwayCustomView,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001b9f80,GZCOM_CreatecSC4NetworkOccupantWithPreBuiltModel(),GZCOM_CreatecSC4NetworkOccupantWithPreBuiltModel,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001d2590,GZCOM_CreatecSC4NetworkBridgeOccupant(),GZCOM_CreatecSC4NetworkBridgeOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001ef250,GZCOM_CreatecSC4Simulator(),GZCOM_CreatecSC4Simulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001fbe90,GZCOM_CreatecSC4CommercialSimulator(),GZCOM_CreatecSC4CommercialSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001fca9b,GZCOM_CreatecSC4CrimeSimulator(),GZCOM_CreatecSC4CrimeSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100201540,GZCOM_CreatecSC4ResidentialSimulator(),GZCOM_CreatecSC4ResidentialSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10020e1d0,GZCOM_CreatecSC4PowerSimulator(),GZCOM_CreatecSC4PowerSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1002153f8,GZCOM_CreatecSC4IndustrialSimulator(),GZCOM_CreatecSC4IndustrialSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100215710,GZCOM_CreatecSC4DispatchManager(),GZCOM_CreatecSC4DispatchManager,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100217fd0,GZCOM_CreatecSC4AuraSimulator(),GZCOM_CreatecSC4AuraSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10021dd20,GZCOM_CreatecSC4BudgetSimulator(),GZCOM_CreatecSC4BudgetSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100223f1c,GZCOM_CreatecSC4DemandSimulator(),GZCOM_CreatecSC4DemandSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10022dec0,GZCOM_CreatecSC4PylonOccupant(),GZCOM_CreatecSC4PylonOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1002433d0,GZCOM_CreatecSC4DepartmentBudget(),GZCOM_CreatecSC4DepartmentBudget,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10024588f,GZCOM_CreatecSC4LineItem(),GZCOM_CreatecSC4LineItem,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100294ffb,GZCOM_CreatecSC4AdvisorSystem(),GZCOM_CreatecSC4AdvisorSystem,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100298970,GZCOM_CreatecSC4TrafficNetworkMap(),GZCOM_CreatecSC4TrafficNetworkMap,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1002fa480,GZCOM_CreatecSC4FireProtectionSimulator(),GZCOM_CreatecSC4FireProtectionSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100306510,GZCOM_CreatecS3DTextureBindingFactory(),GZCOM_CreatecS3DTextureBindingFactory,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1003092c6,GZCOM_CreatecGZWinDebugDisplay(),GZCOM_CreatecGZWinDebugDisplay,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10030c5b0,GZCOM_CreatecSC4ModelMaker(),GZCOM_CreatecSC4ModelMaker,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100320ca9,GZCOM_CreatecSC4PowerPoleOccupant(),GZCOM_CreatecSC4PowerPoleOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10035112b,GZCOM_CreatecSC4ComplexViewOccupantFilter(),GZCOM_CreatecSC4ComplexViewOccupantFilter,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100364a80,GZCOM_CreatecSC4AnimationTickManager(),GZCOM_CreatecSC4AnimationTickManager,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1003ad8fa,GZCOM_CreatecSC4RegionalCity(),GZCOM_CreatecSC4RegionalCity,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1003dddc0,GZCOM_CreatecSC4PipeConnectionOccupant(),GZCOM_CreatecSC4PipeConnectionOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1003de170,GZCOM_CreatecSC4SubwayConnectionOccupant(),GZCOM_CreatecSC4SubwayConnectionOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1004009c0,GZCOM_CreatecSC4AdvisorCityPlanning(),GZCOM_CreatecSC4AdvisorCityPlanning,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100404d80,GZCOM_CreatecSC4NetworkLotManager(),GZCOM_CreatecSC4NetworkLotManager,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10041184c,GZCOM_CreatecGZBuffer(),GZCOM_CreatecGZBuffer,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10042fb70,GZCOM_CreatecGZRealtimeDebugDisplay(),GZCOM_CreatecGZRealtimeDebugDisplay,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10043ce50,GZCOM_CreatecSC4Advice(),GZCOM_CreatecSC4Advice,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10043ec40,GZCOM_CreatecSC4AdvisorUtility(),GZCOM_CreatecSC4AdvisorUtility,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10044117a,GZCOM_CreatecSC4AdviceNeghborDeal(),GZCOM_CreatecSC4AdviceNeghborDeal,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1004418f0,GZCOM_CreatecSC4Advisor(),GZCOM_CreatecSC4Advisor,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100444bfe,GZCOM_CreatecSC4AdvisorBase(),GZCOM_CreatecSC4AdvisorBase,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10044598b,GZCOM_CreatecSC4AdvisorHQ(),GZCOM_CreatecSC4AdvisorHQ,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100447964,GZCOM_CreatecSC4AdvisorFinance(),GZCOM_CreatecSC4AdvisorFinance,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100447f10,GZCOM_CreatecSC4AdvisorTraffic(),GZCOM_CreatecSC4AdvisorTraffic,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100449c60,GZCOM_CreatecSC4AdvisorSafety(),GZCOM_CreatecSC4AdvisorSafety,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10044c0e0,GZCOM_CreatecSC4DisasterManagerEffect(),GZCOM_CreatecSC4DisasterManagerEffect,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10044caf6,GZCOM_CreatecSC4DisasterManagerRiot(),GZCOM_CreatecSC4DisasterManagerRiot,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10044d47a,GZCOM_CreatecSC4DisasterInstanceRiot(),GZCOM_CreatecSC4DisasterInstanceRiot,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10044ef8a,GZCOM_CreatecSC4DisasterManagerFire(),GZCOM_CreatecSC4DisasterManagerFire,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10044f6a2,GZCOM_CreatecSC4DisasterInstanceFire(),GZCOM_CreatecSC4DisasterInstanceFire,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100452b70,GZCOM_CreatecSC4DisasterManagerEarthquake(),GZCOM_CreatecSC4DisasterManagerEarthquake,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100452fa1,GZCOM_CreatecSC4DisasterInstanceEarthquake(),GZCOM_CreatecSC4DisasterInstanceEarthquake,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100455060,GZCOM_CreatecSC4DisasterManagerPipeBurst(),GZCOM_CreatecSC4DisasterManagerPipeBurst,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100455828,GZCOM_CreatecSC4DisasterInstancePipeBurst(),GZCOM_CreatecSC4DisasterInstancePipeBurst,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100456da0,GZCOM_CreatecSC4DisasterManagerVolcano(),GZCOM_CreatecSC4DisasterManagerVolcano,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1004572fa,GZCOM_CreatecSC4DisasterInstanceVolcano(),GZCOM_CreatecSC4DisasterInstanceVolcano,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1004581e0,GZCOM_CreatecSC4PathInfoFactory(),GZCOM_CreatecSC4PathInfoFactory,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10045eb92,GZCOM_CreatecSC4FireOccupant(),GZCOM_CreatecSC4FireOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100461a10,GZCOM_CreatecSC4DisasterLayer(),GZCOM_CreatecSC4DisasterLayer,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1004660d0,GZCOM_CreatecS3DFSHTextureFactory(),GZCOM_CreatecS3DFSHTextureFactory,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1004667b0,GZCOM_CreatecS3DResModelFactory(),GZCOM_CreatecS3DResModelFactory,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10046cde0,GZCOM_CreatecSC4RewardAdvice(),GZCOM_CreatecSC4RewardAdvice,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1004d8ed0,GZCOM_CreatecGZWinTestService(),GZCOM_CreatecGZWinTestService,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1005669e0,GZCOM_CreatecGZWinHTML(),GZCOM_CreatecGZWinHTML,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100569df0,GZCOM_CreatecS3DMaterialManager(),GZCOM_CreatecS3DMaterialManager,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10056a0d0,GZCOM_CreatecSC4EffectsResource(),GZCOM_CreatecSC4EffectsResource,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10056a11d,GZCOM_CreatecSC4EffectsResourceFactory(),GZCOM_CreatecSC4EffectsResourceFactory,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1005c32dc,GZCOM_CreatecSC4WinText(),GZCOM_CreatecSC4WinText,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1005c3cb0,GZCOM_CreatecSC4WinAlertBorder(),GZCOM_CreatecSC4WinAlertBorder,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1005c4140,GZCOM_CreatecSC4WinAuraBar(),GZCOM_CreatecSC4WinAuraBar,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1005c4610,GZCOM_CreatecSC4WinMiniMap(),GZCOM_CreatecSC4WinMiniMap,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1005c7870,GZCOM_CreatecSC4WinAdviceList(),GZCOM_CreatecSC4WinAdviceList,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1005c8bec,GZCOM_CreatecSC4EffectsParser(),GZCOM_CreatecSC4EffectsParser,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1005dacf0,GZCOM_CreatecSC4EffectsManager(),GZCOM_CreatecSC4EffectsManager,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100603640,GZCOM_CreatecSGLDriverDX7(),GZCOM_CreatecSGLDriverDX7,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100643f90,GZCOM_CreatecGZLuaScriptServer(),GZCOM_CreatecGZLuaScriptServer,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100647967,GZCOM_CreatecGZWinLuaScriptConsole(),GZCOM_CreatecGZWinLuaScriptConsole,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100648dbf,GZCOM_CreatecGZWinLuaScriptView(),GZCOM_CreatecGZWinLuaScriptView,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10064bb12,GZCOM_CreatecGZWinLuaScriptViewCallStack(),GZCOM_CreatecGZWinLuaScriptViewCallStack,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10064c0af,GZCOM_CreatecGZWinLuaScriptViewVariables(),GZCOM_CreatecGZWinLuaScriptViewVariables,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10064c853,GZCOM_CreatecGZWinLuaScriptViewBreakpoints(),GZCOM_CreatecGZWinLuaScriptViewBreakpoints,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10064ed60,GZCOM_CreatecGZDrawContext(),GZCOM_CreatecGZDrawContext,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100652da0,GZCOM_CreatecGZDrawContextAsBuffer(),GZCOM_CreatecGZDrawContextAsBuffer,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100657280,GZCOM_CreatecGZDrawFontRenderer(),GZCOM_CreatecGZDrawFontRenderer,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100659450,GZCOM_CreatecGZDrawSystem(),GZCOM_CreatecGZDrawSystem,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1006a7c20,GZCOM_CreatecSC4AdvisorCitySituations(),GZCOM_CreatecSC4AdvisorCitySituations,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1006a81a0,GZCOM_CreatecSC4CitySituationAdvice(),GZCOM_CreatecSC4CitySituationAdvice,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1006aa060,GZCOM_CreatecSC4MySimBalloonAdvice(),GZCOM_CreatecSC4MySimBalloonAdvice,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1006acaff,GZCOM_CreatecSC4MySimDispatch(),GZCOM_CreatecSC4MySimDispatch,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1006b9a90,GZCOM_CreatecSC4MyStreetSim(),GZCOM_CreatecSC4MyStreetSim,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1006fc260,GZCOM_CreatecSC4DisasterManagerToxic(),GZCOM_CreatecSC4DisasterManagerToxic,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10070e660,GZCOM_CreatecSC4SignpostOccupant(),GZCOM_CreatecSC4SignpostOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100711440,GZCOM_CreatecSC4TextDecalOccupant(),GZCOM_CreatecSC4TextDecalOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100712950,GZCOM_CreatecSC4NetworkLayoutCustomView(),GZCOM_CreatecSC4NetworkLayoutCustomView,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100722dfe,GZCOM_CreatecSC4FirePlaneDispatchSource(),GZCOM_CreatecSC4FirePlaneDispatchSource,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100724658,GZCOM_CreatecSC4PoliceHelicopterDispatchSource(),GZCOM_CreatecSC4PoliceHelicopterDispatchSource,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10072e06a,GZCOM_CreatecSTESurfaceWater(),GZCOM_CreatecSTESurfaceWater,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100746040,GZCOM_CreatecSTETerrainView3D(),GZCOM_CreatecSTETerrainView3D,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10075f370,GZCOM_CreatecSC43DRender(),GZCOM_CreatecSC43DRender,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10076afb0,GZCOM_CreatecSC4CameraControl(),GZCOM_CreatecSC4CameraControl,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10076ce40,GZCOM_CreatecSC4ConfigRuleManager(),GZCOM_CreatecSC4ConfigRuleManager,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100795b1e,GZCOM_CreatecSC4OrdinanceCarpoolIncentive(),GZCOM_CreatecSC4OrdinanceCarpoolIncentive,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100795c2a,GZCOM_CreatecSC4OrdinanceCleanAir(),GZCOM_CreatecSC4OrdinanceCleanAir,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100795d36,GZCOM_CreatecSC4OrdinanceCommunityCPRTraining(),GZCOM_CreatecSC4OrdinanceCommunityCPRTraining,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100795e50,GZCOM_CreatecSC4OrdinanceFreeClinics(),GZCOM_CreatecSC4OrdinanceFreeClinics,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100796250,GZCOM_CreatecSC4OrdinanceJuniorSportsLeague(),GZCOM_CreatecSC4OrdinanceJuniorSportsLeague,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100796740,GZCOM_CreatecSC4OrdinanceLandfillGasRecovery(),GZCOM_CreatecSC4OrdinanceLandfillGasRecovery,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100796e10,GZCOM_CreatecSC4OrdinanceLegalizeGambling(),GZCOM_CreatecSC4OrdinanceLegalizeGambling,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10079716c,GZCOM_CreatecSC4OrdinanceMandatorySmokeDetectors(),GZCOM_CreatecSC4OrdinanceMandatorySmokeDetectors,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100797280,GZCOM_CreatecSC4OrdinanceNeighborhoodWatch(),GZCOM_CreatecSC4OrdinanceNeighborhoodWatch,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100797610,GZCOM_CreatecSC4OrdinanceNuclearFreeZone(),GZCOM_CreatecSC4OrdinanceNuclearFreeZone,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10079771c,GZCOM_CreatecSC4OrdinancePaperReductionAct(),GZCOM_CreatecSC4OrdinancePaperReductionAct,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100797828,GZCOM_CreatecSC4OrdinancePowerConservation(),GZCOM_CreatecSC4OrdinancePowerConservation,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100797940,GZCOM_CreatecSC4OrdinanceProReadingCampaign(),GZCOM_CreatecSC4OrdinanceProReadingCampaign,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100797d12,GZCOM_CreatecSC4OrdinanceShuttleService(),GZCOM_CreatecSC4OrdinanceShuttleService,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100797e20,GZCOM_CreatecSC4OrdinanceSimple(),GZCOM_CreatecSC4OrdinanceSimple,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100798b50,GZCOM_CreatecSC4OrdinanceSimulator(),GZCOM_CreatecSC4OrdinanceSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10079aa0c,GZCOM_CreatecSC4OrdinanceTireRecycling(),GZCOM_CreatecSC4OrdinanceTireRecycling,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10079ab20,GZCOM_CreatecSC4OrdinanceTouristPromotion(),GZCOM_CreatecSC4OrdinanceTouristPromotion,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10079aee0,GZCOM_CreatecSC4OrdinanceTrashPresort(),GZCOM_CreatecSC4OrdinanceTrashPresort,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10079b342,GZCOM_CreatecSC4OrdinanceVehicleEmissionStandard(),GZCOM_CreatecSC4OrdinanceVehicleEmissionStandard,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10079b44e,GZCOM_CreatecSC4OrdinanceWaterConservation(),GZCOM_CreatecSC4OrdinanceWaterConservation,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10079b55a,GZCOM_CreatecSC4OrdinanceYouthCurfew(),GZCOM_CreatecSC4OrdinanceYouthCurfew,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10079eaa5,GZCOM_CreatecSC4MySimAdvice(),GZCOM_CreatecSC4MySimAdvice,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10079eb78,GZCOM_CreatecSC4MySim(),GZCOM_CreatecSC4MySim,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1007ab7e0,GZCOM_CreatecSC4MySimAgentSimulator(),GZCOM_CreatecSC4MySimAgentSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
