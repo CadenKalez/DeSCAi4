@@ -105,6 +105,9 @@ public:
     void SetVLINK(const cRZString& value);
     Color linkColor = 0, visitedLinkColor = 0, activeLinkColor = 0;     // +0x48, +0x4c, +0x50
     IHtmlBitmap* background() const { return background_; }
+    Color backgroundColor = 0;               // BGCOLOR (the original keeps a heap-allocated colour at +0x40)
+    bool hasBackgroundColor = false;
+    bool fixedBackground = false;            // BGPROPERTIES (+0x60)
     IHtmlGraphics* graphics = nullptr;      // RZ::GS()
 
 private:
@@ -129,7 +132,7 @@ public:
 };
 class cHTMLDIV : public cHTMLContainerElement {
 public:
-    cHTMLDIV() : cHTMLContainerElement(0x15) {}
+    cHTMLDIV() : cHTMLContainerElement(0x13) {}
     void Layout(cHTMLDrawContext& context) override;
     void Draw(cHTMLDrawContext& context) override;
 };
@@ -166,42 +169,51 @@ public:
 };
 class cHTMLListItem : public cHTMLContainerElement {
 public:
-    cHTMLListItem() : cHTMLContainerElement(0x1b) {}
+    cHTMLListItem() : cHTMLContainerElement(0xc) {}
     void Layout(cHTMLDrawContext& context) override;
     void Draw(cHTMLDrawContext& context) override;
 };
 class cHTMLListItemHangingIndent : public cHTMLContainerElement {   // hanging indent starts after the bullet
 public:
-    cHTMLListItemHangingIndent() : cHTMLContainerElement(0x1c) {}
+    cHTMLListItemHangingIndent() : cHTMLContainerElement(0xc) {}
     void Layout(cHTMLDrawContext& context) override { context.BeginHangingIndent(); }
     void Draw(cHTMLDrawContext&) override {}
 };
 // Containers without behaviour of their own.
-class cHTMLSPAN : public cHTMLContainerElement { public: cHTMLSPAN() : cHTMLContainerElement(0x1d) {} };
-class cHTMLAREA : public cHTMLContainerElement { public: cHTMLAREA() : cHTMLContainerElement(0x1e) {} };
+class cHTMLSPAN : public cHTMLContainerElement { public: cHTMLSPAN() : cHTMLContainerElement(0x23) {} };
+class cHTMLAREA : public cHTMLContainerElement {      // image map region; shape: 1 default, 2 rect, 3 circle, 4 poly
+public:
+    cHTMLAREA() : cHTMLContainerElement(0x18) {}
+    std::int32_t shape = 0;                        // +0x38
+};
 class cHTMLFORM : public cHTMLContainerElement { public: cHTMLFORM() : cHTMLContainerElement(0x1f) {} };
-class cHTMLMAP : public cHTMLContainerElement { public: cHTMLMAP() : cHTMLContainerElement(0x22) {} };
+class cHTMLMAP : public cHTMLContainerElement {
+public:
+    cHTMLMAP() : cHTMLContainerElement(0x17) {}
+    std::unique_ptr<cRZString> name;               // +0x38
+};
 class cHTMLOPTION : public cHTMLContainerElement { public: cHTMLOPTION() : cHTMLContainerElement(0x23) {} };
-class cHTMLSELECT : public cHTMLContainerElement { public: cHTMLSELECT() : cHTMLContainerElement(0x24) {} };
+class cHTMLSELECT : public cHTMLContainerElement { public: cHTMLSELECT() : cHTMLContainerElement(0x1e) {} };
 class cHTMLTH : public cHTMLContainerElement { public: cHTMLTH() : cHTMLContainerElement(0x11) {} };
 
 // ---- leaf elements -----------------------------------------------------------------------------------------
 class cHTMLBR : public cHTMLElement {
 public:
-    cHTMLBR() : cHTMLElement(0x12) {}
+    cHTMLBR() : cHTMLElement(0x16) {}
     void Layout(cHTMLDrawContext& context) override;
     void Draw(cHTMLDrawContext& context) override { if (!laidOut_) Layout(context); }
 };
 class cHTMLHR : public cHTMLElement {
 public:
-    cHTMLHR() : cHTMLElement(0x13) {}
+    cHTMLHR() : cHTMLElement(5) {}
     void Layout(cHTMLDrawContext& context) override;
     void Draw(cHTMLDrawContext& context) override;
-    std::int32_t size = 2;           // +0x24 thickness
+    std::int32_t align = 3;          // +0x20
+    std::int32_t size = 1;           // +0x24 thickness
     std::int32_t width = 100;        // +0x28
     bool widthIsPercent = true;      // +0x2c
 };
-class cHTMLINPUT : public cHTMLElement { public: cHTMLINPUT() : cHTMLElement(0x25) {} };
+class cHTMLINPUT : public cHTMLElement { public: cHTMLINPUT() : cHTMLElement(0x1d) {} };
 class cHTMLLink : public cHTMLElement {               // <link>: remembers rel / href / type
 public:
     cHTMLLink() : cHTMLElement(kTypeLink) {}
@@ -294,6 +306,7 @@ public:
     void SetBGCOLOR(const cRZString& value, IHtmlGraphics* graphics);
     void SetNOWRAP(const cRZString&) { noWrap = true; }
 
+    std::int32_t valign = 0;                 // +0x38: 1 top, 2 middle, 3 bottom, 4 baseline
     tLength width{tLength::kUnset, 0};   // +0x3c unit, +0x40 value
     Color backgroundColor = 0;       // +0x44
     bool hasBackground = false;      // +0x48
