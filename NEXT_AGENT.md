@@ -49,3 +49,11 @@ Paste this as your first message / system prompt:
   cSC4TrafficNetworkMap 97, cSC4BudgetSimulator 87, cGZDBSegmentDirectoryFiles 88, free utilities (5.7k "(free)").
 - Playable client: src/app/main.mm (Metal, scripts/build_app.sh). Still missing: zoning/placement, click-to-inspect,
   simulators driving growth. Skip DX7 emulation per notes/graphics_scope.md.
+
+## Update (latest session end)
+- Honest progress (scripts/progress.py "Recovered so far") is ~9,400 / 28,371 game functions (~33%). Goal 50% = 14,186.
+- Done since last note: NeighborConnection, 16 occupant filters, 20 ordinances (OrdinanceTypes), DX7 stub + DX7Types.h, 16 ambience state filters, GZ input messages, GZ allocators, cGZDrawContext (state/clip/transform; Rasterize*/Tesselate*/Direct* left partial), cGZWinFlatRect.
+- Helpers (in /tmp, recreate if gone): cls.py (print a class's decompile without thunks/dtors), led.sh (ledger classes + progress + commit), runone.sh (build/run one registered test). scripts/tests/fake_winmgr.h is a shared fake window manager for control tests.
+- Lesson: Ghidra drops message construction in GZOnKey*/forwarders; check /tmp/sc4.asm (otool -arch x86_64 -tV) for those.
+- Next: other cGZWin* controls (BMP, Knob, Text, Slider, Scrollbar, Spinner, Combo) on top of cGZWin + cIGZDrawContext; then CDirect3DVertexBuffer7/CDirect3D7 (need a GL seam); cSC4RegionalCity.
+- Pick cheap classes with the avg-size ranking (gap between symbol addresses) rather than by name.
