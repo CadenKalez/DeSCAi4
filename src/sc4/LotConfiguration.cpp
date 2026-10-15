@@ -53,6 +53,7 @@ bool cSC4LotConfiguration::Shutdown() {
     zoneBits_.assign(16, false);
     wealthBits_.assign(4, false);
     purposeBits_.assign(9, false);
+    buildingFlag_ = false;
     doConstruction_ = false;
     requiredRoads_ = 8;
     objects_.clear();
@@ -60,6 +61,26 @@ bool cSC4LotConfiguration::Shutdown() {
     fenceIds_.clear();
     fenceSegments_.clear();
     return true;
+}
+
+void cSC4LotConfiguration::MakeGeneric(std::uint32_t id, std::uint8_t sizeX, std::uint8_t sizeZ,
+                                       const cSC4LotConfigurationObject& object) {
+    id_ = id;
+    sizeX_ = sizeX;
+    sizeZ_ = sizeZ;
+    families_.clear();
+    maxSlopeBeforeFoundation_ = 5.0f;
+    maxSlope_ = 90.0f;
+    growthStage_ = 1;
+    water_ = false;
+    zoneBits_.clear();
+    wealthBits_.clear();
+    purposeBits_.clear();
+    objects_.clear();
+    retainingWalls_.clear();
+    fenceIds_.clear();
+    fenceSegments_.clear();
+    objects_.push_back(object);
 }
 
 bool cSC4LotConfiguration::BelongsToFamily(std::uint32_t family) const {
@@ -95,10 +116,10 @@ void cSC4LotConfiguration::ConvertPropertiesToObjectArray(const cISCPropertyHold
         o.x = static_cast<float>(static_cast<std::int32_t>(data[3])) * kFixed;
         o.y = static_cast<float>(static_cast<std::int32_t>(data[4])) * kFixed;
         o.z = static_cast<float>(static_cast<std::int32_t>(data[5])) * kFixed;
-        o.maxX = static_cast<float>(static_cast<std::int32_t>(data[6])) * kFixed;
-        o.maxZ = static_cast<float>(static_cast<std::int32_t>(data[7])) * kFixed;
-        o.minX = static_cast<float>(static_cast<std::int32_t>(data[8])) * kFixed;
-        o.minZ = static_cast<float>(static_cast<std::int32_t>(data[9])) * kFixed;
+        o.minX = static_cast<float>(static_cast<std::int32_t>(data[6])) * kFixed;
+        o.minZ = static_cast<float>(static_cast<std::int32_t>(data[7])) * kFixed;
+        o.maxX = static_cast<float>(static_cast<std::int32_t>(data[8])) * kFixed;
+        o.maxZ = static_cast<float>(static_cast<std::int32_t>(data[9])) * kFixed;
         if (data.size() > 10) o.value = data[10];
         std::size_t first;
         if (version < 2) {
@@ -129,10 +150,10 @@ void cSC4LotConfiguration::ConvertObjectArrayToProperties(cISCPropertyHolder& ho
         data.push_back(fixed(o.x));
         data.push_back(fixed(o.y));
         data.push_back(fixed(o.z));
-        data.push_back(fixed(o.maxX));
-        data.push_back(fixed(o.maxZ));
         data.push_back(fixed(o.minX));
         data.push_back(fixed(o.minZ));
+        data.push_back(fixed(o.maxX));
+        data.push_back(fixed(o.maxZ));
         data.push_back(o.value);
         data.push_back(o.id);
         data.insert(data.end(), o.extra.begin(), o.extra.end());
@@ -228,8 +249,8 @@ bool cSC4LotConfiguration::LoadFromProperties(const cISCPropertyHolder& holder, 
         cSC4LotConfigurationObject o;
         o.type = 3;
         o.x = 0.5f; o.y = 0.0f; o.z = 0.5f;
-        o.minX = 0.6f; o.minZ = 0.6f;          // (sic) the original stores 0.6 / 0.4 in the min/max slots
-        o.maxX = 0.4f; o.maxZ = 0.4f;
+        o.maxX = 0.6f; o.maxZ = 0.6f;
+        o.minX = 0.4f; o.minZ = 0.4f;
         o.value = foundation;
         objects_.push_back(std::move(o));
     }

@@ -48,8 +48,8 @@ struct cSC4LotConfigurationObject {
     std::uint8_t orientation = 0;          // +2
     std::uint8_t mirrored = 0;             // +3 (sign bit of the stored orientation word)
     float x = 0, y = 0, z = 0;             // +4, +8, +0xc
-    float minX = 0, minZ = 0;              // +0x10, +0x14
-    float maxX = 0, maxZ = 0;              // +0x18, +0x1c
+    float maxX = 0, maxZ = 0;              // +0x10, +0x14
+    float minX = 0, minZ = 0;              // +0x18, +0x1c
     std::uint32_t value = 0;               // +0x20
     std::uint32_t id = 0;                  // +0x24
     std::vector<std::uint32_t> extra;      // +0x28 type-specific ids
@@ -103,6 +103,13 @@ public:
     void GetRequiredRoads(std::vector<bool>& out) const;
     std::uint32_t GetLotConfigurationObjectCount() const { return static_cast<std::uint32_t>(objects_.size()); }
     std::vector<cSC4LotConfigurationObject>& GetLotConfigurationObjectArray() { return objects_; }
+    // Used by the manager when it derives building information / makes generic configurations.
+    void SetBuildingInformation(std::uint16_t minCapacity, std::uint16_t maxCapacity,
+                                std::vector<std::uint32_t> styles, bool flag) {
+        minCapacity_ = minCapacity; maxCapacity_ = maxCapacity; styles_ = std::move(styles); buildingFlag_ = flag;
+    }
+    bool GetBuildingFlag() const { return buildingFlag_; }                  // +0xd0
+    void MakeGeneric(std::uint32_t id, std::uint8_t sizeX, std::uint8_t sizeZ, const cSC4LotConfigurationObject& object);
     cSC4LotConfigurationObject* GetPrimaryBuildingConfigurationObject() { return FindObject(0); }
     cSC4LotConfigurationObject* GetPrimaryBaseConfigurationObject() { return FindObject(2); }
     cSC4LotConfigurationObject* GetPrimaryFoundationConfigurationObject() { return FindObject(3); }
@@ -151,6 +158,7 @@ private:
     std::vector<bool> wealthBits_ = std::vector<bool>(4);     // +0x88
     std::vector<bool> purposeBits_ = std::vector<bool>(9);    // +0xa0
     std::vector<std::uint32_t> styles_;             // +0xb8
+    bool buildingFlag_ = false;                     // +0xd0 set by InitBuildingInformation
     bool doConstruction_ = false;                   // +0xd1
     std::uint8_t requiredRoads_ = 8;                // +0xd2 (bit per edge)
     std::vector<cSC4LotConfigurationObject> objects_;   // +0xd8

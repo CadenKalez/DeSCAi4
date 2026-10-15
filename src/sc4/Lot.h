@@ -66,7 +66,7 @@ public:
 struct LotBuildingProfile {
     std::uint32_t purpose = 0;                                               // +0
     std::int32_t wealthLevels = 0;                                           // +4
-    std::int32_t classId = 0;                                                // +8 (passed to the sim on abandonment)
+    std::int32_t buildingCapacity = 0;                                       // +8 (u16 used by the manager; passed to the sim on abandonment)
     std::vector<std::map<std::uint32_t, std::uint16_t>> capacities;          // +0x10 per wealth level
     bool allowPartialCapacity = false;                                       // +0x28
 };

@@ -275,7 +275,7 @@ void cSC4Lot::SetState(std::uint32_t state, std::uint32_t wealthArg, std::uint8_
     if (old == kLotStateOccupied && buildingType_ != 0 && host) {
         const LotBuildingProfile* profile = host->BuildingProfile(buildingType_);
         if (profile && profile->purpose != 0) {
-            host->OnDeveloperLotAbandoned(static_cast<std::uint16_t>(profile->classId));
+            host->OnDeveloperLotAbandoned(static_cast<std::uint16_t>(profile->buildingCapacity));
             if (state_ == kLotStateLivable) {
                 const std::uint32_t devType = host->DeveloperType(profile->purpose, profile->wealthLevels);
                 SetPopulation(devType, GetCapacity(devType, true));
