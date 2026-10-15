@@ -36,11 +36,14 @@ struct ProtectionEffect {
     float radius = 0;         // +8, scaled by AdjustProtectionEffect
     int peak = 0;             // +0xc
     int edge = 0;             // +0x10
+    int capacity = 0;         // +0x14 (police: copy of peak, not scaled by AdjustProtectionEffect)
 };
 
+class IProtectionStation;
 struct ProtectionDispatchInfo {   // one active dispatch as reported by the dispatch manager
     bool valid = false;
     bool active = false;      // original tests the flag at +0x10 of the record
+    IProtectionStation* origin = nullptr;   // station the dispatch left from
     float targetX = 0, targetZ = 0;
 };
 
