@@ -67,8 +67,8 @@ void cSC4FloraOccupant::SetPosition(const float* xyz) { for (int i = 0; i < 3; +
 
 void cSC4FloraOccupant::GetBoundingBox(float* minXyz, float* maxXyz) {
     if (!data_ && g_floraHost) SetStaticFloraData(g_floraHost->StaticFloraData(floraType_));
-    const float half = data_ ? data_->halfExtent : 1.0f;
-    const float height = data_ ? data_->height : 1.0f;
+    const float half = data_ ? data_->HalfExtent() : 1.0f;
+    const float height = data_ ? data_->Height() : 1.0f;
     minXyz[0] = position_[0] - half;
     minXyz[1] = position_[1];
     minXyz[2] = position_[2] - half;
