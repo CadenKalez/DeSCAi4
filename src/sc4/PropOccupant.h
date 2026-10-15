@@ -42,7 +42,7 @@ public:
     virtual void SetInRenderer(bool inRenderer) = 0;
 };
 
-class cSC4PropOccupant final : public cSC4Occupant {
+class cSC4PropOccupant : public cSC4Occupant {
 public:
     cSC4PropOccupant() { type_ = kOccupantTypeProp; }
 
@@ -101,7 +101,6 @@ private:
     std::uint8_t randomChance_ = 100;       // +0x9a
     std::uint8_t state_ = 0;                // +0x9b
     std::uint8_t usage_ = 0;                // +0x9c
-    std::uint8_t placement_ = 0;            // +0x63: bit0 in occupant manager, bit1 in renderer
 };
 
 }  // namespace sc4

@@ -222,31 +222,31 @@ void cSC4PropOccupant::SetPropTimerState(std::uint8_t mask, bool on) {
 }
 
 bool cSC4PropOccupant::PlaceInOccupantManager(bool place) {
-    const bool placed = (placement_ & 1) != 0;
+    const bool placed = (flags_ & 1) != 0;
     if (placed == place) return true;
     cISC4OccupantManager* manager = g_host ? g_host->OccupantManager() : nullptr;
     if (!manager) return false;
     if (!placed) {
         if (!manager->InsertOccupant(static_cast<cISC4Occupant*>(this), 0)) return false;
-        placement_ |= 1;
+        flags_ |= 1;
     } else {
-        if (placement_ & 2) PlaceInRenderer(false);
+        if (flags_ & 2) PlaceInRenderer(false);
         manager->RemoveOccupant(static_cast<cISC4Occupant*>(this), false, 0);
-        placement_ &= ~1;
+        flags_ &= ~1;
     }
     return true;
 }
 
 bool cSC4PropOccupant::PlaceInRenderer(bool place) {
-    if ((((placement_ & 2) != 0) == place)) return true;
+    if ((((flags_ & 2) != 0) == place)) return true;
     cISC43DPlaceableObject* object = GetPlaceableObject();
     if (!object) return false;
     object->AddRef();
     if (place) {
-        if (!(placement_ & 1)) PlaceInOccupantManager(true);
-        placement_ |= 2;
+        if (!(flags_ & 1)) PlaceInOccupantManager(true);
+        flags_ |= 2;
     } else {
-        placement_ &= ~2;
+        flags_ &= ~2;
     }
     if (auto* renderable = dynamic_cast<cISC43DRenderable*>(object)) renderable->SetInRenderer(place);
     object->Release();
