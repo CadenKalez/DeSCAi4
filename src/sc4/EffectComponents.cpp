@@ -3,12 +3,14 @@
 #include "rz/cRZString.h"
 
 #include <cmath>
+#include <cstring>
 #include <map>
 
 namespace sc4 {
 
 namespace {
 IEffectsHost* g_host = nullptr;
+ITerrainBrush* g_terrainBrush = nullptr;
 std::map<EffectComponentType, EffectComponentFactory>& Factories() {
     static std::map<EffectComponentType, EffectComponentFactory> factories;
     return factories;
@@ -26,6 +28,8 @@ std::string ReadString(cIGZIStream& stream) {
 
 IEffectsHost* EffectsHost() { return g_host; }
 void SetEffectsHost(IEffectsHost* host) { g_host = host; }
+void SetTerrainBrush(ITerrainBrush* brush) { g_terrainBrush = brush; }
+ITerrainBrush* TerrainBrush() { return g_terrainBrush; }
 void SetEffectComponentFactory(EffectComponentType type, EffectComponentFactory factory) { Factories()[type] = std::move(factory); }
 
 // ----------------------------------------------------------------------------------------- descriptions
@@ -34,7 +38,11 @@ cISC4VisualEffectComponent* cSC4CameraDescription::Instantiate() { return new cS
 cISC4VisualEffectComponent* cSC4SoundDescription::Instantiate() { return new cSC4SoundEffect(this); }
 cISC4VisualEffectComponent* cSC4AttractorDescription::Instantiate() { return Make(EffectComponentType::Attractor, this); }
 cISC4VisualEffectComponent* cSC4SequenceDescription::Instantiate() { return Make(EffectComponentType::Sequence, this); }
-cISC4VisualEffectComponent* cSC4BrushDescription::Instantiate() { return Make(EffectComponentType::Brush, this); }
+cISC4VisualEffectComponent* cSC4BrushDescription::Instantiate() {
+    auto* effect = new cSC4BrushEffect();
+    effect->SetDescription(this);
+    return effect;
+}
 cISC4VisualEffectComponent* cSC4ScrubberDescription::Instantiate() { return Make(EffectComponentType::Scrubber, this); }
 
 void cSC4CameraDescription::Read(cIGZIStream& stream) {
@@ -320,6 +328,91 @@ void cSC4SoundEffect::ApplyEffect(float elapsed) {
                                    static_cast<std::int64_t>(position_.y), static_cast<std::int64_t>(position_.z));
     }
     if (0.0f < description_->duration && description_->duration < elapsed_) Stop(1);
+}
+
+// ------------------------------------------------------------------------------------------- brush
+
+cSC4BrushEffect::~cSC4BrushEffect() {
+    if (description_) description_->Release();
+}
+
+// Each effect gets its own random brush parameters, drawn from the description's two ranges.
+void cSC4BrushEffect::SetDescription(cSC4BrushDescription* description) {
+    if (description_ != description) {
+        if (description) description->AddRef();
+        cSC4BrushDescription* old = description_;
+        description_ = description;
+        if (old) old->Release();
+    }
+    if (ITerrainBrush* brush = g_terrainBrush) {
+        randomA_ = static_cast<float>(brush->RandomRange(description_->v28.x, description_->v28.y));
+        randomB_ = static_cast<float>(brush->RandomRange(description_->v30.x, description_->v30.y));
+    }
+}
+
+void cSC4BrushEffect::Start(int) {
+    started_ = true;
+    brushBegun_ = false;
+    previous_ = position_;
+    accumulator_ = 0.0f;
+    elapsed_ = 0.0f;
+}
+
+void cSC4BrushEffect::Stop(int) {
+    if (brushBegun_) {
+        if (g_terrainBrush) g_terrainBrush->EndBrush();
+        brushBegun_ = false;
+    }
+    started_ = false;
+}
+
+void cSC4BrushEffect::SetTransforms(const cS3DTransform& parent, const cS3DTransform& local) {
+    const cS3DVector3 t = ComposeTranslation(parent, local);
+    position_.x = t.x;
+    position_.y = t.z;
+}
+
+void cSC4BrushEffect::ApplyBrush(int count) {
+    ITerrainBrush* terrain = g_terrainBrush;
+    if (!terrain) return;
+    if (!terrain->PositionInCity(previous_.x, previous_.y) || !terrain->PositionInCity(position_.x, position_.y)) return;
+    for (; count != 0; --count) {
+        TerrainBrushParams params;
+        params.u24 = description_->u24;
+        params.last = count == 1;
+        params.randomA = randomA_;
+        params.randomB = randomB_;
+        params.mode = 3;
+        params.amount = description_->f38;
+        params.from = previous_;
+        params.to = position_;
+        terrain->ApplyBrush(description_->id, params);
+    }
+    previous_ = position_;
+}
+
+void cSC4BrushEffect::ApplyEffect(float elapsed) {
+    if (description_->flag != 0) {                 // one shot
+        started_ = false;
+        ApplyBrush(static_cast<int>(description_->f18));
+        return;
+    }
+    if (!brushBegun_) {
+        if (g_terrainBrush) g_terrainBrush->BeginBrush();
+        brushBegun_ = true;
+    }
+    accumulator_ = description_->f18 * elapsed + accumulator_;
+    elapsed_ += elapsed;
+    // floor via the float-add rounding trick of the original (round(x - 0.5) with ties to even, then x == r + 1)
+    const float biased = accumulator_ - 0.5f + 12582912.0f;
+    std::int32_t bits;
+    std::memcpy(&bits, &biased, sizeof bits);
+    std::int32_t whole = bits - 0x4b400000;
+    const std::int32_t next = bits - 0x4b3fffff;
+    if (accumulator_ == static_cast<float>(next)) whole = next;
+    ApplyBrush(whole);
+    accumulator_ -= static_cast<float>(whole);
+    if (0.0f < description_->f1c && description_->f1c < elapsed_) started_ = false;
 }
 
 }  // namespace sc4

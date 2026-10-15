@@ -10,6 +10,18 @@ static int failures = 0;
 using namespace sc4;
 
 namespace {
+struct FakeBrush final : ITerrainBrush {
+    int begins = 0, ends = 0;
+    std::vector<TerrainBrushParams> applied;
+    std::vector<std::uint32_t> ids;
+    bool inside = true;
+    double next = 0.25;
+    void BeginBrush() override { ++begins; }
+    void EndBrush() override { ++ends; }
+    void ApplyBrush(std::uint32_t id, const TerrainBrushParams& p) override { ids.push_back(id); applied.push_back(p); }
+    bool PositionInCity(float, float) override { return inside; }
+    double RandomRange(double low, double high) override { return low + (high - low) * next; }
+};
 struct FakeCamera final : ICameraControl {
     int zoomLevel = 2;
     float zoom = -1, rotation = -1;
@@ -137,6 +149,51 @@ int main() {
     sound->ApplyEffect(2.0f);                       // past the 2 s duration: stops itself
     CHECK(!sound->IsStarted() && host.events.back().id == kSoundEventStop);
     sound->Release();
+    // brush effect
+    FakeBrush terrain;
+    SetTerrainBrush(&terrain);
+    brush.f18 = 4.0f;          // four strokes per second
+    brush.f1c = 1.0f;          // for one second
+    brush.v28 = {10.0f, 20.0f};
+    brush.v30 = {0.0f, 8.0f};
+    brush.u24 = 77;
+    brush.id = 5;
+    brush.flag = 0;
+    brush.f38 = 3.0f;
+    brush.AddRef();
+    auto* paint = static_cast<cSC4BrushEffect*>(brush.Instantiate());
+    paint->AddRef();
+    cS3DTransform at0, at1;
+    at0.flags = 1; at0.translation[0] = 8; at0.translation[2] = 16;
+    paint->SetTransforms(cS3DTransform{}, at0);
+    paint->Start(0);
+    CHECK(paint->IsStarted());
+    paint->ApplyEffect(0.125f);                    // 0.5 stroke: none yet, brush begun
+    CHECK(terrain.begins == 1 && terrain.applied.empty());
+    at1.flags = 1; at1.translation[0] = 24; at1.translation[2] = 40;
+    paint->SetTransforms(cS3DTransform{}, at1);
+    paint->ApplyEffect(0.25f);                     // 0.5 + 1.0 = 1.5 strokes -> one stroke, 0.5 carried
+    CHECK(terrain.applied.size() == 1 && terrain.ids[0] == 5);
+    CHECK(terrain.applied[0].from.x == 8 && terrain.applied[0].from.y == 16 && terrain.applied[0].to.x == 24 && terrain.applied[0].to.y == 40);
+    CHECK(terrain.applied[0].u24 == 77 && terrain.applied[0].last == 1 && terrain.applied[0].mode == 3 && terrain.applied[0].amount == 3.0f);
+    CHECK(terrain.applied[0].randomA == 12.5f && terrain.applied[0].randomB == 2.0f);   // 10 + 10 * 0.25, 0 + 8 * 0.25
+    paint->ApplyEffect(0.875f);                    // 0.5 + 3.5 = 4.0 strokes -> four, and the duration passes
+    CHECK(terrain.applied.size() == 5 && terrain.applied[1].last == 0 && terrain.applied[4].last == 1);
+    CHECK(!paint->IsStarted());
+    paint->Stop(0);
+    CHECK(terrain.ends == 1);
+    // out of the city: nothing is applied; a one-shot description applies its count at once
+    terrain.inside = false;
+    paint->Start(0);
+    paint->ApplyEffect(1.0f);
+    CHECK(terrain.applied.size() == 5);
+    terrain.inside = true;
+    brush.flag = 1;
+    brush.f18 = 3.0f;
+    paint->Start(0);
+    paint->ApplyEffect(0.01f);
+    CHECK(terrain.applied.size() == 8 && !paint->IsStarted());
+    paint->Release();
     std::printf(failures ? "FAILED\n" : "OK\n");
     return failures != 0;
 }

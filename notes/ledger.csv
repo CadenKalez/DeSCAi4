@@ -12695,7 +12695,7 @@ address,symbol,unique_name,source,status,evidence
 0x100575bce,non-virtual thunk to cSC4BrushDescription::~cSC4BrushDescription(),DestructThunk,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
 0x100575bfa,cSC4BrushDescription::~cSC4BrushDescription(),DestructAndDelete,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
 0x100575c4c,non-virtual thunk to cSC4BrushDescription::~cSC4BrushDescription(),DestructAndDeleteThunk,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
-0x100575c5a,cSC4BrushDescription::Instantiate(),Instantiate,src/sc4/EffectComponents.cpp|h,recovered-partial,scripts/tests/sc4_effectcomponents_test.cpp
+0x100575c5a,cSC4BrushDescription::Instantiate(),Instantiate,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
 0x100575d92,cSC4BrushDescription::Read(cIGZIStream&),Read,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
 0x100575e20,cSC4BrushDescription::Write(cIGZOStream&),Write,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
 0x10057623a,cSC4BrushDescription::Type() const,Type,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
@@ -12716,3 +12716,21 @@ address,symbol,unique_name,source,status,evidence
 0x100574bda,cSC4ScrubberDescription::Release(),Release,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
 0x100574be8,non-virtual thunk to cSC4ScrubberDescription::Release(),ReleaseThunk,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
 0x100574bf2,non-virtual thunk to cSC4ScrubberDescription::AddRef(),AddRefThunk,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x100575cde,cSC4BrushEffect::SetDescription(cSC4BrushDescription*),SetDescription,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x100575eb0,cSC4BrushEffect::~cSC4BrushEffect(),Destruct,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x100575f40,cSC4BrushEffect::~cSC4BrushEffect(),DestructAndDelete,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x100575f4a,non-virtual thunk to cSC4BrushEffect::~cSC4BrushEffect(),DestructThunk,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x100575f58,cSC4BrushEffect::~cSC4BrushEffect(),DestructBody,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x100575f86,non-virtual thunk to cSC4BrushEffect::~cSC4BrushEffect(),DestructAndDeleteThunk,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x100575f94,cSC4BrushEffect::Start(cISC4VisualEffect::tTransitionType),Start,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x100575fb0,cSC4BrushEffect::Stop(cISC4VisualEffect::tTransitionType),Stop,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x100575fdc,cSC4BrushEffect::IsStarted() const,IsStarted,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x100575fe6,"cSC4BrushEffect::SetTransforms(cS3DTransform const&, cS3DTransform const&)",SetTransforms,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x10057605e,"cSC4BrushEffect::SetFloatParams(cISC4VisualEffect::tParamType, float const*, int)",SetFloatParams,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x100576066,"cSC4BrushEffect::SetVoidParams(cISC4VisualEffect::tParamType, void**, int)",SetVoidParams,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x10057606e,cSC4BrushEffect::ApplyEffect(float),ApplyEffect,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x100576168,cSC4BrushEffect::ApplyBrush(int),ApplyBrush,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x100576276,cSC4BrushEffect::AddRef(),AddRef,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x100576284,cSC4BrushEffect::Release(),Release,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x100576292,non-virtual thunk to cSC4BrushEffect::Release(),ReleaseThunk,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x10057629c,non-virtual thunk to cSC4BrushEffect::AddRef(),AddRefThunk,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp

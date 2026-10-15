@@ -218,6 +218,54 @@ private:
     bool soundSystem_ = false;             // +0x40
 };
 
+// ---- brush effect ---------------------------------------------------------------------------------
+// The terrain brush service of the effects (cISTETerrain vslots 0x1c8 / 0x2b8 / 0x2c0) and the city's cell test.
+struct TerrainBrushParams {
+    std::uint32_t u24 = 0;         // description +0x24
+    std::int32_t last = 0;         // 1 on the final application of a frame
+    float randomA = 0.0f, randomB = 0.0f;
+    std::int32_t mode = 3;
+    float amount = 0.0f;           // description +0x38
+    cS3DVector2 from, to;          // previous / current position
+};
+class ITerrainBrush {
+public:
+    virtual ~ITerrainBrush() = default;
+    virtual void BeginBrush() = 0;                                                    // vslot 0x2b8
+    virtual void EndBrush() = 0;                                                      // vslot 0x2c0
+    virtual void ApplyBrush(std::uint32_t brushId, const TerrainBrushParams& params) = 0;   // vslot 0x1c8
+    virtual bool PositionInCity(float x, float z) = 0;                                // city vslot 0x310
+    virtual double RandomRange(double low, double high) = 0;                          // cRZRandom mRandom
+};
+void SetTerrainBrush(ITerrainBrush* brush);
+ITerrainBrush* TerrainBrush();
+
+// Paints the terrain along its path: a one-shot description applies the brush once, otherwise brush strokes are
+// applied at a steady rate (fractions carry over) until the description's duration has passed.
+class cSC4BrushEffect final : public cISC4VisualEffectComponent {
+public:
+    cSC4BrushEffect() = default;
+    ~cSC4BrushEffect() override;
+    void SetDescription(cSC4BrushDescription* description);
+    void Start(int transition) override;
+    void Stop(int transition) override;
+    bool IsStarted() const override { return started_; }
+    void SetTransforms(const cS3DTransform& parent, const cS3DTransform& local) override;
+    void ApplyEffect(float elapsed) override;
+    bool SetFloatParams(int, const float*, int) override { return false; }
+    bool SetVoidParams(int, void**, int) override { return false; }
+    void ApplyBrush(int count);
+
+private:
+    cSC4BrushDescription* description_ = nullptr;   // +0x18
+    cS3DVector2 position_, previous_;               // +0x28, +0x30
+    bool started_ = false;                          // +0x38
+    bool brushBegun_ = false;                       // +0x39
+    float accumulator_ = 0.0f;                      // +0x3c
+    float elapsed_ = 0.0f;                          // +0x40
+    float randomA_ = 0.0f, randomB_ = 0.0f;         // +0x44, +0x48
+};
+
 // the translation of (parent * local): the local rotation / scale applied to the parent's translation
 cS3DVector3 ComposeTranslation(const cS3DTransform& parent, const cS3DTransform& local);
 
