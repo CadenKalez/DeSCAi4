@@ -10268,3 +10268,44 @@ address,symbol,unique_name,source,status,evidence
 0x10004940c,cGZApp::AddCOMDirectorsHere(),AddCOMDirectorsHere,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
 0x100049412,non-virtual thunk to cGZApp::AddCOMDirectorsHere(),AddCOMDirectorsHereThunk,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
 0x100049420,cGZApp::AsIGZSystemService(),AsIGZSystemService,src/gz/GZApp.cpp|h,recovered,GZApp: application service base with default hooks; test gz_app
+0x10044ba4c,cSC4AdviceSubject::~cSC4AdviceSubject(),Destruct,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bae2,cSC4AdviceSubject::~cSC4AdviceSubject(),DestructAndDelete,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044baec,cSC4AdviceSubject::~cSC4AdviceSubject(),DestructBody,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bb1a,"cSC4AdviceSubject::SetLocation(float, float)",SetLocation,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bb32,cSC4AdviceSubject::validate_location(),validate_location,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bbc8,"non-virtual thunk to cSC4AdviceSubject::SetLocation(float, float)",SetLocationThunk,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bbe4,cSC4AdviceSubject::GetLocationX(),GetLocationX,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bbfa,non-virtual thunk to cSC4AdviceSubject::GetLocationX(),GetLocationXThunk,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bc10,cSC4AdviceSubject::GetLocationZ(),GetLocationZ,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bc26,non-virtual thunk to cSC4AdviceSubject::GetLocationZ(),GetLocationZThunk,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bc3c,cSC4AdviceSubject::HasLocation(),HasLocation,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bc46,non-virtual thunk to cSC4AdviceSubject::HasLocation(),HasLocationThunk,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bc50,cSC4AdviceSubject::SetObject(cIGZUnknown*),SetObject,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bcd8,non-virtual thunk to cSC4AdviceSubject::SetObject(cIGZUnknown*),SetObjectThunk,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bcea,cSC4AdviceSubject::GetObjectA(),GetObjectA,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bcf4,non-virtual thunk to cSC4AdviceSubject::GetObjectA(),GetObjectAThunk,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bcfe,cSC4AdviceSubject::GetData1() const,GetData1,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bd08,non-virtual thunk to cSC4AdviceSubject::GetData1() const,GetData1Thunk,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bd12,cSC4AdviceSubject::SetData1(unsigned int),SetData1,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bd1c,non-virtual thunk to cSC4AdviceSubject::SetData1(unsigned int),SetData1Thunk,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bd26,cSC4AdviceSubject::GetData2() const,GetData2,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bd30,non-virtual thunk to cSC4AdviceSubject::GetData2() const,GetData2Thunk,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bd3a,cSC4AdviceSubject::SetData2(unsigned int),SetData2,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bd44,non-virtual thunk to cSC4AdviceSubject::SetData2(unsigned int),SetData2Thunk,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bd4e,cSC4AdviceSubject::Clone(cISC4AdviceSubject**),Clone,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bea4,non-virtual thunk to cSC4AdviceSubject::Clone(cISC4AdviceSubject**),CloneThunk,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044beb2,"cSC4AdviceSubject::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bee4,"non-virtual thunk to cSC4AdviceSubject::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_bee4,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bef2,"non-virtual thunk to cSC4AdviceSubject::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_bef2,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bf00,cSC4AdviceSubject::AddRef(),AddRef,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bf0a,non-virtual thunk to cSC4AdviceSubject::AddRef(),AddRefThunk_bf0a,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bf18,non-virtual thunk to cSC4AdviceSubject::AddRef(),AddRefThunk_bf18,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bf26,cSC4AdviceSubject::Release(),Release,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bf30,non-virtual thunk to cSC4AdviceSubject::Release(),ReleaseThunk_bf30,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bf3e,non-virtual thunk to cSC4AdviceSubject::Release(),ReleaseThunk_bf3e,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bf4c,cSC4AdviceSubject::Write(cIGZOStream&) const,Write,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bfde,non-virtual thunk to cSC4AdviceSubject::Write(cIGZOStream&) const,WriteThunk,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044bfec,cSC4AdviceSubject::Read(cIGZIStream&),Read,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044c0b2,non-virtual thunk to cSC4AdviceSubject::Read(cIGZIStream&),ReadThunk,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044c0c0,cSC4AdviceSubject::GetGZCLSID() const,GetGZCLSID,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
+0x10044c0cc,non-virtual thunk to cSC4AdviceSubject::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/AdviceSubject.cpp|h,recovered,AdviceSubject: advisor message subject record; test sc4_advicesubject
