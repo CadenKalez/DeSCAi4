@@ -11482,3 +11482,46 @@ address,symbol,unique_name,source,status,evidence
 0x100076164,cSC4NeighborDeal::CheckFlagsOr(int) const,CheckFlagsOr,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
 0x100076174,cSC4NeighborDeal::GetGZCLSID() const,GetGZCLSID,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
 0x100076180,non-virtual thunk to cSC4NeighborDeal::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/NeighborDeal.cpp|h,recovered,NeighborDeal: regional trade deal over INeighborDealHost; test sc4_neighbordeal
+0x10007146e,cSC4NeighborConnection::cSC4NeighborConnection(),Construct,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x1000747d6,cSC4NeighborConnection::~cSC4NeighborConnection(),Destruct,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x10007482e,non-virtual thunk to cSC4NeighborConnection::~cSC4NeighborConnection(),DestructThunk,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074884,cSC4NeighborConnection::~cSC4NeighborConnection(),DestructAndDelete,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x1000748f8,non-virtual thunk to cSC4NeighborConnection::~cSC4NeighborConnection(),DestructAndDeleteThunk,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074906,"cSC4NeighborConnection::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x10007493a,"non-virtual thunk to cSC4NeighborConnection::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_493a,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074948,"non-virtual thunk to cSC4NeighborConnection::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_4948,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074956,"non-virtual thunk to cSC4NeighborConnection::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_4956,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074964,cSC4NeighborConnection::AddRef(),AddRef,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074972,non-virtual thunk to cSC4NeighborConnection::AddRef(),AddRefThunk_4972,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074980,non-virtual thunk to cSC4NeighborConnection::AddRef(),AddRefThunk_4980,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x10007498e,non-virtual thunk to cSC4NeighborConnection::AddRef(),AddRefThunk_498e,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x10007499c,cSC4NeighborConnection::Release(),Release,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x1000749bc,non-virtual thunk to cSC4NeighborConnection::Release(),ReleaseThunk_49bc,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x1000749e0,non-virtual thunk to cSC4NeighborConnection::Release(),ReleaseThunk_49e0,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074a04,non-virtual thunk to cSC4NeighborConnection::Release(),ReleaseThunk_4a04,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074a28,cSC4NeighborConnection::Write(cIGZOStream&) const,Write,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074ab4,non-virtual thunk to cSC4NeighborConnection::Write(cIGZOStream&) const,WriteThunk_4ab4,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074ac2,non-virtual thunk to cSC4NeighborConnection::Write(cIGZOStream&) const,WriteThunk_4ac2,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074ad0,cSC4NeighborConnection::Read(cIGZIStream&),Read,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074b7e,non-virtual thunk to cSC4NeighborConnection::Read(cIGZIStream&),ReadThunk_4b7e,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074b8c,non-virtual thunk to cSC4NeighborConnection::Read(cIGZIStream&),ReadThunk_4b8c,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074b9a,cSC4NeighborConnection::GetCityOnOtherSideOfConnection() const,GetCityOnOtherSideOfConnection,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074bde,"cSC4NeighborConnection::GetConnectionInnerCell(int&, int&) const",GetConnectionInnerCell,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074c94,cSC4NeighborConnection::Repair(cISC4RegionalCity*),Repair,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100074cb2,cSC4NeighborConnection::UpdateTrafficVolume(),UpdateTrafficVolume,src/sc4/NeighborConnection.h,recovered-partial,scripts/tests/sc4_neighborconnection_test.cpp
+0x100075106,non-virtual thunk to cSC4NeighborConnection::UpdateTrafficVolume(),UpdateTrafficVolumeThunk,src/sc4/NeighborConnection.h,recovered-partial,scripts/tests/sc4_neighborconnection_test.cpp
+0x100075eb2,cSC4NeighborConnection::AsISCPropertyHolder(),AsISCPropertyHolder,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100075ebc,cSC4NeighborConnection::AsTrafficSource(),AsTrafficSource,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100075ec6,cSC4NeighborConnection::GetType() const,GetType,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100075ed0,"cSC4NeighborConnection::GetConnectionCell(int&, int&) const",GetConnectionCell,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100075ee0,"cSC4NeighborConnection::GetRegionCellOnOtherSideOfConnection(int&, int&) const",GetRegionCellOnOtherSideOfConnection,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100075ef0,cSC4NeighborConnection::GetVisitedThisCycle() const,GetVisitedThisCycle,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100075efe,cSC4NeighborConnection::SetVisitedThisCycle(unsigned char),SetVisitedThisCycle,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100075f16,cSC4NeighborConnection::GetIsActive() const,GetIsActive,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100075f28,cSC4NeighborConnection::SetIsActive(unsigned char),SetIsActive,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100075f40,cSC4NeighborConnection::GetGZCLSID() const,GetGZCLSID,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100075f4c,cSC4NeighborConnection::GetTripDataList(),GetTripDataList,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100075f56,cSC4NeighborConnection::GetSourceCells() const,GetSourceCells,src/sc4/NeighborConnection.h,recovered-partial,scripts/tests/sc4_neighborconnection_test.cpp
+0x100075f6c,non-virtual thunk to cSC4NeighborConnection::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100075f78,non-virtual thunk to cSC4NeighborConnection::GetTripDataList(),GetTripDataListThunk,src/sc4/NeighborConnection.h,recovered,scripts/tests/sc4_neighborconnection_test.cpp
+0x100075f82,non-virtual thunk to cSC4NeighborConnection::GetSourceCells() const,GetSourceCellsThunk,src/sc4/NeighborConnection.h,recovered-partial,scripts/tests/sc4_neighborconnection_test.cpp
