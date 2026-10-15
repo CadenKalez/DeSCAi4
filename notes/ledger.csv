@@ -12447,3 +12447,55 @@ address,symbol,unique_name,source,status,evidence
 0x100759052,cGZWinKnob::GetKnobFlag(unsigned int),GetKnobFlag,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
 0x100759062,cGZWinKnob::GZPaint(),GZPaint,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
 0x100759124,non-virtual thunk to cGZWinKnob::GZPaint(),GZPaintThunk,src/gz/WinKnob.cpp|h,recovered,scripts/tests/gz_winknob_test.cpp
+0x10027b750,cGZWinSlider::CreateNewObject(),CreateNewObject,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b788,cGZWinSlider::cGZWinSlider(),Construct,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b792,cGZWinSlider::cGZWinSlider(),ConstructWrapper,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b84c,cGZWinSlider::~cGZWinSlider(),Destruct,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b856,cGZWinSlider::~cGZWinSlider(),DestructAndDelete,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b860,cGZWinSlider::~cGZWinSlider(),DestructBody,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b88e,"cGZWinSlider::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b8b2,"non-virtual thunk to cGZWinSlider::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b8de,cGZWinSlider::AddRef(),AddRef,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b8e8,non-virtual thunk to cGZWinSlider::AddRef(),AddRefThunk,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b8fa,cGZWinSlider::Release(),Release,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b904,non-virtual thunk to cGZWinSlider::Release(),ReleaseThunk,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b916,"cGZWinSlider::SetArea(int, int, int, int)",SetArea_int_int_int_int,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b974,cGZWinSlider::SetArea(cRZRect const&),SetArea_cRZRect_const,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b994,cGZWinSlider::SetDirection(cIGZWinSlider::tSliderWindowDirection),SetDirection,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b9a0,non-virtual thunk to cGZWinSlider::SetDirection(cIGZWinSlider::tSliderWindowDirection),SetDirectionThunk,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b9aa,cGZWinSlider::GetDirection(cIGZWinSlider::tSliderWindowDirection&) const,GetDirection,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b9b8,non-virtual thunk to cGZWinSlider::GetDirection(cIGZWinSlider::tSliderWindowDirection&) const,GetDirectionThunk,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b9c4,cGZWinSlider::Init(),Init,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027b9f0,cGZWinSlider::Shutdown(),Shutdown,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027ba24,cGZWinSlider::slider_paint_flat(),slider_paint_flat,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027bbea,cGZWinSlider::slider_paint_bmp(),slider_paint_bmp,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027be1a,cGZWinSlider::GZPaint(),GZPaint,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027be38,"cGZWinSlider::GZOnMouseDownL(int, int, unsigned int)",GZOnMouseDownL,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027be90,"cGZWinSlider::GZOnMouseUpL(int, int, unsigned int)",GZOnMouseUpL,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027bf20,"cGZWinSlider::GZOnMouseMove(int, int, unsigned int)",GZOnMouseMove,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027bf78,"cGZWinSlider::GZOnKeyDown(unsigned int, unsigned int)",GZOnKeyDown,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027bf9e,"cGZWinSlider::GZOnKeyUp(unsigned int, unsigned int)",GZOnKeyUp,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027bfc4,"cGZWinSlider::ConvertCursorPositionToPercentage(float&, int, int)",ConvertCursorPositionToPercentage,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c090,cGZWinSlider::CalculateAllMetrics(),CalculateAllMetrics,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c132,cGZWinSlider::CalculateThumbPosition(),CalculateThumbPosition,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c27a,cGZWinSlider::AsIGZWin(),AsIGZWin,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c284,non-virtual thunk to cGZWinSlider::AsIGZWin(),AsIGZWinThunk,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c292,cGZWinSlider::GetValue() const,GetValue,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c2c0,non-virtual thunk to cGZWinSlider::GetValue() const,GetValueThunk,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c2e6,cGZWinSlider::SetValue(int),SetValue,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c3b6,non-virtual thunk to cGZWinSlider::SetValue(int),SetValueThunk,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c3c8,cGZWinSlider::SetPercentage(float),SetPercentage,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c476,cGZWinSlider::SetMinimumValue(int),SetMinimumValue,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c4a0,non-virtual thunk to cGZWinSlider::SetMinimumValue(int),SetMinimumValueThunk,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c4d8,cGZWinSlider::GetMinimumValue() const,GetMinimumValue,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c4e4,non-virtual thunk to cGZWinSlider::GetMinimumValue() const,GetMinimumValueThunk,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c4ee,cGZWinSlider::SetMaximumValue(int),SetMaximumValue,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c518,non-virtual thunk to cGZWinSlider::SetMaximumValue(int),SetMaximumValueThunk,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c550,cGZWinSlider::GetMaximumValue() const,GetMaximumValue,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c55c,non-virtual thunk to cGZWinSlider::GetMaximumValue() const,GetMaximumValueThunk,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c566,"cGZWinSlider::SetImage(cIGZBuffer*, cRZRect const*)",SetImage,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c6c8,"non-virtual thunk to cGZWinSlider::SetImage(cIGZBuffer*, cRZRect const*)",SetImageThunk,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c6da,"cGZWinSlider::GetImage(cIGZBuffer*&, cRZRect&) const",GetImage,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c702,"non-virtual thunk to cGZWinSlider::GetImage(cIGZBuffer*&, cRZRect&) const",GetImageThunk,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c720,cGZWinSlider::GetThumbWidth() const,GetThumbWidth,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x10027c756,cGZWinSlider::GetThumbHeight() const,GetThumbHeight,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
