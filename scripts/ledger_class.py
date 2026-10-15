@@ -19,13 +19,14 @@ ap.add_argument("--status", default="recovered")
 ap.add_argument("--partial", default="")
 ap.add_argument("--name", action="append", default=[])
 ap.add_argument("--no-ghidra", action="store_true")
+ap.add_argument("--match", help="regex over the demangled symbol (replaces the Class:: prefix match; for free functions)")
 ap.add_argument("--direct-only", action="store_true", help="skip nested classes (Class::Inner::method)")
 a = ap.parse_args()
 override = {int(k, 16): v for k, v in (x.split("=") for x in a.name)}
 partial = {int(x, 16) for x in a.partial.split(",") if x}
 
 syms = {}
-pat = re.compile(r"^(?:non-virtual thunk to |virtual thunk to )?" + re.escape(a.cls) + r"::")
+pat = re.compile(a.match) if a.match else re.compile(r"^(?:non-virtual thunk to |virtual thunk to )?" + re.escape(a.cls) + r"::")
 for line in (ROOT/"notes/symbols-functions-demangled.txt").read_text(errors="replace").splitlines():
     addr, _, name = line.partition(" ")
     m = pat.match(name)
