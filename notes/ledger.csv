@@ -12499,3 +12499,53 @@ address,symbol,unique_name,source,status,evidence
 0x10027c702,"non-virtual thunk to cGZWinSlider::GetImage(cIGZBuffer*&, cRZRect&) const",GetImageThunk,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
 0x10027c720,cGZWinSlider::GetThumbWidth() const,GetThumbWidth,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
 0x10027c756,cGZWinSlider::GetThumbHeight() const,GetThumbHeight,src/gz/WinSlider.cpp|h,recovered,scripts/tests/gz_winslider_test.cpp
+0x1000b36d0,cSC4LotBaseTextureOccupant::operator new(unsigned long),SC4LotBaseTextureOccupantOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1000b3776,cSC4LotBaseTextureOccupant::operator delete(void*),SC4LotBaseTextureOccupantOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1000d8c1e,"cS3DModelInstance::operator delete(void*, unsigned long)",S3DModelInstanceOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1000d8c3e,cS3DModelInstance::operator new(unsigned long),S3DModelInstanceOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1000dabf0,cSC4Vehicle::operator new(unsigned long),SC4VehicleOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1000dac1a,"cSC4Vehicle::operator delete(void*, unsigned long)",SC4VehicleOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1000f13ea,cSC4Pedestrian::operator new(unsigned long),SC4PedestrianOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1000f1414,"cSC4Pedestrian::operator delete(void*, unsigned long)",SC4PedestrianOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x10012067c,cSC43DPlaceableObject::operator delete(void*),SC43DPlaceableObjectOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x10012068e,cSC43DPlaceableObject::operator new(unsigned long),SC43DPlaceableObjectOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x10015f8f4,cSC4PropOccupantTerrainDecal::operator new(unsigned long),SC4PropOccupantTerrainDecalOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x10015f90e,cSC4PropOccupantTerrainDecal::operator delete(void*),SC4PropOccupantTerrainDecalOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001606e2,cSC4PropOccupantVisualEffect::operator new(unsigned long),SC4PropOccupantVisualEffectOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001607c6,cSC4PropOccupantVisualEffect::operator delete(void*),SC4PropOccupantVisualEffectOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x100161750,cSC4PropOccupantBurntBuilding::operator new(unsigned long),SC4PropOccupantBurntBuildingOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x100161886,cSC4PropOccupantBurntBuilding::operator delete(void*),SC4PropOccupantBurntBuildingOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001624b0,cSC4PropOccupantAutomataController::operator new(unsigned long),SC4PropOccupantAutomataControllerOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x100162586,cSC4PropOccupantAutomataController::operator delete(void*),SC4PropOccupantAutomataControllerOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001673a4,cSC4LotRetainingWallModel::operator delete(void*),SC4LotRetainingWallModelOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001673c4,cSC4LotRetainingWallModel::operator new(unsigned long),SC4LotRetainingWallModelOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x100177318,cSC4ConstructionOccupant::operator new(unsigned long),SC4ConstructionOccupantOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001775f2,cSC4ConstructionOccupant::operator delete(void*),SC4ConstructionOccupantOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001a0eb8,cSC4PipeOccupant::operator new(unsigned long),SC4PipeOccupantOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001a0f50,cSC4PipeOccupant::operator delete(void*),SC4PipeOccupantOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001a1598,cSC4SubwayOccupant::operator new(unsigned long),SC4SubwayOccupantOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001a1626,cSC4SubwayOccupant::operator delete(void*),SC4SubwayOccupantOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001a22ce,cSC4NetworkTunnelOccupant::operator new(unsigned long),SC4NetworkTunnelOccupantOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001a237e,cSC4NetworkTunnelOccupant::operator delete(void*),SC4NetworkTunnelOccupantOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001a4944,"cS3DModelInstanceAnimatedSprite::operator delete(void*, unsigned long)",S3DModelInstanceAnimatedSpriteOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001a4972,cS3DModelInstanceAnimatedSprite::operator new(unsigned long),S3DModelInstanceAnimatedSpriteOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001aa456,cS3DVertexArray::operator new(unsigned long),S3DVertexArrayOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001aa462,cS3DIndexArray::operator new(unsigned long),S3DIndexArrayOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001aa46e,cS3DPrimitiveArray::operator new(unsigned long),S3DPrimitiveArrayOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001aa47a,"cS3DVertexArray::operator delete(void*, unsigned long)",S3DVertexArrayOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001aa48c,"cS3DIndexArray::operator delete(void*, unsigned long)",S3DIndexArrayOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001aa49e,"cS3DPrimitiveArray::operator delete(void*, unsigned long)",S3DPrimitiveArrayOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001b9fc6,cSC4NetworkOccupantWithPreBuiltModel::operator new(unsigned long),SC4NetworkOccupantWithPreBuiltModelOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001ba0ba,cSC4NetworkOccupantWithPreBuiltModel::operator delete(void*),SC4NetworkOccupantWithPreBuiltModelOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001d25d6,cSC4NetworkBridgeOccupant::operator new(unsigned long),SC4NetworkBridgeOccupantOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1001d2698,cSC4NetworkBridgeOccupant::operator delete(void*),SC4NetworkBridgeOccupantOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x10035f284,"cSC4FoundationModel::operator delete(void*, unsigned long)",SC4FoundationModelOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x10035f296,cSC4FoundationModel::operator new(unsigned long),SC4FoundationModelOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x100509586,cSC4TrainCar::operator new(unsigned long),SC4TrainCarOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1005095a6,"cSC4TrainCar::operator delete(void*, unsigned long)",SC4TrainCarOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x10070e69e,cSC4SignpostOccupant::operator new(unsigned long),SC4SignpostOccupantOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x10070e912,cSC4SignpostOccupant::operator delete(void*),SC4SignpostOccupantOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x10071147e,cSC4TextDecalOccupant::operator new(unsigned long),SC4TextDecalOccupantOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x100711498,cSC4TextDecalOccupant::operator delete(void*),SC4TextDecalOccupantOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1008f56c8,SND::CEAXABLKDecf::operator new(unsigned long),CEAXABLKDecfOperatorNew,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
+0x1008f56d6,SND::CEAXABLKDecf::operator delete(void*),CEAXABLKDecfOperatorDelete,src/sc4/ClassAllocators.cpp|h,recovered,scripts/tests/sc4_classallocators_test.cpp
