@@ -25,5 +25,5 @@ for r in rows[1:]:
         r[5] = a.evidence
         n += 1
 with path.open("w", newline="") as f:
-    csv.writer(f, lineterminator="\n").writerows(rows)
+    csv.writer(f).writerows(rows)
 print(f"{a.cls}: {n} rows upgraded")
