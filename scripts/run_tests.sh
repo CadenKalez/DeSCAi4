@@ -41,6 +41,7 @@ declare -a TESTS=(
  "sc4_disaster:$T/sc4_disaster_test.cpp $S/sc4/Disaster.cpp $S/sc4/BuildingOccupant.cpp $S/gz/CommandParameterSet.cpp $S/sc4/ToxicOccupant.cpp $S/sc4/OccupantManager.cpp $S/sc4/Occupant.cpp $S/gz/cGZDate.cpp $S/gz/StreamOps.cpp $S/rz/cRZDate.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp $S/sc4/SCPropertyHelp.cpp $S/rz/cRZStream.cpp $S/sc4/Exemplar.cpp $S/sc4/DBSegment.cpp $S/rz/cRZMessage2Standard.cpp $S/sc4/SCProperty.cpp $S/rz/RZConvert.cpp $S/rz/cRZUnknownList.cpp $S/rz/CharLength.cpp $S/gz/cGZDBSegmentPackedFile.cpp $S/gz/cGZDBRecords.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/gz/cGZPersistDBSegment.cpp $S/gz/cGZPersistResourceKeyList.cpp $S/gz/cGZPersistResourceManager.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp $S/rz/cRZFastCompression3.cpp $S/rz/cRZVariant.cpp $S/rz/nRZHash.cpp"
  "sc4_classallocators:$T/sc4_classallocators_test.cpp $S/sc4/ClassAllocators.cpp"
  "rz_utf16text:$T/rz_utf16text_test.cpp $S/rz/UTF16Text.cpp"
+ "rz_threading:$T/rz_threading_test.cpp $S/rz/Threading.cpp $S/rz/cRZString.cpp $S/rz/RZConvert.cpp $S/rz/CharLength.cpp $S/rz/nRZHash.cpp -lpthread"
  "sc4_effectcomponents:$T/sc4_effectcomponents_test.cpp $S/sc4/EffectComponents.cpp $S/rz/cRZMessage2Standard.cpp $S/rz/cRZString.cpp $S/rz/cRZStream.cpp $S/gz/StreamOps.cpp $S/rz/cRZDate.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp $S/gz/cGZDate.cpp"
  "gz_gzcominterface:$T/gz_gzcominterface_test.cpp $S/rz/cRZSysServPtr.cpp"
  "gz_buffer:$T/gz_buffer_test.cpp $S/gz/Buffer.cpp"
