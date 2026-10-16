@@ -38,6 +38,7 @@ bool cRZCOMDllDirector::GetClassObject(std::uint32_t clsid, std::uint32_t iid, v
     if (it->second.kind == 2) return reinterpret_cast<MakeFn>(it->second.fn)(iid, out);
     if (it->second.kind == 1) {
         cIGZUnknown* object = reinterpret_cast<CreateFn>(it->second.fn)();
+        if (!object) return false;     // the class is not linked into this build
         if (object->QueryInterface(iid, out)) return true;
         object->AddRef();     // the object was never referenced: take and drop one to destroy it
         object->Release();
@@ -79,4 +80,22 @@ void cRZCOMDllDirector::AddCls(std::uint32_t clsid, CreateFn create) {
 
 void cRZCOMDllDirector::AddCls(std::uint32_t clsid, MakeFn make) {
     classes_.emplace(clsid, Entry{reinterpret_cast<void*>(make), 2});
+}
+
+static IDirectorFramework* g_framework = nullptr;
+IDirectorFramework* DirectorFramework() { return g_framework; }
+void SetDirectorFramework(IDirectorFramework* framework) { g_framework = framework; }
+
+bool cRZCOMDllDirector::StartServices(cIGZCOM* com, std::initializer_list<std::uint32_t> serviceClasses) {
+    IDirectorFramework* framework = DirectorFramework();
+    framework->AddHooks(static_cast<cIGZFrameWorkHooks*>(this));
+    for (const std::uint32_t clsid : serviceClasses) {
+        cIGZUnknown* service = nullptr;
+        com->CreateInstance(clsid, kGZIID_cIGZSystemService, reinterpret_cast<void**>(&service));
+        if (service) {
+            framework->AddSystemService(service);
+            service->Release();
+        }
+    }
+    return true;
 }

@@ -8,6 +8,7 @@
 // Note the original CanUnloadNow answers "true" without asking the children when the refcount is not zero.
 #pragma once
 #include <cstdint>
+#include <initializer_list>
 #include <unordered_map>
 #include <vector>
 
@@ -58,6 +59,18 @@ public:
 using RZHeapSizeFn = std::size_t (*)();
 void SetRZHeapSizeFn(RZHeapSizeFn fn);
 
+// The framework services the directors' OnStart handlers use (RZGetFramework(): vslot 0x18 registers a system
+// service, vslot 0x38 registers the framework hooks).
+class IDirectorFramework {
+public:
+    virtual ~IDirectorFramework() = default;
+    virtual void AddSystemService(cIGZUnknown* service) = 0;
+    virtual void AddHooks(cIGZFrameWorkHooks* hooks) = 0;
+};
+IDirectorFramework* DirectorFramework();
+void SetDirectorFramework(IDirectorFramework* framework);
+constexpr std::uint32_t kGZIID_cIGZSystemService = 0x287fb697;
+
 class cRZCOMDllDirector : public cIGZCOMDirector, public cIGZFrameWorkHooks {
 public:
     using CreateFn = cIGZUnknown* (*)();
@@ -96,6 +109,9 @@ public:
     void AddCls(std::uint32_t clsid, MakeFn make);
 
 protected:
+    // OnStart of the plain directors: register as framework hooks, then create each service class through COM
+    // and register it with the framework.
+    bool StartServices(cIGZCOM* com, std::initializer_list<std::uint32_t> serviceClasses);
     struct Entry { void* fn; int kind; };   // kind 1: CreateFn, kind 2: MakeFn
     std::uint32_t refCount_ = 0;                          // +0x10
     cRZString libraryPath_;                               // +0x18
