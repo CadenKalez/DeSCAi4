@@ -13082,3 +13082,28 @@ address,symbol,unique_name,source,status,evidence
 0x100241d30,cRZKeyboard::GetCurrentModifierState(),GetCurrentModifierState,src/rz/cRZKeyboard.h,recovered,scripts/tests/rz_keyboard_test.cpp
 0x100241d8c,cRZKeyboard::IsToggleKeySet(unsigned int),IsToggleKeySet,src/rz/cRZKeyboard.h,recovered,scripts/tests/rz_keyboard_test.cpp
 0x100241d9c,cRZKeyboard::IsToggleKeySetStatic(unsigned int),IsToggleKeySetStatic,src/rz/cRZKeyboard.h,recovered,scripts/tests/rz_keyboard_test.cpp
+0x1002fcdfc,cSC4CatalogItem::cSC4CatalogItem(),Construct,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x1002fce52,cSC4CatalogItem::~cSC4CatalogItem(),Destruct,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x1002fcf02,"cSC4CatalogItem::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x1002fcf24,cSC4CatalogItem::AddRef(),AddRef,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x1002fcf32,cSC4CatalogItem::Release(),Release,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x1002ff02a,cSC4CatalogItem::GetName() const,GetName,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x1002ff034,cSC4CatalogItem::GetDescription() const,GetDescription,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x1002ff03e,cSC4CatalogItem::GetCost() const,GetCost,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x1002ff048,cSC4CatalogItem::GetIcon() const,GetIcon,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x1002ff052,cSC4CatalogItem::GetItemType() const,GetItemType,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x1002ff05c,cSC4CatalogItem::GetItemID() const,GetItemID,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x1002ff066,cSC4CatalogItem::GetEnabled() const,GetEnabled,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x1002ff070,cSC4CatalogItem::SetEnabled(bool),SetEnabled,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x10070dc98,cSC4GlyphTextureInfo::~cSC4GlyphTextureInfo(),Destruct,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x10070dd16,cSC4GlyphTextureInfo::~cSC4GlyphTextureInfo(),DestructAndDelete,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x10070dd20,cSC4GlyphTextureInfo::~cSC4GlyphTextureInfo(),DestructBody,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x10070dd4e,cSC4GlyphTextureInfo::AddRef(),AddRef,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x10070dd5c,cSC4GlyphTextureInfo::SetManager(cSC4GlyphTextureManager*),SetManager,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x10070ddaa,cSC4GlyphTextureInfo::Release(),Release,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x10070dde4,"cSC4GlyphTextureInfo::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x10070ddec,cSC4GlyphTextureInfo::GetGlyphTextureCoordinates(SC4Rect<float>&) const,GetGlyphTextureCoordinates,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x10070df66,cSC4GlyphTextureInfo::GetGlyph(cIGZString&) const,GetGlyph,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x10070df7e,cSC4GlyphTextureInfo::GetTextureSize() const,GetTextureSize,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x10070df94,cSC4GlyphTextureInfo::GetGlyphSize() const,GetGlyphSize,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x10070dfaa,cSC4GlyphTextureInfo::GetTextureBinding() const,GetTextureBinding,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
