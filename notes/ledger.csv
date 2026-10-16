@@ -13764,3 +13764,30 @@ address,symbol,unique_name,source,status,evidence
 0x100387054,non-virtual thunk to cGZBarGraph::AsIGZWin(),AsIGZWinThunk_7054,src/gz/BarGraph.h,recovered,"gz_bargraph_test: series/data bookkeeping, geometry, clustered and stacked drawing, hit test, ticks"
 0x100387062,non-virtual thunk to cGZBarGraph::AsIGZWin(),AsIGZWinThunk_7062,src/gz/BarGraph.h,recovered,"gz_bargraph_test: series/data bookkeeping, geometry, clustered and stacked drawing, hit test, ticks"
 0x100387070,non-virtual thunk to cGZBarGraph::AsIGZGraph(),AsIGZGraphThunk,src/gz/BarGraph.h,recovered,"gz_bargraph_test: series/data bookkeeping, geometry, clustered and stacked drawing, hit test, ticks"
+0x1005e3436,cSC4EffectMaps::MapCount() const,MapCount,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005e3442,cSC4EffectMaps::MapVertsX() const,MapVertsX,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005e344c,cSC4EffectMaps::MapVertsZ() const,MapVertsZ,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fbef0,cSC4EffectMaps::cSC4EffectMaps(),Construct,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fbfac,cSC4EffectMaps::cSC4EffectMaps(),ConstructWrapper,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fbfb6,cSC4EffectMaps::~cSC4EffectMaps(),Destruct,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fc058,cSC4EffectMaps::~cSC4EffectMaps(),DestructAndDelete,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fc062,non-virtual thunk to cSC4EffectMaps::~cSC4EffectMaps(),DestructThunk,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fc070,cSC4EffectMaps::~cSC4EffectMaps(),DestructBody,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fc09e,non-virtual thunk to cSC4EffectMaps::~cSC4EffectMaps(),DestructAndDeleteThunk,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fc0ac,cSC4EffectMaps::Init(),Init,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fc1c2,cSC4EffectMaps::Shutdown(),Shutdown,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fc222,"cSC4EffectMaps::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fc244,"non-virtual thunk to cSC4EffectMaps::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fc26a,cSC4EffectMaps::DrawTerrainMaps(SC4DrawContext*),DrawTerrainMaps,src/sc4/EffectMaps.cpp|h,recovered-partial,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fc318,cSC4EffectMaps::UpdateMapsMesh(),UpdateMapsMesh,src/sc4/EffectMaps.cpp|h,recovered-partial,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fc742,"cSC4EffectMaps::MapLerpedHeight(unsigned int, float, float) const",MapLerpedHeight,src/sc4/EffectMaps.cpp|h,recovered-partial,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fc88e,"cSC4EffectMaps::MapVertexHeight(unsigned int, unsigned int, unsigned int) const",MapVertexHeight,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fc8f0,"cSC4EffectMaps::MapLerpedNormal(unsigned int, float, float) const",MapLerpedNormal,src/sc4/EffectMaps.cpp|h,recovered-partial,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fcc1c,"cSC4EffectMaps::AddRectToMap(unsigned int, SC4Rect<int> const&, float, unsigned int)",AddRectToMap,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fcd22,"cSC4EffectMaps::SetValueAboveTerrain(unsigned int, SC4Rect<int> const&, float, unsigned int)",SetValueAboveTerrain,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fce5c,"cSC4EffectMaps::ResetValueToTerrain(unsigned int, SC4Rect<int> const&)",ResetValueToTerrain,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fcf04,cSC4EffectMaps::ClearMaps(),ClearMaps,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fcf4a,cSC4EffectMaps::AddRef(),AddRef,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fcf58,cSC4EffectMaps::Release(),Release,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fcf66,non-virtual thunk to cSC4EffectMaps::AddRef(),AddRefThunk,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
+0x1005fcf70,non-virtual thunk to cSC4EffectMaps::Release(),ReleaseThunk,src/sc4/EffectMaps.cpp|h,recovered,scripts/tests/sc4_effectmaps_test.cpp
