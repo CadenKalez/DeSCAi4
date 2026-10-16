@@ -12794,3 +12794,190 @@ address,symbol,unique_name,source,status,evidence
 0x10043ce0e,cGZSoundCOMDirector::PreAppShutdown(),PreAppShutdown,src/rz/COMDirectors.h,partial,OnStart/hook body not recovered (framework services seam)
 0x10043ce32,non-virtual thunk to cGZSoundCOMDirector::PostAppInit(),PostAppInitThunk,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
 0x10043ce40,non-virtual thunk to cGZSoundCOMDirector::PreAppShutdown(),PreAppShutdownThunk,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1006175f8,cGZWin32COMDirector::~cGZWin32COMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100617602,cGZWin32COMDirector::cGZWin32COMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100617666,cGZWin32COMDirector::CreateGZWinMgr(),CreateGZWinMgr,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1006176b4,cGZWin32COMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1006176c0,cGZWin32COMDirector::~cGZWin32COMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1005236f8,cGZScriptCOMDirector::~cGZScriptCOMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100523702,cGZScriptCOMDirector::cGZScriptCOMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10052377a,cGZScriptCOMDirector::CreateScriptTerp(),CreateScriptTerp,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1005237b2,cGZScriptCOMDirector::CreateScriptVocab(),CreateScriptVocab,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1005237fc,cGZScriptCOMDirector::OnStart(cIGZCOM*),OnStart,src/rz/COMDirectors.h,partial,OnStart/hook body not recovered (framework services seam)
+0x10052380c,cGZScriptCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100523818,cGZScriptCOMDirector::~cGZScriptCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc168,cGXCOMDirector::~cGXCOMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc172,cGXCOMDirector::cGXCOMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc1fe,cGXCOMDirector::CreateGimexFactory(),CreateGimexFactory,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc236,cGXCOMDirector::CreateGimexReader(),CreateGimexReader,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc26e,cGXCOMDirector::CreateGimexWriter(),CreateGimexWriter,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc2b4,cGXCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc2c0,cGXCOMDirector::~cGXCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1005238c8,cGZUIScriptCOMDirector::~cGZUIScriptCOMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1005238d2,cGZUIScriptCOMDirector::cGZUIScriptCOMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100523972,cGZUIScriptCOMDirector::CreateScriptService(),CreateScriptService,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1005239aa,cGZUIScriptCOMDirector::CreateScriptControlSet(),CreateScriptControlSet,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1005239e2,cGZUIScriptCOMDirector::CreateLegacyControl(),CreateLegacyControl,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x100523a1a,cGZUIScriptCOMDirector::CreateGZWinCustom(),CreateGZWinCustom,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x100523a6c,cGZUIScriptCOMDirector::OnStart(cIGZCOM*),OnStart,src/rz/COMDirectors.h,partial,OnStart/hook body not recovered (framework services seam)
+0x100523ad2,cGZUIScriptCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100523ade,cGZUIScriptCOMDirector::~cGZUIScriptCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100614938,cGZResourceCOMDirectorW32::~cGZResourceCOMDirectorW32(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100614942,cGZResourceCOMDirectorW32::cGZResourceCOMDirectorW32(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1006149e2,cGZResourceCOMDirectorW32::CreateGZPersistBufferResourceFactory(),CreateGZPersistBufferResourceFactory,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x100614a1e,cGZResourceCOMDirectorW32::CreateGZBufferResourceFactory(),CreateGZBufferResourceFactory,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x100614a56,cGZResourceCOMDirectorW32::CreateRZCursor(),CreateRZCursor,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x100614a8e,cGZResourceCOMDirectorW32::CreateRZCursorResourceFactory(),CreateRZCursorResourceFactory,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x100614ad4,cGZResourceCOMDirectorW32::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100614ae0,cGZResourceCOMDirectorW32::~cGZResourceCOMDirectorW32(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100617768,cGZGraphicWin32COMDirector::~cGZGraphicWin32COMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100617772,cGZGraphicWin32COMDirector::cGZGraphicWin32COMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1006177ea,cGZGraphicWin32COMDirector::CreatecGZGraphicSystemW32(),CreatecGZGraphicSystemW32,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x100617822,cGZGraphicWin32COMDirector::CreatecGZCanvasW32(),CreatecGZCanvasW32,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x100617864,cGZGraphicWin32COMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100617870,cGZGraphicWin32COMDirector::~cGZGraphicWin32COMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10068ec98,cFontCOMDirector::~cFontCOMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10068eca2,cFontCOMDirector::cFontCOMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10068ed2e,cFontCOMDirector::CreateFontSys(),CreateFontSys,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x10068ed66,cFontCOMDirector::CreateFontA(),CreateFontA,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x10068ed9e,cFontCOMDirector::CreateBufferFontRenderer(),CreateBufferFontRenderer,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x10068edec,cFontCOMDirector::OnStart(cIGZCOM*),OnStart,src/rz/COMDirectors.h,partial,OnStart/hook body not recovered (framework services seam)
+0x10068ee5a,cFontCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10068ee66,cFontCOMDirector::~cFontCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc368,cGZWinCOMDirector::~cGZWinCOMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc372,cGZWinCOMDirector::cGZWinCOMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc62a,cGZWinCOMDirector::CreatecGZWinCtrlMgr(),CreatecGZWinCtrlMgr,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc662,cGZWinCOMDirector::CreatecGZWinDragAndDropManager(),CreatecGZWinDragAndDropManager,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc69e,cGZWinCOMDirector::CreatecGZWinFlatRect(),CreatecGZWinFlatRect,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc6d6,cGZWinCOMDirector::CreatecGZWinText(),CreatecGZWinText,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc70e,cGZWinCOMDirector::CreatecGZWinTextEdit(),CreatecGZWinTextEdit,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc74a,cGZWinCOMDirector::CreatecGZWinMsgBox(),CreatecGZWinMsgBox,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc782,cGZWinCOMDirector::CreatecGZWinListBox(),CreatecGZWinListBox,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc7bc,cGZWinCOMDirector::CreatecGZWinCombo(),CreatecGZWinCombo,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc7f8,cGZWinCOMDirector::CreatecGZWinFileBrowser(),CreatecGZWinFileBrowser,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc834,cGZWinCOMDirector::CreatecGZWinTreeView(),CreatecGZWinTreeView,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc870,cGZWinCOMDirector::CreatecGZWinPieMenu(),CreatecGZWinPieMenu,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc8ae,cGZWinCOMDirector::CreatecGZWinBMP(),CreatecGZWinBMP,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc922,cGZWinCOMDirector::CreateGZWinTextTicker(),CreateGZWinTextTicker,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc95a,cGZWinCOMDirector::CreateGZWinFolders(),CreateGZWinFolders,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc992,cGZWinCOMDirector::CreateGZWinGrid(),CreateGZWinGrid,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc9ce,cGZWinCOMDirector::CreateGZWin(),CreateGZWin,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dca06,cGZWinCOMDirector::CreateGZWinIMEProxy(),CreateGZWinIMEProxy,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dca3e,cGZWinCOMDirector::CreateGZWinIMEComposition(),CreateGZWinIMEComposition,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dca76,cGZWinCOMDirector::CreateGZWinIMECandidateList(),CreateGZWinIMECandidateList,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcaae,cGZWinCOMDirector::CreatecGZWinKeyAccelerator(),CreatecGZWinKeyAccelerator,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcafc,cGZWinCOMDirector::OnStart(cIGZCOM*),OnStart,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcbb8,cGZWinCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcbc4,cGZWinCOMDirector::~cGZWinCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcbf2,cGZWinCOMDirector::PreFrameWorkInit(),PreFrameWorkInit,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcbfa,cGZWinCOMDirector::PostSystemServiceShutdown(),PostSystemServiceShutdown,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcc02,non-virtual thunk to cGZWinCOMDirector::PreFrameWorkInit(),PreFrameWorkInitThunk,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcc0a,non-virtual thunk to cGZWinCOMDirector::PostSystemServiceShutdown(),PostSystemServiceShutdownThunk,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcc98,cGZResManCOMDirector::~cGZResManCOMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcca2,cGZResManCOMDirector::cGZResManCOMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dce1e,cGZResManCOMDirector::CreateGZDBSerialRecordAsIGZFile(),CreateGZDBSerialRecordAsIGZFile,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dce58,cGZResManCOMDirector::CreateGZDBSegmentMultiPackedFiles(),CreateGZDBSegmentMultiPackedFiles,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dce90,cGZResManCOMDirector::CreateGZDBSegmentPackedFile(),CreateGZDBSegmentPackedFile,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcecc,cGZResManCOMDirector::CreateGZDBSegmentDirectoryFiles(),CreateGZDBSegmentDirectoryFiles,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcf04,cGZResManCOMDirector::CreateGZResourceKeyList(),CreateGZResourceKeyList,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcf3c,cGZResManCOMDirector::CreateGZStringResourceFactory(),CreateGZStringResourceFactory,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcf82,cGZResManCOMDirector::CreateGZResourceManager(),CreateGZResourceManager,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcfba,cGZResManCOMDirector::CreatecSLTokenResourceFactory(),CreatecSLTokenResourceFactory,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcff2,cGZResManCOMDirector::CreatecGZWinKeyAcceleratorResFactory(),CreatecGZWinKeyAcceleratorResFactory,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dd038,cGZResManCOMDirector::CreateSurveyorWriter(),CreateSurveyorWriter,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dd070,cGZResManCOMDirector::CreateBinaryReader(),CreateBinaryReader,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dd0a8,cGZResManCOMDirector::CreateBinaryWriter(),CreateBinaryWriter,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dd0e0,cGZResManCOMDirector::CreateASCIIWriter(),CreateASCIIWriter,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dd118,cGZResManCOMDirector::CreatecRZFastCompression3(),CreatecRZFastCompression3,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dd150,cGZResManCOMDirector::CreateBinaryResourceFactory(),CreateBinaryResourceFactory,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dd19c,cGZResManCOMDirector::OnStart(cIGZCOM*),OnStart,src/rz/COMDirectors.h,partial,OnStart/hook body not recovered (framework services seam)
+0x1004dd230,cGZResManCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dd23c,cGZResManCOMDirector::~cGZResManCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522bf0,cSC4ResourceLibCOMDirector::PreFrameWorkInit(),PreFrameWorkInit,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522bf8,non-virtual thunk to cSC4ResourceLibCOMDirector::PreFrameWorkInit(),PreFrameWorkInitThunk,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522c00,cSC4ResourceLibCOMDirector::PreAppInit(),PreAppInit,src/rz/COMDirectors.h,partial,OnStart/hook body not recovered (framework services seam)
+0x100522cbc,non-virtual thunk to cSC4ResourceLibCOMDirector::PreAppInit(),PreAppInitThunk,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522cc6,cSC4ResourceLibCOMDirector::PostAppInit(),PostAppInit,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522cd4,non-virtual thunk to cSC4ResourceLibCOMDirector::PostAppInit(),PostAppInitThunk,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522cdc,cSC4ResourceLibCOMDirector::PreAppShutdown(),PreAppShutdown,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522ce4,non-virtual thunk to cSC4ResourceLibCOMDirector::PreAppShutdown(),PreAppShutdownThunk,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522cec,cSC4ResourceLibCOMDirector::PostAppShutdown(),PostAppShutdown,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522cf4,non-virtual thunk to cSC4ResourceLibCOMDirector::PostAppShutdown(),PostAppShutdownThunk,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522cfc,cSC4ResourceLibCOMDirector::PostSystemServiceShutdown(),PostSystemServiceShutdown,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522d04,non-virtual thunk to cSC4ResourceLibCOMDirector::PostSystemServiceShutdown(),PostSystemServiceShutdownThunk,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522d0c,cSC4ResourceLibCOMDirector::AbortiveQuit(),AbortiveQuit,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522d14,non-virtual thunk to cSC4ResourceLibCOMDirector::AbortiveQuit(),AbortiveQuitThunk,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522d1c,cSC4ResourceLibCOMDirector::OnInstall(),OnInstall,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522d24,non-virtual thunk to cSC4ResourceLibCOMDirector::OnInstall(),OnInstallThunk,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522da4,cSC4ResourceLibCOMDirector::~cSC4ResourceLibCOMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522dae,cSC4ResourceLibCOMDirector::OnStart(cIGZCOM*),OnStart,src/rz/COMDirectors.h,partial,OnStart/hook body not recovered (framework services seam)
+0x100522e2e,cSC4ResourceLibCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522e3a,cSC4ResourceLibCOMDirector::~cSC4ResourceLibCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522e68,cSC4ResourceLibCOMDirector::cSC4ResourceLibCOMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1005230ae,cSC4ResourceLibCOMDirector::CreateSCResExemplarFactory(),CreateSCResExemplarFactory,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1005230e6,cSC4ResourceLibCOMDirector::CreateSCResExemplarCohortFactory(),CreateSCResExemplarCohortFactory,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x10052311e,cSC4ResourceLibCOMDirector::CreateSCExemplarCache(),CreateSCExemplarCache,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x10052315a,cSC4ResourceLibCOMDirector::CreatecSCResourceCatalogView(),CreatecSCResourceCatalogView,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x100523192,cSC4ResourceLibCOMDirector::CreatecSCHappinessCurveEntryView(),CreatecSCHappinessCurveEntryView,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x100523218,cSC4ResourceLibCOMDirector::CreatecSCGeneralResponseCurveEntryView(),CreatecSCGeneralResponseCurveEntryView,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x100523256,cSC4ResourceLibCOMDirector::CreatecSCResCatalogPickerView(),CreatecSCResCatalogPickerView,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x10052328e,cSC4ResourceLibCOMDirector::CreatecSCStringEntryView(),CreatecSCStringEntryView,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1005232e8,cSC4ResourceLibCOMDirector::CreatecSCSint64TextEntryView(),CreatecSCSint64TextEntryView,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x100523342,cSC4ResourceLibCOMDirector::CreatecSCUint32TextEntryView(),CreatecSCUint32TextEntryView,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x10052339c,cSC4ResourceLibCOMDirector::CreatecSCSint32TextEntryView(),CreatecSCSint32TextEntryView,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1005233f6,cSC4ResourceLibCOMDirector::CreatecSCSint8TextEntryView(),CreatecSCSint8TextEntryView,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x100523450,cSC4ResourceLibCOMDirector::CreatecSCUint8TextEntryView(),CreatecSCUint8TextEntryView,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1005234aa,cSC4ResourceLibCOMDirector::CreatecSCFloat32TextEntryView(),CreatecSCFloat32TextEntryView,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x100523504,cSC4ResourceLibCOMDirector::CreatecSCUint32SpinnerEntryView(),CreatecSCUint32SpinnerEntryView,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x10052355e,cSC4ResourceLibCOMDirector::CreatecSCBoolTextEntryView(),CreatecSCBoolTextEntryView,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1005235b8,cSC4ResourceLibCOMDirector::CreateResSpriteAnimFactory(),CreateResSpriteAnimFactory,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004db628,cSC4AutomataCOMDirector::~cSC4AutomataCOMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004db632,cSC4AutomataCOMDirector::cSC4AutomataCOMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004db8de,cSC4AutomataCOMDirector::CreateAutomataScriptSystem(),CreateAutomataScriptSystem,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004db916,cSC4AutomataCOMDirector::CreateVehicleManager(),CreateVehicleManager,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004db952,cSC4AutomataCOMDirector::CreatePedestrianManager(),CreatePedestrianManager,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004db98e,cSC4AutomataCOMDirector::CreateAircraftManager(),CreateAircraftManager,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004db9ca,cSC4AutomataCOMDirector::CreateWatercraftManager(),CreateWatercraftManager,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dba06,cSC4AutomataCOMDirector::CreateSC4Vehicle(),CreateSC4Vehicle,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dba66,cSC4AutomataCOMDirector::CreateSC4FireTruck(),CreateSC4FireTruck,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dba9e,cSC4AutomataCOMDirector::CreateSC4PatrolCar(),CreateSC4PatrolCar,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbad6,cSC4AutomataCOMDirector::CreateSC4TrainCar(),CreateSC4TrainCar,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbb36,cSC4AutomataCOMDirector::CreateSC4Train(),CreateSC4Train,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbb8a,cSC4AutomataCOMDirector::CreateSC4TrailerVehicle(),CreateSC4TrailerVehicle,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbbde,cSC4AutomataCOMDirector::CreateSC4GetawayVan(),CreateSC4GetawayVan,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbc22,cSC4AutomataCOMDirector::CreateSC4Bus(),CreateSC4Bus,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbc66,cSC4AutomataCOMDirector::CreateSC4CarjackedVehicle(),CreateSC4CarjackedVehicle,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbcaa,cSC4AutomataCOMDirector::CreateSC4Tank(),CreateSC4Tank,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbcee,cSC4AutomataCOMDirector::CreateSC4MayorLimo(),CreateSC4MayorLimo,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbd32,cSC4AutomataCOMDirector::CreateSC4Ambulance(),CreateSC4Ambulance,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbd6a,cSC4AutomataCOMDirector::CreateSC4MassTransitTrain(),CreateSC4MassTransitTrain,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbda2,cSC4AutomataCOMDirector::CreateSC4Pedestrian(),CreateSC4Pedestrian,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbe02,cSC4AutomataCOMDirector::CreateSC4PedestrianOneShot(),CreateSC4PedestrianOneShot,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbe62,cSC4AutomataCOMDirector::CreateSC4SimFireCrew(),CreateSC4SimFireCrew,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbea8,cSC4AutomataCOMDirector::CreateSC4RiotPolice(),CreateSC4RiotPolice,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbeee,cSC4AutomataCOMDirector::CreateSC4Aircraft(),CreateSC4Aircraft,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbf26,cSC4AutomataCOMDirector::CreateSC4Helicopter(),CreateSC4Helicopter,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbf5e,cSC4AutomataCOMDirector::CreateSC4Airplane(),CreateSC4Airplane,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbf96,cSC4AutomataCOMDirector::CreateSC4Watercraft(),CreateSC4Watercraft,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dbfce,cSC4AutomataCOMDirector::CreateAutomataControllerManager(),CreateAutomataControllerManager,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc006,cSC4AutomataCOMDirector::CreateAutomataAttractor(),CreateAutomataAttractor,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc03e,cSC4AutomataCOMDirector::CreateAutomataGenerator(),CreateAutomataGenerator,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc076,cSC4AutomataCOMDirector::CreateSC4CitySituationManager(),CreateSC4CitySituationManager,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc0b4,cSC4AutomataCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc0c0,cSC4AutomataCOMDirector::~cSC4AutomataCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf238,cSC4ScriptedWindowCOMDirector::~cSC4ScriptedWindowCOMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf2c4,cSC4ScriptedWindowCOMDirector::cSC4ScriptedWindowCOMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf472,cSC4ScriptedWindowCOMDirector::CreateSC4WinMapView(),CreateSC4WinMapView,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf4b0,cSC4ScriptedWindowCOMDirector::CreateSC4WinLotConfigurationChooser(),CreateSC4WinLotConfigurationChooser,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf4ee,cSC4ScriptedWindowCOMDirector::CreateSC4WinLotConfigurationEditor(),CreateSC4WinLotConfigurationEditor,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf52c,cSC4ScriptedWindowCOMDirector::CreateSC4WinBuildingFamilyChooser(),CreateSC4WinBuildingFamilyChooser,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf534,cSC4ScriptedWindowCOMDirector::CreateSC4WinBuildingChooser(),CreateSC4WinBuildingChooser,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf53c,cSC4ScriptedWindowCOMDirector::CreateSC4WinNetworkLotChooser(),CreateSC4WinNetworkLotChooser,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf57a,cSC4ScriptedWindowCOMDirector::CreateSC4WinNetworkLotEditor(),CreateSC4WinNetworkLotEditor,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf5b8,cSC4ScriptedWindowCOMDirector::CreateSC4WinRCI(),CreateSC4WinRCI,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf5f4,cSC4ScriptedWindowCOMDirector::CreateSC4WinTrendBar(),CreateSC4WinTrendBar,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf630,cSC4ScriptedWindowCOMDirector::CreateSC4WinGenTransparent(),CreateSC4WinGenTransparent,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf668,cSC4ScriptedWindowCOMDirector::CreateSC4WinIMECandidateList(),CreateSC4WinIMECandidateList,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf6a4,cSC4ScriptedWindowCOMDirector::CreateGZWinKnob(),CreateGZWinKnob,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf6e4,cSC4ScriptedWindowCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf6f0,cSC4ScriptedWindowCOMDirector::~cSC4ScriptedWindowCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
