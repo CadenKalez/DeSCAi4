@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "gz/cIGZString.h"
+#include "gz/cIGZSystemService.h"
 #include "gz/cIGZUnknown.h"
 #include "rz/cRZString.h"
 
@@ -66,10 +67,11 @@ public:
     virtual ~IDirectorFramework() = default;
     virtual void AddSystemService(cIGZUnknown* service) = 0;
     virtual void AddHooks(cIGZFrameWorkHooks* hooks) = 0;
+    virtual void RegisterSystemService(cIGZUnknown* service) = 0;      // vslot 0x48 (a service's Init)
+    virtual void UnregisterSystemService(cIGZUnknown* service) = 0;    // vslot 0x50 (a service's Shutdown)
 };
 IDirectorFramework* DirectorFramework();
 void SetDirectorFramework(IDirectorFramework* framework);
-constexpr std::uint32_t kGZIID_cIGZSystemService = 0x287fb697;
 
 class cRZCOMDllDirector : public cIGZCOMDirector, public cIGZFrameWorkHooks {
 public:

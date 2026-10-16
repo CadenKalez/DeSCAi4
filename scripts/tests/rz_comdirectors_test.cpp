@@ -33,6 +33,8 @@ struct Framework final : IDirectorFramework {
     int services = 0, hooks = 0;
     void AddSystemService(cIGZUnknown*) override { ++services; }
     void AddHooks(cIGZFrameWorkHooks*) override { ++hooks; }
+    void RegisterSystemService(cIGZUnknown*) override {}
+    void UnregisterSystemService(cIGZUnknown*) override {}
 };
 int count = 0;
 void Count(std::uint32_t, std::uint32_t, void*) { ++count; }
