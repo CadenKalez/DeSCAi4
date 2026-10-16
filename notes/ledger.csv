@@ -13107,3 +13107,58 @@ address,symbol,unique_name,source,status,evidence
 0x10070df7e,cSC4GlyphTextureInfo::GetTextureSize() const,GetTextureSize,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
 0x10070df94,cSC4GlyphTextureInfo::GetGlyphSize() const,GetGlyphSize,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
 0x10070dfaa,cSC4GlyphTextureInfo::GetTextureBinding() const,GetTextureBinding,src/sc4/CatalogItem.h,recovered,scripts/tests/sc4_catalogitem_test.cpp
+0x1000a62f6,cSC4OccupantTypesFilter::IsOccupantTypeIncluded(unsigned int),IsOccupantTypeIncluded,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a631a,cSC4OccupantTypesFilter::Write(cIGZOStream&) const,Write,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a63ce,non-virtual thunk to cSC4OccupantTypesFilter::Write(cIGZOStream&) const,WriteThunk,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a63dc,cSC4OccupantTypesFilter::Read(cIGZIStream&),Read,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a64ae,non-virtual thunk to cSC4OccupantTypesFilter::Read(cIGZIStream&),ReadThunk,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a904a,cSC4OccupantTypesFilter::~cSC4OccupantTypesFilter(),Destruct,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a90ac,cSC4OccupantTypesFilter::~cSC4OccupantTypesFilter(),DestructAndDelete,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a90f6,cSC4OccupantTypesFilter::GetGZCLSID() const,GetGZCLSID,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a9102,non-virtual thunk to cSC4OccupantTypesFilter::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a6518,cSC4OccupantTypesFilterHashed::Write(cIGZOStream&) const,Write,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a6594,non-virtual thunk to cSC4OccupantTypesFilterHashed::Write(cIGZOStream&) const,WriteThunk,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a65a2,cSC4OccupantTypesFilterHashed::Read(cIGZIStream&),Read,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a689c,non-virtual thunk to cSC4OccupantTypesFilterHashed::Read(cIGZIStream&),ReadThunk,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a910e,cSC4OccupantTypesFilterHashed::IsOccupantTypeIncluded(unsigned int),IsOccupantTypeIncluded,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a9134,cSC4OccupantTypesFilterHashed::~cSC4OccupantTypesFilterHashed(),Destruct,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a91b6,cSC4OccupantTypesFilterHashed::~cSC4OccupantTypesFilterHashed(),DestructAndDelete,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a9208,cSC4OccupantTypesFilterHashed::GetGZCLSID() const,GetGZCLSID,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a9214,non-virtual thunk to cSC4OccupantTypesFilterHashed::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x10030d52c,cSC4OccupantTypesFilterHashed::AddOccupantType(unsigned int),AddOccupantType,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a6dda,cSC4ViewLevelOccupantFilter::IsOccupantIncluded(cISC4Occupant*),IsOccupantIncluded,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a7038,cSC4ViewLevelOccupantFilter::Write(cIGZOStream&) const,Write,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a7074,non-virtual thunk to cSC4ViewLevelOccupantFilter::Write(cIGZOStream&) const,WriteThunk,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a70b0,cSC4ViewLevelOccupantFilter::Read(cIGZIStream&),Read,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a710e,non-virtual thunk to cSC4ViewLevelOccupantFilter::Read(cIGZIStream&),ReadThunk,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a8ffa,cSC4ViewLevelOccupantFilter::~cSC4ViewLevelOccupantFilter(),Destruct,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a9020,cSC4ViewLevelOccupantFilter::~cSC4ViewLevelOccupantFilter(),DestructAndDelete,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a902a,cSC4ViewLevelOccupantFilter::GetGZCLSID() const,GetGZCLSID,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a9036,non-virtual thunk to cSC4ViewLevelOccupantFilter::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a6c3e,cSC4NetworkOccupantFilter::IsOccupantIncluded(cISC4Occupant*),IsOccupantIncluded,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a6cb4,cSC4NetworkOccupantFilter::Write(cIGZOStream&) const,Write,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a6cf0,non-virtual thunk to cSC4NetworkOccupantFilter::Write(cIGZOStream&) const,WriteThunk,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a6d2c,cSC4NetworkOccupantFilter::Read(cIGZIStream&),Read,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a6d82,non-virtual thunk to cSC4NetworkOccupantFilter::Read(cIGZIStream&),ReadThunk,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a8fb2,cSC4NetworkOccupantFilter::~cSC4NetworkOccupantFilter(),Destruct,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a8fd8,cSC4NetworkOccupantFilter::~cSC4NetworkOccupantFilter(),DestructAndDelete,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a8fe2,cSC4NetworkOccupantFilter::GetGZCLSID() const,GetGZCLSID,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1000a8fee,non-virtual thunk to cSC4NetworkOccupantFilter::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1005c7744,"cSC4SurfaceNetworkOccupantFilter::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1005c7766,cSC4SurfaceNetworkOccupantFilter::AddRef(),AddRef,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1005c7774,cSC4SurfaceNetworkOccupantFilter::Release(),Release,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1005c7782,cSC4SurfaceNetworkOccupantFilter::IsOccupantIncluded(cISC4Occupant*),IsOccupantIncluded,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1005c77c8,cSC4SurfaceNetworkOccupantFilter::IsOccupantTypeIncluded(unsigned int),IsOccupantTypeIncluded,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1005c77d0,cSC4SurfaceNetworkOccupantFilter::IsPropertyHolderIncluded(cISCPropertyHolder*),IsPropertyHolderIncluded,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1005c77d8,cSC4SurfaceNetworkOccupantFilter::~cSC4SurfaceNetworkOccupantFilter(),Destruct,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1005c77e6,cSC4SurfaceNetworkOccupantFilter::~cSC4SurfaceNetworkOccupantFilter(),DestructAndDelete,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1005c7818,non-virtual thunk to cSC4SurfaceNetworkOccupantFilter::~cSC4SurfaceNetworkOccupantFilter(),DestructThunk,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1005c7822,non-virtual thunk to cSC4SurfaceNetworkOccupantFilter::~cSC4SurfaceNetworkOccupantFilter(),DestructAndDeleteThunk,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1005c7852,non-virtual thunk to cSC4SurfaceNetworkOccupantFilter::Release(),ReleaseThunk,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x1005c785c,non-virtual thunk to cSC4SurfaceNetworkOccupantFilter::AddRef(),AddRefThunk,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x10071eebe,cSC4PlacedNetworkOccupantFilter::cSC4PlacedNetworkOccupantFilter(cISC4OccupantFilter*),Construct_cISC4OccupantFilter,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x10071ef24,cSC4PlacedNetworkOccupantFilter::IsOccupantIncluded(cISC4Occupant*),IsOccupantIncluded,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x10071ef52,cSC4PlacedNetworkOccupantFilter::IsPropertyHolderIncluded(cISCPropertyHolder*),IsPropertyHolderIncluded,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x10071ef64,cSC4PlacedNetworkOccupantFilter::~cSC4PlacedNetworkOccupantFilter(),Destruct,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x10071efc4,cSC4PlacedNetworkOccupantFilter::~cSC4PlacedNetworkOccupantFilter(),DestructAndDelete,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x10071f042,cSC4PlacedNetworkOccupantFilter::IsOccPlaced(cISC4Occupant*),IsOccPlaced,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
