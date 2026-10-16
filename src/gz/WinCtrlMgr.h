@@ -20,6 +20,7 @@
 #include "gz/Win.h"
 #include "gz/WinBMP.h"
 #include "gz/WinBtn.h"
+#include "gz/WinCtrlFactory.h"
 #include "gz/WinOptGrp.h"
 #include "gz/WinScrollbar.h"
 #include "gz/WinSlider.h"
@@ -108,7 +109,7 @@ public:
     virtual bool CreateDefaultCtrl(std::uint32_t classId, std::uint32_t iid, void** out) = 0;   // [42]
 };
 
-class cGZWinCtrlMgr : public cRZSystemService, public cIGZWinCtrlMgr {
+class cGZWinCtrlMgr : public cRZSystemService, public cIGZWinCtrlMgr, public IWinCtrlFactory {
 public:
     explicit cGZWinCtrlMgr(cIGZWinMgr* windowManager = nullptr) : cRZSystemService(kGZSID_cGZWinCtrlMgr, 0), winMgr_(windowManager) {}
     ~cGZWinCtrlMgr() override;
@@ -162,6 +163,7 @@ public:
     void SetFontMapping(int id, const cIGZString* name) override { SetString(fontMapping_, id, name); }
     std::uint32_t GetDoubleClickTimeMilliseconds() const override { return doubleClickMs_; }
     void SetDoubleClickTimeMilliseconds(std::uint32_t ms) override { doubleClickMs_ = ms; }
+    std::uint32_t DoubleClickMilliseconds() override { return doubleClickMs_; }   // IWinCtrlFactory
     bool CreateDefaultCtrl(std::uint32_t classId, std::uint32_t iid, void** out) override;
 
 private:

@@ -5,7 +5,6 @@
 namespace gz {
 
 namespace {
-IWinCtrlFactory* g_factory = nullptr;
 constexpr std::uint32_t kColorUnset = 0xffffffffu;
 constexpr std::uint32_t kFlagLabelColor = 0x100000, kFlagLabelDisabledColor = 0x400000;
 constexpr std::uint32_t kFlagBtnNormal = 0x1000000, kFlagBtnHover = 0x2000000, kFlagBtnDisabled = 0x4000000;
@@ -20,9 +19,6 @@ template <class T> struct Held {
     void** out() { return reinterpret_cast<void**>(&p); }
 };
 }  // namespace
-
-IWinCtrlFactory* WinCtrlFactory() { return g_factory; }
-void SetWinCtrlFactory(IWinCtrlFactory* factory) { g_factory = factory; }
 
 cGZWinOptGrp::~cGZWinOptGrp() {   // @ 0x10027c93c
     cGZWinOptGrp::Shutdown();

@@ -40,6 +40,7 @@ public:
     virtual bool Available() = 0;
     virtual void FormatA(int value, cRZString& out) = 0;     // vslot 0x90, used by flag 0x2000
     virtual void FormatB(int value, cRZString& out) = 0;     // vslot 0x80, used by flag 0x4000
+    virtual int CompareStrings(const cIGZString& a, const cIGZString& b, bool flag) { return a.CompareToString(b, flag); }   // vslot 0xb0 (list sorting)
 };
 IWinNumberFormatter* WinNumberFormatter();
 void SetWinNumberFormatter(IWinNumberFormatter* formatter);

@@ -213,6 +213,8 @@ public:
 class cIGZWinMgr : public cIGZUnknown {
 public:
     virtual cIGZWin* GetMainWindow() = 0;                                // [3]
+    // [9] +0x48: a dialog-like window finished (code 0xf from the list box and the generic window; result is the choice).
+    virtual void EndDialog(std::uint32_t code, cIGZWin* window, std::int64_t result) { (void)code; (void)window; (void)result; }
     virtual void AppendToPlotStrategy(cIGZWin* window) = 0;              // [7]
     virtual void Plot() = 0;                                             // [6]
     virtual void PostMessageToTarget(cIGZWin* target, const cGZMessage& message) = 0;   // [14]

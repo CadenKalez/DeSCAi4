@@ -6,10 +6,16 @@
 
 namespace gz {
 
+class cIGZWinScrollbar;
+
 class IWinCtrlFactory {
 public:
     virtual ~IWinCtrlFactory() = default;
     virtual bool CreateCtrl(std::uint32_t classId, std::uint32_t iid, void** out) = 0;
+    // The manager's other entries the composite controls use.
+    virtual cIGZWinScrollbar* CreateScrollbar(std::uint32_t id, int direction, int low, int high, int value) = 0;   // vslot 0x88
+    virtual std::uint32_t DefaultColor(int id) = 0;                                                                // vslot 0xf8: the native colour
+    virtual std::uint32_t DoubleClickMilliseconds() = 0;                                                           // vslot 0x140
 };
 IWinCtrlFactory* WinCtrlFactory();
 void SetWinCtrlFactory(IWinCtrlFactory* factory);

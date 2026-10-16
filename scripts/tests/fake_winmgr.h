@@ -10,6 +10,9 @@ struct FakeMgr final : cIGZWinMgr {
     cIGZWin *focus = nullptr, *capture = nullptr, *mouseWin = nullptr;
     std::vector<cGZMessage> posted;
     int cleanups = 0;
+    struct Dialog { std::uint32_t code; cIGZWin* window; std::int64_t result; };
+    std::vector<Dialog> dialogs;
+    void EndDialog(std::uint32_t code, cIGZWin* window, std::int64_t result) override { dialogs.push_back({code, window, result}); }
     bool QueryInterface(std::uint32_t, void**) override { return false; }
     std::uint32_t AddRef() override { return 1; }
     std::uint32_t Release() override { return 1; }

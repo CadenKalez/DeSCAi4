@@ -44,6 +44,9 @@ struct Host final : IWinButtonHost {
 struct Factory final : IWinCtrlFactory {
     cIGZWinMgr* mgr; std::vector<std::uint32_t> asked;
     explicit Factory(cIGZWinMgr* m) : mgr(m) {}
+    cIGZWinScrollbar* CreateScrollbar(std::uint32_t, int, int, int, int) override { return nullptr; }
+    std::uint32_t DefaultColor(int) override { return 0; }
+    std::uint32_t DoubleClickMilliseconds() override { return 0x2ee; }
     bool CreateCtrl(std::uint32_t classId, std::uint32_t iid, void** out) override {
         asked.push_back(classId);
         cGZWin* object = nullptr;

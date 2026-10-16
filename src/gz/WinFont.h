@@ -17,6 +17,10 @@ public:
     virtual int TextWidth(const char* text, std::uint32_t length) = 0;              // 0x180
     virtual void DrawText(IWinBuffer* target, int x, int y, const char* text, std::uint32_t length,
                           std::uint32_t color, std::uint32_t color2, const cRZRect* clip, int flags) = 0;   // 0x198
+    // The list box asks the font for these; fonts that do not model them fall back to the plain measures.
+    virtual int GlyphHeight() { return LineHeight(0, 0); }                                                          // 0x118
+    virtual std::uint32_t FitLength(const char*, std::uint32_t length, int, int) { return length; }                 // 0x150: how many characters fit
+    virtual std::uint32_t MeasureTextWidth(const char* text, std::uint32_t length, std::uint32_t*) { return static_cast<std::uint32_t>(TextWidth(text, length)); }   // 0x188
     virtual void DrawTextBox(IWinBuffer* target, const cRZRect& box, const char* text, std::uint32_t length,
                              std::uint32_t alignment, std::uint32_t color, std::uint32_t color2, const cRZRect* clip, int flags) = 0;   // 0x1a0
 };
