@@ -38,8 +38,31 @@ constexpr std::uint32_t kMessageOccupantGroupAdded = 0xebff18a3;
 // Occupant flag bits
 constexpr std::uint32_t kOccupantFlagVisible = 4;
 
-// cISC43DPlaceableObject: only reference counting is needed by the base occupant.
-class cISC43DPlaceableObject : public cIGZUnknown {};
+// A renderable model (cIS3DModelInstance): only the owner reset the placeable object performs is needed here.
+class cIS3DModelInstance : public cIGZUnknown {
+public:
+    virtual void Slot3() {}
+    virtual void SetOwner(void* owner) = 0;     // [4] (0x20): cleared when the placeable object lets go
+};
+
+// cISC43DPlaceableObject (iid 0xc6bb5efa): the set of 3D models (and terrain overlays) one occupant shows.
+constexpr std::uint32_t kGZIID_cISC43DPlaceableObject = 0xc6bb5efa;
+class cISC43DPlaceableObject : public cIGZUnknown {
+public:
+    virtual int GetModelCount() = 0;                                              // [3]
+    virtual std::uint32_t GetModels(cIS3DModelInstance** out, std::uint32_t& count) = 0;   // [4]
+    virtual bool AddModel(cIS3DModelInstance* model) = 0;                         // [5]
+    virtual bool RemoveModel(cIS3DModelInstance* model) = 0;                      // [6]
+    virtual bool AddOverlay(std::uint32_t overlayId) = 0;                         // [7]
+    virtual void SetVisibility(bool visible) = 0;                                 // [8] in the renderer or not
+    virtual void SetOverlaysVisible(bool visible) = 0;                            // [9]
+    virtual bool IsVisible() const = 0;                                           // [10]
+    virtual void RemoveAll() = 0;                                                 // [11]
+    virtual std::uint32_t GetZoomLevelsCreatedFor() const = 0;                    // [12]
+    virtual void SetZoomLevelsCreatedFor(std::uint32_t zoomLevels) = 0;           // [13]
+    virtual std::uint32_t GetRotationsCreatedFor() const = 0;                     // [14]
+    virtual void SetRotationsCreatedFor(std::uint32_t rotations) = 0;             // [15]
+};
 using PlaceableObjectFactory = std::function<cISC43DPlaceableObject*()>;   // returns one reference
 void SetPlaceableObjectFactory(PlaceableObjectFactory factory);            // cSC43DPlaceableObject::new
 

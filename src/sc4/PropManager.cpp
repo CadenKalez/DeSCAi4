@@ -374,7 +374,7 @@ void cSC4PropManager::RemoveOccupant(cISC4Occupant* occupant) {
         cISC43DPlaceableObject* placeable = occupant->GetPlaceableObject();
         if (placeable) {
             placeable->AddRef();
-            if (auto* renderable = dynamic_cast<cISC43DRenderable*>(placeable)) renderable->SetInRenderer(false);
+            placeable->SetVisibility(false);
         }
         occupant->ClearFlag(2);
         if (placeable) placeable->Release();

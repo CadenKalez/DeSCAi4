@@ -248,7 +248,7 @@ bool cSC4PropOccupant::PlaceInRenderer(bool place) {
     } else {
         flags_ &= ~2;
     }
-    if (auto* renderable = dynamic_cast<cISC43DRenderable*>(object)) renderable->SetInRenderer(place);
+    object->SetVisibility(place);
     object->Release();
     return true;
 }

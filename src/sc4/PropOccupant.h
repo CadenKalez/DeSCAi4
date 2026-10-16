@@ -36,12 +36,6 @@ public:
 IPropHost* PropHost();
 void SetPropHost(IPropHost* host);
 
-// The placeable 3D object's renderer toggle (cISC43DPlaceableObject slot 8)
-class cISC43DRenderable : public cISC43DPlaceableObject {
-public:
-    virtual void SetInRenderer(bool inRenderer) = 0;
-};
-
 class cSC4PropOccupant : public cSC4Occupant {
 public:
     cSC4PropOccupant() { type_ = kOccupantTypeProp; }
