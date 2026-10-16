@@ -13162,3 +13162,151 @@ address,symbol,unique_name,source,status,evidence
 0x10071ef64,cSC4PlacedNetworkOccupantFilter::~cSC4PlacedNetworkOccupantFilter(),Destruct,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
 0x10071efc4,cSC4PlacedNetworkOccupantFilter::~cSC4PlacedNetworkOccupantFilter(),DestructAndDelete,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
 0x10071f042,cSC4PlacedNetworkOccupantFilter::IsOccPlaced(cISC4Occupant*),IsOccPlaced,src/sc4/OccupantFilters2.h,recovered,scripts/tests/sc4_occupantfilters2_test.cpp
+0x100044342,cRZMutex::cRZMutex(cIGZString const&),Construct_String,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1000443c2,cRZMutex::cRZMutex(cIGZString const&),Construct_StringWrapper,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1000443cc,cRZMutex::~cRZMutex(),Destruct,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x100044412,cRZMutex::~cRZMutex(),DestructAndDelete,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x10004441c,cRZMutex::~cRZMutex(),DestructBody,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x10004444a,cRZMutex::Release(),Release,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x10004445e,cRZMutex::IsValid(),IsValid,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x10004446c,cRZMutex::Lock(),Lock,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x100044484,cRZMutex::TryLock(),TryLock,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x10004449c,cRZMutex::Unlock(),Unlock,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1000444b4,cRZMutex::GetMutexHandle(void*),GetMutexHandle,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1001fbb70,cRZThreadSignal::cRZThreadSignal(int),Construct_int,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1001fbbd6,cRZThreadSignal::cRZThreadSignal(int),Construct_intWrapper,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1001fbbe0,cRZThreadSignal::~cRZThreadSignal(),Destruct,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1001fbc4e,cRZThreadSignal::~cRZThreadSignal(),DestructAndDelete,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1001fbc58,cRZThreadSignal::~cRZThreadSignal(),DestructBody,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1001fbc86,cRZThreadSignal::Release(),Release,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1001fbc9a,cRZThreadSignal::Broadcast(),Broadcast,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1001fbcb2,cRZThreadSignal::Signal(),Signal,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1001fbcca,cRZThreadSignal::Unsignal(),Unsignal,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1001fbcd6,cRZThreadSignal::TimedWait(unsigned int),TimedWait,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1001fbddc,cRZThreadSignal::GetEventHandle(void*),GetEventHandle,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1001fbe1a,cRZThreadSignal::IsValid(),IsValid,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x10004428e,FileChangeNotification::FileChangeNotification(),Construct,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1000442cc,FileChangeNotification::~FileChangeNotification(),Destruct,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1000442e2,FileChangeNotification::Init(),Init,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1000442ea,FileChangeNotification::Shutdown(),Shutdown,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1000442f2,FileChangeNotification::Start(),Start,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x1000442fa,FileChangeNotification::IsStarted(),IsStarted,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x100044302,FileChangeNotification::Stop(),Stop,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x10004430a,FileChangeNotification::GetWatchedDirectory(cIGZString&) const,GetWatchedDirectory,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x100044324,FileChangeNotification::SetWatchedDirectory(cIGZString const&),SetWatchedDirectory,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x10004432c,FileChangeNotification::SetChangeTypeFlags(unsigned int),SetChangeTypeFlags,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x100044334,FileChangeNotification::SetOptionFlags(unsigned int),SetOptionFlags,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x10004433c,FileChangeNotification::SetNotificationTarget(cIGZMessageTarget*),SetNotificationTarget,src/rz/Threading.h,recovered,scripts/tests/rz_threading_test.cpp
+0x10027fa30,cGZWinBtn::CreateNewObject(),CreateNewObject,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027fa6c,cGZWinBtn::cGZWinBtn(),Construct,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027fa76,cGZWinBtn::cGZWinBtn(),ConstructWrapper,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027fc8c,cGZWinBtn::~cGZWinBtn(),Destruct,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027fdb2,cGZWinBtn::~cGZWinBtn(),DestructAndDelete,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027fdbc,non-virtual thunk to cGZWinBtn::~cGZWinBtn(),DestructThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027fdca,cGZWinBtn::~cGZWinBtn(),DestructBody,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027fdf8,non-virtual thunk to cGZWinBtn::~cGZWinBtn(),DestructAndDeleteThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027fe06,"cGZWinBtn::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027fe28,"non-virtual thunk to cGZWinBtn::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027fe4e,cGZWinBtn::AddRef(),AddRef,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027fe5c,non-virtual thunk to cGZWinBtn::AddRef(),AddRefThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027fe66,cGZWinBtn::Release(),Release,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027fe74,non-virtual thunk to cGZWinBtn::Release(),ReleaseThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027fe7e,cGZWinBtn::Init(),Init,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027ffb0,non-virtual thunk to cGZWinBtn::Init(),InitThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027ffc2,cGZWinBtn::Shutdown(),Shutdown,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280050,cGZWinBtn::hide_tip() const,hide_tip,src/gz/WinBtn.h,recovered-partial,scripts/tests/gz_winbtn_test.cpp
+0x100280096,non-virtual thunk to cGZWinBtn::Shutdown(),ShutdownThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002800a8,cGZWinBtn::SetID(unsigned int),SetID,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002800b6,non-virtual thunk to cGZWinBtn::SetID(unsigned int),SetIDThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002800c0,cGZWinBtn::GetID() const,GetID,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002800ce,non-virtual thunk to cGZWinBtn::GetID() const,GetIDThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002800d8,cGZWinBtn::SetKeyEquivalent(unsigned int),SetKeyEquivalent,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10028010e,non-virtual thunk to cGZWinBtn::SetKeyEquivalent(unsigned int),SetKeyEquivalentThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280144,cGZWinBtn::AsIGZWin(),AsIGZWin,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10028014e,"cGZWinBtn::SetFlag(cIGZWin::tWinFlag, bool)",SetFlag,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002801c4,"cGZWinBtn::on_layout(int, int)",on_layout,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10028066c,"non-virtual thunk to cGZWinBtn::SetFlag(cIGZWin::tWinFlag, bool)",SetFlagThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10028067e,cGZWinBtn::ToggleOn(),ToggleOn,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280696,"cGZWinBtn::set_btn_flag(int, bool)",set_btn_flag,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280834,cGZWinBtn::ToggleOff(),ToggleOff,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280848,cGZWinBtn::IsOn() const,IsOn,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280858,cGZWinBtn::SetChecked(bool),SetChecked,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10028086e,cGZWinBtn::IsChecked() const,IsChecked,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10028087e,cGZWinBtn::GetStyle(),GetStyle,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10028088a,"cGZWinBtn::SetStyle(int, cIGZBuffer*, cRZRect const*)",SetStyle,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002809fa,cGZWinBtn::SetButtonStyle(int),SetButtonStyle,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280a7a,cGZWinBtn::SetCaptionStyle(int),SetCaptionStyle,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280ae8,cGZWinBtn::GetCaptionStyle(int&) const,GetCaptionStyle,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280af8,cGZWinBtn::SetFont(cIGZFont*),SetFont,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280c18,cGZWinBtn::SetFontStyle(unsigned int),SetFontStyle,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280c78,cGZWinBtn::GetFontStyle(unsigned int&),GetFontStyle,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280c90,cGZWinBtn::GetImageW() const,GetImageW,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280ca2,cGZWinBtn::GetImageH() const,GetImageH,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280cb4,cGZWinBtn::GetImageArea(cRZRect&) const,GetImageArea,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280cd2,"cGZWinBtn::SetGutters(unsigned char, unsigned char)",SetGutters_uchar_uchar,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280ce8,"cGZWinBtn::GetGutters(int&, int&) const",GetGutters_int_int,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280d02,"cGZWinBtn::SetArea(int, int, int, int)",SetArea,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280d4a,"non-virtual thunk to cGZWinBtn::SetArea(int, int, int, int)",SetAreaThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280d58,cGZWinBtn::GetBtnFlag(int) const,GetBtnFlag,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280d68,"cGZWinBtn::SetBtnFlag(int, bool)",SetBtnFlag,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280d78,cGZWinBtn::SetCaption(cIGZString const&),SetCaption,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100280dfc,cGZWinBtn::update_text_size(),update_text_size,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002810cc,non-virtual thunk to cGZWinBtn::SetCaption(cIGZString const&),SetCaptionThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002810da,cGZWinBtn::GetCaption() const,GetCaption,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002810ea,non-virtual thunk to cGZWinBtn::GetCaption() const,GetCaptionThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002810f6,cGZWinBtn::btn_paint_bmp() const,btn_paint_bmp,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10028120e,cGZWinBtn::btn_paint_flat() const,btn_paint_flat,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002812d8,cGZWinBtn::btn_paint_label() const,btn_paint_label,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10028148c,cGZWinBtn::GZPaint(),GZPaint,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002814cc,non-virtual thunk to cGZWinBtn::GZPaint(),GZPaintThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002814de,"cGZWinBtn::GZOnKeyDown(unsigned int, unsigned int)",GZOnKeyDown,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281566,"non-virtual thunk to cGZWinBtn::GZOnKeyDown(unsigned int, unsigned int)",GZOnKeyDownThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281574,"cGZWinBtn::GZOnKeyUp(unsigned int, unsigned int)",GZOnKeyUp,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002815e2,"non-virtual thunk to cGZWinBtn::GZOnKeyUp(unsigned int, unsigned int)",GZOnKeyUpThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002815f0,"cGZWinBtn::GZOnMouseDownL(int, int, unsigned int)",GZOnMouseDownL,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10028168a,cGZWinBtn::play_sound(cIGZWinBtn::tBtnSnd) const,play_sound,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281736,"non-virtual thunk to cGZWinBtn::GZOnMouseDownL(int, int, unsigned int)",GZOnMouseDownLThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281748,"cGZWinBtn::GZOnMouseDownR(int, int, unsigned int)",GZOnMouseDownR,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002817f2,"non-virtual thunk to cGZWinBtn::GZOnMouseDownR(int, int, unsigned int)",GZOnMouseDownRThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281804,"cGZWinBtn::GZOnMouseUpL(int, int, unsigned int)",GZOnMouseUpL,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002818dc,"non-virtual thunk to cGZWinBtn::GZOnMouseUpL(int, int, unsigned int)",GZOnMouseUpLThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002818ee,"cGZWinBtn::GZOnMouseUpR(int, int, unsigned int)",GZOnMouseUpR,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002819de,"non-virtual thunk to cGZWinBtn::GZOnMouseUpR(int, int, unsigned int)",GZOnMouseUpRThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002819f0,"cGZWinBtn::GZOnMouseMove(int, int, unsigned int)",GZOnMouseMove,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002819f8,"non-virtual thunk to cGZWinBtn::GZOnMouseMove(int, int, unsigned int)",GZOnMouseMoveThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281a00,cGZWinBtn::GZOnMouseEnter(cIGZWin*),GZOnMouseEnter,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281a36,cGZWinBtn::show_tip(),show_tip,src/gz/WinBtn.h,recovered-partial,scripts/tests/gz_winbtn_test.cpp
+0x100281b88,non-virtual thunk to cGZWinBtn::GZOnMouseEnter(cIGZWin*),GZOnMouseEnterThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281b9a,cGZWinBtn::GZOnMouseExit(cIGZWin*),GZOnMouseExit,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281bc0,non-virtual thunk to cGZWinBtn::GZOnMouseExit(cIGZWin*),GZOnMouseExitThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281bee,"cGZWinBtn::GZOnCaptureChanged(cIGZWin*, cIGZWin*)",GZOnCaptureChanged,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281c30,"non-virtual thunk to cGZWinBtn::GZOnCaptureChanged(cIGZWin*, cIGZWin*)",GZOnCaptureChangedThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281c42,cGZWinBtn::ButtonActivated(),ButtonActivated,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281c96,cGZWinBtn::ButtonRightClicked(),ButtonRightClicked,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281ce2,cGZWinBtn::DoMessage(cGZMessage&),DoMessage,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281d98,non-virtual thunk to cGZWinBtn::DoMessage(cGZMessage&),DoMessageThunk,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281da6,cGZWinBtn::FitSizeToContent(),FitSizeToContent,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281df6,cGZWinBtn::GetMinMaxInfo(cRZRect&),GetMinMaxInfo,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100281fbe,cGZWinBtn::update_text_pos(cRZRect const&),update_text_pos,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10028203c,"cGZWinBtn::SetGutters(unsigned char, unsigned char, unsigned char, unsigned char)",SetGutters_uchar_uchar_uchar_uchar,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10028209e,"cGZWinBtn::GetGutters(int&, int&, int&, int&) const",GetGutters_int_int_int_int,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002820cc,"cGZWinBtn::SetFontColor(int, unsigned int)",SetFontColor_int_uint,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002820f6,"cGZWinBtn::SetFontColor(int, cRZColor)",SetFontColor_int_cRZColor,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100282146,"cGZWinBtn::GetFontColor(int, unsigned int&) const",GetFontColor_int_uint,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100282166,"cGZWinBtn::GetFontColor(int, cRZColor&) const",GetFontColor_int_cRZColor,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10028219e,cGZWinBtn::ClearFontColor(int),ClearFontColor,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002821b4,cGZWinBtn::SetTipText(cIGZString const&),SetTipText,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100282216,cGZWinBtn::GetTipText(cIGZString&) const,GetTipText,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100282234,cGZWinBtn::ClearTipText(),ClearTipText,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100282264,cGZWinBtn::SetTipPlacementType(int),SetTipPlacementType,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100282272,cGZWinBtn::GetTipPlacementType(int&) const,GetTipPlacementType,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100282282,"cGZWinBtn::SetTipPlacementOffsets(int, int)",SetTipPlacementOffsets,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100282298,"cGZWinBtn::GetTipPlacementOffsets(int&, int&) const",GetTipPlacementOffsets,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002822b2,"cGZWinBtn::SetTipColor(int, unsigned char, unsigned char, unsigned char)",SetTipColor,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002822d0,"cGZWinBtn::GetTipColor(int, unsigned char&, unsigned char&, unsigned char&) const",GetTipColor,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002822f8,"cGZWinBtn::SetSoundID(int, unsigned int)",SetSoundID,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10028230a,cGZWinBtn::GetSoundID(int) const,GetSoundID,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10028231a,"cGZWinBtn::Flash(unsigned int, unsigned int)",Flash,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002823f2,cGZWinBtn::SetBuffer(cIGZBuffer*),SetBuffer,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x100282426,cGZWinBtn::GetBuffer(cIGZBuffer*&) const,GetBuffer,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
+0x1002823ab,flash_timer_callback(void*),flash_timer_callback,src/gz/WinBtn.cpp,recovered,scripts/tests/gz_winbtn_test.cpp
