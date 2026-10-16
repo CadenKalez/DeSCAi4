@@ -13069,3 +13069,16 @@ address,symbol,unique_name,source,status,evidence
 0x10068ec20,GetFontComDirector(),GetFontComDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
 0x1006bf1c0,SC4GetSC4ScriptedWindowCOMDirector(),SC4GetSC4ScriptedWindowCOMDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
 0x1006bf242,GetSC4GDriversCOMDirector(),GetSC4GDriversCOMDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100241b08,cRZKeyboard::cRZKeyboard(),Construct,src/rz/cRZKeyboard.h,recovered,scripts/tests/rz_keyboard_test.cpp
+0x100241b4a,cRZKeyboard::cRZKeyboard(),ConstructWrapper,src/rz/cRZKeyboard.h,recovered,scripts/tests/rz_keyboard_test.cpp
+0x100241b54,cRZKeyboard::IsKeyDown(unsigned int),IsKeyDown_uint,src/rz/cRZKeyboard.h,recovered,scripts/tests/rz_keyboard_test.cpp
+0x100241b60,cRZKeyboard::IsKeyDownNow(unsigned int),IsKeyDownNow,src/rz/cRZKeyboard.h,recovered,scripts/tests/rz_keyboard_test.cpp
+0x100241b76,cRZKeyboard::IsKeyDownNowStatic(unsigned int),IsKeyDownNowStatic,src/rz/cRZKeyboard.h,recovered,scripts/tests/rz_keyboard_test.cpp
+0x100241b8a,"cRZKeyboard::IsKeyDown(unsigned int, unsigned int)",IsKeyDown_uint_uint,src/rz/cRZKeyboard.h,recovered,scripts/tests/rz_keyboard_test.cpp
+0x100241bba,cRZKeyboard::ProcessKeyDown(unsigned int),ProcessKeyDown,src/rz/cRZKeyboard.h,recovered,scripts/tests/rz_keyboard_test.cpp
+0x100241c0e,cRZKeyboard::ProcessKeyUp(unsigned int),ProcessKeyUp,src/rz/cRZKeyboard.h,recovered,scripts/tests/rz_keyboard_test.cpp
+0x100241cf0,cRZKeyboard::ClearKeyboard(),ClearKeyboard,src/rz/cRZKeyboard.h,recovered,scripts/tests/rz_keyboard_test.cpp
+0x100241d20,cRZKeyboard::CharIsModifier(unsigned int),CharIsModifier,src/rz/cRZKeyboard.h,recovered,scripts/tests/rz_keyboard_test.cpp
+0x100241d30,cRZKeyboard::GetCurrentModifierState(),GetCurrentModifierState,src/rz/cRZKeyboard.h,recovered,scripts/tests/rz_keyboard_test.cpp
+0x100241d8c,cRZKeyboard::IsToggleKeySet(unsigned int),IsToggleKeySet,src/rz/cRZKeyboard.h,recovered,scripts/tests/rz_keyboard_test.cpp
+0x100241d9c,cRZKeyboard::IsToggleKeySetStatic(unsigned int),IsToggleKeySetStatic,src/rz/cRZKeyboard.h,recovered,scripts/tests/rz_keyboard_test.cpp
