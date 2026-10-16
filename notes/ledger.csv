@@ -10537,11 +10537,11 @@ address,symbol,unique_name,source,status,evidence
 0x100094650,GZCOM_CreatecSC4PollutionSimulator(),GZCOM_CreatecSC4PollutionSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x10009bc50,GZCOM_CreatecSC4PlumbingSimulator(),GZCOM_CreatecSC4PlumbingSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1000a2330,GZCOM_CreatecSC4PoliceSimulator(),GZCOM_CreatecSC4PoliceSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x1000a62a6,GZCOM_CreatecSC4OccupantTypesFilter(),GZCOM_CreatecSC4OccupantTypesFilter,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x1000a64bc,GZCOM_CreatecSC4OccupantTypesFilterHashed(),GZCOM_CreatecSC4OccupantTypesFilterHashed,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000a62a6,GZCOM_CreatecSC4OccupantTypesFilter(),GZCOM_CreatecSC4OccupantTypesFilter,src/gz/GZCOMCreators4.cpp,recovered,gz_gzcomcreators4 test: creator builds the class and the class factory table points at it
+0x1000a64bc,GZCOM_CreatecSC4OccupantTypesFilterHashed(),GZCOM_CreatecSC4OccupantTypesFilterHashed,src/gz/GZCOMCreators4.cpp,recovered,gz_gzcomcreators4 test: creator builds the class and the class factory table points at it
 0x1000a68aa,GZCOM_CreatecSC4RealisticOccupantFilter(),GZCOM_CreatecSC4RealisticOccupantFilter,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x1000a6bf4,GZCOM_CreatecSC4NetworkOccupantFilter(),GZCOM_CreatecSC4NetworkOccupantFilter,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x1000a6d90,GZCOM_CreatecSC4ViewLevelOccupantFilter(),GZCOM_CreatecSC4ViewLevelOccupantFilter,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000a6bf4,GZCOM_CreatecSC4NetworkOccupantFilter(),GZCOM_CreatecSC4NetworkOccupantFilter,src/gz/GZCOMCreators4.cpp,recovered,gz_gzcomcreators4 test: creator builds the class and the class factory table points at it
+0x1000a6d90,GZCOM_CreatecSC4ViewLevelOccupantFilter(),GZCOM_CreatecSC4ViewLevelOccupantFilter,src/gz/GZCOMCreators4.cpp,recovered,gz_gzcomcreators4 test: creator builds the class and the class factory table points at it
 0x1000a711c,GZCOM_CreatecSC4StringSpecificationOccupantFilter(),GZCOM_CreatecSC4StringSpecificationOccupantFilter,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1000b360a,GZCOM_CreatecSC4LotBaseTextureOccupant(),GZCOM_CreatecSC4LotBaseTextureOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1000c2a20,GZCOM_CreatecSC4FlammabilitySimulator(),GZCOM_CreatecSC4FlammabilitySimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
@@ -10565,7 +10565,7 @@ address,symbol,unique_name,source,status,evidence
 0x1001605d4,GZCOM_CreatecSC4PropOccupantVisualEffect(),GZCOM_CreatecSC4PropOccupantVisualEffect,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x100161712,GZCOM_CreatecSC4PropOccupantBurntBuilding(),GZCOM_CreatecSC4PropOccupantBurntBuilding,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1001623b0,GZCOM_CreatecSC4PropOccupantAutomataController(),GZCOM_CreatecSC4PropOccupantAutomataController,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x100163ac6,GZCOM_CreatecS3DCamera(),GZCOM_CreatecS3DCamera,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100163ac6,GZCOM_CreatecS3DCamera(),GZCOM_CreatecS3DCamera,src/gz/GZCOMCreators4.cpp,recovered,gz_gzcomcreators4 test: creator builds the class and the class factory table points at it
 0x10016dfb0,GZCOM_CreatecSC4NetworkManager(),GZCOM_CreatecSC4NetworkManager,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1001772db,GZCOM_CreatecSC4ConstructionOccupant(),GZCOM_CreatecSC4ConstructionOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1001834e0,GZCOM_CreatecSC4BusinessUnit(),GZCOM_CreatecSC4BusinessUnit,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class

@@ -231,15 +231,15 @@ __attribute__((weak)) void* GZCOM_CreatecSC4DefaultOccupantFilter() { return nul
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4OccupantTypeFilter() { return nullptr; }
 // original allocates 0x30 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4OccupantTypesFilter() { return nullptr; }
+__attribute__((weak)) void* GZCOM_CreatecSC4OccupantTypesFilter() { return nullptr; }
 // original allocates 0x40 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4OccupantTypesFilterHashed() { return nullptr; }
+__attribute__((weak)) void* GZCOM_CreatecSC4OccupantTypesFilterHashed() { return nullptr; }
 // original allocates 0x18 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4RealisticOccupantFilter() { return nullptr; }
 // original allocates 0x18 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4NetworkOccupantFilter() { return nullptr; }
+__attribute__((weak)) void* GZCOM_CreatecSC4NetworkOccupantFilter() { return nullptr; }
 // original allocates 0x18 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4ViewLevelOccupantFilter() { return nullptr; }
+__attribute__((weak)) void* GZCOM_CreatecSC4ViewLevelOccupantFilter() { return nullptr; }
 // original allocates 0x78 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4StringSpecificationOccupantFilter() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
@@ -299,7 +299,7 @@ void* GZCOM_CreatecSC4PropOccupantBurntBuilding() { return nullptr; }
 // original allocates 0x0 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4PropOccupantAutomataController() { return nullptr; }
 // original allocates 0x1b0 bytes; the class is not recovered yet
-void* GZCOM_CreatecS3DCamera() { return nullptr; }
+__attribute__((weak)) void* GZCOM_CreatecS3DCamera() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4FoundationOccupant() { return nullptr; }
 // original allocates 0x170 bytes; the class is not recovered yet
