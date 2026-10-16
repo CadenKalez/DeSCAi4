@@ -12981,3 +12981,46 @@ address,symbol,unique_name,source,status,evidence
 0x1006bf6a4,cSC4ScriptedWindowCOMDirector::CreateGZWinKnob(),CreateGZWinKnob,src/rz/COMDirectors.h,recovered-partial,scripts/tests/rz_comdirectors_test.cpp
 0x1006bf6e4,cSC4ScriptedWindowCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
 0x1006bf6f0,cSC4ScriptedWindowCOMDirector::~cSC4ScriptedWindowCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10063b4e0,CDirectDraw7::~CDirectDraw7(),Destruct,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b4e6,CDirectDraw7::~CDirectDraw7(),DestructAndDelete,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b4f0,"CDirectDraw7::QueryInterface(_GUID const&, void**)",QueryInterface,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b556,CDirectDraw7::AddRef(),AddRef,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b564,CDirectDraw7::Release(),Release,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b58e,CDirectDraw7::Compact(),Compact,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b596,"CDirectDraw7::CreateClipper(unsigned int, IDirectDrawClipper**, IUnknown*)",CreateClipper,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b59e,"CDirectDraw7::CreatePalette(unsigned int, tagPALETTEENTRY*, IDirectDrawPalette**, IUnknown*)",CreatePalette,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b5a6,"CDirectDraw7::CreateSurface(_DDSURFACEDESC2*, IDirectDrawSurface7**, IUnknown*)",CreateSurface,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b5f2,"CDirectDraw7::DuplicateSurface(IDirectDrawSurface7*, IDirectDrawSurface7**)",DuplicateSurface,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b5fa,"CDirectDraw7::EnumDisplayModes(unsigned int, _DDSURFACEDESC2*, void*, int (*)(_DDSURFACEDESC2*, void*))",EnumDisplayModes,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b602,"CDirectDraw7::EnumSurfaces(unsigned int, _DDSURFACEDESC2*, void*, int (*)(IDirectDrawSurface7*, _DDSURFACEDESC2*, void*))",EnumSurfaces,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b60a,"CDirectDraw7::EvaluateMode(unsigned int, unsigned int*)",EvaluateMode,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b612,CDirectDraw7::FlipToGDISurface(),FlipToGDISurface,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b61a,"CDirectDraw7::GetAvailableVidMem(_DDSCAPS2*, unsigned int*, unsigned int*)",GetAvailableVidMem,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b622,"CDirectDraw7::GetCaps(_DDCAPS_DX7*, _DDCAPS_DX7*)",GetCaps,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b632,"CDirectDraw7::GetDeviceIdentifier(tagDDDEVICEIDENTIFIER2*, unsigned int)",GetDeviceIdentifier,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b73a,CDirectDraw7::GetDisplayMode(_DDSURFACEDESC2*),GetDisplayMode,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b742,"CDirectDraw7::GetFourCCCodes(unsigned int*, unsigned int*)",GetFourCCCodes,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b74a,CDirectDraw7::GetGDISurface(IDirectDrawSurface7**),GetGDISurface,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b752,CDirectDraw7::GetMonitorFrequency(unsigned int*),GetMonitorFrequency,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b75a,CDirectDraw7::GetScanLine(unsigned int*),GetScanLine,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b762,"CDirectDraw7::GetSurfaceFromDC(HDC__*, IDirectDrawSurface7**)",GetSurfaceFromDC,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b76a,CDirectDraw7::GetVerticalBlankStatus(int*),GetVerticalBlankStatus,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b772,CDirectDraw7::Initialize(_GUID*),Initialize,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b77a,CDirectDraw7::RestoreAllSurfaces(),RestoreAllSurfaces,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b782,CDirectDraw7::RestoreDisplayMode(),RestoreDisplayMode,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b78a,"CDirectDraw7::SetCooperativeLevel(HWND__*, unsigned int)",SetCooperativeLevel,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b792,"CDirectDraw7::SetDisplayMode(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int)",SetDisplayMode,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b79a,"CDirectDraw7::StartModeTest(tagSIZE*, unsigned int, unsigned int)",StartModeTest,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b7a2,CDirectDraw7::TestCooperativeLevel(),TestCooperativeLevel,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063b7aa,"CDirectDraw7::WaitForVerticalBlank(unsigned int, void*)",WaitForVerticalBlank,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x100637626,CDirect3D7::CDirect3D7(),Construct,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063763e,CDirect3D7::~CDirect3D7(),Destruct,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x100637644,CDirect3D7::~CDirect3D7(),DestructAndDelete,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063764e,"CDirect3D7::QueryInterface(_GUID const&, void**)",QueryInterface,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x100637660,CDirect3D7::AddRef(),AddRef,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063766e,CDirect3D7::Release(),Release,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x100637694,"CDirect3D7::EnumDevices(int (*)(char*, char*, _D3DDeviceDesc7*, void*), void*)",EnumDevices,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x10063769c,"CDirect3D7::CreateDevice(_GUID const&, IDirectDrawSurface7*, IDirect3DDevice7**)",CreateDevice,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x1006376a4,"CDirect3D7::CreateVertexBuffer(_D3DVERTEXBUFFERDESC*, IDirect3DVertexBuffer7**, unsigned int)",CreateVertexBuffer,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x1006376f4,"CDirect3D7::EnumZBufferFormats(_GUID const&, int (*)(_DDPIXELFORMAT*, void*), void*)",EnumZBufferFormats,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x1006376fc,CDirect3D7::EvictManagedTextures(),EvictManagedTextures,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp

@@ -19,7 +19,13 @@ enum _D3DTRANSFORMSTATETYPE : std::uint32_t {};
 enum _D3DTEXTURESTAGESTATETYPE : std::uint32_t {};
 enum _D3DRENDERSTATETYPE : std::uint32_t {};
 class IDirect3D7; class IDirect3DVertexBuffer7; class IDirectDrawSurface7;
+class IDirectDrawClipper; class IDirectDrawPalette; class IUnknown;
+struct tagPALETTEENTRY; struct _DDSURFACEDESC2; struct _DDCAPS_DX7; struct _DDSCAPS2; struct tagDDDEVICEIDENTIFIER2;
+struct tagSIZE; struct HDC__; struct HWND__; struct _D3DVERTEXBUFFERDESC;
 
+using EnumDevicesCallback = int (*)(char*, char*, _D3DDeviceDesc7*, void*);
+using EnumDisplayModesCallback = int (*)(_DDSURFACEDESC2*, void*);
+using EnumSurfacesCallback = int (*)(IDirectDrawSurface7*, _DDSURFACEDESC2*, void*);
 using EnumTextureFormatsCallback = int (*)(_DDPIXELFORMAT*, void*);
 
 // IDirect3DDevice7 (slots 3..48 after QueryInterface / AddRef / Release).
@@ -75,6 +81,56 @@ public:
     virtual std::uint32_t GetClipPlane(std::uint32_t a0, float* a1) = 0;
     virtual std::uint32_t GetInfo(std::uint32_t a0, void* a1, std::uint32_t a2) = 0;
     virtual ~IDirect3DDevice7() = default;
+};
+
+// IDirect3D7 (slots 3..7).
+class IDirect3D7 {
+public:
+    virtual std::uint32_t QueryInterface(const _GUID& iid, void** out) = 0;
+    virtual void AddRef() = 0;
+    virtual std::int32_t Release() = 0;
+    virtual std::uint32_t EnumDevices(EnumDevicesCallback callback, void* context) = 0;
+    virtual std::uint32_t CreateDevice(const _GUID& iid, IDirectDrawSurface7* target, IDirect3DDevice7** out) = 0;
+    virtual std::uint32_t CreateVertexBuffer(_D3DVERTEXBUFFERDESC* desc, IDirect3DVertexBuffer7** out, std::uint32_t flags) = 0;
+    virtual std::uint32_t EnumZBufferFormats(const _GUID& iid, EnumTextureFormatsCallback callback, void* context) = 0;
+    virtual std::uint32_t EvictManagedTextures() = 0;
+    virtual ~IDirect3D7() = default;
+};
+
+// IDirectDraw7 (slots 3..29).
+class IDirectDraw7 {
+public:
+    virtual std::uint32_t QueryInterface(const _GUID& iid, void** out) = 0;
+    virtual void AddRef() = 0;
+    virtual std::int32_t Release() = 0;
+    virtual std::uint32_t Compact() = 0;
+    virtual std::uint32_t CreateClipper(std::uint32_t flags, IDirectDrawClipper** out, IUnknown* outer) = 0;
+    virtual std::uint32_t CreatePalette(std::uint32_t flags, tagPALETTEENTRY* entries, IDirectDrawPalette** out, IUnknown* outer) = 0;
+    virtual std::uint32_t CreateSurface(_DDSURFACEDESC2* desc, IDirectDrawSurface7** out, IUnknown* outer) = 0;
+    virtual std::uint32_t DuplicateSurface(IDirectDrawSurface7* source, IDirectDrawSurface7** out) = 0;
+    virtual std::uint32_t EnumDisplayModes(std::uint32_t flags, _DDSURFACEDESC2* desc, void* context, EnumDisplayModesCallback callback) = 0;
+    virtual std::uint32_t EnumSurfaces(std::uint32_t flags, _DDSURFACEDESC2* desc, void* context, EnumSurfacesCallback callback) = 0;
+    virtual std::uint32_t FlipToGDISurface() = 0;
+    virtual std::uint32_t GetCaps(_DDCAPS_DX7* driverCaps, _DDCAPS_DX7* helCaps) = 0;
+    virtual std::uint32_t GetDisplayMode(_DDSURFACEDESC2* desc) = 0;
+    virtual std::uint32_t GetFourCCCodes(std::uint32_t* count, std::uint32_t* codes) = 0;
+    virtual std::uint32_t GetGDISurface(IDirectDrawSurface7** out) = 0;
+    virtual std::uint32_t GetMonitorFrequency(std::uint32_t* frequency) = 0;
+    virtual std::uint32_t GetScanLine(std::uint32_t* line) = 0;
+    virtual std::uint32_t GetVerticalBlankStatus(int* inBlank) = 0;
+    virtual std::uint32_t Initialize(_GUID* guid) = 0;
+    virtual std::uint32_t RestoreDisplayMode() = 0;
+    virtual std::uint32_t SetCooperativeLevel(HWND__* window, std::uint32_t flags) = 0;
+    virtual std::uint32_t SetDisplayMode(std::uint32_t w, std::uint32_t h, std::uint32_t bpp, std::uint32_t refresh, std::uint32_t flags) = 0;
+    virtual std::uint32_t WaitForVerticalBlank(std::uint32_t flags, void* event) = 0;
+    virtual std::uint32_t GetAvailableVidMem(_DDSCAPS2* caps, std::uint32_t* total, std::uint32_t* free) = 0;
+    virtual std::uint32_t GetSurfaceFromDC(HDC__* dc, IDirectDrawSurface7** out) = 0;
+    virtual std::uint32_t RestoreAllSurfaces() = 0;
+    virtual std::uint32_t TestCooperativeLevel() = 0;
+    virtual std::uint32_t GetDeviceIdentifier(tagDDDEVICEIDENTIFIER2* id, std::uint32_t flags) = 0;
+    virtual std::uint32_t StartModeTest(tagSIZE* sizes, std::uint32_t count, std::uint32_t flags) = 0;
+    virtual std::uint32_t EvaluateMode(std::uint32_t flags, std::uint32_t* timeout) = 0;
+    virtual ~IDirectDraw7() = default;
 };
 
 }  // namespace sgl
