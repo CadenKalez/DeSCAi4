@@ -7,6 +7,12 @@ static int failures = 0;
 using namespace gz;
 
 namespace {
+struct Product final : cIGZUnknown {
+    std::uint32_t refs = 0;
+    bool QueryInterface(std::uint32_t iid, void** out) override { if (iid != 77) return false; *out = this; AddRef(); return true; }
+    std::uint32_t AddRef() override { return ++refs; }
+    std::uint32_t Release() override { if (--refs == 0) { delete this; return 0; } return refs; }
+};
 struct Service final : cIGZUnknown {
     static int released;
     bool QueryInterface(std::uint32_t, void**) override { return false; }
@@ -60,6 +66,17 @@ int main() {
     CHECK(count >= 20);
     count = 0; cSC4ResourceLibCOMDirector().EnumClassObjects(&Count, nullptr);
     CHECK(count >= 20);
+    // accessors hand out one process-wide instance
+    CHECK(GetGZWinCOMDllDirector() == GetGZWinCOMDllDirector() && GetGZWinCOMDllDirector()->GetDirectorID() == 0xa41740d1);
+    CHECK(GetGZWin32COMDllDirector()->GetDirectorID() == 0x41740ba && GetFontComDirector()->GetDirectorID() == 0x5aa40bd3);
+    CHECK(GetSCLuaCOMDirector()->GetDirectorID() == 0xca107f8b && GetGZDrawCOMDllDirector()->GetDirectorID() == 0xb2ea939);
+    CHECK(GetGZGraphicCOMDllDirector()->GetDirectorID() == 0x246b917a && GetSC4GDriversCOMDirector()->GetDirectorID() == 0x64b2a903);
+    CHECK(GetGZWWWCOMDllDirector()->GetDirectorID() == 0x649b0fbe && GetGZWWWWin32COMDllDirector()->GetDirectorID() == 0xa49b0fd1);
+    // Lua factories hand out interfaces of whatever the registered maker builds
+    RegisterDirectorMaker("cSCLua", +[]() -> cIGZUnknown* { return new Product(); });
+    void* lua = nullptr;
+    CHECK(GetSCLuaCOMDirector()->GetClassObject(0x4b2811aa, 77, &lua) && lua != nullptr);
+    static_cast<cIGZUnknown*>(lua)->Release();
     std::printf(failures ? "FAILED\n" : "rz_comdirectors ok\n");
     return failures != 0;
 }

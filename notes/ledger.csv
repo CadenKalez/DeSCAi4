@@ -13024,3 +13024,48 @@ address,symbol,unique_name,source,status,evidence
 0x1006376a4,"CDirect3D7::CreateVertexBuffer(_D3DVERTEXBUFFERDESC*, IDirect3DVertexBuffer7**, unsigned int)",CreateVertexBuffer,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
 0x1006376f4,"CDirect3D7::EnumZBufferFormats(_GUID const&, int (*)(_DDPIXELFORMAT*, void*), void*)",EnumZBufferFormats,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
 0x1006376fc,CDirect3D7::EvictManagedTextures(),EvictManagedTextures,src/render/DirectDraw7.h,recovered,scripts/tests/render_directdraw7_test.cpp
+0x1004dd2e8,cGZGraphicCOMDirector::~cGZGraphicCOMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dd2f2,cGZGraphicCOMDirector::cGZGraphicCOMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dd37c,cGZGraphicCOMDirector::OnStart(cIGZCOM*),OnStart,src/rz/COMDirectors.h,partial,OnStart body not recovered (framework services seam)
+0x1004dd43c,cGZGraphicCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dd448,cGZGraphicCOMDirector::~cGZGraphicCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10064ebc8,cGZDrawCOMDirector::~cGZDrawCOMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10064ebd2,cGZDrawCOMDirector::cGZDrawCOMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10064ec9c,cGZDrawCOMDirector::OnStart(cIGZCOM*),OnStart,src/rz/COMDirectors.h,partial,OnStart body not recovered (framework services seam)
+0x10064ed18,cGZDrawCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10064ed24,cGZDrawCOMDirector::~cGZDrawCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf2ba,cSC4GDriversCOMDirector::~cSC4GDriversCOMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf71e,cSC4GDriversCOMDirector::cSC4GDriversCOMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf784,cSC4GDriversCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf790,cSC4GDriversCOMDirector::~cSC4GDriversCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100566730,cSCLuaCOMDirector::cSCLuaCOMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100566910,cSCLuaCOMDirector::~cSCLuaCOMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10056691a,cSCLuaCOMDirector::~cSCLuaCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100566948,cSCLuaCOMDirector::OnStart(cIGZCOM*),OnStart,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100566950,cSCLuaCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004311b8,cGZWWWCOMDirector::~cGZWWWCOMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004311c2,cGZWWWCOMDirector::cGZWWWCOMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100431244,cGZWWWCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100431250,cGZWWWCOMDirector::~cGZWWWCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522ba8,cGZWWWWin32COMDirector::~cGZWWWWin32COMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522bb2,cGZWWWWin32COMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522bbe,cGZWWWWin32COMDirector::~cGZWWWWin32COMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100431140,GetGZWWWCOMDllDirector(),GetGZWWWCOMDllDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10043c8d0,GetGZSoundCOMDirector(),GetGZSoundCOMDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004db5b0,SC4AutomataGetCOMDirector(),SC4AutomataGetCOMDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc0f0,GetGimexCOMDllDirector(),GetGimexCOMDllDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dc2f0,GetGZWinCOMDllDirector(),GetGZWinCOMDllDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dcc20,GetGZResManCOMDirector(),GetGZResManCOMDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1004dd270,GetGZGraphicCOMDllDirector(),GetGZGraphicCOMDllDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522b0c,GetGZWWWWin32COMDllDirector(),GetGZWWWWin32COMDllDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100522d2c,GetSC4ResourceLibCOMDirector(),GetSC4ResourceLibCOMDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100523680,GetGZScriptCOMDirector(),GetGZScriptCOMDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100523850,GetGZUIScriptCOMDirector(),GetGZUIScriptCOMDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10056695b,GetSCLuaCOMDirector(),GetSCLuaCOMDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1006148c0,GetGZResourceCOMDirectorW32(),GetGZResourceCOMDirectorW32,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x100617580,GetGZWin32COMDllDirector(),GetGZWin32COMDllDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1006176f0,GetGZGraphicWin32COMDllDirector(),GetGZGraphicWin32COMDllDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10064eb50,GetGZDrawCOMDllDirector(),GetGZDrawCOMDllDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10068ec20,GetFontComDirector(),GetFontComDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf1c0,SC4GetSC4ScriptedWindowCOMDirector(),SC4GetSC4ScriptedWindowCOMDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1006bf242,GetSC4GDriversCOMDirector(),GetSC4GDriversCOMDirector,src/rz/COMDirectors.cpp,recovered,scripts/tests/rz_comdirectors_test.cpp

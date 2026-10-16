@@ -8,10 +8,18 @@ namespace gz {
 
 static std::map<std::string, DirectorMaker>& Makers() { static std::map<std::string, DirectorMaker> m; return m; }
 void RegisterDirectorMaker(const char* className, DirectorMaker maker) { Makers()[className] = maker; }
-cRZCOMDllDirector* GetGZWin32COMDllDirector() { static cGZWin32COMDirector director; return &director; }
 cIGZUnknown* DirectorMake(const char* className) {
     const auto it = Makers().find(className);
     return it == Makers().end() ? nullptr : it->second();
+}
+// cRZCOMDllGenericClassFactoryT<T>::CreateInstance: make a T and hand out the requested interface.
+static bool MakeInterface(const char* className, std::uint32_t iid, void** out) {
+    cIGZUnknown* object = DirectorMake(className);
+    if (!object) return false;
+    if (object->QueryInterface(iid, out)) return true;
+    object->AddRef();
+    object->Release();
+    return false;
 }
 
 cGZWin32COMDirector::cGZWin32COMDirector() {
@@ -330,5 +338,63 @@ cGZSoundCOMDirector::cGZSoundCOMDirector() {
     AddCls(0xbdf613b4, +[]() -> cIGZUnknown* { return DirectorMake("cGZSndInstanceCache"); });
 }
 
+
+cGZGraphicCOMDirector::cGZGraphicCOMDirector() {
+    AddDirector(GetGZGraphicWin32COMDllDirector());
+    AddCls(0x63260361, +[]() -> cIGZUnknown* { return DirectorMake("cGZAlphaBlt"); });
+}
+
+
+cGZDrawCOMDirector::cGZDrawCOMDirector() {
+    AddCls(gzcom::kCLSID_cGZDrawContext, +[]() -> cIGZUnknown* { return DirectorMake("cGZDrawContext"); });
+    AddCls(gzcom::kCLSID_cGZDrawSystem, +[]() -> cIGZUnknown* { return DirectorMake("cGZDrawSystem"); });
+    AddCls(gzcom::kCLSID_cGZDrawContextAsBuffer, +[]() -> cIGZUnknown* { return DirectorMake("cGZDrawContextAsBuffer"); });
+    AddCls(gzcom::kCLSID_cGZDrawFontRenderer, +[]() -> cIGZUnknown* { return DirectorMake("cGZDrawFontRenderer"); });
+    AddCls(gzcom::kCLSID_cGZBuffer, +[]() -> cIGZUnknown* { return DirectorMake("cGZBuffer"); });
+}
+
+
+cSC4GDriversCOMDirector::cSC4GDriversCOMDirector() {
+    AddCls(gzcom::kCLSID_cSGLDriverDX7, +[]() -> cIGZUnknown* { return DirectorMake("cSGLDriverDX7"); });
+}
+
+
+cSCLuaCOMDirector::cSCLuaCOMDirector() {
+    AddCls(0x2bd13fb4, +[](std::uint32_t iid, void** out) -> bool { return MakeInterface("cGZLua5CommandGenerator", iid, out); });
+    AddCls(0x2b2810f7, +[](std::uint32_t iid, void** out) -> bool { return MakeInterface("cGZLua5Thread", iid, out); });
+    AddCls(0x4b2811aa, +[](std::uint32_t iid, void** out) -> bool { return MakeInterface("cSCLua", iid, out); });
+    AddCls(0xea10c4a2, +[](std::uint32_t iid, void** out) -> bool { return MakeInterface("cSCLua", iid, out); });
+}
+
+
+cGZWWWCOMDirector::cGZWWWCOMDirector() {
+    AddDirector(GetGZWWWWin32COMDllDirector());
+    AddCls(gzcom::kCLSID_cGZWinHTML, +[]() -> cIGZUnknown* { return DirectorMake("cGZWinHTML"); });
+}
+
+
+cGZWWWWin32COMDirector::cGZWWWWin32COMDirector() {
+}
+
+
+cRZCOMDllDirector* GetGZWin32COMDllDirector() { static cGZWin32COMDirector director; return &director; }
+cRZCOMDllDirector* GetGZScriptCOMDirector() { static cGZScriptCOMDirector director; return &director; }
+cRZCOMDllDirector* GetGimexCOMDllDirector() { static cGXCOMDirector director; return &director; }
+cRZCOMDllDirector* GetGZUIScriptCOMDirector() { static cGZUIScriptCOMDirector director; return &director; }
+cRZCOMDllDirector* GetGZResourceCOMDirectorW32() { static cGZResourceCOMDirectorW32 director; return &director; }
+cRZCOMDllDirector* GetGZGraphicWin32COMDllDirector() { static cGZGraphicWin32COMDirector director; return &director; }
+cRZCOMDllDirector* GetFontComDirector() { static cFontCOMDirector director; return &director; }
+cRZCOMDllDirector* GetGZWinCOMDllDirector() { static cGZWinCOMDirector director; return &director; }
+cRZCOMDllDirector* GetGZResManCOMDirector() { static cGZResManCOMDirector director; return &director; }
+cRZCOMDllDirector* GetSC4ResourceLibCOMDirector() { static cSC4ResourceLibCOMDirector director; return &director; }
+cRZCOMDllDirector* SC4AutomataGetCOMDirector() { static cSC4AutomataCOMDirector director; return &director; }
+cRZCOMDllDirector* SC4GetSC4ScriptedWindowCOMDirector() { static cSC4ScriptedWindowCOMDirector director; return &director; }
+cRZCOMDllDirector* GetGZSoundCOMDirector() { static cGZSoundCOMDirector director; return &director; }
+cRZCOMDllDirector* GetGZGraphicCOMDllDirector() { static cGZGraphicCOMDirector director; return &director; }
+cRZCOMDllDirector* GetGZDrawCOMDllDirector() { static cGZDrawCOMDirector director; return &director; }
+cRZCOMDllDirector* GetSC4GDriversCOMDirector() { static cSC4GDriversCOMDirector director; return &director; }
+cRZCOMDllDirector* GetSCLuaCOMDirector() { static cSCLuaCOMDirector director; return &director; }
+cRZCOMDllDirector* GetGZWWWCOMDllDirector() { static cGZWWWCOMDirector director; return &director; }
+cRZCOMDllDirector* GetGZWWWWin32COMDllDirector() { static cGZWWWWin32COMDirector director; return &director; }
 
 }  // namespace gz

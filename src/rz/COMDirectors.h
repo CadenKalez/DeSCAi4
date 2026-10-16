@@ -4,13 +4,29 @@
 
 namespace gz {
 
-// The singleton the window director adopts (GetGZWin32COMDllDirector).
-cRZCOMDllDirector* GetGZWin32COMDllDirector();
-
 using DirectorMaker = cIGZUnknown* (*)();
 void RegisterDirectorMaker(const char* className, DirectorMaker maker);
 // The object of the named class, or nullptr when no maker was registered (class not linked in).
 cIGZUnknown* DirectorMake(const char* className);
+cRZCOMDllDirector* GetGZWWWWin32COMDllDirector();   // the process-wide cGZWWWWin32COMDirector
+cRZCOMDllDirector* GetGZWWWCOMDllDirector();   // the process-wide cGZWWWCOMDirector
+cRZCOMDllDirector* GetSCLuaCOMDirector();   // the process-wide cSCLuaCOMDirector
+cRZCOMDllDirector* GetSC4GDriversCOMDirector();   // the process-wide cSC4GDriversCOMDirector
+cRZCOMDllDirector* GetGZDrawCOMDllDirector();   // the process-wide cGZDrawCOMDirector
+cRZCOMDllDirector* GetGZGraphicCOMDllDirector();   // the process-wide cGZGraphicCOMDirector
+cRZCOMDllDirector* GetGZSoundCOMDirector();   // the process-wide cGZSoundCOMDirector
+cRZCOMDllDirector* SC4GetSC4ScriptedWindowCOMDirector();   // the process-wide cSC4ScriptedWindowCOMDirector
+cRZCOMDllDirector* SC4AutomataGetCOMDirector();   // the process-wide cSC4AutomataCOMDirector
+cRZCOMDllDirector* GetSC4ResourceLibCOMDirector();   // the process-wide cSC4ResourceLibCOMDirector
+cRZCOMDllDirector* GetGZResManCOMDirector();   // the process-wide cGZResManCOMDirector
+cRZCOMDllDirector* GetGZWinCOMDllDirector();   // the process-wide cGZWinCOMDirector
+cRZCOMDllDirector* GetFontComDirector();   // the process-wide cFontCOMDirector
+cRZCOMDllDirector* GetGZGraphicWin32COMDllDirector();   // the process-wide cGZGraphicWin32COMDirector
+cRZCOMDllDirector* GetGZResourceCOMDirectorW32();   // the process-wide cGZResourceCOMDirectorW32
+cRZCOMDllDirector* GetGZUIScriptCOMDirector();   // the process-wide cGZUIScriptCOMDirector
+cRZCOMDllDirector* GetGimexCOMDllDirector();   // the process-wide cGXCOMDirector
+cRZCOMDllDirector* GetGZScriptCOMDirector();   // the process-wide cGZScriptCOMDirector
+cRZCOMDllDirector* GetGZWin32COMDllDirector();   // the process-wide cGZWin32COMDirector
 
 class cGZWin32COMDirector : public cRZCOMDllDirector {
 public:
@@ -209,6 +225,42 @@ class cGZSoundCOMDirector : public cRZCOMDllDirector {
 public:
     cGZSoundCOMDirector();
     std::uint32_t GetDirectorID() const override { return 0xe9d3a40b; }
+};
+
+class cGZGraphicCOMDirector : public cRZCOMDllDirector {
+public:
+    cGZGraphicCOMDirector();
+    std::uint32_t GetDirectorID() const override { return 0x246b917a; }
+};
+
+class cGZDrawCOMDirector : public cRZCOMDllDirector {
+public:
+    cGZDrawCOMDirector();
+    std::uint32_t GetDirectorID() const override { return 0xb2ea939; }
+};
+
+class cSC4GDriversCOMDirector : public cRZCOMDllDirector {
+public:
+    cSC4GDriversCOMDirector();
+    std::uint32_t GetDirectorID() const override { return 0x64b2a903; }
+};
+
+class cSCLuaCOMDirector : public cRZCOMDllDirector {
+public:
+    cSCLuaCOMDirector();
+    std::uint32_t GetDirectorID() const override { return 0xca107f8b; }
+};
+
+class cGZWWWCOMDirector : public cRZCOMDllDirector {
+public:
+    cGZWWWCOMDirector();
+    std::uint32_t GetDirectorID() const override { return 0x649b0fbe; }
+};
+
+class cGZWWWWin32COMDirector : public cRZCOMDllDirector {
+public:
+    cGZWWWWin32COMDirector();
+    std::uint32_t GetDirectorID() const override { return 0xa49b0fd1; }
 };
 
 }  // namespace gz
