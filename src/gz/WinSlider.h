@@ -75,10 +75,14 @@ public:
 
     const cRZRect& ThumbRect() const { return thumb_; }
 
+protected:
+    // (the scrollbar subclass reads and writes the slider's state directly)
+
 private:
     bool PaintFlat();
     bool PaintBmp();
 
+protected:
     std::int32_t direction_ = kSliderVertical;   // +0x158
     std::int32_t min_ = 0, max_ = 0x20;          // +0x15c, +0x160
     float fraction_ = 0.0f;                      // +0x164
