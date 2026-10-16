@@ -12775,3 +12775,22 @@ address,symbol,unique_name,source,status,evidence
 0x10003fc36,cRZCOMDllDirector::OnInstall(),OnInstall,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
 0x10003fc3e,non-virtual thunk to cRZCOMDllDirector::OnInstall(),OnInstallThunk,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
 0x1004dcbb0,cRZCOMDllDirector::OnUnload(),OnUnload,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x1003d90c0,cGZToolsCOMDirector::cGZToolsCOMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1003d9160,cGZToolsCOMDirector::~cGZToolsCOMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1003d916a,cGZToolsCOMDirector::~cGZToolsCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1003d9198,cGZToolsCOMDirector::Get(),Get,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1003d9210,cGZToolsCOMDirector::OnStart(cIGZCOM*),OnStart,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1003d9286,cGZToolsCOMDirector::PreFrameWorkInit(),PreFrameWorkInit,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1003d928e,non-virtual thunk to cGZToolsCOMDirector::PreFrameWorkInit(),PreFrameWorkInitThunk,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x1003d9296,cGZToolsCOMDirector::PostAppInit(),PostAppInit,src/rz/COMDirectors.h,partial,OnStart/hook body not recovered (framework services seam)
+0x1003d933c,non-virtual thunk to cGZToolsCOMDirector::PostAppInit(),PostAppInitThunk,src/rz/COMDirectors.h,partial,OnStart/hook body not recovered (framework services seam)
+0x1003d9352,cGZToolsCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10043c948,cGZSoundCOMDirector::~cGZSoundCOMDirector(),Destruct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10043c952,cGZSoundCOMDirector::cGZSoundCOMDirector(),Construct,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10043cb7c,cGZSoundCOMDirector::OnStart(cIGZCOM*),OnStart,src/rz/COMDirectors.h,partial,OnStart/hook body not recovered (framework services seam)
+0x10043cd1c,cGZSoundCOMDirector::GetDirectorID() const,GetDirectorID,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10043cd28,cGZSoundCOMDirector::~cGZSoundCOMDirector(),DestructAndDelete,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10043cd56,cGZSoundCOMDirector::PostAppInit(),PostAppInit,src/rz/COMDirectors.h,partial,OnStart/hook body not recovered (framework services seam)
+0x10043ce0e,cGZSoundCOMDirector::PreAppShutdown(),PreAppShutdown,src/rz/COMDirectors.h,partial,OnStart/hook body not recovered (framework services seam)
+0x10043ce32,non-virtual thunk to cGZSoundCOMDirector::PostAppInit(),PostAppInitThunk,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
+0x10043ce40,non-virtual thunk to cGZSoundCOMDirector::PreAppShutdown(),PreAppShutdownThunk,src/rz/COMDirectors.h,recovered,scripts/tests/rz_comdirectors_test.cpp
