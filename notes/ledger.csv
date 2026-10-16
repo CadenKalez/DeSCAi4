@@ -12734,3 +12734,44 @@ address,symbol,unique_name,source,status,evidence
 0x100576284,cSC4BrushEffect::Release(),Release,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
 0x100576292,non-virtual thunk to cSC4BrushEffect::Release(),ReleaseThunk,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
 0x10057629c,non-virtual thunk to cSC4BrushEffect::AddRef(),AddRefThunk,src/sc4/EffectComponents.cpp|h,recovered,scripts/tests/sc4_effectcomponents_test.cpp
+0x10003f2e8,cRZCOMDllDirector::cRZCOMDllDirector(),Construct,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f368,cRZCOMDllDirector::~cRZCOMDllDirector(),Destruct,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f3f2,cRZCOMDllDirector::~cRZCOMDllDirector(),DestructAndDelete,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f3f8,cRZCOMDllDirector::~cRZCOMDllDirector(),DestructBody,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f3fe,"cRZCOMDllDirector::QueryInterface(unsigned int, void**)",QueryInterface,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f432,"non-virtual thunk to cRZCOMDllDirector::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f440,cRZCOMDllDirector::FrameWork(),FrameWork,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f44a,cRZCOMDllDirector::AddRef(),AddRef,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f458,non-virtual thunk to cRZCOMDllDirector::AddRef(),AddRefThunk,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f466,cRZCOMDllDirector::Release(),Release,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f472,non-virtual thunk to cRZCOMDllDirector::Release(),ReleaseThunk,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f482,cRZCOMDllDirector::RemoveRef(),RemoveRef,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f498,cRZCOMDllDirector::RefCount(),RefCount,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f4a2,"cRZCOMDllDirector::InitializeCOM(cIGZCOM*, cIGZString const&)",InitializeCOM,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f514,cRZCOMDllDirector::OnStart(cIGZCOM*),OnStart,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f51c,"cRZCOMDllDirector::GetClassObject(unsigned int, unsigned int, void**)",GetClassObject,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f5d4,"cRZCOMDllDirector::EnumClassObjects(void (*)(unsigned int, unsigned int, void*), void*)",EnumClassObjects,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f62a,cRZCOMDllDirector::GetLibraryPath(cIGZString&),GetLibraryPath,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f662,cRZCOMDllDirector::AddDirector(cRZCOMDllDirector*),AddDirector,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f6da,cRZCOMDllDirector::CanUnloadNow(),CanUnloadNow,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f722,cRZCOMDllDirector::GetHeapAllocatedSize(),GetHeapAllocatedSize,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f72c,"cRZCOMDllDirector::AddCls(unsigned int, cIGZUnknown* (*)())",AddCls_uint_cIGZUnknown,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003f974,"cRZCOMDllDirector::AddCls(unsigned int, bool (*)(unsigned int, void**))",AddCls_uint_bool_uint_void,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fbbc,cRZCOMDllDirector::GZCOM(),GZCOM,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fbc6,cRZCOMDllDirector::PreFrameWorkInit(),PreFrameWorkInit,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fbce,non-virtual thunk to cRZCOMDllDirector::PreFrameWorkInit(),PreFrameWorkInitThunk,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fbd6,cRZCOMDllDirector::PreAppInit(),PreAppInit,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fbde,non-virtual thunk to cRZCOMDllDirector::PreAppInit(),PreAppInitThunk,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fbe6,cRZCOMDllDirector::PostAppInit(),PostAppInit,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fbee,non-virtual thunk to cRZCOMDllDirector::PostAppInit(),PostAppInitThunk,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fbf6,cRZCOMDllDirector::PreAppShutdown(),PreAppShutdown,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fbfe,non-virtual thunk to cRZCOMDllDirector::PreAppShutdown(),PreAppShutdownThunk,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fc06,cRZCOMDllDirector::PostAppShutdown(),PostAppShutdown,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fc0e,non-virtual thunk to cRZCOMDllDirector::PostAppShutdown(),PostAppShutdownThunk,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fc16,cRZCOMDllDirector::PostSystemServiceShutdown(),PostSystemServiceShutdown,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fc1e,non-virtual thunk to cRZCOMDllDirector::PostSystemServiceShutdown(),PostSystemServiceShutdownThunk,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fc26,cRZCOMDllDirector::AbortiveQuit(),AbortiveQuit,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fc2e,non-virtual thunk to cRZCOMDllDirector::AbortiveQuit(),AbortiveQuitThunk,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fc36,cRZCOMDllDirector::OnInstall(),OnInstall,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x10003fc3e,non-virtual thunk to cRZCOMDllDirector::OnInstall(),OnInstallThunk,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
+0x1004dcbb0,cRZCOMDllDirector::OnUnload(),OnUnload,src/rz/cRZCOMDllDirector.h,recovered,scripts/tests/rz_comdirector_test.cpp
