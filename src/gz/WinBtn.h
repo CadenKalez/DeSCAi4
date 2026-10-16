@@ -19,6 +19,7 @@
 
 #include "gz/Buffer.h"
 #include "gz/Win.h"
+#include "gz/WinFont.h"
 #include "rz/cRZCallbackTimer.h"
 
 namespace gz {
@@ -39,20 +40,7 @@ constexpr std::uint32_t kBtnDefaultImageId = 0xe8963ef1;
 
 struct cRZColor { std::uint32_t rgb = 0; };
 
-// The font as the button uses it (vslots of cIGZFont noted).
-class IWinButtonFont : public cIGZUnknown {
-public:
-    virtual std::uint32_t DefaultTextColor() = 0;                                   // 0x60
-    virtual std::uint32_t DefaultShadowColor() = 0;                                 // 0x68
-    virtual std::int16_t LineHeight(int a, int b) = 0;                              // 0x128
-    virtual int CountLines(const char* text, std::uint32_t length, int width) = 0;  // 0x158
-    virtual int WrappedWidth(const char* text, std::uint32_t length, int height) = 0;   // 0x160
-    virtual void MeasureText(const char* text, std::uint32_t length, cRZRect& out) = 0;  // 0x178
-    virtual void DrawText(IWinBuffer* target, int x, int y, const char* text, std::uint32_t length,
-                          std::uint32_t color, std::uint32_t color2, const cRZRect* clip, int flags) = 0;   // 0x198
-    virtual void DrawTextBox(IWinBuffer* target, const cRZRect& box, const char* text, std::uint32_t length,
-                             std::uint16_t alignment, std::uint32_t color, std::uint32_t color2, const cRZRect* clip, int flags) = 0;   // 0x1a0
-};
+using IWinButtonFont = IWinFont;   // the font as the button uses it (see WinFont.h)
 
 // Tool tip request the button posts to the message server when the pointer rests on it (message 0x22c010d0).
 struct BtnTipRequest {

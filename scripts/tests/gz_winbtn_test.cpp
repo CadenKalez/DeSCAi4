@@ -12,7 +12,7 @@ using namespace gz;
 using fake_dc::Ctx;
 
 namespace {
-struct FakeFont final : IWinButtonFont {
+struct FakeFont final : IWinFont {
     int refs = 0; std::vector<std::string> drawn;
     bool QueryInterface(std::uint32_t, void**) override { return false; }
     std::uint32_t AddRef() override { return ++refs; }
@@ -23,10 +23,11 @@ struct FakeFont final : IWinButtonFont {
     int CountLines(const char*, std::uint32_t length, int width) override { return width > 0 ? int((length * 6 + width - 1) / width) : 1; }
     int WrappedWidth(const char*, std::uint32_t, int) override { return 40; }
     void MeasureText(const char*, std::uint32_t length, cRZRect& out) override { out = {0, 0, int(length) * 6, 12}; }
+    int TextWidth(const char*, std::uint32_t length) override { return int(length) * 6; }
     void DrawText(IWinBuffer*, int x, int y, const char*, std::uint32_t, std::uint32_t c1, std::uint32_t c2, const cRZRect*, int) override {
         drawn.push_back("text " + std::to_string(x) + "," + std::to_string(y) + " " + std::to_string(c1) + "/" + std::to_string(c2));
     }
-    void DrawTextBox(IWinBuffer*, const cRZRect&, const char*, std::uint32_t, std::uint16_t, std::uint32_t, std::uint32_t, const cRZRect*, int) override { drawn.push_back("box"); }
+    void DrawTextBox(IWinBuffer*, const cRZRect&, const char*, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, const cRZRect*, int) override { drawn.push_back("box"); }
 };
 struct Host final : IWinButtonHost {
     FakeFont font; std::vector<std::uint32_t> sounds; int tips = 0, hides = 0; BtnTipRequest lastTip;

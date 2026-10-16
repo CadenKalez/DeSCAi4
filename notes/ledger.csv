@@ -13310,3 +13310,76 @@ address,symbol,unique_name,source,status,evidence
 0x1002823f2,cGZWinBtn::SetBuffer(cIGZBuffer*),SetBuffer,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
 0x100282426,cGZWinBtn::GetBuffer(cIGZBuffer*&) const,GetBuffer,src/gz/WinBtn.h,recovered,scripts/tests/gz_winbtn_test.cpp
 0x1002823ab,flash_timer_callback(void*),flash_timer_callback,src/gz/WinBtn.cpp,recovered,scripts/tests/gz_winbtn_test.cpp
+0x10027e5e0,cGZWinText::cGZWinText(),Construct,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e6ac,cGZWinText::cGZWinText(),ConstructWrapper,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e6b6,cGZWinText::~cGZWinText(),Destruct,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e72e,cGZWinText::~cGZWinText(),DestructAndDelete,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e738,cGZWinText::~cGZWinText(),DestructBody,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e766,"cGZWinText::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e78a,"non-virtual thunk to cGZWinText::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e7b6,cGZWinText::AddRef(),AddRef,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e7c0,non-virtual thunk to cGZWinText::AddRef(),AddRefThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e7d2,cGZWinText::Release(),Release,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e7dc,non-virtual thunk to cGZWinText::Release(),ReleaseThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e7ee,cGZWinText::Init(),Init,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e862,cGZWinText::Shutdown(),Shutdown,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e8a8,cGZWinText::DoMessage(cGZMessage&),DoMessage,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e956,"cGZWinText::GZOnKeyDown(unsigned int, unsigned int)",GZOnKeyDown,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e97c,"cGZWinText::GZOnKeyUp(unsigned int, unsigned int)",GZOnKeyUp,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e9a2,cGZWinText::GetWinTextFlag(int),GetWinTextFlag,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e9b2,non-virtual thunk to cGZWinText::GetWinTextFlag(int),GetWinTextFlagThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027e9be,"cGZWinText::SetWinTextFlag(int, bool)",SetWinTextFlag,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ea42,cGZWinText::calc_text_pos(),calc_text_pos,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027eba6,"non-virtual thunk to cGZWinText::SetWinTextFlag(int, bool)",SetWinTextFlagThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ebbe,cGZWinText::SetFillColor(unsigned int),SetFillColor,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ebde,cGZWinText::SetTextColor(unsigned int),SetTextColor_uint,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ebf6,non-virtual thunk to cGZWinText::SetTextColor(unsigned int),SetTextColor_uintThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ec18,cGZWinText::GetTextColor(unsigned int&),GetTextColor_uint,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ec32,non-virtual thunk to cGZWinText::GetTextColor(unsigned int&),GetTextColor_uintThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ec56,cGZWinText::ClearTextColor(),ClearTextColor_void,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ec6a,non-virtual thunk to cGZWinText::ClearTextColor(),ClearTextColor_voidThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ec88,"cGZWinText::SetTextColor(cIGZWinText::tFontColorIdx, unsigned int)",SetTextColor_cIGZWinText_tFontColorIdx_uint,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ecc2,"non-virtual thunk to cGZWinText::SetTextColor(cIGZWinText::tFontColorIdx, unsigned int)",SetTextColor_cIGZWinText_tFontColorIdx_uintThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ed0a,"cGZWinText::SetTextColor(cIGZWinText::tFontColorIdx, cRZColor)",SetTextColor_cIGZWinText_tFontColorIdx_cRZColor,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027edcc,"non-virtual thunk to cGZWinText::SetTextColor(cIGZWinText::tFontColorIdx, cRZColor)",SetTextColor_cIGZWinText_tFontColorIdx_cRZColorThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027edde,"cGZWinText::GetTextColor(cIGZWinText::tFontColorIdx, unsigned int&) const",GetTextColor_cIGZWinText_tFontColorIdx_uint,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ee16,"non-virtual thunk to cGZWinText::GetTextColor(cIGZWinText::tFontColorIdx, unsigned int&) const",GetTextColor_cIGZWinText_tFontColorIdx_uintThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ee54,"cGZWinText::GetTextColor(cIGZWinText::tFontColorIdx, cRZColor&) const",GetTextColor_cIGZWinText_tFontColorIdx_cRZColor,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ee78,"non-virtual thunk to cGZWinText::GetTextColor(cIGZWinText::tFontColorIdx, cRZColor&) const",GetTextColor_cIGZWinText_tFontColorIdx_cRZColorThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ee98,cGZWinText::ClearTextColor(cIGZWinText::tFontColorIdx),ClearTextColor_cIGZWinText_tFontColorIdx,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027eef8,non-virtual thunk to cGZWinText::ClearTextColor(cIGZWinText::tFontColorIdx),ClearTextColor_cIGZWinText_tFontColorIdxThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ef0a,cGZWinText::SetBackgroundOpaque(bool),SetBackgroundOpaque,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ef24,non-virtual thunk to cGZWinText::SetBackgroundOpaque(bool),SetBackgroundOpaqueThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ef4a,cGZWinText::IsBackgroundOpaque(),IsBackgroundOpaque,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ef60,non-virtual thunk to cGZWinText::IsBackgroundOpaque(),IsBackgroundOpaqueThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027ef82,cGZWinText::SetFont(cIGZFont*),SetFont,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f07a,non-virtual thunk to cGZWinText::SetFont(cIGZFont*),SetFontThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f08e,cGZWinText::SetFontStyle(unsigned int),SetFontStyle,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f0e2,non-virtual thunk to cGZWinText::SetFontStyle(unsigned int),SetFontStyleThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f0f6,cGZWinText::GetFontStyle(unsigned int&),GetFontStyle,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f10e,non-virtual thunk to cGZWinText::GetFontStyle(unsigned int&),GetFontStyleThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f124,"cGZWinText::SetGutters(signed char, signed char)",SetGutters,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f13e,"non-virtual thunk to cGZWinText::SetGutters(signed char, signed char)",SetGuttersThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f15a,"cGZWinText::GetGutters(signed char&, signed char&)",GetGutters,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f172,"non-virtual thunk to cGZWinText::GetGutters(signed char&, signed char&)",GetGuttersThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f184,"cGZWinText::SetTextOffsets(signed char, signed char)",SetTextOffsets,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f19a,"non-virtual thunk to cGZWinText::SetTextOffsets(signed char, signed char)",SetTextOffsetsThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f1aa,"cGZWinText::GetTextOffsets(signed char&, signed char&)",GetTextOffsets,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f1c2,"non-virtual thunk to cGZWinText::GetTextOffsets(signed char&, signed char&)",GetTextOffsetsThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f1d4,"cGZWinText::SetOutlineUse(bool, unsigned int)",SetOutlineUse,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f1fa,"non-virtual thunk to cGZWinText::SetOutlineUse(bool, unsigned int)",SetOutlineUseThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f218,"cGZWinText::GetOutlineUse(bool&, unsigned int&) const",GetOutlineUse,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f234,"non-virtual thunk to cGZWinText::GetOutlineUse(bool&, unsigned int&) const",GetOutlineUseThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f24a,cGZWinText::SetCaption(cIGZString const&),SetCaption,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f272,non-virtual thunk to cGZWinText::SetCaption(cIGZString const&),SetCaptionThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f2a8,"cGZWinText::SetArea(int, int, int, int)",SetArea,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f342,cGZWinText::GZPaint(),GZPaint,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f558,"cGZWinText::FitWindowToText(bool, bool)",FitWindowToText,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f5bc,"cGZWinText::get_min_text_area(cRZRect&, bool, bool)",get_min_text_area,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f972,"non-virtual thunk to cGZWinText::FitWindowToText(bool, bool)",FitWindowToTextThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f98e,cGZWinText::SetAlignment(unsigned int),SetAlignment,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f9e2,non-virtual thunk to cGZWinText::SetAlignment(unsigned int),SetAlignmentThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027f9f4,cGZWinText::GetAlignment(unsigned int&) const,GetAlignment,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027fa04,non-virtual thunk to cGZWinText::GetAlignment(unsigned int&) const,GetAlignmentThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027fa12,cGZWinText::AsIGZWin(),AsIGZWin,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp
+0x10027fa1c,non-virtual thunk to cGZWinText::AsIGZWin(),AsIGZWinThunk,src/gz/WinText.h,recovered,scripts/tests/gz_wintext_test.cpp

@@ -1,0 +1,37 @@
+// The font as the text-bearing window controls use it (cIGZFont vslots noted), and where they get fonts from.
+#pragma once
+#include <cstdint>
+
+#include "gz/Win.h"
+
+namespace gz {
+
+class IWinFont : public cIGZUnknown {
+public:
+    virtual std::uint32_t DefaultTextColor() = 0;                                   // 0x60
+    virtual std::uint32_t DefaultShadowColor() = 0;                                 // 0x68
+    virtual std::int16_t LineHeight(int a, int b) = 0;                              // 0x128
+    virtual int CountLines(const char* text, std::uint32_t length, int width) = 0;  // 0x158
+    virtual int WrappedWidth(const char* text, std::uint32_t length, int height) = 0;   // 0x160
+    virtual void MeasureText(const char* text, std::uint32_t length, cRZRect& out) = 0;  // 0x178
+    virtual int TextWidth(const char* text, std::uint32_t length) = 0;              // 0x180
+    virtual void DrawText(IWinBuffer* target, int x, int y, const char* text, std::uint32_t length,
+                          std::uint32_t color, std::uint32_t color2, const cRZRect* clip, int flags) = 0;   // 0x198
+    virtual void DrawTextBox(IWinBuffer* target, const cRZRect& box, const char* text, std::uint32_t length,
+                             std::uint32_t alignment, std::uint32_t color, std::uint32_t color2, const cRZRect* clip, int flags) = 0;   // 0x1a0
+};
+
+// RZ::WCM() vslot 0x28: the font registered under a style id (borrowed pointer, null when unknown).
+class IWinFontSource {
+public:
+    virtual ~IWinFontSource() = default;
+    virtual IWinFont* Font(std::uint32_t styleId) = 0;
+    virtual bool Available() = 0;
+};
+IWinFontSource* WinFontSource();
+void SetWinFontSource(IWinFontSource* source);
+
+constexpr std::uint32_t kWinDefaultFontStyle = 0x68963c4c;
+constexpr std::uint32_t kWinUnsetTextColor = 0xdeadbeef;
+
+}  // namespace gz
