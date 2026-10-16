@@ -21,6 +21,7 @@
 #include "gz/WinBMP.h"
 #include "gz/WinBtn.h"
 #include "gz/WinCtrlFactory.h"
+#include "gz/WinListBox.h"
 #include "gz/WinOptGrp.h"
 #include "gz/WinScrollbar.h"
 #include "gz/WinSlider.h"
@@ -175,6 +176,7 @@ private:
     bool QueryAndRelease(void* object, std::uint32_t iid, void** out);
     bool CreateButtonCtrl(std::uint32_t classId, std::uint32_t iid, void** out);   // 0x68963e48 / 0xa8963e4b
     bool CreateOptGrpCtrl(std::uint32_t iid, void** out);                          // 0xc8963e3c
+    bool CreateListBoxCtrl(std::uint32_t iid, void** out);                         // 0x28963e36
 
     bool initialized_ = false;                                 // +0x30
     std::unordered_map<int, std::uint32_t> colors_;            // +0x48 (r << 16 | g << 8 | b)

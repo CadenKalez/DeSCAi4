@@ -350,6 +350,27 @@ bool cGZWinCtrlMgr::CreateOptGrpCtrl(std::uint32_t iid, void** out) {   // 0xc89
     return ok;
 }
 
+bool cGZWinCtrlMgr::CreateListBoxCtrl(std::uint32_t iid, void** out) {   // 0x28963e36
+    auto* list = Typed<cIGZWinListBox>(Make<cGZWinListBox>(kGZCLSID_cGZWinListBox, kGZIID_cIGZWinListBox));
+    const bool ok = list->QueryInterface(iid, out);
+    if (ok) {
+        std::uint8_t r = 0, g = 0, b = 0;
+        DefaultColor(static_cast<int>(0xa8963fb2), r, g, b);
+        list->AsIGZWin()->SetFillColor(r, g, b);
+        list->SetFont(SystemFont(kFontDefault));
+        list->SetFontColor(cIGZWinListBox::kColorText, DefaultColor(kColorTextHover));
+        list->SetFontColor(cIGZWinListBox::kColorSelected, DefaultColor(kColorTextNormal));
+        list->SetFontColor(cIGZWinListBox::kColorDisabled, DefaultColor(kColorTextDisabled));
+        list->SetHighlightColor(DefaultColor(static_cast<int>(0x88963fb4)));
+        list->SetHighlightFillAlpha(1.0f);
+        list->SetOutlineDrawing(true);
+        list->SetDrawSunkenRect(true);
+        list->SetOutlineColors(DefaultColor(kColorShadow), DefaultColor(kColorLight));
+    }
+    list->Release();
+    return ok;
+}
+
 bool cGZWinCtrlMgr::CreateDefaultCtrl(std::uint32_t classId, std::uint32_t iid, void** out) {   // @ 0x1001f5098
     const cRZString empty;
     switch (classId) {
@@ -368,6 +389,7 @@ bool cGZWinCtrlMgr::CreateDefaultCtrl(std::uint32_t classId, std::uint32_t iid, 
         case 0xe8963e24: return QueryAndRelease(CreateButton(3, 0, empty, nullptr, nullptr, 0), iid, out);
         case 0x68963e21: return QueryAndRelease(CreateToggleButton(0, empty, nullptr, nullptr, 0), iid, out);
         case 0xc8963e3c: return CreateOptGrpCtrl(iid, out);
+        case 0x28963e36: return CreateListBoxCtrl(iid, out);
         case 0xe8963e4d: {
             void* object = Make<cGZWinBMP>(kClsBMP, kGZIID_cIGZWinBMP);
             return QueryAndRelease(object, iid, out);
@@ -377,7 +399,7 @@ bool cGZWinCtrlMgr::CreateDefaultCtrl(std::uint32_t classId, std::uint32_t iid, 
         case 0x48963e33: return QueryAndRelease(CreateLabel(0, empty), iid, out);
         case 0x68963e48:
         case 0xa8963e4b: return CreateButtonCtrl(classId, iid, out);
-        default: return false;   // list box, text edit and line input controls are not recovered yet
+        default: return false;   // text edit and line input controls are not recovered yet
     }
 }
 

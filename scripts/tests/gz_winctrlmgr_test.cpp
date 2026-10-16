@@ -214,6 +214,11 @@ int main() {
     cIGZWinOptGrp* grp = static_cast<cIGZWinOptGrp*>(made);
     CHECK(grp->GetOptGrpFlag(1) && grp->GetOptGrpFlag(8));
     grp->Release();
+    CHECK(m->CreateCtrl(0x28963e36, kGZIID_cIGZWinListBox, &made));                       // default: a list box with the stock look
+    cIGZWinListBox* list = static_cast<cIGZWinListBox*>(made);
+    std::uint32_t lc = 0;
+    CHECK(list->GetFontColor(cIGZWinListBox::kColorSelected, lc) && lc == 0xffffffffu && list->GetDrawSunkenRect() && !list->GetOutlineDrawing());
+    list->Release();
     CHECK(!m->CreateCtrl(0x88963e39, 1, &made));                                           // generic window: no constructor registered
     int built = 0;
     m->SetFallbackConstructor(0x4386d516, [&] { ++built; auto* w = new cGZWin(&mgr); w->AddRef(); return static_cast<cIGZUnknown*>(static_cast<cIGZWin*>(w)); });
