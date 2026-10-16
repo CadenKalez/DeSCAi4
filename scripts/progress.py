@@ -50,7 +50,13 @@ GAME_OWNER = [  # (category, regex on owner)
     ("other game classes",                     r"^(\(anonymous namespace\)|[A-Za-z_][A-Za-z_0-9]*)"),
 ]
 
-def classify(name):
+# The binary links its third-party code (libjpeg, FreeType, Lua, zlib/png, SDL, OpenSSL, the EA gimex image codecs,
+# the SND/AEMS audio middleware, SDL's Cocoa/HID glue) in one contiguous tail that starts with libjpeg's
+# jdiv_round_up at 0x1007b7351; game code (cSC4*/cGZ*/cRZ*, iTunesPlayer, IUnknown_Mac) all lies below it.
+# Free functions from that address on are therefore library code even when their names carry no known prefix.
+LIB_TAIL_START = 0x1007b7340
+
+def classify(name, addr=None):
     owner, thunk = owner_of(name)
     if thunk:
         return ("compiler", "compiler thunks / static-init glue")
@@ -59,6 +65,8 @@ def classify(name):
     if not owner:
         if name.startswith("operator"): return ("game", "stream operators etc. (operator>>/<<)")
         if LIB_FREE.match(name):
+            return ("lib", "C libs (FreeType, Lua, zlib/png, SDL/SND)")
+        if addr is not None and addr >= LIB_TAIL_START:
             return ("lib", "C libs (FreeType, Lua, zlib/png, SDL/SND)")
         return ("game", "free C functions (unclassified)")
     for cat, rx in GAME_OWNER:
@@ -81,7 +89,7 @@ def main():
             done[int(r["address"],16)] = r["status"]
     totals = collections.Counter(); rec = collections.Counter()
     for addr, name in funcs.items():
-        kind, cat = classify(name)
+        kind, cat = classify(name, addr)
         totals[(kind,cat)] += 1
         if done.get(addr,"").startswith("recovered"): rec[(kind,cat)] += 1
     nlib = sum(v for (k,_),v in totals.items() if k=="lib")
