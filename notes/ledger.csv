@@ -15282,3 +15282,36 @@ address,symbol,unique_name,source,status,evidence
 0x10075ef90,"cRZSysServPtr<cIGZWinCtrlMgr, 583199519u, 3267554063u>::~cRZSysServPtr()",SysServPtrIGZWinCtrlMgr_583199Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
 0x10079e9b0,cRZAutoRefCount<cISC4ViewInputControl>::~cRZAutoRefCount(),AutoRefISC4ViewInputControlDestruct,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
 0x1007b4f60,"cRZSysServPtr<cIGZDrawSystem, 1261347763u, 3945702347u>::~cRZSysServPtr()",SysServPtrIGZDrawSystem_126134Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1005f9e84,cSCParticleSimulatorBase::GetParticles() const,GetParticles,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x100702942,cSCParticleSimulatorBase::cSCParticleSimulatorBase(),Construct,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x100702980,cSCParticleSimulatorBase::~cSCParticleSimulatorBase(),Destruct,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x100702998,cSCParticleSimulatorBase::~cSCParticleSimulatorBase(),DestructAndDelete,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x1007029b0,cSCParticleSimulatorBase::~cSCParticleSimulatorBase(),DestructBody,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x1007029da,cSCParticleSimulatorBase::Init(),Init,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x1007029ec,cSCParticleSimulatorBase::Shutdown(),Shutdown,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x100702a1a,cSCParticleSimulatorBase::Start(),Start,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x100702a42,cSCParticleSimulatorBase::IsStarted() const,IsStarted,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x100702a4c,"cSCParticleSimulatorBase::Stop(bool, bool)",Stop,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x100702ac4,cSCParticleSimulatorBase::IsInDelayedStop(),IsInDelayedStop,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x100702ace,cSCParticleSimulatorBase::CheckForStop(),CheckForStop,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x100702b18,cSCParticleSimulatorBase::AddParticle(cSCParticle*),AddParticle,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x100702b60,cSCParticleSimulatorBase::RemoveParticle(cSCParticle*),RemoveParticle,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x100702b6a,cSCParticleSimulatorBase::CreateParticle(),CreateParticle,src/sc4/ParticleSimulatorBase.cpp|h,recovered-partial,sc4_particlesim
+0x100702bbe,cSCParticleSimulatorBase::DestroyParticle(cSCParticle*),DestroyParticle,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x100702bd2,cSCParticleSimulatorBase::AddRef(),AddRef,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x100702be0,cSCParticleSimulatorBase::Release(),Release,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x100702bfc,cSCParticleSimulatorBase::RefCount(),RefCount,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x100702c06,cSCParticleSimulatorBase::FinalRelease(),FinalRelease,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x100702c30,"cSCParticleSimulatorBase::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/ParticleSimulatorBase.cpp|h,recovered,sc4_particlesim
+0x10003b430,cGZCOMLibrary::cGZCOMLibrary(cIGZString const&),Construct_String,src/gz/COMLibrary.cpp|h,recovered,sc4_particlesim
+0x10003b516,"cGZCOMLibrary::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/COMLibrary.cpp|h,recovered,sc4_particlesim
+0x10003b538,cGZCOMLibrary::AddRef(),AddRef,src/gz/COMLibrary.cpp|h,recovered,sc4_particlesim
+0x10003b546,cGZCOMLibrary::Release(),Release,src/gz/COMLibrary.cpp|h,recovered,sc4_particlesim
+0x10003b554,cGZCOMLibrary::Load(),Load,src/gz/COMLibrary.cpp|h,recovered,sc4_particlesim
+0x10003b5fc,cGZCOMLibrary::GetPath(cIGZString&) const,GetPath,src/gz/COMLibrary.cpp|h,recovered,sc4_particlesim
+0x10003b624,cGZCOMLibrary::GetDirector() const,GetDirector,src/gz/COMLibrary.cpp|h,recovered,sc4_particlesim
+0x10003b63a,cGZCOMLibrary::operator<(cGZCOMLibrary const&) const,operator<,src/gz/COMLibrary.cpp|h,recovered,sc4_particlesim
+0x10003b742,cGZCOMLibrary::IsLoaded() const,IsLoaded,src/gz/COMLibrary.cpp|h,recovered,sc4_particlesim
+0x10003b750,cGZCOMLibrary::GetHandle() const,GetHandle,src/gz/COMLibrary.cpp|h,recovered,sc4_particlesim
+0x10003bde8,cGZCOMLibrary::~cGZCOMLibrary(),Destruct,src/gz/COMLibrary.cpp|h,recovered,sc4_particlesim
+0x10003c4be,cGZCOMLibrary::~cGZCOMLibrary(),DestructAndDelete,src/gz/COMLibrary.cpp|h,recovered,sc4_particlesim
