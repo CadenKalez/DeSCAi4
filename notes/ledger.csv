@@ -17370,3 +17370,67 @@ address,symbol,unique_name,source,status,evidence
 0x100659ec4,cGZDrawContextRenderToBufferFactory::~cGZDrawContextRenderToBufferFactory(),DestructAndDelete,src/gz/DrawSystem.cpp|h,recovered-partial,decompile; engine class cGZDrawContextRenderToBuffer is not recovered so CreateEngine builds through a creator hook
 0x100659ef6,non-virtual thunk to cGZDrawContextRenderToBufferFactory::~cGZDrawContextRenderToBufferFactory(),DestructThunk,src/gz/DrawSystem.cpp|h,recovered-partial,decompile; engine class cGZDrawContextRenderToBuffer is not recovered so CreateEngine builds through a creator hook
 0x100659f00,non-virtual thunk to cGZDrawContextRenderToBufferFactory::~cGZDrawContextRenderToBufferFactory(),DestructAndDeleteThunk,src/gz/DrawSystem.cpp|h,recovered-partial,decompile; engine class cGZDrawContextRenderToBuffer is not recovered so CreateEngine builds through a creator hook
+0x1004d6492,cGZDBSDFRecord::cGZDBSDFRecord(cIGZPersistDBSegment*),Construct_cIGZPersistDBSegment,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d7dc6,cGZDBSDFRecord::cGZDBSDFRecord(cIGZPersistDBSegment*),Construct_cIGZPersistDBSegmentWrapper,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d7ee2,cGZDBSDFRecord::~cGZDBSDFRecord(),Destruct,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d7fb6,cGZDBSDFRecord::~cGZDBSDFRecord(),DestructAndDelete,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d7fc0,non-virtual thunk to cGZDBSDFRecord::~cGZDBSDFRecord(),DestructThunk,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d7fce,non-virtual thunk to cGZDBSDFRecord::~cGZDBSDFRecord(),DestructAndDeleteThunk,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d7fdc,non-virtual thunk to cGZDBSDFRecord::~cGZDBSDFRecord(),DestructBodyThunk_7fdc,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d7fea,non-virtual thunk to cGZDBSDFRecord::~cGZDBSDFRecord(),DestructBodyThunk_7fea,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d7ff8,cGZDBSDFRecord::~cGZDBSDFRecord(),DestructBody,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8026,non-virtual thunk to cGZDBSDFRecord::~cGZDBSDFRecord(),DestructBodyThunk_8026,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8034,non-virtual thunk to cGZDBSDFRecord::~cGZDBSDFRecord(),DestructBodyThunk_8034,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8042,non-virtual thunk to cGZDBSDFRecord::~cGZDBSDFRecord(),DestructBodyThunk_8042,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8050,non-virtual thunk to cGZDBSDFRecord::~cGZDBSDFRecord(),DestructBodyThunk_8050,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d805e,"cGZDBSDFRecord::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8080,"non-virtual thunk to cGZDBSDFRecord::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_8080,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d80a6,"non-virtual thunk to cGZDBSDFRecord::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_80a6,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d80cc,"non-virtual thunk to cGZDBSDFRecord::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_80cc,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d80f2,"non-virtual thunk to cGZDBSDFRecord::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_80f2,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8118,cGZDBSDFRecord::AddRef(),AddRef,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8126,non-virtual thunk to cGZDBSDFRecord::AddRef(),AddRefThunk_8126,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8130,non-virtual thunk to cGZDBSDFRecord::AddRef(),AddRefThunk_8130,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d813e,non-virtual thunk to cGZDBSDFRecord::AddRef(),AddRefThunk_813e,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d814c,non-virtual thunk to cGZDBSDFRecord::AddRef(),AddRefThunk_814c,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d815a,cGZDBSDFRecord::Release(),Release,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8168,non-virtual thunk to cGZDBSDFRecord::Release(),ReleaseThunk_8168,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8172,non-virtual thunk to cGZDBSDFRecord::Release(),ReleaseThunk_8172,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8180,non-virtual thunk to cGZDBSDFRecord::Release(),ReleaseThunk_8180,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d818e,non-virtual thunk to cGZDBSDFRecord::Release(),ReleaseThunk_818e,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d819c,"cGZDBSDFRecord::Init(cGZPersistResourceKey const&, cIGZString const&, cIGZPersistDBSDFRecord::dbsdfFlags)",Init,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8328,cGZDBSDFRecord::CloseInternal(),CloseInternal,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d837e,cGZDBSDFRecord::AbortInternal(),AbortInternal,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d83d8,cGZDBSDFRecord::GetSize(),GetSize,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d83f4,non-virtual thunk to cGZDBSDFRecord::GetSize(),GetSizeThunk_83f4,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8414,non-virtual thunk to cGZDBSDFRecord::GetSize(),GetSizeThunk_8414,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8434,cGZDBSDFRecord::SetSize(unsigned int),SetSize,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d843c,non-virtual thunk to cGZDBSDFRecord::SetSize(unsigned int),SetSizeThunk_843c,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8444,non-virtual thunk to cGZDBSDFRecord::SetSize(unsigned int),SetSizeThunk_8444,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d844c,cGZDBSDFRecord::GetPosition(),GetPosition,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8468,non-virtual thunk to cGZDBSDFRecord::GetPosition(),GetPositionThunk_8468,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8488,non-virtual thunk to cGZDBSDFRecord::GetPosition(),GetPositionThunk_8488,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d84a8,"cGZDBSDFRecord::GetFieldVoid(void*, unsigned int)",GetFieldVoid,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d84ca,"non-virtual thunk to cGZDBSDFRecord::GetFieldVoid(void*, unsigned int)",GetFieldVoidThunk_84ca,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d84f0,"non-virtual thunk to cGZDBSDFRecord::GetFieldVoid(void*, unsigned int)",GetFieldVoidThunk_84f0,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8516,"cGZDBSDFRecord::SetFieldVoid(void const*, unsigned int)",SetFieldVoid,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d853c,"non-virtual thunk to cGZDBSDFRecord::SetFieldVoid(void const*, unsigned int)",SetFieldVoidThunk_853c,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8566,"non-virtual thunk to cGZDBSDFRecord::SetFieldVoid(void const*, unsigned int)",SetFieldVoidThunk_8566,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8590,"cGZDBSDFRecord::Read(void*, unsigned int)",Read,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d85c2,"cGZDBSDFRecord::Write(void const*, unsigned int)",Write,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d85f4,cGZDBSDFRecord::Flush(),Flush,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8614,non-virtual thunk to cGZDBSDFRecord::Flush(),FlushThunk_8614,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8636,non-virtual thunk to cGZDBSDFRecord::Flush(),FlushThunk_8636,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8658,cGZDBSDFRecord::SeekAbsolute(unsigned int),SeekAbsolute,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8680,non-virtual thunk to cGZDBSDFRecord::SeekAbsolute(unsigned int),SeekAbsoluteThunk_8680,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d86ac,non-virtual thunk to cGZDBSDFRecord::SeekAbsolute(unsigned int),SeekAbsoluteThunk_86ac,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d86d8,cGZDBSDFRecord::SeekRelative(int),SeekRelative,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8700,non-virtual thunk to cGZDBSDFRecord::SeekRelative(int),SeekRelativeThunk_8700,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d872c,non-virtual thunk to cGZDBSDFRecord::SeekRelative(int),SeekRelativeThunk_872c,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8758,cGZDBSDFRecord::Tell(unsigned int&),Tell,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8784,"cGZDBSDFRecord::Seek(unsigned int, cIGZPersistDBSDFRecord::eSeekMethod)",Seek,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d87dc,cGZDBSDFRecord::GetPath(cIGZString**),GetPath,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d884c,cGZDBSDFRecord::GetName(cIGZString**),GetName,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8910,cGZDBSDFRecord::GetExtension(cIGZString**),GetExtension,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8a52,cGZDBSDFRecord::AsIGZPersistDBRecord(),AsIGZPersistDBRecord,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1004d8a5c,non-virtual thunk to cGZDBSDFRecord::AsIGZPersistDBRecord(),AsIGZPersistDBRecordThunk,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
