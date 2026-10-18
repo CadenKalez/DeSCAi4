@@ -18070,3 +18070,4 @@ address,symbol,unique_name,source,status,evidence
 0x10063eb96,"NCT_GetWindowMaxSizes(int*, int*)",NCT_GetWindowMaxSizes,src/render/MacDisplay.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/render_dx7_test.cpp)
 0x100641a7d,GetMacLogFile(),GetMacLogFile,src/render/MacDisplay.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/render_dx7_test.cpp)
 0x1007f9fb1,MacLogToConsole(char const*),MacLogToConsole,src/render/MacDisplay.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/render_dx7_test.cpp)
+0x100771d00,"cSC4PackedRenderState::PackRenderState(bool, bool, bool, bool, bool, int, bool, int, int, int, int, float, int, int)",PackRenderState,src/sc4/PackedRenderState.cpp|h,recovered,decompiled in Ghidra; bit layout and ties-to-even alpha ref checked by unit test (scripts/tests/sc4_packedrenderstate_test.cpp)

@@ -83,6 +83,7 @@ declare -a TESTS=(
  "gz_drawsystem:$T/gz_drawsystem_test.cpp $S/gz/DrawSystem.cpp $S/gz/DrawContextAsBuffer.cpp $S/gz/DrawContext.cpp $S/gz/Buffer.cpp -I$T"
  "sc4_grouplayer:$T/sc4_grouplayer_test.cpp $S/sc4/GroupLayer.cpp -I$T"
  "render_dx7:$T/render_dx7_test.cpp $S/render/GLApi.cpp $S/render/GLState.cpp $S/render/FastATIVertexProgram.cpp $S/render/MacPreferences.cpp $S/render/MacDisplay.cpp $S/render/D3DVertexBuffer7.cpp $S/render/DDSurface7.cpp $S/render/D3DDevice7.cpp $S/render/MacOpenGL.cpp $S/render/DX7Host.cpp $S/render/DirectDraw7.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp -I$T"
+ "sc4_packedrenderstate:$T/sc4_packedrenderstate_test.cpp $S/sc4/PackedRenderState.cpp $S/render/gd/GDriverBase.cpp -I$T"
  "gz_drawcontextasbuffer:$T/gz_drawcontextasbuffer_test.cpp $S/gz/DrawContextAsBuffer.cpp $S/gz/Buffer.cpp -I$T"
  "gz_rzdraw:$T/gz_rzdraw_test.cpp $S/gz/RZDraw.cpp $S/gz/Buffer.cpp"
  "rz_stringutils:$T/rz_stringutils_test.cpp $S/rz/RZStringUtils.cpp $S/rz/RZConvert.cpp $S/rz/cRZString.cpp $S/rz/CharLength.cpp"
