@@ -17634,3 +17634,42 @@ address,symbol,unique_name,source,status,evidence
 0x100032e6d,RZFileFindFinish(RZFileFindData*),RZFileFindFinish,src/gz/FileFind.cpp|h,recovered,decompile; tests/gz_filefind_test.cpp
 0x100034e69,"Fullpath(char*, char const*, unsigned long)",Fullpath_char_char_const_unsigned_long,src/gz/FileFind.cpp|h,recovered,decompile; tests/gz_filefind_test.cpp
 0x10003514f,"Fullpath(cRZString&, cRZString const&)",Fullpath_cRZString_cRZString_const,src/gz/FileFind.cpp|h,recovered,decompile; tests/gz_filefind_test.cpp
+0x1001f6e50,cGZWinIMEServer::cGZWinIMEServer(),Construct,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f6f5c,cGZWinIMEServer::cGZWinIMEServer(),ConstructWrapper,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f6f66,cGZWinIMEServer::~cGZWinIMEServer(),Destruct,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f7088,cGZWinIMEServer::~cGZWinIMEServer(),DestructAndDelete,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f7092,non-virtual thunk to cGZWinIMEServer::~cGZWinIMEServer(),DestructThunk,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f70a0,non-virtual thunk to cGZWinIMEServer::~cGZWinIMEServer(),DestructAndDeleteThunk,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f70ae,cGZWinIMEServer::~cGZWinIMEServer(),DestructBody,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f70dc,non-virtual thunk to cGZWinIMEServer::~cGZWinIMEServer(),DestructBodyThunk_70dc,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f70ea,non-virtual thunk to cGZWinIMEServer::~cGZWinIMEServer(),DestructBodyThunk_70ea,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f70f8,"cGZWinIMEServer::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f7120,"non-virtual thunk to cGZWinIMEServer::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_7120,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f712e,"non-virtual thunk to cGZWinIMEServer::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_712e,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f713c,cGZWinIMEServer::AddRef(),AddRef,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f714a,non-virtual thunk to cGZWinIMEServer::AddRef(),AddRefThunk_714a,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f7158,non-virtual thunk to cGZWinIMEServer::AddRef(),AddRefThunk_7158,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f7166,cGZWinIMEServer::Release(),Release,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f71aa,non-virtual thunk to cGZWinIMEServer::Release(),ReleaseThunk_71aa,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f71e4,non-virtual thunk to cGZWinIMEServer::Release(),ReleaseThunk_71e4,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f721e,cGZWinIMEServer::Init(),Init,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f7326,non-virtual thunk to cGZWinIMEServer::Init(),InitThunk,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f7338,cGZWinIMEServer::Shutdown(),Shutdown,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f738e,non-virtual thunk to cGZWinIMEServer::Shutdown(),ShutdownThunk,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f73a0,cGZWinIMEServer::IsIMEAvailable() const,IsIMEAvailable,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f73a8,cGZWinIMEServer::GetEnabled() const,GetEnabled,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f73b2,cGZWinIMEServer::SetEnabled(bool),SetEnabled,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f73c8,cGZWinIMEServer::GetCompositionEnabled() const,GetCompositionEnabled,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f73d0,cGZWinIMEServer::SetCompositionEnabled(bool),SetCompositionEnabled,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f73d8,cGZWinIMEServer::GetCompositionActive() const,GetCompositionActive,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f73e4,cGZWinIMEServer::SetCompositionActive(bool) const,SetCompositionActive,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f73f2,"cGZWinIMEServer::SetCompositionString(unsigned short*, unsigned int)",SetCompositionString,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f74b0,cGZWinIMEServer::GetCompositionStringData(),GetCompositionStringData,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f74ba,cGZWinIMEServer::GetCandidateListActive() const,GetCandidateListActive,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f74c6,cGZWinIMEServer::SetCandidateListActive(bool) const,SetCandidateListActive,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f74d4,cGZWinIMEServer::SetCandidateListSelection(unsigned int),SetCandidateListSelection,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f7502,cGZWinIMEServer::GetCandidateListData(),GetCandidateListData,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f7510,cGZWinIMEServer::cGZIMECompositionStringDataEx::cGZIMECompositionStringDataEx(),cGZIMECompositionStringDataEx,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f75e0,cGZWinIMEServer::cGZIMECompositionStringDataEx::Set(),Set_75e0,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f763e,cGZWinIMEServer::cGZIMECandidateListDataEx::cGZIMECandidateListDataEx(),cGZIMECandidateListDataEx,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x1001f7708,cGZWinIMEServer::cGZIMECandidateListDataEx::Set(),Set_7708,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
