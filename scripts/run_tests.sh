@@ -81,6 +81,7 @@ declare -a TESTS=(
  "rz_netsocket:$T/rz_netsocket_test.cpp $S/rz/NetSocket.cpp $S/platform/WinCompat.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
  "gz_persist:$T/gz_persist_test.cpp $S/gz/PersistStreams.cpp $S/gz/PersistSurveyorWriter.cpp $S/gz/PersistBinaryWriter.cpp $S/gz/PersistASCIIWriter.cpp $S/gz/PersistBinaryReader.cpp $S/rz/cRZString.cpp $S/rz/cRZSysServPtr.cpp $S/rz/cRZVariant.cpp $S/rz/cRZStream.cpp -I$T"
  "gz_drawsystem:$T/gz_drawsystem_test.cpp $S/gz/DrawSystem.cpp $S/gz/DrawContextAsBuffer.cpp $S/gz/DrawContext.cpp $S/gz/Buffer.cpp -I$T"
+ "sc4_grouplayer:$T/sc4_grouplayer_test.cpp $S/sc4/GroupLayer.cpp -I$T"
  "gz_drawcontextasbuffer:$T/gz_drawcontextasbuffer_test.cpp $S/gz/DrawContextAsBuffer.cpp $S/gz/Buffer.cpp -I$T"
  "gz_rzdraw:$T/gz_rzdraw_test.cpp $S/gz/RZDraw.cpp $S/gz/Buffer.cpp"
  "rz_stringutils:$T/rz_stringutils_test.cpp $S/rz/RZStringUtils.cpp $S/rz/RZConvert.cpp $S/rz/cRZString.cpp $S/rz/CharLength.cpp"

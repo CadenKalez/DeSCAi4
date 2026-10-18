@@ -17847,3 +17847,22 @@ address,symbol,unique_name,source,status,evidence
 0x1007b7338,IUnknown_Mac::Release(),Release,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
 0x100477c9c,"AudioBufferCallback(void*, OpaqueAudioQueue*, AudioQueueBuffer*)",AudioBufferCallback,src/audio/DirectSoundMac.cpp|h,recovered,decompile; tests/audio_directsoundmac_test.cpp
 0x1007d3393,GetXZAngle(vector3),GetXZAngle,src/audio/DirectSoundMac.cpp|h,recovered,decompile; tests/audio_directsoundmac_test.cpp
+0x10040fcca,cGroupLayer::cGroupLayer(float),Construct_float,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x10040fd0e,cGroupLayer::Init(),Init,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x10040fd16,cGroupLayer::Shutdown(),Shutdown,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x10040fd26,cGroupLayer::Clear(bool),Clear,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x10040fe2e,cGroupLayer::ClearEmptyGroups(),ClearEmptyGroups,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x10040fe9e,"cGroupLayer::InsertInstance(cS3DVector3&, float)",InsertInstance_cS3DVector3_float,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x10040feac,"cGroupLayer::_AddPositionToGroup(cS3DVector3&, float)",_AddPositionToGroup,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x10040ffe0,"cGroupLayer::InsertInstance(unsigned int, cS3DVector3&, float)",InsertInstance_uint_cS3DVector3_float,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x1004100de,cGroupLayer::_AddInstanceToGroup(cInstance*),_AddInstanceToGroup,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x10041021c,cGroupLayer::RemoveInstance(unsigned int),RemoveInstance,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x1004102ce,"cGroupLayer::UpdateInstance(unsigned int, cS3DVector3&, float)",UpdateInstance,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x100410308,"cGroupLayer::Intersect(cGroupLayer*, cGroupLayer*, bool)",Intersect,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x1004104ca,"cGroupLayer::GetPositions(SC4Rect<float>&, std::__1::list<cS3DVector3, std::__1::allocator<cS3DVector3>>&, int&, int&, bool)",GetPositions,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x1004105ae,"cGroupLayer::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x1004105c8,cGroupLayer::AddRef(),AddRef,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x1004105d6,cGroupLayer::Release(),Release,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x10040fdaa,cGroup_SC4RH::Clear(),Clear,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x10041027e,cGroup_SC4RH::RemoveInstance(cInstance*),RemoveInstance,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
+0x10041062e,cGroup_SC4RH::AddInstance(cInstance*),AddInstance,src/sc4/GroupLayer.cpp|h,recovered,decompiled in Ghidra; semantics checked by unit test (scripts/tests/sc4_grouplayer_test.cpp)
