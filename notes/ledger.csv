@@ -16096,3 +16096,137 @@ address,symbol,unique_name,source,status,evidence
 0x1005160b2,cGZWinOutline::SetFlags(unsigned int),SetFlags,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
 0x1005160be,cGZWinOutline::GetFlags(),GetFlags,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
 0x1005160ca,cGZWinOutline::AsIGZWin(),AsIGZWin,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x1005165f0,cGZWinPieMenu::cGZWinPieMenu(),Construct,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051673c,cGZWinPieMenu::cGZWinPieMenu(),ConstructWrapper,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516746,cGZWinPieMenu::~cGZWinPieMenu(),Destruct,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516846,cGZWinPieMenu::~cGZWinPieMenu(),DestructAndDelete,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516850,cGZWinPieMenu::~cGZWinPieMenu(),DestructBody,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051687e,cGZWinPieMenu::AsIGZWin(),AsIGZWin,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516888,non-virtual thunk to cGZWinPieMenu::AsIGZWin(),AsIGZWinThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516896,cGZWinPieMenu::Pi() const,Pi,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005168a4,non-virtual thunk to cGZWinPieMenu::Pi() const,PiThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005168b2,"cGZWinPieMenu::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005168d6,"non-virtual thunk to cGZWinPieMenu::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516902,cGZWinPieMenu::AddRef(),AddRef,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051690c,non-virtual thunk to cGZWinPieMenu::AddRef(),AddRefThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051691e,cGZWinPieMenu::Release(),Release,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516928,non-virtual thunk to cGZWinPieMenu::Release(),ReleaseThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051693a,cGZWinPieMenu::Init(),Init,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516afa,cGZWinPieMenu::Shutdown(),Shutdown,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516b4c,"cGZWinPieMenu::SetArea(int, int, int, int)",SetArea,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516b56,"non-virtual thunk to cGZWinPieMenu::SetArea(int, int, int, int)",SetAreaThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516b68,cGZWinPieMenu::SetFont(cIGZFont*),SetFont,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516bbc,non-virtual thunk to cGZWinPieMenu::SetFont(cIGZFont*),SetFontThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516c0a,cGZWinPieMenu::GetFont() const,GetFont,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516c18,non-virtual thunk to cGZWinPieMenu::GetFont() const,GetFontThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516c22,cGZWinPieMenu::SetPopupBackgroundBuffer(cIGZBuffer*),SetPopupBackgroundBuffer,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516c76,non-virtual thunk to cGZWinPieMenu::SetPopupBackgroundBuffer(cIGZBuffer*),SetPopupBackgroundBufferThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516cc4,cGZWinPieMenu::SetLowlightColor(unsigned int),SetLowlightColor_uint,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516cd0,non-virtual thunk to cGZWinPieMenu::SetLowlightColor(unsigned int),SetLowlightColor_uintThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516cda,cGZWinPieMenu::SetHighlightColor(unsigned int),SetHighlightColor_uint,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516ce6,non-virtual thunk to cGZWinPieMenu::SetHighlightColor(unsigned int),SetHighlightColor_uintThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516cf0,cGZWinPieMenu::SetSelectedColor(unsigned int),SetSelectedColor_uint,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516cfc,non-virtual thunk to cGZWinPieMenu::SetSelectedColor(unsigned int),SetSelectedColor_uintThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516d06,"cGZWinPieMenu::SetLowlightColor(unsigned char, unsigned char, unsigned char)",SetLowlightColor_uchar_uchar_uchar,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516d26,"non-virtual thunk to cGZWinPieMenu::SetLowlightColor(unsigned char, unsigned char, unsigned char)",SetLowlightColor_uchar_uchar_ucharThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516d4e,"cGZWinPieMenu::SetHighlightColor(unsigned char, unsigned char, unsigned char)",SetHighlightColor_uchar_uchar_uchar,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516d6e,"non-virtual thunk to cGZWinPieMenu::SetHighlightColor(unsigned char, unsigned char, unsigned char)",SetHighlightColor_uchar_uchar_ucharThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516d96,"cGZWinPieMenu::SetSelectedColor(unsigned char, unsigned char, unsigned char)",SetSelectedColor_uchar_uchar_uchar,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516db6,"non-virtual thunk to cGZWinPieMenu::SetSelectedColor(unsigned char, unsigned char, unsigned char)",SetSelectedColor_uchar_uchar_ucharThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516dde,cGZWinPieMenu::SetFirstDirection(unsigned int),SetFirstDirection,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516dea,non-virtual thunk to cGZWinPieMenu::SetFirstDirection(unsigned int),SetFirstDirectionThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516df6,cGZWinPieMenu::SetSpokeRadius(unsigned int),SetSpokeRadius,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516e02,non-virtual thunk to cGZWinPieMenu::SetSpokeRadius(unsigned int),SetSpokeRadiusThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516e0e,cGZWinPieMenu::SetAbbreviated(unsigned int),SetAbbreviated,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516e1a,non-virtual thunk to cGZWinPieMenu::SetAbbreviated(unsigned int),SetAbbreviatedThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516e26,cGZWinPieMenu::GetMaxRadius() const,GetMaxRadius,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516e32,non-virtual thunk to cGZWinPieMenu::GetMaxRadius() const,GetMaxRadiusThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516e3e,cGZWinPieMenu::SetMaxRadius(int),SetMaxRadius,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516e4a,non-virtual thunk to cGZWinPieMenu::SetMaxRadius(int),SetMaxRadiusThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516e56,cGZWinPieMenu::GetAutoCancel() const,GetAutoCancel,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516e62,non-virtual thunk to cGZWinPieMenu::GetAutoCancel() const,GetAutoCancelThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516e6e,cGZWinPieMenu::SetAutoCancel(int),SetAutoCancel,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516e7a,non-virtual thunk to cGZWinPieMenu::SetAutoCancel(int),SetAutoCancelThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516e86,cGZWinPieMenu::GetPopupX() const,GetPopupX,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516e92,non-virtual thunk to cGZWinPieMenu::GetPopupX() const,GetPopupXThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516e9e,cGZWinPieMenu::GetPopupY() const,GetPopupY,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516eaa,non-virtual thunk to cGZWinPieMenu::GetPopupY() const,GetPopupYThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516eb6,cGZWinPieMenu::GetPopupDownX() const,GetPopupDownX,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516ec2,non-virtual thunk to cGZWinPieMenu::GetPopupDownX() const,GetPopupDownXThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516ecc,cGZWinPieMenu::GetPopupDownY() const,GetPopupDownY,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516ed8,non-virtual thunk to cGZWinPieMenu::GetPopupDownY() const,GetPopupDownYThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516ee2,cGZWinPieMenu::GetPopupCenterX() const,GetPopupCenterX,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516eee,non-virtual thunk to cGZWinPieMenu::GetPopupCenterX() const,GetPopupCenterXThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516ef8,cGZWinPieMenu::GetPopupCenterY() const,GetPopupCenterY,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516f04,non-virtual thunk to cGZWinPieMenu::GetPopupCenterY() const,GetPopupCenterYThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516f0e,cGZWinPieMenu::GetCurItemCenterX() const,GetCurItemCenterX,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516f48,non-virtual thunk to cGZWinPieMenu::GetCurItemCenterX() const,GetCurItemCenterXThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516f7e,cGZWinPieMenu::GetCurItemCenterY() const,GetCurItemCenterY,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516fb8,non-virtual thunk to cGZWinPieMenu::GetCurItemCenterY() const,GetCurItemCenterYThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100516fee,cGZWinPieMenu::GetTitle(cIGZString&) const,GetTitle,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051700c,non-virtual thunk to cGZWinPieMenu::GetTitle(cIGZString&) const,GetTitleThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100517028,cGZWinPieMenu::SetTitle(cIGZString const&),SetTitle,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051703a,non-virtual thunk to cGZWinPieMenu::SetTitle(cIGZString const&),SetTitleThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100517048,cGZWinPieMenu::Layout(),Layout,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005176b4,non-virtual thunk to cGZWinPieMenu::Layout(),LayoutThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005176c8,cGZWinPieMenu::ReLayout(),ReLayout,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100517728,non-virtual thunk to cGZWinPieMenu::ReLayout(),ReLayoutThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051773a,"cGZWinPieMenu::DrawLabelFrame(unsigned int, int, int, int, int)",DrawLabelFrame,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005179de,"cGZWinPieMenu::DrawFramedLabel(char const*, int, int, cIGZFont*, unsigned int, unsigned int, int, int, int, int)",DrawFramedLabel,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100517b20,cGZWinPieMenu::GZPaint(),GZPaint,src/gz/WinPieMenu.cpp|h,recovered-partial,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005180a6,cGZWinPieMenu::Clear(),Clear,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051817e,non-virtual thunk to cGZWinPieMenu::Clear(),ClearThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005181b0,"cGZWinPieMenu::InsertString(cIGZString const&, cIGZWinBtn*)",InsertString,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051826a,"non-virtual thunk to cGZWinPieMenu::InsertString(cIGZString const&, cIGZWinBtn*)",InsertStringThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051827e,cGZWinPieMenu::GZOnCharacter(char),GZOnCharacter,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005182c4,"cGZWinPieMenu::GZOnKeyDown(unsigned int, unsigned int)",GZOnKeyDown,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051834e,"cGZWinPieMenu::GZOnMouseDownL(int, int, unsigned int)",GZOnMouseDownL,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051839a,"cGZWinPieMenu::GZOnMouseUpL(int, int, unsigned int)",GZOnMouseUpL,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518416,"cGZWinPieMenu::GZOnMouseDownR(int, int, unsigned int)",GZOnMouseDownR,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518420,"cGZWinPieMenu::GZOnMouseUpR(int, int, unsigned int)",GZOnMouseUpR,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051842a,"cGZWinPieMenu::GZOnMouseMove(int, int, unsigned int)",GZOnMouseMove,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518528,"cGZWinPieMenu::SetSelection(int, bool)",SetSelection,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051862e,"non-virtual thunk to cGZWinPieMenu::SetSelection(int, bool)",SetSelectionThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518646,cGZWinPieMenu::EndPopup(int),EndPopup_int,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518690,non-virtual thunk to cGZWinPieMenu::EndPopup(int),EndPopup_intThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005186a2,cGZWinPieMenu::EndPopup(),EndPopup_void,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005186ba,non-virtual thunk to cGZWinPieMenu::EndPopup(),EndPopup_voidThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005186da,cGZWinPieMenu::GetSelection() const,GetSelection,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005186e6,non-virtual thunk to cGZWinPieMenu::GetSelection() const,GetSelectionThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005186f0,cGZWinPieMenu::GetItemCount() const,GetItemCount,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051870e,non-virtual thunk to cGZWinPieMenu::GetItemCount() const,GetItemCountThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051872c,cGZWinPieMenu::GetPoppedUp() const,GetPoppedUp,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518738,non-virtual thunk to cGZWinPieMenu::GetPoppedUp() const,GetPoppedUpThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518744,"cGZWinPieMenu::CalcItem(int, int)",CalcItem,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518912,"non-virtual thunk to cGZWinPieMenu::CalcItem(int, int)",CalcItemThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518924,"cGZWinPieMenu::EnableItem(int, bool)",EnableItem,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518958,"non-virtual thunk to cGZWinPieMenu::EnableItem(int, bool)",EnableItemThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051898c,cGZWinPieMenu::GetDistance() const,GetDistance,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051899a,non-virtual thunk to cGZWinPieMenu::GetDistance() const,GetDistanceThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005189a8,cGZWinPieMenu::GetDirection() const,GetDirection,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005189b6,non-virtual thunk to cGZWinPieMenu::GetDirection() const,GetDirectionThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005189c4,cGZWinPieMenu::GetInactiveRadius() const,GetInactiveRadius,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005189d0,non-virtual thunk to cGZWinPieMenu::GetInactiveRadius() const,GetInactiveRadiusThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005189dc,cGZWinPieMenu::SetInactiveRadius(int),SetInactiveRadius,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005189e8,non-virtual thunk to cGZWinPieMenu::SetInactiveRadius(int),SetInactiveRadiusThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005189f4,cGZWinPieMenu::GetCurrentItem() const,GetCurrentItem,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518a00,non-virtual thunk to cGZWinPieMenu::GetCurrentItem() const,GetCurrentItemThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518a0a,"cGZWinPieMenu::Popup(int, int, int, int)",Popup,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518a40,"non-virtual thunk to cGZWinPieMenu::Popup(int, int, int, int)",PopupThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518a96,"cGZWinPieMenu::PopupBegin(int, int, int, int)",PopupBegin,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518b22,"non-virtual thunk to cGZWinPieMenu::PopupBegin(int, int, int, int)",PopupBeginThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518b34,cGZWinPieMenu::PopupEventLoop(),PopupEventLoop,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518b56,non-virtual thunk to cGZWinPieMenu::PopupEventLoop(),PopupEventLoopThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518b80,cGZWinPieMenu::PopupEnd(),PopupEnd,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518b9a,non-virtual thunk to cGZWinPieMenu::PopupEnd(),PopupEndThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518bba,"cGZWinPieMenu::BeginPopupWindow(int, int, int, int)",BeginPopupWindow,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518e8e,"non-virtual thunk to cGZWinPieMenu::BeginPopupWindow(int, int, int, int)",BeginPopupWindowThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518ea0,cGZWinPieMenu::EndPopupWindow(),EndPopupWindow,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518f3e,non-virtual thunk to cGZWinPieMenu::EndPopupWindow(),EndPopupWindowThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518f50,"cGZWinPieMenu::SetRadii(int, int)",SetRadii,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518f62,"non-virtual thunk to cGZWinPieMenu::SetRadii(int, int)",SetRadiiThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518f74,cGZWinPieMenu::SetOwnerDraw(cIGZWinPieMenuOwnerDraw*),SetOwnerDraw,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x100518fb0,non-virtual thunk to cGZWinPieMenu::SetOwnerDraw(cIGZWinPieMenuOwnerDraw*),SetOwnerDrawThunk,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051907c,"cGZWinPieMenu::_PieMenuItem::_PieMenuItem(cIGZString const&, cIGZWinBtn*)",_PieMenuItem_String_cIGZWinBtn,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10051918c,cGZWinPieMenu::_PieMenuItem::operator=(cGZWinPieMenu::_PieMenuItem const&),operator=,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x1005192e6,cGZWinPieMenu::_PieMenuItem::_PieMenuItem(cGZWinPieMenu::_PieMenuItem const&),_PieMenuItem_cGZWinPieMenu_PieMenuItem_const,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test

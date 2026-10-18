@@ -225,6 +225,8 @@ public:
     virtual bool IsWindowValid(cIGZWin* window) = 0;                     // [24]
     virtual cIGZWin* GetWindowFromPoint(int x, int y) = 0;               // [25]
     // [34] +0x110: the mouse position in `window`'s coordinates.
+    // [33] +0x108: the mouse position in screen coordinates.
+    virtual void GetMousePosition(int& x, int& y) { x = 0; y = 0; }
     virtual void GetCursorPos(cIGZWin* window, int& x, int& y) { (void)window; x = 0; y = 0; }
     // [41] +0x148: shows `popup` modally under the mouse and answers the index the user chose (-1 when none).
     virtual int RunPopup(cIGZWin* popup) { (void)popup; return -1; }
