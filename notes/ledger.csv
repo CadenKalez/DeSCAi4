@@ -17033,3 +17033,53 @@ address,symbol,unique_name,source,status,evidence
 0x10005e9d0,cSCStringDetokenizerDefault::~cSCStringDetokenizerDefault(),Destruct,src/sc4/StringDetokenizer.cpp|h,recovered,Detokenizer recovered from decompile; covered by sc4_stringdetokenizer
 0x10005ea54,cSCStringDetokenizerDefault::~cSCStringDetokenizerDefault(),DestructAndDelete,src/sc4/StringDetokenizer.cpp|h,recovered,Detokenizer recovered from decompile; covered by sc4_stringdetokenizer
 0x10005d530,"cSCStringDetokenizer::CaseInsensitiveStringCompare::operator()(cRZString const&, cRZString const&) const",operator,src/sc4/StringDetokenizer.cpp|h,recovered,comparator
+0x10052ed40,cSCExemplarCache::cSCExemplarCache(),Construct,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052ee3c,cSCExemplarCache::cSCExemplarCache(),ConstructWrapper,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052ee46,cSCExemplarCache::~cSCExemplarCache(),Destruct,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052ef02,cSCExemplarCache::~cSCExemplarCache(),DestructAndDelete,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052ef0c,non-virtual thunk to cSCExemplarCache::~cSCExemplarCache(),DestructThunk,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052ef1a,non-virtual thunk to cSCExemplarCache::~cSCExemplarCache(),DestructAndDeleteThunk,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052ef28,cSCExemplarCache::~cSCExemplarCache(),DestructBody,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052ef56,non-virtual thunk to cSCExemplarCache::~cSCExemplarCache(),DestructBodyThunk_ef56,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052ef64,non-virtual thunk to cSCExemplarCache::~cSCExemplarCache(),DestructBodyThunk_ef64,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052ef72,cSCExemplarCache::Init(),Init,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052effe,cSCExemplarCache::Shutdown(),Shutdown,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052f100,cSCExemplarCache::DoMessage(cIGZMessage2*),DoMessage,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052f1c2,non-virtual thunk to cSCExemplarCache::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052f1d0,"cSCExemplarCache::processCohortChange(unsigned int, unsigned int)",processCohortChange,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052f2d8,"cSCExemplarCache::processExemplarAdd(unsigned int, bool)",processExemplarAdd,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052f3ee,"cSCExemplarCache::exemplarPluginCallback(cGZPersistResourceKey const&, void*)",exemplarPluginCallback,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052f556,"cSCExemplarCache::AddExemplar(cISCResExemplar*, bool)",AddExemplar,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052f6e8,"non-virtual thunk to cSCExemplarCache::AddExemplar(cISCResExemplar*, bool)",AddExemplarThunk,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052f6fa,"cSCExemplarCache::RemoveExemplar(cISCResExemplar*, bool)",RemoveExemplar,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052f7e2,"non-virtual thunk to cSCExemplarCache::RemoveExemplar(cISCResExemplar*, bool)",RemoveExemplarThunk,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052f7f4,cSCExemplarCache::AddCohort(cISCResExemplarCohort*),AddCohort,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052f968,non-virtual thunk to cSCExemplarCache::AddCohort(cISCResExemplarCohort*),AddCohortThunk,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052f976,"cSCExemplarCache::RemoveCohort(cISCResExemplarCohort*, bool)",RemoveCohort,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052faee,"non-virtual thunk to cSCExemplarCache::RemoveCohort(cISCResExemplarCohort*, bool)",RemoveCohortThunk,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052fb00,"cSCExemplarCache::PerformQuery(cISCExemplarCacheQueryDef*, cIGZUnknownList**)",PerformQuery,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052fd44,"non-virtual thunk to cSCExemplarCache::PerformQuery(cISCExemplarCacheQueryDef*, cIGZUnknownList**)",PerformQueryThunk,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052fd52,cSCExemplarCache::RegisterRetainedQuery(cISCExemplarCacheQueryDef*),RegisterRetainedQuery,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052ffb0,non-virtual thunk to cSCExemplarCache::RegisterRetainedQuery(cISCExemplarCacheQueryDef*),RegisterRetainedQueryThunk,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10052ffbe,cSCExemplarCache::UnregisterRetainedQuery(unsigned int),UnregisterRetainedQuery,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x100530010,non-virtual thunk to cSCExemplarCache::UnregisterRetainedQuery(unsigned int),UnregisterRetainedQueryThunk,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10053001e,cSCExemplarCache::PerformRetainedQuery(unsigned int),PerformRetainedQuery,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x1005300a0,non-virtual thunk to cSCExemplarCache::PerformRetainedQuery(unsigned int),PerformRetainedQueryThunk,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x1005300ae,"cSCExemplarCache::GetRetainedQueryResult(unsigned int, cIGZUnknownList**)",GetRetainedQueryResult,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x100530104,"non-virtual thunk to cSCExemplarCache::GetRetainedQueryResult(unsigned int, cIGZUnknownList**)",GetRetainedQueryResultThunk,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x100530112,"cSCExemplarCache::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10053014e,"non-virtual thunk to cSCExemplarCache::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_014e,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10053015c,"non-virtual thunk to cSCExemplarCache::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_015c,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10053016a,"non-virtual thunk to cSCExemplarCache::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_016a,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x100530178,cSCExemplarCache::updateRetainedQueries(),updateRetainedQueries,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10053020a,"cSCExemplarCache::performQuery(cISCExemplarCacheQueryDef*, cIGZUnknownList*)",performQuery,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10053025c,cSCExemplarCache::AddRef(),AddRef,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10053026a,cSCExemplarCache::Release(),Release,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x100530280,non-virtual thunk to cSCExemplarCache::AddRef(),AddRefThunk_0280,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10053028e,non-virtual thunk to cSCExemplarCache::Release(),ReleaseThunk_028e,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x10053029c,non-virtual thunk to cSCExemplarCache::AddRef(),AddRefThunk_029c,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x1005302aa,non-virtual thunk to cSCExemplarCache::Release(),ReleaseThunk_02aa,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x1005302b8,non-virtual thunk to cSCExemplarCache::Release(),ReleaseThunk_02b8,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x1005302c2,non-virtual thunk to cSCExemplarCache::AddRef(),AddRefThunk_02c2,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x1005302cc,non-virtual thunk to cSCExemplarCache::AddRef(),AddRefThunk_02cc,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
+0x1005302da,non-virtual thunk to cSCExemplarCache::Release(),ReleaseThunk_02da,src/sc4/ExemplarCache.cpp|h,recovered,Exemplar cache recovered from decompile; covered by sc4_exemplarcache
