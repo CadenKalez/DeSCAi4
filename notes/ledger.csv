@@ -14857,3 +14857,42 @@ address,symbol,unique_name,source,status,evidence
 0x100409548,cSC4NetworkLotConfiguration::GetID() const,GetID,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
 0x100409552,cSC4NetworkLotConfiguration::GetName(cIGZString&) const,GetName,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
 0x10040956a,cSC4NetworkLotConfiguration::GetNetworkPieceId() const,GetNetworkPieceId,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x10018357a,cSC4BusinessUnit::cSC4BusinessUnit(),Construct,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x100183602,cSC4BusinessUnit::~cSC4BusinessUnit(),Destruct,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x10018364e,non-virtual thunk to cSC4BusinessUnit::~cSC4BusinessUnit(),DestructThunk,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x10018369a,cSC4BusinessUnit::~cSC4BusinessUnit(),DestructAndDelete,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x100183704,non-virtual thunk to cSC4BusinessUnit::~cSC4BusinessUnit(),DestructAndDeleteThunk,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x100183712,"cSC4BusinessUnit::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x100183746,"non-virtual thunk to cSC4BusinessUnit::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_3746,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x100183754,"non-virtual thunk to cSC4BusinessUnit::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_3754,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x100183762,cSC4BusinessUnit::AddRef(),AddRef,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x100183770,non-virtual thunk to cSC4BusinessUnit::AddRef(),AddRefThunk_3770,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x10018377e,non-virtual thunk to cSC4BusinessUnit::AddRef(),AddRefThunk_377e,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x10018378c,cSC4BusinessUnit::Release(),Release,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1001837aa,non-virtual thunk to cSC4BusinessUnit::Release(),ReleaseThunk_37aa,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1001837ca,non-virtual thunk to cSC4BusinessUnit::Release(),ReleaseThunk_37ca,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1001837ea,cSC4BusinessUnit::Write(cIGZOStream&) const,Write,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x10018384e,non-virtual thunk to cSC4BusinessUnit::Write(cIGZOStream&) const,WriteThunk_384e,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x10018385c,non-virtual thunk to cSC4BusinessUnit::Write(cIGZOStream&) const,WriteThunk_385c,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x10018386a,cSC4BusinessUnit::Read(cIGZIStream&),Read,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x100183962,non-virtual thunk to cSC4BusinessUnit::Read(cIGZIStream&),ReadThunk_3962,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x100183970,non-virtual thunk to cSC4BusinessUnit::Read(cIGZIStream&),ReadThunk_3970,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x100183c2c,cSC4BusinessUnit::Add(cISC4Lot*),Add,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x100183cf0,cSC4BusinessUnit::Remove(cISC4Lot*),Remove,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x100183d7a,cSC4BusinessUnit::GetMembers(),GetMembers,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x100183d84,cSC4BusinessUnit::GetGZCLSID() const,GetGZCLSID,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x100183d90,non-virtual thunk to cSC4BusinessUnit::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1006bf7ca,cSC4FeatureManager::cSC4FeatureManager(),Construct,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1006bf7e6,cSC4FeatureManager::~cSC4FeatureManager(),Destruct,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1006bf7f6,cSC4FeatureManager::~cSC4FeatureManager(),DestructAndDelete,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1006bf800,"cSC4FeatureManager::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1006bf822,cSC4FeatureManager::AddRef(),AddRef,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1006bf830,cSC4FeatureManager::Release(),Release,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1006bf86e,cSC4FeatureManager::StaticInit(),StaticInit,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1006bfa24,cSC4FeatureManager::StaticShutdown(void*),StaticShutdown,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1006bfa7e,"cSC4FeatureManager::EnableFeatures(cRZString const&, cRZString const&, void*)",EnableFeatures,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1006bfc0c,cSC4FeatureManager::Init(),Init,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1006bfc24,cSC4FeatureManager::Shutdown(),Shutdown,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1006bfc36,cSC4FeatureManager::IsFeatureEnabled(unsigned int) const,IsFeatureEnabled,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1006bfc8c,cSC4FeatureManager::IsExpansionPackInstalled(int) const,IsExpansionPackInstalled,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1006bfca0,cSC4FeatureManager::GetCurrentExpansionPack() const,GetCurrentExpansionPack,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
