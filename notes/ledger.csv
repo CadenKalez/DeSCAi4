@@ -14959,3 +14959,43 @@ address,symbol,unique_name,source,status,evidence
 0x1000d891a,cS3DMeshAndMaterial::AddRef(),AddRef,src/s3d/MeshAndMaterial.h,recovered,gz_smallobjects
 0x1000d8928,cS3DMeshAndMaterial::Release(),Release,src/s3d/MeshAndMaterial.h,recovered,gz_smallobjects
 0x1000d8944,"cS3DMeshAndMaterial::QueryInterface(unsigned int, void**)",QueryInterface,src/s3d/MeshAndMaterial.h,recovered,gz_smallobjects
+0x1006170a0,cRZCursorResource::cRZCursorResource(),Construct,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617116,cRZCursorResource::~cRZCursorResource(),Destruct,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617174,cRZCursorResource::~cRZCursorResource(),DestructAndDelete,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x10061717e,cRZCursorResource::~cRZCursorResource(),DestructBody,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x1006171ac,"cRZCursorResource::QueryInterface(unsigned int, void**)",QueryInterface,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617222,"non-virtual thunk to cRZCursorResource::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617230,cRZCursorResource::AddRef(),AddRef,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x10061723a,non-virtual thunk to cRZCursorResource::AddRef(),AddRefThunk,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617248,cRZCursorResource::Release(),Release,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617252,non-virtual thunk to cRZCursorResource::Release(),ReleaseThunk,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617260,cRZCursorResource::SetCursor(cIGZCursor*),SetCursor,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617296,non-virtual thunk to cRZCursorResource::SetCursor(cIGZCursor*),SetCursorThunk,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x1006172cc,cRZCursorResource::GetCursor(cIGZCursor**) const,GetCursor,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x1006172f2,non-virtual thunk to cRZCursorResource::GetCursor(cIGZCursor**) const,GetCursorThunk,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617318,"cRZCursorResource::GetCursorAs(unsigned int, void**) const",GetCursorAs,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617332,"non-virtual thunk to cRZCursorResource::GetCursorAs(unsigned int, void**) const",GetCursorAsThunk,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x10061734c,cRZCursorResource::LoadFromSerialRecord(cIGZPersistDBSerialRecord*),LoadFromSerialRecord,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617354,non-virtual thunk to cRZCursorResource::LoadFromSerialRecord(cIGZPersistDBSerialRecord*),LoadFromSerialRecordThunk,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617366,cRZCursorResourceFactory::cRZCursorResourceFactory(),Construct,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617390,"cRZCursorResourceFactory::QueryInterface(unsigned int, void**)",QueryInterface,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x1006173b2,"non-virtual thunk to cRZCursorResourceFactory::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x1006173d8,cRZCursorResourceFactory::AddRef(),AddRef,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x1006173e2,non-virtual thunk to cRZCursorResourceFactory::AddRef(),AddRefThunk,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x1006173f0,cRZCursorResourceFactory::Release(),Release,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x1006173fa,non-virtual thunk to cRZCursorResourceFactory::Release(),ReleaseThunk,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617408,"cRZCursorResourceFactory::SerialRead(cIGZPersistResource&, cIGZPersistDBSerialRecord&)",SerialRead,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x10061746e,"cRZCursorResourceFactory::CreateInstance(unsigned int, unsigned int, void**)",CreateInstance,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x1006174e4,"cRZCursorResourceFactory::SerialWrite(cIGZPersistResource&, cIGZPersistDBSerialRecord&)",SerialWrite,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x1006174ec,"cRZCursorResourceFactory::LoadFromSerialRecord(cIGZCursor**, cIGZPersistDBSerialRecord*)",LoadFromSerialRecord,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617538,"non-virtual thunk to cRZCursorResourceFactory::LoadFromSerialRecord(cIGZCursor**, cIGZPersistDBSerialRecord*)",LoadFromSerialRecordThunk,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617546,cRZCursorResourceFactory::~cRZCursorResourceFactory(),Destruct,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x100617550,cRZCursorResourceFactory::~cRZCursorResourceFactory(),DestructAndDelete,src/rz/CursorResource.cpp|h,recovered,rz_cursorresource
+0x1004aa2c0,cCompletionObj::cCompletionObj(),Construct,src/audio/CompletionObj.h,recovered,rz_cursorresource
+0x1004aa2e0,cCompletionObj::~cCompletionObj(),Destruct,src/audio/CompletionObj.h,recovered,rz_cursorresource
+0x1004afd70,cCompletionObj::cCompletionObj(),ConstructWrapper,src/audio/CompletionObj.h,recovered,rz_cursorresource
+0x1004afdf0,"cCompletionObj::QueryInterface(unsigned int, void**)",QueryInterface,src/audio/CompletionObj.h,recovered,rz_cursorresource
+0x1004afe80,cCompletionObj::AddRef(),AddRef,src/audio/CompletionObj.h,recovered,rz_cursorresource
+0x1004afea0,cCompletionObj::Release(),Release,src/audio/CompletionObj.h,recovered,rz_cursorresource
+0x1004aff40,cCompletionObj::DoCompletionFunction(cIGZSnd*),DoCompletionFunction,src/audio/CompletionObj.h,recovered,rz_cursorresource
+0x1004aff50,cCompletionObj::~cCompletionObj(),DestructAndDelete,src/audio/CompletionObj.h,recovered,rz_cursorresource
