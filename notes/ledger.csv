@@ -14632,3 +14632,26 @@ address,symbol,unique_name,source,status,evidence
 0x1002156dc,non-virtual thunk to cSC4IndustrialSimulator::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
 0x1002156ee,cSC4IndustrialSimulator::GetGZCLSID() const,GetGZCLSID,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
 0x1002156fa,non-virtual thunk to cSC4IndustrialSimulator::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x1001fbf24,cSC4CommercialSimulator::~cSC4CommercialSimulator(),Destruct,src/sc4/CommercialSimulator.cpp|h,recovered-partial,sc4_commercialsimulator
+0x1001fbf56,cSC4CommercialSimulator::~cSC4CommercialSimulator(),DestructAndDelete,src/sc4/CommercialSimulator.cpp|h,recovered-partial,sc4_commercialsimulator
+0x1001fbf60,"cSC4CommercialSimulator::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fbfaa,"non-virtual thunk to cSC4CommercialSimulator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_bfaa,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fbfb8,"non-virtual thunk to cSC4CommercialSimulator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_bfb8,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fbfc6,cSC4CommercialSimulator::AddRef(),AddRef,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fbfd4,non-virtual thunk to cSC4CommercialSimulator::AddRef(),AddRefThunk_bfd4,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fbfe2,non-virtual thunk to cSC4CommercialSimulator::AddRef(),AddRefThunk_bfe2,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fbff0,cSC4CommercialSimulator::Release(),Release,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fc02e,non-virtual thunk to cSC4CommercialSimulator::Release(),ReleaseThunk_c02e,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fc066,non-virtual thunk to cSC4CommercialSimulator::Release(),ReleaseThunk_c066,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fc09e,cSC4CommercialSimulator::Init(),Init,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fc3cc,cSC4CommercialSimulator::Shutdown(),Shutdown,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fc4f4,cSC4CommercialSimulator::Write(cIGZOStream&) const,Write,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fc558,non-virtual thunk to cSC4CommercialSimulator::Write(cIGZOStream&) const,WriteThunk,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fc566,cSC4CommercialSimulator::Read(cIGZIStream&),Read,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fc5ee,non-virtual thunk to cSC4CommercialSimulator::Read(cIGZIStream&),ReadThunk,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fc608,cSC4CommercialSimulator::DoMessage(cIGZMessage2*),DoMessage,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fc6ba,cSC4CommercialSimulator::DoIdle(unsigned int),DoIdle,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fc7fa,non-virtual thunk to cSC4CommercialSimulator::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fc80c,cSC4CommercialSimulator::GetProximityMap(cISC4BuildingDevelopmentSimulator::DeveloperType) const,GetProximityMap,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fc834,cSC4CommercialSimulator::GetGZCLSID() const,GetGZCLSID,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1001fc840,non-virtual thunk to cSC4CommercialSimulator::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
