@@ -17690,3 +17690,21 @@ address,symbol,unique_name,source,status,evidence
 0x100366d80,SC4QuadGridQuadrant::AddElement(SC4GridElement*),AddElement,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
 0x100366dbc,SC4QuadGridQuadrant::RemoveElement(SC4GridElement*),RemoveElement,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
 0x100366e28,SC4QuadGridQuadrant::RemoveAllElements(),RemoveAllElements,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x1005fd0de,"cSC4PrimitivePool::QuadVertexInit_V3F_C4UB_T2F(void*, unsigned int, unsigned int)",QuadVertexInit_V3F_C4UB_T2F,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd144,"cSC4PrimitivePool::VFlip_QuadVertexInit_V3F_C4UB_T2F(void*, unsigned int, unsigned int)",VFlip_QuadVertexInit_V3F_C4UB_T2F,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd1a8,"cSC4PrimitivePool::HFlip_QuadVertexInit_V3F_C4UB_T2F(void*, unsigned int, unsigned int)",HFlip_QuadVertexInit_V3F_C4UB_T2F,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd210,"cSC4PrimitivePool::QuadTriListIndexInit(unsigned short*, unsigned int, unsigned int)",QuadTriListIndexInit,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd262,cSC4PrimitivePool::cSC4PrimitivePool(),Construct,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd2aa,cSC4PrimitivePool::cSC4PrimitivePool(cSC4PrimitivePool const&),Construct_cSC4PrimitivePool_constWrapper,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd34a,cSC4PrimitivePool::cSC4PrimitivePool(cSC4PrimitivePool const&),Construct_cSC4PrimitivePool_const,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd354,cSC4PrimitivePool::~cSC4PrimitivePool(),Destruct,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd398,cSC4PrimitivePool::~cSC4PrimitivePool(),DestructAndDelete,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd3a2,cSC4PrimitivePool::~cSC4PrimitivePool(),DestructBody,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd3d0,cSC4PrimitivePool::Draw(SC4DrawContext*),Draw,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd4a0,"cSC4PrimitivePool::SetFormat(eGDPrimType, unsigned int, unsigned int, eGDVertexFormat, void (*)(void*, unsigned int, unsigned int), void (*)(unsigned short*, unsigned int, unsigned int))",SetFormat,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd4f8,cSC4PrimitivePool::VerticesUsed(),VerticesUsed,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd502,cSC4PrimitivePool::Indices(),Indices,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd50c,cSC4PrimitivePool::IndicesUsed(),IndicesUsed,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd516,cSC4PrimitivePool::GetPrimVertices(unsigned int),GetPrimVertices,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd57e,cSC4PrimitivePool::GetPrimIndices(unsigned int),GetPrimIndices,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x1005fd5f2,cSC4PrimitivePool::RestartArrays(),RestartArrays,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
