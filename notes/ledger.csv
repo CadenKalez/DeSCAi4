@@ -15480,3 +15480,67 @@ address,symbol,unique_name,source,status,evidence
 0x10003c3fe,"cGZCOM::CreateGuids(unsigned int*, unsigned int)",CreateGuids,src/gz/cGZCOM.cpp|h,recovered,gz_com
 0x10003c4ee,cGZCOM::FrameWork(),FrameWork,src/gz/cGZCOM.cpp|h,recovered,gz_com
 0x10003c2e6,GetGuidGenSeconds(),GetGuidGenSeconds,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x100064ed8,cGZClipboardManager::cGZClipboardManager(),Construct,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064f98,cGZClipboardManager::cGZClipboardManager(),ConstructWrapper,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064fa2,cGZClipboardManager::~cGZClipboardManager(),Destruct,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100065034,cGZClipboardManager::~cGZClipboardManager(),DestructAndDelete,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x10006503e,non-virtual thunk to cGZClipboardManager::~cGZClipboardManager(),DestructThunk,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x10006504c,non-virtual thunk to cGZClipboardManager::~cGZClipboardManager(),DestructAndDeleteThunk,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x10006505a,cGZClipboardManager::~cGZClipboardManager(),DestructBody,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100065088,non-virtual thunk to cGZClipboardManager::~cGZClipboardManager(),DestructBodyThunk_5088,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100065096,non-virtual thunk to cGZClipboardManager::~cGZClipboardManager(),DestructBodyThunk_5096,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000650a4,cGZClipboardManager::Init(),Init,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000651c2,non-virtual thunk to cGZClipboardManager::Init(),InitThunk,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000651d4,cGZClipboardManager::Shutdown(),Shutdown,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100065230,non-virtual thunk to cGZClipboardManager::Shutdown(),ShutdownThunk,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100065242,"cGZClipboardManager::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000652c4,"non-virtual thunk to cGZClipboardManager::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_52c4,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000652d2,"non-virtual thunk to cGZClipboardManager::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_52d2,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000652e0,cGZClipboardManager::AddRef(),AddRef,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x10006531e,non-virtual thunk to cGZClipboardManager::AddRef(),AddRefThunk_531e,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x10006535c,non-virtual thunk to cGZClipboardManager::AddRef(),AddRefThunk_535c,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x10006539a,cGZClipboardManager::Release(),Release,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100065404,non-virtual thunk to cGZClipboardManager::Release(),ReleaseThunk_5404,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100065412,non-virtual thunk to cGZClipboardManager::Release(),ReleaseThunk_5412,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100065420,cGZClipboardManager::GetClipboardCount(),GetClipboardCount,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100065458,cGZClipboardManager::GetClipboard(unsigned int),GetClipboard,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000654c6,"cGZClipboardManager::GetClipboards(cIGZClipboard**, unsigned int&)",GetClipboards,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000655a6,cGZClipboardManager::AddClipboard(cIGZClipboard*),AddClipboard,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000656b6,cGZClipboardManager::RemoveClipboard(cIGZClipboard*),RemoveClipboard_cIGZClipboard,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100065780,cGZClipboardManager::RemoveClipboard(unsigned int),RemoveClipboard_uint,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000658da,"cGZClipboardManager::IsClipboardDataTypeAvailable(unsigned int, unsigned int)",IsClipboardDataTypeAvailable,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000659c2,"cGZClipboardManager::GetAvailableClipboardDataTypes(unsigned int*, unsigned int&, unsigned int)",GetAvailableClipboardDataTypes,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100065ae2,cGZClipboardManager::GetClipboardWithDataTypeAvailable(unsigned int),GetClipboardWithDataTypeAvailable,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100065ba0,"cGZClipboardManager::GetClipboardData(unsigned int, unsigned int, void**, unsigned int)",GetClipboardData,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100065cac,"cGZClipboardManager::SetClipboardData(cIGZClipboardData*, unsigned char, unsigned int)",SetClipboardData,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100065d9a,"cGZClipboardManager::ClearClipboard(unsigned int, unsigned int)",ClearClipboard,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100065e78,"cGZClipboardManager::GetClipboardText(cIGZString&, unsigned int)",GetClipboardText_cIGZString_uint,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100065f66,"cGZClipboardManager::SetClipboardText(cIGZString const&, unsigned char, unsigned int)",SetClipboardText_String_uchar_uint,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x10006605a,"cGZClipboardManager::GetClipboardText(void*, unsigned int&, unsigned int, unsigned int)",GetClipboardText_void_uint_uint_uint,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x10006616a,"cGZClipboardManager::SetClipboardText(void*, unsigned int, unsigned int, unsigned char, unsigned int)",SetClipboardText_void_uint_uint_uchar_uint,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x10006439a,cGZClipboardManagerClipboard::cGZClipboardManagerClipboard(),Construct,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064416,cGZClipboardManagerClipboard::~cGZClipboardManagerClipboard(),Destruct,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064462,cGZClipboardManagerClipboard::~cGZClipboardManagerClipboard(),DestructAndDelete,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x10006446c,cGZClipboardManagerClipboard::~cGZClipboardManagerClipboard(),DestructBody,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x10006449a,cGZClipboardManagerClipboard::Init(),Init,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000644f2,cGZClipboardManagerClipboard::SendChangeNotification(bool),SendChangeNotification,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064538,cGZClipboardManagerClipboard::Shutdown(),Shutdown,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x10006459a,"cGZClipboardManagerClipboard::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064622,cGZClipboardManagerClipboard::AddRef(),AddRef,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064660,cGZClipboardManagerClipboard::Release(),Release,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000646ca,cGZClipboardManagerClipboard::GetID() const,GetID,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000646d4,cGZClipboardManagerClipboard::SetID(unsigned int),SetID,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000646de,cGZClipboardManagerClipboard::GetChangeNotificationEnabled() const,GetChangeNotificationEnabled,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000646e8,cGZClipboardManagerClipboard::SetChangeNotificationEnabled(unsigned char),SetChangeNotificationEnabled,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x1000646f6,cGZClipboardManagerClipboard::GetChangeCount() const,GetChangeCount,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064700,cGZClipboardManagerClipboard::IsClipboardDataTypeAvailable(unsigned int),IsClipboardDataTypeAvailable,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064770,"cGZClipboardManagerClipboard::GetAvailableClipboardDataTypes(unsigned int*, unsigned int&)",GetAvailableClipboardDataTypes,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064822,cGZClipboardManagerClipboard::GetClipboardData(unsigned int),GetClipboardData_uint,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064890,"cGZClipboardManagerClipboard::GetClipboardData(unsigned int, unsigned int, void**)",GetClipboardData_uint_uint_void,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064936,"cGZClipboardManagerClipboard::SetClipboardData(cIGZClipboardData*, unsigned char)",SetClipboardData,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064a9c,cGZClipboardManagerClipboard::PostDataChangeNotification(unsigned int),PostDataChangeNotification,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064aec,cGZClipboardManagerClipboard::Clear(unsigned int),Clear,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064c4e,cGZClipboardManagerClipboard::GetClipboardText(cIGZString&),GetClipboardText_cIGZString,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064cfa,"cGZClipboardManagerClipboard::SetClipboardText(cIGZString const&, unsigned char)",SetClipboardText_String_uchar,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064e84,"cGZClipboardManagerClipboard::GetClipboardText(void*, unsigned int&, unsigned int)",GetClipboardText_void_uint_uint,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100064eae,"cGZClipboardManagerClipboard::SetClipboardText(void*, unsigned int, unsigned int, unsigned char)",SetClipboardText_void_uint_uint_uchar,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
