@@ -34,6 +34,13 @@ public:
     operator T*() const noexcept { return ptr_; }     // cRZAutoRefCount<T>::operator T*() const (all instantiations)
     T* operator->() const noexcept { return ptr_; }
     explicit operator bool() const noexcept { return ptr_ != nullptr; }
+    // Releases what is held and hands back the (now empty) slot for a creation call's out-parameter.
+    // cRZAutoRefCount<T>::AsPPVoidParam() in every instantiation.
+    cRZAutoRefCount* AsPPVoidParam() noexcept {
+        if (ptr_) std::exchange(ptr_, nullptr)->Release();
+        return this;
+    }
+    void** AsOutParam() noexcept { AsPPVoidParam(); return reinterpret_cast<void**>(&ptr_); }
 
 private:
     T* ptr_ = nullptr;

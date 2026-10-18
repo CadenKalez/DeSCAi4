@@ -15078,3 +15078,207 @@ address,symbol,unique_name,source,status,evidence
 0x10032f19e,cSC4CompassWinProc::DoMessage(cIGZMessage2*),DoMessage,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
 0x10032f212,cSC4CompassWinProc::UpdateRotation(),UpdateRotation,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
 0x10032f29e,non-virtual thunk to cSC4CompassWinProc::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x100007394,"cRZSysServPtr<cIGZGraphicSystem2, 3296425084u, 3289776732u>::operator=(cIGZGraphicSystem2*)",SysServPtrIGZGraphicSystem2_329642AssignPointer,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1000139d0,"cRZSysServPtr<cIS3DTextureBindingFactory, 4206944793u, 448848154u>::~cRZSysServPtr()",SysServPtrIS3DTextureBindingFactory_420694Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100013a00,"cRZSysServPtr<cIGZGraphicSystem2, 3296425084u, 3289776732u>::~cRZSysServPtr()",SysServPtrIGZGraphicSystem2_329642Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10003ad70,"cRZSysServPtr<cIGZWinMgr, 1444u, 2752988254u>::~cRZSysServPtr()",SysServPtrIGZWinMgr_1444Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10003ad98,"cRZSysServPtr<cISC4App, 651035072u, 102u>::~cRZSysServPtr()",SysServPtrISC4App_651035Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1000411ac,"cRZSysServPtr<cIGZRealtimeDebugDisplay, 1616159483u, 2215944898u>::~cRZSysServPtr()",SysServPtrIGZRealtimeDebugDisplay_161615Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1000411d0,"cRZSysServPtr<cIGZMessageServer, 3238549282u, 1678128007u>::~cRZSysServPtr()",SysServPtrIGZMessageServer_323854Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1000411f8,"cRZSysServPtr<cISC4AEMSEvents, 2350886583u, 2887757361u>::~cRZSysServPtr()",SysServPtrISC4AEMSEvents_235088Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100041c80,"cRZSysServPtr<cIGZMessageServer2, 1696765127u, 83526747u>::~cRZSysServPtr()",SysServPtrIGZMessageServer2_169676Destruct_1c80,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100043e28,cRZAutoRefCount<cIGZBuffer>::operator=(cRZAutoRefCount<cIGZBuffer> const&),AutoRefIGZBufferAssignCopy,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1000a1580,"cRZSysServPtr<cIGZAllocatorService, 988069547u, 988069539u>::~cRZSysServPtr()",SysServPtrIGZAllocatorService_988069Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1000d9930,cRZAutoRefCount<cS3DVertexArray>::operator=(cS3DVertexArray*),AutoRefS3DVertexArrayAssignPointer,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1000fd194,cRZAutoRefCount<cSC4ViewInputControlPlayerDrive>::~cRZAutoRefCount(),AutoRefSC4ViewInputControlPlayerDriveDestruct,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100108da8,cRZAutoRefCount<cIS3DModelInstanceAnimated>::operator=(cIS3DModelInstanceAnimated*),AutoRefIS3DModelInstanceAnimatedAssignPointer,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100128028,"cRZSysServPtr<cIGZTestService, 2348147565u, 2348147560u>::~cRZSysServPtr()",SysServPtrIGZTestService_234814Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100173450,"cRZSysServPtr<cIGZLanguageManager, 5552085u, 1142837360u>::~cRZSysServPtr()",SysServPtrIGZLanguageManager_555208Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1001fbb46,"cRZSysServPtr<cIGZWinIMEServer, 717507303u, 717509703u>::~cRZSysServPtr()",SysServPtrIGZWinIMEServer_717507Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100267620,"cRZSysServPtr<cIGZClipboardManager, 132907024u, 669777917u>::~cRZSysServPtr()",SysServPtrIGZClipboardManager_132907Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10026ff60,"cRZSysServPtr<cIGZGraphicSystem, 7546940u, 3289776732u>::~cRZSysServPtr()",SysServPtrIGZGraphicSystem_754694Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100300abc,cRZAutoRefCount<cISCProperty>::operator=(cRZAutoRefCount<cISCProperty> const&),AutoRefISCPropertyAssignCopy,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100308334,"cRZSysServPtr<cIGZFontSys, 6764896u, 543635808u>::~cRZSysServPtr()",SysServPtrIGZFontSys_676489Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003151a0,"cRZSysServPtr<cIGZPersistResourceManager, 1701547772u, 90935406u>::~cRZSysServPtr()",SysServPtrIGZPersistResourceManager_170154Destruct_51a0,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10031e0aa,cRZAutoRefCount<cISC4Advice>::operator=(cRZAutoRefCount<cISC4Advice> const&),AutoRefISC4AdviceAssignCopy,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100327ac4,"cRZSysServPtr<cISCExemplarCache, 2771296456u, 624156449u>::~cRZSysServPtr()",SysServPtrISCExemplarCache_277129Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003299c8,cRZAutoRefCount<cISCResourceView>::operator=(cRZAutoRefCount<cISCResourceView> const&),AutoRefISCResourceViewAssignCopy,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100330454,"cRZSysServPtr<cISC4Simulator, 2257937998u, 1184196185u>::~cRZSysServPtr()",SysServPtrISC4Simulator_225793Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003509d2,cRZAutoRefCount<cISC4VisualEffect>::operator=(cRZAutoRefCount<cISC4VisualEffect> const&),AutoRefISC4VisualEffectAssignCopy,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100375ff0,"cRZSysServPtr<cISC4AnimationTickManager, 2259489005u, 2259489004u>::~cRZSysServPtr()",SysServPtrISC4AnimationTickManager_225948Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003aafe4,"cRZSysServPtr<cIGZSndSys, 274757586u, 600755104u>::operator=(cIGZSndSys*)",SysServPtrIGZSndSys_274757AssignPointer,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003abe46,"cRZSysServPtr<cIGZRadio, 3763405408u, 487043999u>::~cRZSysServPtr()",SysServPtrIGZRadio_376340Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003bab9c,"cRZSysServPtr<cIGZSndMgr, 989354935u, 452484091u>::~cRZSysServPtr()",SysServPtrIGZSndMgr_989354Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003ec776,"cRZSysServPtr<cISC4AudioScapeManager, 702782900u, 1239747489u>::~cRZSysServPtr()",SysServPtrISC4AudioScapeManager_702782Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003edb30,"cRZSysServPtr<cIGZRadio, 3763405408u, 487043999u>::operator=(cIGZRadio*)",SysServPtrIGZRadio_376340AssignPointer,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f0180,cRZAutoRefCount<cIGZSndSys>::~cRZAutoRefCount(),AutoRefIGZSndSysDestruct,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f29f0,"cRZSysServPtr<cIGZSndSys, 274757586u, 600755104u>::~cRZSysServPtr()",SysServPtrIGZSndSys_274757Destruct_29f0,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f5570,cRZAutoRefCount<cIGZSndSys>::cRZAutoRefCount(cIGZSndSys*),AutoRefIGZSndSysConstructFromPointer_5570,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f55a0,cRZAutoRefCount<cIGZMessageServer2>::cRZAutoRefCount(cIGZMessageServer2*),AutoRefIGZMessageServer2ConstructFromPointer_55a0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f5790,cRZAutoRefCount<cIGZMessageServer2>::~cRZAutoRefCount(),AutoRefIGZMessageServer2Destruct_5790,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f5950,"cRZSysServPtr<cIGZMessageServer2, 1696765127u, 83526747u>::cRZSysServPtr()",SysServPtrIGZMessageServer2_169676Construct_5950,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f5990,cRZAutoRefCount<cIGZMessageServer2>::operator=(cIGZMessageServer2*),AutoRefIGZMessageServer2AssignPointer,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f5a20,cRZAutoRefCount<cIGZMessageServer2>::operator->() const,AutoRefIGZMessageServer2Arrow,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f5a40,"cRZSysServPtr<cIGZMessageServer2, 1696765127u, 83526747u>::~cRZSysServPtr()",SysServPtrIGZMessageServer2_169676Destruct_5a40,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f5b70,cRZAutoRefCount<cIGZSndSys>::operator=(cIGZSndSys*),AutoRefIGZSndSysAssignPointer,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f7400,cRZAutoRefCount<cIGZSndEventStd>::cRZAutoRefCount(cIGZSndEventStd*),AutoRefIGZSndEventStdConstructFromPointer_7400,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f7430,cRZAutoRefCount<cIGZSndSys>::operator->() const,AutoRefIGZSndSysArrow,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f7450,cRZAutoRefCount<cIGZSndEventStd>::AsPPVoidParam(),AutoRefIGZSndEventStdAsOutParam,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f74c0,cRZAutoRefCount<cIGZSndEventStd>::~cRZAutoRefCount(),AutoRefIGZSndEventStdDestruct_74c0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f74e0,cRZAutoRefCount<cIGZMessage2Standard>::cRZAutoRefCount(cIGZMessage2Standard*),AutoRefIGZMessage2StandardConstructFromPointer_74e0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f7510,cRZAutoRefCount<cIGZMessage2Standard>::AsPPVoidParam(),AutoRefIGZMessage2StandardAsOutParam,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f7580,cRZAutoRefCount<cIGZMessage2Standard>::~cRZAutoRefCount(),AutoRefIGZMessage2StandardDestruct_7580,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f7960,cRZAutoRefCount<cIGZMessage2Standard>::operator->() const,AutoRefIGZMessage2StandardArrow,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f79a0,cRZAutoRefCount<cIGZPersistResourceManager>::cRZAutoRefCount(cIGZPersistResourceManager*),AutoRefIGZPersistResourceManagerConstructFromPointer_79a0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f79d0,cRZAutoRefCount<cISCResExemplar>::cRZAutoRefCount(cISCResExemplar*),AutoRefISCResExemplarConstructFromPointer_79d0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f7a30,cRZAutoRefCount<cIGZPersistResourceManager>::operator->() const,AutoRefIGZPersistResourceManagerArrow,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f7a50,cRZAutoRefCount<cISCResExemplar>::AsPPVoidParam(),AutoRefISCResExemplarAsOutParam,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f7aa0,cRZAutoRefCount<cISCResExemplar>::operator->() const,AutoRefISCResExemplarArrow,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f7ac0,cRZAutoRefCount<cIGZSnd3DListenerEx>::cRZAutoRefCount(cIGZSnd3DListenerEx*),AutoRefIGZSnd3DListenerExConstructFromPointer_7ac0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f7af0,cRZAutoRefCount<cIGZSnd3DListenerEx>::operator->() const,AutoRefIGZSnd3DListenerExArrow,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f7b10,cRZAutoRefCount<cIGZSnd3DListenerEx>::~cRZAutoRefCount(),AutoRefIGZSnd3DListenerExDestruct_7b10,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f7b30,cRZAutoRefCount<cISCResExemplar>::~cRZAutoRefCount(),AutoRefISCResExemplarDestruct_7b30,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f7b50,cRZAutoRefCount<cIGZPersistResourceManager>::~cRZAutoRefCount(),AutoRefIGZPersistResourceManagerDestruct_7b50,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f81c0,cRZAutoRefCount<cIGZSndSys>::cRZAutoRefCount(cIGZSndSys*),AutoRefIGZSndSysConstructFromPointer_81c0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f8210,cRZAutoRefCount<cIGZMessageServer2>::cRZAutoRefCount(cIGZMessageServer2*),AutoRefIGZMessageServer2ConstructFromPointer_8210,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f8260,cRZAutoRefCount<cIGZMessageServer2>::~cRZAutoRefCount(),AutoRefIGZMessageServer2Destruct_8260,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f82a0,"cRZSysServPtr<cIGZMessageServer2, 1696765127u, 83526747u>::cRZSysServPtr()",SysServPtrIGZMessageServer2_169676Construct_82a0,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f8320,cRZAutoRefCount<cIGZSndEventStd>::cRZAutoRefCount(cIGZSndEventStd*),AutoRefIGZSndEventStdConstructFromPointer_8320,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f8370,cRZAutoRefCount<cIGZSndEventStd>::~cRZAutoRefCount(),AutoRefIGZSndEventStdDestruct_8370,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f83b0,cRZAutoRefCount<cIGZMessage2Standard>::cRZAutoRefCount(cIGZMessage2Standard*),AutoRefIGZMessage2StandardConstructFromPointer_83b0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f8400,cRZAutoRefCount<cIGZMessage2Standard>::~cRZAutoRefCount(),AutoRefIGZMessage2StandardDestruct_8400,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f8440,cRZAutoRefCount<cIGZPersistResourceManager>::cRZAutoRefCount(cIGZPersistResourceManager*),AutoRefIGZPersistResourceManagerConstructFromPointer_8440,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f8490,cRZAutoRefCount<cIGZPersistResourceManager>::~cRZAutoRefCount(),AutoRefIGZPersistResourceManagerDestruct_8490,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f84d0,cRZAutoRefCount<cISCResExemplar>::cRZAutoRefCount(cISCResExemplar*),AutoRefISCResExemplarConstructFromPointer_84d0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f8520,cRZAutoRefCount<cISCResExemplar>::~cRZAutoRefCount(),AutoRefISCResExemplarDestruct_8520,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f8560,cRZAutoRefCount<cIGZSnd3DListenerEx>::cRZAutoRefCount(cIGZSnd3DListenerEx*),AutoRefIGZSnd3DListenerExConstructFromPointer_8560,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1003f85b0,cRZAutoRefCount<cIGZSnd3DListenerEx>::~cRZAutoRefCount(),AutoRefIGZSnd3DListenerExDestruct_85b0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100468418,cRZAutoRefCount<cS3DIndexArray>::operator=(cS3DIndexArray*),AutoRefS3DIndexArrayAssignPointer,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004684e0,cRZAutoRefCount<cS3DPrimitiveArray>::operator=(cS3DPrimitiveArray*),AutoRefS3DPrimitiveArrayAssignPointer,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10046a18a,"cRZSysServPtr<cIS3DMaterialManager, 4206944794u, 448848155u>::~cRZSysServPtr()",SysServPtrIS3DMaterialManager_420694Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10047482a,cRZAutoRefCount<cIGZSnd>::operator=(cRZAutoRefCount<cIGZSnd> const&),AutoRefIGZSndAssignCopy,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004829d0,"cRZSysServPtr<cIHitMan, 3139164584u, 455927409u>::~cRZSysServPtr()",SysServPtrIHitMan_313916Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004878f0,cRZAutoRefCount<cIGZMessageQueue2>::cRZAutoRefCount(cIGZMessageQueue2*),AutoRefIGZMessageQueue2ConstructFromPointer_78f0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100487920,cRZAutoRefCount<cIGZSndPropertyCache>::cRZAutoRefCount(cIGZSndPropertyCache*),AutoRefIGZSndPropertyCacheConstructFromPointer_7920,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100487950,cRZAutoRefCount<cIGZSndInstanceCache>::cRZAutoRefCount(cIGZSndInstanceCache*),AutoRefIGZSndInstanceCacheConstructFromPointer_7950,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100487980,"cRZSysServPtr<cIGZFileSystem, 3760207456u, 544416093u>::cRZSysServPtr()",SysServPtrIGZFileSystem_376020Construct_7980,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004879c0,"cRZSysServPtr<cIGZFileSystem, 3760207456u, 544416093u>::operator->() const",SysServPtrIGZFileSystem_376020Arrow,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100487a10,"cRZSysServPtr<cIGZFileSystem, 3760207456u, 544416093u>::~cRZSysServPtr()",SysServPtrIGZFileSystem_376020Destruct_7a10,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100487a30,cRZAutoRefCount<cIGZSndInstanceCache>::~cRZAutoRefCount(),AutoRefIGZSndInstanceCacheDestruct_7a30,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100487a50,cRZAutoRefCount<cIGZSndPropertyCache>::~cRZAutoRefCount(),AutoRefIGZSndPropertyCacheDestruct_7a50,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100487b10,cRZAutoRefCount<cIGZMessageQueue2>::~cRZAutoRefCount(),AutoRefIGZMessageQueue2Destruct_7b10,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100488870,cRZAutoRefCount<cIGZMessageQueue2>::operator=(cIGZMessageQueue2*),AutoRefIGZMessageQueue2AssignPointer,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100488900,cRZAutoRefCount<cIGZSndPropertyCache>::AsPPVoidParam(),AutoRefIGZSndPropertyCacheAsOutParam,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100488950,cRZAutoRefCount<cIGZSndInstanceCache>::AsPPVoidParam(),AutoRefIGZSndInstanceCacheAsOutParam,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004896b0,cRZAutoRefCount<cIGZSnd>::cRZAutoRefCount(cIGZSnd*),AutoRefIGZSndConstructFromPointer_96b0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004896e0,cRZAutoRefCount<cIGZSnd>::AsPPVoidParam(),AutoRefIGZSndAsOutParam,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100489f00,cRZAutoRefCount<cIGZSnd>::~cRZAutoRefCount(),AutoRefIGZSndDestruct_9f00,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10048aee0,cRZAutoRefCount<cIGZSndUpdateTarget>::operator->() const,AutoRefIGZSndUpdateTargetArrow,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10048af00,cRZAutoRefCount<cIGZSnd>::operator->() const,AutoRefIGZSndArrow,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10048af20,cRZAutoRefCount<cIGZSndPropertyCache>::operator=(cIGZSndPropertyCache*),AutoRefIGZSndPropertyCacheAssignPointer,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10048afb0,cRZAutoRefCount<cIGZSndInstanceCache>::operator=(cIGZSndInstanceCache*),AutoRefIGZSndInstanceCacheAssignPointer,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10048bb00,cRZAutoRefCount<cIGZSndRenderer>::cRZAutoRefCount(cIGZSndRenderer*),AutoRefIGZSndRendererConstructFromPointer_bb00,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10048bb30,cRZAutoRefCount<cIGZSndRenderer>::~cRZAutoRefCount(),AutoRefIGZSndRendererDestruct_bb30,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10048ca40,cRZAutoRefCount<cIGZSnd3DListener>::cRZAutoRefCount(cIGZSnd3DListener*),AutoRefIGZSnd3DListenerConstructFromPointer_ca40,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10048ca70,cRZAutoRefCount<cIGZSnd3DListener>::AsPPVoidParam(),AutoRefIGZSnd3DListenerAsOutParam,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10048cac0,cRZAutoRefCount<cIGZSnd3DListener>::operator->() const,AutoRefIGZSnd3DListenerArrow,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10048cae0,cRZAutoRefCount<cIGZSnd3DListener>::~cRZAutoRefCount(),AutoRefIGZSnd3DListenerDestruct_cae0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10048dda0,cRZAutoRefCount<cIGZSnd3DListenerEx>::AsPPVoidParam(),AutoRefIGZSnd3DListenerExAsOutParam,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004907e0,cRZAutoRefCount<cIGZUnknown>::cRZAutoRefCount(cIGZUnknown*),AutoRefIGZUnknownConstructFromPointer_07e0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100490810,cRZAutoRefCount<cIGZUnknown>::~cRZAutoRefCount(),AutoRefIGZUnknownDestruct_0810,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004913c0,cRZAutoRefCount<cIGZSndUpdateTarget>::cRZAutoRefCount(cIGZSndUpdateTarget*),AutoRefIGZSndUpdateTargetConstructFromPointer_13c0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004913f0,cRZAutoRefCount<cIGZSndUpdateTarget>::~cRZAutoRefCount(),AutoRefIGZSndUpdateTargetDestruct_13f0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004928a0,cRZAutoRefCount<cIGZSndEventHandler>::cRZAutoRefCount(cIGZSndEventHandler*),AutoRefIGZSndEventHandlerConstructFromPointer_28a0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004928d0,cRZAutoRefCount<cIGZSndEventHandler>::~cRZAutoRefCount(),AutoRefIGZSndEventHandlerDestruct_28d0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100493dc0,cRZAutoRefCount<cIGZMessageQueue2>::operator->() const,AutoRefIGZMessageQueue2Arrow,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100495960,cRZAutoRefCount<cIGZSndEventStd>::operator->() const,AutoRefIGZSndEventStdArrow,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004975d0,cRZAutoRefCount<cIGZSndPropertyCache>::operator->() const,AutoRefIGZSndPropertyCacheArrow,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004976a0,cRZAutoRefCount<cIGZSndInstanceCache>::operator->() const,AutoRefIGZSndInstanceCacheArrow,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049a000,cRZAutoRefCount<cIGZSndEaRendererEffects>::cRZAutoRefCount(cIGZSndEaRendererEffects*),AutoRefIGZSndEaRendererEffectsConstructFromPointer_a000,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049a030,cRZAutoRefCount<cIGZSndEaRendererEffects>::AsPPVoidParam(),AutoRefIGZSndEaRendererEffectsAsOutParam,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049a080,cRZAutoRefCount<cIGZSndEaRendererEffects>::operator->() const,AutoRefIGZSndEaRendererEffectsArrow,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049a0a0,cRZAutoRefCount<cIGZSndEaRendererEffects>::~cRZAutoRefCount(),AutoRefIGZSndEaRendererEffectsDestruct_a0a0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049b950,cRZAutoRefCount<cIGZMessageQueue2>::cRZAutoRefCount(cIGZMessageQueue2*),AutoRefIGZMessageQueue2ConstructFromPointer_b950,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049bb20,cRZAutoRefCount<cIGZSndPropertyCache>::cRZAutoRefCount(cIGZSndPropertyCache*),AutoRefIGZSndPropertyCacheConstructFromPointer_bb20,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049bb70,cRZAutoRefCount<cIGZSndInstanceCache>::cRZAutoRefCount(cIGZSndInstanceCache*),AutoRefIGZSndInstanceCacheConstructFromPointer_bb70,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049bbc0,cRZAutoRefCount<cIGZMessageQueue2>::~cRZAutoRefCount(),AutoRefIGZMessageQueue2Destruct_bbc0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049bc00,cRZAutoRefCount<cIGZSndPropertyCache>::~cRZAutoRefCount(),AutoRefIGZSndPropertyCacheDestruct_bc00,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049bc40,cRZAutoRefCount<cIGZSndInstanceCache>::~cRZAutoRefCount(),AutoRefIGZSndInstanceCacheDestruct_bc40,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049bc80,"cRZSysServPtr<cIGZFileSystem, 3760207456u, 544416093u>::cRZSysServPtr()",SysServPtrIGZFileSystem_376020Construct_bc80,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049bd00,"cRZSysServPtr<cIGZFileSystem, 3760207456u, 544416093u>::~cRZSysServPtr()",SysServPtrIGZFileSystem_376020Destruct_bd00,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049bd70,cRZAutoRefCount<cIGZSnd>::cRZAutoRefCount(cIGZSnd*),AutoRefIGZSndConstructFromPointer_bd70,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049bdc0,cRZAutoRefCount<cIGZSnd>::~cRZAutoRefCount(),AutoRefIGZSndDestruct_bdc0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049bf90,cRZAutoRefCount<cIGZSndRenderer>::cRZAutoRefCount(cRZAutoRefCount<cIGZSndRenderer> const&),AutoRefIGZSndRendererConstructCopy_bf90,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049bfc0,cRZAutoRefCount<cIGZSndRenderer>::cRZAutoRefCount(cRZAutoRefCount<cIGZSndRenderer> const&),AutoRefIGZSndRendererConstructCopy_bfc0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049c010,cRZAutoRefCount<cIGZSndRenderer>::cRZAutoRefCount(cIGZSndRenderer*),AutoRefIGZSndRendererConstructFromPointer_c010,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049c060,cRZAutoRefCount<cIGZSndRenderer>::~cRZAutoRefCount(),AutoRefIGZSndRendererDestruct_c060,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049c0a0,cRZAutoRefCount<cIGZSnd3DListener>::cRZAutoRefCount(cIGZSnd3DListener*),AutoRefIGZSnd3DListenerConstructFromPointer_c0a0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049c0f0,cRZAutoRefCount<cIGZSnd3DListener>::~cRZAutoRefCount(),AutoRefIGZSnd3DListenerDestruct_c0f0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049c130,cRZAutoRefCount<cIGZUnknown>::cRZAutoRefCount(cRZAutoRefCount<cIGZUnknown> const&),AutoRefIGZUnknownConstructCopy_c130,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049c160,cRZAutoRefCount<cIGZUnknown>::cRZAutoRefCount(cRZAutoRefCount<cIGZUnknown> const&),AutoRefIGZUnknownConstructCopy_c160,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049c1b0,cRZAutoRefCount<cIGZUnknown>::cRZAutoRefCount(cIGZUnknown*),AutoRefIGZUnknownConstructFromPointer_c1b0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049c200,cRZAutoRefCount<cIGZUnknown>::~cRZAutoRefCount(),AutoRefIGZUnknownDestruct_c200,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049c240,cRZAutoRefCount<cIGZSndUpdateTarget>::cRZAutoRefCount(cRZAutoRefCount<cIGZSndUpdateTarget> const&),AutoRefIGZSndUpdateTargetConstructCopy_c240,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049c270,cRZAutoRefCount<cIGZSndUpdateTarget>::cRZAutoRefCount(cRZAutoRefCount<cIGZSndUpdateTarget> const&),AutoRefIGZSndUpdateTargetConstructCopy_c270,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049c2c0,cRZAutoRefCount<cIGZSndUpdateTarget>::cRZAutoRefCount(cIGZSndUpdateTarget*),AutoRefIGZSndUpdateTargetConstructFromPointer_c2c0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049c310,cRZAutoRefCount<cIGZSndUpdateTarget>::~cRZAutoRefCount(),AutoRefIGZSndUpdateTargetDestruct_c310,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049c350,cRZAutoRefCount<cIGZSndEventHandler>::cRZAutoRefCount(cRZAutoRefCount<cIGZSndEventHandler> const&),AutoRefIGZSndEventHandlerConstructCopy_c350,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049c380,cRZAutoRefCount<cIGZSndEventHandler>::cRZAutoRefCount(cRZAutoRefCount<cIGZSndEventHandler> const&),AutoRefIGZSndEventHandlerConstructCopy_c380,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049c3d0,cRZAutoRefCount<cIGZSndEventHandler>::cRZAutoRefCount(cIGZSndEventHandler*),AutoRefIGZSndEventHandlerConstructFromPointer_c3d0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10049c420,cRZAutoRefCount<cIGZSndEventHandler>::~cRZAutoRefCount(),AutoRefIGZSndEventHandlerDestruct_c420,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004a0330,cRZAutoRefCount<cIGZSndEaRendererEffects>::cRZAutoRefCount(cIGZSndEaRendererEffects*),AutoRefIGZSndEaRendererEffectsConstructFromPointer_0330,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004a0380,cRZAutoRefCount<cIGZSndEaRendererEffects>::~cRZAutoRefCount(),AutoRefIGZSndEaRendererEffectsDestruct_0380,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004a1b70,"cRZSysServPtr<cIGZPersistResourceManager, 1701547772u, 90935406u>::cRZSysServPtr()",SysServPtrIGZPersistResourceManager_170154Construct_1b70,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004a1bb0,cRZAutoRefCount<cIGZPersistResourceManager>::operator=(cIGZPersistResourceManager*),AutoRefIGZPersistResourceManagerAssignPointer,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004a1c40,"cRZSysServPtr<cIGZPersistResourceManager, 1701547772u, 90935406u>::~cRZSysServPtr()",SysServPtrIGZPersistResourceManager_170154Destruct_1c40,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004a4990,cRZAutoRefCount<cIGZSoundCreator>::cRZAutoRefCount(cIGZSoundCreator*),AutoRefIGZSoundCreatorConstructFromPointer_4990,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004a5290,cRZAutoRefCount<cIGZSoundCreator>::~cRZAutoRefCount(),AutoRefIGZSoundCreatorDestruct_5290,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004aa4b0,cRZAutoRefCount<cIGZSndDataSourceCreator>::cRZAutoRefCount(cIGZSndDataSourceCreator*),AutoRefIGZSndDataSourceCreatorConstructFromPointer_a4b0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004ab070,cRZAutoRefCount<cIGZSndDataSourceCreator>::operator=(cRZAutoRefCount<cIGZSndDataSourceCreator> const&),AutoRefIGZSndDataSourceCreatorAssignCopy,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004ab0b0,cRZAutoRefCount<cIGZSndDataSourceCreator>::~cRZAutoRefCount(),AutoRefIGZSndDataSourceCreatorDestruct_b0b0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004adc40,cRZAutoRefCount<cIGZSndDataSource>::cRZAutoRefCount(cIGZSndDataSource*),AutoRefIGZSndDataSourceConstructFromPointer_dc40,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004adcb0,cRZAutoRefCount<cIGZSndDataSource>::~cRZAutoRefCount(),AutoRefIGZSndDataSourceDestruct_dcb0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004b0430,"cRZSysServPtr<cIGZPersistResourceManager, 1701547772u, 90935406u>::cRZSysServPtr()",SysServPtrIGZPersistResourceManager_170154Construct_0430,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004b40f0,cRZAutoRefCount<cIGZSoundCreator>::cRZAutoRefCount(cIGZSoundCreator*),AutoRefIGZSoundCreatorConstructFromPointer_40f0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004b4140,cRZAutoRefCount<cIGZSoundCreator>::~cRZAutoRefCount(),AutoRefIGZSoundCreatorDestruct_4140,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004b4180,cRZAutoRefCount<cIGZSoundCreator>::cRZAutoRefCount(cRZAutoRefCount<cIGZSoundCreator> const&),AutoRefIGZSoundCreatorConstructCopy_4180,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004b41b0,cRZAutoRefCount<cIGZSoundCreator>::cRZAutoRefCount(cRZAutoRefCount<cIGZSoundCreator> const&),AutoRefIGZSoundCreatorConstructCopy_41b0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004b4800,cRZAutoRefCount<cIGZSnd>::cRZAutoRefCount(cRZAutoRefCount<cIGZSnd> const&),AutoRefIGZSndConstructCopy_4800,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004b4830,cRZAutoRefCount<cIGZSnd>::cRZAutoRefCount(cRZAutoRefCount<cIGZSnd> const&),AutoRefIGZSndConstructCopy_4830,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004ba020,cRZAutoRefCount<cIGZSndDataSourceCreator>::cRZAutoRefCount(cIGZSndDataSourceCreator*),AutoRefIGZSndDataSourceCreatorConstructFromPointer_a020,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004ba070,cRZAutoRefCount<cIGZSndDataSourceCreator>::~cRZAutoRefCount(),AutoRefIGZSndDataSourceCreatorDestruct_a070,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004ba0b0,cRZAutoRefCount<cIGZSndDataSourceCreator>::operator=(cIGZSndDataSourceCreator*),AutoRefIGZSndDataSourceCreatorAssignPointer,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004bc160,cRZAutoRefCount<cIGZSndDataSource>::cRZAutoRefCount(cIGZSndDataSource*),AutoRefIGZSndDataSourceConstructFromPointer_c160,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004bc1b0,cRZAutoRefCount<cIGZSndDataSource>::~cRZAutoRefCount(),AutoRefIGZSndDataSourceDestruct_c1b0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004bc1f0,cRZAutoRefCount<cIGZSndDataSource>::cRZAutoRefCount(cRZAutoRefCount<cIGZSndDataSource> const&),AutoRefIGZSndDataSourceConstructCopy_c1f0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004bc220,cRZAutoRefCount<cIGZSndDataSource>::cRZAutoRefCount(cRZAutoRefCount<cIGZSndDataSource> const&),AutoRefIGZSndDataSourceConstructCopy_c220,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004c3188,"cRZSysServPtr<cIHitDebugInfo, 2075790525u, 4224306436u>::~cRZSysServPtr()",SysServPtrIHitDebugInfo_207579Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004d8ba0,"cRZSysServPtr<cIGZRegistry, 2721538364u, 621243294u>::~cRZSysServPtr()",SysServPtrIGZRegistry_272153Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004e37e6,cRZAutoRefCount<cRZNullOStream>::~cRZAutoRefCount(),AutoRefRZNullOStreamDestruct,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1004f1ee4,cRZAutoRefCount<cISC4Lot>::operator=(cRZAutoRefCount<cISC4Lot> const&),AutoRefISC4LotAssignCopy,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100569dce,"cRZSysServPtr<cIGZWWWSystem, 1151015186u, 1151015225u>::~cRZSysServPtr()",SysServPtrIGZWWWSystem_115101Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1005ca066,cRZAutoRefCount<cISC4EffectsCollection>::operator=(cRZAutoRefCount<cISC4EffectsCollection> const&),AutoRefISC4EffectsCollectionAssignCopy,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1005e8788,"cRZSysServPtr<cISC4GameDataRegistry, 3902336259u, 3957385312u>::~cRZSysServPtr()",SysServPtrISC4GameDataRegistry_390233Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1005ed5a0,cRZAutoRefCount<cSC4ParticlesDescription>::operator=(cSC4ParticlesDescription*),AutoRefSC4ParticlesDescriptionAssignPointer,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100601336,cRZAutoRefCount<nSCRes::cICommandParser>::operator=(nSCRes::cICommandParser*),AutoRefnSCRescICommandParserAssignPointer,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100620116,"cRZSysServPtr<cIGZCanvas, 1722947489u, 2739277291u>::~cRZSysServPtr()",SysServPtrIGZCanvas_172294Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1006251e0,cRZAutoRefCount<cIGZSystemService>::cRZAutoRefCount(cIGZSystemService*),AutoRefIGZSystemServiceConstructFromPointer_51e0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100625210,cRZAutoRefCount<cIGZSystemService>::AsPPVoidParam(),AutoRefIGZSystemServiceAsOutParam,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100625280,cRZAutoRefCount<cIGZSystemService>::~cRZAutoRefCount(),AutoRefIGZSystemServiceDestruct_5280,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1006252a0,cRZAutoRefCount<cIGZSystemService>::cRZAutoRefCount(cIGZSystemService*),AutoRefIGZSystemServiceConstructFromPointer_52a0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1006252f0,cRZAutoRefCount<cIGZSystemService>::~cRZAutoRefCount(),AutoRefIGZSystemServiceDestruct_52f0,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1006256f0,"cRZSysServPtr<cIGZSndSys, 274757586u, 600755104u>::cRZSysServPtr()",SysServPtrIGZSndSys_274757Construct_56f0,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100625730,"cRZSysServPtr<cIGZSndSys, 274757586u, 600755104u>::~cRZSysServPtr()",SysServPtrIGZSndSys_274757Destruct_5730,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100625d00,cRZAutoRefCount<cIGZSndDataSource>::operator=(cIGZSndDataSource*),AutoRefIGZSndDataSourceAssignPointer,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100626500,cRZAutoRefCount<cIGZSndDataSource>::operator->() const,AutoRefIGZSndDataSourceArrow,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100627290,"cRZSysServPtr<cIGZSndSys, 274757586u, 600755104u>::cRZSysServPtr()",SysServPtrIGZSndSys_274757Construct_7290,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x100636300,"cRZSysServPtr<cIGZSndSys, 274757586u, 600755104u>::operator->() const",SysServPtrIGZSndSys_274757Arrow,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10064d2d0,"cRZSysServPtr<cIGZCommandServer, 3415221562u, 3952097842u>::~cRZSysServPtr()",SysServPtrIGZCommandServer_341522Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10064d520,"cRZSysServPtr<cIGZLuaScriptServer, 1271988521u, 1271988531u>::~cRZSysServPtr()",SysServPtrIGZLuaScriptServer_127198Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10064d544,"cRZSysServPtr<cIGZUIScriptService, 4197802746u, 1513451029u>::~cRZSysServPtr()",SysServPtrIGZUIScriptService_419780Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10068fc40,"cRZSysServPtr<nGZLog::cIService, 162962502u, 162962510u>::~cRZSysServPtr()",SysServPtrnGZLogcIService_162962Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1006db854,cRZAutoRefCount<cISC4Automaton>::operator=(cRZAutoRefCount<cISC4Automaton> const&),AutoRefISC4AutomatonAssignCopy,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1007285b8,cRZAutoRefCount<cS3DTextureBinding>::operator=(cS3DTextureBinding*),AutoRefS3DTextureBindingAssignPointer,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10075ef90,"cRZSysServPtr<cIGZWinCtrlMgr, 583199519u, 3267554063u>::~cRZSysServPtr()",SysServPtrIGZWinCtrlMgr_583199Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x10079e9b0,cRZAutoRefCount<cISC4ViewInputControl>::~cRZAutoRefCount(),AutoRefISC4ViewInputControlDestruct,src/rz/cRZAutoRefCount.h,recovered,scripts/tests/rz_autoref_test.cpp
+0x1007b4f60,"cRZSysServPtr<cIGZDrawSystem, 1261347763u, 3945702347u>::~cRZSysServPtr()",SysServPtrIGZDrawSystem_126134Destruct,src/rz/cRZSysServPtr.h,recovered,scripts/tests/rz_autoref_test.cpp

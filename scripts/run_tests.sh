@@ -98,6 +98,7 @@ declare -a TESTS=(
  "sc4_winprocs:$T/sc4_winprocs_test.cpp $S/sc4/WinProcs.cpp $S/gz/Win.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp $S/rz/cRZMessage2Standard.cpp -I$T"
  "rz_cursorresource:$T/rz_cursorresource_test.cpp $S/rz/CursorResource.cpp $S/gz/cGZPersistResourceManager.cpp $S/rz/cRZString.cpp $S/rz/cRZUnknownList.cpp $S/gz/cGZPersistResourceKeyList.cpp -I$T"
  "rz_randomsuper:$T/rz_randomsuper_test.cpp $S/rz/cRZRandomSuper.cpp"
+ "rz_autoref:$T/rz_autoref_test.cpp $S/rz/cRZSysServPtr.cpp"
  "sc4_tileneighborhood:$T/sc4_tileneighborhood_test.cpp $S/sc4/TileNeighborhood.cpp $S/rz/cRZString.cpp"
  "sc4_businessfeature:$T/sc4_businessfeature_test.cpp $S/sc4/BusinessFeature.cpp $S/sc4/DBSegment.cpp $S/sc4/SCProperty.cpp $S/sc4/SCPropertyHelp.cpp $S/sc4/cSC4ResponseCurve.cpp $S/sc4/cSC4SimGrid.cpp $S/rz/cRZUnknownList.cpp $S/gz/cGZDBSegmentPackedFile.cpp $S/gz/cGZDBRecords.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/gz/cGZPersistDBSegment.cpp $S/gz/cGZPersistResourceKeyList.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp $S/rz/cRZRandom.cpp $S/rz/cRZFastCompression3.cpp $S/rz/cRZMessage2Standard.cpp $S/rz/cRZVariant.cpp $S/rz/nRZHash.cpp $S/rz/cRZStream.cpp $S/rz/RZConvert.cpp"
  "gz_winslider:$T/gz_winslider_test.cpp $S/gz/WinSlider.cpp $S/gz/Buffer.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"

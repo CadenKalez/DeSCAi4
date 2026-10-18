@@ -20,6 +20,14 @@ public:
     cRZSysServPtr(const cRZSysServPtr&) = delete;
     cRZSysServPtr& operator=(const cRZSysServPtr&) = delete;
 
+    // AddRefs the new service before releasing the old one (cRZSysServPtr<...>::operator=(T*)).
+    cRZSysServPtr& operator=(T* service) noexcept {
+        if (service) service->AddRef();
+        if (service_) service_->Release();
+        service_ = service;
+        return *this;
+    }
+
     operator T*() const noexcept { return service_; }
     T* operator->() const noexcept { return service_; }
     T* get() const noexcept { return service_; }
