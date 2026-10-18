@@ -47,9 +47,12 @@ public:
     virtual bool Attach(cIGZBuffer* buffer) = 0;                 // +0x18
     virtual void Slot4() {}
     virtual void Slot5() {}
-    virtual void Slot6() {}
+    virtual void Flush() {}                                      // +0x30 (the draw system drops the texture copy)
     virtual void Slot7() {}
     virtual void Invalidate() = 0;                               // +0x40 (colour key changed)
+    virtual bool IsResident() { return false; }                  // +0x48 (holds a texture copy)
+    virtual void Slot10() {}
+    virtual std::uint32_t GetLastUsedClock() { return 0; }       // +0x58 (draw system clock of the last use)
 };
 
 class cIGZBuffer : public gz::IDrawTargetBuffer {

@@ -499,7 +499,7 @@ __attribute__((weak)) void* GZCOM_CreatecGZDrawContextAsBuffer() { return nullpt
 // original allocates 0x480 bytes; the class is not recovered yet
 void* GZCOM_CreatecGZDrawFontRenderer() { return nullptr; }
 // original allocates 0x78 bytes; the class is not recovered yet
-void* GZCOM_CreatecGZDrawSystem() { return nullptr; }
+__attribute__((weak)) void* GZCOM_CreatecGZDrawSystem() { return nullptr; }
 // original allocates 0x148 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4AdvisorCitySituations() { return nullptr; }
 // original allocates 0x290 bytes; the class is not recovered yet

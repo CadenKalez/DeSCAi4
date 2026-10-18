@@ -10655,7 +10655,7 @@ address,symbol,unique_name,source,status,evidence
 0x10064ed60,GZCOM_CreatecGZDrawContext(),GZCOM_CreatecGZDrawContext,src/gz/GZCOM.cpp|h,recovered,src/gz/GZCOMCreators2.cpp|3.cpp; scripts/tests/gz_gzcomcreators_test.cpp
 0x100652da0,GZCOM_CreatecGZDrawContextAsBuffer(),GZCOM_CreatecGZDrawContextAsBuffer,src/gz/GZCOMCreators6.cpp,recovered,GZCOM creator; covered by gz_gzcomcreators6
 0x100657280,GZCOM_CreatecGZDrawFontRenderer(),GZCOM_CreatecGZDrawFontRenderer,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x100659450,GZCOM_CreatecGZDrawSystem(),GZCOM_CreatecGZDrawSystem,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100659450,GZCOM_CreatecGZDrawSystem(),GZCOM_CreatecGZDrawSystem,src/gz/GZCOMCreators6.cpp,recovered,allocates cGZDrawSystem; test gz_gzcomcreators6
 0x1006a7c20,GZCOM_CreatecSC4AdvisorCitySituations(),GZCOM_CreatecSC4AdvisorCitySituations,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1006a81a0,GZCOM_CreatecSC4CitySituationAdvice(),GZCOM_CreatecSC4CitySituationAdvice,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1006aa060,GZCOM_CreatecSC4MySimBalloonAdvice(),GZCOM_CreatecSC4MySimBalloonAdvice,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
@@ -17329,3 +17329,44 @@ address,symbol,unique_name,source,status,evidence
 0x1007b5630,"cSC4AudioAEMSSoundBank::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AudioAEMSSoundBank.cpp|h,recovered,AEMS sound bank buffer recovered; covered by sc4_audioaemssoundbank
 0x1007b564a,cSC4AudioAEMSSoundBank::AddRef(),AddRef,src/sc4/AudioAEMSSoundBank.cpp|h,recovered,AEMS sound bank buffer recovered; covered by sc4_audioaemssoundbank
 0x1007b5658,cSC4AudioAEMSSoundBank::Release(),Release,src/sc4/AudioAEMSSoundBank.cpp|h,recovered,AEMS sound bank buffer recovered; covered by sc4_audioaemssoundbank
+0x10065959c,cGZDrawSystem::cGZDrawSystem(),Construct,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x10065965e,cGZDrawSystem::~cGZDrawSystem(),Destruct,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x1006596fa,cGZDrawSystem::~cGZDrawSystem(),DestructAndDelete,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659704,non-virtual thunk to cGZDrawSystem::~cGZDrawSystem(),DestructThunk,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659712,non-virtual thunk to cGZDrawSystem::~cGZDrawSystem(),DestructAndDeleteThunk,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659720,cGZDrawSystem::~cGZDrawSystem(),DestructBody,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x10065974e,non-virtual thunk to cGZDrawSystem::~cGZDrawSystem(),DestructBodyThunk_974e,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x10065975c,non-virtual thunk to cGZDrawSystem::~cGZDrawSystem(),DestructBodyThunk_975c,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x10065976a,cGZDrawSystem::AddRef(),AddRef,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659778,non-virtual thunk to cGZDrawSystem::AddRef(),AddRefThunk_9778,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659782,non-virtual thunk to cGZDrawSystem::AddRef(),AddRefThunk_9782,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659790,cGZDrawSystem::Release(),Release,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x10065979e,non-virtual thunk to cGZDrawSystem::Release(),ReleaseThunk_979e,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x1006597a8,non-virtual thunk to cGZDrawSystem::Release(),ReleaseThunk_97a8,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x1006597b6,"cGZDrawSystem::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x1006597d8,"non-virtual thunk to cGZDrawSystem::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_97d8,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x1006597fe,"non-virtual thunk to cGZDrawSystem::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_97fe,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659824,cGZDrawSystem::Init(),Init,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659962,non-virtual thunk to cGZDrawSystem::Init(),InitThunk,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659974,cGZDrawSystem::Shutdown(),Shutdown,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659998,non-virtual thunk to cGZDrawSystem::Shutdown(),ShutdownThunk,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x1006599bc,cGZDrawSystem::AddEngine(cIGZDrawContextEngineFactory*),AddEngine,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659a84,"cGZDrawSystem::CreateEngine(cIGZUnknown*, cIGZDrawContextEngine**)",CreateEngine,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659ad0,cGZDrawSystem::RegisterBufferCache(cIGZBufferHardwareCache*),RegisterBufferCache,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659b46,cGZDrawSystem::UnregisterBufferCache(cIGZBufferHardwareCache*),UnregisterBufferCache,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659bb8,cGZDrawSystem::OnTick(unsigned int),OnTick,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659bf8,non-virtual thunk to cGZDrawSystem::OnTick(unsigned int),OnTickThunk,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659c3c,cGZDrawSystem::FlushOldBufferCaches(unsigned int),FlushOldBufferCaches,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659cd2,cGZDrawSystem::FlushBufferCaches(),FlushBufferCaches,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659d3a,cGZDrawSystem::GetBufferCacheClock(),GetBufferCacheClock,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x100659d44,"cGZDrawSystem::CreatePrivateBuffer(cIGZBuffer**, int, int, cGZBufferColorType::eColorType)",CreatePrivateBuffer,src/gz/DrawSystem.cpp|h,recovered,decompile of every method; tests/gz_drawsystem_test.cpp
+0x10065949e,cGZDrawContextRenderToBufferFactory::AddRef(),AddRef,src/gz/DrawSystem.cpp|h,recovered-partial,decompile; engine class cGZDrawContextRenderToBuffer is not recovered so CreateEngine builds through a creator hook
+0x1006594ac,non-virtual thunk to cGZDrawContextRenderToBufferFactory::AddRef(),AddRefThunk,src/gz/DrawSystem.cpp|h,recovered-partial,decompile; engine class cGZDrawContextRenderToBuffer is not recovered so CreateEngine builds through a creator hook
+0x1006594b6,cGZDrawContextRenderToBufferFactory::Release(),Release,src/gz/DrawSystem.cpp|h,recovered-partial,decompile; engine class cGZDrawContextRenderToBuffer is not recovered so CreateEngine builds through a creator hook
+0x1006594c4,non-virtual thunk to cGZDrawContextRenderToBufferFactory::Release(),ReleaseThunk,src/gz/DrawSystem.cpp|h,recovered-partial,decompile; engine class cGZDrawContextRenderToBuffer is not recovered so CreateEngine builds through a creator hook
+0x1006594ce,"cGZDrawContextRenderToBufferFactory::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/DrawSystem.cpp|h,recovered-partial,decompile; engine class cGZDrawContextRenderToBuffer is not recovered so CreateEngine builds through a creator hook
+0x1006594f0,"cGZDrawContextRenderToBufferFactory::CreateEngine(cIGZUnknown*, cIGZDrawContextEngine**)",CreateEngine,src/gz/DrawSystem.cpp|h,recovered-partial,decompile; engine class cGZDrawContextRenderToBuffer is not recovered so CreateEngine builds through a creator hook
+0x100659eb6,cGZDrawContextRenderToBufferFactory::~cGZDrawContextRenderToBufferFactory(),Destruct,src/gz/DrawSystem.cpp|h,recovered-partial,decompile; engine class cGZDrawContextRenderToBuffer is not recovered so CreateEngine builds through a creator hook
+0x100659ec4,cGZDrawContextRenderToBufferFactory::~cGZDrawContextRenderToBufferFactory(),DestructAndDelete,src/gz/DrawSystem.cpp|h,recovered-partial,decompile; engine class cGZDrawContextRenderToBuffer is not recovered so CreateEngine builds through a creator hook
+0x100659ef6,non-virtual thunk to cGZDrawContextRenderToBufferFactory::~cGZDrawContextRenderToBufferFactory(),DestructThunk,src/gz/DrawSystem.cpp|h,recovered-partial,decompile; engine class cGZDrawContextRenderToBuffer is not recovered so CreateEngine builds through a creator hook
+0x100659f00,non-virtual thunk to cGZDrawContextRenderToBufferFactory::~cGZDrawContextRenderToBufferFactory(),DestructAndDeleteThunk,src/gz/DrawSystem.cpp|h,recovered-partial,decompile; engine class cGZDrawContextRenderToBuffer is not recovered so CreateEngine builds through a creator hook
