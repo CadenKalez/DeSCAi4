@@ -16403,3 +16403,58 @@ address,symbol,unique_name,source,status,evidence
 0x100521270,non-virtual thunk to cGZWinMsgBox::GetCancelButton(),GetCancelButtonThunk,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
 0x10052127a,non-virtual thunk to cGZWinMsgBox::GetTitleText(),GetTitleTextThunk,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
 0x100521284,non-virtual thunk to cGZWinMsgBox::GetMessageText(),GetMessageTextThunk,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x1003ad2a4,cGZWinGenDlg::GetBorderWidths(),GetBorderWidths,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003ad2c4,"cGZWinGenDlg::SetCommandCallback(void (*)(unsigned int, unsigned int, void*), void*)",SetCommandCallback,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003ad2e6,non-virtual thunk to cGZWinGenDlg::GetStyle(),GetStyleThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003ad2f0,"non-virtual thunk to cGZWinGenDlg::SetCommandCallback(void (*)(unsigned int, unsigned int, void*), void*)",SetCommandCallbackThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003ca670,cGZWinGenDlg::cGZWinGenDlg(cIGZWinGenDlg::tWindowBackgroundStyle),Construct_cIGZWinGenDlg_tWindowBackgroundStyle,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003ca6e4,cGZWinGenDlg::~cGZWinGenDlg(),Destruct,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003ca732,cGZWinGenDlg::~cGZWinGenDlg(),DestructAndDelete,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003ca73c,cGZWinGenDlg::~cGZWinGenDlg(),DestructBody,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003ca76a,"cGZWinGenDlg::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003ca796,"non-virtual thunk to cGZWinGenDlg::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003ca7a8,cGZWinGenDlg::AddRef(),AddRef,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003ca7b2,non-virtual thunk to cGZWinGenDlg::AddRef(),AddRefThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003ca7c4,cGZWinGenDlg::Release(),Release,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003ca7ce,non-virtual thunk to cGZWinGenDlg::Release(),ReleaseThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003ca7e0,cGZWinGenDlg::Init(),Init,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003ca900,cGZWinGenDlg::Shutdown(),Shutdown,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003ca996,cGZWinGenDlg::GZPaint(),GZPaint,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cab5c,"cGZWinGenDlg::GZOnCommand(unsigned int, unsigned long)",GZOnCommand,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cabe6,"cGZWinGenDlg::GZOnMouseDownL(int, int, unsigned int)",GZOnMouseDownL,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cac30,"cGZWinGenDlg::GZOnMouseUpL(int, int, unsigned int)",GZOnMouseUpL,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cac70,"cGZWinGenDlg::GZOnMouseMove(int, int, unsigned int)",GZOnMouseMove,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cad42,cGZWinGenDlg::SetBackground(cIGZBuffer*),SetBackground,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cad84,non-virtual thunk to cGZWinGenDlg::SetBackground(cIGZBuffer*),SetBackgroundThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cadbc,cGZWinGenDlg::AddListBox(cRZRect const&),AddListBox,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cae74,non-virtual thunk to cGZWinGenDlg::AddListBox(cRZRect const&),AddListBoxThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cae86,"cGZWinGenDlg::AddBMP(cRZRect const&, cIGZBuffer*)",AddBMP,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003caf2a,"non-virtual thunk to cGZWinGenDlg::AddBMP(cRZRect const&, cIGZBuffer*)",AddBMPThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003caf3c,"cGZWinGenDlg::AddBtn(cRZRect const&, cIGZString const&)",AddBtn,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cafe6,"non-virtual thunk to cGZWinGenDlg::AddBtn(cRZRect const&, cIGZString const&)",AddBtnThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003caff8,"cGZWinGenDlg::AddCombo(cRZRect const&, bool)",AddCombo,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb0b4,"non-virtual thunk to cGZWinGenDlg::AddCombo(cRZRect const&, bool)",AddComboThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb0ca,cGZWinGenDlg::AddLineInput(cRZRect const&),AddLineInput,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb1aa,non-virtual thunk to cGZWinGenDlg::AddLineInput(cRZRect const&),AddLineInputThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb1bc,"cGZWinGenDlg::AddSlider(cRZRect const&, int, int, int, int)",AddSlider,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb276,"non-virtual thunk to cGZWinGenDlg::AddSlider(cRZRect const&, int, int, int, int)",AddSliderThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb288,"cGZWinGenDlg::Scrollbar(cRZRect const&, int, int, int, int)",Scrollbar,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb348,"non-virtual thunk to cGZWinGenDlg::Scrollbar(cRZRect const&, int, int, int, int)",ScrollbarThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb35a,"cGZWinGenDlg::AddSpinner(cRZRect const&, int, int, int)",AddSpinner,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb3fe,"non-virtual thunk to cGZWinGenDlg::AddSpinner(cRZRect const&, int, int, int)",AddSpinnerThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb410,"cGZWinGenDlg::AddText(cRZRect const&, cIGZString const&, unsigned int, bool)",AddText,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb574,"non-virtual thunk to cGZWinGenDlg::AddText(cRZRect const&, cIGZString const&, unsigned int, bool)",AddTextThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb58a,"cGZWinGenDlg::AddTextEdit(cRZRect const&, cIGZString const&)",AddTextEdit,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb688,"non-virtual thunk to cGZWinGenDlg::AddTextEdit(cRZRect const&, cIGZString const&)",AddTextEditThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb69a,"cGZWinGenDlg::AddCheck(cRZRect const&, cIGZString const&)",AddCheck,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb73e,"non-virtual thunk to cGZWinGenDlg::AddCheck(cRZRect const&, cIGZString const&)",AddCheckThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb750,"cGZWinGenDlg::AddOptionGroup(cRZRect const&, cIGZString const&)",AddOptionGroup,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb7dc,"non-virtual thunk to cGZWinGenDlg::AddOptionGroup(cRZRect const&, cIGZString const&)",AddOptionGroupThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb7ee,cGZWinGenDlg::AddLineGraph(cRZRect const&),AddLineGraph,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb858,non-virtual thunk to cGZWinGenDlg::AddLineGraph(cRZRect const&),AddLineGraphThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb86a,cGZWinGenDlg::AddBarGraph(cRZRect const&),AddBarGraph,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb8d4,non-virtual thunk to cGZWinGenDlg::AddBarGraph(cRZRect const&),AddBarGraphThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb8e6,cGZWinGenDlg::AddScatterGraph(cRZRect const&),AddScatterGraph,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb950,non-virtual thunk to cGZWinGenDlg::AddScatterGraph(cRZRect const&),AddScatterGraphThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb970,cGZWinGenDlg::GetStyle(),GetStyle,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x1003cb980,non-virtual thunk to cGZWinGenDlg::GetBorderWidths(),GetBorderWidthsThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg

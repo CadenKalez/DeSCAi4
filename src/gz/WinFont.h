@@ -4,10 +4,14 @@
 
 #include "gz/Win.h"
 
+class cIGZFont;
+
 namespace gz {
 
 class IWinFont : public cIGZUnknown {
 public:
+    // The full font interface (Font.h) of the same object, for the controls that take it; null when the font has none.
+    virtual cIGZFont* AsFont() { return nullptr; }
     virtual std::uint32_t DefaultTextColor() = 0;                                   // 0x60
     virtual std::uint32_t DefaultShadowColor() = 0;                                 // 0x68
     virtual std::int16_t LineHeight(int a, int b) = 0;                              // 0x128
