@@ -49,6 +49,7 @@ declare -a TESTS=(
  "sc4_effectcomponents:$T/sc4_effectcomponents_test.cpp $S/sc4/EffectComponents.cpp $S/rz/cRZMessage2Standard.cpp $S/rz/cRZString.cpp $S/rz/cRZStream.cpp $S/gz/StreamOps.cpp $S/rz/cRZDate.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp $S/gz/cGZDate.cpp"
  "gz_gzcominterface:$T/gz_gzcominterface_test.cpp $S/rz/cRZSysServPtr.cpp"
  "gz_buffer:$T/gz_buffer_test.cpp $S/gz/Buffer.cpp"
+ "s3d_modelinstance:$T/s3d_modelinstance_test.cpp $S/s3d/ModelInstance.cpp -I$T"
  "rz_netsocket:$T/rz_netsocket_test.cpp $S/rz/NetSocket.cpp $S/platform/WinCompat.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
  "gz_persist:$T/gz_persist_test.cpp $S/gz/PersistStreams.cpp $S/gz/PersistSurveyorWriter.cpp $S/gz/PersistBinaryWriter.cpp $S/gz/PersistASCIIWriter.cpp $S/gz/PersistBinaryReader.cpp $S/rz/cRZString.cpp $S/rz/cRZSysServPtr.cpp $S/rz/cRZVariant.cpp $S/rz/cRZStream.cpp -I$T"
  "gz_drawcontextasbuffer:$T/gz_drawcontextasbuffer_test.cpp $S/gz/DrawContextAsBuffer.cpp $S/gz/Buffer.cpp -I$T"

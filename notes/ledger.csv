@@ -16766,3 +16766,86 @@ address,symbol,unique_name,source,status,evidence
 0x100642440,_closesocket,_closesocket,src/platform/WinCompat.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
 0x10064244a,_ioctlsocket,_ioctlsocket,src/platform/WinCompat.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
 0x100642456,_WSAGetLastError,_WSAGetLastError,src/platform/WinCompat.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x1000d9296,cS3DModelInstanceBasic::cS3DModelInstanceBasic(),Construct,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d92dc,cS3DModelInstanceBasic::~cS3DModelInstanceBasic(),Destruct,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9318,cS3DModelInstanceBasic::~cS3DModelInstanceBasic(),DestructAndDelete,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d931e,cS3DModelInstanceBasic::~cS3DModelInstanceBasic(),DestructBody,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9324,cS3DModelInstanceBasic::GetOwner(),GetOwner,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d932e,virtual thunk to cS3DModelInstanceBasic::GetOwner(),GetOwnerThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9340,cS3DModelInstanceBasic::SetOwner(cIGZUnknown*),SetOwner,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9378,virtual thunk to cS3DModelInstanceBasic::SetOwner(cIGZUnknown*),SetOwnerThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d93c2,cS3DModelInstanceBasic::GetCustomData(),GetCustomData,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d93cc,virtual thunk to cS3DModelInstanceBasic::GetCustomData(),GetCustomDataThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d93de,cS3DModelInstanceBasic::SetCustomData(void*),SetCustomData,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d93e8,virtual thunk to cS3DModelInstanceBasic::SetCustomData(void*),SetCustomDataThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d93fa,cS3DModelInstanceBasic::GetBounds(cS3DBoundingBox&),GetBounds,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9408,virtual thunk to cS3DModelInstanceBasic::GetBounds(cS3DBoundingBox&),GetBoundsThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9426,cS3DModelInstanceBasic::GetTransform(cS3DTransform&),GetTransform,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9454,virtual thunk to cS3DModelInstanceBasic::GetTransform(cS3DTransform&),GetTransformThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d945e,cS3DModelInstanceBasic::SetTransform(cS3DTransform const&),SetTransform,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9464,virtual thunk to cS3DModelInstanceBasic::SetTransform(cS3DTransform const&),SetTransformThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d946a,cS3DModelInstanceBasic::Pick(cSC4PickContext*),Pick,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9472,virtual thunk to cS3DModelInstanceBasic::Pick(cSC4PickContext*),PickThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d947a,"cS3DModelInstanceBasic::Draw(SC4DrawContext*, bool)",Draw,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9486,"virtual thunk to cS3DModelInstanceBasic::Draw(SC4DrawContext*, bool)",DrawThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9492,cS3DModelInstanceBasic::GetProperties(),GetProperties,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d949c,virtual thunk to cS3DModelInstanceBasic::GetProperties(),GetPropertiesThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d94ae,cS3DModelInstanceBasic::SetProperties(int),SetProperties,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d94b8,virtual thunk to cS3DModelInstanceBasic::SetProperties(int),SetPropertiesThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d94cc,cS3DModelInstanceBasic::GetDrawAttributes() const,GetDrawAttributes,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d94e2,virtual thunk to cS3DModelInstanceBasic::GetDrawAttributes() const,GetDrawAttributesThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9504,cS3DModelInstanceBasic::SetDrawAttributes(SC4DrawAttributes&),SetDrawAttributes,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9528,virtual thunk to cS3DModelInstanceBasic::SetDrawAttributes(SC4DrawAttributes&),SetDrawAttributesThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d955a,cS3DModelInstanceBasic::AddRef(),AddRef,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d956e,virtual thunk to cS3DModelInstanceBasic::AddRef(),AddRefThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d958a,cS3DModelInstanceBasic::Release(),Release,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d95ae,virtual thunk to cS3DModelInstanceBasic::Release(),ReleaseThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d95e2,"cS3DModelInstanceBasic::QueryInterface(unsigned int, void**)",QueryInterface,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9612,"virtual thunk to cS3DModelInstanceBasic::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1001634a0,cS3DModelInstanceBasic::GetResModel() const,GetResModel,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1001a7014,virtual thunk to cS3DModelInstanceBasic::GetResModel() const,GetResModelThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8966,cS3DModelInstance::cS3DModelInstance(),Construct,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8a3c,cS3DModelInstance::cS3DModelInstance(),ConstructWrapper,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8b10,cS3DModelInstance::~cS3DModelInstance(),Destruct,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8bc8,cS3DModelInstance::~cS3DModelInstance(),DestructAndDelete,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8bda,cS3DModelInstance::~cS3DModelInstance(),DestructBody,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8c5e,cS3DModelInstance::GetDrawAttributes() const,GetDrawAttributes,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8c7a,virtual thunk to cS3DModelInstance::GetDrawAttributes() const,GetDrawAttributesThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8ca2,cS3DModelInstance::SetDrawAttributes(SC4DrawAttributes&),SetDrawAttributes,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8cd4,virtual thunk to cS3DModelInstance::SetDrawAttributes(SC4DrawAttributes&),SetDrawAttributesThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8d16,cS3DModelInstance::GetSortValue(unsigned int&) const,GetSortValue,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8d38,virtual thunk to cS3DModelInstance::GetSortValue(unsigned int&) const,GetSortValueThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8d66,cS3DModelInstance::GetOwner(),GetOwner,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8d70,virtual thunk to cS3DModelInstance::GetOwner(),GetOwnerThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8d82,cS3DModelInstance::SetOwner(cIGZUnknown*),SetOwner,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8dd0,virtual thunk to cS3DModelInstance::SetOwner(cIGZUnknown*),SetOwnerThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8e24,cS3DModelInstance::GetCustomData(),GetCustomData,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8e32,virtual thunk to cS3DModelInstance::GetCustomData(),GetCustomDataThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8e48,cS3DModelInstance::SetCustomData(void*),SetCustomData,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8e56,virtual thunk to cS3DModelInstance::SetCustomData(void*),SetCustomDataThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8e6c,cS3DModelInstance::GetBounds(cS3DBoundingBox&),GetBounds,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8ee0,cS3DModelInstance::RecalculateBounds(),RecalculateBounds,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8f0e,virtual thunk to cS3DModelInstance::GetBounds(cS3DBoundingBox&),GetBoundsThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8f20,cS3DModelInstance::GetWorldBounds(cS3DBoundingBox&),GetWorldBounds,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8fa2,virtual thunk to cS3DModelInstance::GetWorldBounds(cS3DBoundingBox&),GetWorldBoundsThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d8fb4,cS3DModelInstance::GetTransform(cS3DTransform&),GetTransform,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9016,virtual thunk to cS3DModelInstance::GetTransform(cS3DTransform&),GetTransformThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9028,cS3DModelInstance::SetTransform(cS3DTransform const&),SetTransform,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d908c,virtual thunk to cS3DModelInstance::SetTransform(cS3DTransform const&),SetTransformThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d909e,cS3DModelInstance::Pick(cSC4PickContext*),Pick,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d90be,virtual thunk to cS3DModelInstance::Pick(cSC4PickContext*),PickThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d90e4,"cS3DModelInstance::Draw(SC4DrawContext*, bool)",Draw,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9116,"virtual thunk to cS3DModelInstance::Draw(SC4DrawContext*, bool)",DrawThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9154,cS3DModelInstance::GetProperties(),GetProperties,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9162,virtual thunk to cS3DModelInstance::GetProperties(),GetPropertiesThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9178,cS3DModelInstance::SetProperties(int),SetProperties,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9186,virtual thunk to cS3DModelInstance::SetProperties(int),SetPropertiesThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d919e,"cS3DModelInstance::QueryInterface(unsigned int, void**)",QueryInterface,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d91d8,"virtual thunk to cS3DModelInstance::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d91ea,cS3DModelInstance::SetModelResource(cIS3DResModel*),SetModelResource,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9628,virtual thunk to cS3DModelInstance::AddRef(),AddRefThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d9640,virtual thunk to cS3DModelInstance::Release(),ReleaseThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1000d966c,virtual thunk to cS3DModelInstance::GetResModel() const,GetResModelThunk,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1001a2d4c,cS3DModelInstance::Release(),Release,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x1001a6fdc,cS3DModelInstance::GetResModel() const,GetResModel,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance
+0x100715c28,cS3DModelInstance::AddRef(),AddRef,src/s3d/ModelInstance.cpp|h,recovered,Rewritten from the exported decompile; tested in s3d_modelinstance

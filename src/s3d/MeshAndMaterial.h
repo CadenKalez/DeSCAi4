@@ -14,8 +14,9 @@ constexpr std::uint32_t kGZIID_cIS3DMeshAndMaterial = 0x26a68448;
 using MeshRecord = std::array<std::uint8_t, 0x18>;
 using MaterialRecord = std::array<std::uint8_t, 0x50>;
 
-class cS3DMeshAndMaterial final : public cIGZUnknown {
+class cS3DMeshAndMaterial : public cIGZUnknown {
 public:
+    virtual ~cS3DMeshAndMaterial() = default;
     bool QueryInterface(std::uint32_t iid, void** out) override {
         if (iid != 1 && iid != kGZIID_cIS3DMeshAndMaterial) return false;
         *out = this;
@@ -36,7 +37,7 @@ public:
     std::vector<MeshRecord>& Meshes() { return meshes_; }
     std::vector<MaterialRecord>& Materials() { return materials_; }
 
-private:
+protected:
     std::vector<MeshRecord> meshes_;           // +8
     std::vector<MaterialRecord> materials_;    // +0x20
     std::uint32_t refCount_ = 0;               // +0x38
