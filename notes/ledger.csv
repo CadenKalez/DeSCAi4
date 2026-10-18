@@ -15043,3 +15043,38 @@ address,symbol,unique_name,source,status,evidence
 0x10003db14,"cRZRandomSuper::RandomDoubleRangeUniform(double, double)",RandomDoubleRangeUniform,src/rz/cRZRandomSuper.cpp|h,recovered,rz_randomsuper
 0x10003db5e,"cRZRandomSuper::RandomSint32RangeUniform(int, int)",RandomSint32RangeUniform,src/rz/cRZRandomSuper.cpp|h,recovered,rz_randomsuper
 0x10003db84,cRZRandomSuper::RandomDoubleUniform(),RandomDoubleUniform,src/rz/cRZRandomSuper.cpp|h,recovered,rz_randomsuper
+0x10054a388,"cGZDummyWinProc::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10054a3aa,cGZDummyWinProc::AddRef(),AddRef,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10054a3d0,cGZDummyWinProc::Release(),Release,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10054a410,"cGZDummyWinProc::DoWinMsg(cIGZWin*, unsigned int, unsigned long, unsigned long, unsigned long)",DoWinMsg,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10054a422,cGZDummyWinProc::~cGZDummyWinProc(),Destruct,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10054a428,cGZDummyWinProc::~cGZDummyWinProc(),DestructAndDelete,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10030b29e,cSC4GenericDialogWinProc::~cSC4GenericDialogWinProc(),Destruct,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10030b2ae,cSC4GenericDialogWinProc::~cSC4GenericDialogWinProc(),DestructAndDelete,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10030b2b8,"cSC4GenericDialogWinProc::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10030bda4,cSC4GenericDialogWinProc::AddRef(),AddRef,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10030bdb2,cSC4GenericDialogWinProc::Release(),Release,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10030bdce,"cSC4GenericDialogWinProc::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessage,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x1002c1bbe,cSC4LegendDialogWinProc::~cSC4LegendDialogWinProc(),Destruct,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x1002c1bce,cSC4LegendDialogWinProc::~cSC4LegendDialogWinProc(),DestructAndDelete,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x1002c1bd8,"cSC4LegendDialogWinProc::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x1002c1bfa,"cSC4LegendDialogWinProc::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessage,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x1002dbd88,cSC4LegendDialogWinProc::AddRef(),AddRef,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x1002dbd96,cSC4LegendDialogWinProc::Release(),Release,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032ef20,cSC4CompassWinProc::cSC4CompassWinProc(),Construct,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032ef76,cSC4CompassWinProc::~cSC4CompassWinProc(),Destruct,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032efb0,non-virtual thunk to cSC4CompassWinProc::~cSC4CompassWinProc(),DestructThunk,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032efe6,cSC4CompassWinProc::~cSC4CompassWinProc(),DestructAndDelete,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032f044,non-virtual thunk to cSC4CompassWinProc::~cSC4CompassWinProc(),DestructAndDeleteThunk,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032f052,cSC4CompassWinProc::AddRef(),AddRef,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032f060,non-virtual thunk to cSC4CompassWinProc::AddRef(),AddRefThunk_f060,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032f06a,non-virtual thunk to cSC4CompassWinProc::AddRef(),AddRefThunk_f06a,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032f078,cSC4CompassWinProc::Release(),Release,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032f086,non-virtual thunk to cSC4CompassWinProc::Release(),ReleaseThunk_f086,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032f090,non-virtual thunk to cSC4CompassWinProc::Release(),ReleaseThunk_f090,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032f09e,"cSC4CompassWinProc::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032f0d2,"non-virtual thunk to cSC4CompassWinProc::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032f10a,"cSC4CompassWinProc::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessage,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032f19e,cSC4CompassWinProc::DoMessage(cIGZMessage2*),DoMessage,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032f212,cSC4CompassWinProc::UpdateRotation(),UpdateRotation,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs
+0x10032f29e,non-virtual thunk to cSC4CompassWinProc::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/WinProcs.cpp|h,recovered,sc4_winprocs

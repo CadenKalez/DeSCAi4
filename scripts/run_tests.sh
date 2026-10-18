@@ -95,6 +95,7 @@ declare -a TESTS=(
  "sc4_smallsim:$T/sc4_smallsim_test.cpp $S/sc4/WealthRequester.cpp $S/sc4/UIFilters.cpp $S/gz/Win.cpp $S/rz/cRZRandom.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp -I$T"
  "sc4_uiresource:$T/sc4_uiresource_test.cpp $S/sc4/UIResourceObjects.cpp $S/rz/cRZString.cpp"
  "gz_smallobjects:$T/gz_smallobjects_test.cpp $S/gz/SmallObjects.cpp $S/sc4/ColorCustomizer.cpp $S/gz/Win.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp -I$T"
+ "sc4_winprocs:$T/sc4_winprocs_test.cpp $S/sc4/WinProcs.cpp $S/gz/Win.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp $S/rz/cRZMessage2Standard.cpp -I$T"
  "rz_cursorresource:$T/rz_cursorresource_test.cpp $S/rz/CursorResource.cpp $S/gz/cGZPersistResourceManager.cpp $S/rz/cRZString.cpp $S/rz/cRZUnknownList.cpp $S/gz/cGZPersistResourceKeyList.cpp -I$T"
  "rz_randomsuper:$T/rz_randomsuper_test.cpp $S/rz/cRZRandomSuper.cpp"
  "sc4_tileneighborhood:$T/sc4_tileneighborhood_test.cpp $S/sc4/TileNeighborhood.cpp $S/rz/cRZString.cpp"
