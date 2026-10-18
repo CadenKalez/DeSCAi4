@@ -57,6 +57,7 @@ declare -a TESTS=(
  "gz_winimeserver:$T/gz_winimeserver_test.cpp $S/gz/WinIMEServer.cpp $S/rz/cRZSysServPtr.cpp"
  "sc4_quadgrid:$T/sc4_quadgrid_test.cpp $S/sc4/QuadGrid.cpp"
  "render_primitivepool:$T/render_primitivepool_test.cpp $S/render/PrimitivePool.cpp $S/render/SimGL.cpp"
+ "sc4_slbuffer:$T/sc4_slbuffer_test.cpp $S/sc4/SLBuffer.cpp $S/gz/Buffer.cpp $S/rz/cRZString.cpp"
  "gz_dbrecordbitmapres:$T/gz_dbrecordbitmapres_test.cpp $S/gz/cGZDBRecordBitmapRes.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/CharLength.cpp $S/rz/RZConvert.cpp $S/rz/cRZUnknownList.cpp"
  "sc4_slstring:$T/sc4_slstring_test.cpp $S/sc4/SLString.cpp $S/sc4/StringDetokenizer.cpp $S/rz/cRZString.cpp $S/rz/CharLength.cpp $S/rz/RZConvert.cpp $S/rz/cRZSysServPtr.cpp -I$T"
  "gz_winkeyaccelerator:$T/gz_winkeyaccelerator_test.cpp $S/gz/WinKeyAccelerator.cpp $S/rz/cRZSysServPtr.cpp"

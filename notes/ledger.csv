@@ -17708,3 +17708,20 @@ address,symbol,unique_name,source,status,evidence
 0x1005fd516,cSC4PrimitivePool::GetPrimVertices(unsigned int),GetPrimVertices,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
 0x1005fd57e,cSC4PrimitivePool::GetPrimIndices(unsigned int),GetPrimIndices,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
 0x1005fd5f2,cSC4PrimitivePool::RestartArrays(),RestartArrays,src/render/PrimitivePool.cpp|h,recovered,decompile of every method; tests/render_primitivepool_test.cpp
+0x10004367c,cSLBuffer::cSLBuffer(bool),Construct_bool,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x1000436c2,"cSLBuffer::cSLBuffer(cGZPersistResourceKey const&, cGZBufferColorType::eColorType, bool)",Construct_cGZPersistResourceKey_const_cGZBufferColorType_eColorType_boolWrapper,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x100043760,cSLBuffer::Load(),Load,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x100043bce,"cSLBuffer::cSLBuffer(cGZPersistResourceKey const&, cGZBufferColorType::eColorType, bool)",Construct_cGZPersistResourceKey_const_cGZBufferColorType_eColorType_bool,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x100043bdc,"cSLBuffer::cSLBuffer(unsigned int, unsigned int, unsigned int, cGZBufferColorType::eColorType, bool)",Construct_uint_uint_uint_cGZBufferColorType_eColorType_boolWrapper,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x100043c72,"cSLBuffer::cSLBuffer(unsigned int, unsigned int, unsigned int, cGZBufferColorType::eColorType, bool)",Construct_uint_uint_uint_cGZBufferColorType_eColorType_bool,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x100043c80,"cSLBuffer::cSLBuffer(cRZString const&, cGZBufferColorType::eColorType, bool)",Construct_cRZString_const_cGZBufferColorType_eColorType_boolWrapper,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x100043d3c,"cSLBuffer::cSLBuffer(cRZString const&, cGZBufferColorType::eColorType, bool)",Construct_cRZString_const_cGZBufferColorType_eColorType_bool,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x100043d4a,cSLBuffer::~cSLBuffer(),Destruct,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x100043dce,cSLBuffer::Unload(),Unload,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x100043df0,cSLBuffer::~cSLBuffer(),DestructAndDelete,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x100043dfa,cSLBuffer::~cSLBuffer(),DestructBody,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x100043e72,cSLBuffer::GetResKey(cGZPersistResourceKey&) const,GetResKey,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x100043e90,cSLBuffer::SetResKey(cGZPersistResourceKey const&),SetResKey_cGZPersistResourceKey_const,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x100043ea8,"cSLBuffer::SetResKey(unsigned int, unsigned int, unsigned int)",SetResKey_uint_uint_uint,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x100043ebe,cSLBuffer::SetPath(cRZString const&),SetPath,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x100043ed0,cSLBuffer::SetColorType(cGZBufferColorType::eColorType),SetColorType,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
