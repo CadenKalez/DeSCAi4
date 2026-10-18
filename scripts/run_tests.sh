@@ -51,6 +51,7 @@ declare -a TESTS=(
  "gz_miscfunctions:$T/gz_miscfunctions_test.cpp $S/gz/MiscFunctions.cpp $S/rz/cRZString.cpp $S/rz/CharLength.cpp $S/rz/TextEncoding.cpp $S/rz/UTF16Text.cpp $S/rz/RZConvert.cpp $S/rz/RZStringUtils.cpp"
  "gz_refpack:$T/gz_refpack_test.cpp $S/gz/RefPack.cpp"
  "gz_gstreamplugin:$T/gz_gstreamplugin_test.cpp $S/gz/GStreamPlugin.cpp $S/gz/MiscFunctions.cpp $S/rz/cRZString.cpp $S/rz/CharLength.cpp $S/rz/TextEncoding.cpp $S/rz/UTF16Text.cpp $S/rz/RZConvert.cpp $S/rz/RZStringUtils.cpp"
+ "sc4_effectdescriptions:$T/sc4_effectdescriptions_test.cpp $S/sc4/EffectDescriptions.cpp $S/sc4/EffectComponents.cpp $S/rz/cRZMessage2Standard.cpp $S/rz/cRZString.cpp $S/rz/cRZStream.cpp $S/gz/StreamOps.cpp $S/rz/cRZDate.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp $S/gz/cGZDate.cpp"
  "gz_dbrecordbitmapres:$T/gz_dbrecordbitmapres_test.cpp $S/gz/cGZDBRecordBitmapRes.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/CharLength.cpp $S/rz/RZConvert.cpp $S/rz/cRZUnknownList.cpp"
  "sc4_slstring:$T/sc4_slstring_test.cpp $S/sc4/SLString.cpp $S/sc4/StringDetokenizer.cpp $S/rz/cRZString.cpp $S/rz/CharLength.cpp $S/rz/RZConvert.cpp $S/rz/cRZSysServPtr.cpp -I$T"
  "gz_winkeyaccelerator:$T/gz_winkeyaccelerator_test.cpp $S/gz/WinKeyAccelerator.cpp $S/rz/cRZSysServPtr.cpp"
