@@ -10526,7 +10526,7 @@ address,symbol,unique_name,source,status,evidence
 0x1007312b0,GZCOM_CreatecSTETerrain(),GZCOM_CreatecSTETerrain,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
 0x100041220,GZCOM_CreatecRZMessage2Standard(),GZCOM_CreatecRZMessage2Standard,src/gz/GZCOM.cpp|h,recovered,src/gz/GZCOMCreators2.cpp|3.cpp; scripts/tests/gz_gzcomcreators_test.cpp
 0x1000476f0,GZCOM_CreatecSC4City(),GZCOM_CreatecSC4City,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x100053158,GZCOM_CreatecGZMessageQueueManager2(),GZCOM_CreatecGZMessageQueueManager2,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100053158,GZCOM_CreatecGZMessageQueueManager2(),GZCOM_CreatecGZMessageQueueManager2,src/gz/GZCOMCreators6.cpp,recovered,allocates cGZMessageQueueManager2; test gz_gzcomcreators6
 0x1000539df,GZCOM_CreatecGZMessageServer2(),GZCOM_CreatecGZMessageServer2,src/gz/GZCOMCreators6.cpp,recovered,GZCOM creator; covered by gz_gzcomcreators6
 0x10005f086,GZCOM_CreatecSC4TutorialSystem(),GZCOM_CreatecSC4TutorialSystem,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x100060940,GZCOM_CreatecSC4LandfillDeveloper(),GZCOM_CreatecSC4LandfillDeveloper,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
@@ -17434,3 +17434,31 @@ address,symbol,unique_name,source,status,evidence
 0x1004d8910,cGZDBSDFRecord::GetExtension(cIGZString**),GetExtension,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
 0x1004d8a52,cGZDBSDFRecord::AsIGZPersistDBRecord(),AsIGZPersistDBRecord,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
 0x1004d8a5c,non-virtual thunk to cGZDBSDFRecord::AsIGZPersistDBRecord(),AsIGZPersistDBRecordThunk,src/gz/cGZDBSDFRecord.cpp|h,recovered,decompile of every method; tests/gz_dbsdfrecord_test.cpp
+0x1000531aa,cGZMessageQueueManager2::cGZMessageQueueManager2(),Construct,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x10005323e,cGZMessageQueueManager2::~cGZMessageQueueManager2(),Destruct,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x1000532c0,cGZMessageQueueManager2::~cGZMessageQueueManager2(),DestructAndDelete,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x1000532ca,non-virtual thunk to cGZMessageQueueManager2::~cGZMessageQueueManager2(),DestructThunk,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x1000532d8,non-virtual thunk to cGZMessageQueueManager2::~cGZMessageQueueManager2(),DestructAndDeleteThunk,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x1000532e6,cGZMessageQueueManager2::~cGZMessageQueueManager2(),DestructBody,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x100053314,non-virtual thunk to cGZMessageQueueManager2::~cGZMessageQueueManager2(),DestructBodyThunk_3314,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x100053322,non-virtual thunk to cGZMessageQueueManager2::~cGZMessageQueueManager2(),DestructBodyThunk_3322,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x100053330,cGZMessageQueueManager2::Init(),Init,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x100053338,non-virtual thunk to cGZMessageQueueManager2::Init(),InitThunk,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x100053340,cGZMessageQueueManager2::Shutdown(),Shutdown,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x100053348,non-virtual thunk to cGZMessageQueueManager2::Shutdown(),ShutdownThunk,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x100053350,"cGZMessageQueueManager2::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x100053372,"non-virtual thunk to cGZMessageQueueManager2::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_3372,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x100053398,"non-virtual thunk to cGZMessageQueueManager2::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_3398,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x1000533be,cGZMessageQueueManager2::AddRef(),AddRef,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x1000533cc,non-virtual thunk to cGZMessageQueueManager2::AddRef(),AddRefThunk_33cc,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x1000533d6,non-virtual thunk to cGZMessageQueueManager2::AddRef(),AddRefThunk_33d6,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x1000533e4,cGZMessageQueueManager2::Release(),Release,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x1000533f2,non-virtual thunk to cGZMessageQueueManager2::Release(),ReleaseThunk_33f2,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x1000533fc,non-virtual thunk to cGZMessageQueueManager2::Release(),ReleaseThunk_33fc,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x10005340a,"cGZMessageQueueManager2::GetQueue(unsigned int, cIGZMessageQueue2**)",GetQueue,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x1000534ae,cGZMessageQueueManager2::AddQueue(unsigned int),AddQueue_uint,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x10005367c,"cGZMessageQueueManager2::AddQueue(unsigned int, cIGZMessageQueue2*)",AddQueue_uint_cIGZMessageQueue2,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x100053842,cGZMessageQueueManager2::RemoveQueue(unsigned int),RemoveQueue_uint,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x1000538d4,cGZMessageQueueManager2::RemoveQueue(cIGZMessageQueue2*),RemoveQueue_cIGZMessageQueue2,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x100053984,cGZMessageQueueManager2::RemoveAllQueues(),RemoveAllQueues,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp
+0x1000539d6,cGZMessageQueueManager2::GetQueueCount(),GetQueueCount,src/gz/cGZMessageQueueManager2.cpp|h,recovered,decompile of every method; tests/gz_messagequeuemanager2_test.cpp

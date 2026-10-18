@@ -203,7 +203,7 @@ __attribute__((weak)) void* GZCOM_CreatecRZMessage2Standard() { return nullptr; 
 // original allocates 0x3d0 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4City() { return nullptr; }
 // original allocates 0x60 bytes; the class is not recovered yet
-void* GZCOM_CreatecGZMessageQueueManager2() { return nullptr; }
+__attribute__((weak)) void* GZCOM_CreatecGZMessageQueueManager2() { return nullptr; }
 // original allocates 0x130 bytes; the class is not recovered yet
 __attribute__((weak)) void* GZCOM_CreatecGZMessageServer2() { return nullptr; }
 // original allocates 0x68 bytes; the class is not recovered yet
