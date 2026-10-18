@@ -132,7 +132,7 @@ public:
     void SetCaption(const cIGZString& caption) override { caption_.AssignFromIGZString(caption); }
     cIGZWinKeyAccelerator* GetKeyboardAccelerator() const override { return accelerator_; }
     void SetKeyboardAccelerator(cIGZWinKeyAccelerator* accelerator) override;
-    bool AccelerateKeyboardMsg(cGZMessage& message) override { return accelerator_ ? accelerator_->Accelerate(this, message) : false; }
+    bool AccelerateKeyboardMsg(cGZMessage& message) override { return accelerator_ ? accelerator_->ProcessAccelerator(message) : false; }
     std::uint32_t GetKeyEquivalent() override { return keyEquivalent_; }
     void SetKeyEquivalent(std::uint32_t key) override { keyEquivalent_ = key; }
     bool CheckKeyEquivalent(std::uint32_t key, std::uint32_t modifiers) override { return MakeKeyEquivalent(key, modifiers) == keyEquivalent_; }

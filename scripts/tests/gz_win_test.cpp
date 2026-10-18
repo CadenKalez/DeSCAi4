@@ -52,7 +52,18 @@ struct Accel final : cIGZWinKeyAccelerator {
     bool QueryInterface(std::uint32_t, void**) override { return false; }
     std::uint32_t AddRef() override { return ++refs; }
     std::uint32_t Release() override { return --refs; }
-    bool Accelerate(cIGZWin*, cGZMessage&) override { ++calls; return true; }
+    bool Init() override { return true; }
+    bool Shutdown() override { return true; }
+    bool RegisterAccelerator(std::uint32_t, std::uint32_t) override { return false; }
+    bool RegisterAccelerator(std::uint32_t, const cGZMessage&) override { return false; }
+    bool UnregisterAccelerator(std::uint32_t) override { return false; }
+    bool IsAcceleratorPresent(std::uint32_t, bool, bool) override { return false; }
+    bool TestForAccelerator(const cGZMessage&, std::uint32_t&) override { return false; }
+    bool TestForAccelerator(const cGZMessage&, cGZMessage&) override { return false; }
+    bool TestForAccelerator(std::uint32_t, std::uint32_t, bool, std::uint32_t&) override { return false; }
+    bool TestForAccelerator(std::uint32_t, std::uint32_t, bool, cGZMessage&) override { return false; }
+    int GetKeysForAccelerator(std::uint32_t, std::uint32_t*, std::uint32_t&) override { return 0; }
+    bool ProcessAccelerator(const cGZMessage&) override { ++calls; return true; }
 };
 
 struct Filter final : cIGZWinMessageFilter {

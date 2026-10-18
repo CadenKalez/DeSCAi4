@@ -44,9 +44,22 @@ public:
     virtual void SetCursor(cIGZCursor* cursor) = 0;                // vslot 0x50
 };
 class cIGZKeyboard : public cIGZUnknown {};
+// The keyboard accelerator table windows ask first (iid 0xe2c1b3c4; cRZWinKeyAccelerator implements it). A key is the
+// virtual key code with the modifier bits (shifted to bit 16) and "key up" (bit 28); an entry maps it to a message.
 class cIGZWinKeyAccelerator : public cIGZUnknown {
 public:
-    virtual bool Accelerate(cIGZWin* window, cGZMessage& message) = 0;   // vslot 0x70... (the window's "AccelerateKeyboardMsg")
+    virtual bool Init() = 0;                                                                  // [3]
+    virtual bool Shutdown() = 0;                                                              // [4]
+    virtual bool RegisterAccelerator(std::uint32_t key, std::uint32_t command) = 0;           // [5] a message of that type, no payload
+    virtual bool RegisterAccelerator(std::uint32_t key, const cGZMessage& message) = 0;       // [6]
+    virtual bool UnregisterAccelerator(std::uint32_t key) = 0;                                // [7]
+    virtual bool IsAcceleratorPresent(std::uint32_t key, bool withModifiers, bool withDirection) = 0;   // [8]
+    virtual bool TestForAccelerator(const cGZMessage& keyMessage, std::uint32_t& command) = 0;   // [9]
+    virtual bool TestForAccelerator(const cGZMessage& keyMessage, cGZMessage& result) = 0;       // [10]
+    virtual bool TestForAccelerator(std::uint32_t key, std::uint32_t modifiers, bool keyDown, std::uint32_t& command) = 0;   // [11]
+    virtual bool TestForAccelerator(std::uint32_t key, std::uint32_t modifiers, bool keyDown, cGZMessage& result) = 0;       // [12]
+    virtual int GetKeysForAccelerator(std::uint32_t command, std::uint32_t* keys, std::uint32_t& count) = 0;   // [13]
+    virtual bool ProcessAccelerator(const cGZMessage& keyMessage) = 0;                        // [14] test, then send the result
 };
 class cIGZWinMessageFilter : public cIGZUnknown {
 public:
