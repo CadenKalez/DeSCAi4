@@ -17551,3 +17551,14 @@ address,symbol,unique_name,source,status,evidence
 0x100749684,"operator*(cS3DMatrix4 const&, cS3DMatrix4 const&)",operator*_cS3DMatrix4_const_cS3DMatrix4_const,src/s3d/S3DMath.cpp|h,recovered,decompile; tests/s3d_math_test.cpp
 0x1007b71f3,"RotateRadMatrix44(char, float)",RotateRadMatrix44,src/s3d/S3DMath.cpp|h,recovered,decompile; tests/s3d_math_test.cpp
 0x1007d39f9,"operator*(matrix44 const&, vector4 const&)",operator*_matrix44_const_vector4_const,src/s3d/S3DMath.cpp|h,recovered,decompile; tests/s3d_math_test.cpp
+0x1002b394b,"ClipLineToRect(int&, int&, int&, int&, int, int, int, int)",ClipLineToRect,src/gz/MiscFunctions.cpp|h,recovered,decompile; tests/gz_miscfunctions_test.cpp
+0x1002d3961,"SafeGetAltitude(cISTETerrain*, float, float)",SafeGetAltitude,src/gz/MiscFunctions.cpp|h,recovered,decompile; tests/gz_miscfunctions_test.cpp
+0x100305f0a,"RemoveUnnecessaryFloatingPointDigits(char*, int)",RemoveUnnecessaryFloatingPointDigits,src/gz/MiscFunctions.cpp|h,recovered,decompile; tests/gz_miscfunctions_test.cpp
+0x1003fbf4c,"gConvertURLFromEndodedForm(cRZString const&, cRZString&)",gConvertURLFromEndodedForm,src/gz/MiscFunctions.cpp|h,recovered,decompile; tests/gz_miscfunctions_test.cpp
+0x1003fc0be,"gCombineGUIDs(int, int)",gCombineGUIDs,src/gz/MiscFunctions.cpp|h,recovered,decompile; tests/gz_miscfunctions_test.cpp
+0x1005c1326,"HTMLIsSpace(char const*, int)",HTMLIsSpace_char_const_int,src/gz/MiscFunctions.cpp|h,recovered,decompile; tests/gz_miscfunctions_test.cpp
+0x1005c13d0,"HTMLIsSpace(cRZString const&, int)",HTMLIsSpace_cRZString_const_int,src/gz/MiscFunctions.cpp|h,recovered,decompile; tests/gz_miscfunctions_test.cpp
+0x1005c140a,"HTMLAdvance(cRZString const&, int)",HTMLAdvance,src/gz/MiscFunctions.cpp|h,recovered,decompile; tests/gz_miscfunctions_test.cpp
+0x1005c1453,"HTMLBackspace(cRZString const&, int)",HTMLBackspace,src/gz/MiscFunctions.cpp|h,recovered,decompile; tests/gz_miscfunctions_test.cpp
+0x10060a069,"FastAddOffset(unsigned short*, unsigned int, int)",FastAddOffset,src/gz/MiscFunctions.cpp|h,recovered,decompile; tests/gz_miscfunctions_test.cpp
+0x100777646,"HillToTerrainRect(int, int, int, SC4Rect<int> const&, SC4Rect<int>&)",HillToTerrainRect,src/gz/MiscFunctions.cpp|h,recovered,decompile; tests/gz_miscfunctions_test.cpp

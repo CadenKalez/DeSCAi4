@@ -48,6 +48,7 @@ declare -a TESTS=(
  "gz_dbsdfrecord:$T/gz_dbsdfrecord_test.cpp $S/gz/cGZDBSDFRecord.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/CharLength.cpp $S/rz/RZConvert.cpp $S/rz/cRZUnknownList.cpp"
  "gz_stringcommandgenerator:$T/gz_stringcommandgenerator_test.cpp $S/gz/StringCommandGenerator.cpp $S/gz/CommandParameterSet.cpp $S/rz/RZStringUtils.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/CharLength.cpp $S/rz/RZConvert.cpp $S/rz/cRZUnknownList.cpp $S/rz/cRZSysServPtr.cpp"
  "gz_commandserver:$T/gz_commandserver_test.cpp $S/gz/CommandServer.cpp $S/gz/StringCommandGenerator.cpp $S/gz/CommandParameterSet.cpp $S/rz/cRZMessage2Standard.cpp $S/rz/RZStringUtils.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/CharLength.cpp $S/rz/RZConvert.cpp $S/rz/cRZUnknownList.cpp $S/rz/cRZSysServPtr.cpp"
+ "gz_miscfunctions:$T/gz_miscfunctions_test.cpp $S/gz/MiscFunctions.cpp $S/rz/cRZString.cpp $S/rz/CharLength.cpp $S/rz/TextEncoding.cpp $S/rz/UTF16Text.cpp $S/rz/RZConvert.cpp $S/rz/RZStringUtils.cpp"
  "gz_dbrecordbitmapres:$T/gz_dbrecordbitmapres_test.cpp $S/gz/cGZDBRecordBitmapRes.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/CharLength.cpp $S/rz/RZConvert.cpp $S/rz/cRZUnknownList.cpp"
  "sc4_slstring:$T/sc4_slstring_test.cpp $S/sc4/SLString.cpp $S/sc4/StringDetokenizer.cpp $S/rz/cRZString.cpp $S/rz/CharLength.cpp $S/rz/RZConvert.cpp $S/rz/cRZSysServPtr.cpp -I$T"
  "gz_winkeyaccelerator:$T/gz_winkeyaccelerator_test.cpp $S/gz/WinKeyAccelerator.cpp $S/rz/cRZSysServPtr.cpp"
