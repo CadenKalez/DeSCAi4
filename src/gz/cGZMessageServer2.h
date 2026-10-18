@@ -31,6 +31,7 @@ public:
     virtual void RemoveTickClient(cIGZSystemService* service) = 0;
 };
 void SetMessageServerFramework(IMessageServerFramework* framework);
+IMessageServerFramework* GetMessageServerFramework();
 
 class cGZMessageServer2 final : public cIGZMessageServer2, public cRZSystemService {
 public:

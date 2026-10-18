@@ -15402,3 +15402,42 @@ address,symbol,unique_name,source,status,evidence
 0x1000556b0,cGZMessageServer2::SetAlwaysClearQueueOnTick(bool),SetAlwaysClearQueueOnTick,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
 0x1000556be,"cGZMessageServer2::CreateMessage(unsigned int, unsigned int, void**)",CreateMessage,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
 0x100055aec,"cGZMessageServer2::GeneralMessageTargetInfo::GeneralMessageTargetInfo(cIGZMessageTarget2*, cIGZMessage2*)",GeneralMessageTargetInfo,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x10005a0fe,cGZMessageServer::cGZMessageServer(),Construct,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a114,cGZMessageServer::cGZMessageServer(),ConstructWrapper,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a266,cGZMessageServer::~cGZMessageServer(),Destruct,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a434,cGZMessageServer::~cGZMessageServer(),DestructAndDelete,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a43e,non-virtual thunk to cGZMessageServer::~cGZMessageServer(),DestructThunk,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a44c,cGZMessageServer::~cGZMessageServer(),DestructBody,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a47a,non-virtual thunk to cGZMessageServer::~cGZMessageServer(),DestructAndDeleteThunk,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a488,cGZMessageServer::Init(),Init,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a4ba,cGZMessageServer::Shutdown(),Shutdown,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a4ec,"cGZMessageServer::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a50e,"non-virtual thunk to cGZMessageServer::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_a50e,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a534,"non-virtual thunk to cGZMessageServer::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_a534,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a55a,cGZMessageServer::AddRef(),AddRef,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a564,non-virtual thunk to cGZMessageServer::AddRef(),AddRefThunk_a564,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a572,non-virtual thunk to cGZMessageServer::AddRef(),AddRefThunk_a572,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a580,cGZMessageServer::Release(),Release,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a58a,non-virtual thunk to cGZMessageServer::Release(),ReleaseThunk_a58a,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a598,non-virtual thunk to cGZMessageServer::Release(),ReleaseThunk_a598,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a5a6,cGZMessageServer::MessageSend(cGZMessage const&),MessageSend,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005a6d6,cGZMessageServer::DoDelayedNotificationAdditionsAndRemovalsImmediately(),DoDelayedNotificationAdditionsAndRemovalsImmediately,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005aaea,non-virtual thunk to cGZMessageServer::MessageSend(cGZMessage const&),MessageSendThunk,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005aafc,"cGZMessageServer::AddNotification(cIGZMessageTarget*, unsigned int)",AddNotification,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005aee0,cGZMessageServer::DoDelayedNotificationAdditionsAndRemovals(),DoDelayedNotificationAdditionsAndRemovals,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005afc0,"non-virtual thunk to cGZMessageServer::AddNotification(cIGZMessageTarget*, unsigned int)",AddNotificationThunk,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005afd2,"cGZMessageServer::RemoveNotification(cIGZMessageTarget*, unsigned int)",RemoveNotification,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005b1ea,"non-virtual thunk to cGZMessageServer::RemoveNotification(cIGZMessageTarget*, unsigned int)",RemoveNotificationThunk,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005b1fc,"cGZMessageServer::MessagePost(cGZMessage const&, bool)",MessagePost,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005b270,"non-virtual thunk to cGZMessageServer::MessagePost(cGZMessage const&, bool)",MessagePostThunk,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005b284,"cGZMessageServer::GeneralMessagePostToTarget(cGZMessage const&, cIGZMessageTarget*)",GeneralMessagePostToTarget,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005b3b4,"non-virtual thunk to cGZMessageServer::GeneralMessagePostToTarget(cGZMessage const&, cIGZMessageTarget*)",GeneralMessagePostToTargetThunk,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005b3c2,cGZMessageServer::CancelGeneralMessagePostsToTarget(cIGZMessageTarget*),CancelGeneralMessagePostsToTarget,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005b9b0,non-virtual thunk to cGZMessageServer::CancelGeneralMessagePostsToTarget(cIGZMessageTarget*),CancelGeneralMessagePostsToTargetThunk,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005b9be,cGZMessageServer::SendGeneralMessages(),SendGeneralMessages,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005bb26,cGZMessageServer::OnTick(unsigned int),OnTick,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005bc4a,non-virtual thunk to cGZMessageServer::OnTick(unsigned int),OnTickThunk,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005bc5c,cGZMessageServer::GetMessageQueueSize(),GetMessageQueueSize,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005bcce,non-virtual thunk to cGZMessageServer::GetMessageQueueSize(),GetMessageQueueSizeThunk,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005bcdc,cGZMessageServer::SetAlwaysClearQueueOnTick(bool),SetAlwaysClearQueueOnTick,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10005bcea,non-virtual thunk to cGZMessageServer::SetAlwaysClearQueueOnTick(bool),SetAlwaysClearQueueOnTickThunk,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver

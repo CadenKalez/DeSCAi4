@@ -7,6 +7,7 @@
 
 static IMessageServerFramework* g_framework = nullptr;
 void SetMessageServerFramework(IMessageServerFramework* framework) { g_framework = framework; }
+IMessageServerFramework* GetMessageServerFramework() { return g_framework; }
 
 cGZMessageServer2::~cGZMessageServer2() {
     std::lock_guard<std::recursive_mutex> guard(notificationLock_);
