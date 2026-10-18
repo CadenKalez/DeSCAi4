@@ -42,6 +42,7 @@ declare -a TESTS=(
  "sc4_classallocators:$T/sc4_classallocators_test.cpp $S/sc4/ClassAllocators.cpp"
  "rz_utf16text:$T/rz_utf16text_test.cpp $S/rz/UTF16Text.cpp"
  "sc4_effectmaps:$T/sc4_effectmaps_test.cpp $S/sc4/EffectMaps.cpp"
+ "sc4_industrialsimulator:$T/sc4_industrialsimulator_test.cpp $S/sc4/IndustrialSimulator.cpp $S/rz/cRZMessage2Standard.cpp $S/rz/cRZStream.cpp $S/rz/cRZString.cpp"
  "rz_threading:$T/rz_threading_test.cpp $S/rz/Threading.cpp $S/rz/cRZString.cpp $S/rz/RZConvert.cpp $S/rz/CharLength.cpp $S/rz/nRZHash.cpp -lpthread"
  "sc4_effectcomponents:$T/sc4_effectcomponents_test.cpp $S/sc4/EffectComponents.cpp $S/rz/cRZMessage2Standard.cpp $S/rz/cRZString.cpp $S/rz/cRZStream.cpp $S/gz/StreamOps.cpp $S/rz/cRZDate.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp $S/gz/cGZDate.cpp"
  "gz_gzcominterface:$T/gz_gzcominterface_test.cpp $S/rz/cRZSysServPtr.cpp"

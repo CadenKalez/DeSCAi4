@@ -14611,3 +14611,24 @@ address,symbol,unique_name,source,status,evidence
 0x100274836,cGZWinListBox::emit_dblclick_msg(),emit_dblclick_msg,src/gz/WinListBox.h,recovered,"gz_winlistbox test: strings, selection, keys, mouse, double click, sorting, scrollbar, painting, drop-down"
 0x1002748aa,cGZWinListBox::send_selection_changed_msg(),send_selection_changed_msg,src/gz/WinListBox.h,recovered,"gz_winlistbox test: strings, selection, keys, mouse, double click, sorting, scrollbar, painting, drop-down"
 0x1002748b8,cGZWinListBox::send_dblclick_msg(),send_dblclick_msg,src/gz/WinListBox.h,recovered,"gz_winlistbox test: strings, selection, keys, mouse, double click, sorting, scrollbar, painting, drop-down"
+0x10021544a,cSC4IndustrialSimulator::~cSC4IndustrialSimulator(),Destruct,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x10021547c,cSC4IndustrialSimulator::~cSC4IndustrialSimulator(),DestructAndDelete,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x100215486,"cSC4IndustrialSimulator::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x1002154d0,"non-virtual thunk to cSC4IndustrialSimulator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_54d0,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x1002154de,"non-virtual thunk to cSC4IndustrialSimulator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_54de,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x1002154ec,cSC4IndustrialSimulator::AddRef(),AddRef,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x1002154fa,non-virtual thunk to cSC4IndustrialSimulator::AddRef(),AddRefThunk_54fa,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x100215508,non-virtual thunk to cSC4IndustrialSimulator::AddRef(),AddRefThunk_5508,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x100215516,cSC4IndustrialSimulator::Release(),Release,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x10021554a,non-virtual thunk to cSC4IndustrialSimulator::Release(),ReleaseThunk_554a,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x100215582,non-virtual thunk to cSC4IndustrialSimulator::Release(),ReleaseThunk_5582,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x1002155ba,cSC4IndustrialSimulator::Init(),Init,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x1002155dc,cSC4IndustrialSimulator::Shutdown(),Shutdown,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x1002155ee,cSC4IndustrialSimulator::Write(cIGZOStream&) const,Write,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x10021561a,non-virtual thunk to cSC4IndustrialSimulator::Write(cIGZOStream&) const,WriteThunk,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x100215646,cSC4IndustrialSimulator::Read(cIGZIStream&),Read,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x100215688,non-virtual thunk to cSC4IndustrialSimulator::Read(cIGZIStream&),ReadThunk,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x1002156ca,cSC4IndustrialSimulator::DoMessage(cIGZMessage2*),DoMessage,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x1002156dc,non-virtual thunk to cSC4IndustrialSimulator::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x1002156ee,cSC4IndustrialSimulator::GetGZCLSID() const,GetGZCLSID,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
+0x1002156fa,non-virtual thunk to cSC4IndustrialSimulator::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/IndustrialSimulator.cpp|h,recovered,scripts/tests/sc4_industrialsimulator_test.cpp
