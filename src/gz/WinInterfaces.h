@@ -224,6 +224,8 @@ public:
     virtual bool DestroyWindow(cIGZWin* window) = 0;                     // [23]
     virtual bool IsWindowValid(cIGZWin* window) = 0;                     // [24]
     virtual cIGZWin* GetWindowFromPoint(int x, int y) = 0;               // [25]
+    // [34] +0x110: the mouse position in `window`'s coordinates.
+    virtual void GetCursorPos(cIGZWin* window, int& x, int& y) { (void)window; x = 0; y = 0; }
     virtual void SetCurrentMouseWin(cIGZWin* window) = 0;                // [26]
     virtual cIGZWin* GZGetCapture() = 0;                                 // [28]
     virtual void GZSetCapture(cIGZWin* window) = 0;                      // [29]

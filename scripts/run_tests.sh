@@ -92,6 +92,7 @@ declare -a TESTS=(
  "gz_winbmp:$T/gz_winbmp_test.cpp $S/gz/WinBMP.cpp $S/gz/RZDraw.cpp $S/gz/Buffer.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
  "gz_winknob:$T/gz_winknob_test.cpp $S/gz/WinKnob.cpp $S/gz/Buffer.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
  "gz_winlineinput:$T/gz_winlineinput_test.cpp $S/gz/WinLineInput.cpp $S/rz/TextEncoding.cpp $S/rz/CharLength.cpp $S/gz/RZDraw.cpp $S/gz/WinBtn.cpp $S/gz/WinKnob.cpp $S/gz/WinCtrlFactory.cpp $S/rz/cRZCallbackTimer.cpp $S/gz/Buffer.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
+ "gz_wintextedit:$T/gz_wintextedit_test.cpp $S/gz/WinTextEdit.cpp $S/rz/TextEncoding.cpp $S/rz/UTF16Text.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp $S/rz/CharLength.cpp $S/gz/RZDraw.cpp $S/gz/WinBtn.cpp $S/gz/WinKnob.cpp $S/gz/WinCtrlFactory.cpp $S/rz/cRZCallbackTimer.cpp $S/gz/Buffer.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
  "sc4_smallsim:$T/sc4_smallsim_test.cpp $S/sc4/WealthRequester.cpp $S/sc4/UIFilters.cpp $S/gz/Win.cpp $S/rz/cRZRandom.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp -I$T"
  "sc4_uiresource:$T/sc4_uiresource_test.cpp $S/sc4/UIResourceObjects.cpp $S/rz/cRZString.cpp"
  "gz_smallobjects:$T/gz_smallobjects_test.cpp $S/gz/SmallObjects.cpp $S/sc4/ColorCustomizer.cpp $S/gz/Win.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp -I$T"
