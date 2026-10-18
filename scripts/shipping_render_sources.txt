@@ -1,0 +1,9 @@
+# Sources that make up the SHIPPING renderer (native Metal only). Anything not listed here is reference/test code.
+# Reference-only (never linked into a shipping binary): src/render/MetalGL.*, src/render/GLApi.*, src/render/GLState.*,
+# src/render/{D3DDevice7,DDSurface7,D3DVertexBuffer7,DirectDraw7,D3D7Stub,DX7*,MacOpenGL,FastATIVertexProgram}.*,
+# scripts/tests/gdriver_on_gl.h.
+src/render/gd/MetalGDriver.mm
+src/render/gd/GDriverBase.cpp
+src/render/GDIndexOps.cpp
+src/render/SimGL.cpp
+src/sc4/PackedRenderState.cpp

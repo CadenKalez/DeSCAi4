@@ -24,3 +24,13 @@
    scenes (textured quad lists, 2048-vertex chunks, alpha test 0.5, SRC_ALPHA blend) through the harness.
 2. Backing-store service (`IBackingStore`) + `cSC43DRender` raw-GL functions recovered against it.
 3. Terrain / vertex-buffer extension (persistent MTLBuffers), models, lighting-free fog, snapshots.
+
+## Shipping-vs-reference rule (non-negotiable)
+The shipping build renders 100% through native Metal: no OpenGL/CGL/AGL/D3D7/DirectDraw code or symbols, no GL-on-Metal or
+D3D7-on-Metal layer, no generic GL state machine — Metal is driven from `cIGZGDriver` with SC4's own render state. The DX7 shim,
+`MetalGL` and `GDriverOnGL` are **reference-build only** (tests/harness). The game's own direct GL calls (the `cSC43DRender`
+backing store) must be ported to Metal driver services (`IBackingStore`), not emulated.
+* Shipping sources are listed in `scripts/shipping_render_sources.txt`; nothing else may be added to a shipping target.
+* **Gate:** `scripts/verify_shipping_render.sh` builds them, then runs `otool -L` and `nm` over the check binary (and `build/sc4`
+  if built) and fails on any OpenGL link or GL/D3D7/DirectDraw/shim/MetalGL/GDriverOnGL symbol. It must pass before any
+  rendering milestone is called done. Last run: pass (render_ship_check, build/sc4).
