@@ -1430,7 +1430,7 @@ bool cGZWinTextEdit::Redo() { return ApplyAction(redo_, undo_); }   // 0x100266a
 
 bool cGZWinTextEdit::DoMessage(cGZMessage& message) {   // 0x10025fffe
     if (message.type == kGZMsgCommand) {
-        if (message.param1 == kGZMsgScrollbarChanged) {
+        if (message.param1 == kTextEditCmdScrollbarChanged) {
             if (message.param2 == 0) {
                 if (!vScroll_) return true;
                 const int value = vScroll_->GetValue();

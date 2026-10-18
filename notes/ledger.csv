@@ -15953,3 +15953,108 @@ address,symbol,unique_name,source,status,evidence
 0x10026752e,non-virtual thunk to cGZWinTextEdit::GetText(),GetText_voidThunk,src/gz/WinTextEdit.cpp|h,recovered,"Rewritten from the exported decompile; tested in gz_wintextedit_test (fake font, window manager, host)"
 0x100267554,non-virtual thunk to cGZWinTextEdit::GetTextLength(),GetTextLengthThunk,src/gz/WinTextEdit.cpp|h,recovered,"Rewritten from the exported decompile; tested in gz_wintextedit_test (fake font, window manager, host)"
 0x10026756c,non-virtual thunk to cGZWinTextEdit::GetText(cIGZString&),GetText_cIGZStringThunk,src/gz/WinTextEdit.cpp|h,recovered,"Rewritten from the exported decompile; tested in gz_wintextedit_test (fake font, window manager, host)"
+0x1002f3440,cGZWinCombo::cGZWinCombo(bool),Construct_bool,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f358c,cGZWinCombo::cGZWinCombo(bool),Construct_boolWrapper,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f359a,cGZWinCombo::~cGZWinCombo(),Destruct,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3600,cGZWinCombo::~cGZWinCombo(),DestructAndDelete,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f360a,cGZWinCombo::~cGZWinCombo(),DestructBody,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3638,cGZWinCombo::AddRef(),AddRef,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3642,non-virtual thunk to cGZWinCombo::AddRef(),AddRefThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3654,cGZWinCombo::Release(),Release,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f365e,non-virtual thunk to cGZWinCombo::Release(),ReleaseThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3670,"cGZWinCombo::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f369e,"non-virtual thunk to cGZWinCombo::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f36d2,cGZWinCombo::AsIGZWin(),AsIGZWin,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f36dc,non-virtual thunk to cGZWinCombo::AsIGZWin(),AsIGZWinThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f36ea,cGZWinCombo::GetLineInput(),GetLineInput,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f36f8,non-virtual thunk to cGZWinCombo::GetLineInput(),GetLineInputThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3712,cGZWinCombo::GetTextEdit(),GetTextEdit,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3754,non-virtual thunk to cGZWinCombo::GetTextEdit(),GetTextEditThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f37a4,cGZWinCombo::Init(),Init,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f399a,cGZWinCombo::Shutdown(),Shutdown,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f39f4,cGZWinCombo::SetFlag(int),SetFlag_int,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3a16,non-virtual thunk to cGZWinCombo::SetFlag(int),SetFlagThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3a3c,cGZWinCombo::ClearFlag(int),ClearFlag,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3a60,non-virtual thunk to cGZWinCombo::ClearFlag(int),ClearFlagThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3a88,cGZWinCombo::IsFlagSet(int),IsFlagSet,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3a98,non-virtual thunk to cGZWinCombo::IsFlagSet(int),IsFlagSetThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3aa4,cGZWinCombo::SetFlags(int),SetFlags,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3ac8,non-virtual thunk to cGZWinCombo::SetFlags(int),SetFlagsThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3ae6,cGZWinCombo::GetFlags(),GetFlags,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3af2,non-virtual thunk to cGZWinCombo::GetFlags(),GetFlagsThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3afc,"cGZWinCombo::SetArea(int, int, int, int)",SetArea,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3bbc,"cGZWinCombo::SetFlag(cIGZWin::tWinFlag, bool)",SetFlag_cIGZWin_tWinFlag_bool,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3c76,cGZWinCombo::SetFillColor(unsigned int),SetFillColor,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3cbe,"cGZWinCombo::SetComboDownArrow(cIGZBuffer*, cRZRect const*)",SetComboDownArrow,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3de6,"non-virtual thunk to cGZWinCombo::SetComboDownArrow(cIGZBuffer*, cRZRect const*)",SetComboDownArrowThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3dfa,"cGZWinCombo::GetComboDownArrow(cIGZBuffer*&, cRZRect&) const",GetComboDownArrow,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3e3c,"non-virtual thunk to cGZWinCombo::GetComboDownArrow(cIGZBuffer*&, cRZRect&) const",GetComboDownArrowThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3e70,cGZWinCombo::SetComboDownColor(unsigned int),SetComboDownColor,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3e88,non-virtual thunk to cGZWinCombo::SetComboDownColor(unsigned int),SetComboDownColorThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3eaa,cGZWinCombo::GetComboDownColor(unsigned int&) const,GetComboDownColor,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3eba,non-virtual thunk to cGZWinCombo::GetComboDownColor(unsigned int&) const,GetComboDownColorThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3eca,"cGZWinCombo::SetFontColor(cIGZWinCombo::tFontColorIdx, unsigned int)",SetFontColor,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3f42,"non-virtual thunk to cGZWinCombo::SetFontColor(cIGZWinCombo::tFontColorIdx, unsigned int)",SetFontColorThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3f54,cGZWinCombo::GetFontColor(cIGZWinCombo::tFontColorIdx) const,GetFontColor_cIGZWinCombo_tFontColorIdx,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3f64,non-virtual thunk to cGZWinCombo::GetFontColor(cIGZWinCombo::tFontColorIdx) const,GetFontColor_cIGZWinCombo_tFontColorIdxThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3f70,"cGZWinCombo::GetFontColor(cIGZWinCombo::tFontColorIdx, unsigned int&) const",GetFontColor_cIGZWinCombo_tFontColorIdx_uint,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3f8e,"non-virtual thunk to cGZWinCombo::GetFontColor(cIGZWinCombo::tFontColorIdx, unsigned int&) const",GetFontColor_cIGZWinCombo_tFontColorIdx_uintThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3faa,cGZWinCombo::ClearFontColor(cIGZWinCombo::tFontColorIdx),ClearFontColor,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3fc0,non-virtual thunk to cGZWinCombo::ClearFontColor(cIGZWinCombo::tFontColorIdx),ClearFontColorThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f3fe2,cGZWinCombo::SetBtnGutter(signed char),SetBtnGutter,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f402e,non-virtual thunk to cGZWinCombo::SetBtnGutter(signed char),SetBtnGutterThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f408a,cGZWinCombo::GetBtnGutter(signed char&) const,GetBtnGutter,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f409a,non-virtual thunk to cGZWinCombo::GetBtnGutter(signed char&) const,GetBtnGutterThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f40aa,"cGZWinCombo::SetTextGutters(signed char, signed char)",SetTextGutters,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4136,"non-virtual thunk to cGZWinCombo::SetTextGutters(signed char, signed char)",SetTextGuttersThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f414a,"cGZWinCombo::GetTextGutters(signed char&, signed char&) const",GetTextGutters,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4162,"non-virtual thunk to cGZWinCombo::GetTextGutters(signed char&, signed char&) const",GetTextGuttersThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f417a,cGZWinCombo::GZPaint(),GZPaint,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f422a,cGZWinCombo::SetFont(cIGZFont*),SetFont,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f428c,non-virtual thunk to cGZWinCombo::SetFont(cIGZFont*),SetFontThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f429e,cGZWinCombo::GetEditable() const,GetEditable,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f42aa,non-virtual thunk to cGZWinCombo::GetEditable() const,GetEditableThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f42b4,cGZWinCombo::SetEditable(bool),SetEditable,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f42fc,non-virtual thunk to cGZWinCombo::SetEditable(bool),SetEditableThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4314,cGZWinCombo::SetHighlightColor(unsigned int),SetHighlightColor,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f434e,non-virtual thunk to cGZWinCombo::SetHighlightColor(unsigned int),SetHighlightColorThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4390,cGZWinCombo::GetHighlightColor(unsigned int&) const,GetHighlightColor,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f43ac,non-virtual thunk to cGZWinCombo::GetHighlightColor(unsigned int&) const,GetHighlightColorThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f43c4,cGZWinCombo::SetHighlightFillAlpha(float),SetHighlightFillAlpha,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f43e8,non-virtual thunk to cGZWinCombo::SetHighlightFillAlpha(float),SetHighlightFillAlphaThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4408,cGZWinCombo::GetHighlightFillAlpha(float&) const,GetHighlightFillAlpha,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4418,non-virtual thunk to cGZWinCombo::GetHighlightFillAlpha(float&) const,GetHighlightFillAlphaThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4426,cGZWinCombo::SetDropDownOutlineColor(unsigned int),SetDropDownOutlineColor,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4434,non-virtual thunk to cGZWinCombo::SetDropDownOutlineColor(unsigned int),SetDropDownOutlineColorThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4440,cGZWinCombo::GetDropDownOutlineColor(unsigned int&) const,GetDropDownOutlineColor,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4450,non-virtual thunk to cGZWinCombo::GetDropDownOutlineColor(unsigned int&) const,GetDropDownOutlineColorThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f445e,"cGZWinCombo::GZOnMouseDownL(int, int, unsigned int)",GZOnMouseDownL,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4470,"cGZWinCombo::GZOnKeyDown(unsigned int, unsigned int)",GZOnKeyDown,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f44d8,"cGZWinCombo::GZOnKeyUp(unsigned int, unsigned int)",GZOnKeyUp,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f44fe,cGZWinCombo::DoMessage(cGZMessage&),DoMessage,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f453e,"cGZWinCombo::SetSelection(int, bool)",SetSelection,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f466e,"non-virtual thunk to cGZWinCombo::SetSelection(int, bool)",SetSelectionThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4682,cGZWinCombo::GetSelection() const,GetSelection_void,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f468e,non-virtual thunk to cGZWinCombo::GetSelection() const,GetSelection_voidThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4698,"cGZWinCombo::GetSelection(int&, cIGZString&) const",GetSelection_int_cIGZString,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f46b8,"non-virtual thunk to cGZWinCombo::GetSelection(int&, cIGZString&) const",GetSelection_int_cIGZStringThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f46dc,"cGZWinCombo::InsertString(cIGZString const&, int)",InsertString,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4a4a,"non-virtual thunk to cGZWinCombo::InsertString(cIGZString const&, int)",InsertStringThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4a5c,"cGZWinCombo::GetIndexFromString(int&, cIGZString const&) const",GetIndexFromString,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4ad0,"non-virtual thunk to cGZWinCombo::GetIndexFromString(int&, cIGZString const&) const",GetIndexFromStringThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4b3e,"cGZWinCombo::GetStringFromIndex(int, cIGZString&) const",GetStringFromIndex,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4b76,"non-virtual thunk to cGZWinCombo::GetStringFromIndex(int, cIGZString&) const",GetStringFromIndexThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4bb8,cGZWinCombo::RemoveString(cIGZString const&),RemoveString_String,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4bfa,non-virtual thunk to cGZWinCombo::RemoveString(cIGZString const&),RemoveString_StringThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4c4a,cGZWinCombo::RemoveString(int),RemoveString_int,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4cf4,non-virtual thunk to cGZWinCombo::RemoveString(int),RemoveString_intThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4d06,cGZWinCombo::RemoveAllStrings(),RemoveAllStrings,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4d4e,non-virtual thunk to cGZWinCombo::RemoveAllStrings(),RemoveAllStringsThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4d84,"cGZWinCombo::get_string_address_from_index(int, cRZString const*&) const",get_string_address_from_index,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4dc2,cGZWinCombo::GetMinMaxInfo(cRZRect&),GetMinMaxInfo,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4e60,non-virtual thunk to cGZWinCombo::GetMinMaxInfo(cRZRect&),GetMinMaxInfoThunk,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4e74,cGZWinCombo::get_text_edit(),get_text_edit,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f4eb6,cGZWinCombo::create_text_edit(),create_text_edit,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f5080,"cGZWinCombo::layout(int, int)",layout,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f5114,cGZWinCombo::do_drop_down(),do_drop_down,src/gz/WinCombo.cpp|h,recovered-partial,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1002f5534,cGZWinCombo::send_combo_changed_msg(),send_combo_changed_msg,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test

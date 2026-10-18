@@ -32,7 +32,7 @@ constexpr std::uint32_t kGZIID_cIGZWinTextEdit = 0x231a1c57;
 constexpr std::uint32_t kTextEditMsgKey = 0x9b1552d5, kTextEditMsgMouseDownL = 0x9b1552d6, kTextEditMsgMouseDownR = 0x9b1552d7,
                         kTextEditMsgChanged = 0x9b1552d8, kTextEditMsgKillFocus = 0x9b1552d9, kTextEditMsgSetFocus = 0x9b1552da;
 constexpr std::uint32_t kTextEditMsgCaretBlink = 0x631b56cc, kTextEditMsgScrollTick = 0x631b56cd;
-constexpr std::uint32_t kGZMsgScrollbarChanged = 0x887113a3;
+constexpr std::uint32_t kTextEditCmdScrollbarChanged = 0x887113a3;
 constexpr std::uint32_t kTextEditDefaultFontStyle = 0x68963c4c;
 enum TextEditFlag : std::uint32_t {
     kTEEditable = 0x1, kTEWrap = 0x2, kTEHScroll = 0x4, kTEVScroll = 0x8, kTEOutline = 0x10, kTEFilled = 0x20,

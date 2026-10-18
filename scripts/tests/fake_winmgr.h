@@ -35,6 +35,8 @@ struct FakeMgr final : cIGZWinMgr {
     cIGZWin* GZGetFocus() override { return focus; }
     void GZSetFocus(cIGZWin* w) override { focus = w; }
     cIGZKeyboard* GetKeyboard() override { return nullptr; }
+    int popupAnswer = -1, popups = 0;
+    int RunPopup(cIGZWin*) override { ++popups; return popupAnswer; }
 };
 
 // A graphics system whose native colour is simply 0xff000000 | rgb.
