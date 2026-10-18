@@ -76,6 +76,8 @@ public:
     virtual void SetCompletionMessage(std::uint32_t message, std::uint32_t userValue) = 0;   // +0x50
     virtual void SetIntParameter(int parameter, const void* data, int count) = 0;            // +0x60
     virtual void SetPointerParameter(int parameter, const void* data, int count) = 0;        // +0x68
+    // +0x40: places the effect (3x3 rotation, translation, scale: 13 floats).
+    virtual void SetTransform(const float* matrix) { (void)matrix; }
 };
 
 class cISC4DisasterInstance : public cIGZUnknown {

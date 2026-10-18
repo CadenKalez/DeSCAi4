@@ -90,6 +90,10 @@ public:
 class cISC4PipeOccupantView : public cIGZUnknown {
 public:
     virtual void GetCell(std::uint32_t& x, std::uint32_t& z) = 0;   // slot 0x1d8
+    // What the burst effect needs of a pipe (defaults answer "nothing").
+    virtual void GetCenter(float* xyz) { xyz[0] = xyz[1] = xyz[2] = 0.0f; }   // slot 0x290
+    virtual bool IsConnected(int direction, int kind) { (void)direction; (void)kind; return false; }   // slot 0x178
+    virtual cISC4Occupant* AsOccupant() { return nullptr; }                  // the occupant sub-object (+8)
 };
 
 // What the managers need that is not in IDisasterHost.

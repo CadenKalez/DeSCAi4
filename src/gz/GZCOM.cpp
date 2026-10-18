@@ -437,7 +437,7 @@ void* GZCOM_CreatecSC4DisasterInstanceEarthquake() { return nullptr; }
 // original allocates 0x80 bytes; the class is not recovered yet
 __attribute__((weak)) void* GZCOM_CreatecSC4DisasterManagerPipeBurst() { return nullptr; }
 // original allocates 0x88 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4DisasterInstancePipeBurst() { return nullptr; }
+__attribute__((weak)) void* GZCOM_CreatecSC4DisasterInstancePipeBurst() { return nullptr; }
 // original allocates 0x80 bytes; the class is not recovered yet
 __attribute__((weak)) void* GZCOM_CreatecSC4DisasterManagerVolcano() { return nullptr; }
 // original allocates 0x80 bytes; the class is not recovered yet

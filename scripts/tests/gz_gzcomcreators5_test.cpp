@@ -32,6 +32,12 @@ int main() {
     CHECK(static_cast<sc4::cISC4DisasterManager*>(manager)->GetID() == sc4::kDisasterManagerIdFire);
     static_cast<sc4::cISC4DisasterManager*>(manager)->Release();
     fireView->Release();
+    void* instance = GZCOM_CreatecSC4DisasterInstancePipeBurst();
+    CHECK(instance != nullptr && FindClassFactory(kCLSID_cSC4DisasterInstancePipeBurst)->create == &GZCOM_CreatecSC4DisasterInstancePipeBurst);
+    auto* disaster = static_cast<sc4::cISC4DisasterInstance*>(instance);
+    disaster->AddRef();
+    CHECK(disaster->GetID() == sc4::kDisasterManagerIdPipeBurst);
+    disaster->Release();
     std::printf(failures ? "FAILED\n" : "gz_gzcomcreators5 ok\n");
     return failures != 0;
 }
