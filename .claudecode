@@ -6,3 +6,17 @@
 - Never commit game binaries, assets or Ghidra DBs; the Steam folder is read-only.
 - Rendering target is native Metal (no OpenGL); audio must be bug-free; skip DX7 emulation.
 - Ask before sudo, downloads over 500 MB, or touching anything outside SC4-Decomp / Homebrew.
+
+# Engine architecture & optimization rules (from the user)
+1. Data-oriented design (ECS) is mandatory for simulation data (vehicles, citizens, buildings, grid nodes): no deep
+   inheritance trees, arrays of pointers or scattered heap allocations; pack data in contiguous arrays.
+2. Optimize CPU-bound loops (pathfinding, A*, water/power propagation, economic ticks) with SIMD intrinsics or
+   native vector extensions, never raw ARM/x86 assembly.
+3. Cross-platform parity: ARM64 (NEON) and x86_64 (SSE/AVX2) with compile-time switches and a scalar fallback.
+4. Profile first: no SIMD for UI, modding layers or one-off init; write clean ECS logic, then vectorize bottlenecks.
+
+# How these rules apply to the recovery work
+- src/ classes mirror the original binary one function at a time so they can be checked against Ghidra; they are
+  the reference implementation and stay faithful (quirks included).
+- The shipping simulation lives in a separate ECS layer (src/ecs/, to be built) that is validated against the
+  faithful classes; hot loops there are vectorized per rule 2-4 with a scalar fallback checked bit-for-bit.

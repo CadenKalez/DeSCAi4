@@ -35,3 +35,6 @@ going, and give a progress report whenever you stop.
 cSC4TrafficSimulator, cSC4PoliceSimulator, cSC4ResidentialSimulator,
 growth planner of cSC4BuildingDevelopmentSimulator, cSC4ZoneDeveloper, cSC4PowerPoleOccupant, cGZWin* UI family,
 cSCLua, remaining free utilities (SC4 helper functions, GZCOM factories, UTF16/Thai line-break tables).
+
+## Architecture rules
+See .claudecode (ECS, SIMD intrinsics with scalar fallback, cross-platform, profile first).
