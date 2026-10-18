@@ -1,0 +1,8 @@
+# SC4-Decomp architectural rules (summary of AGENT_RULES.md / NEXT_AGENT.md)
+- Hand-write clean C++20 per decompiled function; unique descriptive names recorded in notes/ledger.csv, zero duplicates.
+- Replace SL::sp* globals with small host/seam interfaces; keep original quirks and comment them.
+- One test per class in scripts/tests + entry in scripts/run_tests.sh; build with ASan/UBSan.
+- Commit locally after each class, never push; end commits with the Co-Authored-By line.
+- Never commit game binaries, assets or Ghidra DBs; the Steam folder is read-only.
+- Rendering target is native Metal (no OpenGL); audio must be bug-free; skip DX7 emulation.
+- Ask before sudo, downloads over 500 MB, or touching anything outside SC4-Decomp / Homebrew.
