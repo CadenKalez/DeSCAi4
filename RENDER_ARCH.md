@@ -1,6 +1,6 @@
 # RENDER_ARCH — where the native Metal renderer plugs in
 
-Status: **survey only — no renderer code has been written against this document yet.** Awaiting review.
+Status: survey **approved** (decision on §7: recover `cGDriver`'s bookkeeping, preserving *observable* behaviour 1:1 — texture handles/ids, hint flags, video-mode list contents and order, buffer-region ids, return/error values, edge cases — with internals free to be Metal-natural). §8 below answers the five follow-up confirmations; implementation (step 2) is tracked in RENDER_STATUS.md.
 
 ## 0. Correction of course
 
@@ -163,3 +163,107 @@ projection matrices into GL (Metal maps clip z explicitly; keep depth *ordering*
 * Confirm: should `cGDriver`'s own bookkeeping (texture table, hint flags, video-mode enumeration, buffer-region ids)
   be recovered 1:1 (it is engine-visible) while its D3D7 calls are replaced? (Proposed: yes.)
 * Window/drawable ownership: the existing host (`src/app/main.mm`) owns a CAMetalLayer; `SetVideoMode` should adopt it.
+
+---
+
+# 8. Follow-up confirmations (before step 2)
+
+## 8.1 Buffer regions and persistence of framebuffer contents
+**Evidence.** `cSC43DRender::StaticSetGDriver` (0x1007614c6) queries the driver for the buffer-region extension (iid
+0x669565fe) and the snapshot extension (0xe69bfe2a). The buffer-region pointer is then used **only** for slot 9
+(`CanDoPartialRegionWrites()`, in `Init` 0x10076002a and `SetGDriver` 0x10076143c; the driver returns `true`, as do
+`BufferRegionEnabled()` and `CanDoOffsetReads()`). A byte scan of the whole binary for the extension iids finds no other
+query site: **`NewBufferRegion / ReadBufferRegion / DrawBufferRegion / IsBufferRegion` have no callers in game code.**
+The snapshot extension (`CopyColorBuffer`) is used by `SC4TakeSnapshot`, `cSC4WinSnapshotTaker::TakeSnapshot`,
+`cSC4WinAnimationRecorder::Init` and `cSC43DRender::TakeSnapshot`.
+
+**What the city view does instead (bypass #1).** `cSC43DRender` keeps a *backing store* as a raw OpenGL framebuffer
+object (`CreateBackingStore` 0x1007699ee: FBO + RGBA8 colour renderbuffer + 24-bit depth renderbuffer, sized to the
+viewport; `sMacBackingStoreFBO` @0x100b90ed0) and moves pixels with `glBlitFramebufferEXT(mask = COLOR|DEPTH, NEAREST)`:
+`SaveBackingStore(x,y,w,h)` (0x100764aec; screen → store), `RestoreBackingStore(...)` (0x100769b1c; store → screen),
+`DoTranslatedViewUpdate(dx,dy)` (0x100763d10; scroll the store), plus `DeleteFramebuffersEXT` in `StaticSetGDriver`/
+`StaticShutdown`. `Draw()` (0x1007659f6) is built around it: with the store valid it **restores the static scene from the
+store, draws only the dynamic layer on top, and processes the dirty-rectangle queue** (`AddDirtyRectangle`,
+`ProcessDirtyRectangleQueue`, `DoPartialViewUpdate`, `AttemptTranslatedViewUpdate`) by redrawing sub-rectangles into the
+live frame and re-saving them. So yes: the city view relies on **persistent colour *and depth* between operations**,
+and on blits whose rectangles are in GL (bottom-left) coordinates (`y' = height - (y + h)`), clamped against the camera
+shake offsets at `this+0x398/0x39c`.
+
+**Design.** The Metal driver owns two persistent target pairs and never loses them implicitly:
+1. *frame target* — `BGRA8` colour + `Depth32Float`, load action `Load`/`Clear` only on explicit `Clear()`; presented by a
+   blit to the drawable (`Present`, once per `cGZGraphicSystem::Draw`);
+2. *backing store* — the same pair, created by the backing-store service when the driver is set (viewport-sized), with
+   `Save/Restore/Translate` implemented as `MTLBlitCommandEncoder` copies (colour and depth, flipped rectangles).
+`cSC43DRender`'s five raw-GL functions are recovered against this service (`IBackingStore`), not against GL: that is the
+one place game code must be changed, and it is localised (`CreateBackingStore`, `SaveBackingStore` ×2,
+`RestoreBackingStore` ×2, `DoTranslatedViewUpdate`, `StaticSetGDriver/StaticShutdown` cleanup). Buffer-region calls stay
+inert (`BufferRegionEnabled=true`, `Can…=true`, `NewBufferRegion` returns the original failure value once recovered).
+Dirty-rect redraws need nothing special beyond load-action `Load` and scissored draws (`SetViewport(x,y,w,h)` also sets
+the scissor rect — see 0x100607176: `glViewport + glScissor + Enable(SCISSOR_TEST)`; the no-argument form disables it).
+
+## 8.2 Pipeline key from the slot calls, and agreement with the packed state word
+The driver mirrors exactly the state that `SC4DrawContext::SetRenderState` drives, field by field:
+
+| packed bit(s) | driver slot call (group-3 slot) | driver-side field | key part |
+|---|---|---|---|
+| 0 | `ColorMask(b)` (15) | `colorMask` | pipeline `writeMask` |
+| 1 | `DepthMask(b)` (17) | `depthWrite` | depth-stencil state |
+| 2 | `Enable/Disable(1)` (44/45) | `depthTest` | depth-stencil state |
+| 3 | `Enable/Disable(0)` | `alphaTest` | function constant `kAlphaTest` |
+| 4 | `Enable/Disable(4)` | `blend` | pipeline `blendEnabled` |
+| 5 | `TexStage(0)`+`Enable/Disable(5)` | `stage[0].enabled` | function constant `kTex0` |
+| 6 | `Enable/Disable(3)` | `cull` | encoder cull mode |
+| 7–9 | `DepthFunc(f)` (16) | `depthFunc` | depth-stencil state |
+| 10–12, 21–24 | `AlphaFunc(f, n·1/15)` (22) | `alphaFunc`, `alphaRef` | function constants `kAlphaFunc`, ref in constants |
+| 13–16 / 17–20 | `BlendFunc(src,dst)` (21) | `blendSrc/Dst` | pipeline blend factors |
+| 25–27 | `TexEnv(0,0,mode)` (27) | `stage[0].envMode` | function constant `kTexEnv0` |
+| 28 / 29–31 | stage-1 on / `TexEnv` mode (only when the device reports the second stage) | `stage[1]…` | `kTex1`, `kTexEnv1` |
+
+`PipelineKey` is *derived from the driver's mirror*, never from the packed word. The packed word is recovered
+(`cSC4PackedRenderState::PackRenderState`, `SC4DrawContext::SetRenderState`) and a **debug assert**
+(`GDriverState::AssertMatches(packed)` → `SC4_ASSERT_RENDER_STATE`) is run after every `SetRenderState` in the harness
+and in debug builds of the engine: it decodes the 30 field bits of `value` (honouring `mask`) and compares each against the
+mirror; a mismatch aborts with the field name. The harness feeds it all catalogued states (8.3) plus random ones.
+
+## 8.3 Only the combinations the survey found
+The render states SC4 can request are all created through `PackRenderState`; the survey (call sites in 33 functions,
+60 constant argument tuples) gives the closed set below. Parameter order is (colorMask, depthMask, depthTest, alphaTest,
+blend, texStages{0,1,2→also stage 1}, cull, depthFunc, blendSrc, blendDst, alphaFunc, alphaRef, texEnv0, texEnv1).
+
+* Distinct `depthFunc` values: 1, 2, 3, 4, 7, −1.  `blendSrc`: 0, 1, 4, 8, −1 ·  `blendDst`: 1, 2, 5, −1  (the common
+  pair is SRC_ALPHA / INV_SRC_ALPHA = 4/5; others are the flash and highlight effects).
+* `alphaFunc`: 1, 4 or −1 with refs 0.0, 0.1, 0.5 (n/15 quantised to 0, 2/15, 8/15).  `texEnv0`: 1 or −1; `texEnv1`: −1.
+* Dynamic (computed) states: `SC4DrawContext::SetRenderState(cS3DMaterial)`, `cSC4ParticlesEffect::SetDrawMode`,
+  `SC4PathInfoView`/`SC4MarkedCellView`/`cSC4NetworkLayoutView`/`cSC4NetworkPreview` (flags from properties), and the
+  UI context's own `HWUpdateState` (calls `Enable/Disable(0,1,4,5)`, `AlphaFunc(GREATER,0.5)`, `BlendFunc(4,5)`,
+  `MatrixMode(1)`, `LoadIdentity` directly).
+The pipeline cache is therefore keyed on these field values only; any other combination raises `Unsupported` (counted and
+logged, never silently emulated). The full catalogue (`scripts/dump_render_states.py` output) is checked into
+`work/renderstates.txt` by the harness and the pre-warm list is generated from it.
+
+Driver-state enum values (from the lookup tables at 0x100a26820..0x100a268e0): `eGDPrimType` 0 TRIANGLES, 1 TRI_STRIP,
+2 TRI_FAN, 3 POINTS, 4 LINES, 5 LINE_STRIP, 6 QUADS, 7 QUAD_STRIP (QUADS/QUAD_STRIP/ strips/fans are index-expanded;
+the expanders are recovered). `eGDTestFunc` 0..7 = NEVER, LESS, EQUAL, LEQUAL, GREATER, NOTEQUAL, GEQUAL, ALWAYS.
+`eGDBlend` 0..10 = ZERO, ONE, SRC_COLOR, INV_SRC_COLOR, SRC_ALPHA, INV_SRC_ALPHA, DST_ALPHA, INV_DST_ALPHA, DST_COLOR,
+INV_DST_COLOR, SRC_ALPHA_SAT. `eGDDriverState` 0 alpha test, 1 depth test, 2 stencil, 3 cull, 4 blend, 5 texturing of the
+current stage, 6 fog (only if the device allows), 7 no-op.
+
+## 8.4 Capability queries
+`MacOpenGL::IsFastATICard()` is `false` and `IsVertexArraySupported()` is `false` in the Metal build, as constants (the
+real functions read driver globals; the callers listed in §4 are compiled against `render/GDCaps.h`, which defines
+`constexpr bool IsFastATICard() { return false; }` and `IsVertexArraySupported()` likewise). Vertex stride for the vertex-
+buffer extension is therefore 32 bytes (`V3F_C4UB_2T2F`, format 0xb).
+
+## 8.5 Visual reference and the diff harness
+* **Comparison renderer: MetalGL** — verified running headless (`/tmp` smoke test: clear + vertex-coloured triangle read
+  back correctly, 1 draw, 1 pipeline). It is driven *not* through the D3D7 shim but through a thin **`GDriverOnGL`
+  adapter**: `cIGZGDriver` is GL-shaped, so each slot call maps to one or two `IGLApi` calls. That gives an independent
+  implementation of the same driver semantics (different code, different shader, different state handling), so a disagreement
+  points at one of the two; fidelity quirks of the old D3D7 layer are covered separately by targeted unit tests rather than
+  by this reference.
+* **Harness** (`scripts/render_diff.sh`, `tests/render_diff_test.mm`): a *scene* is a list of driver calls (a tiny text
+  format or C++ lambdas). The harness runs it on both back ends at the same size, reads back BGRA, writes
+  `work/shots/<scene>.{native,ref,diff}.png`, and reports max channel difference, count of pixels differing by > 2, and a
+  pass/fail against per-scene tolerances (exact for flat colour/clear, ≤ 2 for textured/blended). It must pass on the
+  **clear** and **solid 2D quad** scenes before any real feature lands.
+* A second, manual reference is the original game itself under Rosetta (not automated; used only for qualitative checks).
