@@ -10525,7 +10525,7 @@ address,symbol,unique_name,source,status,evidence
 0x1006c2fc0,GZCOM_CreatecSC4LotConfigurationManager(),GZCOM_CreatecSC4LotConfigurationManager,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
 0x1007312b0,GZCOM_CreatecSTETerrain(),GZCOM_CreatecSTETerrain,src/gz/GZCOM.cpp|h,recovered,decompile: allocate + construct; GZCOMCreators*.cpp (compiles against the recovered class)
 0x100041220,GZCOM_CreatecRZMessage2Standard(),GZCOM_CreatecRZMessage2Standard,src/gz/GZCOM.cpp|h,recovered,src/gz/GZCOMCreators2.cpp|3.cpp; scripts/tests/gz_gzcomcreators_test.cpp
-0x1000476f0,GZCOM_CreatecSC4City(),GZCOM_CreatecSC4City,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000476f0,GZCOM_CreatecSC4City(),GZCOM_CreatecSC4City,src/gz/GZCOMCreators7.cpp,recovered,allocates the class with hosts from gz/SimHostRegistry.h (compile-checked; the class tests cover behaviour)
 0x100053158,GZCOM_CreatecGZMessageQueueManager2(),GZCOM_CreatecGZMessageQueueManager2,src/gz/GZCOMCreators6.cpp,recovered,allocates cGZMessageQueueManager2; test gz_gzcomcreators6
 0x1000539df,GZCOM_CreatecGZMessageServer2(),GZCOM_CreatecGZMessageServer2,src/gz/GZCOMCreators6.cpp,recovered,GZCOM creator; covered by gz_gzcomcreators6
 0x10005f086,GZCOM_CreatecSC4TutorialSystem(),GZCOM_CreatecSC4TutorialSystem,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
@@ -10533,10 +10533,10 @@ address,symbol,unique_name,source,status,evidence
 0x10006e5d0,GZCOM_CreatecSC4NeighborsSimulator(),GZCOM_CreatecSC4NeighborsSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x100074710,GZCOM_CreatecSC4NeighborConnection(),GZCOM_CreatecSC4NeighborConnection,src/gz/GZCOM.cpp|h,recovered,src/gz/GZCOMCreators2.cpp|3.cpp; scripts/tests/gz_gzcomcreators_test.cpp
 0x100075114,GZCOM_CreatecSC4NeighborDeal(),GZCOM_CreatecSC4NeighborDeal,src/gz/GZCOM.cpp|h,recovered,src/gz/GZCOMCreators2.cpp|3.cpp; scripts/tests/gz_gzcomcreators_test.cpp
-0x10007678b,GZCOM_CreatecSC4TrafficSimulator(),GZCOM_CreatecSC4TrafficSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x100094650,GZCOM_CreatecSC4PollutionSimulator(),GZCOM_CreatecSC4PollutionSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10007678b,GZCOM_CreatecSC4TrafficSimulator(),GZCOM_CreatecSC4TrafficSimulator,src/gz/GZCOMCreators7.cpp,recovered,allocates the class with hosts from gz/SimHostRegistry.h (compile-checked; the class tests cover behaviour)
+0x100094650,GZCOM_CreatecSC4PollutionSimulator(),GZCOM_CreatecSC4PollutionSimulator,src/gz/GZCOMCreators7.cpp,recovered,allocates the class with hosts from gz/SimHostRegistry.h (compile-checked; the class tests cover behaviour)
 0x10009bc50,GZCOM_CreatecSC4PlumbingSimulator(),GZCOM_CreatecSC4PlumbingSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x1000a2330,GZCOM_CreatecSC4PoliceSimulator(),GZCOM_CreatecSC4PoliceSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000a2330,GZCOM_CreatecSC4PoliceSimulator(),GZCOM_CreatecSC4PoliceSimulator,src/gz/GZCOMCreators7.cpp,recovered,allocates the class with hosts from gz/SimHostRegistry.h (compile-checked; the class tests cover behaviour)
 0x1000a62a6,GZCOM_CreatecSC4OccupantTypesFilter(),GZCOM_CreatecSC4OccupantTypesFilter,src/gz/GZCOMCreators4.cpp,recovered,gz_gzcomcreators4 test: creator builds the class and the class factory table points at it
 0x1000a64bc,GZCOM_CreatecSC4OccupantTypesFilterHashed(),GZCOM_CreatecSC4OccupantTypesFilterHashed,src/gz/GZCOMCreators4.cpp,recovered,gz_gzcomcreators4 test: creator builds the class and the class factory table points at it
 0x1000a68aa,GZCOM_CreatecSC4RealisticOccupantFilter(),GZCOM_CreatecSC4RealisticOccupantFilter,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
@@ -10544,8 +10544,8 @@ address,symbol,unique_name,source,status,evidence
 0x1000a6d90,GZCOM_CreatecSC4ViewLevelOccupantFilter(),GZCOM_CreatecSC4ViewLevelOccupantFilter,src/gz/GZCOMCreators4.cpp,recovered,gz_gzcomcreators4 test: creator builds the class and the class factory table points at it
 0x1000a711c,GZCOM_CreatecSC4StringSpecificationOccupantFilter(),GZCOM_CreatecSC4StringSpecificationOccupantFilter,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1000b360a,GZCOM_CreatecSC4LotBaseTextureOccupant(),GZCOM_CreatecSC4LotBaseTextureOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x1000c2a20,GZCOM_CreatecSC4FlammabilitySimulator(),GZCOM_CreatecSC4FlammabilitySimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x1000c4e10,GZCOM_CreatecSC4LandValueSimulator(),GZCOM_CreatecSC4LandValueSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1000c2a20,GZCOM_CreatecSC4FlammabilitySimulator(),GZCOM_CreatecSC4FlammabilitySimulator,src/gz/GZCOMCreators7.cpp,recovered,allocates the class with hosts from gz/SimHostRegistry.h (compile-checked; the class tests cover behaviour)
+0x1000c4e10,GZCOM_CreatecSC4LandValueSimulator(),GZCOM_CreatecSC4LandValueSimulator,src/gz/GZCOMCreators7.cpp,recovered,allocates the class with hosts from gz/SimHostRegistry.h (compile-checked; the class tests cover behaviour)
 0x1000c8034,GZCOM_CreatecSC4AirportDeveloper(),GZCOM_CreatecSC4AirportDeveloper,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1000c8f30,GZCOM_CreatecSC4ParkManager(),GZCOM_CreatecSC4ParkManager,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1000c9fd0,GZCOM_CreatecSC4SeaportDeveloper(),GZCOM_CreatecSC4SeaportDeveloper,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
@@ -10554,10 +10554,10 @@ address,symbol,unique_name,source,status,evidence
 0x1000eaeea,GZCOM_CreatecSC4Demolition(),GZCOM_CreatecSC4Demolition,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1000eee30,GZCOM_CreatecSC4HistoryWarehouse(),GZCOM_CreatecSC4HistoryWarehouse,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x100121780,GZCOM_CreatecSC4PropDeveloper(),GZCOM_CreatecSC4PropDeveloper,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x1001261af,GZCOM_CreatecSC4WealthRequester(),GZCOM_CreatecSC4WealthRequester,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001261af,GZCOM_CreatecSC4WealthRequester(),GZCOM_CreatecSC4WealthRequester,src/gz/GZCOMCreators7.cpp,recovered,allocates the class with hosts from gz/SimHostRegistry.h (compile-checked; the class tests cover behaviour)
 0x10012804a,GZCOM_CreatecSC4ZoneDeveloper(),GZCOM_CreatecSC4ZoneDeveloper,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x100134b90,GZCOM_CreatecSC4TractDeveloper(),GZCOM_CreatecSC4TractDeveloper,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x10013ead0,GZCOM_CreatecSC4LotDeveloper(),GZCOM_CreatecSC4LotDeveloper,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x10013ead0,GZCOM_CreatecSC4LotDeveloper(),GZCOM_CreatecSC4LotDeveloper,src/gz/GZCOMCreators7.cpp,recovered,allocates the class with hosts from gz/SimHostRegistry.h (compile-checked; the class tests cover behaviour)
 0x100156020,GZCOM_CreatecSC4GrowthDeveloper(),GZCOM_CreatecSC4GrowthDeveloper,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x10015caa0,GZCOM_CreatecSC4LotRetainingWallOccupant(),GZCOM_CreatecSC4LotRetainingWallOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x10015e410,GZCOM_CreatecSC4PropPlacementPropertiesFactory(),GZCOM_CreatecSC4PropPlacementPropertiesFactory,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
@@ -10570,7 +10570,7 @@ address,symbol,unique_name,source,status,evidence
 0x1001772db,GZCOM_CreatecSC4ConstructionOccupant(),GZCOM_CreatecSC4ConstructionOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1001834e0,GZCOM_CreatecSC4BusinessUnit(),GZCOM_CreatecSC4BusinessUnit,src/gz/GZCOMCreators6.cpp,recovered,GZCOM creator; covered by gz_gzcomcreators6
 0x1001971b0,GZCOM_CreatecSC4CityDetailManager(),GZCOM_CreatecSC4CityDetailManager,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x1001980ba,GZCOM_CreatecSC4ZoneManager(),GZCOM_CreatecSC4ZoneManager,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001980ba,GZCOM_CreatecSC4ZoneManager(),GZCOM_CreatecSC4ZoneManager,src/gz/GZCOMCreators7.cpp,recovered,allocates the class with hosts from gz/SimHostRegistry.h (compile-checked; the class tests cover behaviour)
 0x1001a0e00,GZCOM_CreatecSC4PipeOccupant(),GZCOM_CreatecSC4PipeOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1001a14ea,GZCOM_CreatecSC4SubwayOccupant(),GZCOM_CreatecSC4SubwayOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1001a2200,GZCOM_CreatecSC4NetworkTunnelOccupant(),GZCOM_CreatecSC4NetworkTunnelOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
@@ -10579,10 +10579,10 @@ address,symbol,unique_name,source,status,evidence
 0x1001b9f80,GZCOM_CreatecSC4NetworkOccupantWithPreBuiltModel(),GZCOM_CreatecSC4NetworkOccupantWithPreBuiltModel,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1001d2590,GZCOM_CreatecSC4NetworkBridgeOccupant(),GZCOM_CreatecSC4NetworkBridgeOccupant,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1001ef250,GZCOM_CreatecSC4Simulator(),GZCOM_CreatecSC4Simulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x1001fbe90,GZCOM_CreatecSC4CommercialSimulator(),GZCOM_CreatecSC4CommercialSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1001fbe90,GZCOM_CreatecSC4CommercialSimulator(),GZCOM_CreatecSC4CommercialSimulator,src/gz/GZCOMCreators7.cpp,recovered,allocates the class with hosts from gz/SimHostRegistry.h (compile-checked; the class tests cover behaviour)
 0x1001fca9b,GZCOM_CreatecSC4CrimeSimulator(),GZCOM_CreatecSC4CrimeSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x100201540,GZCOM_CreatecSC4ResidentialSimulator(),GZCOM_CreatecSC4ResidentialSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x10020e1d0,GZCOM_CreatecSC4PowerSimulator(),GZCOM_CreatecSC4PowerSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x100201540,GZCOM_CreatecSC4ResidentialSimulator(),GZCOM_CreatecSC4ResidentialSimulator,src/gz/GZCOMCreators7.cpp,recovered,allocates the class with hosts from gz/SimHostRegistry.h (compile-checked; the class tests cover behaviour)
+0x10020e1d0,GZCOM_CreatecSC4PowerSimulator(),GZCOM_CreatecSC4PowerSimulator,src/gz/GZCOMCreators7.cpp,recovered,allocates the class with hosts from gz/SimHostRegistry.h (compile-checked; the class tests cover behaviour)
 0x1002153f8,GZCOM_CreatecSC4IndustrialSimulator(),GZCOM_CreatecSC4IndustrialSimulator,src/gz/GZCOMCreators6.cpp,recovered,GZCOM creator; covered by gz_gzcomcreators6
 0x100215710,GZCOM_CreatecSC4DispatchManager(),GZCOM_CreatecSC4DispatchManager,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x100217fd0,GZCOM_CreatecSC4AuraSimulator(),GZCOM_CreatecSC4AuraSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
@@ -10593,7 +10593,7 @@ address,symbol,unique_name,source,status,evidence
 0x10024588f,GZCOM_CreatecSC4LineItem(),GZCOM_CreatecSC4LineItem,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x100294ffb,GZCOM_CreatecSC4AdvisorSystem(),GZCOM_CreatecSC4AdvisorSystem,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x100298970,GZCOM_CreatecSC4TrafficNetworkMap(),GZCOM_CreatecSC4TrafficNetworkMap,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x1002fa480,GZCOM_CreatecSC4FireProtectionSimulator(),GZCOM_CreatecSC4FireProtectionSimulator,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1002fa480,GZCOM_CreatecSC4FireProtectionSimulator(),GZCOM_CreatecSC4FireProtectionSimulator,src/gz/GZCOMCreators7.cpp,recovered,allocates the class with hosts from gz/SimHostRegistry.h (compile-checked; the class tests cover behaviour)
 0x100306510,GZCOM_CreatecS3DTextureBindingFactory(),GZCOM_CreatecS3DTextureBindingFactory,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1003092c6,GZCOM_CreatecGZWinDebugDisplay(),GZCOM_CreatecGZWinDebugDisplay,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x10030c5b0,GZCOM_CreatecSC4ModelMaker(),GZCOM_CreatecSC4ModelMaker,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
@@ -10639,8 +10639,8 @@ address,symbol,unique_name,source,status,evidence
 0x10056a0d0,GZCOM_CreatecSC4EffectsResource(),GZCOM_CreatecSC4EffectsResource,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x10056a11d,GZCOM_CreatecSC4EffectsResourceFactory(),GZCOM_CreatecSC4EffectsResourceFactory,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1005c32dc,GZCOM_CreatecSC4WinText(),GZCOM_CreatecSC4WinText,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x1005c3cb0,GZCOM_CreatecSC4WinAlertBorder(),GZCOM_CreatecSC4WinAlertBorder,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
-0x1005c4140,GZCOM_CreatecSC4WinAuraBar(),GZCOM_CreatecSC4WinAuraBar,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
+0x1005c3cb0,GZCOM_CreatecSC4WinAlertBorder(),GZCOM_CreatecSC4WinAlertBorder,src/gz/GZCOMCreators7.cpp,recovered,allocates the class with hosts from gz/SimHostRegistry.h (compile-checked; the class tests cover behaviour)
+0x1005c4140,GZCOM_CreatecSC4WinAuraBar(),GZCOM_CreatecSC4WinAuraBar,src/gz/GZCOMCreators7.cpp,recovered,allocates the class with hosts from gz/SimHostRegistry.h (compile-checked; the class tests cover behaviour)
 0x1005c4610,GZCOM_CreatecSC4WinMiniMap(),GZCOM_CreatecSC4WinMiniMap,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1005c7870,GZCOM_CreatecSC4WinAdviceList(),GZCOM_CreatecSC4WinAdviceList,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
 0x1005c8bec,GZCOM_CreatecSC4EffectsParser(),GZCOM_CreatecSC4EffectsParser,src/gz/GZCOM.cpp|h,partial,class id and allocation size recorded; construction needs the unrecovered class
