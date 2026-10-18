@@ -15679,3 +15679,42 @@ address,symbol,unique_name,source,status,evidence
 0x10001b41d,"ConvertStringEncoding(cIGZString const&, void*, unsigned int&, int)",Construct_String_void_uint_intWrapper,src/rz/StringConversion.cpp|h,recovered,Rewritten from the decompile; exercised through rz_language_test
 0x10001b4d2,"ConvertStringEncoding(cIGZString const&, int, cIGZString&)",Construct_String_int_cIGZString,src/rz/StringConversion.cpp|h,recovered,Rewritten from the decompile; exercised through rz_language_test
 0x10001b619,"ConvertStringEncoding(cIGZString const&, cIGZString&, int)",Construct_String_cIGZString_intWrapper,src/rz/StringConversion.cpp|h,recovered,Rewritten from the decompile; exercised through rz_language_test
+0x100013a30,cRZCmdLine::cRZCmdLine(cIGZCmdLine const&),Construct_cIGZCmdLine_const,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x100013cca,cRZCmdLine::cRZCmdLine(cIGZCmdLine const&),Construct_cIGZCmdLine_constWrapper,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x100013cd4,"cRZCmdLine::ConvertStringArrayToString(std::__1::vector<cRZString, std::__1::allocator<cRZString>> const&, cRZString&)",ConvertStringArrayToString_std_1_vector_cRZString_std_1_allocator_cRZString_const_cRZString,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x100013e42,cRZCmdLine::cRZCmdLine(char const*),Construct_char_const,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x100013f96,"cRZCmdLine::ConvertStringArrayToString(cRZString const&, std::__1::vector<cRZString, std::__1::allocator<cRZString>>&)",ConvertStringArrayToString_cRZString_const_std_1_vector_cRZString_std_1_allocator_cRZString,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x100014530,cRZCmdLine::cRZCmdLine(char const*),Construct_char_constWrapper,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x10001453a,"cRZCmdLine::QueryInterface(unsigned int, void**)",QueryInterface,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x10001455c,cRZCmdLine::AddRef(),AddRef,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x10001456a,cRZCmdLine::Release(),Release,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x10001458a,cRZCmdLine::GetCommandLineText(cIGZString&) const,GetCommandLineText,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x1000145a6,cRZCmdLine::operator[](int) const,operator[],src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x1000145d6,cRZCmdLine::argv(int) const,argv,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x100014616,cRZCmdLine::argc() const,argc,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x10001462e,"cRZCmdLine::Find(cIGZString const&, bool) const",Find,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x1000148d2,"cRZCmdLine::FindSubString(cIGZString const&, bool) const",FindSubString,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x100014cb0,cRZCmdLine::IsSwitchPresent(cIGZString const&) const,IsSwitchPresent_String,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x100014d46,"cRZCmdLine::IsSwitchPresent(char, cIGZString&, bool) const",IsSwitchPresent_char_cIGZString_bool,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x100014ff6,"cRZCmdLine::GetIndexOfSwitch(char, int) const",GetIndexOfSwitch_char_int,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x100015162,"cRZCmdLine::IsSwitchPresent(cIGZString const&, cIGZString&, bool) const",IsSwitchPresent_String_cIGZString_bool,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x10001556c,"cRZCmdLine::GetIndexOfSwitch(cIGZString const&, int) const",GetIndexOfSwitch_String_int,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x100015968,"cRZCmdLine::InsertArgument(cIGZString const&, int)",InsertArgument,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x100015d86,cRZCmdLine::EraseArgument(int),EraseArgument,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x100015fb6,cRZCmdLine::~cRZCmdLine(),Destruct,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x100015fc0,cRZCmdLine::~cRZCmdLine(),DestructAndDelete,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x10002d6f0,cRZCmdLine::~cRZCmdLine(),DestructBody,src/rz/cRZCmdLine.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_cmdline_test
+0x100041d2e,cRZVersion::cRZVersion(),Construct,src/rz/cRZVersion.cpp|h,recovered,Rewritten from the exported decompile; platform queries behind IRZVersionPlatform; tested in rz_version_test
+0x100041d62,cRZVersion::~cRZVersion(),Destruct,src/rz/cRZVersion.cpp|h,recovered,Rewritten from the exported decompile; platform queries behind IRZVersionPlatform; tested in rz_version_test
+0x100041d82,cRZVersion::~cRZVersion(),DestructAndDelete,src/rz/cRZVersion.cpp|h,recovered,Rewritten from the exported decompile; platform queries behind IRZVersionPlatform; tested in rz_version_test
+0x100041db2,cRZVersion::GetModulePath(cRZString&),GetModulePath,src/rz/cRZVersion.cpp|h,recovered,Rewritten from the exported decompile; platform queries behind IRZVersionPlatform; tested in rz_version_test
+0x100041dc6,cRZVersion::GetModuleName(cRZString&),GetModuleName,src/rz/cRZVersion.cpp|h,recovered,Rewritten from the exported decompile; platform queries behind IRZVersionPlatform; tested in rz_version_test
+0x100041f62,cRZVersion::GetModuleVersion(cRZString&),GetModuleVersion_cRZString,src/rz/cRZVersion.cpp|h,recovered,Rewritten from the exported decompile; platform queries behind IRZVersionPlatform; tested in rz_version_test
+0x100042122,cRZVersion::GetSystemVersion(cRZString&),GetSystemVersion,src/rz/cRZVersion.cpp|h,recovered,Rewritten from the exported decompile; platform queries behind IRZVersionPlatform; tested in rz_version_test
+0x100042142,cRZVersion::GetModuleVersion(unsigned int),GetModuleVersion_uint,src/rz/cRZVersion.cpp|h,recovered,Rewritten from the exported decompile; platform queries behind IRZVersionPlatform; tested in rz_version_test
+0x10004214e,cRZVersion::GetCPUSpeed(),GetCPUSpeed,src/rz/cRZVersion.cpp|h,recovered,Rewritten from the exported decompile; platform queries behind IRZVersionPlatform; tested in rz_version_test
+0x10004219c,cRZVersion::GetCPUName(cRZString&),GetCPUName,src/rz/cRZVersion.cpp|h,recovered,Rewritten from the exported decompile; platform queries behind IRZVersionPlatform; tested in rz_version_test
+0x1000421a4,cRZVersion::GetCPUFlags(),GetCPUFlags,src/rz/cRZVersion.cpp|h,recovered,Rewritten from the exported decompile; platform queries behind IRZVersionPlatform; tested in rz_version_test
+0x1000421ac,"cRZVersion::GetSystemMemory(unsigned int&, unsigned int&)",GetSystemMemory,src/rz/cRZVersion.cpp|h,recovered,Rewritten from the exported decompile; platform queries behind IRZVersionPlatform; tested in rz_version_test
+0x10004227a,"cRZVersion::GetUserNameA(cRZString&, cRZString*)",GetUserNameA,src/rz/cRZVersion.cpp|h,recovered,Rewritten from the exported decompile; platform queries behind IRZVersionPlatform; tested in rz_version_test
+0x10004244e,"cRZVersion::GetHostName(cRZString&, cRZString*)",GetHostName,src/rz/cRZVersion.cpp|h,recovered,Rewritten from the exported decompile; platform queries behind IRZVersionPlatform; tested in rz_version_test
