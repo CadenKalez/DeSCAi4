@@ -98,6 +98,37 @@ int main() {
     CHECK(lo == 3 && hi == 4564 && wout[0] == 900 && wout[2] == wide[2]);
     GenerateIndexedTriListForIndexedTriangleStrip<std::uint16_t>(2, strip, out, &lo, &hi);
     CHECK(lo == 10 && hi == 11);
+    {   // nSGLDX7 generators
+        std::uint16_t q[12] = {};
+        nSGLDX7::GenerateIndexedTriListForQuads(8, q);
+        const std::uint16_t qwant[12] = {0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7};
+        for (int i = 0; i < 12; ++i) CHECK(q[i] == qwant[i]);
+        std::uint16_t qs[12] = {};
+        nSGLDX7::GenerateIndexedTriListForQuadStrip(6, qs);
+        const std::uint16_t qswant[12] = {0, 1, 3, 0, 3, 2, 2, 3, 5, 2, 5, 4};
+        for (int i = 0; i < 12; ++i) CHECK(qs[i] == qswant[i]);
+        std::uint16_t ts[9] = {};
+        nSGLDX7::GenerateIndexedTriListForTriangleStrip(9, ts);
+        const std::uint16_t tswant[9] = {0, 1, 2, 2, 1, 3, 2, 3, 4};
+        for (int i = 0; i < 9; ++i) CHECK(ts[i] == tswant[i]);
+        std::uint16_t tf[9] = {};
+        nSGLDX7::GenerateIndexedTriListForTriangleFan(9, tf);
+        const std::uint16_t tfwant[9] = {0, 1, 2, 0, 2, 3, 0, 3, 4};
+        for (int i = 0; i < 9; ++i) CHECK(tf[i] == tfwant[i]);
+        std::uint32_t iq[8] = {20, 21, 22, 23, 30, 31, 32, 33};
+        std::uint16_t iqo[12] = {};
+        std::uint32_t mn = 0, mx = 0;
+        nSGLDX7::GenerateIndexedTriListForIndexedQuads<std::uint32_t>(8, iq, iqo, &mn, &mx);
+        const std::uint16_t iqwant[12] = {20, 21, 22, 20, 22, 23, 30, 31, 32, 30, 32, 33};
+        for (int i = 0; i < 12; ++i) CHECK(iqo[i] == iqwant[i]);
+        CHECK(mn == 20 && mx == 33);
+        std::uint8_t is[6] = {1, 2, 3, 4, 5, 6};
+        std::uint16_t iso[12] = {};
+        nSGLDX7::GenerateIndexedTriListForIndexedQuadStrip<std::uint8_t>(6, is, iso, &mn, &mx);
+        const std::uint16_t iswant[12] = {1, 2, 3, 2, 4, 3, 3, 4, 5, 4, 6, 5};
+        for (int i = 0; i < 12; ++i) CHECK(iso[i] == iswant[i]);
+        CHECK(mn == 1 && mx == 6);
+    }
     std::printf(failures ? "FAILED\n" : "gz_gstreamplugin ok\n");
     return failures != 0;
 }
