@@ -14691,3 +14691,36 @@ address,symbol,unique_name,source,status,evidence
 0x1000c747a,cSC4LandValueSimulator::GetModeAltitude() const,GetModeAltitude,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
 0x1000c7488,cSC4LandValueSimulator::GetGZCLSID() const,GetGZCLSID,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
 0x1000c7494,non-virtual thunk to cSC4LandValueSimulator::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1001261fc,cSC4WealthRequester::Write(cIGZOStream&) const,Write,src/sc4/WealthRequester.cpp|h,recovered,sc4_smallsim
+0x100126204,non-virtual thunk to cSC4WealthRequester::Write(cIGZOStream&) const,WriteThunk,src/sc4/WealthRequester.cpp|h,recovered,sc4_smallsim
+0x10012620c,cSC4WealthRequester::Read(cIGZIStream&),Read,src/sc4/WealthRequester.cpp|h,recovered,sc4_smallsim
+0x100126214,non-virtual thunk to cSC4WealthRequester::Read(cIGZIStream&),ReadThunk,src/sc4/WealthRequester.cpp|h,recovered,sc4_smallsim
+0x10012621c,cSC4WealthRequester::GetGZCLSID() const,GetGZCLSID,src/sc4/WealthRequester.cpp|h,recovered,sc4_smallsim
+0x100126228,non-virtual thunk to cSC4WealthRequester::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/WealthRequester.cpp|h,recovered,sc4_smallsim
+0x100126234,cSC4WealthRequester::AddRef(),AddRef,src/sc4/WealthRequester.cpp|h,recovered,sc4_smallsim
+0x100126242,non-virtual thunk to cSC4WealthRequester::AddRef(),AddRefThunk,src/sc4/WealthRequester.cpp|h,recovered,sc4_smallsim
+0x100126250,cSC4WealthRequester::Release(),Release,src/sc4/WealthRequester.cpp|h,recovered,sc4_smallsim
+0x10012626c,non-virtual thunk to cSC4WealthRequester::Release(),ReleaseThunk,src/sc4/WealthRequester.cpp|h,recovered,sc4_smallsim
+0x10012628c,"cSC4WealthRequester::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/WealthRequester.cpp|h,recovered,sc4_smallsim
+0x1001262c0,"non-virtual thunk to cSC4WealthRequester::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/sc4/WealthRequester.cpp|h,recovered,sc4_smallsim
+0x1001262ce,"cSC4WealthRequester::SelectProp(std::__1::vector<unsigned int, std::__1::allocator<unsigned int>> const&, int, int) const",SelectProp,src/sc4/WealthRequester.cpp|h,recovered,sc4_smallsim
+0x100126488,cSC4WealthRequester::GetRequestedShare(SC4Rect<int> const&) const,GetRequestedShare,src/sc4/WealthRequester.cpp|h,recovered,sc4_smallsim
+0x100126494,cSC4WealthRequester::GetRequesterSatisfactionId() const,GetRequesterSatisfactionId,src/sc4/WealthRequester.cpp|h,recovered,sc4_smallsim
+0x1001264a0,cSC4WealthRequester::UsesCustomPropSelector() const,UsesCustomPropSelector,src/sc4/WealthRequester.cpp|h,recovered,sc4_smallsim
+0x1006c303a,cSC4LotConfigurationFilter::cSC4LotConfigurationFilter(),Construct,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x1006c305a,cSC4LotConfigurationFilter::~cSC4LotConfigurationFilter(),Destruct,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x1006c306a,cSC4LotConfigurationFilter::~cSC4LotConfigurationFilter(),DestructAndDelete,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x1006c307a,cSC4LotConfigurationFilter::~cSC4LotConfigurationFilter(),DestructBody,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x1006c3084,cSC4LotConfigurationFilter::IsLotConfigurationIncluded(cISC4LotConfiguration*),IsLotConfigurationIncluded,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x1006c308c,"cSC4LotConfigurationFilter::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x1006c30ae,cSC4LotConfigurationFilter::AddRef(),AddRef,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x1006c30bc,cSC4LotConfigurationFilter::Release(),Release,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x1003762aa,cSC4CtabFilter::cSC4CtabFilter(cIGZWin*),Construct_cIGZWin,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x100376312,cSC4CtabFilter::cSC4CtabFilter(cIGZWin*),Construct_cIGZWinWrapper,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x10037631c,cSC4CtabFilter::~cSC4CtabFilter(),Destruct,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x100376378,cSC4CtabFilter::~cSC4CtabFilter(),DestructAndDelete,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x100376382,cSC4CtabFilter::~cSC4CtabFilter(),DestructBody,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x1003763b0,"cSC4CtabFilter::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x1003763d2,cSC4CtabFilter::AddRef(),AddRef,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x1003763e0,cSC4CtabFilter::Release(),Release,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x1003763fc,"cSC4CtabFilter::DoMessage(cIGZWin*, cGZMessage&)",DoMessage,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim

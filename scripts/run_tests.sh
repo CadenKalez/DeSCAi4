@@ -91,6 +91,7 @@ declare -a TESTS=(
  "gz_winflatrect:$T/gz_winflatrect_test.cpp $S/gz/WinFlatRect.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
  "gz_winbmp:$T/gz_winbmp_test.cpp $S/gz/WinBMP.cpp $S/gz/RZDraw.cpp $S/gz/Buffer.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
  "gz_winknob:$T/gz_winknob_test.cpp $S/gz/WinKnob.cpp $S/gz/Buffer.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
+ "sc4_smallsim:$T/sc4_smallsim_test.cpp $S/sc4/WealthRequester.cpp $S/sc4/UIFilters.cpp $S/gz/Win.cpp $S/rz/cRZRandom.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp -I$T"
  "gz_winslider:$T/gz_winslider_test.cpp $S/gz/WinSlider.cpp $S/gz/Buffer.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
  "rz_comdirector:$T/rz_comdirector_test.cpp $S/rz/cRZCOMDllDirector.cpp $S/rz/cRZString.cpp"
  "rz_comdirectors:$T/rz_comdirectors_test.cpp $S/rz/COMDirectors.cpp $S/rz/cRZCOMDllDirector.cpp $S/rz/cRZString.cpp $S/gz/GZCOM.cpp"
