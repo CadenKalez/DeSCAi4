@@ -5,6 +5,15 @@
 
 #include "gz/Win.h"
 
+// A cursor manager that loads nothing.
+struct FakeCursors final : cIGZCursorManager {
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return 1; }
+    std::uint32_t Release() override { return 1; }
+    cIGZCursor* LoadCursor(std::uint32_t) override { return nullptr; }
+    void SetCursor(cIGZCursor*) override {}
+};
+
 struct FakeMgr final : cIGZWinMgr {
     std::set<cIGZWin*> valid;
     cIGZWin *focus = nullptr, *capture = nullptr, *mouseWin = nullptr;
@@ -16,7 +25,8 @@ struct FakeMgr final : cIGZWinMgr {
     bool QueryInterface(std::uint32_t, void**) override { return false; }
     std::uint32_t AddRef() override { return 1; }
     std::uint32_t Release() override { return 1; }
-    cIGZWin* GetMainWindow() override { return nullptr; }
+    cIGZWin* mainWin = nullptr;
+    cIGZWin* GetMainWindow() override { return mainWin; }
     void AppendToPlotStrategy(cIGZWin*) override {}
     void Plot() override {}
     void PostMessageToTarget(cIGZWin*, const cGZMessage& m) override { posted.push_back(m); }
@@ -30,7 +40,8 @@ struct FakeMgr final : cIGZWinMgr {
     cIGZWin* GZGetCapture() override { return capture; }
     void GZSetCapture(cIGZWin* w) override { capture = w; }
     void GZReleaseCapture(cIGZWin* w) override { if (capture == w) capture = nullptr; }
-    cIGZCursorManager* cursors = nullptr;
+    FakeCursors defaultCursors;
+    cIGZCursorManager* cursors = &defaultCursors;
     cIGZCursorManager* GetCursorManager() override { return cursors; }
     cIGZWin* GZGetFocus() override { return focus; }
     void GZSetFocus(cIGZWin* w) override { focus = w; }

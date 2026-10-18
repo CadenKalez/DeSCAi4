@@ -130,6 +130,16 @@ int main() {
     m->SetSystemFont(static_cast<int>(0xc8963c5c), &boldFont);
     m->SetSystemFont(0x68963c54, &font);
 
+    // line input: raised outline in the shadow / light colours, editable as asked
+    cIGZWinLineInput* line = m->CreateLineInput(9, false);
+    cIGZWinLineInput::tOutlineType lineOutline{};
+    std::uint32_t lineShadow = 0, lineLight = 0;
+    CHECK(line && line->AsIGZWin()->GetID() == 9 && !line->IsEditable());
+    CHECK(line->GetOutlineType(lineOutline) && lineOutline == cIGZWinLineInput::kOutlineRaised);
+    CHECK(line->GetOutlineColor(cIGZWinLineInput::kOutlineColor0, lineShadow) && line->GetOutlineColor(cIGZWinLineInput::kOutlineColor1, lineLight));
+    CHECK(lineShadow != lineLight);
+    line->Release();
+
     // buttons
     cRZString caption("Go");
     cIGZWinBtn* btn = m->CreateButton(5, caption, nullptr, nullptr, 0x41);

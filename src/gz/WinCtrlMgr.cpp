@@ -26,7 +26,7 @@ constexpr int kBmpSliderH = static_cast<int>(0x88963ec1), kBmpSliderV = static_c
 
 constexpr std::uint32_t kClsButton = 0x22ecfc47, kClsLabel = 0x592, kClsOptGrp = kGZCLSID_cGZWinOptGrp, kClsBMP = 0x82fe68c4,
                         kClsSlider = 0x21325208, kClsScrollbar = 0x61325a2e, kClsSpinner = 0x612ce0c4, kClsGen = 0x4386d516;
-constexpr std::uint32_t kIidSlider = 0x21325207;
+constexpr std::uint32_t kIidSlider = 0x21325207, kClsLineInput = 0x21335c5a;
 
 template <class T> T* Typed(void* p) { return static_cast<T*>(p); }
 }  // namespace
@@ -203,6 +203,17 @@ cIGZWinBtn* cGZWinCtrlMgr::CreateButton(std::uint32_t style, std::uint32_t id, c
     button->SetStyle(static_cast<int>(style), image, area);
     window->SetKeyEquivalent(key);
     return button;
+}
+
+cIGZWinLineInput* cGZWinCtrlMgr::CreateLineInput(std::uint32_t id, bool editable) {   // @ 0x1001f4da6
+    auto* input = Typed<cIGZWinLineInput>(Make<cGZWinLineInput>(kClsLineInput, kGZIID_cIGZWinLineInput));
+    cIGZWin* window = input->AsIGZWin();
+    input->SetEditable(editable);
+    input->SetOutlineType(cIGZWinLineInput::kOutlineRaised);
+    input->SetOutlineColor(cIGZWinLineInput::kOutlineColor0, DefaultColor(kColorShadow));
+    input->SetOutlineColor(cIGZWinLineInput::kOutlineColor1, DefaultColor(kColorLight));
+    window->SetID(id);
+    return input;
 }
 
 cIGZWinText* cGZWinCtrlMgr::CreateLabel(std::uint32_t id, const cIGZString& caption) {   // @ 0x1001f458a

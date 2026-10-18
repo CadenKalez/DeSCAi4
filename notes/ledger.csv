@@ -16357,3 +16357,49 @@ address,symbol,unique_name,source,status,evidence
 0x10024d9c4,"cGZWinGenTitleBar::GetTitleFont(unsigned int, void**) const",GetTitleFont,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
 0x10024d9e2,"non-virtual thunk to cGZWinGenTitleBar::GetTitleFont(unsigned int, void**) const",GetTitleFontThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
 0x10024d9fc,"cGZWinGenTitleBar::SetTitleBarFlag(int, bool)",SetTitleBarFlag,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10051fb7a,cGZWinMsgBox::cGZWinMsgBox(),Construct,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10051fc74,cGZWinMsgBox::cGZWinMsgBox(),ConstructWrapper,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10051fc7e,cGZWinMsgBox::~cGZWinMsgBox(),Destruct,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10051fd0c,cGZWinMsgBox::~cGZWinMsgBox(),DestructAndDelete,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10051fd16,non-virtual thunk to cGZWinMsgBox::~cGZWinMsgBox(),DestructThunk,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10051fd28,cGZWinMsgBox::~cGZWinMsgBox(),DestructBody,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10051fd56,non-virtual thunk to cGZWinMsgBox::~cGZWinMsgBox(),DestructAndDeleteThunk,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10051fd68,"cGZWinMsgBox::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10051fd8c,"non-virtual thunk to cGZWinMsgBox::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_fd8c,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10051fdb8,"non-virtual thunk to cGZWinMsgBox::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_fdb8,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10051fde4,cGZWinMsgBox::AddRef(),AddRef,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10051fdee,non-virtual thunk to cGZWinMsgBox::AddRef(),AddRefThunk_fdee,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10051fe00,non-virtual thunk to cGZWinMsgBox::AddRef(),AddRefThunk_fe00,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10051fe12,cGZWinMsgBox::Release(),Release,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10051fe1c,non-virtual thunk to cGZWinMsgBox::Release(),ReleaseThunk_fe1c,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10051fe2e,non-virtual thunk to cGZWinMsgBox::Release(),ReleaseThunk_fe2e,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10051fe40,cGZWinMsgBox::Init(),Init,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100520814,cGZWinMsgBox::create_and_add_button(unsigned int),create_and_add_button,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100520d8c,cGZWinMsgBox::Shutdown(),Shutdown,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100520e38,cGZWinMsgBox::GZPaint(),GZPaint,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100520eec,"cGZWinMsgBox::GZOnKeyDown(unsigned int, unsigned int)",GZOnKeyDown,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100520f2a,"cGZWinMsgBox::GZOnKeyUp(unsigned int, unsigned int)",GZOnKeyUp,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100520f32,"cGZWinMsgBox::GZOnMouseDownL(int, int, unsigned int)",GZOnMouseDownL,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100520f68,"cGZWinMsgBox::GZOnMouseUpL(int, int, unsigned int)",GZOnMouseUpL,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100520fac,"cGZWinMsgBox::GZOnMouseMove(int, int, unsigned int)",GZOnMouseMove,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100520ffe,"cGZWinMsgBox::GZOnCommand(unsigned int, unsigned long)",GZOnCommand,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10052103c,cGZWinMsgBox::AsIGZWin(),AsIGZWin,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100521046,non-virtual thunk to cGZWinMsgBox::AsIGZWin(),AsIGZWinThunk,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100521054,"cGZWinMsgBox::CreateDlg(cIGZString const&, cIGZString const&, unsigned int)",CreateDlg_String_String_uint,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x1005210bc,"non-virtual thunk to cGZWinMsgBox::CreateDlg(cIGZString const&, cIGZString const&, unsigned int)",CreateDlg_String_String_uintThunk,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100521118,"cGZWinMsgBox::CreateDlg(cIGZString const&, unsigned int)",CreateDlg_String_uint,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10052116e,"non-virtual thunk to cGZWinMsgBox::CreateDlg(cIGZString const&, unsigned int)",CreateDlg_String_uintThunk,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x1005211ac,cGZWinMsgBox::DestroyDlg(),DestroyDlg,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x1005211b8,non-virtual thunk to cGZWinMsgBox::DestroyDlg(),DestroyDlgThunk,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x1005211ce,cGZWinMsgBox::SetTitleFillColor(unsigned int),SetTitleFillColor_uint,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x1005211da,non-virtual thunk to cGZWinMsgBox::SetTitleFillColor(unsigned int),SetTitleFillColor_uintThunk,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x1005211e4,"cGZWinMsgBox::SetTitleFillColor(unsigned char, unsigned char, unsigned char)",SetTitleFillColor_uchar_uchar_uchar,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100521204,"non-virtual thunk to cGZWinMsgBox::SetTitleFillColor(unsigned char, unsigned char, unsigned char)",SetTitleFillColor_uchar_uchar_ucharThunk,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10052122e,cGZWinMsgBox::GetDefaultButton(),GetDefaultButton,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10052123c,cGZWinMsgBox::GetCancelButton(),GetCancelButton,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10052124a,cGZWinMsgBox::GetTitleText(),GetTitleText,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100521258,cGZWinMsgBox::GetMessageText(),GetMessageText,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100521266,non-virtual thunk to cGZWinMsgBox::GetDefaultButton(),GetDefaultButtonThunk,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100521270,non-virtual thunk to cGZWinMsgBox::GetCancelButton(),GetCancelButtonThunk,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x10052127a,non-virtual thunk to cGZWinMsgBox::GetTitleText(),GetTitleTextThunk,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox
+0x100521284,non-virtual thunk to cGZWinMsgBox::GetMessageText(),GetMessageTextThunk,src/gz/WinMsgBox.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winmsgbox

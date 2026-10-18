@@ -30,6 +30,10 @@ public:
     virtual cIGZUnknown* Font(std::uint32_t id) { (void)id; return nullptr; }                                                           // vslot 0x140
 };
 IWinCtrlFactory* WinCtrlFactory();
+// RZ::WCM(): the window control manager service (service 0xc2c2eb0f), the entry the dialogs build their children through.
+class cIGZWinCtrlMgr;
+cIGZWinCtrlMgr* WinCtrlMgr();
+void SetWinCtrlMgr(cIGZWinCtrlMgr* manager);
 void SetWinCtrlFactory(IWinCtrlFactory* factory);
 
 }  // namespace gz

@@ -21,6 +21,7 @@
 #include "gz/WinBMP.h"
 #include "gz/WinBtn.h"
 #include "gz/WinCtrlFactory.h"
+#include "gz/WinLineInput.h"
 #include "gz/WinListBox.h"
 #include "gz/WinOptGrp.h"
 #include "gz/WinScrollbar.h"
@@ -84,7 +85,7 @@ public:
     virtual cIGZWinSlider* CreateSlider(std::uint32_t id, int direction, int low, int high, int value) = 0;   // [16]
     virtual cIGZWinScrollbar* CreateScrollbar(std::uint32_t id, int direction, int low, int high, int value) = 0;   // [17]
     virtual cIGZWinSpinner* CreateSpinner(std::uint32_t id, int type, int low, int high, int step, int value) = 0;   // [18]
-    virtual cIGZUnknown* CreateLineInput(std::uint32_t id, bool flag) = 0;                 // [19] (cGZWinLineInput is not recovered yet)
+    virtual cIGZWinLineInput* CreateLineInput(std::uint32_t id, bool editable) = 0;         // [19]
     virtual cIGZWinBtn* CreateFixedButton(std::uint32_t id, const cIGZString& caption, cIGZBuffer* image, const cRZRect* area, std::uint32_t key) = 0;   // [20]
     virtual cIGZWinBtn* CreateFixedToggleButton(std::uint32_t id, const cIGZString& caption, cIGZBuffer* image, const cRZRect* area, std::uint32_t key) = 0;   // [21]
     virtual cIGZWinBtn* CreateCheckBox(std::uint32_t id, const cIGZString& caption, cIGZBuffer* image, const cRZRect* area, std::uint32_t key) = 0;   // [22]
@@ -141,7 +142,7 @@ public:
     cIGZWinSlider* CreateSlider(std::uint32_t id, int direction, int low, int high, int value) override;
     cIGZWinScrollbar* CreateScrollbar(std::uint32_t id, int direction, int low, int high, int value) override;
     cIGZWinSpinner* CreateSpinner(std::uint32_t id, int type, int low, int high, int step, int value) override;
-    cIGZUnknown* CreateLineInput(std::uint32_t, bool) override { return nullptr; }
+    cIGZWinLineInput* CreateLineInput(std::uint32_t id, bool editable) override;
     cIGZWinBtn* CreateFixedButton(std::uint32_t id, const cIGZString& caption, cIGZBuffer* image, const cRZRect* area, std::uint32_t key) override { return CreateButton(2, id, caption, image, area, key); }
     cIGZWinBtn* CreateFixedToggleButton(std::uint32_t id, const cIGZString& caption, cIGZBuffer* image, const cRZRect* area, std::uint32_t key) override { return CreateButton(3, id, caption, image, area, key); }
     cIGZWinBtn* CreateCheckBox(std::uint32_t id, const cIGZString& caption, cIGZBuffer* image, const cRZRect* area, std::uint32_t key) override { return CreateButton(4, id, caption, image, area, key); }
