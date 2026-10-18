@@ -17132,3 +17132,25 @@ address,symbol,unique_name,source,status,evidence
 0x100616b14,cGZDBRecordBitmapRes::SetSize(unsigned int),SetSize,src/gz/cGZDBRecordBitmapRes.cpp|h,recovered,Windows-resource bitmap record; Init always fails on the Mac port; covered by gz_dbrecordbitmapres
 0x100616b2a,cGZDBRecordBitmapRes::GetSize(unsigned int&),GetSize_uint,src/gz/cGZDBRecordBitmapRes.cpp|h,recovered,Windows-resource bitmap record; Init always fails on the Mac port; covered by gz_dbrecordbitmapres
 0x100616b52,non-virtual thunk to cGZDBRecordBitmapRes::SetSize(unsigned int),SetSizeThunk,src/gz/cGZDBRecordBitmapRes.cpp|h,recovered,Windows-resource bitmap record; Init always fails on the Mac port; covered by gz_dbrecordbitmapres
+0x10012123a,cSLString::cSLString(),Construct,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x100121260,cSLString::cSLString(),ConstructWrapper,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x100121286,"cSLString::cSLString(cGZPersistResourceKey const&, bool)",Construct_cGZPersistResourceKey_const_bool,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x1001212f6,"cSLString::Load(bool, bool)",Load,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x1001215d6,"cSLString::cSLString(cGZPersistResourceKey const&, bool)",Construct_cGZPersistResourceKey_const_boolWrapper,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x1001215e4,"cSLString::cSLString(unsigned int, unsigned int, bool)",Construct_uint_uint_bool,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x100121650,"cSLString::cSLString(unsigned int, unsigned int, bool)",Construct_uint_uint_boolWrapper,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x100121664,cSLString::operator=(cSLString const&),operator=_cSLString_const,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x1001216a0,cSLString::GetKey(cGZPersistResourceKey&) const,GetKey,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x1001216b8,cSLString::SetKey(cGZPersistResourceKey const&),SetKey,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x1001216d0,"cSLString::ConvertTokens(cISCStringDetokenizer*, bool)",ConvertTokens,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x100121738,cSLString::~cSLString(),Destruct,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x10012174e,cSLString::~cSLString(),DestructAndDelete,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x100121774,cSLString::operator=(cIGZString const&),operator=_String,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x1003faf80,cADVString::cADVString(char const*),Construct_char_const,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x1003fafc6,"cADVString::init(char const*, int)",init,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x1003fb07c,cADVString::cADVString(char const*),Construct_char_constWrapper,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x1003fb086,"cADVString::FromScriptText(char const*, unsigned int)",FromScriptText_char_const_uint,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x1003fb090,cADVString::FromScriptText(char const*),FromScriptText_char_const,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x1003fc0c8,cADVString::~cADVString(),Destruct,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x1003fc0e4,cADVString::operator=(cIGZString const&),operator=,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring
+0x1004452d0,cADVString::~cADVString(),DestructAndDelete,src/sc4/SLString.cpp|h,recovered,String-resource strings recovered; covered by sc4_slstring

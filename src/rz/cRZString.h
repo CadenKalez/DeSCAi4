@@ -14,7 +14,7 @@
 
 #include "gz/cIGZString.h"
 
-class cRZString final : public cIGZString {
+class cRZString : public cIGZString {
 public:
     cRZString() = default;
     cRZString(const char* s) : str_(s ? s : "") {}  // original dereferences null; we treat it as empty
