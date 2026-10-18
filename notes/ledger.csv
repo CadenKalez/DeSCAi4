@@ -16058,3 +16058,41 @@ address,symbol,unique_name,source,status,evidence
 0x1002f5080,"cGZWinCombo::layout(int, int)",layout,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
 0x1002f5114,cGZWinCombo::do_drop_down(),do_drop_down,src/gz/WinCombo.cpp|h,recovered-partial,Rewritten from the exported decompile; tested in gz_wincombo_test
 0x1002f5534,cGZWinCombo::send_combo_changed_msg(),send_combo_changed_msg,src/gz/WinCombo.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wincombo_test
+0x1004dc8e6,cGZWinOutline::CreateNewObject(),CreateNewObject,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x1005150e0,cGZWinOutline::cGZWinOutline(),Construct,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x10051525c,cGZWinOutline::cGZWinOutline(),ConstructWrapper,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515266,cGZWinOutline::~cGZWinOutline(),Destruct,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515324,cGZWinOutline::~cGZWinOutline(),DestructAndDelete,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x10051532e,non-virtual thunk to cGZWinOutline::~cGZWinOutline(),DestructThunk,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x10051533c,cGZWinOutline::~cGZWinOutline(),DestructBody,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x10051536a,non-virtual thunk to cGZWinOutline::~cGZWinOutline(),DestructAndDeleteThunk,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515378,"cGZWinOutline::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x10051539a,"non-virtual thunk to cGZWinOutline::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x1005153c0,cGZWinOutline::AddRef(),AddRef,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x1005153ce,non-virtual thunk to cGZWinOutline::AddRef(),AddRefThunk,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x1005153d8,cGZWinOutline::Release(),Release,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x1005153e6,non-virtual thunk to cGZWinOutline::Release(),ReleaseThunk,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x1005153f0,"cGZWinOutline::SetShapePoly(int, cRZPoint*, bool, bool)",SetShapePoly,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515626,cGZWinOutline::BuildScanlines(),BuildScanlines,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x10051587a,cGZWinOutline::ResizeToFitVertexBounds(bool),ResizeToFitVertexBounds,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515928,cGZWinOutline::GetVertexBounds(cRZRect&) const,GetVertexBounds,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515944,cGZWinOutline::GetPolyCount() const,GetPolyCount,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x10051595e,cGZWinOutline::GetShapePoly(cRZPoint*) const,GetShapePoly,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x1005159ca,cGZWinOutline::DoMessage(cGZMessage&),DoMessage,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515a46,non-virtual thunk to cGZWinOutline::DoMessage(cGZMessage&),DoMessageThunk,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515a54,cGZWinOutline::GZPaint(),GZPaint,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515d9e,non-virtual thunk to cGZWinOutline::GZPaint(),GZPaintThunk,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515db0,"cGZWinOutline::SetArea(int, int, int, int)",SetArea,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515e0c,"non-virtual thunk to cGZWinOutline::SetArea(int, int, int, int)",SetAreaThunk,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515e8c,"cGZWinOutline::SetColor(int, unsigned char, unsigned char, unsigned char)",SetColor,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515ef4,"cGZWinOutline::GetColor(int, unsigned char&, unsigned char&, unsigned char&)",GetColor,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515f4c,cGZWinOutline::GetFillColor(),GetFillColor,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515f5a,cGZWinOutline::SetFillColor(unsigned int),SetFillColor,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515f68,non-virtual thunk to cGZWinOutline::SetFillColor(unsigned int),SetFillColorThunk,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515f72,cGZWinOutline::SetDarkOutlineColor(unsigned int),SetDarkOutlineColor,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100515fdc,cGZWinOutline::SetLightOutlineColor(unsigned int),SetLightOutlineColor,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x100516046,cGZWinOutline::GetDarkOutlineColor(),GetDarkOutlineColor,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x10051607c,cGZWinOutline::GetLightOutlineColor(),GetLightOutlineColor,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x1005160b2,cGZWinOutline::SetFlags(unsigned int),SetFlags,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x1005160be,cGZWinOutline::GetFlags(),GetFlags,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
+0x1005160ca,cGZWinOutline::AsIGZWin(),AsIGZWin,src/gz/WinOutline.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winoutline_test
