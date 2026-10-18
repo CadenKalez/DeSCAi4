@@ -359,3 +359,77 @@ void ModelPointToWorldPoint(const cS3DTransform& t, cS3DVector3& p) {
 }
 
 }  // namespace nS3D
+
+// ---- free operators ----
+
+cS3DVector3 operator*(const cS3DVector3& v, float s) { return {v.x * s, v.y * s, v.z * s}; }
+cS3DVector3 operator-(const cS3DVector3& a, const cS3DVector3& b) { return {a.x - b.x, a.y - b.y, a.z - b.z}; }
+cS3DVector3 operator-(const cS3DVector3& v) { return {-v.x, -v.y, -v.z}; }
+cS3DVector3 operator+(const cS3DVector3& a, const cS3DVector3& b) { return {a.x + b.x, a.y + b.y, a.z + b.z}; }
+
+cS3DVector3 cross(const cS3DVector3& a, const cS3DVector3& b) {
+    cS3DVector3 r;
+    r.x = a.y * b.z - a.z * b.y;
+    r.y = a.z * b.x - a.x * b.z;
+    r.z = a.x * b.y - a.y * b.x;
+    return r;
+}
+
+float dot(const cS3DVector3& a, const cS3DVector3& b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+
+cS3DMatrix4 operator*(const cS3DMatrix4& a, const cS3DMatrix4& b) {
+    const auto& A = a.m;
+    const auto& B = b.m;
+    cS3DMatrix4 r;
+    auto& o = r.m;
+    for (int c = 0; c < 4; ++c) o[0][c] = A[0][0] * B[0][c] + A[0][1] * B[1][c] + A[0][2] * B[2][c] + A[0][3] * B[3][c];
+    for (int row = 1; row < 4; ++row) {
+        // Columns 0 and 2 are summed last term first, columns 1 and 3 first term first.
+        o[row][0] = B[3][0] * A[row][3] + B[2][0] * A[row][2] + B[1][0] * A[row][1] + B[0][0] * A[row][0];
+        o[row][1] = B[0][1] * A[row][0] + B[1][1] * A[row][1] + B[2][1] * A[row][2] + B[3][1] * A[row][3];
+        o[row][2] = B[3][2] * A[row][3] + B[2][2] * A[row][2] + B[1][2] * A[row][1] + B[0][2] * A[row][0];
+        o[row][3] = A[row][0] * B[0][3] + A[row][1] * B[1][3] + A[row][2] * B[2][3] + A[row][3] * B[3][3];
+    }
+    return r;
+}
+
+void Bezier3D4ControlsArray(const cS3DVector3& p0, const cS3DVector3& p1, const cS3DVector3& p2, const cS3DVector3& p3,
+                            cS3DVector3* out, int count) {
+    if (count <= 0) return;
+    float t = 1.0f / static_cast<float>(count);
+    for (int i = 0; i < count; ++i) {
+        const float t2 = t * t;
+        const float t3 = t * t2;
+        const float w0 = ((1.0f - t * 3.0f) + t2 * 3.0f) - t3;
+        const float w1 = t2 * -6.0f + t * 3.0f + t3 * 3.0f;
+        const float w2 = t2 * 3.0f - t3 * 3.0f;
+        out[i].x = p3.x * t3 + p2.x * w2 + p1.x * w1 + p0.x * w0;
+        out[i].y = p3.y * t3 + p2.y * w2 + p1.y * w1 + p0.y * w0;
+        out[i].z = p3.z * t3 + p2.z * w2 + p1.z * w1 + p0.z * w0;
+        t = t + 1.0f / static_cast<float>(count);
+    }
+}
+
+vector4 operator*(const matrix44& m, const vector4& v) {
+    vector4 r;
+    for (int c = 0; c < 4; ++c)
+        r.v[c] = v.v[3] * m.m[12 + c] + v.v[2] * m.m[8 + c] + v.v[1] * m.m[4 + c] + m.m[c] * v.v[0];
+    return r;
+}
+
+matrix44 RotateRadMatrix44(char axis, float radians) {
+    matrix44 r;
+    for (float& e : r.m) e = 0.0f;
+    const float s = std::sin(radians), c = std::cos(radians);
+    switch (axis) {
+        case 'X': case 'x':
+            r.m[0] = 1.0f; r.m[5] = c; r.m[6] = s; r.m[9] = -s; r.m[10] = c; break;
+        case 'Y': case 'y':
+            r.m[0] = c; r.m[2] = -s; r.m[5] = 1.0f; r.m[8] = s; r.m[10] = c; break;
+        case 'Z': case 'z':
+            r.m[0] = c; r.m[1] = s; r.m[4] = -s; r.m[5] = c; r.m[10] = 1.0f; break;
+        default: break;
+    }
+    r.m[15] = 1.0f;
+    return r;
+}

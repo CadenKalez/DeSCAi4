@@ -107,6 +107,43 @@ int main() {
         nS3D::ModelVectorToWorldVector(placed, q);
         CHECK(Near(q.x, 0, 1e-5f) && Near(q.z, -1, 1e-5f));
     }
+    {   // free operators
+        cS3DVector3 a{1, 2, 3}, b{4, 5, 6};
+        cS3DVector3 s = a + b, d = b - a, n = -a, m = a * 2.0f, c = cross(a, b);
+        CHECK(s.x == 5 && s.y == 7 && s.z == 9 && d.x == 3 && d.z == 3 && n.y == -2 && m.z == 6);
+        CHECK(c.x == -3 && c.y == 6 && c.z == -3 && dot(a, b) == 32);
+        cS3DMatrix4 x, y;
+        for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) { x.m[i][j] = float(i * 4 + j + 1); y.m[i][j] = float(j == i ? 2 : 0); }
+        cS3DMatrix4 xy = x * y;
+        for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) CHECK(xy.m[i][j] == 2.0f * x.m[i][j]);
+        cS3DMatrix4 id;
+        cS3DMatrix4 xi = x * id;
+        for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) CHECK(xi.m[i][j] == x.m[i][j]);
+        cS3DMatrix4 p, q;
+        for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) { p.m[i][j] = float(i + 2 * j); q.m[i][j] = float(3 * i - j); }
+        cS3DMatrix4 pq = p * q;
+        for (int i = 0; i < 4; ++i) for (int j = 0; j < 4; ++j) {
+            float want = 0; for (int k = 0; k < 4; ++k) want += p.m[i][k] * q.m[k][j];
+            CHECK(pq.m[i][j] == want);
+        }
+        cS3DVector3 pts[4];
+        Bezier3D4ControlsArray({0, 0, 0}, {1, 0, 0}, {2, 0, 0}, {3, 0, 0}, pts, 4);
+        CHECK(Near(pts[3].x, 3, 1e-5f) && Near(pts[1].x, 1.5f, 1e-5f) && pts[0].y == 0);   // a straight line is uniform in t
+        Bezier3D4ControlsArray({0, 0, 0}, {1, 0, 0}, {2, 0, 0}, {3, 0, 0}, pts, 0);
+        vector4 v4; v4.v[0] = 1; v4.v[1] = 2; v4.v[2] = 3; v4.v[3] = 4;
+        matrix44 mm;
+        mm.m[12] = 10;   // translation row
+        vector4 r = mm * v4;
+        CHECK(r.v[0] == 1 + 40 && r.v[1] == 2 && r.v[3] == 4);
+        matrix44 rx = RotateRadMatrix44('X', 1.5707964f), rz = RotateRadMatrix44('z', 1.5707964f), ry = RotateRadMatrix44('Y', 0.0f);
+        CHECK(rx.m[0] == 1 && Near(rx.m[6], 1, 1e-5f) && Near(rx.m[9], -1, 1e-5f) && rx.m[15] == 1);
+        CHECK(Near(rz.m[1], 1, 1e-5f) && Near(rz.m[4], -1, 1e-5f) && rz.m[10] == 1);
+        CHECK(ry.m[0] == 1 && ry.m[2] == 0 && ry.m[5] == 1 && ry.m[8] == 0 && ry.m[10] == 1);
+        matrix44 none = RotateRadMatrix44('Q', 1.0f);
+        CHECK(none.m[0] == 0 && none.m[15] == 1);
+        nS3D::S3DBlockTag tag{2.5f};
+        CHECK(float(tag) == 2.5f);
+    }
     if (failures) return 1;
     std::printf("s3d_math: all passed\n");
 }

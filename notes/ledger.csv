@@ -17540,3 +17540,14 @@ address,symbol,unique_name,source,status,evidence
 0x1003dbf04,non-virtual thunk to cGZMessage2CommandDispatcherMessage::Release(),ReleaseThunk,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
 0x1003dbf0e,"cGZMessage2CommandDispatcherMessage::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
 0x1003dbf3a,"non-virtual thunk to cGZMessage2CommandDispatcherMessage::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x10031fc88,"void Bezier3D4ControlsArray<cS3DVector3>(cS3DVector3&, cS3DVector3&, cS3DVector3&, cS3DVector3&, cS3DVector3*, int)",void Bezier3D4ControlsArray<cS3DVector3>,src/s3d/S3DMath.cpp|h,recovered,decompile; tests/s3d_math_test.cpp
+0x1003f49b0,"operator*(cS3DVector3 const&, float)",operator*_cS3DVector3_const_float,src/s3d/S3DMath.cpp|h,recovered,decompile; tests/s3d_math_test.cpp
+0x1003f7620,"operator-(cS3DVector3 const&, cS3DVector3 const&)",operator-_cS3DVector3_const_cS3DVector3_const,src/s3d/S3DMath.cpp|h,recovered,decompile; tests/s3d_math_test.cpp
+0x1003f7700,"cross(cS3DVector3 const&, cS3DVector3 const&)",cross,src/s3d/S3DMath.cpp|h,recovered,decompile; tests/s3d_math_test.cpp
+0x1003f78f0,operator-(cS3DVector3 const&),operator-_cS3DVector3_const,src/s3d/S3DMath.cpp|h,recovered,decompile; tests/s3d_math_test.cpp
+0x1003f7e90,nS3D::S3DBlockTag::operator float() const,operator float,src/s3d/S3DMath.cpp|h,recovered,decompile; tests/s3d_math_test.cpp
+0x100628be0,"operator+(cS3DVector3 const&, cS3DVector3 const&)",operator+,src/s3d/S3DMath.cpp|h,recovered,decompile; tests/s3d_math_test.cpp
+0x100628c90,"dot(cS3DVector3 const&, cS3DVector3 const&)",dot,src/s3d/S3DMath.cpp|h,recovered,decompile; tests/s3d_math_test.cpp
+0x100749684,"operator*(cS3DMatrix4 const&, cS3DMatrix4 const&)",operator*_cS3DMatrix4_const_cS3DMatrix4_const,src/s3d/S3DMath.cpp|h,recovered,decompile; tests/s3d_math_test.cpp
+0x1007b71f3,"RotateRadMatrix44(char, float)",RotateRadMatrix44,src/s3d/S3DMath.cpp|h,recovered,decompile; tests/s3d_math_test.cpp
+0x1007d39f9,"operator*(matrix44 const&, vector4 const&)",operator*_matrix44_const_vector4_const,src/s3d/S3DMath.cpp|h,recovered,decompile; tests/s3d_math_test.cpp
