@@ -99,6 +99,7 @@ declare -a TESTS=(
  "rz_cursorresource:$T/rz_cursorresource_test.cpp $S/rz/CursorResource.cpp $S/gz/cGZPersistResourceManager.cpp $S/rz/cRZString.cpp $S/rz/cRZUnknownList.cpp $S/gz/cGZPersistResourceKeyList.cpp -I$T"
  "rz_randomsuper:$T/rz_randomsuper_test.cpp $S/rz/cRZRandomSuper.cpp"
  "gz_cheatcode:$T/gz_cheatcode_test.cpp $S/gz/CheatCodeManager.cpp $S/rz/cRZFastCompression3.cpp $S/rz/cRZMessage2Standard.cpp $S/rz/cRZVariant.cpp $S/rz/cRZString.cpp $S/rz/cRZDate.cpp $S/rz/nRZHash.cpp"
+ "gz_messageserver2:$T/gz_messageserver2_test.cpp $S/gz/cGZMessageServer2.cpp $S/gz/cGZMessageQueue2.cpp $S/rz/cRZMessage2Standard.cpp $S/rz/cRZVariant.cpp $S/rz/cRZString.cpp $S/rz/nRZHash.cpp"
  "sc4_particlesim:$T/sc4_particlesim_test.cpp $S/sc4/ParticleSimulatorBase.cpp $S/gz/COMLibrary.cpp $S/rz/cRZString.cpp"
  "rz_autoref:$T/rz_autoref_test.cpp $S/rz/cRZSysServPtr.cpp"
  "sc4_tileneighborhood:$T/sc4_tileneighborhood_test.cpp $S/sc4/TileNeighborhood.cpp $S/rz/cRZString.cpp"

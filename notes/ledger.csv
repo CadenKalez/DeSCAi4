@@ -15363,3 +15363,42 @@ address,symbol,unique_name,source,status,evidence
 0x1002df77c,"cGZCheatCodeManager::GetCheatCodePassword(unsigned char*, unsigned int&)",GetCheatCodePassword,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
 0x1002df7cc,"cGZCheatCodeManager::SetCheatCodePassword(unsigned char*, unsigned int)",SetCheatCodePassword,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
 0x1002df866,"cGZCheatCodeManager::SetEnableDisableStrings(cIGZString const&, cIGZString const&)",SetEnableDisableStrings,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1000402e2,cGZMessageServer2::GeneralMessageTargetInfo::operator=(cGZMessageServer2::GeneralMessageTargetInfo const&),operator=,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053a1a,cGZMessageServer2::cGZMessageServer2(),Construct,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053a30,cGZMessageServer2::cGZMessageServer2(),ConstructWrapper,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053b92,cGZMessageServer2::~cGZMessageServer2(),Destruct,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053da0,cGZMessageServer2::~cGZMessageServer2(),DestructAndDelete,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053daa,non-virtual thunk to cGZMessageServer2::~cGZMessageServer2(),DestructThunk,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053db8,non-virtual thunk to cGZMessageServer2::~cGZMessageServer2(),DestructAndDeleteThunk,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053dc6,cGZMessageServer2::~cGZMessageServer2(),DestructBody,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053df4,non-virtual thunk to cGZMessageServer2::~cGZMessageServer2(),DestructBodyThunk_3df4,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053e02,non-virtual thunk to cGZMessageServer2::~cGZMessageServer2(),DestructBodyThunk_3e02,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053e10,cGZMessageServer2::Init(),Init,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053e34,non-virtual thunk to cGZMessageServer2::Init(),InitThunk,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053e58,cGZMessageServer2::Shutdown(),Shutdown,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053e7c,non-virtual thunk to cGZMessageServer2::Shutdown(),ShutdownThunk,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053ea0,"cGZMessageServer2::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053ec2,"non-virtual thunk to cGZMessageServer2::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_3ec2,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053ee8,"non-virtual thunk to cGZMessageServer2::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_3ee8,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053f0e,cGZMessageServer2::AddRef(),AddRef,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053f1c,non-virtual thunk to cGZMessageServer2::AddRef(),AddRefThunk_3f1c,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053f26,non-virtual thunk to cGZMessageServer2::AddRef(),AddRefThunk_3f26,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053f34,cGZMessageServer2::Release(),Release,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053f42,non-virtual thunk to cGZMessageServer2::Release(),ReleaseThunk_3f42,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053f4c,non-virtual thunk to cGZMessageServer2::Release(),ReleaseThunk_3f4c,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053f5a,cGZMessageServer2::GetRefCount() const,GetRefCount,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100053f6a,cGZMessageServer2::MessageSend(cIGZMessage2*),MessageSend,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x1000540f4,cGZMessageServer2::DoDelayedNotificationAdditionsAndRemovalsImmediately(),DoDelayedNotificationAdditionsAndRemovalsImmediately,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x1000544bc,"cGZMessageServer2::AddNotification(cIGZMessageTarget2*, unsigned int)",AddNotification,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100054964,cGZMessageServer2::DoDelayedNotificationAdditionsAndRemovals(),DoDelayedNotificationAdditionsAndRemovals,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100054a20,"cGZMessageServer2::RemoveNotification(cIGZMessageTarget2*, unsigned int)",RemoveNotification,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100054c8e,"cGZMessageServer2::MessagePost(cIGZMessage2*, bool)",MessagePost,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100054d02,"cGZMessageServer2::GeneralMessagePostToTarget(cIGZMessage2*, cIGZMessageTarget2*)",GeneralMessagePostToTarget,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100054ec2,cGZMessageServer2::CancelGeneralMessagePostsToTarget(cIGZMessageTarget2*),CancelGeneralMessagePostsToTarget,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100055398,cGZMessageServer2::SendGeneralMessages(),SendGeneralMessages,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x1000554fa,cGZMessageServer2::OnTick(unsigned int),OnTick,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x10005562c,non-virtual thunk to cGZMessageServer2::OnTick(unsigned int),OnTickThunk,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x10005563e,cGZMessageServer2::GetMessageQueueSize(),GetMessageQueueSize,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x1000556b0,cGZMessageServer2::SetAlwaysClearQueueOnTick(bool),SetAlwaysClearQueueOnTick,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x1000556be,"cGZMessageServer2::CreateMessage(unsigned int, unsigned int, void**)",CreateMessage,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
+0x100055aec,"cGZMessageServer2::GeneralMessageTargetInfo::GeneralMessageTargetInfo(cIGZMessageTarget2*, cIGZMessage2*)",GeneralMessageTargetInfo,src/gz/cGZMessageServer2.cpp|h,recovered,gz_messageserver2
