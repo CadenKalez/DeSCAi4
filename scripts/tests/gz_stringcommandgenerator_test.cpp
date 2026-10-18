@@ -16,16 +16,28 @@ struct Server final : cIGZCommandServer {
     bool QueryInterface(std::uint32_t, void**) override { return false; }
     std::uint32_t AddRef() override { return ++refs; }
     std::uint32_t Release() override { return --refs; }
-    bool GetCommandName(std::uint32_t id, cIGZString& name, std::uint32_t) override {
+    bool Init() override { return true; }
+    bool Shutdown() override { return true; }
+    void CreateCommandParameterSet(cIGZCommandParameterSet**) override {}
+    bool RegisterCommand(std::uint32_t, const char*, const char*) override { return true; }
+    bool RegisterCommands(const cGZCommandInfoEntry*, std::uint32_t) override { return true; }
+    bool RegisterCommandParameterInfo(std::uint32_t, const char*) override { return true; }
+    bool UnregisterCommand(std::uint32_t) override { return true; }
+    bool UnregisterCommands(const cGZCommandInfoEntry*, std::uint32_t) override { return true; }
+    bool GetCommandInfo(std::uint32_t id, cIGZString& name, cIGZString*) const override {
         for (auto& e : ids) if (e.second == id) { name.AssignFromCString(e.first.c_str()); return true; }
         return false;
     }
-    std::uint32_t FindCommand(const cIGZString& name) override {
+    std::uint32_t GetCommandID(const cIGZString& name) const override {
         auto it = ids.find(name.ToChar());
         return it == ids.end() ? 0 : it->second;
     }
-    bool RegisterGenerator(cIGZCommandGenerator*) override { return true; }
-    bool UnregisterGenerator(cIGZCommandGenerator*) override { return true; }
+    std::uint32_t GetCommandIDFromCommandString(const char*, std::uint32_t) const override { return 0; }
+    void EnumerateCommands(std::vector<std::uint32_t>&) const override {}
+    bool RegisterCommandGenerator(cIGZCommandGenerator*) override { return true; }
+    bool UnregisterCommandGenerator(cIGZCommandGenerator*) override { return true; }
+    cIGZCommandDispatcher* GetCommandDispatcher() const override { return nullptr; }
+    bool SetCommandDispatcher(cIGZCommandDispatcher*) override { return true; }
     std::uint32_t ExecuteCommand(std::uint32_t id, cIGZCommandParameterSet* in, cIGZCommandParameterSet* out) override {
         lastId = id;
         lastArgs.clear();
@@ -37,6 +49,11 @@ struct Server final : cIGZCommandServer {
         if (out) out->AppendParameter(cRZVariant(static_cast<std::uint32_t>(42)));
         return 0;
     }
+    std::uint32_t ExecuteCommand(const char*, std::uint32_t, cIGZCommandParameterSet*) override { return 2; }
+    std::uint32_t ExecuteCommandFormatted(const char*, cIGZCommandParameterSet*, ...) override { return 2; }
+    bool ConvertStringToCommand(const char*, std::uint32_t, std::uint32_t&, cIGZCommandParameterSet*&) override { return false; }
+    bool ConvertCommandToString(std::uint32_t, cIGZCommandParameterSet*, cIGZString&) override { return false; }
+    bool ConvertCommandOutputToString(cIGZCommandParameterSet*, cIGZString&) override { return false; }
 };
 Server g_server;
 bool Resolve(std::uint32_t service, std::uint32_t iid, void** out) {

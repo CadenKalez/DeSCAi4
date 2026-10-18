@@ -73,7 +73,7 @@ bool cGZStringCommandGenerator::ConvertStringToCommand(const char* text, std::ui
         tokens_.resize(tokens_.size() * 2);   // the vector grows even when the parse fit
     } while (!fits);
     if (count == 0) return false;
-    id = server_->FindCommand(tokens_[0]);
+    id = server_->GetCommandID(tokens_[0]);
     if (id == 0) return false;
     auto* set = new cGZCommandParameterSet();
     params = set;
@@ -90,7 +90,7 @@ bool cGZStringCommandGenerator::ConvertCommandToString(std::uint32_t id, cIGZCom
     out.Erase(0, 0xffffffffu);
     if (!server_.get()) return false;
     cRZString text;
-    if (!server_->GetCommandName(id, text, 0)) return false;
+    if (!server_->GetCommandInfo(id, text, nullptr)) return false;
     ConvertStringToArgumentString(text, text);
     out.AppendString(text);
     if (params) {

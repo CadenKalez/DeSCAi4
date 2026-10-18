@@ -17478,3 +17478,65 @@ address,symbol,unique_name,source,status,evidence
 0x1003dbae0,"cGZStringCommandGenerator::ConvertCommandToString(unsigned int, cIGZCommandParameterSet*, cIGZString&)",ConvertCommandToString,src/gz/StringCommandGenerator.cpp|h,recovered,decompile of every method; tests/gz_stringcommandgenerator_test.cpp
 0x1003dbc48,"cGZStringCommandGenerator::ConvertStringToArgumentString(cIGZString const&, cIGZString&)",ConvertStringToArgumentString,src/gz/StringCommandGenerator.cpp|h,recovered,decompile of every method; tests/gz_stringcommandgenerator_test.cpp
 0x1003dbcdc,"cGZStringCommandGenerator::ConvertCommandOutputToString(cIGZCommandParameterSet*, cIGZString&)",ConvertCommandOutputToString,src/gz/StringCommandGenerator.cpp|h,recovered,decompile of every method; tests/gz_stringcommandgenerator_test.cpp
+0x1003dc4c8,cGZCommandServer::cGZCommandServer(),Construct,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc55a,cGZCommandServer::~cGZCommandServer(),Destruct,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc646,cGZCommandServer::~cGZCommandServer(),DestructAndDelete,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc650,non-virtual thunk to cGZCommandServer::~cGZCommandServer(),DestructThunk,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc65e,non-virtual thunk to cGZCommandServer::~cGZCommandServer(),DestructAndDeleteThunk,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc66c,cGZCommandServer::~cGZCommandServer(),DestructBody,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc69a,non-virtual thunk to cGZCommandServer::~cGZCommandServer(),DestructBodyThunk_c69a,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc6a8,non-virtual thunk to cGZCommandServer::~cGZCommandServer(),DestructBodyThunk_c6a8,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc6b6,cGZCommandServer::Init(),Init,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc7b2,non-virtual thunk to cGZCommandServer::Init(),InitThunk,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc7c4,cGZCommandServer::Shutdown(),Shutdown,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc8b2,non-virtual thunk to cGZCommandServer::Shutdown(),ShutdownThunk,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc8c4,"cGZCommandServer::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc8f4,"non-virtual thunk to cGZCommandServer::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_c8f4,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc902,"non-virtual thunk to cGZCommandServer::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_c902,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc910,cGZCommandServer::AddRef(),AddRef,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc91e,non-virtual thunk to cGZCommandServer::AddRef(),AddRefThunk_c91e,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc92c,non-virtual thunk to cGZCommandServer::AddRef(),AddRefThunk_c92c,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc93a,cGZCommandServer::Release(),Release,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc95a,non-virtual thunk to cGZCommandServer::Release(),ReleaseThunk_c95a,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc97e,non-virtual thunk to cGZCommandServer::Release(),ReleaseThunk_c97e,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc9a2,cGZCommandServer::CreateCommandParameterSet(cIGZCommandParameterSet**),CreateCommandParameterSet,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc9e4,"cGZCommandServer::NotifyCommandRegistration(cGZCommandServer::CommandInfo const*, bool, cIGZCommandGenerator*)",NotifyCommandRegistration,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dcb1a,"cGZCommandServer::RegisterCommand(unsigned int, char const*, char const*)",RegisterCommand,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dce3c,"cGZCommandServer::RegisterCommands(cIGZCommandServer::cGZCommandInfo*, unsigned int)",RegisterCommands,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dce8c,"cGZCommandServer::RegisterCommandParameterInfo(unsigned int, char const*)",RegisterCommandParameterInfo,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dd006,cGZCommandServer::UnregisterCommand(unsigned int),UnregisterCommand,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dd06c,"cGZCommandServer::UnregisterCommands(cIGZCommandServer::cGZCommandInfo*, unsigned int)",UnregisterCommands,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dd0aa,"cGZCommandServer::GetCommandInfo(unsigned int, cIGZString&, cIGZString*) const",GetCommandInfo,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dd120,cGZCommandServer::GetCommandID(cIGZString const&) const,GetCommandID,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dd19c,"cGZCommandServer::GetCommandIDFromCommandString(char const*, unsigned int) const",GetCommandIDFromCommandString,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dd28c,cGZCommandServer::EnumerateCommands(ivector<unsigned int>&) const,EnumerateCommands,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dd322,cGZCommandServer::RegisterCommandGenerator(cIGZCommandGenerator*),RegisterCommandGenerator,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dd48e,cGZCommandServer::UnregisterCommandGenerator(cIGZCommandGenerator*),UnregisterCommandGenerator,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dd51e,cGZCommandServer::GetCommandDispatcher() const,GetCommandDispatcher,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dd528,cGZCommandServer::SetCommandDispatcher(cIGZCommandDispatcher*),SetCommandDispatcher,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dd56e,"cGZCommandServer::ExecuteCommand(unsigned int, cIGZCommandParameterSet*, cIGZCommandParameterSet*)",ExecuteCommand_uint_cIGZCommandParameterSet_cIGZCommandParameterSet,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dd58c,"cGZCommandServer::ExecuteCommand(char const*, unsigned int, cIGZCommandParameterSet*)",ExecuteCommand_char_const_uint_cIGZCommandParameterSet,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dd5aa,"cGZCommandServer::ExecuteCommandFormatted(char const*, cIGZCommandParameterSet*, ...)",ExecuteCommandFormatted,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dd69c,"cGZCommandServer::ConvertStringToCommand(char const*, unsigned int, unsigned int&, cIGZCommandParameterSet*&)",ConvertStringToCommand,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dd6b8,"cGZCommandServer::ConvertCommandToString(unsigned int, cIGZCommandParameterSet*, cIGZString&)",ConvertCommandToString,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dd6d4,"cGZCommandServer::ConvertCommandOutputToString(cIGZCommandParameterSet*, cIGZString&)",ConvertCommandOutputToString,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dbf54,cGZMessage2CommandDispatcher::~cGZMessage2CommandDispatcher(),Destruct,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc01a,cGZMessage2CommandDispatcher::~cGZMessage2CommandDispatcher(),DestructAndDelete,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc024,cGZMessage2CommandDispatcher::~cGZMessage2CommandDispatcher(),DestructBody,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc052,cGZMessage2CommandDispatcher::Init(),Init,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc28e,cGZMessage2CommandDispatcher::Shutdown(),Shutdown,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc322,"cGZMessage2CommandDispatcher::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc34c,cGZMessage2CommandDispatcher::AddRef(),AddRef,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc35a,cGZMessage2CommandDispatcher::Release(),Release,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dc376,"cGZMessage2CommandDispatcher::ExecuteCommand(unsigned int, cIGZCommandParameterSet*, cIGZCommandParameterSet*)",ExecuteCommand,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dbdf2,cGZMessage2CommandDispatcherMessage::~cGZMessage2CommandDispatcherMessage(),Destruct,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dbe82,cGZMessage2CommandDispatcherMessage::~cGZMessage2CommandDispatcherMessage(),DestructAndDelete,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dbe8c,non-virtual thunk to cGZMessage2CommandDispatcherMessage::~cGZMessage2CommandDispatcherMessage(),DestructThunk,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dbe9a,cGZMessage2CommandDispatcherMessage::~cGZMessage2CommandDispatcherMessage(),DestructBody,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dbed0,non-virtual thunk to cGZMessage2CommandDispatcherMessage::~cGZMessage2CommandDispatcherMessage(),DestructAndDeleteThunk,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dbede,cGZMessage2CommandDispatcherMessage::AddRef(),AddRef,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dbeec,non-virtual thunk to cGZMessage2CommandDispatcherMessage::AddRef(),AddRefThunk,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dbef6,cGZMessage2CommandDispatcherMessage::Release(),Release,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dbf04,non-virtual thunk to cGZMessage2CommandDispatcherMessage::Release(),ReleaseThunk,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dbf0e,"cGZMessage2CommandDispatcherMessage::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
+0x1003dbf3a,"non-virtual thunk to cGZMessage2CommandDispatcherMessage::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/CommandServer.cpp|h,recovered,decompile of every method; tests/gz_commandserver_test.cpp
