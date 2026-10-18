@@ -16230,3 +16230,130 @@ address,symbol,unique_name,source,status,evidence
 0x10051907c,"cGZWinPieMenu::_PieMenuItem::_PieMenuItem(cIGZString const&, cIGZWinBtn*)",_PieMenuItem_String_cIGZWinBtn,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
 0x10051918c,cGZWinPieMenu::_PieMenuItem::operator=(cGZWinPieMenu::_PieMenuItem const&),operator=,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
 0x1005192e6,cGZWinPieMenu::_PieMenuItem::_PieMenuItem(cGZWinPieMenu::_PieMenuItem const&),_PieMenuItem_cGZWinPieMenu_PieMenuItem_const,src/gz/WinPieMenu.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_winpiemenu_test
+0x10024dae6,cGZWinGen::CreateNewObject(),CreateNewObject,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024dbae,cGZWinGen::cGZWinGen(),Construct,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024dc4c,cGZWinGen::cGZWinGen(),ConstructWrapper,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024dcea,cGZWinGen::~cGZWinGen(),Destruct,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024dd88,cGZWinGen::~cGZWinGen(),DestructAndDelete,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024dd92,cGZWinGen::~cGZWinGen(),DestructBody,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024ddc0,"cGZWinGen::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024dde4,"non-virtual thunk to cGZWinGen::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024de10,cGZWinGen::AddRef(),AddRef,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024de1a,non-virtual thunk to cGZWinGen::AddRef(),AddRefThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024de2c,cGZWinGen::Release(),Release,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024de36,non-virtual thunk to cGZWinGen::Release(),ReleaseThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024de48,cGZWinGen::Init(),Init,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024e066,cGZWinGen::create_title_bar(),create_title_bar,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024e500,"cGZWinGen::calc_user_area(int, int, cRZRect&)",calc_user_area,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024e598,cGZWinGen::on_layout(),on_layout,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024e74a,cGZWinGen::Shutdown(),Shutdown,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024e902,"cGZWinGen::SetArea(int, int, int, int)",SetArea,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024eb76,"cGZWinGen::calc_win_area(cRZRect const&, cRZRect&)",calc_win_area,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024ec0c,cGZWinGen::SetCaption(cIGZString const&),SetCaption,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024ec42,"cGZWinGen::IsPointInWindowScreenCoordinates(int, int) const",IsPointInWindowScreenCoordinates,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024ec8a,"cGZWinGen::IsPointInWindowWindowCoordinates(int, int) const",IsPointInWindowWindowCoordinates,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024ed30,cGZWinGen::GZPaint(),GZPaint,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024f01c,cGZWinGen::DoMessage(cGZMessage&),DoMessage,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024f14e,"cGZWinGen::GZOnKeyDown(unsigned int, unsigned int)",GZOnKeyDown,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024f1da,cGZWinGen::kill_self(int),kill_self,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024f260,"cGZWinGen::GZOnKeyUp(unsigned int, unsigned int)",GZOnKeyUp,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024f2be,"cGZWinGen::GZOnMouseDownL(int, int, unsigned int)",GZOnMouseDownL,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024f314,"cGZWinGen::calc_size_mode(int, int)",calc_size_mode,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024f47c,"cGZWinGen::GZOnMouseUpL(int, int, unsigned int)",GZOnMouseUpL,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024f4a0,"cGZWinGen::GZOnMouseMove(int, int, unsigned int)",GZOnMouseMove,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024f6c8,"cGZWinGen::GZOnCommand(unsigned int, unsigned long)",GZOnCommand,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024f700,cGZWinGen::GetWinGenFlag(int) const,GetWinGenFlag,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024f710,non-virtual thunk to cGZWinGen::GetWinGenFlag(int) const,GetWinGenFlagThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024f71c,"cGZWinGen::SetWinGenFlag(int, bool)",SetWinGenFlag,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024f898,cGZWinGen::destroy_title_bar(),destroy_title_bar,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024f96c,cGZWinGen::create_side_bar(),create_side_bar,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fac2,"non-virtual thunk to cGZWinGen::SetWinGenFlag(int, bool)",SetWinGenFlagThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fada,cGZWinGen::GetUserArea(cRZRect&) const,GetUserArea,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024faf8,non-virtual thunk to cGZWinGen::GetUserArea(cRZRect&) const,GetUserAreaThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fb10,cGZWinGen::SetUserArea(cRZRect const&),SetUserArea,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fb2e,non-virtual thunk to cGZWinGen::SetUserArea(cRZRect const&),SetUserAreaThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fb46,cGZWinGen::AsIGZWin(),AsIGZWin,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fb50,non-virtual thunk to cGZWinGen::AsIGZWin(),AsIGZWinThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fb5e,cGZWinGen::GetCLSID() const,GetCLSID,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fb6a,non-virtual thunk to cGZWinGen::GetCLSID() const,GetCLSIDThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fb76,cGZWinGen::SetWinProc(cIGZWinProc*),SetWinProc,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fcb0,non-virtual thunk to cGZWinGen::SetWinProc(cIGZWinProc*),SetWinProcThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fcc4,cGZWinGen::GetWinProc() const,GetWinProc,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fcd2,non-virtual thunk to cGZWinGen::GetWinProc() const,GetWinProcThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fcdc,"cGZWinGen::GetWinProcAs(unsigned int, void**) const",GetWinProcAs,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fcfa,"non-virtual thunk to cGZWinGen::GetWinProcAs(unsigned int, void**) const",GetWinProcAsThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fd14,cGZWinGen::SetUserTarget(cIGZWinProc*),SetUserTarget,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fd26,"cGZWinGen::SetBackgroundBitmap(cIGZWinGen::BGBltType, cIGZBuffer*)",SetBackgroundBitmap_cIGZWinGen_BGBltType_cIGZBuffer,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fd8a,"non-virtual thunk to cGZWinGen::SetBackgroundBitmap(cIGZWinGen::BGBltType, cIGZBuffer*)",SetBackgroundBitmap_cIGZWinGen_BGBltType_cIGZBufferThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fd9e,cGZWinGen::SetBackgroundBitmap(cIGZBuffer*),SetBackgroundBitmap_cIGZBuffer,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fde6,non-virtual thunk to cGZWinGen::SetBackgroundBitmap(cIGZBuffer*),SetBackgroundBitmap_cIGZBufferThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fe24,"cGZWinGen::GetBackgroundBitmap(cIGZWinGen::BGBltType&, cIGZBuffer*&) const",GetBackgroundBitmap_cIGZWinGen_BGBltType_cIGZBuffer,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fe3e,"non-virtual thunk to cGZWinGen::GetBackgroundBitmap(cIGZWinGen::BGBltType&, cIGZBuffer*&) const",GetBackgroundBitmap_cIGZWinGen_BGBltType_cIGZBufferThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fe52,cGZWinGen::GetBackgroundBitmap(cIGZBuffer**) const,GetBackgroundBitmap_cIGZBuffer,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fe76,non-virtual thunk to cGZWinGen::GetBackgroundBitmap(cIGZBuffer**) const,GetBackgroundBitmap_cIGZBufferThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fe94,cGZWinGen::GetBackgroundBlitType(cIGZWinGen::BGBltType&) const,GetBackgroundBlitType,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fea4,non-virtual thunk to cGZWinGen::GetBackgroundBlitType(cIGZWinGen::BGBltType&) const,GetBackgroundBlitTypeThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024feb2,cGZWinGen::SetBackgroundBlitType(cIGZWinGen::BGBltType),SetBackgroundBlitType,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fec0,non-virtual thunk to cGZWinGen::SetBackgroundBlitType(cIGZWinGen::BGBltType),SetBackgroundBlitTypeThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fecc,cGZWinGen::SetUserData(unsigned int),SetUserData_uint,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024feda,non-virtual thunk to cGZWinGen::SetUserData(unsigned int),SetUserData_uintThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fee6,cGZWinGen::GetUserData() const,GetUserData_void,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fef2,non-virtual thunk to cGZWinGen::GetUserData() const,GetUserData_voidThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024fefc,"cGZWinGen::SetUserData(unsigned int, unsigned int)",SetUserData_uint_uint,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024ff18,"non-virtual thunk to cGZWinGen::SetUserData(unsigned int, unsigned int)",SetUserData_uint_uintThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024ff3a,"cGZWinGen::GetUserData(unsigned int, unsigned int&) const",GetUserData_uint_uint,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024ff60,"non-virtual thunk to cGZWinGen::GetUserData(unsigned int, unsigned int&) const",GetUserData_uint_uintThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024ff8c,"cGZWinGen::SetUserData(unsigned int, cIGZUnknown*)",SetUserData_uint_cIGZUnknown,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x1002500fc,"non-virtual thunk to cGZWinGen::SetUserData(unsigned int, cIGZUnknown*)",SetUserData_uint_cIGZUnknownThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10025010e,"cGZWinGen::GetUserData(unsigned int, unsigned int, void**)",GetUserData_uint_uint_void,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x100250160,"non-virtual thunk to cGZWinGen::GetUserData(unsigned int, unsigned int, void**)",GetUserData_uint_uint_voidThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x100250172,cGZWinGen::RemoveUserData(unsigned int),RemoveUserData,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x1002501c0,non-virtual thunk to cGZWinGen::RemoveUserData(unsigned int),RemoveUserDataThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x1002501d2,"cGZWinGen::SetGutters(unsigned char, unsigned char)",SetGutters_uchar_uchar,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x1002501e8,"non-virtual thunk to cGZWinGen::SetGutters(unsigned char, unsigned char)",SetGutters_uchar_ucharThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x1002501f8,"cGZWinGen::GetGutters(int&, int&)",GetGutters_int_int,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x100250212,"non-virtual thunk to cGZWinGen::GetGutters(int&, int&)",GetGutters_int_intThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x100250226,"cGZWinGen::SetGutters(signed char, signed char, signed char, signed char)",SetGutters_signed_char_signed_char_signed_char_signed_char,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10025023e,"non-virtual thunk to cGZWinGen::SetGutters(signed char, signed char, signed char, signed char)",SetGutters_signed_char_signed_char_signed_char_signed_charThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x100250262,"cGZWinGen::GetGutters(int&, int&, int&, int&) const",GetGutters_int_int_int_int,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x100250290,"non-virtual thunk to cGZWinGen::GetGutters(int&, int&, int&, int&) const",GetGutters_int_int_int_intThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x1002502b2,"cGZWinGen::AddColorBar(int, int, int, cRZRect const&)",AddColorBar,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10025049e,"non-virtual thunk to cGZWinGen::AddColorBar(int, int, int, cRZRect const&)",AddColorBarThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x1002504b0,"cGZWinGen::AddDividerH(int, int)",AddDividerH,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x100250538,"non-virtual thunk to cGZWinGen::AddDividerH(int, int)",AddDividerHThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10025054a,cGZWinGen::RemoveColorBar(int),RemoveColorBar,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10025057e,non-virtual thunk to cGZWinGen::RemoveColorBar(int),RemoveColorBarThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x1002505c0,"cGZWinGen::SetCursor(cIGZCursor*, bool)",SetCursor,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10025062e,"cGZWinGen::enum_flat_rects(cIGZWin*, unsigned int, void*, void*)",enum_flat_rects,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen
+0x10024c880,cGZWinGenTitleBar::cGZWinGenTitleBar(),Construct,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024c976,cGZWinGenTitleBar::~cGZWinGenTitleBar(),Destruct,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024c9fc,cGZWinGenTitleBar::~cGZWinGenTitleBar(),DestructAndDelete,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024ca06,cGZWinGenTitleBar::~cGZWinGenTitleBar(),DestructBody,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024ca34,"cGZWinGenTitleBar::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024ca58,"non-virtual thunk to cGZWinGenTitleBar::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_ca58,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024ca84,"non-virtual thunk to cGZWinGenTitleBar::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_ca84,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024cab0,cGZWinGenTitleBar::AddRef(),AddRef,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024caba,non-virtual thunk to cGZWinGenTitleBar::AddRef(),AddRefThunk_caba,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024cacc,non-virtual thunk to cGZWinGenTitleBar::AddRef(),AddRefThunk_cacc,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024cade,cGZWinGenTitleBar::Release(),Release,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024cae8,non-virtual thunk to cGZWinGenTitleBar::Release(),ReleaseThunk_cae8,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024cafa,non-virtual thunk to cGZWinGenTitleBar::Release(),ReleaseThunk_cafa,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024cb0c,cGZWinGenTitleBar::Init(),Init,src/gz/WinGen.cpp|h,recovered-partial,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024cf02,cGZWinGenTitleBar::SetTitleFont(cIGZFont*),SetTitleFont,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024cf56,"cGZWinGenTitleBar::create_and_add_sys_btn(unsigned int, cIGZBuffer*, cRZRect&, cIGZWinBtn*&)",create_and_add_sys_btn,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024d0c6,cGZWinGenTitleBar::Shutdown(),Shutdown,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024d196,cGZWinGenTitleBar::SetCaption(cIGZString const&),SetCaption,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024d1b2,cGZWinGenTitleBar::calc_display_caption(),calc_display_caption,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024d44c,"cGZWinGenTitleBar::SetArea(int, int, int, int)",SetArea,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024d4de,cGZWinGenTitleBar::place_controls(),place_controls,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024d78e,cGZWinGenTitleBar::GZPaint(),GZPaint,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024d82a,cGZWinGenTitleBar::AutoSize(cRZRect const&),AutoSize,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024d8d8,"cGZWinGenTitleBar::GetMinSize(int&, int&)",GetMinSize,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024d946,non-virtual thunk to cGZWinGenTitleBar::AutoSize(cRZRect const&),AutoSizeThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024d958,cGZWinGenTitleBar::GetDisplayCaption(cIGZString**) const,GetDisplayCaption,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024d97a,non-virtual thunk to cGZWinGenTitleBar::GetDisplayCaption(cIGZString**) const,GetDisplayCaptionThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024d998,"cGZWinGenTitleBar::GetGutters(int&, int&, int&, int&) const",GetGutters,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024d9ae,"non-virtual thunk to cGZWinGenTitleBar::GetGutters(int&, int&, int&, int&) const",GetGuttersThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024d9c4,"cGZWinGenTitleBar::GetTitleFont(unsigned int, void**) const",GetTitleFont,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024d9e2,"non-virtual thunk to cGZWinGenTitleBar::GetTitleFont(unsigned int, void**) const",GetTitleFontThunk,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
+0x10024d9fc,"cGZWinGenTitleBar::SetTitleBarFlag(int, bool)",SetTitleBarFlag,src/gz/WinGen.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingen; Init default-bitmap path not recovered
