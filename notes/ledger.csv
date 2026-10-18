@@ -17611,3 +17611,21 @@ address,symbol,unique_name,source,status,evidence
 0x1005c2c0e,"operator<<(cIGZOStream&, cSC4MessageTriggerDescription const&)",operator<<_cIGZOStream_cSC4MessageTriggerDescription_const,src/sc4/EffectDescriptions.cpp|h,recovered,decompile; tests/sc4_effectdescriptions_test.cpp
 0x1006fd0d8,"operator>>(cIGZIStream&, cSC4DynamicParticleDescription&)",operator>>_cIGZIStream_cSC4DynamicParticleDescription,src/sc4/EffectDescriptions.cpp|h,recovered,decompile; tests/sc4_effectdescriptions_test.cpp
 0x1006fd207,"operator<<(cIGZOStream&, cSC4DynamicParticleDescription const&)",operator<<_cIGZOStream_cSC4DynamicParticleDescription_const,src/sc4/EffectDescriptions.cpp|h,recovered,decompile; tests/sc4_effectdescriptions_test.cpp
+0x1000ce8b3,"operator>>(cIGZIStream&, cRZRandom&)",operator>>_cIGZIStream_cRZRandom,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x1000ce8d2,cRZRandomSubclass::Read(cIGZIStream&),Read,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x1000ce92a,"operator<<(cIGZOStream&, cRZRandom const&)",operator<<_cIGZOStream_cRZRandom_const,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x1000ce948,cRZRandomSubclass::Write(cIGZOStream&),Write,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x1000ce99f,"operator>>(cIGZIStream&, BoundaryIterator&)",operator>>_cIGZIStream_BoundaryIterator,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x1000cea25,"operator<<(cIGZOStream&, BoundaryIterator const&)",operator<<_cIGZOStream_BoundaryIterator_const,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x1000cea88,"operator>>(cIGZIStream&, RandomIterator&)",operator>>_cIGZIStream_RandomIterator,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x1000ceb93,"operator<<(cIGZOStream&, RandomIterator const&)",operator<<_cIGZOStream_RandomIterator_const,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x1000cec88,"operator>>(cIGZIStream&, ScanningIterator&)",operator>>_cIGZIStream_ScanningIterator,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x1000ced01,"operator<<(cIGZOStream&, ScanningIterator const&)",operator<<_cIGZOStream_ScanningIterator_const,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x1000cfb37,"operator>>(cIGZIStream&, ilist<cISC4Occupant*>&)",operator>>_cIGZIStream_ilist_cISC4Occupant,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x1000cfbd7,"operator<<(cIGZOStream&, ilist<cISC4Occupant*> const&)",operator<<_cIGZOStream_ilist_cISC4Occupant_const,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x1000cfc24,"operator>>(cIGZIStream&, cSC4ResponseCurve&)",operator>>_cIGZIStream_cSC4ResponseCurve,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x1000cfd0c,"operator<<(cIGZOStream&, cSC4ResponseCurve const&)",operator<<_cIGZOStream_cSC4ResponseCurve_const,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x100182e4c,"cIGZOStream& operator<<<unsigned char>(cIGZOStream&, SC4Rect<unsigned char> const&)",cIGZOStream& operator<<<unsigned char>,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x100215cb1,"operator>>(cIGZIStream&, cISC4DispatchManager::DispatchInfo&)",operator>>_cIGZIStream_cISC4DispatchManager_DispatchInfo,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x100215d52,"operator<<(cIGZOStream&, cISC4DispatchManager::DispatchInfo const&)",operator<<_cIGZOStream_cISC4DispatchManager_DispatchInfo_const,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x10030d31a,"cIGZOStream& operator<<<int>(cIGZOStream&, SC4Rect<int> const&)",cIGZOStream& operator<<<int>,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp

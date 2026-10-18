@@ -9,6 +9,9 @@
 #pragma once
 #include <cstdint>
 
+class cIGZIStream;
+class cIGZOStream;
+
 class cRZRandom {
 public:
     explicit cRZRandom(std::uint32_t seed) { Seed(seed); }
@@ -30,6 +33,11 @@ public:
     double RandomDoubleGaussian() noexcept;                             // polar method, caches 2nd
     double RandomDoubleRangeGaussian(double lo, double hi) noexcept;    // clamped to +-3 sigma
     double RandomDoubleRangeGaussianFast(double lo, double hi) noexcept;  // mean of three uniforms
+
+    // Saves / restores the generator (cRZRandomSubclass::Write @ 0x1000ce948, Read @ 0x1000ce8d2): both states, the spare
+    // flag as a signed 32-bit value and the cached gaussian as a double.
+    void Read(cIGZIStream& stream);
+    void Write(cIGZOStream& stream) const;
 
 private:
     float NextMulUnit() noexcept;  // next MUL value as a float in [-0.5, 0.5)

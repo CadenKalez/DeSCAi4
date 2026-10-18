@@ -120,3 +120,24 @@ double cRZRandom::RandomDoubleRangeGaussianFast(double lo, double hi) noexcept {
     const double c = static_cast<double>(NextMulUnit()) + 0.5;
     return (a + b + c) * (hi - lo) * (1.0 / 3.0) + lo;
 }
+
+#include "gz/cIGZIStream.h"
+#include "gz/cIGZOStream.h"
+
+void cRZRandom::Read(cIGZIStream& stream) {
+    stream.GetUint32(lcgState_);
+    std::uint32_t mul = 0;
+    stream.GetUint32(mul);
+    mulState_ = static_cast<std::int32_t>(mul);
+    std::int32_t spare = 0;
+    stream.GetSint32(spare);
+    hasSpareGaussian_ = spare;
+    stream.GetFloat64(spareGaussian_);
+}
+
+void cRZRandom::Write(cIGZOStream& stream) const {
+    stream.SetUint32(lcgState_);
+    stream.SetUint32(static_cast<std::uint32_t>(mulState_));
+    stream.SetSint32(hasSpareGaussian_);
+    stream.SetFloat64(spareGaussian_);
+}

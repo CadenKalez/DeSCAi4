@@ -16,8 +16,13 @@
 #include <cstdint>
 #include <vector>
 
+class cIGZIStream;
+class cIGZOStream;
+
 class RandomIterator {
 public:
+    friend cIGZIStream& operator>>(cIGZIStream& s, RandomIterator& v);          // sc4/SimStreamOps.cpp
+    friend cIGZOStream& operator<<(cIGZOStream& s, const RandomIterator& v);
     RandomIterator() = default;
 
     void SetRect(int minA, int minB, int maxA, int maxB) { minA_ = minA; minB_ = minB; maxA_ = maxA; maxB_ = maxB; dirty_ = true; }
