@@ -17673,3 +17673,20 @@ address,symbol,unique_name,source,status,evidence
 0x1001f75e0,cGZWinIMEServer::cGZIMECompositionStringDataEx::Set(),Set_75e0,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
 0x1001f763e,cGZWinIMEServer::cGZIMECandidateListDataEx::cGZIMECandidateListDataEx(),cGZIMECandidateListDataEx,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
 0x1001f7708,cGZWinIMEServer::cGZIMECandidateListDataEx::Set(),Set_7708,src/gz/WinIMEServer.cpp|h,recovered,decompile of every method; tests/gz_winimeserver_test.cpp
+0x100366e7a,"SC4QuadGrid::SC4QuadGrid(float, float)",Construct_float_float,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x100366ed8,"SC4QuadGrid::SetSize(float, float)",SetSize,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x100366f8c,"SC4QuadGrid::SC4QuadGrid(float, float)",Construct_float_floatWrapper,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x100366f96,SC4QuadGrid::~SC4QuadGrid(),Destruct,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x100366fd4,SC4QuadGrid::RemoveAllElements(),RemoveAllElements,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x10036702e,SC4QuadGrid::~SC4QuadGrid(),DestructAndDelete,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x100367038,"SC4QuadGrid::AddElement(SC4GridElement*, unsigned int)",AddElement,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x100367146,SC4QuadGrid::RemoveElement(SC4GridElement*),RemoveElement,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x10036722a,"SC4QuadGrid::MoveElement(SC4GridElement*, SC4Rect<float> const&, unsigned int)",MoveElement,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x1003672ea,"SC4QuadGrid::GetAllElements(SC4GridElement**, int&)",GetAllElements,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x10036744a,"SC4QuadGrid::GetQuadrantsOfScreenRect(SC4Rect<float> const&, SC4QuadGridQuadrant**, int&)",GetQuadrantsOfScreenRect_SC4Rect_float_const_SC4QuadGridQuadrant_int,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x1003674f6,"SC4QuadGrid::GetQuadrantsOfScreenRect(SC4Rect<float> const&, int&, int&, int&, int&)",GetQuadrantsOfScreenRect_SC4Rect_float_const_int_int_int_int,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x1003675be,"SC4QuadGrid::SetGridRectForElement(SC4Rect<float> const&, SC4GridElement*)",SetGridRectForElement,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x10036764c,"SC4QuadGrid::SetQuadrantFlagsForElement(SC4GridElement const*, unsigned int)",SetQuadrantFlagsForElement,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x100366d80,SC4QuadGridQuadrant::AddElement(SC4GridElement*),AddElement,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x100366dbc,SC4QuadGridQuadrant::RemoveElement(SC4GridElement*),RemoveElement,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
+0x100366e28,SC4QuadGridQuadrant::RemoveAllElements(),RemoveAllElements,src/sc4/QuadGrid.cpp|h,recovered,decompile of every method; tests/sc4_quadgrid_test.cpp
