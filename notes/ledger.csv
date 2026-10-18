@@ -16458,3 +16458,69 @@ address,symbol,unique_name,source,status,evidence
 0x1003cb950,non-virtual thunk to cGZWinGenDlg::AddScatterGraph(cRZRect const&),AddScatterGraphThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
 0x1003cb970,cGZWinGenDlg::GetStyle(),GetStyle,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
 0x1003cb980,non-virtual thunk to cGZWinGenDlg::GetBorderWidths(),GetBorderWidthsThunk,src/gz/WinGenDlg.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_wingendlg
+0x100652e32,cGZDrawContextAsBuffer::cGZDrawContextAsBuffer(),Construct,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100652eac,cGZDrawContextAsBuffer::~cGZDrawContextAsBuffer(),Destruct,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100652f4e,cGZDrawContextAsBuffer::~cGZDrawContextAsBuffer(),DestructAndDelete,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100652f58,non-virtual thunk to cGZDrawContextAsBuffer::~cGZDrawContextAsBuffer(),DestructThunk,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100652f66,cGZDrawContextAsBuffer::~cGZDrawContextAsBuffer(),DestructBody,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100652f94,non-virtual thunk to cGZDrawContextAsBuffer::~cGZDrawContextAsBuffer(),DestructAndDeleteThunk,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100652fa2,cGZDrawContextAsBuffer::AddRef(),AddRef,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100652fb0,non-virtual thunk to cGZDrawContextAsBuffer::AddRef(),AddRefThunk_2fb0,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100652fba,non-virtual thunk to cGZDrawContextAsBuffer::AddRef(),AddRefThunk_2fba,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100652fc8,cGZDrawContextAsBuffer::Release(),Release,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100652fd6,non-virtual thunk to cGZDrawContextAsBuffer::Release(),ReleaseThunk_2fd6,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100652fe0,non-virtual thunk to cGZDrawContextAsBuffer::Release(),ReleaseThunk_2fe0,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100652fee,"cGZDrawContextAsBuffer::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653032,"non-virtual thunk to cGZDrawContextAsBuffer::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653040,cGZDrawContextAsBuffer::GetContext(),GetContext,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653084,non-virtual thunk to cGZDrawContextAsBuffer::GetContext(),GetContextThunk,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653092,cGZDrawContextAsBuffer::LockContext(),LockContext,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006530b2,non-virtual thunk to cGZDrawContextAsBuffer::LockContext(),LockContextThunk,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006530d6,cGZDrawContextAsBuffer::UnlockContext(),UnlockContext,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006530ea,non-virtual thunk to cGZDrawContextAsBuffer::UnlockContext(),UnlockContextThunk,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653102,"cGZDrawContextAsBuffer::Init(cIGZDrawContext*, cIGZBuffer*)",Init_cIGZDrawContext_cIGZBuffer,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006531cc,"non-virtual thunk to cGZDrawContextAsBuffer::Init(cIGZDrawContext*, cIGZBuffer*)",InitThunk,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006531da,cGZDrawContextAsBuffer::ResetSize(),ResetSize,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653230,non-virtual thunk to cGZDrawContextAsBuffer::ResetSize(),ResetSizeThunk,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x10065323e,cGZDrawContextAsBuffer::NativeToARGB32(unsigned int),NativeToARGB32,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653314,cGZDrawContextAsBuffer::SetBltShader(cIGZBuffer*),SetBltShader,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006533e4,non-virtual thunk to cGZDrawContextAsBuffer::SetBltShader(cIGZBuffer*),SetBltShaderThunk,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006533f2,"cGZDrawContextAsBuffer::Init(unsigned int, unsigned int, cGZBufferColorType)",Init_uint_uint_cGZBufferColorType,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006533fa,cGZDrawContextAsBuffer::Shutdown(),Shutdown,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653402,cGZDrawContextAsBuffer::Uninitialize(),Uninitialize,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x10065340a,cGZDrawContextAsBuffer::Lock(cIGZBuffer::eLockFlags),Lock,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653496,cGZDrawContextAsBuffer::Unlock(cIGZBuffer::eLockFlags),Unlock,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006534b6,cGZDrawContextAsBuffer::IsLocked() const,IsLocked,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006534c4,cGZDrawContextAsBuffer::Width() const,Width,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006534d8,cGZDrawContextAsBuffer::Height() const,Height,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006534ec,cGZDrawContextAsBuffer::GetBufferArea() const,GetBufferArea_void,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006534f6,cGZDrawContextAsBuffer::GetBufferArea(cRZRect&) const,GetBufferArea_cRZRect,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x10065350c,cGZDrawContextAsBuffer::GetMemoryUsage() const,GetMemoryUsage,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653514,cGZDrawContextAsBuffer::GetColorType() const,GetColorType_void,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x10065353a,cGZDrawContextAsBuffer::GetColorType(cGZBufferColorType&) const,GetColorType_cGZBufferColorType,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653564,cGZDrawContextAsBuffer::GetBitsPerPixel() const,GetBitsPerPixel,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653570,cGZDrawContextAsBuffer::GetBytesPerPixel() const,GetBytesPerPixel,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x10065357a,"cGZDrawContextAsBuffer::Fill(unsigned int, cRZRect const&, cRZRect*)",Fill_uint_cRZRect_const_cRZRect,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x10065360c,"cGZDrawContextAsBuffer::Fill(unsigned int, int, int, int, int, cRZRect*)",Fill_uint_int_int_int_int_cRZRect,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653642,"cGZDrawContextAsBuffer::Fill(unsigned int, cRZRect*)",Fill_uint_cRZRect,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006536c4,"cGZDrawContextAsBuffer::GetPixel(unsigned int, unsigned int) const",GetPixel,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653790,"cGZDrawContextAsBuffer::SetPixel(unsigned int, unsigned int, unsigned int)",SetPixel,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006537f6,cGZDrawContextAsBuffer::SetTransparency(unsigned int),SetTransparency,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653810,cGZDrawContextAsBuffer::GetTransparency() const,GetTransparency,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x10065381a,"cGZDrawContextAsBuffer::IsPixelTransparent(unsigned int, unsigned int)",IsPixelTransparent,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006538b2,cGZDrawContextAsBuffer::GetTransparentColor(unsigned int&) const,GetTransparentColor,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006538c8,cGZDrawContextAsBuffer::RemoveTransparency(),RemoveTransparency,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1006538de,"cGZDrawContextAsBuffer::DrawLine(int, int, int, int, int, unsigned int)",DrawLine,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653a56,"cGZDrawContextAsBuffer::Blt(cIGZBuffer*, cRZRect const&, cRZRect const&, cRZRect const*)",Blt,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653b10,"cGZDrawContextAsBuffer::ConvertRGBValueToNative(unsigned char, unsigned char, unsigned char)",ConvertRGBValueToNative,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653bc4,"cGZDrawContextAsBuffer::ConvertNativeValueToRGB(unsigned int, unsigned char&, unsigned char&, unsigned char&)",ConvertNativeValueToRGB,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653bf8,"cGZDrawContextAsBuffer::ConvertRGBAValueToNative(unsigned char, unsigned char, unsigned char, unsigned char)",ConvertRGBAValueToNative,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653c00,"cGZDrawContextAsBuffer::ConvertNativeValueToRGBA(unsigned int, unsigned char&, unsigned char&, unsigned char&, unsigned char&)",ConvertNativeValueToRGBA,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653c08,cGZDrawContextAsBuffer::GetColorSurfaceBits(),GetColorSurfaceBits,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653c12,cGZDrawContextAsBuffer::GetColorSurfaceStride(),GetColorSurfaceStride,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653c1c,cGZDrawContextAsBuffer::GetChangeCounter(),GetChangeCounter,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653c2e,cGZDrawContextAsBuffer::GetHardwareCache(),GetHardwareCache,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653c40,cGZDrawContextAsBuffer::SetHardwareCache(cIGZBufferHardwareCache*),SetHardwareCache,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653c56,cGZDrawContextAsBuffer::IsReady(),IsReady,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653c5e,cGZDrawContextAsBuffer::AsIGZBuffer(),AsIGZBuffer,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x100653c68,non-virtual thunk to cGZDrawContextAsBuffer::AsIGZBuffer(),AsIGZBufferThunk,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer

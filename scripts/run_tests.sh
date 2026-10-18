@@ -49,6 +49,7 @@ declare -a TESTS=(
  "sc4_effectcomponents:$T/sc4_effectcomponents_test.cpp $S/sc4/EffectComponents.cpp $S/rz/cRZMessage2Standard.cpp $S/rz/cRZString.cpp $S/rz/cRZStream.cpp $S/gz/StreamOps.cpp $S/rz/cRZDate.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp $S/gz/cGZDate.cpp"
  "gz_gzcominterface:$T/gz_gzcominterface_test.cpp $S/rz/cRZSysServPtr.cpp"
  "gz_buffer:$T/gz_buffer_test.cpp $S/gz/Buffer.cpp"
+ "gz_drawcontextasbuffer:$T/gz_drawcontextasbuffer_test.cpp $S/gz/DrawContextAsBuffer.cpp $S/gz/Buffer.cpp -I$T"
  "gz_rzdraw:$T/gz_rzdraw_test.cpp $S/gz/RZDraw.cpp $S/gz/Buffer.cpp"
  "rz_stringutils:$T/rz_stringutils_test.cpp $S/rz/RZStringUtils.cpp $S/rz/RZConvert.cpp $S/rz/cRZString.cpp $S/rz/CharLength.cpp"
  "rz_textencoding:$T/rz_textencoding_test.cpp $S/rz/TextEncoding.cpp $S/rz/CharLength.cpp $S/rz/cRZString.cpp"

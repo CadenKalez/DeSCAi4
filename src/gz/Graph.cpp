@@ -360,7 +360,7 @@ bool cGZGraph::Blt(cIGZBuffer* source, cIGZBuffer* destination, const cRZRect& s
         if (!destination->Lock(static_cast<cIGZBuffer::eLockFlags>(kLockBlt))) return false;
         lockedHere = true;
     }
-    const bool result = destination->Blt(source, sourceRect, cRZPoint{destRect.left, destRect.top}, nullptr);
+    const bool result = destination->Blt(source, sourceRect, destRect, nullptr);
     if (lockedHere) destination->Unlock(static_cast<cIGZBuffer::eLockFlags>(kLockBlt));
     return result;
 }

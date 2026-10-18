@@ -506,13 +506,13 @@ bool cGZBuffer::Fill(std::uint32_t color, const cRZRect& rect, const cRZRect* cl
     return true;
 }
 
-bool cGZBuffer::Blt(cIGZBuffer* source, const cRZRect& sourceRect, const cRZPoint& destination, const cRZRect* clip) {
+bool cGZBuffer::Blt(cIGZBuffer* source, const cRZRect& sourceRect, const cRZRect& destination, const cRZRect* clip) {
     cRZRect src = sourceRect;
     cRZRect dst;
-    dst.left = destination.x;
-    dst.top = destination.y;
-    dst.right = destination.x + (sourceRect.right - sourceRect.left);
-    dst.bottom = destination.y + (sourceRect.bottom - sourceRect.top);
+    dst.left = destination.left;
+    dst.top = destination.top;
+    dst.right = destination.left + (sourceRect.right - sourceRect.left);
+    dst.bottom = destination.top + (sourceRect.bottom - sourceRect.top);
     if (!GenericBufferClip(this, src, dst, clip)) return false;
     return BltNoClip(source, src, dst);
 }

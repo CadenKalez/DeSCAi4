@@ -64,7 +64,7 @@ public:
     void Resume() override {}
     void Draw(eDrawingOp op, const float* points, int count) override {}
     void DrawNoTransform(eDrawingOp op, const float* points, int count) override {}
-    void Lock(cGZBufferSurfaceDesc& desc, bool write) override {}
+    bool Lock(cGZBufferSurfaceDesc&, bool) override { return true; }
     void Unlock() override {}
 };
 

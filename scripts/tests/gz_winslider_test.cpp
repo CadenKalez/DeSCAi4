@@ -38,7 +38,7 @@ struct Ctx final : cIGZDrawContext {
     void BltTiled(IDrawTargetBuffer*, const cRZRect&, const cRZRect&, int, int) override { log.push_back("tile"); }
     void Flush() override {} bool IsSuspended() override { return false; } void Suspend() override {} void Resume() override {}
     void Draw(eDrawingOp, const float*, int) override {} void DrawNoTransform(eDrawingOp, const float*, int) override {}
-    void Lock(cGZBufferSurfaceDesc&, bool) override {} void Unlock() override {}
+    bool Lock(cGZBufferSurfaceDesc&, bool) override { return true; } void Unlock() override {}
 };
 
 struct Probe final : cGZWin {

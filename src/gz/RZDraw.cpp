@@ -115,7 +115,7 @@ bool RZDrawBltTiled(cIGZBuffer* dest, cIGZBuffer* source, const cRZRect& s, cons
                         dst.top = clip->top;
                     }
                 }
-                dest->Blt(source, src, cRZPoint{dst.left, dst.top}, nullptr);
+                dest->Blt(source, src, dst, nullptr);
                 accumulated -= tileW;
                 x0 = x1;
             } while (x1 < destRight);
@@ -198,7 +198,7 @@ bool RZDrawBltEdge(cIGZBuffer* dest, cIGZBuffer* source, const cRZRect& s, const
     const int w = s.right - s.left, h = s.bottom - s.top;
     cRZRect a = s;                                   // the tile being drawn
     cRZRect r{d.left, d.top, 0, d.top + h};          // the destination
-    dest->Blt(source, a, cRZPoint{r.left, r.top}, nullptr);                  // top-left corner
+    dest->Blt(source, a, r, nullptr);                  // top-left corner
     a.left += w; a.right += w;
     r.left = d.left + w;
     r.right = d.right - w;
@@ -206,7 +206,7 @@ bool RZDrawBltEdge(cIGZBuffer* dest, cIGZBuffer* source, const cRZRect& s, const
     a.left += w; a.right += w;
     r.left = r.right;
     r.right = d.right;
-    dest->Blt(source, a, cRZPoint{r.left, r.top}, nullptr);                  // top-right corner
+    dest->Blt(source, a, r, nullptr);                  // top-right corner
     // second row: left edge, centre, right edge
     a.left = s.left; a.right = s.left + w;
     a.top = s.top + h; a.bottom = s.top + 2 * h;
@@ -231,7 +231,7 @@ bool RZDrawBltEdge(cIGZBuffer* dest, cIGZBuffer* source, const cRZRect& s, const
     a.top = s.top + 2 * h; a.bottom = s.top + 3 * h;
     r.left = d.left; r.right = d.left + w;
     r.top = d.bottom - h; r.bottom = d.bottom;
-    dest->Blt(source, a, cRZPoint{r.left, r.top}, nullptr);                  // bottom-left corner
+    dest->Blt(source, a, r, nullptr);                  // bottom-left corner
     a.left += w; a.right += w;
     r.left = r.right;
     r.right = d.right - w;
@@ -239,7 +239,7 @@ bool RZDrawBltEdge(cIGZBuffer* dest, cIGZBuffer* source, const cRZRect& s, const
     a.left += w; a.right += w;
     r.left = r.right;
     r.right = d.right;
-    dest->Blt(source, a, cRZPoint{r.left, r.top}, nullptr);                  // bottom-right corner
+    dest->Blt(source, a, r, nullptr);                  // bottom-right corner
     return true;
 }
 

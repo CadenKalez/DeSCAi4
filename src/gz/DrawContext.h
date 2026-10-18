@@ -31,7 +31,15 @@ enum class eDrawingOp : std::uint32_t {
 // What Draw() on the engine answers: how the context should carry the primitive out itself.
 enum class eEngineDrawResult : int { Done = 0, Tesselate = 1, Rasterize = 2 };
 
-struct cGZBufferSurfaceDesc;
+// What the engine's LockTarget fills in (0x20 bytes copied from the engine): the locked pixels and their layout.
+struct cGZBufferSurfaceDesc {
+    std::uint8_t* pixels = nullptr;      // +0
+    std::int64_t pitch = 0;              // +8 (bytes per row)
+    std::uint32_t width = 0;             // +0x10
+    std::uint32_t height = 0;            // +0x14
+    std::uint32_t format = 0;            // +0x18
+    std::uint32_t bytesPerPixel = 0;     // +0x1c
+};
 
 // The target buffer as far as the context uses it (cIGZBuffer vslots 0x68 and 0x100).
 class IDrawTargetBuffer : public cIGZUnknown {
@@ -59,7 +67,7 @@ public:
     virtual void Flush() = 0;                                                                           // [16]
     virtual void Suspend() = 0;                                                                         // [17]
     virtual void Resume() = 0;                                                                          // [18]
-    virtual void LockTarget(cGZBufferSurfaceDesc& desc, bool write) = 0;                                // [19]
+    virtual bool LockTarget(cGZBufferSurfaceDesc& desc, bool write) = 0;                                // [19]
     virtual void UnlockTarget() = 0;                                                                    // [20]
     virtual eEngineDrawResult Draw(eDrawingOp op, const float* points, int count) = 0;                  // [21]
     virtual void DrawPreclippedSpanList(const std::uint32_t* spans, int count) = 0;                     // [22]
@@ -119,7 +127,7 @@ public:
     virtual void Resume() = 0;                                                           // [43]
     virtual void Draw(eDrawingOp op, const float* points, int count) = 0;                // [44]
     virtual void DrawNoTransform(eDrawingOp op, const float* points, int count) = 0;     // [45]
-    virtual void Lock(cGZBufferSurfaceDesc& desc, bool write) = 0;                       // [46]
+    virtual bool Lock(cGZBufferSurfaceDesc& desc, bool write) = 0;                       // [46]
     virtual void Unlock() = 0;                                                           // [47]
 };
 
@@ -175,7 +183,7 @@ public:
     void Resume() override;
     void Draw(eDrawingOp op, const float* points, int count) override;
     void DrawNoTransform(eDrawingOp op, const float* points, int count) override;
-    void Lock(cGZBufferSurfaceDesc& desc, bool write) override { engine_->LockTarget(desc, write); }
+    bool Lock(cGZBufferSurfaceDesc& desc, bool write) override { return engine_->LockTarget(desc, write); }
     void Unlock() override { engine_->UnlockTarget(); }
 
     void RecomputeClipRect();

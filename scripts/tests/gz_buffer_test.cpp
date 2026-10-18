@@ -92,19 +92,19 @@ int main() {
     src->Fill(0xf800, nullptr);
     src->SetPixel(0, 0, 0x001f);
     cRZRect srcRect{0, 0, 4, 4};
-    cRZPoint at{2, 2};
+    cRZRect at{2, 2, 6, 6};
     CHECK(b32->Blt(src, srcRect, at, nullptr));
     CHECK(b32->GetPixel(2, 2) == 0xff0000ff && b32->GetPixel(3, 2) == 0xffff0000);
     CHECK(b32->GetPixel(1, 1) == 0 && b32->GetPixel(3, 3) == 0xffff0000);
     b32->Fill(0, nullptr);
     src->SetTransparency(0xf800);
-    CHECK(b32->Blt(src, srcRect, {0, 0}, nullptr));
+    CHECK(b32->Blt(src, srcRect, cRZRect{0, 0, 4, 4}, nullptr));
     CHECK(b32->GetPixel(0, 0) == 0xff0000ff && b32->GetPixel(1, 0) == 0);   // keyed pixels skipped
     // overlapping self blit moves rows bottom-up
     auto* self = Make(4, 4, kBufferColorRGB565, 16);
     for (int y = 0; y < 4; ++y) self->Fill(0x100 + y, 0, y, 4, y + 1, nullptr);
     cRZRect two{0, 0, 4, 3};
-    CHECK(self->Blt(self, two, {0, 1}, nullptr));
+    CHECK(self->Blt(self, two, cRZRect{0, 1, 4, 4}, nullptr));
     CHECK(self->GetPixel(0, 0) == 0x100 && self->GetPixel(0, 1) == 0x100 && self->GetPixel(0, 2) == 0x101 &&
           self->GetPixel(0, 3) == 0x102);
 

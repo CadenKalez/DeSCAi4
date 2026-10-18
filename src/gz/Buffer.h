@@ -82,7 +82,7 @@ public:
     virtual bool GetTransparentColor(std::uint32_t& color) const = 0;                              // [28]
     virtual void RemoveTransparency() = 0;                                                         // [29]
     virtual bool DrawLine(int x0, int y0, int x1, int y1, int color, std::uint32_t thickness) = 0; // [30]
-    virtual bool Blt(cIGZBuffer* source, const cRZRect& sourceRect, const cRZPoint& destination, const cRZRect* clip) = 0;   // [31]
+    virtual bool Blt(cIGZBuffer* source, const cRZRect& sourceRect, const cRZRect& destination, const cRZRect* clip) = 0;   // [31] (cGZBuffer only reads the destination's top-left corner)
     std::uint32_t ConvertRGBValueToNative(std::uint8_t r, std::uint8_t g, std::uint8_t b) override = 0;     // [32]
     virtual bool ConvertNativeValueToRGB(std::uint32_t native, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b) = 0;   // [33]
     virtual std::uint32_t ConvertRGBAValueToNative(std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t a) = 0;   // [34]
@@ -100,7 +100,12 @@ public:
 constexpr std::uint32_t kGZIID_cIGZBufferDrawTarget = 0xab300b2b;
 class cIGZBufferDrawTarget : public cIGZUnknown {
 public:
-    virtual gz::cIGZDrawContext* GetDrawContext() = 0;                       // +0x20
+    virtual cIGZBuffer* AsIGZBuffer() = 0;                                   // +0x18
+    virtual gz::cIGZDrawContext* GetDrawContext() = 0;                       // +0x20 (attaches the buffer as the target when needed)
+    virtual gz::cIGZDrawContext* LockContext() = 0;                          // +0x28
+    virtual void UnlockContext() = 0;                                        // +0x30
+    virtual void Init(gz::cIGZDrawContext* context, cIGZBuffer* buffer) = 0;  // +0x38
+    virtual void ResetSize() = 0;                                            // +0x40
     virtual void SetBlitSource(cIGZBuffer* source) = 0;                      // +0x48
 };
 
@@ -156,7 +161,7 @@ public:
     bool GetTransparentColor(std::uint32_t& color) const override;
     void RemoveTransparency() override;
     bool DrawLine(int x0, int y0, int x1, int y1, int color, std::uint32_t thickness) override;
-    bool Blt(cIGZBuffer* source, const cRZRect& sourceRect, const cRZPoint& destination, const cRZRect* clip) override;
+    bool Blt(cIGZBuffer* source, const cRZRect& sourceRect, const cRZRect& destination, const cRZRect* clip) override;
     std::uint32_t ConvertRGBValueToNative(std::uint8_t r, std::uint8_t g, std::uint8_t b) override;
     bool ConvertNativeValueToRGB(std::uint32_t native, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b) override;
     std::uint32_t ConvertRGBAValueToNative(std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t a) override;

@@ -36,7 +36,7 @@ struct Ctx final : cIGZDrawContext {
     void BltTiled(IDrawTargetBuffer*, const cRZRect&, const cRZRect&, int, int) override {}
     void Flush() override {} bool IsSuspended() override { return false; } void Suspend() override {} void Resume() override {}
     void Draw(eDrawingOp, const float*, int) override {} void DrawNoTransform(eDrawingOp, const float*, int) override {}
-    void Lock(cGZBufferSurfaceDesc&, bool) override {} void Unlock() override {}
+    bool Lock(cGZBufferSurfaceDesc&, bool) override { return true; } void Unlock() override {}
 };
 struct Colors final : IWinColorManager {
     void GetColor(std::uint32_t id, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b) override {

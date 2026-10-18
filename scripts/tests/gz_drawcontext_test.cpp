@@ -34,7 +34,7 @@ struct Engine final : cIGZDrawEngine {
     void Flush() override { log.push_back("flush"); }
     void Suspend() override { log.push_back("suspend"); }
     void Resume() override { log.push_back("resume"); }
-    void LockTarget(cGZBufferSurfaceDesc&, bool) override { log.push_back("lock"); }
+    bool LockTarget(cGZBufferSurfaceDesc&, bool) override { log.push_back("lock"); return true; }
     void UnlockTarget() override { log.push_back("unlock"); }
     eEngineDrawResult Draw(eDrawingOp op, const float* p, int n) override {
         lastOp = op; lastPoints.assign(p, p + n * 2); log.push_back("draw"); return eEngineDrawResult::Done;
