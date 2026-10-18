@@ -9,10 +9,10 @@
 #include "gz/cIGZString.h"
 #include "gz/cIGZUnknown.h"
 #include "rz/cRZString.h"
+#include "rz/cRZCOMDllDirector.h"
 
 constexpr std::uint32_t kGZIID_cIGZCOMLibrary = 0x07d4922e;
 
-class cIGZCOMDirector;
 
 class cGZCOMLibrary final : public cIGZUnknown {
 public:
@@ -29,6 +29,9 @@ public:
     void* GetHandle() const { return handle_; }
     bool IsLoaded() const { return loaded_; }
     bool operator<(const cGZCOMLibrary& other) const;
+    // library bookkeeping the COM registry does when it unloads (and that a test loader does when it loads)
+    void MarkUnloaded() { loaded_ = false; director_ = nullptr; handle_ = nullptr; }
+    void MarkLoaded(cIGZCOMDirector* director, void* handle) { loaded_ = true; director_ = director; handle_ = handle; }
 
 private:
     bool loaded_ = false;                 // +8

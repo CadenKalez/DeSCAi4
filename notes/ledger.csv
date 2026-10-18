@@ -15441,3 +15441,42 @@ address,symbol,unique_name,source,status,evidence
 0x10005bcce,non-virtual thunk to cGZMessageServer::GetMessageQueueSize(),GetMessageQueueSizeThunk,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
 0x10005bcdc,cGZMessageServer::SetAlwaysClearQueueOnTick(bool),SetAlwaysClearQueueOnTick,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
 0x10005bcea,non-virtual thunk to cGZMessageServer::SetAlwaysClearQueueOnTick(bool),SetAlwaysClearQueueOnTickThunk,src/gz/cGZMessageServer.cpp|h,recovered,gz_messageserver
+0x10003b75a,cGZCOM::cGZCOM(),Construct,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003b884,cGZCOM::cGZCOM(),ConstructWrapper,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003b88e,cGZCOM::~cGZCOM(),Destruct,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003b918,cGZCOM::~cGZCOM(),DestructAndDelete,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003b922,non-virtual thunk to cGZCOM::~cGZCOM(),DestructThunk,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003b930,non-virtual thunk to cGZCOM::~cGZCOM(),DestructAndDeleteThunk,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003b93e,cGZCOM::~cGZCOM(),DestructBody,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003b96c,non-virtual thunk to cGZCOM::~cGZCOM(),DestructBodyThunk_b96c,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003b97a,non-virtual thunk to cGZCOM::~cGZCOM(),DestructBodyThunk_b97a,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003b988,"cGZCOM::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003b9aa,"non-virtual thunk to cGZCOM::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_b9aa,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003b9d0,"non-virtual thunk to cGZCOM::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_b9d0,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003b9f6,cGZCOM::AddRef(),AddRef,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003ba04,non-virtual thunk to cGZCOM::AddRef(),AddRefThunk_ba04,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003ba0e,non-virtual thunk to cGZCOM::AddRef(),AddRefThunk_ba0e,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003ba1c,cGZCOM::Release(),Release,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003ba2c,non-virtual thunk to cGZCOM::Release(),ReleaseThunk_ba2c,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003ba3c,non-virtual thunk to cGZCOM::Release(),ReleaseThunk_ba3c,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003ba48,cGZCOM::Init(),Init,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003ba50,non-virtual thunk to cGZCOM::Init(),InitThunk,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003ba58,cGZCOM::Shutdown(),Shutdown,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003ba60,non-virtual thunk to cGZCOM::Shutdown(),ShutdownThunk,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003ba68,cGZCOM::RealInit(),RealInit,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003bb1c,cGZCOM::RealShutdown(),RealShutdown,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003bb4a,cGZCOM::FreeAllLibraries(),FreeAllLibraries,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003bbee,cGZCOM::SetServiceRunning(bool),SetServiceRunning,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003bc00,non-virtual thunk to cGZCOM::SetServiceRunning(bool),SetServiceRunningThunk,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003bc0e,cGZCOM::AddLibrary(cIGZString const&),AddLibrary,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003bd84,cGZCOM::UpdateClassRegistry(cGZCOMLibrary&),UpdateClassRegistry,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003be08,"cGZCOM::AddEntryCallback(unsigned int, unsigned int, void*)",AddEntryCallback,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003bf0a,"cGZCOM::GetClassObject(unsigned int, unsigned int, void**)",GetClassObject,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003bfe8,"cGZCOM::GetLibObject(cGZCOMLibrary&, unsigned int, unsigned int, void**)",GetLibObject,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003c04a,cGZCOM::FreeUnusedLibraries(),FreeUnusedLibraries,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003c124,"cGZCOM::EnumerateLibraries(cIGZCOMLibrary**, unsigned int&)",EnumerateLibraries_cIGZCOMLibrary_uint,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003c1ba,"cGZCOM::EnumerateLibraries(bool (*)(cIGZCOMLibrary*, void*), void*)",EnumerateLibraries_bool_cIGZCOMLibrary_void_void,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003c23c,cGZCOM::CreateGuid(unsigned int*),CreateGuid,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003c3fe,"cGZCOM::CreateGuids(unsigned int*, unsigned int)",CreateGuids,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003c4ee,cGZCOM::FrameWork(),FrameWork,src/gz/cGZCOM.cpp|h,recovered,gz_com
+0x10003c2e6,GetGuidGenSeconds(),GetGuidGenSeconds,src/gz/cGZCOM.cpp|h,recovered,gz_com
