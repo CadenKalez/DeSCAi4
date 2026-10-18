@@ -15315,3 +15315,51 @@ address,symbol,unique_name,source,status,evidence
 0x10003b750,cGZCOMLibrary::GetHandle() const,GetHandle,src/gz/COMLibrary.cpp|h,recovered,sc4_particlesim
 0x10003bde8,cGZCOMLibrary::~cGZCOMLibrary(),Destruct,src/gz/COMLibrary.cpp|h,recovered,sc4_particlesim
 0x10003c4be,cGZCOMLibrary::~cGZCOMLibrary(),DestructAndDelete,src/gz/COMLibrary.cpp|h,recovered,sc4_particlesim
+0x1002dda80,cGZCheatCodeManager::cGZCheatCodeManager(),Construct,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002ddd4c,cGZCheatCodeManager::cGZCheatCodeManager(),ConstructWrapper,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002ddd56,cGZCheatCodeManager::~cGZCheatCodeManager(),Destruct,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002dde34,cGZCheatCodeManager::~cGZCheatCodeManager(),DestructAndDelete,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002dde3e,non-virtual thunk to cGZCheatCodeManager::~cGZCheatCodeManager(),DestructThunk,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002dde4c,non-virtual thunk to cGZCheatCodeManager::~cGZCheatCodeManager(),DestructAndDeleteThunk,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002dde5a,cGZCheatCodeManager::~cGZCheatCodeManager(),DestructBody,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002dde88,non-virtual thunk to cGZCheatCodeManager::~cGZCheatCodeManager(),DestructBodyThunk_de88,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002dde96,non-virtual thunk to cGZCheatCodeManager::~cGZCheatCodeManager(),DestructBodyThunk_de96,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002ddea4,cGZCheatCodeManager::AddRef(),AddRef,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002ddeb2,non-virtual thunk to cGZCheatCodeManager::AddRef(),AddRefThunk_deb2,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002ddec0,non-virtual thunk to cGZCheatCodeManager::AddRef(),AddRefThunk_dec0,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002ddece,cGZCheatCodeManager::Release(),Release,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002ddeee,non-virtual thunk to cGZCheatCodeManager::Release(),ReleaseThunk_deee,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002ddf12,non-virtual thunk to cGZCheatCodeManager::Release(),ReleaseThunk_df12,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002ddf36,"cGZCheatCodeManager::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002ddf5e,"non-virtual thunk to cGZCheatCodeManager::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_df5e,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002ddf6c,"non-virtual thunk to cGZCheatCodeManager::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_df6c,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002ddf7a,cGZCheatCodeManager::Init(),Init,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002ddf82,non-virtual thunk to cGZCheatCodeManager::Init(),InitThunk,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002ddf8a,cGZCheatCodeManager::Shutdown(),Shutdown,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002ddf92,non-virtual thunk to cGZCheatCodeManager::Shutdown(),ShutdownThunk,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002ddf9a,"cGZCheatCodeManager::RegisterCheatCode(unsigned int, cIGZString const&)",RegisterCheatCode,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de0f4,cGZCheatCodeManager::UnregisterCheatCode(unsigned int),UnregisterCheatCode,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de162,"cGZCheatCodeManager::AddNotification(cIGZMessageTarget*, unsigned int)",AddNotification,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de1e0,"cGZCheatCodeManager::RemoveNotification(cIGZMessageTarget*, unsigned int)",RemoveNotification,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de248,"cGZCheatCodeManager::AddNotification2(cIGZMessageTarget2*, unsigned int)",AddNotification2,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de2c6,"cGZCheatCodeManager::RemoveNotification2(cIGZMessageTarget2*, unsigned int)",RemoveNotification2,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de32e,cGZCheatCodeManager::EnableCheatCodeHistory(bool),EnableCheatCodeHistory,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de338,cGZCheatCodeManager::ClearCheatCodeHistory(),ClearCheatCodeHistory,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de34c,"cGZCheatCodeManager::GetCheatCodeSaveData(char*, unsigned int&)",GetCheatCodeSaveData,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de4de,"cGZCheatCodeManager::SetCheatCodeSaveData(char const*, unsigned int)",SetCheatCodeSaveData,src/gz/CheatCodeManager.cpp|h,recovered-partial,gz_cheatcode
+0x1002de6a2,"cGZCheatCodeManager::AddCheatCodeHistoryRecord(unsigned int, unsigned int, unsigned int, unsigned int)",AddCheatCodeHistoryRecord,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de6fc,"cGZCheatCodeManager::GetListOfAllCheatStrings(cIGZString**, unsigned int&)",GetListOfAllCheatStrings,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de74a,cGZCheatCodeManager::HasUserUsedCheat(unsigned int),HasUserUsedCheat,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de78a,cGZCheatCodeManager::GetCheatState(unsigned int),GetCheatState,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de7d0,"cGZCheatCodeManager::SetCheatState(unsigned int, bool)",SetCheatState,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de8d0,"cGZCheatCodeManager::GetCheatsWithEnabledStates(unsigned int*, unsigned int&)",GetCheatsWithEnabledStates,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de94a,"cGZCheatCodeManager::SetStateShouldBeSaved(unsigned int, bool)",SetStateShouldBeSaved,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de972,cGZCheatCodeManager::ClearAllEnabledCheatStates(),ClearAllEnabledCheatStates,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002de9a8,"cGZCheatCodeManager::SendCheatNotifications(cIGZString const&, unsigned int)",SendCheatNotifications,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002deae4,"cGZCheatCodeManager::DoesCheatCodeMatch(cIGZString const&, unsigned int&)",DoesCheatCodeMatch,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002dedd6,"cGZCheatCodeManager::DoDefaultCheatCodeProcessing(cIGZString const&, unsigned int&)",DoDefaultCheatCodeProcessing,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002df4a0,"cGZCheatCodeManager::EnableCheatCodes(bool, cIGZString const&)",EnableCheatCodes,src/gz/CheatCodeManager.cpp|h,recovered-partial,gz_cheatcode
+0x1002df76e,cGZCheatCodeManager::GetCheatCodesEnabled(),GetCheatCodesEnabled,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002df77c,"cGZCheatCodeManager::GetCheatCodePassword(unsigned char*, unsigned int&)",GetCheatCodePassword,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002df7cc,"cGZCheatCodeManager::SetCheatCodePassword(unsigned char*, unsigned int)",SetCheatCodePassword,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
+0x1002df866,"cGZCheatCodeManager::SetEnableDisableStrings(cIGZString const&, cIGZString const&)",SetEnableDisableStrings,src/gz/CheatCodeManager.cpp|h,recovered,gz_cheatcode
