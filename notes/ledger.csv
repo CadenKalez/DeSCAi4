@@ -17318,3 +17318,14 @@ address,symbol,unique_name,source,status,evidence
 0x1005c4100,non-virtual thunk to cSC4WinAlertBorder::SetImage(cIGZBuffer*),SetImageThunk,src/sc4/WinAuraAlert.cpp|h,recovered,City UI decoration windows recovered; painting through the draw context; covered by sc4_winauraalert
 0x1005c411c,cSC4WinAlertBorder::AsIGZWin(),AsIGZWin,src/sc4/WinAuraAlert.cpp|h,recovered,City UI decoration windows recovered; painting through the draw context; covered by sc4_winauraalert
 0x1005c4126,non-virtual thunk to cSC4WinAlertBorder::AsIGZWin(),AsIGZWinThunk,src/sc4/WinAuraAlert.cpp|h,recovered,City UI decoration windows recovered; painting through the draw context; covered by sc4_winauraalert
+0x1007b547c,cSC4AudioAEMSSoundBank::cSC4AudioAEMSSoundBank(),Construct,src/sc4/AudioAEMSSoundBank.cpp|h,recovered,AEMS sound bank buffer recovered; covered by sc4_audioaemssoundbank
+0x1007b54b6,cSC4AudioAEMSSoundBank::LoadFromResource(cGZPersistResourceKey&),LoadFromResource,src/sc4/AudioAEMSSoundBank.cpp|h,recovered,AEMS sound bank buffer recovered; covered by sc4_audioaemssoundbank
+0x1007b555a,cSC4AudioAEMSSoundBank::LoadFromFile(cIGZFile*),LoadFromFile,src/sc4/AudioAEMSSoundBank.cpp|h,recovered,AEMS sound bank buffer recovered; covered by sc4_audioaemssoundbank
+0x1007b55e4,cSC4AudioAEMSSoundBank::GetKey(cGZPersistResourceKey&),GetKey,src/sc4/AudioAEMSSoundBank.cpp|h,recovered,AEMS sound bank buffer recovered; covered by sc4_audioaemssoundbank
+0x1007b55fc,cSC4AudioAEMSSoundBank::SetModuleBankHandle(int),SetModuleBankHandle,src/sc4/AudioAEMSSoundBank.cpp|h,recovered,AEMS sound bank buffer recovered; covered by sc4_audioaemssoundbank
+0x1007b5606,cSC4AudioAEMSSoundBank::GetModuleBankHandle(),GetModuleBankHandle,src/sc4/AudioAEMSSoundBank.cpp|h,recovered,AEMS sound bank buffer recovered; covered by sc4_audioaemssoundbank
+0x1007b561c,cSC4AudioAEMSSoundBank::Data(),Data,src/sc4/AudioAEMSSoundBank.cpp|h,recovered,AEMS sound bank buffer recovered; covered by sc4_audioaemssoundbank
+0x1007b5626,"cSC4AudioAEMSSoundBank::modulebankmalloc(void*, int, int)",modulebankmalloc,src/sc4/AudioAEMSSoundBank.cpp|h,recovered,AEMS sound bank buffer recovered; covered by sc4_audioaemssoundbank
+0x1007b5630,"cSC4AudioAEMSSoundBank::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/AudioAEMSSoundBank.cpp|h,recovered,AEMS sound bank buffer recovered; covered by sc4_audioaemssoundbank
+0x1007b564a,cSC4AudioAEMSSoundBank::AddRef(),AddRef,src/sc4/AudioAEMSSoundBank.cpp|h,recovered,AEMS sound bank buffer recovered; covered by sc4_audioaemssoundbank
+0x1007b5658,cSC4AudioAEMSSoundBank::Release(),Release,src/sc4/AudioAEMSSoundBank.cpp|h,recovered,AEMS sound bank buffer recovered; covered by sc4_audioaemssoundbank
