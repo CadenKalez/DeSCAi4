@@ -17629,3 +17629,8 @@ address,symbol,unique_name,source,status,evidence
 0x100215cb1,"operator>>(cIGZIStream&, cISC4DispatchManager::DispatchInfo&)",operator>>_cIGZIStream_cISC4DispatchManager_DispatchInfo,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
 0x100215d52,"operator<<(cIGZOStream&, cISC4DispatchManager::DispatchInfo const&)",operator<<_cIGZOStream_cISC4DispatchManager_DispatchInfo_const,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
 0x10030d31a,"cIGZOStream& operator<<<int>(cIGZOStream&, SC4Rect<int> const&)",cIGZOStream& operator<<<int>,src/sc4/SimStreamOps.cpp|h,recovered,decompile; tests/sc4_simstreamops_test.cpp
+0x1000327ea,RZFileFindFirst(cRZString const&),RZFileFindFirst,src/gz/FileFind.cpp|h,recovered,decompile; tests/gz_filefind_test.cpp
+0x100032c33,RZFileFindNext(RZFileFindData*),RZFileFindNext,src/gz/FileFind.cpp|h,recovered,decompile; tests/gz_filefind_test.cpp
+0x100032e6d,RZFileFindFinish(RZFileFindData*),RZFileFindFinish,src/gz/FileFind.cpp|h,recovered,decompile; tests/gz_filefind_test.cpp
+0x100034e69,"Fullpath(char*, char const*, unsigned long)",Fullpath_char_char_const_unsigned_long,src/gz/FileFind.cpp|h,recovered,decompile; tests/gz_filefind_test.cpp
+0x10003514f,"Fullpath(cRZString&, cRZString const&)",Fullpath_cRZString_cRZString_const,src/gz/FileFind.cpp|h,recovered,decompile; tests/gz_filefind_test.cpp
