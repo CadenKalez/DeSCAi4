@@ -17562,3 +17562,29 @@ address,symbol,unique_name,source,status,evidence
 0x1005c1453,"HTMLBackspace(cRZString const&, int)",HTMLBackspace,src/gz/MiscFunctions.cpp|h,recovered,decompile; tests/gz_miscfunctions_test.cpp
 0x10060a069,"FastAddOffset(unsigned short*, unsigned int, int)",FastAddOffset,src/gz/MiscFunctions.cpp|h,recovered,decompile; tests/gz_miscfunctions_test.cpp
 0x100777646,"HillToTerrainRect(int, int, int, SC4Rect<int> const&, SC4Rect<int>&)",HillToTerrainRect,src/gz/MiscFunctions.cpp|h,recovered,decompile; tests/gz_miscfunctions_test.cpp
+0x100624b7e,_galloc,_galloc,src/gz/GStreamPlugin.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x100624b9b,_gfree,_gfree,src/gz/GStreamPlugin.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x100624bad,_gread,_gread,src/gz/GStreamPlugin.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x100624bd5,_gwrite,_gwrite,src/gz/GStreamPlugin.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x100624bfd,_gseek,_gseek,src/gz/GStreamPlugin.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x100624c18,_glen,_glen,src/gz/GStreamPlugin.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x100624c26,_gtell,_gtell,src/gz/GStreamPlugin.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x100624c36,NULL_about(),NULL_about,src/gz/GStreamPlugin.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x100624cdd,NULL_is(GSTREAM*),NULL_is,src/gz/GStreamPlugin.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x100624ce5,"NULL_open(GINSTANCE**, GSTREAM*, char const*, bool)",NULL_open,src/gz/GStreamPlugin.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x100624ced,"NULL_info(GINSTANCE*, int)",NULL_info,src/gz/GStreamPlugin.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x100624cf5,"NULL_read(GINSTANCE*, GINFO*, char*, int)",NULL_read,src/gz/GStreamPlugin.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x100624cfd,NULL_close(GINSTANCE*),NULL_close,src/gz/GStreamPlugin.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x100624d05,"NULL_wopen(GINSTANCE**, GSTREAM*, char const*, int)",NULL_wopen,src/gz/GStreamPlugin.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x100624d0d,"NULL_write(GINSTANCE*, GINFO const*, char*, int)",NULL_write,src/gz/GStreamPlugin.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x100624d15,NULL_wclose(GINSTANCE*),NULL_wclose,src/gz/GStreamPlugin.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x1006421d8,"stricmp(char const*, char const*)",stricmp,src/gz/MiscFunctions.cpp|h,recovered,decompile; tests/gz_gstreamplugin_test.cpp
+0x1003da6f0,sizeref(char*),sizeref,src/gz/RefPack.cpp|h,recovered,decompile; round-trip tests/gz_refpack_test.cpp
+0x1003da73f,"decoderef(char*, long*, char*)",decoderef,src/gz/RefPack.cpp|h,recovered,decompile; round-trip tests/gz_refpack_test.cpp
+0x1003da9e8,"encoderef(char*, long, char*, int*)",encoderef,src/gz/RefPack.cpp|h,recovered,decompile; round-trip tests/gz_refpack_test.cpp
+0x1006048c4,"void GenerateIndexedTriListForIndexedTriangleStrip<unsigned short>(int, unsigned short*, unsigned short*, unsigned int*, unsigned int*)",void GenerateIndexedTriListForIndexedTriangleStrip<unsigned short>,s3d/IndexGeneration.h,recovered,"decompile; tests/gz_gstreamplugin_test.cpp (template, 6 instantiations)"
+0x100604988,"void GenerateIndexedTriListForIndexedTriangleStrip<unsigned int>(int, unsigned int*, unsigned short*, unsigned int*, unsigned int*)",void GenerateIndexedTriListForIndexedTriangleStrip<unsigned int>,s3d/IndexGeneration.h,recovered,"decompile; tests/gz_gstreamplugin_test.cpp (template, 6 instantiations)"
+0x100604a3c,"void GenerateIndexedTriListForIndexedTriangleStrip<unsigned char>(int, unsigned char*, unsigned short*, unsigned int*, unsigned int*)",void GenerateIndexedTriListForIndexedTriangleStrip<unsigned char>,s3d/IndexGeneration.h,recovered,"decompile; tests/gz_gstreamplugin_test.cpp (template, 6 instantiations)"
+0x100604afd,"void GenerateIndexedTriListForIndexedTriangleFan<unsigned short>(int, unsigned short*, unsigned short*, unsigned int*, unsigned int*)",void GenerateIndexedTriListForIndexedTriangleFan<unsigned short>,s3d/IndexGeneration.h,recovered,"decompile; tests/gz_gstreamplugin_test.cpp (template, 6 instantiations)"
+0x100604b9f,"void GenerateIndexedTriListForIndexedTriangleFan<unsigned int>(int, unsigned int*, unsigned short*, unsigned int*, unsigned int*)",void GenerateIndexedTriListForIndexedTriangleFan<unsigned int>,s3d/IndexGeneration.h,recovered,"decompile; tests/gz_gstreamplugin_test.cpp (template, 6 instantiations)"
+0x100604c33,"void GenerateIndexedTriListForIndexedTriangleFan<unsigned char>(int, unsigned char*, unsigned short*, unsigned int*, unsigned int*)",void GenerateIndexedTriListForIndexedTriangleFan<unsigned char>,s3d/IndexGeneration.h,recovered,"decompile; tests/gz_gstreamplugin_test.cpp (template, 6 instantiations)"

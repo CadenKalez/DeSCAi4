@@ -170,3 +170,20 @@ float SafeGetAltitude(ISTETerrainAltitude* terrain, float x, float z) {
     if (maxZ <= cz) cz = maxZ;
     return terrain->GetAltitude(cx, cz);
 }
+
+int stricmp(const char* a, const char* b) {
+    auto lower = [](const char* p) -> signed char {
+        const int c = static_cast<unsigned char>(*p);
+        return static_cast<signed char>(c >= 'A' && c <= 'Z' ? c + 32 : c);
+    };
+    signed char ca = lower(a), cb = lower(b);
+    while (cb <= ca) {
+        ++a;
+        ++b;
+        if (cb < ca) return 1;
+        if (ca == 0) return 0;
+        ca = lower(a);
+        cb = lower(b);
+    }
+    return -1;
+}

@@ -48,3 +48,6 @@ public:
 };
 // Altitude at (x, z) with both coordinates clamped into [0, cells * cell size]. @ 0x1002d3961
 float SafeGetAltitude(ISTETerrainAltitude* terrain, float x, float z);
+
+// ASCII case-insensitive comparison on signed chars: -1, 0 or 1. @ 0x1006421d8
+int stricmp(const char* a, const char* b);
