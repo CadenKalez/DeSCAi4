@@ -30,7 +30,8 @@ struct FakeMgr final : cIGZWinMgr {
     cIGZWin* GZGetCapture() override { return capture; }
     void GZSetCapture(cIGZWin* w) override { capture = w; }
     void GZReleaseCapture(cIGZWin* w) override { if (capture == w) capture = nullptr; }
-    cIGZCursorManager* GetCursorManager() override { return nullptr; }
+    cIGZCursorManager* cursors = nullptr;
+    cIGZCursorManager* GetCursorManager() override { return cursors; }
     cIGZWin* GZGetFocus() override { return focus; }
     void GZSetFocus(cIGZWin* w) override { focus = w; }
     cIGZKeyboard* GetKeyboard() override { return nullptr; }

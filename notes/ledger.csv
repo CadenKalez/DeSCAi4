@@ -14724,3 +14724,103 @@ address,symbol,unique_name,source,status,evidence
 0x1003763d2,cSC4CtabFilter::AddRef(),AddRef,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
 0x1003763e0,cSC4CtabFilter::Release(),Release,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
 0x1003763fc,"cSC4CtabFilter::DoMessage(cIGZWin*, cGZMessage&)",DoMessage,src/sc4/UIFilters.cpp|h,recovered,sc4_smallsim
+0x100275ea0,cGZWinLineInput::CreateNewObject(),CreateNewObject,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100275ee4,cGZWinLineInput::cGZWinLineInput(bool),Construct_bool,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100275ef2,cGZWinLineInput::cGZWinLineInput(bool),Construct_boolWrapper,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027607c,cGZWinLineInput::~cGZWinLineInput(),Destruct,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027610a,cGZWinLineInput::~cGZWinLineInput(),DestructAndDelete,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276114,cGZWinLineInput::~cGZWinLineInput(),DestructBody,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276142,cGZWinLineInput::AddRef(),AddRef,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027614c,non-virtual thunk to cGZWinLineInput::AddRef(),AddRefThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027615e,cGZWinLineInput::Release(),Release,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276168,non-virtual thunk to cGZWinLineInput::Release(),ReleaseThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027617a,"cGZWinLineInput::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027619e,"non-virtual thunk to cGZWinLineInput::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002761ca,cGZWinLineInput::Init(),Init,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027637e,cGZWinLineInput::Shutdown(),Shutdown,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002763ac,"cGZWinLineInput::SetArea(int, int, int, int)",SetArea,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027641c,"cGZWinLineInput::SetFlag(cIGZWin::tWinFlag, bool)",SetFlag,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002764a8,cGZWinLineInput::SetFont(cIGZFont*),SetFont,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276506,non-virtual thunk to cGZWinLineInput::SetFont(cIGZFont*),SetFontThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027651a,cGZWinLineInput::SetFontColor(unsigned int),SetFontColor_uint,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276532,non-virtual thunk to cGZWinLineInput::SetFontColor(unsigned int),SetFontColor_uintThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276554,"cGZWinLineInput::SetFontColor(cIGZWinLineInput::tFontColorIdx, unsigned int)",SetFontColor_cIGZWinLineInput_tFontColorIdx_uint,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027658a,"non-virtual thunk to cGZWinLineInput::SetFontColor(cIGZWinLineInput::tFontColorIdx, unsigned int)",SetFontColor_cIGZWinLineInput_tFontColorIdx_uintThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002765c6,"cGZWinLineInput::GetFontColor(cIGZWinLineInput::tFontColorIdx, unsigned int&) const",GetFontColor,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002765ea,"non-virtual thunk to cGZWinLineInput::GetFontColor(cIGZWinLineInput::tFontColorIdx, unsigned int&) const",GetFontColorThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027660a,cGZWinLineInput::ClearFontColor(cIGZWinLineInput::tFontColorIdx),ClearFontColor,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276620,non-virtual thunk to cGZWinLineInput::ClearFontColor(cIGZWinLineInput::tFontColorIdx),ClearFontColorThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276642,cGZWinLineInput::SetFilled(bool),SetFilled,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027665a,non-virtual thunk to cGZWinLineInput::SetFilled(bool),SetFilledThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027667e,cGZWinLineInput::IsFilled() const,IsFilled,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027668a,non-virtual thunk to cGZWinLineInput::IsFilled() const,IsFilledThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276696,cGZWinLineInput::SetOutline(bool),SetOutline,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002766ac,non-virtual thunk to cGZWinLineInput::SetOutline(bool),SetOutlineThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002766cc,cGZWinLineInput::SetOutlineColor(unsigned int),SetOutlineColor_uint,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002766e4,non-virtual thunk to cGZWinLineInput::SetOutlineColor(unsigned int),SetOutlineColor_uintThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276706,cGZWinLineInput::SetOutlineType(cIGZWinLineInput::tOutlineType),SetOutlineType,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276714,non-virtual thunk to cGZWinLineInput::SetOutlineType(cIGZWinLineInput::tOutlineType),SetOutlineTypeThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276720,cGZWinLineInput::GetOutlineType(cIGZWinLineInput::tOutlineType&) const,GetOutlineType,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276730,non-virtual thunk to cGZWinLineInput::GetOutlineType(cIGZWinLineInput::tOutlineType&) const,GetOutlineTypeThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027673e,"cGZWinLineInput::SetOutlineColor(cIGZWinLineInput::tOutlineColorIdx, unsigned int)",SetOutlineColor_cIGZWinLineInput_tOutlineColorIdx_uint,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027678c,"non-virtual thunk to cGZWinLineInput::SetOutlineColor(cIGZWinLineInput::tOutlineColorIdx, unsigned int)",SetOutlineColor_cIGZWinLineInput_tOutlineColorIdx_uintThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002767e8,"cGZWinLineInput::GetOutlineColor(cIGZWinLineInput::tOutlineColorIdx, unsigned int&) const",GetOutlineColor,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276818,"non-virtual thunk to cGZWinLineInput::GetOutlineColor(cIGZWinLineInput::tOutlineColorIdx, unsigned int&) const",GetOutlineColorThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027684e,cGZWinLineInput::SetHighlightFillColor(unsigned int),SetHighlightFillColor,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027687c,non-virtual thunk to cGZWinLineInput::SetHighlightFillColor(unsigned int),SetHighlightFillColorThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002768b8,cGZWinLineInput::GetHighlightFillColor(unsigned int&) const,GetHighlightFillColor,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002768dc,non-virtual thunk to cGZWinLineInput::GetHighlightFillColor(unsigned int&) const,GetHighlightFillColorThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276908,cGZWinLineInput::SetHighlightFillAlpha(float),SetHighlightFillAlpha,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276934,non-virtual thunk to cGZWinLineInput::SetHighlightFillAlpha(float),SetHighlightFillAlphaThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027696c,cGZWinLineInput::GetHighlightFillAlpha(float&) const,GetHighlightFillAlpha,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027697c,non-virtual thunk to cGZWinLineInput::GetHighlightFillAlpha(float&) const,GetHighlightFillAlphaThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027698c,cGZWinLineInput::GZPaint(),GZPaint,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100276f4e,"cGZWinLineInput::draw_text(int, int, int, int, cIGZWinLineInput::tFontColorIdx)",draw_text,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277146,cGZWinLineInput::paint_outline(),paint_outline,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277234,cGZWinLineInput::GZOnSetFocus(cIGZWin*),GZOnSetFocus,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277252,cGZWinLineInput::GZOnKillFocus(cIGZWin*),GZOnKillFocus,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277264,"cGZWinLineInput::GZOnMouseDownL(int, int, unsigned int)",GZOnMouseDownL,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277356,cGZWinLineInput::FindTextIndexFromCursorLocation(int),FindTextIndexFromCursorLocation,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002774b8,cGZWinLineInput::UpdateViewLocation(),UpdateViewLocation,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002775ec,"cGZWinLineInput::GZOnMouseUpL(int, int, unsigned int)",GZOnMouseUpL,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277622,"cGZWinLineInput::GZOnMouseMove(int, int, unsigned int)",GZOnMouseMove,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277664,"cGZWinLineInput::InsertChar(unsigned int, unsigned int)",InsertChar,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277700,"cGZWinLineInput::DeleteChar(unsigned int, unsigned int)",DeleteChar,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277788,"cGZWinLineInput::GZOnKeyDown(unsigned int, unsigned int)",GZOnKeyDown,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277ccc,cGZWinLineInput::GZOnCharacter(char),GZOnCharacter,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277dd2,cGZWinLineInput::SetCursorLoc(unsigned int),SetCursorLoc,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277e20,non-virtual thunk to cGZWinLineInput::SetCursorLoc(unsigned int),SetCursorLocThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277e5c,cGZWinLineInput::GetCursorLoc(unsigned int&) const,GetCursorLoc,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277e6c,non-virtual thunk to cGZWinLineInput::GetCursorLoc(unsigned int&) const,GetCursorLocThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277e7a,cGZWinLineInput::GetText(cIGZString&) const,GetText,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277eb8,non-virtual thunk to cGZWinLineInput::GetText(cIGZString&) const,GetTextThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277ef6,cGZWinLineInput::SetText(char*),SetText_char,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100277ff0,non-virtual thunk to cGZWinLineInput::SetText(char*),SetText_charThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100278002,cGZWinLineInput::SetText(cIGZString const&),SetText_String,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100278014,non-virtual thunk to cGZWinLineInput::SetText(cIGZString const&),SetText_StringThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100278030,cGZWinLineInput::SetText(cIGZString const*),SetText_cIGZString_const,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027810c,non-virtual thunk to cGZWinLineInput::SetText(cIGZString const*),SetText_cIGZString_constThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100278120,cGZWinLineInput::AsIGZWin(),AsIGZWin,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027812a,non-virtual thunk to cGZWinLineInput::AsIGZWin(),AsIGZWinThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100278138,cGZWinLineInput::IsEditable() const,IsEditable,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100278144,non-virtual thunk to cGZWinLineInput::IsEditable() const,IsEditableThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100278150,cGZWinLineInput::SetEditable(bool),SetEditable,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002781a4,non-virtual thunk to cGZWinLineInput::SetEditable(bool),SetEditableThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002781bc,cGZWinLineInput::SetCharacterLimit(unsigned int),SetCharacterLimit,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002781ca,non-virtual thunk to cGZWinLineInput::SetCharacterLimit(unsigned int),SetCharacterLimitThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002781d8,cGZWinLineInput::GetCharacterLimit(unsigned int&) const,GetCharacterLimit,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002781e8,non-virtual thunk to cGZWinLineInput::GetCharacterLimit(unsigned int&) const,GetCharacterLimitThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002781f8,"cGZWinLineInput::SetSelection(unsigned int, unsigned int)",SetSelection,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002782b4,"non-virtual thunk to cGZWinLineInput::SetSelection(unsigned int, unsigned int)",SetSelectionThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002782c8,"cGZWinLineInput::GetSelection(unsigned int&, unsigned int&) const",GetSelection,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002782e6,"non-virtual thunk to cGZWinLineInput::GetSelection(unsigned int&, unsigned int&) const",GetSelectionThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002782fc,"cGZWinLineInput::SetGutters(signed char, signed char, signed char, signed char)",SetGutters,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100278328,"non-virtual thunk to cGZWinLineInput::SetGutters(signed char, signed char, signed char, signed char)",SetGuttersThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027835e,"cGZWinLineInput::GetGutters(signed char&, signed char&, signed char&, signed char&) const",GetGutters,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100278388,"non-virtual thunk to cGZWinLineInput::GetGutters(signed char&, signed char&, signed char&, signed char&) const",GetGuttersThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1002783b2,cGZWinLineInput::GetMinMaxInfo(cRZRect&),GetMinMaxInfo,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100278414,non-virtual thunk to cGZWinLineInput::GetMinMaxInfo(cRZRect&),GetMinMaxInfoThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100278428,"cGZWinLineInput::SetSoundID(int, int)",SetSoundID,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100278444,"non-virtual thunk to cGZWinLineInput::SetSoundID(int, int)",SetSoundIDThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x100278460,cGZWinLineInput::PlaySoundA(int),PlaySoundA,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x10027852a,non-virtual thunk to cGZWinLineInput::PlaySoundA(int),PlaySoundAThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput

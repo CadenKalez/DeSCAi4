@@ -91,6 +91,7 @@ declare -a TESTS=(
  "gz_winflatrect:$T/gz_winflatrect_test.cpp $S/gz/WinFlatRect.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
  "gz_winbmp:$T/gz_winbmp_test.cpp $S/gz/WinBMP.cpp $S/gz/RZDraw.cpp $S/gz/Buffer.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
  "gz_winknob:$T/gz_winknob_test.cpp $S/gz/WinKnob.cpp $S/gz/Buffer.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
+ "gz_winlineinput:$T/gz_winlineinput_test.cpp $S/gz/WinLineInput.cpp $S/rz/TextEncoding.cpp $S/rz/CharLength.cpp $S/gz/RZDraw.cpp $S/gz/WinBtn.cpp $S/gz/WinKnob.cpp $S/gz/WinCtrlFactory.cpp $S/rz/cRZCallbackTimer.cpp $S/gz/Buffer.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
  "sc4_smallsim:$T/sc4_smallsim_test.cpp $S/sc4/WealthRequester.cpp $S/sc4/UIFilters.cpp $S/gz/Win.cpp $S/rz/cRZRandom.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp -I$T"
  "gz_winslider:$T/gz_winslider_test.cpp $S/gz/WinSlider.cpp $S/gz/Buffer.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
  "rz_comdirector:$T/rz_comdirector_test.cpp $S/rz/cRZCOMDllDirector.cpp $S/rz/cRZString.cpp"
