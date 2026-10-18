@@ -15544,3 +15544,35 @@ address,symbol,unique_name,source,status,evidence
 0x100064cfa,"cGZClipboardManagerClipboard::SetClipboardText(cIGZString const&, unsigned char)",SetClipboardText_String_uchar,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
 0x100064e84,"cGZClipboardManagerClipboard::GetClipboardText(void*, unsigned int&, unsigned int)",GetClipboardText_void_uint_uint,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
 0x100064eae,"cGZClipboardManagerClipboard::SetClipboardText(void*, unsigned int, unsigned int, unsigned char)",SetClipboardText_void_uint_uint_uchar,src/gz/ClipboardManager.cpp|h,recovered,gz_clipboard
+0x100028644,cRZTextOStream::SetSint8(signed char),SetSint8,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x1000286da,cRZTextOStream::SetUint8(unsigned char),SetUint8,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100028770,cRZTextOStream::SetSint16(short),SetSint16,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100028806,cRZTextOStream::SetUint16(unsigned short),SetUint16,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x10002889c,cRZTextOStream::SetSint32(int),SetSint32,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100028932,cRZTextOStream::SetUint32(unsigned int),SetUint32,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x1000289c8,cRZTextOStream::SetSint64(long long),SetSint64,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100028a60,cRZTextOStream::SetUint64(unsigned long long),SetUint64,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100028af8,cRZTextOStream::SetFloat32(float),SetFloat32,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100028b8e,cRZTextOStream::SetFloat64(double),SetFloat64,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100028c28,cRZTextOStream::SetGZStr(cIGZString const&),SetGZStr,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100028d74,"cRZOFStream::cRZOFStream(cIGZString const&, bool, bool, bool, bool)",Construct_String_bool_bool_bool_bool,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100029020,"cRZOFStream::cRZOFStream(cIGZString const&, bool, bool, bool, bool)",Construct_String_bool_bool_bool_boolWrapper,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100029038,"cRZOFStream::cRZOFStream(char const*, bool, bool, bool, bool)",Construct_char_const_bool_bool_bool_bool,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100029304,"cRZOFStream::cRZOFStream(char const*, bool, bool, bool, bool)",Construct_char_const_bool_bool_bool_boolWrapper,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x10002931c,cRZOFStream::~cRZOFStream(),Destruct,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x10002938e,cRZOFStream::~cRZOFStream(),DestructAndDelete,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100029398,cRZOFStream::~cRZOFStream(),DestructBody,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x1000293c6,cRZOFStream::SetSint8(signed char),SetSint8,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x1000293fc,cRZOFStream::SetUint8(unsigned char),SetUint8,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100029432,cRZOFStream::SetSint16(short),SetSint16,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100029474,cRZOFStream::SetUint16(unsigned short),SetUint16,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x1000294b6,cRZOFStream::SetSint32(int),SetSint32,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x1000294ee,cRZOFStream::SetUint32(unsigned int),SetUint32,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100029526,cRZOFStream::SetSint64(long long),SetSint64,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100029562,cRZOFStream::SetUint64(unsigned long long),SetUint64,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x10002959e,cRZOFStream::SetFloat32(float),SetFloat32,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x1000295e2,cRZOFStream::SetFloat64(double),SetFloat64,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x100029624,cRZOFStream::SetRZCharStr(char const*),SetRZCharStr,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x1000296a8,"cRZOFStream::SetVoid(void const*, unsigned int)",SetVoid,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x1000296d6,cRZOFStream::GetError() const,GetError,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream
+0x1000296f0,cRZOFStream::Flush(),Flush,src/rz/cRZOFStream.cpp|h,recovered,rz_ofstream

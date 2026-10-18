@@ -103,6 +103,7 @@ declare -a TESTS=(
  "gz_messageserver:$T/gz_messageserver_test.cpp $S/gz/cGZMessageServer.cpp $S/gz/cGZMessageServer2.cpp $S/gz/MessageQueue.cpp $S/gz/cGZMessageQueue2.cpp $S/rz/cRZMessage2Standard.cpp $S/rz/cRZVariant.cpp $S/rz/cRZString.cpp $S/rz/nRZHash.cpp $S/rz/Threading.cpp $S/rz/cRZCriticalSection.cpp $S/rz/RZConvert.cpp $S/rz/CharLength.cpp -lpthread"
  "gz_com:$T/gz_com_test.cpp $S/gz/cGZCOM.cpp $S/gz/COMLibrary.cpp $S/rz/cRZRandom.cpp $S/rz/cRZDate.cpp $S/rz/cRZString.cpp -lpthread"
  "gz_clipboard:$T/gz_clipboard_test.cpp $S/gz/ClipboardManager.cpp $S/gz/SmallObjects.cpp $S/gz/cGZMessageServer.cpp $S/gz/cGZMessageServer2.cpp $S/gz/MessageQueue.cpp $S/gz/cGZMessageQueue2.cpp $S/gz/Win.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp $S/rz/cRZMessage2Standard.cpp $S/rz/cRZVariant.cpp $S/rz/cRZString.cpp $S/rz/nRZHash.cpp $S/rz/Threading.cpp $S/rz/cRZCriticalSection.cpp $S/rz/RZConvert.cpp $S/rz/CharLength.cpp -lpthread"
+ "rz_ofstream:$T/rz_ofstream_test.cpp $S/rz/cRZOFStream.cpp $S/rz/cRZStream.cpp $S/rz/cRZString.cpp"
  "sc4_particlesim:$T/sc4_particlesim_test.cpp $S/sc4/ParticleSimulatorBase.cpp $S/gz/COMLibrary.cpp $S/rz/cRZString.cpp"
  "rz_autoref:$T/rz_autoref_test.cpp $S/rz/cRZSysServPtr.cpp"
  "sc4_tileneighborhood:$T/sc4_tileneighborhood_test.cpp $S/sc4/TileNeighborhood.cpp $S/rz/cRZString.cpp"
