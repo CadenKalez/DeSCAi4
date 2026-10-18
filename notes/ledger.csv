@@ -14999,3 +14999,37 @@ address,symbol,unique_name,source,status,evidence
 0x1004afea0,cCompletionObj::Release(),Release,src/audio/CompletionObj.h,recovered,rz_cursorresource
 0x1004aff40,cCompletionObj::DoCompletionFunction(cIGZSnd*),DoCompletionFunction,src/audio/CompletionObj.h,recovered,rz_cursorresource
 0x1004aff50,cCompletionObj::~cCompletionObj(),DestructAndDelete,src/audio/CompletionObj.h,recovered,rz_cursorresource
+0x1005308b6,cGZWinCustom::cGZWinCustom(),Construct,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x1005308f2,cGZWinCustom::~cGZWinCustom(),Destruct,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10053094c,cGZWinCustom::~cGZWinCustom(),DestructAndDelete,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100530956,cGZWinCustom::~cGZWinCustom(),DestructBody,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100530984,"cGZWinCustom::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x1005309b2,"non-virtual thunk to cGZWinCustom::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x1005309e6,cGZWinCustom::AddRef(),AddRef,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x1005309f0,non-virtual thunk to cGZWinCustom::AddRef(),AddRefThunk,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100530a02,cGZWinCustom::Release(),Release,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100530a0c,non-virtual thunk to cGZWinCustom::Release(),ReleaseThunk,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100530a1e,cGZWinCustom::DoMessage(cGZMessage&),DoMessage,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100530a9e,cGZWinCustom::GZPaint(),GZPaint,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100530aee,"cGZWinCustom::GZOnKeyDown(unsigned int, unsigned int)",GZOnKeyDown,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100530b24,"cGZWinCustom::GZOnKeyUp(unsigned int, unsigned int)",GZOnKeyUp,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100530b5a,cGZWinCustom::AsIGZWin(),AsIGZWin,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100530b64,non-virtual thunk to cGZWinCustom::AsIGZWin(),AsIGZWinThunk,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10070de06,cSC4CachedStringTexture::~cSC4CachedStringTexture(),Destruct,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x10070de82,cSC4CachedStringTexture::~cSC4CachedStringTexture(),DestructAndDelete,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x10070de8c,cSC4CachedStringTexture::~cSC4CachedStringTexture(),DestructBody,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x10070deba,cSC4CachedStringTexture::AddRef(),AddRef,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x10070dec8,cSC4CachedStringTexture::SetManager(cSC4GlyphTextureManager*),SetManager,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x10070df16,cSC4CachedStringTexture::Release(),Release,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x10070df42,"cSC4CachedStringTexture::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x10070df4a,cSC4CachedStringTexture::GetTextureId(),GetTextureId,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x10070dfb4,cSC4CachedStringTexture::GetTextureSize() const,GetTextureSize,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x100306388,cSC4ScriptServiceResourceFactory::cSC4ScriptServiceResourceFactory(),Construct,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x1003063a0,cSC4ScriptServiceResourceFactory::~cSC4ScriptServiceResourceFactory(),Destruct,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x1003063b0,cSC4ScriptServiceResourceFactory::~cSC4ScriptServiceResourceFactory(),DestructAndDelete,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x1003063ba,"cSC4ScriptServiceResourceFactory::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x1003063dc,cSC4ScriptServiceResourceFactory::AddRef(),AddRef,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x1003063ea,cSC4ScriptServiceResourceFactory::Release(),Release,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x100306406,cSC4ScriptServiceResourceFactory::GZUIScriptLoadBuffer(cGZPersistResourceKey const&),GZUIScriptLoadBuffer,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x10030647c,cSC4ScriptServiceResourceFactory::GZUIScriptLoadString(cGZPersistResourceKey const&),GZUIScriptLoadString_cGZPersistResourceKey_const,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource
+0x1003064e6,"cSC4ScriptServiceResourceFactory::GZUIScriptLoadString(cGZPersistResourceKey const&, cIGZString&)",GZUIScriptLoadString_cGZPersistResourceKey_const_cIGZString,src/sc4/UIResourceObjects.cpp|h,recovered,sc4_uiresource

@@ -31,6 +31,11 @@ struct Target final : cGZWin {
     int got = 0;
     bool DoMessage(cGZMessage&) override { ++got; return true; }
 };
+struct Recorder final : cGZWin {
+    explicit Recorder(cIGZWinMgr* mgr) : cGZWin(mgr) {}
+    std::vector<cGZMessage> got;
+    bool DoMessage(cGZMessage& m) override { got.push_back(m); return true; }
+};
 struct Variant final : cIGZVariant {
     // only the three members the customizer uses
 };
@@ -73,6 +78,26 @@ int main() {
     CHECK(filter->QueryInterface(0xc6ae7085, &out) && !filter->QueryInterface(5, &out));
     filter->Release();
     watched->Release();
+
+    auto* parentWindow = new Recorder(&mgr);
+    parentWindow->AddRef();
+    auto* custom = new cGZWinCustom(&mgr);
+    custom->AddRef();
+    parentWindow->ChildAdd(custom);
+    custom->SetArea(10, 20, 50, 60);
+    custom->SetNotificationTarget(parentWindow);
+    cGZMessage mouse{kGZMsgMouseDownL, 5, 6, 0};
+    CHECK(custom->DoMessage(mouse) && parentWindow->got.size() == 1 && parentWindow->got[0].param1 == 15 && parentWindow->got[0].param2 == 26);
+    cGZMessage other{kGZMsgCommand, 5, 6, 0};
+    custom->DoMessage(other);
+    CHECK(parentWindow->got[1].param1 == 5);                    // non-mouse messages are not shifted
+    CHECK(custom->GZOnKeyDown(65, 2) && parentWindow->got[2].type == kGZMsgKeyDown && parentWindow->got[2].param1 == 65);
+    CHECK(custom->GZOnKeyUp(65, 2) && parentWindow->got[3].type == kGZMsgKeyUp && parentWindow->got[3].param2 == 2);
+    CHECK(custom->QueryInterface(0x678d1e84, &out) && custom->QueryInterface(0x22ba0121, &out) && !custom->QueryInterface(5, &out));
+    custom->Release();
+    custom->Release();
+    custom->Release();
+    parentWindow->Release();
 
     auto* meshes = new s3d::cS3DMeshAndMaterial();
     meshes->AddRef();

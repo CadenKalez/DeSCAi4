@@ -93,6 +93,7 @@ declare -a TESTS=(
  "gz_winknob:$T/gz_winknob_test.cpp $S/gz/WinKnob.cpp $S/gz/Buffer.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
  "gz_winlineinput:$T/gz_winlineinput_test.cpp $S/gz/WinLineInput.cpp $S/rz/TextEncoding.cpp $S/rz/CharLength.cpp $S/gz/RZDraw.cpp $S/gz/WinBtn.cpp $S/gz/WinKnob.cpp $S/gz/WinCtrlFactory.cpp $S/rz/cRZCallbackTimer.cpp $S/gz/Buffer.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
  "sc4_smallsim:$T/sc4_smallsim_test.cpp $S/sc4/WealthRequester.cpp $S/sc4/UIFilters.cpp $S/gz/Win.cpp $S/rz/cRZRandom.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp -I$T"
+ "sc4_uiresource:$T/sc4_uiresource_test.cpp $S/sc4/UIResourceObjects.cpp $S/rz/cRZString.cpp"
  "gz_smallobjects:$T/gz_smallobjects_test.cpp $S/gz/SmallObjects.cpp $S/sc4/ColorCustomizer.cpp $S/gz/Win.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp -I$T"
  "rz_cursorresource:$T/rz_cursorresource_test.cpp $S/rz/CursorResource.cpp $S/gz/cGZPersistResourceManager.cpp $S/rz/cRZString.cpp $S/rz/cRZUnknownList.cpp $S/gz/cGZPersistResourceKeyList.cpp -I$T"
  "sc4_tileneighborhood:$T/sc4_tileneighborhood_test.cpp $S/sc4/TileNeighborhood.cpp $S/rz/cRZString.cpp"
