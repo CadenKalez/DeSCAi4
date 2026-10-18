@@ -14655,3 +14655,39 @@ address,symbol,unique_name,source,status,evidence
 0x1001fc80c,cSC4CommercialSimulator::GetProximityMap(cISC4BuildingDevelopmentSimulator::DeveloperType) const,GetProximityMap,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
 0x1001fc834,cSC4CommercialSimulator::GetGZCLSID() const,GetGZCLSID,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
 0x1001fc840,non-virtual thunk to cSC4CommercialSimulator::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/CommercialSimulator.cpp|h,recovered,sc4_commercialsimulator
+0x1000c4f1c,cSC4LandValueSimulator::~cSC4LandValueSimulator(),Destruct,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c4f88,cSC4LandValueSimulator::~cSC4LandValueSimulator(),DestructAndDelete,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c4f92,cSC4LandValueSimulator::~cSC4LandValueSimulator(),DestructBody,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c4fc0,"cSC4LandValueSimulator::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c5006,"non-virtual thunk to cSC4LandValueSimulator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_5006,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c5014,"non-virtual thunk to cSC4LandValueSimulator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_5014,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c5022,cSC4LandValueSimulator::AddRef(),AddRef,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c5030,non-virtual thunk to cSC4LandValueSimulator::AddRef(),AddRefThunk_5030,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c503e,non-virtual thunk to cSC4LandValueSimulator::AddRef(),AddRefThunk_503e,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c504c,cSC4LandValueSimulator::Release(),Release,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c508a,non-virtual thunk to cSC4LandValueSimulator::Release(),ReleaseThunk_508a,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c50c2,non-virtual thunk to cSC4LandValueSimulator::Release(),ReleaseThunk_50c2,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c50fa,cSC4LandValueSimulator::Init(),Init,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c564e,cSC4LandValueSimulator::ReadSimulatorTunableValues(),ReadSimulatorTunableValues,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c5968,cSC4LandValueSimulator::Shutdown(),Shutdown,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c5b7a,cSC4LandValueSimulator::Write(cIGZOStream&) const,Write,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c5c0c,non-virtual thunk to cSC4LandValueSimulator::Write(cIGZOStream&) const,WriteThunk,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c5c1a,cSC4LandValueSimulator::Read(cIGZIStream&),Read,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c5cda,non-virtual thunk to cSC4LandValueSimulator::Read(cIGZIStream&),ReadThunk,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c5dac,cSC4LandValueSimulator::DoMessage(cIGZMessage2*),DoMessage,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c5e64,cSC4LandValueSimulator::DoIdle(unsigned int),DoIdle,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c6d42,non-virtual thunk to cSC4LandValueSimulator::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c6d54,"cSC4LandValueSimulator::TractIsZoned(int, int)",TractIsZoned,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c6dd8,"cSC4LandValueSimulator::TractHasLand(int, int)",TractHasLand,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c6e66,cSC4LandValueSimulator::SetupAltitudeEffect(),SetupAltitudeEffect,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c6f32,cSC4LandValueSimulator::LookupAltitudeEffect(float),LookupAltitudeEffect,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c738e,cSC4LandValueSimulator::DoEndOfSimulationCycle(),DoEndOfSimulationCycle,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c73fc,"cSC4LandValueSimulator::GetLandValueType(int, int) const",GetLandValueType,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c7434,"cSC4LandValueSimulator::GetLandValue(int, int) const",GetLandValue,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c744e,cSC4LandValueSimulator::GetIntrinsicLandValueMap() const,GetIntrinsicLandValueMap,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c7458,cSC4LandValueSimulator::GetTotalLandValueMap() const,GetTotalLandValueMap,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c7462,cSC4LandValueSimulator::GetSlopeMap() const,GetSlopeMap,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c746c,cSC4LandValueSimulator::GetAverageLandValue() const,GetAverageLandValue,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c747a,cSC4LandValueSimulator::GetModeAltitude() const,GetModeAltitude,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c7488,cSC4LandValueSimulator::GetGZCLSID() const,GetGZCLSID,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
+0x1000c7494,non-virtual thunk to cSC4LandValueSimulator::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/LandValueSimulator.cpp|h,recovered,sc4_landvaluesimulator
