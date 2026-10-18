@@ -37,11 +37,39 @@ enum GZWinFlag : std::uint32_t {
     kWinFlag400000 = 0x400000, kWinPlotted = 0x4000000, kWinDesktop = 0x8000000,
 };
 
-class cIGZCursor : public cIGZUnknown {};
+// The mouse cursors (cRZCursor, cRZSystemCursorW95; iid 0x834c471e) and their manager (cRZCursorManager; iid 0xa34c498a).
+// The members past the bare unknown all have do-nothing defaults so test doubles only override what they use.
+class cIGZBuffer;
+class cIGZCursor : public cIGZUnknown {
+public:
+    virtual bool Init() { return true; }                                        // [3]
+    virtual bool Shutdown() { return true; }                                    // [4]
+    virtual void SetCursor(bool apply) { (void)apply; }                         // [5] makes it the pointer
+    virtual void ShowCursor(bool show) { (void)show; }                          // [6]
+    virtual void GetCursorHotSpot(int& x, int& y) { x = y = 0; }                // [7]
+    virtual void SetCursorHotSpot(int x, int y) { (void)x; (void)y; }           // [8]
+    virtual bool LoadCursorA(const cIGZString& path) { (void)path; return false; }   // [9] a .cur file
+    virtual void SetCursorHandle(void* handle) { (void)handle; }                // [10]
+    virtual void SetCursorBuffer(cIGZBuffer* buffer) { (void)buffer; }          // [11]
+    virtual bool SystemHasCursorSupport() { return false; }                     // [12]
+    virtual cIGZBuffer* GetCursorBuffer() { return nullptr; }                   // [13]
+    virtual bool IsLoaded() { return false; }                                   // [14]
+};
 class cIGZCursorManager : public cIGZUnknown {
 public:
-    virtual cIGZCursor* LoadCursor(std::uint32_t id) = 0;          // vslot 0x38
+    virtual cIGZCursor* LoadCursor(std::uint32_t id) = 0;          // vslot 0x38 (the original calls it GetCursor(id))
     virtual void SetCursor(cIGZCursor* cursor) = 0;                // vslot 0x50
+    virtual bool Init() { return true; }                           // [3]
+    virtual bool Shutdown() { return true; }                       // [4]
+    virtual bool AddCursor(cIGZCursor* cursor, std::uint32_t id) { (void)cursor; (void)id; return false; }   // [5]
+    virtual bool RemoveCursor(std::uint32_t id) { (void)id; return false; }                // [6]
+    virtual cIGZCursor* GetCursor() { return nullptr; }            // [8] the current cursor
+    virtual bool SetCursor(std::uint32_t id) { (void)id; return false; }                   // [9]
+    virtual bool PushAutoCursor(std::uint32_t id) { (void)id; return false; }              // [11]
+    virtual bool PopAutoCursor() { return false; }                 // [12]
+    virtual void AddCursor(const cIGZString& path, std::uint32_t id) { (void)path; (void)id; }   // [13]
+    virtual void ShowCursor() {}                                   // [14]
+    virtual void HideCursor() {}                                   // [15]
 };
 class cIGZKeyboard : public cIGZUnknown {};
 // The keyboard accelerator table windows ask first (iid 0xe2c1b3c4; cRZWinKeyAccelerator implements it). A key is the

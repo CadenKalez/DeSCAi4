@@ -17230,3 +17230,51 @@ address,symbol,unique_name,source,status,evidence
 0x1006a22a7,"nsGZWinUtils::SetEditText(cIGZWin*, unsigned int, cIGZString const&)",SetEditText,src/gz/WinUtils.cpp|h,recovered,Window helper functions recovered; covered by gz_winutils
 0x1006a2333,"nsGZWinUtils::SetSpinnerValue(cIGZWin*, unsigned int, int)",SetSpinnerValue,src/gz/WinUtils.cpp|h,recovered,Window helper functions recovered; covered by gz_winutils
 0x1006a20e1,"sSetNotification(cIGZWin*, unsigned int, void*, void*)",Construct_cIGZWin_uint_void_void,src/gz/WinUtils.cpp|h,recovered,EnumChildren callback; covered by gz_winutils
+0x1000572a0,cRZCursor::cRZCursor(),Construct,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x10005733c,cRZCursor::cRZCursor(),ConstructWrapper,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100057346,cRZCursor::cRZCursor(cIGZString const&),Construct_String,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x1000573e8,cRZCursor::cRZCursor(cRZString const&),Construct_cRZString_constWrapper,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100057480,cRZCursor::cRZCursor(cRZString const&),Construct_cRZString_const,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x10005748a,cRZCursor::~cRZCursor(),Destruct,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x1000574f6,cRZCursor::~cRZCursor(),DestructAndDelete,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100057500,cRZCursor::~cRZCursor(),DestructBody,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x10005752e,cRZCursor::AddRef(),AddRef,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x10005753c,cRZCursor::Release(),Release,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100057558,"cRZCursor::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x10005757a,cRZCursor::Init(),Init,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100057582,cRZCursor::Shutdown(),Shutdown,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x10005758a,cRZCursor::SetCursor(bool),SetCursor,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x10005762e,cRZCursor::ShowCursor(bool),ShowCursor,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100057644,"cRZCursor::GetCursorHotSpot(int&, int&)",GetCursorHotSpot,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100057656,"cRZCursor::SetCursorHotSpot(int, int)",SetCursorHotSpot,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100057664,cRZCursor::LoadCursorA(cIGZString const&),LoadCursorA,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100057fc6,cRZCursor::SetCursorHandle(void*),SetCursorHandle,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100057fd6,cRZCursor::SetCursorBuffer(cIGZBuffer*),SetCursorBuffer,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100058012,cRZCursor::SystemHasCursorSupport(),SystemHasCursorSupport,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x10005878e,cRZCursor::GetCursorBuffer(),GetCursorBuffer,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100058798,cRZCursor::IsLoaded(),IsLoaded,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x1000587b0,cRZSystemCursorW95::~cRZSystemCursorW95(),Destruct,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x1000587cc,cRZSystemCursorW95::~cRZSystemCursorW95(),DestructAndDelete,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x10005880c,cRZSystemCursorW95::LoadCursorA(cIGZString const&),LoadCursorA,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100058814,cRZSystemCursorW95::SetCursorHandle(void*),SetCursorHandle,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x1000580ae,cRZCursorManager::cRZCursorManager(),Construct,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x1000580f8,cRZCursorManager::~cRZCursorManager(),Destruct,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100058144,cRZCursorManager::~cRZCursorManager(),DestructAndDelete,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x10005814e,cRZCursorManager::~cRZCursorManager(),DestructBody,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x10005817c,cRZCursorManager::Init(),Init,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x1000582ca,cRZCursorManager::Shutdown(),Shutdown,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100058312,cRZCursorManager::release_all_cursors(),release_all_cursors,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x10005839a,cRZCursorManager::HideCursor(),HideCursor,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x1000583a4,cRZCursorManager::ShowCursor(),ShowCursor,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x1000583ae,"cRZCursorManager::AddCursor(cIGZString const&, unsigned int)",AddCursor_String_uint,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100058408,cRZCursorManager::RemoveCursor(unsigned int),RemoveCursor,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100058468,cRZCursorManager::AddRef(),AddRef,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100058476,cRZCursorManager::Release(),Release,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100058496,"cRZCursorManager::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x1000584b8,cRZCursorManager::SetCursor(unsigned int),SetCursor_uint,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x10005851a,cRZCursorManager::SetCursor(cIGZCursor*),SetCursor_cIGZCursor,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100058566,cRZCursorManager::PushAutoCursor(unsigned int),PushAutoCursor,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x1000585c2,cRZCursorManager::PopAutoCursor(),PopAutoCursor,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100058620,cRZCursorManager::GetCursor(unsigned int),GetCursor_uint,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x100058660,cRZCursorManager::GetCursor(),GetCursor_void,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
+0x10005866a,"cRZCursorManager::AddCursor(cIGZCursor*, unsigned int)",AddCursor_cIGZCursor_uint,src/gz/Cursor.cpp|h,recovered,Mouse cursors recovered; platform calls behind ICursorPlatform; covered by gz_cursor
