@@ -16524,3 +16524,146 @@ address,symbol,unique_name,source,status,evidence
 0x100653c56,cGZDrawContextAsBuffer::IsReady(),IsReady,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
 0x100653c5e,cGZDrawContextAsBuffer::AsIGZBuffer(),AsIGZBuffer,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
 0x100653c68,non-virtual thunk to cGZDrawContextAsBuffer::AsIGZBuffer(),AsIGZBufferThunk,src/gz/DrawContextAsBuffer.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_drawcontextasbuffer
+0x1004e31ac,cGZPersistSurveyorWriter::cGZPersistSurveyorWriter(),Construct,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3206,cGZPersistSurveyorWriter::~cGZPersistSurveyorWriter(),Destruct,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e32c0,cGZPersistSurveyorWriter::~cGZPersistSurveyorWriter(),DestructAndDelete,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e32ca,cGZPersistSurveyorWriter::~cGZPersistSurveyorWriter(),DestructBody,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e32e6,"cGZPersistSurveyorWriter::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3316,cGZPersistSurveyorWriter::AddRef(),AddRef,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3324,cGZPersistSurveyorWriter::Release(),Release,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3340,"cGZPersistSurveyorWriter::WriteRoot(cIGZPersistResource2 const*, cIGZOStream*)",WriteRoot,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e340c,cGZPersistSurveyorWriter::AddObjectRef(cIGZPersistSerializableReferent const*),AddObjectRef,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e34f4,"cGZPersistSurveyorWriter::WriteBool(char const*, bool)",WriteBool,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e34fa,"cGZPersistSurveyorWriter::WriteSint8(char const*, signed char)",WriteSint8,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3500,"cGZPersistSurveyorWriter::WriteUint8(char const*, unsigned char)",WriteUint8,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3506,"cGZPersistSurveyorWriter::WriteSint16(char const*, short)",WriteSint16,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e350c,"cGZPersistSurveyorWriter::WriteUint16(char const*, unsigned short)",WriteUint16,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3512,"cGZPersistSurveyorWriter::WriteSint32(char const*, int)",WriteSint32,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3518,"cGZPersistSurveyorWriter::WriteUint32(char const*, unsigned int)",WriteUint32,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e351e,"cGZPersistSurveyorWriter::WriteFloat32(char const*, float)",WriteFloat32,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3524,"cGZPersistSurveyorWriter::WriteFloat64(char const*, double)",WriteFloat64,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e352a,"cGZPersistSurveyorWriter::WriteBoolArray(char const*, bool const*, unsigned int)",WriteBoolArray,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3530,"cGZPersistSurveyorWriter::WriteSint8Array(char const*, signed char const*, unsigned int)",WriteSint8Array,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3536,"cGZPersistSurveyorWriter::WriteUint8Array(char const*, unsigned char const*, unsigned int)",WriteUint8Array,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e353c,"cGZPersistSurveyorWriter::WriteSint16Array(char const*, short const*, unsigned int)",WriteSint16Array,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3542,"cGZPersistSurveyorWriter::WriteUint16Array(char const*, unsigned short const*, unsigned int)",WriteUint16Array,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3548,"cGZPersistSurveyorWriter::WriteSint32Array(char const*, int const*, unsigned int)",WriteSint32Array,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e354e,"cGZPersistSurveyorWriter::WriteUint32Array(char const*, unsigned int const*, unsigned int)",WriteUint32Array,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3554,"cGZPersistSurveyorWriter::WriteFloat32Array(char const*, float const*, unsigned int)",WriteFloat32Array,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e355a,"cGZPersistSurveyorWriter::WriteFloat64Array(char const*, double const*, unsigned int)",WriteFloat64Array,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3560,"cGZPersistSurveyorWriter::WriteString(char const*, cIGZString const*)",WriteString_char_const_cIGZString_const,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3566,"cGZPersistSurveyorWriter::WriteString(char const*, char const*)",WriteString_char_const_char_const,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e356c,"cGZPersistSurveyorWriter::WriteObject(char const*, cIGZPersistSerializable2 const*)",WriteObject,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e358a,"cGZPersistSurveyorWriter::WriteObjectRef(char const*, cIGZPersistSerializableReferent const*)",WriteObjectRef_char_const_cIGZPersistSerializableReferent_const,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e35ce,cGZPersistSurveyorWriter::AddDepResource(cIGZPersistResource2*),AddDepResource,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e36ba,"cGZPersistSurveyorWriter::WriteObjectRef(char const*, cIGZUnknown const*)",WriteObjectRef_char_const_cIGZUnknown_const,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e373a,cGZPersistSurveyorWriter::WriteTypeInfo(cGZPersistTypeInfo const&),WriteTypeInfo,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3740,cGZPersistSurveyorWriter::OutputStream(),OutputStream,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e37fc,cGZPersistSurveyorWriter::Clear(),Clear,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e38cc,cGZPersistSurveyorWriter::Resource() const,Resource,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e38d6,cGZPersistSurveyorWriter::NumObjectRefs() const,NumObjectRefs,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e38e8,cGZPersistSurveyorWriter::ObjectRef(int) const,ObjectRef,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e38fa,cGZPersistSurveyorWriter::IndexOfObjectRef(cIGZPersistSerializableReferent const*) const,IndexOfObjectRef,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3a0e,cGZPersistSurveyorWriter::NumDependentResources() const,NumDependentResources,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3a20,cGZPersistSurveyorWriter::DependentResource(int) const,DependentResource,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e3a32,cGZPersistSurveyorWriter::IndexOfDependentResource(cIGZPersistResource2 const*) const,IndexOfDependentResource,src/gz/PersistSurveyorWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de84c,cGZPersistBinaryWriter::cGZPersistBinaryWriter(),Construct,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de87e,cGZPersistBinaryWriter::~cGZPersistBinaryWriter(),Destruct,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de8a0,cGZPersistBinaryWriter::~cGZPersistBinaryWriter(),DestructAndDelete,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de8aa,cGZPersistBinaryWriter::~cGZPersistBinaryWriter(),DestructBody,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de8c6,"cGZPersistBinaryWriter::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de8ee,cGZPersistBinaryWriter::AddRef(),AddRef,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de8fc,cGZPersistBinaryWriter::Release(),Release,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de918,"cGZPersistBinaryWriter::WriteRoot(cIGZPersistResource2 const*, cIGZOStream*)",WriteRoot,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004ded32,"cGZPersistBinaryWriter::WriteBool(char const*, bool)",WriteBool,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004ded58,"cGZPersistBinaryWriter::WriteSint8(char const*, signed char)",WriteSint8,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004ded7e,"cGZPersistBinaryWriter::WriteUint8(char const*, unsigned char)",WriteUint8,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004deda4,"cGZPersistBinaryWriter::WriteSint16(char const*, short)",WriteSint16,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dedca,"cGZPersistBinaryWriter::WriteUint16(char const*, unsigned short)",WriteUint16,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dedf0,"cGZPersistBinaryWriter::WriteSint32(char const*, int)",WriteSint32,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dee16,"cGZPersistBinaryWriter::WriteUint32(char const*, unsigned int)",WriteUint32,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dee3c,"cGZPersistBinaryWriter::WriteFloat32(char const*, float)",WriteFloat32,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dee68,"cGZPersistBinaryWriter::WriteFloat64(char const*, double)",WriteFloat64,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dee94,"cGZPersistBinaryWriter::WriteBoolArray(char const*, bool const*, unsigned int)",WriteBoolArray,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004deed8,"cGZPersistBinaryWriter::WriteSint8Array(char const*, signed char const*, unsigned int)",WriteSint8Array,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004def08,"cGZPersistBinaryWriter::WriteUint8Array(char const*, unsigned char const*, unsigned int)",WriteUint8Array,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004def38,"cGZPersistBinaryWriter::WriteSint16Array(char const*, short const*, unsigned int)",WriteSint16Array,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004def7c,"cGZPersistBinaryWriter::WriteUint16Array(char const*, unsigned short const*, unsigned int)",WriteUint16Array,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004defc0,"cGZPersistBinaryWriter::WriteSint32Array(char const*, int const*, unsigned int)",WriteSint32Array,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df004,"cGZPersistBinaryWriter::WriteUint32Array(char const*, unsigned int const*, unsigned int)",WriteUint32Array,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df048,"cGZPersistBinaryWriter::WriteFloat32Array(char const*, float const*, unsigned int)",WriteFloat32Array,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df08e,"cGZPersistBinaryWriter::WriteFloat64Array(char const*, double const*, unsigned int)",WriteFloat64Array,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df0d4,"cGZPersistBinaryWriter::WriteString(char const*, cIGZString const*)",WriteString_char_const_cIGZString_const,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df0fc,"cGZPersistBinaryWriter::WriteString(char const*, char const*)",WriteString_char_const_char_const,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df124,"cGZPersistBinaryWriter::WriteObject(char const*, cIGZPersistSerializable2 const*)",WriteObject,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df1c0,"cGZPersistBinaryWriter::WriteObjectRef(char const*, cIGZPersistSerializableReferent const*)",WriteObjectRef_char_const_cIGZPersistSerializableReferent_const,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df2e8,"cGZPersistBinaryWriter::WriteObjectRef(char const*, cIGZUnknown const*)",WriteObjectRef_char_const_cIGZUnknown_const,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df368,cGZPersistBinaryWriter::WriteTypeInfo(cGZPersistTypeInfo const&),WriteTypeInfo,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df3c4,cGZPersistBinaryWriter::OutputStream(),OutputStream,src/gz/PersistBinaryWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df3fa,cGZPersistASCIIWriter::cGZPersistASCIIWriter(),Construct,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df42c,cGZPersistASCIIWriter::~cGZPersistASCIIWriter(),Destruct,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df44e,cGZPersistASCIIWriter::~cGZPersistASCIIWriter(),DestructAndDelete,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df458,cGZPersistASCIIWriter::~cGZPersistASCIIWriter(),DestructBody,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df474,"cGZPersistASCIIWriter::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df49c,cGZPersistASCIIWriter::AddRef(),AddRef,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df4aa,cGZPersistASCIIWriter::Release(),Release,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004df4c6,"cGZPersistASCIIWriter::WriteRoot(cIGZPersistResource2 const*, cIGZOStream*)",WriteRoot,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dfa9e,cGZPersistASCIIWriter::WriteKey(cGZPersistResourceKey const&),WriteKey,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dfbfe,"cGZPersistASCIIWriter::WriteBool(char const*, bool)",WriteBool,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dfc82,"cGZPersistASCIIWriter::WriteSint8(char const*, signed char)",WriteSint8,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dfcf4,"cGZPersistASCIIWriter::WriteUint8(char const*, unsigned char)",WriteUint8,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dfd66,"cGZPersistASCIIWriter::WriteSint16(char const*, short)",WriteSint16,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dfdd8,"cGZPersistASCIIWriter::WriteUint16(char const*, unsigned short)",WriteUint16,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dfe4a,"cGZPersistASCIIWriter::WriteSint32(char const*, int)",WriteSint32,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dfebc,"cGZPersistASCIIWriter::WriteUint32(char const*, unsigned int)",WriteUint32,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dff2e,"cGZPersistASCIIWriter::WriteFloat32(char const*, float)",WriteFloat32,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dffa2,"cGZPersistASCIIWriter::WriteFloat64(char const*, double)",WriteFloat64,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e0016,"cGZPersistASCIIWriter::WriteBoolArray(char const*, bool const*, unsigned int)",WriteBoolArray,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e0102,"cGZPersistASCIIWriter::WriteSint8Array(char const*, signed char const*, unsigned int)",WriteSint8Array,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e01de,"cGZPersistASCIIWriter::WriteUint8Array(char const*, unsigned char const*, unsigned int)",WriteUint8Array,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e02ba,"cGZPersistASCIIWriter::WriteSint16Array(char const*, short const*, unsigned int)",WriteSint16Array,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e0396,"cGZPersistASCIIWriter::WriteUint16Array(char const*, unsigned short const*, unsigned int)",WriteUint16Array,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e0472,"cGZPersistASCIIWriter::WriteSint32Array(char const*, int const*, unsigned int)",WriteSint32Array,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e054e,"cGZPersistASCIIWriter::WriteUint32Array(char const*, unsigned int const*, unsigned int)",WriteUint32Array,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e062a,"cGZPersistASCIIWriter::WriteFloat32Array(char const*, float const*, unsigned int)",WriteFloat32Array,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e0708,"cGZPersistASCIIWriter::WriteFloat64Array(char const*, double const*, unsigned int)",WriteFloat64Array,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e07e6,"cGZPersistASCIIWriter::WriteString(char const*, cIGZString const*)",WriteString_char_const_cIGZString_const,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e0858,"cGZPersistASCIIWriter::WriteString(char const*, char const*)",WriteString_char_const_char_const,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e08ca,"cGZPersistASCIIWriter::WriteObject(char const*, cIGZPersistSerializable2 const*)",WriteObject,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e0a60,"cGZPersistASCIIWriter::WriteObjectRef(char const*, cIGZPersistSerializableReferent const*)",WriteObjectRef_char_const_cIGZPersistSerializableReferent_const,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e0dba,"cGZPersistASCIIWriter::WriteObjectRef(char const*, cIGZUnknown const*)",WriteObjectRef_char_const_cIGZUnknown_const,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e0e3a,cGZPersistASCIIWriter::WriteTypeInfo(cGZPersistTypeInfo const&),WriteTypeInfo,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e0f38,cGZPersistASCIIWriter::OutputStream(),OutputStream,src/gz/PersistASCIIWriter.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dd962,cGZPersistBinaryReader::cGZPersistBinaryReader(),Construct,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dd994,cGZPersistBinaryReader::~cGZPersistBinaryReader(),Destruct,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dd9b6,cGZPersistBinaryReader::~cGZPersistBinaryReader(),DestructAndDelete,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dd9c0,cGZPersistBinaryReader::~cGZPersistBinaryReader(),DestructBody,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dd9dc,"cGZPersistBinaryReader::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dda04,cGZPersistBinaryReader::AddRef(),AddRef,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dda12,cGZPersistBinaryReader::Release(),Release,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004dda2e,"cGZPersistBinaryReader::ReadRoot(cIGZPersistResource2*, cIGZIStream*)",ReadRoot,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de17c,cGZPersistBinaryReader::ReadBool(char const*),ReadBool,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de1a8,cGZPersistBinaryReader::ReadSint8(char const*),ReadSint8,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de1d2,cGZPersistBinaryReader::ReadUint8(char const*),ReadUint8,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de1fc,cGZPersistBinaryReader::ReadSint16(char const*),ReadSint16,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de226,cGZPersistBinaryReader::ReadUint16(char const*),ReadUint16,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de250,cGZPersistBinaryReader::ReadSint32(char const*),ReadSint32,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de278,cGZPersistBinaryReader::ReadUint32(char const*),ReadUint32,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de2a0,cGZPersistBinaryReader::ReadFloat32(char const*),ReadFloat32,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de2ca,cGZPersistBinaryReader::ReadFloat64(char const*),ReadFloat64,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de2f4,"cGZPersistBinaryReader::ReadBoolArray(char const*, bool*, unsigned int)",ReadBoolArray,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de34a,"cGZPersistBinaryReader::ReadSint8Array(char const*, signed char*, unsigned int)",ReadSint8Array,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de37a,"cGZPersistBinaryReader::ReadUint8Array(char const*, unsigned char*, unsigned int)",ReadUint8Array,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de3aa,"cGZPersistBinaryReader::ReadSint16Array(char const*, short*, unsigned int)",ReadSint16Array,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de3ee,"cGZPersistBinaryReader::ReadUint16Array(char const*, unsigned short*, unsigned int)",ReadUint16Array,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de432,"cGZPersistBinaryReader::ReadSint32Array(char const*, int*, unsigned int)",ReadSint32Array,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de476,"cGZPersistBinaryReader::ReadUint32Array(char const*, unsigned int*, unsigned int)",ReadUint32Array,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de4ba,"cGZPersistBinaryReader::ReadFloat32Array(char const*, float*, unsigned int)",ReadFloat32Array,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de4fe,"cGZPersistBinaryReader::ReadFloat64Array(char const*, double*, unsigned int)",ReadFloat64Array,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de542,"cGZPersistBinaryReader::ReadString(char const*, cIGZString*)",ReadString,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de56a,"cGZPersistBinaryReader::SkipBytes(char const*, unsigned int)",SkipBytes,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de590,"cGZPersistBinaryReader::ReadObject(char const*, unsigned int, void**)",ReadObject,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de64c,"cGZPersistBinaryReader::ReadObjectRef(char const*, unsigned int, void**)",ReadObjectRef,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de740,cGZPersistBinaryReader::ReadTypeInfo(),ReadTypeInfo,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004de80a,cGZPersistBinaryReader::InputStream(),InputStream,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x1004e1146,cGZPersistBinaryReader::cResourceInfo::cResourceInfo(cIGZIStream*),cResourceInfo,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
