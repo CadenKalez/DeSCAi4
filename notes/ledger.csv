@@ -14896,3 +14896,66 @@ address,symbol,unique_name,source,status,evidence
 0x1006bfc36,cSC4FeatureManager::IsFeatureEnabled(unsigned int) const,IsFeatureEnabled,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
 0x1006bfc8c,cSC4FeatureManager::IsExpansionPackInstalled(int) const,IsExpansionPackInstalled,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
 0x1006bfca0,cSC4FeatureManager::GetCurrentExpansionPack() const,GetCurrentExpansionPack,src/sc4/BusinessFeature.cpp|h,recovered,sc4_businessfeature
+0x1000642bc,cGZClipboardManagerClipboardData::~cGZClipboardManagerClipboardData(),Destruct,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x1000642dc,cGZClipboardManagerClipboardData::~cGZClipboardManagerClipboardData(),DestructAndDelete,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10006431e,"cGZClipboardManagerClipboardData::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100064340,cGZClipboardManagerClipboardData::AddRef(),AddRef,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10006434e,cGZClipboardManagerClipboardData::Release(),Release,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10006436a,cGZClipboardManagerClipboardData::GetDataType() const,GetDataType,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100064374,cGZClipboardManagerClipboardData::GetData(),GetData_void,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10006437e,"cGZClipboardManagerClipboardData::GetData(unsigned int, void**)",GetData_uint_void,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10069aa20,"cGZWinSpyMessageFilter::cGZWinSpyMessageFilter(cIGZWin*, cIGZWinSpyTarget*)",Construct_cIGZWin_cIGZWinSpyTarget,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10069aa96,cGZWinSpyMessageFilter::~cGZWinSpyMessageFilter(),Destruct,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10069aabe,cGZWinSpyMessageFilter::~cGZWinSpyMessageFilter(),DestructAndDelete,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10069aac8,cGZWinSpyMessageFilter::~cGZWinSpyMessageFilter(),DestructBody,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10069aae4,cGZWinSpyMessageFilter::AddRef(),AddRef,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10069aaee,non-virtual thunk to cGZWinSpyMessageFilter::AddRef(),AddRefThunk,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10069aafc,cGZWinSpyMessageFilter::Release(),Release,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10069ab06,non-virtual thunk to cGZWinSpyMessageFilter::Release(),ReleaseThunk,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10069ab14,"cGZWinSpyMessageFilter::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10069ab42,"non-virtual thunk to cGZWinSpyMessageFilter::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10069ab74,cGZWinSpyMessageFilter::Detach(),Detach,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10069abb0,"cGZWinSpyMessageFilter::DoMessage(cIGZWin*, cGZMessage&)",DoMessage,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10069abc8,"non-virtual thunk to cGZWinSpyMessageFilter::DoMessage(cIGZWin*, cGZMessage&)",DoMessageThunk,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x1005228f0,cGZWinDlg::AddRef(),AddRef,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x1005228fa,non-virtual thunk to cGZWinDlg::AddRef(),AddRefThunk,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10052290c,cGZWinDlg::Release(),Release,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100522916,non-virtual thunk to cGZWinDlg::Release(),ReleaseThunk,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100522928,"cGZWinDlg::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10052294c,"non-virtual thunk to cGZWinDlg::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100522978,cGZWinDlg::~cGZWinDlg(),Destruct,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x1005229dc,cGZWinDlg::~cGZWinDlg(),DestructAndDelete,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x1005229e6,cGZWinDlg::~cGZWinDlg(),DestructBody,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100522a14,"cGZWinDlg::GZOnKeyDown(unsigned int, unsigned int)",GZOnKeyDown,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100522a84,cGZWinDlg::GZEndDialog(unsigned long),GZEndDialog,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100522ab4,non-virtual thunk to cGZWinDlg::GZEndDialog(unsigned long),GZEndDialogThunk,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100522afc,cGZWinDlg::GZOnCharacter(char),GZOnCharacter,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x100522b04,"cGZWinDlg::GZOnKeyUp(unsigned int, unsigned int)",GZOnKeyUp,src/gz/SmallObjects.cpp|h,recovered,gz_smallobjects
+0x10052ea2e,cSC24BitRGBColorCustomizer::Create(),Create,src/sc4/ColorCustomizer.cpp|h,recovered,gz_smallobjects
+0x10052ea94,"cSC24BitRGBColorCustomizer::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/ColorCustomizer.cpp|h,recovered,gz_smallobjects
+0x10052ead4,"non-virtual thunk to cSC24BitRGBColorCustomizer::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_ead4,src/sc4/ColorCustomizer.cpp|h,recovered,gz_smallobjects
+0x10052eb18,"non-virtual thunk to cSC24BitRGBColorCustomizer::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_eb18,src/sc4/ColorCustomizer.cpp|h,recovered,gz_smallobjects
+0x10052eb5e,"cSC24BitRGBColorCustomizer::GetPropertyValueString(unsigned int, cIGZVariant const&, cIGZString&)",GetPropertyValueString,src/sc4/ColorCustomizer.cpp|h,recovered,gz_smallobjects
+0x10052ebd4,"non-virtual thunk to cSC24BitRGBColorCustomizer::GetPropertyValueString(unsigned int, cIGZVariant const&, cIGZString&)",GetPropertyValueStringThunk,src/sc4/ColorCustomizer.cpp|h,recovered,gz_smallobjects
+0x10052ec4a,"cSC24BitRGBColorCustomizer::ValueIsValid(unsigned int, cIGZVariant const&)",ValueIsValid,src/sc4/ColorCustomizer.cpp|h,recovered,gz_smallobjects
+0x10052ec7e,"non-virtual thunk to cSC24BitRGBColorCustomizer::ValueIsValid(unsigned int, cIGZVariant const&)",ValueIsValidThunk,src/sc4/ColorCustomizer.cpp|h,recovered,gz_smallobjects
+0x10052ecb2,cSC24BitRGBColorCustomizer::~cSC24BitRGBColorCustomizer(),Destruct,src/sc4/ColorCustomizer.cpp|h,recovered,gz_smallobjects
+0x10052ecbc,cSC24BitRGBColorCustomizer::~cSC24BitRGBColorCustomizer(),DestructAndDelete,src/sc4/ColorCustomizer.cpp|h,recovered,gz_smallobjects
+0x10052ecea,cSC24BitRGBColorCustomizer::Release(),Release,src/sc4/ColorCustomizer.cpp|h,recovered,gz_smallobjects
+0x10052ecf4,cSC24BitRGBColorCustomizer::AddRef(),AddRef,src/sc4/ColorCustomizer.cpp|h,recovered,gz_smallobjects
+0x10052ecfe,non-virtual thunk to cSC24BitRGBColorCustomizer::AddRef(),AddRefThunk_ecfe,src/sc4/ColorCustomizer.cpp|h,recovered,gz_smallobjects
+0x10052ed0c,non-virtual thunk to cSC24BitRGBColorCustomizer::Release(),ReleaseThunk_ed0c,src/sc4/ColorCustomizer.cpp|h,recovered,gz_smallobjects
+0x10052ed1a,non-virtual thunk to cSC24BitRGBColorCustomizer::AddRef(),AddRefThunk_ed1a,src/sc4/ColorCustomizer.cpp|h,recovered,gz_smallobjects
+0x10052ed28,non-virtual thunk to cSC24BitRGBColorCustomizer::Release(),ReleaseThunk_ed28,src/sc4/ColorCustomizer.cpp|h,recovered,gz_smallobjects
+0x1000d8802,cS3DMeshAndMaterial::cS3DMeshAndMaterial(),Construct,src/s3d/MeshAndMaterial.h,recovered,gz_smallobjects
+0x1000d8834,cS3DMeshAndMaterial::~cS3DMeshAndMaterial(),Destruct,src/s3d/MeshAndMaterial.h,recovered,gz_smallobjects
+0x1000d887a,cS3DMeshAndMaterial::~cS3DMeshAndMaterial(),DestructAndDelete,src/s3d/MeshAndMaterial.h,recovered,gz_smallobjects
+0x1000d8884,cS3DMeshAndMaterial::~cS3DMeshAndMaterial(),DestructBody,src/s3d/MeshAndMaterial.h,recovered,gz_smallobjects
+0x1000d88b2,cS3DMeshAndMaterial::MeshCount() const,MeshCount,src/s3d/MeshAndMaterial.h,recovered,gz_smallobjects
+0x1000d88ca,cS3DMeshAndMaterial::Mesh(unsigned int) const,Mesh_88ca,src/s3d/MeshAndMaterial.h,recovered,gz_smallobjects
+0x1000d88de,cS3DMeshAndMaterial::Mesh(unsigned int),Mesh_88de,src/s3d/MeshAndMaterial.h,recovered,gz_smallobjects
+0x1000d88f2,cS3DMeshAndMaterial::Material(unsigned int) const,Material_88f2,src/s3d/MeshAndMaterial.h,recovered,gz_smallobjects
+0x1000d8906,cS3DMeshAndMaterial::Material(unsigned int),Material_8906,src/s3d/MeshAndMaterial.h,recovered,gz_smallobjects
+0x1000d891a,cS3DMeshAndMaterial::AddRef(),AddRef,src/s3d/MeshAndMaterial.h,recovered,gz_smallobjects
+0x1000d8928,cS3DMeshAndMaterial::Release(),Release,src/s3d/MeshAndMaterial.h,recovered,gz_smallobjects
+0x1000d8944,"cS3DMeshAndMaterial::QueryInterface(unsigned int, void**)",QueryInterface,src/s3d/MeshAndMaterial.h,recovered,gz_smallobjects
