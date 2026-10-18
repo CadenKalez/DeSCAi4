@@ -17725,3 +17725,125 @@ address,symbol,unique_name,source,status,evidence
 0x100043ea8,"cSLBuffer::SetResKey(unsigned int, unsigned int, unsigned int)",SetResKey_uint_uint_uint,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
 0x100043ebe,cSLBuffer::SetPath(cRZString const&),SetPath,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
 0x100043ed0,cSLBuffer::SetColorType(cGZBufferColorType::eColorType),SetColorType,src/sc4/SLBuffer.cpp|h,recovered,decompile of every method; tests/sc4_slbuffer_test.cpp
+0x1004777ec,IDirectSound_Mac::IDirectSound_Mac(),Construct,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1004778ac,IDirectSound_Mac::~IDirectSound_Mac(),Destruct,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100477944,IDirectSound_Mac::~IDirectSound_Mac(),DestructAndDelete,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x10047794e,non-virtual thunk to IDirectSound_Mac::~IDirectSound_Mac(),DestructThunk,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x10047795c,IDirectSound_Mac::~IDirectSound_Mac(),DestructBody,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x10047798a,non-virtual thunk to IDirectSound_Mac::~IDirectSound_Mac(),DestructAndDeleteThunk,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100477998,"IDirectSound_Mac::QueryInterface(_GUID const&, void**)",QueryInterface,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1004779aa,"non-virtual thunk to IDirectSound_Mac::QueryInterface(_GUID const&, void**)",QueryInterfaceThunk,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1004779bc,"IDirectSound_Mac::CreateSoundBuffer(_DSBUFFERDESC const*, IDirectSoundBuffer**, IUnknown*)",CreateSoundBuffer,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100477a76,IDirectSound_Mac::GetCaps(_DSCAPS*),GetCaps,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100477aee,"IDirectSound_Mac::DuplicateSoundBuffer(IDirectSoundBuffer*, IDirectSoundBuffer**)",DuplicateSoundBuffer,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100477bdc,"IDirectSound_Mac::SetCooperativeLevel(HWND__*, unsigned int)",SetCooperativeLevel,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100477be4,IDirectSound_Mac::Compact(),Compact,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100477bec,IDirectSound_Mac::GetSpeakerConfig(unsigned int*),GetSpeakerConfig,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100477bf4,IDirectSound_Mac::SetSpeakerConfig(unsigned int),SetSpeakerConfig,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100477bfc,IDirectSound_Mac::Initialize(_GUID const*),Initialize,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100477c06,"IDirectSound_Mac::MacAudioQueueBankAllocate(AudioStreamBasicDescription*, void*)",MacAudioQueueBankAllocate,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100477da0,IDirectSound_Mac::MacGet3DListener(),MacGet3DListener,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100477df4,IDirectSound_Mac::MacGetSoundBufferMaxCount(),MacGetSoundBufferMaxCount,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100477e00,IDirectSound_Mac::MacGetSoundBuffer(int),MacGetSoundBuffer,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478aa2,IDirectSound_Mac::AddRef(),AddRef,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478ab0,IDirectSound_Mac::Release(),Release,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478abe,non-virtual thunk to IDirectSound_Mac::AddRef(),AddRefThunk,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478ac8,non-virtual thunk to IDirectSound_Mac::Release(),ReleaseThunk,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100477e14,"IDirectSoundBuffer_Mac::IDirectSoundBuffer_Mac(int, int, unsigned long, tWAVEFORMATEX*)",Construct_int_int_unsigned_long_tWAVEFORMATEX,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100477fcc,IDirectSoundBuffer_Mac::MacInitSoundInfo(),MacInitSoundInfo,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478044,"IDirectSoundBuffer_Mac::IDirectSoundBuffer_Mac(int, IDirectSoundBuffer_Mac*)",Construct_int_IDirectSoundBuffer_MacWrapper,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478212,IDirectSoundBuffer_Mac::~IDirectSoundBuffer_Mac(),Destruct,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1004782fe,IDirectSoundBuffer_Mac::~IDirectSoundBuffer_Mac(),DestructAndDelete,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478308,non-virtual thunk to IDirectSoundBuffer_Mac::~IDirectSoundBuffer_Mac(),DestructThunk,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478316,IDirectSoundBuffer_Mac::~IDirectSoundBuffer_Mac(),DestructBody,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478344,non-virtual thunk to IDirectSoundBuffer_Mac::~IDirectSoundBuffer_Mac(),DestructAndDeleteThunk,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478352,"IDirectSoundBuffer_Mac::QueryInterface(_GUID const&, void**)",QueryInterface,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478400,IDirectSoundBuffer_Mac::MacCreate3DBuffer(),MacCreate3DBuffer,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478464,IDirectSoundBuffer_Mac::MacGet3DBuffer(),MacGet3DBuffer,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478472,"non-virtual thunk to IDirectSoundBuffer_Mac::QueryInterface(_GUID const&, void**)",QueryInterfaceThunk,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478480,IDirectSoundBuffer_Mac::GetCaps(_DSBCAPS*),GetCaps,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1004784a8,"IDirectSoundBuffer_Mac::Initialize(IDirectSound*, _DSBUFFERDESC const*)",Initialize,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1004784b0,IDirectSoundBuffer_Mac::SetFormat(tWAVEFORMATEX const*),SetFormat,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1004784d8,"IDirectSoundBuffer_Mac::GetFormat(tWAVEFORMATEX*, unsigned int, unsigned int*)",GetFormat,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478510,"IDirectSoundBuffer_Mac::Lock(unsigned int, unsigned int, void**, unsigned int*, void**, unsigned int*, unsigned int)",Lock,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1004785f4,IDirectSoundBuffer_Mac::MacAdjustSampleRate(),MacAdjustSampleRate,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478666,"IDirectSoundBuffer_Mac::Unlock(void*, unsigned int, void*, unsigned int)",Unlock,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478674,IDirectSoundBuffer_Mac::SetCurrentPosition(unsigned int),SetCurrentPosition,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1004786e8,IDirectSoundBuffer_Mac::MacPlaySndBuffer(bool),MacPlaySndBuffer,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1004787a8,"IDirectSoundBuffer_Mac::GetCurrentPosition(unsigned int*, unsigned int*)",GetCurrentPosition,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1004787f0,"IDirectSoundBuffer_Mac::Play(unsigned int, unsigned int, unsigned int)",Play,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478876,IDirectSoundBuffer_Mac::Stop(),Stop,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1004788a8,IDirectSoundBuffer_Mac::SetFrequency(unsigned int),SetFrequency,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1004788b0,IDirectSoundBuffer_Mac::SetPan(int),SetPan,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x10047893e,IDirectSoundBuffer_Mac::MacApplyVolumeAndPan(),MacApplyVolumeAndPan,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1004789f0,IDirectSoundBuffer_Mac::SetVolume(int),SetVolume,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478a06,IDirectSoundBuffer_Mac::GetStatus(unsigned int*),GetStatus,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478a52,IDirectSoundBuffer_Mac::Restore(),Restore,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478a5a,"IDirectSoundBuffer_Mac::SetFX(unsigned int, _DSEFFECTDESC*, unsigned int*)",SetFX,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478a62,"IDirectSoundBuffer_Mac::AcquireResources(unsigned int, unsigned int, unsigned int*)",AcquireResources,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478a6a,"IDirectSoundBuffer_Mac::GetObjectInPath(_GUID const&, unsigned int, _GUID const&, void**)",GetObjectInPath,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478a72,IDirectSoundBuffer_Mac::MacGetDirectSound(),MacGetDirectSound,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478a80,"IDirectSoundBuffer_Mac::MacSetPanVolumeMultipliers(float, float, float)",MacSetPanVolumeMultipliers,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478ad2,IDirectSoundBuffer_Mac::AddRef(),AddRef,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478ae0,IDirectSoundBuffer_Mac::Release(),Release,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478aee,IDirectSoundBuffer_Mac::GetVolume(int*),GetVolume,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478afc,IDirectSoundBuffer_Mac::GetPan(int*),GetPan,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478b0a,IDirectSoundBuffer_Mac::GetFrequency(unsigned int*),GetFrequency,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478b18,non-virtual thunk to IDirectSoundBuffer_Mac::AddRef(),AddRefThunk,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100478b22,non-virtual thunk to IDirectSoundBuffer_Mac::Release(),ReleaseThunk,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2b74,IDirectSound3DBuffer_Mac::IDirectSound3DBuffer_Mac(),Construct,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2bd4,"IDirectSound3DBuffer_Mac::QueryInterface(_GUID const&, void**)",QueryInterface,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2be6,IDirectSound3DBuffer_Mac::AddRef(),AddRef,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2bf8,IDirectSound3DBuffer_Mac::Release(),Release,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2c30,IDirectSound3DBuffer_Mac::GetAllParameters(_DS3DBUFFER*),GetAllParameters,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2c86,"IDirectSound3DBuffer_Mac::GetConeAngles(unsigned int*, unsigned int*)",GetConeAngles,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2ca8,IDirectSound3DBuffer_Mac::GetConeOrientation(_D3DVECTOR*),GetConeOrientation,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2cca,IDirectSound3DBuffer_Mac::GetConeOutsideVolume(int*),GetConeOutsideVolume,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2ce4,IDirectSound3DBuffer_Mac::GetMaxDistance(float*),GetMaxDistance,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2cfe,IDirectSound3DBuffer_Mac::GetMinDistance(float*),GetMinDistance,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2d18,IDirectSound3DBuffer_Mac::GetMode(unsigned int*),GetMode,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2d32,IDirectSound3DBuffer_Mac::GetPosition(_D3DVECTOR*),GetPosition,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2d54,IDirectSound3DBuffer_Mac::GetVelocity(_D3DVECTOR*),GetVelocity,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2d76,"IDirectSound3DBuffer_Mac::SetAllParameters(_DS3DBUFFER const*, unsigned int)",SetAllParameters,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2df0,IDirectSound3DBuffer_Mac::MacUpdateListener(),MacUpdateListener,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2e1c,"IDirectSound3DBuffer_Mac::SetConeAngles(unsigned int, unsigned int, unsigned int)",SetConeAngles,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2e4a,"IDirectSound3DBuffer_Mac::SetConeOrientation(float, float, float, unsigned int)",SetConeOrientation,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2e82,"IDirectSound3DBuffer_Mac::SetConeOutsideVolume(int, unsigned int)",SetConeOutsideVolume,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2eae,"IDirectSound3DBuffer_Mac::SetMaxDistance(float, unsigned int)",SetMaxDistance,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2edc,"IDirectSound3DBuffer_Mac::SetMinDistance(float, unsigned int)",SetMinDistance,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2f0a,"IDirectSound3DBuffer_Mac::SetMode(unsigned int, unsigned int)",SetMode,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2f36,"IDirectSound3DBuffer_Mac::SetPosition(float, float, float, unsigned int)",SetPosition,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2f6e,"IDirectSound3DBuffer_Mac::SetVelocity(float, float, float, unsigned int)",SetVelocity,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d2fa6,IDirectSound3DBuffer_Mac::MacApplyPosition(),MacApplyPosition,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d350c,IDirectSound3DBuffer_Mac::MacSetBuffer(IDirectSoundBuffer_Mac*),MacSetBuffer,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d34a4,IDirectSound3DListener_Mac::MacCommitDeferredBufferSettings(IDirectSound3DBuffer_Mac*),MacCommitDeferredBufferSettings,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d3518,IDirectSound3DListener_Mac::IDirectSound3DListener_Mac(),Construct,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d3570,"IDirectSound3DListener_Mac::QueryInterface(_GUID const&, void**)",QueryInterface,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d3582,IDirectSound3DListener_Mac::AddRef(),AddRef,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d3590,IDirectSound3DListener_Mac::Release(),Release,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d35a8,IDirectSound3DListener_Mac::GetAllParameters(_DS3DLISTENER*),GetAllParameters,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d35fe,IDirectSound3DListener_Mac::GetDistanceFactor(float*),GetDistanceFactor,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d3618,IDirectSound3DListener_Mac::GetDopplerFactor(float*),GetDopplerFactor,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d3632,"IDirectSound3DListener_Mac::GetOrientation(_D3DVECTOR*, _D3DVECTOR*)",GetOrientation,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d3664,IDirectSound3DListener_Mac::GetPosition(_D3DVECTOR*),GetPosition,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d3686,IDirectSound3DListener_Mac::GetRolloffFactor(float*),GetRolloffFactor,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d36a0,IDirectSound3DListener_Mac::GetVelocity(_D3DVECTOR*),GetVelocity,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d36c2,"IDirectSound3DListener_Mac::SetAllParameters(_DS3DLISTENER const*, unsigned int)",SetAllParameters,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d3744,"IDirectSound3DListener_Mac::SetDistanceFactor(float, unsigned int)",SetDistanceFactor,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d3768,"IDirectSound3DListener_Mac::SetDopplerFactor(float, unsigned int)",SetDopplerFactor,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d378c,"IDirectSound3DListener_Mac::SetOrientation(float, float, float, float, float, float, unsigned int)",SetOrientation,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d37d6,IDirectSound3DListener_Mac::MacCreateListenerMatrix(),MacCreateListenerMatrix,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d38f2,"IDirectSound3DListener_Mac::SetPosition(float, float, float, unsigned int)",SetPosition,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d392c,"IDirectSound3DListener_Mac::SetRolloffFactor(float, unsigned int)",SetRolloffFactor,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d3950,"IDirectSound3DListener_Mac::SetVelocity(float, float, float, unsigned int)",SetVelocity,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d397e,IDirectSound3DListener_Mac::CommitDeferredSettings(),CommitDeferredSettings,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d398e,IDirectSound3DListener_Mac::MacProcess3DBuffers(IDirectSound3DBuffer_Mac*),MacProcess3DBuffers,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007d39ec,IDirectSound3DListener_Mac::MacSetDirectSound(IDirectSound_Mac*),MacSetDirectSound,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007b7300,IUnknown_Mac::IUnknown_Mac(),Construct,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007b7318,IUnknown_Mac::~IUnknown_Mac(),Destruct,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007b731e,IUnknown_Mac::~IUnknown_Mac(),DestructAndDelete,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007b7324,IUnknown_Mac::~IUnknown_Mac(),DestructBody,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007b732a,IUnknown_Mac::AddRef(),AddRef,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x1007b7338,IUnknown_Mac::Release(),Release,src/audio/DirectSoundMac.cpp|h,recovered,decompile of every method; tests/audio_directsoundmac_test.cpp
+0x100477c9c,"AudioBufferCallback(void*, OpaqueAudioQueue*, AudioQueueBuffer*)",AudioBufferCallback,src/audio/DirectSoundMac.cpp|h,recovered,decompile; tests/audio_directsoundmac_test.cpp
+0x1007d3393,GetXZAngle(vector3),GetXZAngle,src/audio/DirectSoundMac.cpp|h,recovered,decompile; tests/audio_directsoundmac_test.cpp
