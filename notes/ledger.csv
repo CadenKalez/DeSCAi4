@@ -16667,3 +16667,102 @@ address,symbol,unique_name,source,status,evidence
 0x1004de740,cGZPersistBinaryReader::ReadTypeInfo(),ReadTypeInfo,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
 0x1004de80a,cGZPersistBinaryReader::InputStream(),InputStream,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
 0x1004e1146,cGZPersistBinaryReader::cResourceInfo::cResourceInfo(cIGZIStream*),cResourceInfo,src/gz/PersistBinaryReader.cpp|h,recovered,Rewritten from the exported decompile; tested in gz_persist
+0x10079ce26,cRZSocketError::GetErrorFromPlatformSpecificError(int),GetErrorFromPlatformSpecificError,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079d1c4,cRZSocketError::Init(int),Init,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079d1e6,cRZSocketError::GetErrorStringCStr() const,GetErrorStringCStr,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079d5f8,cRZSocketError::GetErrorString(cRZString&) const,GetErrorString,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079d656,cRZSocketError::GetErrorValue() const,GetErrorValue,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10064eb1e,cRZSocketAddress::cRZSocketAddress(),Construct,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10064eb2a,"cRZINetSocketAddress::cRZINetSocketAddress(unsigned short, unsigned int)",Construct_unsigned_short_uint,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b690,cRZNetSocket::cRZNetSocket(),Construct,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b704,cRZNetSocket::~cRZNetSocket(),Destruct,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b756,cRZNetSocket::~cRZNetSocket(),DestructAndDelete,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b760,cRZNetSocket::~cRZNetSocket(),DestructBody,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b78e,"cRZNetSocket::Notification(unsigned int, int, int)",Notification,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b886,cRZNetSocket::SetupWindow(),SetupWindow,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b88e,cRZNetSocket::ShutdownWindow(),ShutdownWindow,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b898,cRZNetSocket::SetSaveSocketOnDelete(bool),SetSaveSocketOnDelete,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b8a4,cRZNetSocket::GetAsyncNotificationTarget(),GetAsyncNotificationTarget,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b8ae,cRZNetSocket::SetAsyncNotificationTarget(cIGZMessageTarget*),SetAsyncNotificationTarget,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b8e4,cRZNetSocket::StartAsyncStandardNotification(),StartAsyncStandardNotification,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b8fa,cRZNetSocket::StartAsyncAcceptNotification(),StartAsyncAcceptNotification,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b910,cRZNetSocket::StartAsyncCustomNotification(int),StartAsyncCustomNotification,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b918,cRZNetSocket::StopAsyncNotification(),StopAsyncNotification,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b92c,"cRZNetSocket::SetSocketStyle(int, int, int)",SetSocketStyle,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b93e,cRZNetSocket::CreateSocket(),CreateSocket,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b982,cRZNetSocket::IsSocketCreated() const,IsSocketCreated,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b990,cRZNetSocket::CloseSocket(),CloseSocket,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079b9de,cRZNetSocket::ShutDownSocket(cRZNetSocket::ShutMode),ShutDownSocket,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079ba20,cRZNetSocket::BindSocket(cRZSocketAddress const&),BindSocket_cRZSocketAddress_const,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079ba7c,cRZNetSocket::BindSocket(),BindSocket_void,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079ba8e,"cRZNetSocket::GetSocketAddress(cRZSocketAddress&, unsigned long&)",GetSocketAddress,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079bada,cRZNetSocket::GetMyAddress(cRZSocketAddress&),GetMyAddress,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079baec,"cRZNetSocket::GetPeerAddress(cRZSocketAddress&, unsigned long&)",GetPeerAddress,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079bb38,cRZNetSocket::GetMyPeerAddress(cRZSocketAddress&),GetMyPeerAddress,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079bb4a,cRZNetSocket::SetMyAddress(cRZSocketAddress const&),SetMyAddress,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079bb62,cRZNetSocket::SetPeerSocketAddress(cRZSocketAddress const&),SetPeerSocketAddress,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079bb7a,"cRZNetSocket::GetWaitingDataSize(unsigned int&, unsigned int)",GetWaitingDataSize,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079bc88,cRZNetSocket::IsWaitingDataAvailable(unsigned int),IsWaitingDataAvailable,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079bd50,cRZNetSocket::IsWritable(unsigned int),IsWritable,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079be10,"cRZNetSocket::IsReadableAndOrWritable(cRZNetSocket::WaitMode, unsigned int)",IsReadableAndOrWritable,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079bf5a,cRZNetSocket::DoMessage(cGZMessage*),DoMessage,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079bf62,cRZNetSocket::SetBroadcastOption(bool),SetBroadcastOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079bfbc,cRZNetSocket::SetDebugOption(bool),SetDebugOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c016,"cRZNetSocket::SetLingerOption(bool, unsigned int)",SetLingerOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c076,cRZNetSocket::SetRouteOption(bool),SetRouteOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c0d4,cRZNetSocket::SetKeepAliveOption(bool),SetKeepAliveOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c12e,cRZNetSocket::SetOOBOption(bool),SetOOBOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c188,cRZNetSocket::SetReceiveBufferOption(unsigned int),SetReceiveBufferOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c1de,cRZNetSocket::SetSendBufferOption(unsigned int),SetSendBufferOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c234,cRZNetSocket::SetReuseAddressOption(bool),SetReuseAddressOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c28e,cRZNetSocket::SetSendDelayOption(bool),SetSendDelayOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c2e8,cRZNetSocket::SetSendTimeout(unsigned int),SetSendTimeout,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c33e,cRZNetSocket::SetReceiveTimeout(unsigned int),SetReceiveTimeout,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c394,cRZNetSocket::GetBroadcastOption(bool&),GetBroadcastOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c3f8,cRZNetSocket::GetDebugOption(bool&),GetDebugOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c45c,"cRZNetSocket::GetLingerOption(bool&, unsigned int&)",GetLingerOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c4ce,cRZNetSocket::GetRouteOption(bool&),GetRouteOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c532,cRZNetSocket::GetKeepAliveOption(bool&),GetKeepAliveOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c596,cRZNetSocket::GetOOBOption(bool&),GetOOBOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c5fa,cRZNetSocket::GetReceiveBufferOption(unsigned int&),GetReceiveBufferOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c656,cRZNetSocket::GetSendBufferOption(unsigned int&),GetSendBufferOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c6b2,cRZNetSocket::GetReuseAddressOption(bool&),GetReuseAddressOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c716,cRZNetSocket::GetSendDelayOption(bool&),GetSendDelayOption,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c77a,cRZNetSocket::GetSendTimeout(unsigned int&),GetSendTimeout,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c7d6,cRZNetSocket::GetReceiveTimeout(unsigned int&),GetReceiveTimeout,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079d62e,cRZNetSocket::GetSocket() const,GetSocket,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079d638,cRZNetSocket::SetID(int),SetID,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079d642,cRZNetSocket::GetID(),GetID,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079d64c,cRZNetSocket::GetLastError(),GetLastError,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c834,cRZNetStreamSocket::cRZNetStreamSocket(),Construct,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c86c,"cRZNetStreamSocket::Read(void*, int&)",Read,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c8fe,"cRZNetStreamSocket::Peek(void*, int&)",Peek,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c990,"cRZNetStreamSocket::Write(void const*, int&, int)",Write,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079c9f4,"cRZNetStreamSocket::ReadOOB(void*, int&)",ReadOOB,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079ca86,"cRZNetStreamSocket::WriteOOB(void const*, int&, int)",WriteOOB,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079caec,cRZNetStreamSocket::IsSocketConnected(),IsSocketConnected,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079cbaa,cRZNetStreamSocket::CloseSocket(),CloseSocket,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079cbbe,cRZNetStreamSocket::ShutDownSocket(cRZNetSocket::ShutMode),ShutDownSocket,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079cbd2,cRZNetStreamSocket::StartListen(int),StartListen,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079cc14,cRZNetStreamSocket::StopListen(),StopListen,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079cc6a,"cRZNetStreamSocket::Connect(cRZSocketAddress const&, bool&, unsigned int)",Connect_cRZSocketAddress_const_bool_uint,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079cc98,"cRZNetStreamSocket::Connect(bool&, unsigned int)",Connect_bool_uint,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079cd00,"cRZNetStreamSocket::Accept(cRZNetStreamSocket&, bool&)",Accept_cRZNetStreamSocket_bool,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079cd60,"cRZNetStreamSocket::Accept(unsigned long&, cRZSocketAddress&, bool&)",Accept_unsigned_long_cRZSocketAddress_bool,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079cdcc,cRZNetStreamSocket::DoMessage(cGZMessage*),DoMessage,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079d662,cRZNetStreamSocket::~cRZNetStreamSocket(),Destruct,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079d66c,cRZNetStreamSocket::~cRZNetStreamSocket(),DestructAndDelete,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10079d69a,cRZNetStreamSocket::GetConnectStatus(),GetConnectStatus,src/rz/NetSocket.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10064214c,_InterlockedIncrement,_InterlockedIncrement,src/platform/WinCompat.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x100642156,_InterlockedDecrement,_InterlockedDecrement,src/platform/WinCompat.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x100642162,_fcvt,_fcvt,src/platform/WinCompat.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x1006421cd,_setenv,_setenv,src/platform/WinCompat.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10064225b,_GetKeyState,_GetKeyState,src/platform/WinCompat.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10064232c,_GetAsyncKeyState,_GetAsyncKeyState,src/platform/WinCompat.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x1006423f3,_GetClientRect,_GetClientRect,src/platform/WinCompat.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x1006423fd,_GetWindowRect,_GetWindowRect,src/platform/WinCompat.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x100642407,_ClientToScreen,_ClientToScreen,src/platform/WinCompat.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x100642414,_SetCursorPos,_SetCursorPos,src/platform/WinCompat.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x100642440,_closesocket,_closesocket,src/platform/WinCompat.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x10064244a,_ioctlsocket,_ioctlsocket,src/platform/WinCompat.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
+0x100642456,_WSAGetLastError,_WSAGetLastError,src/platform/WinCompat.cpp|h,recovered,Rewritten from the exported decompile; tested in rz_netsocket
