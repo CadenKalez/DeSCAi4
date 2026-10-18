@@ -14824,3 +14824,36 @@ address,symbol,unique_name,source,status,evidence
 0x100278444,"non-virtual thunk to cGZWinLineInput::SetSoundID(int, int)",SetSoundIDThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
 0x100278460,cGZWinLineInput::PlaySoundA(int),PlaySoundA,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
 0x10027852a,non-virtual thunk to cGZWinLineInput::PlaySoundA(int),PlaySoundAThunk,src/gz/WinLineInput.cpp|h,recovered,gz_winlineinput
+0x1001aee18,cSC4TileNeighborhoodCompact::cSC4TileNeighborhoodCompact(cSC4TileNeighborhoodCompact const&),Construct_cSC4TileNeighborhoodCompact_const,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x1001aee24,cSC4TileNeighborhoodCompact::GetEdgeCondition(int) const,GetEdgeCondition,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x1001aee42,cSC4TileNeighborhoodCompact::GetMirrorImageEquivalent(cSC4TileNeighborhoodCompact&) const,GetMirrorImageEquivalent,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x1001aeeee,"cSC4TileNeighborhoodCompact::SetEdgeCondition(int, unsigned char)",SetEdgeCondition,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x1001aef0e,"cSC4TileNeighborhoodCompact::GetStraightAndDiagonalEdges(int*, int*, int&, int&) const",GetStraightAndDiagonalEdges,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x1001aef60,cSC4TileNeighborhoodCompact::HasConnectionOnEdge(int) const,HasConnectionOnEdge_int,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x1001aef78,"cSC4TileNeighborhoodCompact::HasConnectionOnEdge(unsigned int, int)",HasConnectionOnEdge_uint_int,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x1001aef90,cSC4TileNeighborhoodCompact::Merge(cSC4TileNeighborhoodCompact const&),Merge,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x1001af00c,cSC4TileNeighborhoodCompact::Read(cSC4FileTokenizer&),Read,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x1001af0a4,cSC4TileNeighborhoodCompact::ResetEdgeMinorTypes(),ResetEdgeMinorTypes,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x1001af0d0,"cSC4TileNeighborhoodCompact::SetEdgeTypeMinor(int, unsigned char)",SetEdgeTypeMinor,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x1001af0fe,"cSC4TileNeighborhoodCompact::SetEdgeConnectionDirection(int, unsigned char)",SetEdgeConnectionDirection,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x100409190,cSC4NetworkLot::~cSC4NetworkLot(),Destruct,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x1004091ee,cSC4NetworkLot::~cSC4NetworkLot(),DestructAndDelete,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x1004091f8,cSC4NetworkLot::~cSC4NetworkLot(),DestructBody,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x100409226,cSC4NetworkLot::AddRef(),AddRef,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x100409234,cSC4NetworkLot::Release(),Release,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x100409250,"cSC4NetworkLot::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x100409272,cSC4NetworkLot::GetLotConfigurationObjectCount(),GetLotConfigurationObjectCount,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x10040929a,cSC4NetworkLot::GetLotConfigurationObjectArray(),GetLotConfigurationObjectArray,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x100409320,cSC4NetworkLot::GetNetworkOccupant() const,GetNetworkOccupant,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x10040593c,cSC4NetworkLotConfiguration::cSC4NetworkLotConfiguration(),Construct,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x10040932a,cSC4NetworkLotConfiguration::cSC4NetworkLotConfiguration(),ConstructWrapper,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x10040944e,cSC4NetworkLotConfiguration::~cSC4NetworkLotConfiguration(),Destruct,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x10040949e,cSC4NetworkLotConfiguration::~cSC4NetworkLotConfiguration(),DestructAndDelete,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x1004094a8,cSC4NetworkLotConfiguration::~cSC4NetworkLotConfiguration(),DestructBody,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x1004094d6,cSC4NetworkLotConfiguration::AddRef(),AddRef,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x1004094ea,cSC4NetworkLotConfiguration::Release(),Release,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x10040950c,"cSC4NetworkLotConfiguration::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x10040953e,cSC4NetworkLotConfiguration::GetObjectArray() const,GetObjectArray,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x100409548,cSC4NetworkLotConfiguration::GetID() const,GetID,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x100409552,cSC4NetworkLotConfiguration::GetName(cIGZString&) const,GetName,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
+0x10040956a,cSC4NetworkLotConfiguration::GetNetworkPieceId() const,GetNetworkPieceId,src/sc4/TileNeighborhood.cpp|h,recovered,sc4_tileneighborhood
