@@ -39,6 +39,9 @@ void DeriveDirectory(cRZString& target, Fill&& fillBase, const char* name) {
 }
 }  // namespace
 
+bool gbAppResourcesInitializedOK = false;
+std::uint32_t gbAppResourceErrorLanguage = 0;
+
 cSC4App::cSC4App(const char* moduleName, IGZAppFramework* framework) : cGZApp(moduleName, framework) {
     timer3d0_.Start();
     timer3f0_.Start();

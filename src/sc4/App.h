@@ -16,11 +16,13 @@
 #include <string>
 
 #include "gz/GZApp.h"
+#include "gz/WinCtrlMgr.h"
 #include "gz/WinInterfaces.h"
 #include "gz/cGZMessageServer.h"
 #include "gz/cIGZMessage2.h"
 #include "rz/Threading.h"
 #include "rz/cRZTimer.h"
+#include "render/gd/IGZGDriver.h"
 #include "rz/cRZCmdLine.h"
 #include "sc4/AppPreferences.h"
 #include "sc4/RenderProperties.h"
@@ -29,6 +31,8 @@
 
 class cIGZFrameWork;
 class cRZCOMDllDirector;
+
+class cSC4App;
 
 namespace sc4 {
 
@@ -39,6 +43,8 @@ public:
     virtual ~IVideoOptionStore() = default;
     virtual void SetOption(int option, int value) = 0;        // vslot 0x30
     virtual int GetOption(int option) = 0;                    // vslot 0x38
+    virtual void SetRenderProperties(cSC4RenderProperties*) {}   // vslot 0x18
+    virtual void Initialize() {}                              // vslot 0x20
 };
 
 // The native resolutions of the attached display (MacDisplay::GetNthNativeResolution).
@@ -62,6 +68,14 @@ public:
     virtual void EnablePageFlipping(bool enable) = 0;                                 // group 3 slot 22
     virtual bool IsPageFlippingEnabled() = 0;                                         // group 3 slot 23
     virtual void SetDefaultDriverClassID(std::uint32_t driverClass) = 0;              // group 3 slot 8
+    // used by cSC4App::Init
+    virtual bool CanvasReady() = 0;                                                   // canvas vslot 0x28 (GetCanvas() is group 2 slot 15)
+    virtual DisplayMetrics GetGameMetrics() = 0;                                      // group 2 slot 11
+    virtual gd::cIGZGDriver* GetGDriver() = 0;                                        // group 3 slot 3
+    virtual int GetGDriverCount() = 0;                                                // group 3 slot 4
+    virtual gd::cIGZGDriver* GetGDriverByIndex(int index) = 0;                        // group 3 slot 5
+    virtual void SetGDriver(gd::cIGZGDriver* driver) = 0;                             // group 3 slot 7
+    virtual void SetForceNoTranslucency(bool force, float threshold) = 0;             // group 3 slot 18
 };
 
 // The file system service's directories (cGZFileSystem vslots 0x20 / 0x50 / 0x38 / 0x58).
@@ -80,6 +94,29 @@ struct AppStartupHooks {
     std::function<void(cIGZUnknown* graphicSystem, const cIGZString& iniPath)> configureGraphicSystem;
     // the script service exists: register cSC4ScriptServiceResourceFactory with it
     std::function<void(cIGZUnknown* scriptService)> registerScriptResourceFactory;
+    // SC4OSMessageBoxAlert(text, title)
+    std::function<void(const std::string& text, const std::string& title)> messageBox;
+    // cSC43DRender::StaticInit(0) + StaticSetGDriver(driver) (null when there is no driver)
+    std::function<void(gd::cIGZGDriver* driver)> initialize3DRender;
+    // the configuration rule manager (COM class 0x0a1d8285, iid 0x0a1d8284), created for Init
+    std::function<IVideoOptionStore*()> createVideoOptionStore;
+    // the texture binding factory (service 0x1ac0e11a) is told the new driver
+    std::function<void(gd::cIGZGDriver* driver)> setTextureBindingDriver;
+    // the managers Init creates and initialises, called where the original calls their Init: (class name, object)
+    // names: cSC4GlyphTextureManager, cSCStringDetokenizer, cSLWinLocationSaver, cSC4FeatureManager, cSC4ToolTipManager,
+    // cSC4MissingPluginDataReporter, cSC4Nation, cSC4TutorialRegistry
+    std::function<void(const char* className, cIGZUnknown* object)> initializeManager;
+    // cWinSC4App::cWinSC4App(app): the application window, added to the main window
+    struct ApplicationWindow { cIGZWin* window = nullptr; SL::IWinSC4App* application = nullptr; };
+    std::function<ApplicationWindow(cSC4App&)> createApplicationWindow;
+    // the canvas gets the caption too (canvas vslots 0x68 / 0x58)
+    std::function<void(const std::string& title)> setCanvasTitle;
+    // the realtime debug display (service 0x8414a2c2): a 4,4,8,8 text overlay shown for -XDD or the fps preference
+    std::function<void(bool showOverlay)> configureDebugDisplay;
+    // the realtime debug display / resource cache set-up that follows the resource registration
+    std::function<void()> configureResourceCache;
+    // the fonts, bitmaps and font-style script of SetupWinCtrlMgr (the part after the colour table)
+    std::function<void(gz::cIGZWinCtrlMgr*)> setupWinCtrlResources;
     // RZ::GS(): the graphics system (null while it is not recovered / created)
     std::function<IGraphicSystemControl*()> graphicSystem;
     // RZ::FS(): the file system service's directories
@@ -96,11 +133,17 @@ struct AppStartupHooks {
     std::function<void(bool pause)> gamePause;
     // the simulator's tick interval (city -> simulator vslot 0xf8) for the preference's speed setting
     std::function<void(std::uint32_t ticks)> setSimulatorTickInterval;
+    // debug builds only: registry of segment creators (cGZRegistry category callback of cSC4App::CreateDBSegmentCallback)
+    std::function<void()> registerSegmentCategoryCallback;
     // the WWW system was created: set its cache directory, enable it and hook the HTML UI
     std::function<void(cIGZUnknown* wwwSystem, const cIGZString& cacheDirectory)> configureWWWSystem;
 };
 
 }  // namespace sc4
+
+// set when Init fails to set up the resources: SC4AppStart then shows the localised error (gbAppResourcesInitializedOK)
+extern bool gbAppResourcesInitializedOK;
+extern std::uint32_t gbAppResourceErrorLanguage;
 
 class cSC4App final : public SL::IApplicationWindowSource, public cIGZMessageTarget, public cIGZMessageTarget2, public cIGZWinMessageFilter,
                       public cISC4App, public cGZApp {
@@ -175,6 +218,7 @@ public:
     // --- start-up: directors and system services
     void FindAndPossiblyFixIniFiles();                             // @ 0x100010c06
     bool PreFrameWorkInit() override;                              // @ 0x100004b20
+    bool SetupResources();                                         // @ 0x1000b0a3c
     int AddCodePlugins(const cRZString& directory);                // @ 0x1000073de (count of plugins added)
     void FindAndRegisterAllAvailableLanguages();                   // @ 0x100007d56
     void DoPreferencesChanged(bool initial);                       // @ 0x1000080b2
@@ -193,6 +237,7 @@ public:
     void SetDisplayInfo(sc4::IDisplayInfo* display) { display_ = display; }
     // The directories the framework fills in at start-up (PreFrameWorkInit); exposed for the host and tests.
     void SetDirectories(const char* appDirectory, const char* dataDirectory, const char* userDataDirectory);
+    void SetPluginDirectories(const char* pluginDirectory, const char* userPluginDirectory, const char* skuDirectory) { pluginDirectory_ = pluginDirectory; userPluginDirectory_ = userPluginDirectory; skuSpecificDirectory_ = skuDirectory; }
     cRZString& AppNameString() { return appName_; }
     sc4::SC4Preferences& Preferences() { return preferences_; }
 
@@ -233,7 +278,13 @@ public:
     bool AddDynamicLibraryByPath(const cIGZString& path, bool required) override;
     bool Init() override;
     bool Shutdown() override;
-    bool PostFrameWorkInit() override;
+    bool PostFrameWorkInit() override;                             // @ 0x10000997e
+    void PostSC4AppMessage(std::uint32_t type, bool post);          // @ 0x10000985c
+    bool WindowSetup();                                            // @ 0x1000121fa
+    bool WindowShutdown();                                         // @ 0x10001226e
+    void SetupWinCtrlMgr();                                        // @ 0x10000b128
+    void ShutdownWinCtrlMgr();                                     // @ 0x10000c7ca
+    void SetupFontSet();                                           // @ 0x10000c7d0
     bool PreFrameWorkShutdown() override;
     bool LoadRegistry() override;
     bool OnTick(std::uint32_t elapsed) override;
@@ -246,6 +297,7 @@ private:
     bool field7c_ = false;                               // +0x7c
     cIGZWin* mainWindow_ = nullptr;                      // +0x80
     SL::IWinSC4App* winSC4App_ = nullptr;                // +0x88 (the application window object, bound by Init)
+    cIGZWin* applicationWindow_ = nullptr;               // the same object as a window (a child of the main window)
     cISC4Nation* nation_ = nullptr;                      // +0x90
     cRZAutoRefCount<cISC4RegionalCity>* regionalCity_ = nullptr;   // +0x98 (set by RequestNewCity / LoadCity)
     cISC4City* city_ = nullptr;                          // +0xa0
@@ -271,6 +323,7 @@ private:
     cSC4TutorialRegistry* tutorialRegistry_ = nullptr;   // +0x380 (embedded in the original)
     cIGZUnknown* featureManager_ = nullptr;              // +0x3b8
     cIGZUnknown* cheatCodeManager_ = nullptr;            // +0x3c0
+    cIGZUnknown* toolTipManager_ = nullptr;              // +0x3c8
     cRZTimer timer3d0_{cRZTimer::kMinutes};              // +0x3d0
     int interval3e8_ = 30;                               // +0x3e8
     cRZTimer timer3f0_{cRZTimer::kMinutes};              // +0x3f0
@@ -300,6 +353,7 @@ private:
     cRZMutex instanceMutex_{cRZString("SimCity 4 Mutex")};   // +0x790
     bool debugFunctionality_ = false;                    // +0x7a0
     bool popupDialogs_ = true;                           // +0x7a1
+    cIGZUnknown* missingPluginReporter_ = nullptr;       // +0x7b0
     cIGZUnknown* glyphTextureManager_ = nullptr;         // +0x7c0
     cIGZUnknown* luaInterpreter_ = nullptr;              // +0x7c8
     bool runFirstTimeAfterInstall_ = true;               // +0x7d0

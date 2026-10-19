@@ -14,6 +14,8 @@
 
 #include "rz/cRZCmdLine.h"
 #include "gz/GZFramework.h"
+#include "gz/cGZDBSegmentPackedFile.h"
+#include "gz/cGZPersistResourceManager.h"
 #include "rz/LanguageManager.h"
 #include "sc4/App.h"
 #include "sc4/AppPlatform.h"
@@ -23,6 +25,12 @@ static int failures = 0;
 #define CHECK(c) do { if (!(c)) { std::printf("FAIL line %d: %s\n", __LINE__, #c); ++failures; } } while (0)
 
 namespace {
+struct Object final : cIGZUnknown {
+    bool QueryInterface(std::uint32_t, void** out) override { *out = this; return true; }
+    std::uint32_t AddRef() override { return ++refs; }
+    std::uint32_t Release() override { return --refs; }
+    int refs = 0;
+};
 struct Options final : sc4::IVideoOptionStore {
     std::map<int, int> values;
     void SetOption(int option, int value) override { values[option] = value; }
@@ -203,6 +211,13 @@ int main() {
             void EnablePageFlipping(bool) override { log.push_back("flip"); }
             bool IsPageFlippingEnabled() override { return true; }
             void SetDefaultDriverClassID(std::uint32_t d) override { driver = d; log.push_back("driver"); }
+            bool CanvasReady() override { return true; }
+            DisplayMetrics GetGameMetrics() override { return {1024, 768, 32}; }
+            gd::cIGZGDriver* GetGDriver() override { return nullptr; }
+            int GetGDriverCount() override { return 0; }
+            gd::cIGZGDriver* GetGDriverByIndex(int) override { return nullptr; }
+            void SetGDriver(gd::cIGZGDriver*) override {}
+            void SetForceNoTranslucency(bool, float) override {}
         };
         char dir[] = "/tmp/sc4pfiXXXXXX"; CHECK(mkdtemp(dir));
         std::string root = dir;
@@ -249,6 +264,75 @@ int main() {
         CHECK(!graphics.windowed);                                        // 1280x1024 does not fit the 1440x900 desktop -> full screen
         CHECK(a->GetRenderProperties() != nullptr);
         a->Release();
+        std::string cleanup = "rm -rf " + root; std::system(cleanup.c_str());
+    }
+
+
+    // ---- Init: failure without a canvas, success with the resources set up
+    {
+        struct Graphics final : sc4::IGraphicSystemControl {
+            bool ready = true; bool forced = false;
+            DisplayMetrics GetScreenMetrics() override { return {1440, 900, 32}; }
+            void PreInitSetDesiredGameResolution(const DisplayMetrics&) override {}
+            void PreInitSetWindowedMode(bool) override {}
+            void DisableScreenBuffer() override {}
+            void EnableCursorEmulation(bool) override {}
+            void EnablePageFlipping(bool) override {}
+            bool IsPageFlippingEnabled() override { return false; }
+            void SetDefaultDriverClassID(std::uint32_t) override {}
+            bool CanvasReady() override { return ready; }
+            DisplayMetrics GetGameMetrics() override { return {1024, 768, 32}; }
+            gd::cIGZGDriver* GetGDriver() override { return nullptr; }
+            int GetGDriverCount() override { return 0; }
+            gd::cIGZGDriver* GetGDriverByIndex(int) override { return nullptr; }
+            void SetGDriver(gd::cIGZGDriver*) override {}
+            void SetForceNoTranslucency(bool force, float) override { forced = force; }
+        };
+        struct Options final : sc4::IVideoOptionStore {
+            void SetOption(int, int) override {}
+            int GetOption(int option) override { return option == 0xd ? 1 : 0; }
+        };
+        char dir[] = "/tmp/sc4initXXXXXX"; CHECK(mkdtemp(dir));
+        std::string root = dir;
+        std::filesystem::create_directories(root + "/Data/English");
+        std::filesystem::create_directories(root + "/Docs");
+        SetDocumentsFolderProvider([&](std::string& out) { out = root + "/Docs"; return true; });
+
+        auto* f = new cGZFramework();
+        cGZFramework::sSetFrameWork(f);
+        f->COM().RealInit();
+        auto* a = new cSC4App("T", f->AppView()); a->AddRef();
+        a->SetFramework(f);
+        a->SetDirectories((root + "/App/").c_str(), (root + "/Data/").c_str(), (root + "/Docs/SimCity 4/").c_str());
+        a->SetPluginDirectories((root + "/Data/Plugins/").c_str(), (root + "/Docs/SimCity 4/Plugins/").c_str(), (root + "/Data/Sku/").c_str());
+        for (std::string sub : {"/Data/Sku", "/Data/Plugins", "/Docs/SimCity 4/Plugins", "/Data/English"}) {   // one (empty) database in each directory
+            std::filesystem::create_directories(root + sub);
+            cRZAutoRefCount<cGZDBSegmentPackedFile> database(new cGZDBSegmentPackedFile());
+            database->Init();
+            database->SetPath(cRZString((root + sub + "/empty.dat").c_str()));
+            CHECK(database->Open(true, true));
+            database->Close();
+        }
+        auto* languages = new cRZLanguageManager(); f->AddSystemService(languages);
+        auto* resources = new cGZPersistResourceManager(); f->AddSystemService(resources);
+        Graphics graphics; Options options;
+        std::vector<std::string> initialized; std::vector<std::string> alerts;
+        a->StartupHooks().graphicSystem = [&] { return &graphics; };
+        a->StartupHooks().createVideoOptionStore = [&] { return &options; };
+        a->StartupHooks().messageBox = [&](const std::string& text, const std::string&) { alerts.push_back(text); };
+        a->StartupHooks().initializeManager = [&](const char* name, cIGZUnknown*) { initialized.push_back(name); };
+        for (const char* name : {"cSC4GlyphTextureManager", "cSCStringDetokenizer", "cSLWinLocationSaver", "cSC4FeatureManager", "cSC4ToolTipManager", "cSC4MissingPluginDataReporter", "cSC4Nation"}) {
+            a->SetServiceFactory(name, [] () -> cIGZUnknown* { static int dummy; return reinterpret_cast<cIGZUnknown*>(new Object()); });
+        }
+        graphics.ready = false;
+        CHECK(!a->Init());
+        CHECK(alerts.size() == 1 && a->Preferences().data()[sc4::prefs::kVideoHardwareDriver] == 0 && a->Preferences().data()[sc4::prefs::kVideoAutoConfigure] == 1);
+        graphics.ready = true;
+        a->Preferences().data()[sc4::prefs::kVideoAutoConfigure] = 0;
+        CHECK(a->Init());
+        CHECK(a->GetCheatCodeManager() != nullptr && SL::spSC4 == static_cast<cISC4App*>(a));
+        CHECK(resources->GetSegmentCount() >= 3);
+        CHECK(initialized.size() >= 5);
         std::string cleanup = "rm -rf " + root; std::system(cleanup.c_str());
     }
 

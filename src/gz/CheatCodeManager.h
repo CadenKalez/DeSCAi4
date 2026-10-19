@@ -13,6 +13,7 @@
 // disable words hand the (always empty) remainder to EnableCheatCodes. Deviation: SetCheatCodeSaveData reads the
 // enabled-state list as bytes / 4 ids (the original loops bytes times and reads past the block).
 #pragma once
+#include "gz/cGZMessageServer.h"   // cIGZMessageTarget (the pre-cIGZMessage2 target: gets a cGZMessage)
 #include <cstdint>
 #include <list>
 #include <set>
@@ -29,11 +30,6 @@ constexpr std::uint32_t kGZIID_cIGZCheatCodeManager = 0xa1085722;
 constexpr std::uint32_t kGZSID_cGZCheatCodeManager = 0x69d9e74b;
 constexpr std::uint32_t kMessageCheatCodeTyped = 0x230e27ac, kMessageCheatCodesEnabled = 0x030e27b7,
                         kMessageCheatCodesDisabled = 0x69d9a743;
-
-class cIGZMessageTarget : public cIGZUnknown {   // the pre-cIGZMessage2 target: gets a cGZMessage
-public:
-    virtual bool DoMessage(cGZMessage& message) = 0;
-};
 
 struct CheatCodeHistoryRecord {
     std::uint32_t cheatId, julianDay, kind, extra;
