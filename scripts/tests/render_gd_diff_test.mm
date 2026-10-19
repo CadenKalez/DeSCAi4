@@ -15,6 +15,7 @@
 #include "gdriver_on_gl.h"
 #include "render/MetalGL.h"
 #include "render/gd/MetalGDriver.h"
+#include "render/gd/IBackingStore.h"
 #include "render/gd/TextureTable.h"
 #include "render/gd/VideoModes.h"
 
@@ -328,6 +329,33 @@ int main() {
             CHECK(w == 64 && h == 48 && px[1] == 255);
             CHECK(!drv->SetVideoMode(500, nullptr, true, false) && drv->GetError() == 2);
             CHECK(drv->SetVideoMode(-1, nullptr, true, false));
+        }
+        {   // backing store: colour AND depth survive a clear, and blocks can be moved while restoring
+            auto drv = cMetalGDriver::Create(nullptr, W, H);
+            IBackingStore* store = drv->BackingStore();
+            CHECK(!store->Exists() && store->Create(W, H) && store->Exists());
+            Reset(*drv);
+            drv->Enable(state::DepthTest);
+            Quad(*drv, -0.9f, -0.9f, 0.1f, 0.1f, 0.3f, 255, 0, 0, 255);          // red, near
+            store->SaveFromFrame(0, 0, W, H, 0, 0);
+            drv->ClearColor(0, 0, 1, 1);
+            drv->Clear(kClearColor | kClearDepth);                                   // wipe the frame
+            store->RestoreToFrame(0, 0, W, H, 0, 0);
+            Quad(*drv, -0.5f, -0.5f, 0.5f, 0.5f, 0.6f, 0, 255, 0, 255);             // green, farther: must lose the depth test where red is
+            std::vector<std::uint8_t> px; std::uint32_t w, h;
+            drv->ReadBack(px, w, h);
+            auto at = [&](int x, int y, int c) { return px[(y * W + x) * 4 + c]; };
+            CHECK(at(40, 90, 2) == 255 && at(40, 90, 1) == 0);                      // red restored (left-bottom area)
+            CHECK(at(64, 64, 2) == 255 && at(64, 64, 1) == 0);                      // overlap: red still wins -> depth was restored
+            CHECK(at(83, 64, 1) == 255 && at(83, 64, 2) == 0);                    // green visible where red never was
+            CHECK(at(110, 120, 1) == 0 && at(110, 120, 2) == 0);                    // untouched area is the saved background, not the later blue clear
+            // moving restore: copy a 20x20 block from (30,70) to (90,10)
+            drv->ClearColor(0, 0, 0, 1); drv->Clear(kClearColor | kClearDepth);
+            store->RestoreToFrame(30, 70, 20, 20, 90, 10);
+            drv->ReadBack(px, w, h);
+            CHECK(at(95, 15, 2) == 255 && at(85, 15, 2) == 0 && at(95, 35, 2) == 0);
+            store->Destroy();
+            CHECK(!store->Exists());
         }
         // ---- analytic checks the reference cannot do ----
         {   // clear colour quantisation: ARGB 8-bit, round-half-even(f*256) with 256 -> 255

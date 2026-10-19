@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "render/gd/GDriverBase.h"
+#include "render/gd/IBackingStore.h"
 #include "render/gd/VideoModes.h"
 
 namespace gd {
@@ -27,6 +28,8 @@ public:
     // ---- presentation / test hooks (not part of cIGZGDriver) ----
     void Present();                                                   // frame target -> drawable, once per frame
     bool ReadBack(std::vector<std::uint8_t>& bgra, std::uint32_t& width, std::uint32_t& height);   // top-left origin
+    // The city view's backing store (colour + depth copies of the frame; see IBackingStore.h).
+    IBackingStore* BackingStore();
     std::uint32_t DrawCalls() const;
     std::uint32_t PipelineCount() const;
 
@@ -75,8 +78,6 @@ private:
     cMetalGDriver();
     void MarkStage(bool enabled);
     void Encode(int primitive, std::size_t vertexOffset, int vertexCount, const std::uint16_t* indices, int indexCount);
-    float pendingClearRGBA_[4] = {0, 0, 0, 0};
-    double pendingClearDepth_ = 1.0;
     struct Impl;
     std::unique_ptr<Impl> impl_;
 };

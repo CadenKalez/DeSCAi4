@@ -197,6 +197,8 @@ struct cMetalGDriver::Impl {
 
     // pending target clears (applied as load actions when the next pass starts)
     bool clearColorPending = true, clearDepthPending = true;
+    float pendingRGBA[4] = {0, 0, 0, 0};
+    double pendingDepth = 1.0;
 
     // viewport / scissor in the game's GL-style coordinates (origin bottom-left)
     std::uint32_t vx = 0, vy = 0, vw = 0, vh = 0;
@@ -259,6 +261,53 @@ struct cMetalGDriver::Impl {
     } backend{this};
     cTextureTable table{&backend};
     std::unique_ptr<cVideoModeList> modeList;
+
+    // ---- backing store: persistent colour + depth copies of the frame ----
+    struct Store final : IBackingStore {
+        Impl* m;
+        id<MTLTexture> color = nil, depth = nil;
+        explicit Store(Impl* impl) : m(impl) {}
+        bool Create(std::uint32_t w, std::uint32_t h) override {
+            if (w == 0 || h == 0) return false;
+            Destroy();
+            MTLTextureDescriptor* c = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm width:w height:h mipmapped:NO];
+            c.storageMode = MTLStorageModePrivate;
+            c.usage = MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget;
+            MTLTextureDescriptor* z = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth32Float width:w height:h mipmapped:NO];
+            z.storageMode = MTLStorageModePrivate;
+            z.usage = MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget;
+            color = [m->device newTextureWithDescriptor:c];
+            depth = [m->device newTextureWithDescriptor:z];
+            return color != nil && depth != nil;
+        }
+        void Destroy() override { color = nil; depth = nil; }
+        bool Exists() const override { return color != nil; }
+        void Copy(bool toStore, int sx, int sy, int w, int h, int dx, int dy) {
+            if (!Exists() || w <= 0 || h <= 0) return;
+            // clip both blocks to their textures
+            id<MTLTexture> src = toStore ? m->color : color, srcZ = toStore ? m->depth : depth;
+            id<MTLTexture> dst = toStore ? color : m->color, dstZ = toStore ? depth : m->depth;
+            if (sx < 0 || sy < 0 || dx < 0 || dy < 0) return;
+            w = std::min<int>(w, std::min<int>(src.width - sx, dst.width - dx));
+            h = std::min<int>(h, std::min<int>(src.height - sy, dst.height - dy));
+            if (w <= 0 || h <= 0) return;
+            m->EndEncoder();
+            if (!m->cb) m->cb = [m->queue commandBuffer];
+            if (m->clearColorPending || m->clearDepthPending) {   // materialise a pending clear before copying from the frame
+                // (the pending clear is applied by a pass that draws nothing)
+                m->BeginEncoder(m->pendingDepth, m->pendingRGBA);
+                m->EndEncoder();
+            }
+            id<MTLBlitCommandEncoder> blit = [m->cb blitCommandEncoder];
+            [blit copyFromTexture:src sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(sx, sy, 0) sourceSize:MTLSizeMake(w, h, 1)
+                        toTexture:dst destinationSlice:0 destinationLevel:0 destinationOrigin:MTLOriginMake(dx, dy, 0)];
+            [blit copyFromTexture:srcZ sourceSlice:0 sourceLevel:0 sourceOrigin:MTLOriginMake(sx, sy, 0) sourceSize:MTLSizeMake(w, h, 1)
+                        toTexture:dstZ destinationSlice:0 destinationLevel:0 destinationOrigin:MTLOriginMake(dx, dy, 0)];
+            [blit endEncoding];
+        }
+        void SaveFromFrame(int sx, int sy, int w, int h, int dx, int dy) override { Copy(true, sx, sy, w, h, dx, dy); }
+        void RestoreToFrame(int sx, int sy, int w, int h, int dx, int dy) override { Copy(false, sx, sy, w, h, dx, dy); }
+    } store{this};
     sGDMode currentMode{};
     std::map<std::uint32_t, id<MTLTexture>> textures;
     nSGLDX7::cTextureStageData records[2];
@@ -468,6 +517,8 @@ std::unique_ptr<cMetalGDriver> cMetalGDriver::Create(void* caMetalLayer, std::ui
     return d;
 }
 
+IBackingStore* cMetalGDriver::BackingStore() { return &impl_->store; }
+
 std::uint32_t cMetalGDriver::DrawCalls() const { return impl_->draws; }
 std::uint32_t cMetalGDriver::PipelineCount() const { return static_cast<std::uint32_t>(impl_->pipelines.size()); }
 
@@ -640,11 +691,11 @@ void cMetalGDriver::Clear(std::uint32_t mask) {
         if (doColor) s.clearColorPending = true;
         if (doDepth) s.clearDepthPending = true;
         // The pass that carries the load action starts lazily; remember the values it will need.
-        pendingClearRGBA_[0] = rgba[0]; pendingClearRGBA_[1] = rgba[1]; pendingClearRGBA_[2] = rgba[2]; pendingClearRGBA_[3] = rgba[3];
-        pendingClearDepth_ = mirror_.clearDepth;
+        impl_->pendingRGBA[0] = rgba[0]; impl_->pendingRGBA[1] = rgba[1]; impl_->pendingRGBA[2] = rgba[2]; impl_->pendingRGBA[3] = rgba[3];
+        impl_->pendingDepth = mirror_.clearDepth;
         return;
     }
-    s.BeginEncoder(pendingClearDepth_, pendingClearRGBA_);
+    s.BeginEncoder(impl_->pendingDepth, impl_->pendingRGBA);
     ClearConstants cc;
     cc.color = simd_make_float4(rgba[0], rgba[1], rgba[2], rgba[3]);
     cc.depth = mirror_.clearDepth;
@@ -739,7 +790,7 @@ void cMetalGDriver::DrawElements(eGDPrimType mode, int count, eGDType indexType,
 
 void cMetalGDriver::Encode(int primitive, std::size_t vertexOffset, int vertexCount, const std::uint16_t* indices, int indexCount) {
     Impl& s = *impl_;
-    s.BeginEncoder(pendingClearDepth_, pendingClearRGBA_);
+    s.BeginEncoder(impl_->pendingDepth, impl_->pendingRGBA);
     s.ApplyDirtyStages();
     PipelineKey key{};
     key.blend = mirror_.blend;
@@ -809,7 +860,7 @@ void cMetalGDriver::Present() {
 
 bool cMetalGDriver::ReadBack(std::vector<std::uint8_t>& bgra, std::uint32_t& width, std::uint32_t& height) {
     Impl& s = *impl_;
-    if (s.clearColorPending || s.clearDepthPending) s.BeginEncoder(pendingClearDepth_, pendingClearRGBA_);
+    if (s.clearColorPending || s.clearDepthPending) s.BeginEncoder(impl_->pendingDepth, impl_->pendingRGBA);
     s.Submit(true);
     const NSUInteger rowBytes = static_cast<NSUInteger>(s.width) * 4;
     id<MTLBuffer> staging = [s.device newBufferWithLength:rowBytes * s.height options:MTLResourceStorageModeShared];
