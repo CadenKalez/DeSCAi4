@@ -19439,3 +19439,5 @@ address,symbol,unique_name,source,status,evidence
 0x10000c7ca,cSC4App::ShutdownWinCtrlMgr(),ShutdownWinCtrlMgr,src/sc4/AppShutdown.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
 0x10001136a,"cSC4App::AddDynamicLibraryByName(cIGZString const&, cRZString*, bool)",AddDynamicLibraryByName,src/sc4/AppShutdown.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
 0x100011656,"cSC4App::AddDynamicLibraryByPath(cIGZString const&, bool)",AddDynamicLibraryByPath,src/sc4/AppShutdown.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x10000997e,cSC4App::PostFrameWorkInit(),PostFrameWorkInit,src/sc4/AppPost.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x10000a2be,cSC4App::FindTestScript(cRZString&),FindTestScript,src/sc4/AppPost.cpp,recovered,scripts/tests/sc4_appcity_test.cpp

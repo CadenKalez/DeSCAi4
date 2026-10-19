@@ -87,6 +87,16 @@ struct AppStartupHooks {
     std::function<void(const char* className, cIGZUnknown* object)> initializeManager;
     // the matching Shutdown calls of Shutdown(): (class name, object); the application releases the objects it owns
     std::function<void(const char* className, cIGZUnknown* object)> shutdownManager;
+    // PostFrameWorkInit: the scripted-UI command systems ("win", "tool", "misc": cGZWin/Tool/MiscCommandSystemSupport,
+    // initialised through initializeManager) and the network command generator (-NetCommandGenerator:on)
+    std::function<cIGZUnknown*(const char* kind)> createCommandSupport;
+    std::function<cIGZUnknown*()> createNetCommandGenerator;
+    // RZ::GS() vslot 0x60: true lowers the framework's debug level from 2 to 1
+    std::function<bool()> graphicsWantsQuietLog;
+    // creates a 32x32 buffer of the graphics system's colour type and initialises the alpha blitter with it
+    std::function<void()> initializeAlphaSystem;
+    // -LuaScript:"file" args: runs the test script (the lua interpreter's RunScript)
+    std::function<void(const std::string& scriptPath, const std::string& arguments)> runTestScript;
     // cWinSC4App::cWinSC4App(app): the application window, added to the main window
     struct ApplicationWindow { cIGZWin* window = nullptr; SL::IWinSC4App* application = nullptr; };
     std::function<ApplicationWindow(cSC4App&)> createApplicationWindow;
@@ -296,6 +306,7 @@ public:
     bool Init() override;
     bool Shutdown() override;
     bool PostFrameWorkInit() override;                             // @ 0x10000997e
+    bool FindTestScript(cRZString& path);                          // @ 0x10000a2be
     void PostSC4AppMessage(std::uint32_t type, bool post);          // @ 0x10000985c
     bool WindowSetup();                                            // @ 0x1000121fa
     bool WindowShutdown();                                         // @ 0x10001226e

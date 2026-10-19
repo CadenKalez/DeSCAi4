@@ -14,7 +14,6 @@ namespace {
 
 bool cSC4App::DoMessage(cIGZWin*, cGZMessage&) { Pending("DoMessage(cIGZWin*, cGZMessage&)"); }
 bool cSC4App::SaveCity(const cRZString&, bool) { Pending("SaveCity(path, bool)"); }
-bool cSC4App::PostFrameWorkInit() { Pending("PostFrameWorkInit"); }
 bool cSC4App::LoadRegistry() { Pending("LoadRegistry"); }
 void cSC4App::SetupFontSet() { Pending("SetupFontSet"); }
 bool cSC4App::DoCityObliteration() { Pending("DoCityObliteration"); }

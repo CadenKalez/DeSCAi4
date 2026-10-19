@@ -1,5 +1,6 @@
 // cSC4App city life cycle: new city, close with / without saving, the quit requests and the application messages.
 #include <cstdio>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -126,6 +127,26 @@ int main() {
     state.SetType(0xea8ae29a); app->DoMessage(&state); CHECK(app->GetAppState() == 2);
     state.SetType(0xcbb5bb45); app->DoMessage(&state); CHECK(app->GetAppState() == 1);
     state.SetType(0x26d31ec2); app->DoMessage(&state); CHECK(app->GetAppState() == 0);
+
+    // post-framework set-up: the three command systems are created once and initialised
+    struct Support final : cIGZUnknown {
+        bool QueryInterface(std::uint32_t, void**) override { return false; }
+        std::uint32_t AddRef() override { return ++refs; }
+        std::uint32_t Release() override { return --refs; }
+        int refs = 0;
+    };
+    Support supports[3];
+    int created = 0;
+    std::vector<std::string> initialised;
+    app->StartupHooks().createCommandSupport = [&](const char*) -> cIGZUnknown* { return &supports[created++]; };
+    app->StartupHooks().initializeManager = [&](const char* name, cIGZUnknown*) { initialised.push_back(name); };
+    CHECK(app->PostFrameWorkInit() && created == 3 && initialised.size() == 3 && initialised[0] == "cGZWinCommandSystemSupport");
+    CHECK(app->PostFrameWorkInit() && created == 3);
+    {
+        std::ofstream("/tmp/appcity_script.lua") << "x";
+        cRZString existing("/tmp/appcity_script.lua"), missing("/tmp/does_not_exist.lua");
+        CHECK(app->FindTestScript(existing) && !app->FindTestScript(missing));
+    }
 
     // plug-in libraries and shutdown
     CHECK(!app->AddDynamicLibraryByPath(cRZString("/nonexistent/lib.so"), true));
