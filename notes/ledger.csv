@@ -19100,3 +19100,52 @@ address,symbol,unique_name,source,status,evidence
 0x100376afa,"cSC4EstablishCityWinProc::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessage,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
 0x100376bf8,cSC4EstablishCityWinProc::DoCommand(cGZMessage&),DoCommand,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
 0x100376d10,cSC4EstablishCityWinProc::Shutdown(),Shutdown,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
+0x100242930,cSC4BudgetUIExpenseWinProc::cSC4BudgetUIExpenseWinProc(),Construct,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242a1c,cSC4BudgetUIExpenseWinProc::cSC4BudgetUIExpenseWinProc(),ConstructWrapper,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242a26,cSC4BudgetUIExpenseWinProc::~cSC4BudgetUIExpenseWinProc(),Destruct,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242ab4,cSC4BudgetUIExpenseWinProc::~cSC4BudgetUIExpenseWinProc(),DestructAndDelete,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242abe,cSC4BudgetUIExpenseWinProc::~cSC4BudgetUIExpenseWinProc(),DestructBody,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242aec,"cSC4BudgetUIExpenseWinProc::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242b1e,"non-virtual thunk to cSC4BudgetUIExpenseWinProc::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_2b1e,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242b2c,"non-virtual thunk to cSC4BudgetUIExpenseWinProc::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_2b2c,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242b3a,cSC4BudgetUIExpenseWinProc::AddRef(),AddRef,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242b44,non-virtual thunk to cSC4BudgetUIExpenseWinProc::AddRef(),AddRefThunk_2b44,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242b52,non-virtual thunk to cSC4BudgetUIExpenseWinProc::AddRef(),AddRefThunk_2b52,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242b60,cSC4BudgetUIExpenseWinProc::Release(),Release,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242b6a,non-virtual thunk to cSC4BudgetUIExpenseWinProc::Release(),ReleaseThunk_2b6a,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242b78,non-virtual thunk to cSC4BudgetUIExpenseWinProc::Release(),ReleaseThunk_2b78,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242b86,"cSC4BudgetUIExpenseWinProc::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessage,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242c98,cSC4BudgetUIExpenseWinProc::InitDialog(),InitDialog,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242e88,cSC4BudgetUIExpenseWinProc::SaveChanges(),SaveChanges,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242f42,cSC4BudgetUIExpenseWinProc::EndDialog(),EndDialog,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242fce,cSC4BudgetUIExpenseWinProc::SetInfoPerSlider(unsigned int),SetInfoPerSlider,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100243112,"non-virtual thunk to cSC4BudgetUIExpenseWinProc::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessageThunk,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100243120,cSC4BudgetUIExpenseWinProc::DoMessage(cIGZMessage2*),DoMessage,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100243128,non-virtual thunk to cSC4BudgetUIExpenseWinProc::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100243130,cSC4BudgetUIExpenseWinProc::DisplayDepartmentInfo(cSC4BudgetUIExpenseWinProc::cUIDepartmentInfo&),DisplayDepartmentInfo,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100243200,"cSC4BudgetUIExpenseWinProc::SetFormattedAmountInTextControl(unsigned int, long long)",SetFormattedAmountInTextControl,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x1002432ec,cSC4BudgetUIExpenseWinProc::RecalculateTotals(),RecalculateTotals,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100241e00,cSC4BudgetUIIncomeWinProc::cSC4BudgetUIIncomeWinProc(),Construct,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100241f0c,cSC4BudgetUIIncomeWinProc::cSC4BudgetUIIncomeWinProc(),ConstructWrapper,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100241f16,cSC4BudgetUIIncomeWinProc::~cSC4BudgetUIIncomeWinProc(),Destruct,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100241fa4,cSC4BudgetUIIncomeWinProc::~cSC4BudgetUIIncomeWinProc(),DestructAndDelete,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100241fae,cSC4BudgetUIIncomeWinProc::~cSC4BudgetUIIncomeWinProc(),DestructBody,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100241fdc,"cSC4BudgetUIIncomeWinProc::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x10024200e,"non-virtual thunk to cSC4BudgetUIIncomeWinProc::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_200e,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x10024201c,"non-virtual thunk to cSC4BudgetUIIncomeWinProc::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_201c,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x10024202a,cSC4BudgetUIIncomeWinProc::AddRef(),AddRef,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242034,non-virtual thunk to cSC4BudgetUIIncomeWinProc::AddRef(),AddRefThunk_2034,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242042,non-virtual thunk to cSC4BudgetUIIncomeWinProc::AddRef(),AddRefThunk_2042,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242050,cSC4BudgetUIIncomeWinProc::Release(),Release,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x10024205a,non-virtual thunk to cSC4BudgetUIIncomeWinProc::Release(),ReleaseThunk_205a,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242068,non-virtual thunk to cSC4BudgetUIIncomeWinProc::Release(),ReleaseThunk_2068,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242076,"cSC4BudgetUIIncomeWinProc::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessage,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x10024220c,cSC4BudgetUIIncomeWinProc::InitDialog(),InitDialog,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x100242338,cSC4BudgetUIIncomeWinProc::EndDialog(),EndDialog,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x1002423c4,cSC4BudgetUIIncomeWinProc::SetInfoPerSpinner(unsigned int),SetInfoPerSpinner,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x10024258c,"non-virtual thunk to cSC4BudgetUIIncomeWinProc::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessageThunk,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x10024259a,cSC4BudgetUIIncomeWinProc::DoMessage(cIGZMessage2*),DoMessage,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x1002425a2,non-virtual thunk to cSC4BudgetUIIncomeWinProc::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x1002425aa,cSC4BudgetUIIncomeWinProc::SetInfoPerTaxType(cISC4BudgetSimulator::TaxType),SetInfoPerTaxType,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x10024272e,"cSC4BudgetUIIncomeWinProc::SetFormattedAmountInTextControl(unsigned int, long long)",SetFormattedAmountInTextControl,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x10024281a,cSC4BudgetUIIncomeWinProc::RecalculateTotals(),RecalculateTotals,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
