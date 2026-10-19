@@ -19035,3 +19035,35 @@ address,symbol,unique_name,source,status,evidence
 0x10051189c,"cGZGimexWriter::BeginWrite(char const*, unsigned int)",BeginWrite_char_const_uint,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
 0x100511904,cGZGimexWriter::EndWrite(),EndWrite,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
 0x100511974,"cGZGimexWriter::PutFramePixels(cGZGimexInfo*, void*, unsigned int)",PutFramePixels,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x1003d694e,cSC4DialogWinProcBase::~cSC4DialogWinProcBase(),Destruct,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d697c,non-virtual thunk to cSC4DialogWinProcBase::~cSC4DialogWinProcBase(),DestructThunk,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d69a8,cSC4DialogWinProcBase::~cSC4DialogWinProcBase(),DestructAndDelete,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d69fa,non-virtual thunk to cSC4DialogWinProcBase::~cSC4DialogWinProcBase(),DestructAndDeleteThunk,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d6a08,cSC4DialogWinProcBase::AddRef(),AddRef,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d6a16,non-virtual thunk to cSC4DialogWinProcBase::AddRef(),AddRefThunk,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d6a20,cSC4DialogWinProcBase::Release(),Release,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d6a2e,non-virtual thunk to cSC4DialogWinProcBase::Release(),ReleaseThunk,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d6a38,"cSC4DialogWinProcBase::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d6a5a,cSC4DialogWinProcBase::Display(cIGZWin*),Display,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d6bdc,"cSC4DialogWinProcBase::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessage,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d6c9c,cSC4DialogWinProcBase::GZOnButtonActivate(unsigned int),GZOnButtonActivate,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d6cc6,cSC4DialogWinProcBase::TranslateTokensInCaption(unsigned int),TranslateTokensInCaption,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d6e3e,cSC4DialogWinProcBase::GetBtnControl(unsigned int),GetBtnControl,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d866a,cSC4DialogWinProcBase::GZOnAttach(),GZOnAttach,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d8670,cSC4DialogWinProcBase::GZOnDetach(),GZOnDetach,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d8676,cSC4DialogWinProcBase::GZOnCancel(),GZOnCancel,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003d86a8,cSC4DialogWinProcBase::GZOnOK(),GZOnOK,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003cd4bc,cSC4CreditsWinProc::cSC4CreditsWinProc(),Construct,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003cd4de,cSC4CreditsWinProc::~cSC4CreditsWinProc(),Destruct,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003cd546,cSC4CreditsWinProc::DoModalWin(),DoModalWin,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003cd610,cSC4CreditsWinProc::ShowDialog(cSC4CreditsWinProc::eCreditsWindowType),ShowDialog,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003cd6a8,cSC4CreditsWinProc::InitDialog(),InitDialog,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003cd988,"cSC4CreditsWinProc::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003cd9aa,cSC4CreditsWinProc::AddRef(),AddRef,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003cd9b8,cSC4CreditsWinProc::Release(),Release,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003cd9d4,cSC4CreditsWinProc::FinalRelease(),FinalRelease,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003cda1c,"cSC4CreditsWinProc::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessage,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x1003cda8c,cSC4CreditsWinProc::EndDialog(),EndDialog,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x100039a9f,"SC4CreateWindowFromScript(cGZPersistResourceKey const&, cIGZWin*, unsigned int)",Construct_cGZPersistResourceKey_const_cIGZWin_uint,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x100039b38,"SC4CreateWindowFromScript(unsigned int, cIGZWin*, unsigned int, unsigned int, void**)",Construct_uint_cIGZWin_uint_uint_voidWrapper,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x100039bf7,"SC4CreateWindowFromScript(cGZPersistResourceKey const&, cIGZWin*, unsigned int, unsigned int, void**)",Construct_cGZPersistResourceKey_const_cIGZWin_uint_uint_void,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
