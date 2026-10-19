@@ -19255,3 +19255,16 @@ address,symbol,unique_name,source,status,evidence
 0x1003a3492,cSC4GamePreferencesWinProc::FinalRelease(),FinalRelease,src/sc4/GamePreferencesWinProc.cpp,recovered,scripts/tests/sc4_gamepreferenceswinproc_test.cpp
 0x1003a34e4,"cSC4GamePreferencesWinProc::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessage,src/sc4/GamePreferencesWinProc.cpp,recovered,scripts/tests/sc4_gamepreferenceswinproc_test.cpp
 0x1003a357e,"cSC4GamePreferencesWinProc::HandleControlMessage(unsigned int, cIGZWin*)",HandleControlMessage,src/sc4/GamePreferencesWinProc.cpp,recovered,scripts/tests/sc4_gamepreferenceswinproc_test.cpp
+0x1002f2c10,cSC4TimeDisplayMiniWindowWinProc::cSC4TimeDisplayMiniWindowWinProc(),Construct,src/sc4/TimeDisplayMiniWindowWinProc.cpp,recovered,scripts/tests/sc4_timedisplayminiwindowwinproc_test.cpp
+0x1002f2ce6,cSC4TimeDisplayMiniWindowWinProc::~cSC4TimeDisplayMiniWindowWinProc(),Destruct,src/sc4/TimeDisplayMiniWindowWinProc.cpp,recovered,scripts/tests/sc4_timedisplayminiwindowwinproc_test.cpp
+0x1002f2d84,cSC4TimeDisplayMiniWindowWinProc::~cSC4TimeDisplayMiniWindowWinProc(),DestructAndDelete,src/sc4/TimeDisplayMiniWindowWinProc.cpp,recovered,scripts/tests/sc4_timedisplayminiwindowwinproc_test.cpp
+0x1002f2d8e,cSC4TimeDisplayMiniWindowWinProc::~cSC4TimeDisplayMiniWindowWinProc(),DestructBody,src/sc4/TimeDisplayMiniWindowWinProc.cpp,recovered,scripts/tests/sc4_timedisplayminiwindowwinproc_test.cpp
+0x1002f2dbc,"cSC4TimeDisplayMiniWindowWinProc::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/TimeDisplayMiniWindowWinProc.cpp,recovered,scripts/tests/sc4_timedisplayminiwindowwinproc_test.cpp
+0x1002f2dde,cSC4TimeDisplayMiniWindowWinProc::AddRef(),AddRef,src/sc4/TimeDisplayMiniWindowWinProc.cpp,recovered,scripts/tests/sc4_timedisplayminiwindowwinproc_test.cpp
+0x1002f2dec,cSC4TimeDisplayMiniWindowWinProc::Release(),Release,src/sc4/TimeDisplayMiniWindowWinProc.cpp,recovered,scripts/tests/sc4_timedisplayminiwindowwinproc_test.cpp
+0x1002f2e08,cSC4TimeDisplayMiniWindowWinProc::Init(),Init,src/sc4/TimeDisplayMiniWindowWinProc.cpp,recovered,scripts/tests/sc4_timedisplayminiwindowwinproc_test.cpp
+0x1002f2e1a,cSC4TimeDisplayMiniWindowWinProc::Shutdown(),Shutdown,src/sc4/TimeDisplayMiniWindowWinProc.cpp,recovered,scripts/tests/sc4_timedisplayminiwindowwinproc_test.cpp
+0x1002f2ef4,"cSC4TimeDisplayMiniWindowWinProc::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessage,src/sc4/TimeDisplayMiniWindowWinProc.cpp,recovered,scripts/tests/sc4_timedisplayminiwindowwinproc_test.cpp
+0x1002f2f7e,cSC4TimeDisplayMiniWindowWinProc::EndDialog(),EndDialog,src/sc4/TimeDisplayMiniWindowWinProc.cpp,recovered,scripts/tests/sc4_timedisplayminiwindowwinproc_test.cpp
+0x1002f3050,cSC4TimeDisplayMiniWindowWinProc::UpdateTimeDisplay(),UpdateTimeDisplay,src/sc4/TimeDisplayMiniWindowWinProc.cpp,recovered,scripts/tests/sc4_timedisplayminiwindowwinproc_test.cpp
+0x1002f319e,cSC4TimeDisplayMiniWindowWinProc::DoModelessWin(),DoModelessWin,src/sc4/TimeDisplayMiniWindowWinProc.cpp,recovered,scripts/tests/sc4_timedisplayminiwindowwinproc_test.cpp
