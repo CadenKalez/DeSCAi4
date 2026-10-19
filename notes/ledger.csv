@@ -18873,3 +18873,29 @@ address,symbol,unique_name,source,status,evidence
 0x1000ef346,cStatVecRange::ComputeMeans(),ComputeMeans,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
 0x1000ef3d0,cStatVecRange::ComputeStandardDeviations(),ComputeStandardDeviations,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
 0x1000ef46e,cStatVecRange::ComputePearsonsCorrelation(),ComputePearsonsCorrelation,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x100038ed2,cSC4AutoFlushInputMessageQueue::cSC4AutoFlushInputMessageQueue(unsigned int),Construct_uint,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100038f18,cSC4AutoFlushInputMessageQueue::cSC4AutoFlushInputMessageQueue(unsigned int),Construct_uintWrapper,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100038f22,cSC4AutoFlushInputMessageQueue::~cSC4AutoFlushInputMessageQueue(),Destruct,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100038f60,cSC4AutoFlushInputMessageQueue::Flush(),Flush,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100038fa2,cSC4AutoFlushInputMessageQueue::~cSC4AutoFlushInputMessageQueue(),DestructAndDelete,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x10003929e,cSC4AutoDisableAppSwitching::cSC4AutoDisableAppSwitching(),Construct,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x1000392aa,cSC4AutoDisableAppSwitching::~cSC4AutoDisableAppSwitching(),Destruct,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100039240,"cSC4AutoGamePause::cSC4AutoGamePause(bool, bool, bool, bool)",Construct_bool_bool_bool_bool,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100039276,cSC4AutoGamePause::~cSC4AutoGamePause(),Destruct,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100042bb0,"cSC4AutoLoadStream::cSC4AutoLoadStream(cIGZPersistDBSegment*, unsigned int, unsigned int, unsigned int)",Construct_cIGZPersistDBSegment_uint_uint_uint,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100042c80,"cSC4AutoLoadStream::openStream(cISC4DBSegment*, unsigned int, unsigned int, unsigned int)",openStream,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100042d6c,"cSC4AutoLoadStream::cSC4AutoLoadStream(cIGZPersistDBSegment*, unsigned int, unsigned int, unsigned int)",Construct_cIGZPersistDBSegment_uint_uint_uintWrapper,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100042d82,cSC4AutoLoadStream::~cSC4AutoLoadStream(),Destruct,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100042e3a,cSC4AutoLoadStream::IsOpen(),IsOpen,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100042e54,cSC4AutoLoadStream::~cSC4AutoLoadStream(),DestructAndDelete,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100042e5e,cSC4AutoLoadStream::~cSC4AutoLoadStream(),DestructBody,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100042e8c,"cSC4AutoSaveStream::cSC4AutoSaveStream(cIGZPersistDBSegment*, unsigned int, unsigned int, unsigned int, unsigned short)",Construct_cIGZPersistDBSegment_uint_uint_uint_unsigned_short,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100042f64,"cSC4AutoSaveStream::openStream(cISC4DBSegment*, unsigned int, unsigned int, unsigned int, unsigned short)",openStream,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100043052,"cSC4AutoSaveStream::cSC4AutoSaveStream(cIGZPersistDBSegment*, unsigned int, unsigned int, unsigned int, unsigned short)",Construct_cIGZPersistDBSegment_uint_uint_uint_unsigned_shortWrapper,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100043068,cSC4AutoSaveStream::~cSC4AutoSaveStream(),Destruct,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100043120,cSC4AutoSaveStream::IsOpen(),IsOpen,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x10004313a,cSC4AutoSaveStream::~cSC4AutoSaveStream(),DestructAndDelete,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100043144,cSC4AutoSaveStream::~cSC4AutoSaveStream(),DestructBody,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x1003f4ab0,"SC4Percentage::SC4Percentage(float, bool)",Construct_float_bool,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x1003f7db0,"SC4Percentage::SC4Percentage(float, bool)",Construct_float_boolWrapper,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x10003903e,"SC4GamePause(bool, bool, bool, bool, bool)",Construct_bool_bool_bool_bool_bool,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp

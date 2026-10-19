@@ -12,7 +12,13 @@
 
 namespace sc4 {
 
-struct SC4Percentage { float value = 0.0f; };   // stored as a fraction (property value / 100)
+// Stored as a fraction (property value / 100). SC4Percentage(v, true) keeps v; (v, false) divides a 0..100 value by 100
+// (multiplying in double precision like the original: @ 0x1003f7db0).
+struct SC4Percentage {
+    float value = 0.0f;
+    SC4Percentage() = default;
+    explicit SC4Percentage(float v, bool isFraction = true) : value(isFraction ? v : static_cast<float>(v * 0.01)) {}
+};
 
 class cSCPropertyHelp {
 public:
