@@ -19006,3 +19006,32 @@ address,symbol,unique_name,source,status,evidence
 0x1003fae94,non-virtual thunk to cGZFileSystem::SetExpectedCDAppPath(cIGZString const&),SetExpectedCDAppPathThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
 0x1003faea6,non-virtual thunk to cGZFileSystem::GetPluginDirectoryName(cIGZString&),GetPluginDirectoryNameThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
 0x1003faeea,non-virtual thunk to cGZFileSystem::SetPluginDirectoryName(cIGZString const&),SetPluginDirectoryNameThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x100510cce,cGZGimexReader::cGZGimexReader(),Construct,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100510cf0,cGZGimexReader::~cGZGimexReader(),Destruct,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100510d00,cGZGimexReader::~cGZGimexReader(),DestructAndDelete,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100510d0a,"cGZGimexReader::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100510d2c,cGZGimexReader::AddRef(),AddRef,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100510d3a,cGZGimexReader::Release(),Release,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100510d56,cGZGimexReader::FinalRelease(),FinalRelease,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100510d96,cGZGimexReader::SetInput(cIGZFile*),SetInput_cIGZFile,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100510e22,cGZGimexReader::SetInput(cIGZPersistDBSerialRecord*),SetInput_cIGZPersistDBSerialRecord,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100510eb0,"cGZGimexReader::BeginRead(unsigned int, unsigned int&)",BeginRead_uint_uint,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100511200,"cGZGimexReader::BeginRead(char const*, unsigned int&)",BeginRead_char_const_uint,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x10051127c,cGZGimexReader::EndRead(),EndRead,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x1005112ec,cGZGimexReader::GetFrameInfo(unsigned int),GetFrameInfo,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100511338,cGZGimexReader::FreeGInfo(cGZGimexInfo*),FreeGInfo,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100511346,"cGZGimexReader::GetFramePixels(cGZGimexInfo*, void*, unsigned int)",GetFramePixels,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x1005113ae,cGZGimexWriter::cGZGimexWriter(),Construct,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x1005113d0,cGZGimexWriter::~cGZGimexWriter(),Destruct,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x1005113e0,cGZGimexWriter::~cGZGimexWriter(),DestructAndDelete,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x1005113ea,"cGZGimexWriter::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x10051140c,cGZGimexWriter::AddRef(),AddRef,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x10051141a,cGZGimexWriter::Release(),Release,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100511436,cGZGimexWriter::FinalRelease(),FinalRelease,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100511476,cGZGimexWriter::SetOutput(cIGZFile*),SetOutput_cIGZFile,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100511502,cGZGimexWriter::SetOutput(cIGZPersistDBSerialRecord*),SetOutput_cIGZPersistDBSerialRecord,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100511590,"cGZGimexWriter::BeginWrite(unsigned int, unsigned int)",BeginWrite_uint_uint,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x10051184a,cGZGimexWriter::DoBeginWrite(unsigned int),DoBeginWrite,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x10051189c,"cGZGimexWriter::BeginWrite(char const*, unsigned int)",BeginWrite_char_const_uint,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100511904,cGZGimexWriter::EndWrite(),EndWrite,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp
+0x100511974,"cGZGimexWriter::PutFramePixels(cGZGimexInfo*, void*, unsigned int)",PutFramePixels,src/gz/GimexReaderWriter.cpp,recovered,scripts/tests/gz_gimexreaderwriter_test.cpp

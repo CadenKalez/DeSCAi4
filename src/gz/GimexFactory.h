@@ -34,23 +34,23 @@ static_assert(sizeof(cGZGimexInfo) == 0x2a70);
 
 class cIGZGimexReader : public cIGZUnknown {
 public:
-    virtual bool SetFile(cIGZFile* file) = 0;                                      // +0x18
-    virtual bool SetRecord(cIGZPersistDBSerialRecord* record) = 0;                 // +0x20
-    virtual bool OpenImage(std::uint32_t format, std::uint32_t* imageCount) = 0;   // +0x28
-    virtual bool Reserved30() { return false; }                                    // +0x30
-    virtual cGZGimexInfo* GetInfo(std::uint32_t index) = 0;                        // +0x38
-    virtual bool ReadImage(cGZGimexInfo* info, void* pixels, std::uint32_t bytes) = 0;   // +0x40
-    virtual void FreeInfo(cGZGimexInfo* info) = 0;                                 // +0x48
-    virtual void Close() = 0;                                                      // +0x50
+    virtual bool SetInput(cIGZFile* file) = 0;                                     // +0x18
+    virtual bool SetInput(cIGZPersistDBSerialRecord* record) = 0;                  // +0x20
+    virtual bool BeginRead(std::uint32_t format, std::uint32_t& imageCount) = 0;   // +0x28 (0x30 auto, 0x31 by extension, 0x32 both)
+    virtual bool BeginRead(const char* extension, std::uint32_t& imageCount) = 0;  // +0x30
+    virtual cGZGimexInfo* GetFrameInfo(std::uint32_t index) = 0;                   // +0x38
+    virtual bool GetFramePixels(cGZGimexInfo* info, void* pixels, std::uint32_t bytes) = 0;   // +0x40
+    virtual void FreeGInfo(cGZGimexInfo* info) = 0;                                // +0x48
+    virtual bool EndRead() = 0;                                                    // +0x50
 };
 class cIGZGimexWriter : public cIGZUnknown {
 public:
-    virtual bool SetFile(cIGZFile* file) = 0;                                      // +0x18
-    virtual bool SetRecord(cIGZPersistDBSerialRecord* record) = 0;                 // +0x20
-    virtual bool OpenImage(std::uint32_t format, std::uint32_t flags) = 0;         // +0x28
-    virtual bool Reserved30() { return false; }                                    // +0x30
-    virtual bool WriteImage(const cGZGimexInfo* info, const void* pixels, std::uint32_t bytes) = 0;   // +0x38
-    virtual void Close() = 0;                                                      // +0x40
+    virtual bool SetOutput(cIGZFile* file) = 0;                                    // +0x18
+    virtual bool SetOutput(cIGZPersistDBSerialRecord* record) = 0;                 // +0x20
+    virtual bool BeginWrite(std::uint32_t format, std::uint32_t flags) = 0;        // +0x28 (0x31 / 0x32: by the file's extension)
+    virtual bool BeginWrite(const char* extension, std::uint32_t flags) = 0;       // +0x30
+    virtual bool PutFramePixels(const cGZGimexInfo* info, const void* pixels, std::uint32_t bytes) = 0;   // +0x38
+    virtual bool EndWrite() = 0;                                                   // +0x40
 };
 
 class cGZGimexFactory : public cGZPersistResourceFactory {

@@ -78,14 +78,14 @@ bool cGZGimexFactory::LoadWithReader(cIGZGimexReader* reader, std::uint32_t form
     if (!reader || !buffer) return false;
     bool result = false;
     std::uint32_t imageCount = 0;
-    if (reader->OpenImage(format, &imageCount) && imageCount != 0) {
-        cGZGimexInfo* info = reader->GetInfo(0);
+    if (reader->BeginRead(format, imageCount) && imageCount != 0) {
+        cGZGimexInfo* info = reader->GetFrameInfo(0);
         if (!info) {
             result = true;
         } else {
             std::uint32_t bytes = static_cast<std::uint32_t>((info->bitsPerPixel / 8) * info->height * info->width);
             pixelScratch_.resize(bytes);
-            if (reader->ReadImage(info, pixelScratch_.data(), static_cast<std::uint32_t>(info->bitsPerPixel / 8 * info->width))) {
+            if (reader->GetFramePixels(info, pixelScratch_.data(), static_cast<std::uint32_t>(info->bitsPerPixel / 8 * info->width))) {
                 if (buffer->IsReady()) buffer->Shutdown();
                 std::uint64_t flags = ColorTypeFlags(colorType);
                 if (buffer->Init(info->width, info->height, cGZBufferColorType{static_cast<std::int32_t>(static_cast<std::uint32_t>(colorType) | flags), static_cast<std::uint32_t>(flags >> 32)})) {
@@ -96,9 +96,9 @@ bool cGZGimexFactory::LoadWithReader(cIGZGimexReader* reader, std::uint32_t form
                     }
                 }
             }
-            reader->FreeInfo(info);
+            reader->FreeGInfo(info);
         }
-        reader->Close();
+        reader->EndRead();
     }
     reader->Release();
     return result;
@@ -131,7 +131,7 @@ bool cGZGimexFactory::CreateFromFile(cIGZFile* file, std::uint32_t format, cIGZB
 bool cGZGimexFactory::LoadFromFile(cIGZFile* file, std::uint32_t format, cIGZBuffer* buffer, int colorType) {
     cRZAutoRefCount<cIGZGimexReader> reader = CreateReader(*this);
     if (!reader) return false;
-    if (!reader->SetFile(file)) return false;
+    if (!reader->SetInput(file)) return false;
     reader->AddRef();
     return LoadWithReader(reader.get(), format, buffer, colorType);
 }
@@ -139,7 +139,7 @@ bool cGZGimexFactory::LoadFromFile(cIGZFile* file, std::uint32_t format, cIGZBuf
 bool cGZGimexFactory::LoadFromSerialRecord(cIGZPersistDBSerialRecord* record, std::uint32_t format, cIGZBuffer* buffer, int colorType) {
     cRZAutoRefCount<cIGZGimexReader> reader = CreateReader(*this);
     if (!reader) return false;
-    if (!reader->SetRecord(record)) return false;
+    if (!reader->SetInput(record)) return false;
     reader->AddRef();
     return LoadWithReader(reader.get(), format, buffer, colorType);
 }
@@ -181,7 +181,7 @@ bool cGZGimexFactory::CreateFromResource(cGZPersistResourceKey& key, std::uint32
 
 bool cGZGimexFactory::SaveWithWriter(cIGZGimexWriter* writer, std::uint32_t format, cIGZBuffer* buffer, const cRZRect& area, std::uint32_t flags) {
     bool result = false;
-    if (writer->OpenImage(format, 1)) {
+    if (writer->BeginWrite(format, 1u)) {
         cGZGimexInfo info;
         std::memset(&info, 0, sizeof info);
         std::int32_t width = area.right - area.left, height = area.bottom - area.top;
@@ -191,10 +191,10 @@ bool cGZGimexFactory::SaveWithWriter(cIGZGimexWriter* writer, std::uint32_t form
         std::uint32_t bytes = static_cast<std::uint32_t>(height * width * 4);
         pixelScratch_.assign(bytes, 0);
         TranslateGZBufferToGimex(buffer, area, &info, pixelScratch_.data());
-        result = writer->WriteImage(&info, pixelScratch_.data(), static_cast<std::uint32_t>(info.bitsPerPixel * width / 8));
+        result = writer->PutFramePixels(&info, pixelScratch_.data(), static_cast<std::uint32_t>(info.bitsPerPixel * width / 8));
         (void)flags;
     }
-    writer->Close();
+    writer->EndWrite();
     writer->Release();
     return result;
 }
@@ -219,7 +219,7 @@ bool cGZGimexFactory::SaveToFile(cIGZFile* file, std::uint32_t format, cIGZBuffe
 
 bool cGZGimexFactory::SaveToFile(cIGZFile* file, std::uint32_t format, cIGZBuffer* buffer, const cRZRect& area, std::uint32_t flags) {
     cRZAutoRefCount<cIGZGimexWriter> writer = CreateWriter(*this);
-    if (!writer || !writer->SetFile(file)) return false;
+    if (!writer || !writer->SetOutput(file)) return false;
     writer->AddRef();
     return SaveWithWriter(writer.get(), format, buffer, area, flags);
 }
@@ -231,7 +231,7 @@ bool cGZGimexFactory::SaveToSerialRecord(cIGZPersistDBSerialRecord* record, std:
 
 bool cGZGimexFactory::SaveToSerialRecord(cIGZPersistDBSerialRecord* record, std::uint32_t format, cIGZBuffer* buffer, const cRZRect& area, std::uint32_t flags) {
     cRZAutoRefCount<cIGZGimexWriter> writer = CreateWriter(*this);
-    if (!writer || !writer->SetRecord(record)) return false;
+    if (!writer || !writer->SetOutput(record)) return false;
     writer->AddRef();
     return SaveWithWriter(writer.get(), format, buffer, area, flags);
 }
