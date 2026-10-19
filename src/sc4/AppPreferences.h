@@ -21,6 +21,16 @@ namespace prefs {
 constexpr std::size_t kAudio = 0x004, kAudioSize = 0x67;                       // SC4AudioPreferences
 constexpr std::size_t kApp = 0x4a4, kAppSize = 0x9ac;                          // SC4AppPreferences
 constexpr std::size_t kTutorial = 0xf34, kTutorialSize = 0x800;                // SC4TutorialPreferences2
+// fields set from the command line
+constexpr std::size_t kAudioEnabled = 0x004;        // u8  (-audio / -sound)
+constexpr std::size_t kMusicEnabled = 0x010;        // u32 (-radio / -music)
+constexpr std::size_t kAudioEnabledMirror = 0x069;  // u8  (-audio / -sound)
+constexpr std::size_t kSimulatorParameter = 0x470;  // float, default 50.0 (-sim)
+constexpr std::size_t kSwitchXDD = 0x498;           // u8  (-XDD)
+constexpr std::size_t kAppFlag4a4 = 0x4a4;          // u8  (-g p)
+constexpr std::size_t kPlayerName = 0x4ac;          // 0x40 bytes (-l), also cleared by SavePreferences
+constexpr std::size_t kImeEnabled = 0x4ef;          // u8  (-IME)
+constexpr std::size_t kFullScreen = 0xf17;          // u8  (-f / -w)
 // fields addressed by cSC4App
 constexpr std::size_t kAppResetFlag = 0x4a8;       // u32: set to 1 by SavePreferences
 constexpr std::size_t kAppResetBlock = 0x4ac;      // 0x40 bytes zeroed by SavePreferences

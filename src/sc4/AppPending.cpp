@@ -29,7 +29,6 @@ bool cSC4App::LoadCity(const cRZString&, cRZAutoRefCount<cISC4RegionalCity>*) { 
 bool cSC4App::CloseCity() { Pending("CloseCity"); }
 bool cSC4App::SaveCity(bool) { Pending("SaveCity(bool)"); }
 bool cSC4App::SaveCity(const cRZString&, bool) { Pending("SaveCity(path, bool)"); }
-void cSC4App::SavePreferences() { Pending("SavePreferences"); }
 void cSC4App::EnableFullGamePauseOnAppFocusLoss(bool) { Pending("EnableFullGamePauseOnAppFocusLoss"); }
 bool cSC4App::AddDynamicLibraryByName(const cIGZString&, cRZString*, bool) { Pending("AddDynamicLibraryByName"); }
 bool cSC4App::AddDynamicLibraryByPath(const cIGZString&, bool) { Pending("AddDynamicLibraryByPath"); }

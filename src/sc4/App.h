@@ -18,7 +18,9 @@
 #include "gz/cIGZMessage2.h"
 #include "rz/Threading.h"
 #include "rz/cRZTimer.h"
+#include "rz/cRZCmdLine.h"
 #include "sc4/AppPreferences.h"
+#include "sc4/RenderProperties.h"
 #include "sc4/ISC4App.h"
 
 class cIGZFrameWork;
@@ -106,7 +108,14 @@ public:
     cSC4TutorialRegistry* GetTutorialRegistry() override { return tutorialRegistry_; }    // @ 0x100013724
     bool IsRunFirstTimeAfterInstall() override { return runFirstTimeAfterInstall_; }      // @ 0x100013732
 
+    // --- command line and start-up resolution
+    void ReadCommandLine();                                        // @ 0x10000f814
+    void FixStartupResolutionValuesIfNeeded(std::uint32_t& width, std::uint32_t& height);   // @ 0x10000acba
+    bool IsStartupResolutionOK(std::uint32_t width, std::uint32_t height);                  // @ 0x10000ad7a
+
     // --- host seams (the original reached these through RZ:: / MacDisplay::)
+    void SetCommandLineSource(cIGZCmdLine* commandLine) { commandLine_ = commandLine; }   // cGZFramework::FrameWork()->CommandLine()
+    void SetRenderProperties(sc4::cSC4RenderProperties* properties);
     void SetVideoOptionStore(sc4::IVideoOptionStore* store) { videoOptions_ = store; }
     void SetDisplayInfo(sc4::IDisplayInfo* display) { display_ = display; }
     // The directories the framework fills in at start-up (PreFrameWorkInit); exposed for the host and tests.
@@ -142,7 +151,8 @@ public:
     bool CloseCity() override;
     bool SaveCity(bool a) override;
     bool SaveCity(const cRZString& path, bool a) override;
-    void SavePreferences() override;
+    void SavePreferences() override;                               // @ 0x10000f670
+    void ReadPreferences();                                        // @ 0x10000f35c
     void EnableFullGamePauseOnAppFocusLoss(bool enable) override;
     bool AddDynamicLibraryByName(const cIGZString& name, cRZString* resolvedPath, bool required) override;
     bool AddDynamicLibraryByPath(const cIGZString& path, bool required) override;
@@ -205,7 +215,7 @@ private:
     std::list<ShutdownCallbackData> shutdownCallbacks_;  // +0x698
     FileChangeNotification pluginWatcher_;               // +0x6b8
     FileChangeNotification dataWatcher_;                 // +0x708
-    cIGZUnknown* renderProperties_ = nullptr;            // +0x760
+    sc4::cSC4RenderProperties* renderProperties_ = nullptr;   // +0x760
     sc4::IVideoOptionStore* videoOptions_ = nullptr;     // +0x768
     cIGZUnknown* winCommandSupport_ = nullptr;           // +0x770
     cIGZUnknown* toolCommandSupport_ = nullptr;          // +0x778
@@ -219,5 +229,7 @@ private:
     bool runFirstTimeAfterInstall_ = true;               // +0x7d0
 
     sc4::IDisplayInfo* display_ = nullptr;
+    cIGZCmdLine* commandLine_ = nullptr;
+    std::uint32_t requestedGraphicsDriver_ = 0;          // +0x7b8 (set by the -d switch)
     cISC4Region* (*regionOf_)(cISC4Nation*) = nullptr;
 };

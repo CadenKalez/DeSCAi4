@@ -4,7 +4,12 @@
 #include <cstring>
 #include <map>
 #include <string>
+#include <string>
 
+#include <cstdlib>
+#include <unistd.h>
+
+#include "rz/cRZCmdLine.h"
 #include "sc4/App.h"
 #include "sc4/AppPreferences.h"
 
@@ -89,6 +94,68 @@ int main() {
     CHECK(app->QueryInterface(0xca263481, &iface) && iface == static_cast<cIGZMessageTarget*>(app));
     CHECK(app->QueryInterface(kGZIID_cIGZApp, &iface) && iface == static_cast<cIGZApp*>(app));
     CHECK(!app->QueryInterface(0x1234, &iface));
+
+
+    // ---- start-up resolution
+    {
+        auto* a = new cSC4App("T"); a->AddRef();
+        CHECK(a->IsStartupResolutionOK(1024, 768) && a->IsStartupResolutionOK(1280, 1024) && a->IsStartupResolutionOK(1400, 1050 - 0 + 0) == false);
+        CHECK(a->IsStartupResolutionOK(1680, 1050) && a->IsStartupResolutionOK(1920, 1200) && !a->IsStartupResolutionOK(1000, 768));
+        CHECK(!a->IsStartupResolutionOK(800, 480));
+        std::uint32_t w = 1000, h = 700;                    // area 700000 -> 1024x768
+        a->FixStartupResolutionValuesIfNeeded(w, h); CHECK(w == 0x400 && h == 0x300);
+        w = 640; h = 480; a->FixStartupResolutionValuesIfNeeded(w, h); CHECK(w == 800 && h == 600);
+        w = 3000; h = 2000; a->FixStartupResolutionValuesIfNeeded(w, h); CHECK(w == 0x400 && h == 0x300);   // quirk: huge areas fall back to 1024x768
+        w = 1800; h = 1000; a->FixStartupResolutionValuesIfNeeded(w, h); CHECK(w == 0x640 && h == 0x4b0);
+        w = 2000; h = 1400; a->FixStartupResolutionValuesIfNeeded(w, h); CHECK(w == 0x800 && h == 0x600);
+        w = 1024; h = 768; a->FixStartupResolutionValuesIfNeeded(w, h); CHECK(w == 1024 && h == 768);
+        a->Release();
+    }
+
+    // ---- command line
+    {
+        auto* a = new cSC4App("T"); a->AddRef();
+        auto* props = new sc4::cSC4RenderProperties(); a->SetRenderProperties(props);
+        a->SetDirectories("/g/", "/g/Data/", "/u/");
+        cRZCmdLine line("sc4 -IME:off -r1280x1024x32 -w -d:OpenGL -l:\"Mayor Bob\" -audio:off -radio:enabled -sim:75.5 -XDD:on -CPUCount:2 -AutoZoomChange:off -UserDir:off");
+        a->SetCommandLineSource(&line);
+        a->ReadCommandLine();
+        auto& p = a->Preferences();
+        CHECK(p.Get<std::uint8_t>(sc4::prefs::kImeEnabled) == 0);
+        CHECK(p.Get<std::uint32_t>(sc4::prefs::kVideoWidth) == 1280 && p.Get<std::uint32_t>(sc4::prefs::kVideoHeight) == 1024 && p.Get<std::uint32_t>(sc4::prefs::kVideoColorDepth) == 32);
+        CHECK(p.Get<std::uint8_t>(sc4::prefs::kFullScreen) == 0);
+        CHECK(std::strcmp(reinterpret_cast<const char*>(p.data() + sc4::prefs::kPlayerName), "Mayor Bob") == 0);
+        CHECK(p.Get<std::uint8_t>(sc4::prefs::kAudioEnabled) == 0 && p.Get<std::uint8_t>(sc4::prefs::kAudioEnabledMirror) == 0);
+        CHECK(p.Get<std::uint32_t>(sc4::prefs::kMusicEnabled) == 1);
+        CHECK(p.Get<float>(sc4::prefs::kSimulatorParameter) == 75.5f && p.Get<std::uint8_t>(sc4::prefs::kSwitchXDD) == 1);
+        CHECK(!props->BoolValue(0x25));
+        CHECK(Get(&cSC4App::GetUserDataDirectory, *a) == "/g/Data/");
+        a->Release();            // the application owns (and frees) the render properties
+    }
+
+    // ---- preferences file round trip
+    {
+        char dir[] = "/tmp/sc4appXXXXXX"; CHECK(mkdtemp(dir));
+        std::string user = std::string(dir) + "/";
+        auto* a = new cSC4App("Tst"); a->AddRef();
+        a->SetDirectories("/g/", "/g/Data/", user.c_str());
+        a->AppNameString() = "Tst";
+        a->Preferences().Set<std::uint32_t>(sc4::prefs::kVideoWidth, 1600);
+        a->Preferences().Set<float>(sc4::prefs::kSimulatorParameter, 12.5f);
+        std::memcpy(a->Preferences().data() + sc4::prefs::kPlayerName, "temp", 5);
+        a->SavePreferences();
+        CHECK(a->Preferences().Get<std::uint32_t>(sc4::prefs::kAppResetFlag) == 1 && a->Preferences().data()[sc4::prefs::kPlayerName] == 0);
+        auto* b = new cSC4App("Tst"); b->AddRef();
+        b->SetDirectories("/g/", "/g/Data/", user.c_str());
+        b->AppNameString() = "Tst";
+        CHECK(b->IsRunFirstTimeAfterInstall());
+        b->ReadPreferences();
+        CHECK(!b->IsRunFirstTimeAfterInstall());
+        CHECK(b->Preferences().Get<std::uint32_t>(sc4::prefs::kVideoWidth) == 1600 && b->Preferences().Get<float>(sc4::prefs::kSimulatorParameter) == 12.5f);
+        CHECK(std::memcmp(a->Preferences().data(), b->Preferences().data(), sc4::kPreferencesSize) == 0);
+        a->Release(); b->Release();
+        std::string cleanup = "rm -rf " + std::string(dir); std::system(cleanup.c_str());
+    }
 
     // preferences blob defaults
     sc4::SC4Preferences p;

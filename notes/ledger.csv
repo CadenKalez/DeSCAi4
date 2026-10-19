@@ -18328,3 +18328,9 @@ address,symbol,unique_name,source,status,evidence
 0x10001384a,SC4AudioPreferences::SC4AudioPreferences(),SC4AudioPreferences,src/sc4/AppPreferences.cpp|h,recovered,preference blob defaults (0x1734 bytes); test sc4_app
 0x1000138c8,SC4AppPreferences::SC4AppPreferences(),SC4AppPreferences,src/sc4/AppPreferences.cpp|h,recovered,preference blob defaults (0x1734 bytes); test sc4_app
 0x10001393c,SC4TutorialPreferences2::SC4TutorialPreferences2(),SC4TutorialPreferences2,src/sc4/AppPreferences.cpp|h,recovered,preference blob defaults (0x1734 bytes); test sc4_app
+0x10000acba,"cSC4App::FixStartupResolutionValuesIfNeeded(unsigned int&, unsigned int&)",FixStartupResolutionValuesIfNeeded,src/sc4/App.cpp|h,recovered,"cSC4App: command-line switches, start-up resolution, preferences file read/write (real DBPF round trip); test sc4_app"
+0x10000ad7a,"cSC4App::IsStartupResolutionOK(unsigned int, unsigned int)",IsStartupResolutionOK,src/sc4/App.cpp|h,recovered,"cSC4App: command-line switches, start-up resolution, preferences file read/write (real DBPF round trip); test sc4_app"
+0x10000f35c,cSC4App::ReadPreferences(),ReadPreferences,src/sc4/App.cpp|h,recovered,"cSC4App: command-line switches, start-up resolution, preferences file read/write (real DBPF round trip); test sc4_app"
+0x10000f670,cSC4App::SavePreferences(),SavePreferences,src/sc4/App.cpp|h,recovered,"cSC4App: command-line switches, start-up resolution, preferences file read/write (real DBPF round trip); test sc4_app"
+0x10000f806,non-virtual thunk to cSC4App::SavePreferences(),SavePreferencesThunk,src/sc4/App.cpp|h,recovered,"cSC4App: command-line switches, start-up resolution, preferences file read/write (real DBPF round trip); test sc4_app"
+0x10000f814,cSC4App::ReadCommandLine(),ReadCommandLine,src/sc4/App.cpp|h,recovered,"cSC4App: command-line switches, start-up resolution, preferences file read/write (real DBPF round trip); test sc4_app"

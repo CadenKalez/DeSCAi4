@@ -1,8 +1,17 @@
 #include "sc4/App.h"
 
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <string>
+
 #include "rz/LanguageManager.h"
 #include "rz/cRZFile.h"
 #include "rz/cRZMessage2Standard.h"
+#include "gz/cGZDBSegmentPackedFile.h"
+#include "rz/PathUtils.h"
+#include "sc4/AutoRecord.h"
 #include "rz/cRZSysServPtr.h"
 
 namespace {
@@ -40,7 +49,7 @@ cSC4App::cSC4App(const char* moduleName, IGZAppFramework* framework) : cGZApp(mo
 cSC4App::~cSC4App() {
     instanceMutex_.Unlock();
     for (cIGZUnknown* object : {luaInterpreter_, field788_, miscCommandSupport_, toolCommandSupport_, winCommandSupport_,
-                                 renderProperties_, field668_}) {
+                                 static_cast<cIGZUnknown*>(renderProperties_), field668_}) {
         if (object) object->Release();
     }
 }
@@ -224,4 +233,222 @@ cISC4Region* cSC4App::GetRegion() { return nation_ && regionOf_ ? regionOf_(nati
 cISC4RegionalCity* cSC4App::GetRegionalCity() {
     if (!regionalCity_) return nullptr;
     return regionalCity_->get();   // (the original AddRefs and Releases once, a no-op)
+}
+
+// ---- command line -------------------------------------------------------------------------------------------
+
+namespace {
+// "off"/"disabled" -> false, "on"/"enabled" -> true (the text is lower-cased first); anything else leaves `value`.
+bool ParseOnOff(const std::string& text, bool& value) {
+    if (text == "off" || text == "disabled") { value = false; return true; }
+    if (text == "on" || text == "enabled") { value = true; return true; }
+    return false;
+}
+
+std::string Lower(std::string text) {
+    for (char& c : text) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    return text;
+}
+
+// IsSwitchPresent(name) -> value text
+bool SwitchValue(cIGZCmdLine& commandLine, const char* name, std::string& value, bool stripQuotes = true) {
+    cRZString text;
+    if (!commandLine.IsSwitchPresent(cRZString(name), text, stripQuotes)) return false;
+    value = text.ToChar();
+    return true;
+}
+
+// The graphics driver ids the -d switch selects (a substring of the value picks the driver).
+constexpr std::uint32_t kDriverOpenGL = 0xc4554841, kDriverSoftware = 0x7aca35c6, kDriverDirectX = 0xbadb6906;
+}  // namespace
+
+void cSC4App::SetRenderProperties(sc4::cSC4RenderProperties* properties) {
+    if (renderProperties_ != properties) {
+        if (properties) properties->AddRef();
+        if (renderProperties_) renderProperties_->Release();
+        renderProperties_ = properties;
+    }
+}
+
+void cSC4App::ReadCommandLine() {
+    cIGZCmdLine& commandLine = *commandLine_;
+    std::uint8_t* prefs = preferences_.data();
+    std::string value;
+    bool flag = false;
+
+    if (SwitchValue(commandLine, "IME", value)) {
+        value = Lower(value);
+        if (ParseOnOff(value, flag)) prefs[sc4::prefs::kImeEnabled] = flag ? 1 : 0;
+    }
+
+    // -r<width>x<height>x<depth>
+    cRZString resolution;
+    if (commandLine.IsSwitchPresent('r', resolution, true)) {
+        std::uint32_t width = preferences_.Get<std::uint32_t>(sc4::prefs::kVideoWidth);
+        std::uint32_t height = preferences_.Get<std::uint32_t>(sc4::prefs::kVideoHeight);
+        std::uint32_t depth = preferences_.Get<std::uint32_t>(sc4::prefs::kVideoColorDepth);
+        std::sscanf(resolution.ToChar(), "%ux%ux%u", &width, &height, &depth);
+        if (width == 0 || height == 0) {
+            width = preferences_.Get<std::uint32_t>(sc4::prefs::kVideoWidth);
+            height = preferences_.Get<std::uint32_t>(sc4::prefs::kVideoHeight);
+        }
+        FixStartupResolutionValuesIfNeeded(width, height);
+        if (depth == 0) depth = preferences_.Get<std::uint32_t>(sc4::prefs::kVideoColorDepth);
+        preferences_.Set<std::uint32_t>(sc4::prefs::kVideoWidth, width);
+        preferences_.Set<std::uint32_t>(sc4::prefs::kVideoHeight, height);
+        preferences_.Set<std::uint32_t>(sc4::prefs::kVideoColorDepth, depth);
+    }
+
+    // -f full screen, -w windowed (windowed wins when both are given)
+    if (commandLine.GetIndexOfSwitch(cRZString("f"), 0) >= 0) prefs[sc4::prefs::kFullScreen] = 1;
+    if (commandLine.GetIndexOfSwitch(cRZString("w"), 0) >= 0) prefs[sc4::prefs::kFullScreen] = 0;
+
+    // -g<p...>
+    if (SwitchValue(commandLine, "g", value) && !value.empty() && (static_cast<unsigned char>(value[0]) | 0x20) == 'p')
+        prefs[sc4::prefs::kAppFlag4a4] = 1;
+
+    // -d<driver>: "opengl", "soft", "dx" / "directx", else a hexadecimal id
+    requestedGraphicsDriver_ = 0;
+    if (SwitchValue(commandLine, "d", value, false)) {
+        value = Lower(value);
+        std::uint32_t driver;
+        if (value.find("opengl") != std::string::npos) driver = kDriverOpenGL;
+        else if (value.find("soft") != std::string::npos) driver = kDriverSoftware;
+        else if (value.find("dx") != std::string::npos || value.find("directx") != std::string::npos) driver = kDriverDirectX;
+        else driver = static_cast<std::uint32_t>(std::strtoul(value.c_str(), nullptr, 16));   // RZAtoUint32HexA
+        requestedGraphicsDriver_ = driver;
+    }
+
+    // -l[:]["]name["]  (at most 63 characters)
+    if (SwitchValue(commandLine, "l", value)) {
+        if (!value.empty() && value[0] == ':') {
+            value.erase(0, 1);
+            if (!value.empty() && value[0] == '"') value.erase(0, 1);
+            if (!value.empty() && value.back() == '"') value.pop_back();
+        }
+        if (value.size() > 0x3f) value.resize(0x3f);
+        std::memcpy(prefs + sc4::prefs::kPlayerName, value.c_str(), value.size() + 1);
+    }
+
+    // -audio / -sound
+    if (SwitchValue(commandLine, "audio", value) || SwitchValue(commandLine, "sound", value)) {
+        if (ParseOnOff(Lower(value), flag)) {
+            prefs[sc4::prefs::kAudioEnabled] = flag ? 1 : 0;
+            prefs[sc4::prefs::kAudioEnabledMirror] = flag ? 1 : 0;
+        }
+    }
+    // -radio / -music
+    if (SwitchValue(commandLine, "radio", value) || SwitchValue(commandLine, "music", value)) {
+        if (ParseOnOff(Lower(value), flag)) preferences_.Set<std::uint32_t>(sc4::prefs::kMusicEnabled, flag ? 1 : 0);
+    }
+    // -sim<number>
+    if (SwitchValue(commandLine, "sim", value))
+        preferences_.Set<float>(sc4::prefs::kSimulatorParameter, static_cast<float>(std::strtod(value.c_str(), nullptr)));
+    // -XDD
+    if (SwitchValue(commandLine, "XDD", value)) {
+        if (ParseOnOff(Lower(value), flag)) prefs[sc4::prefs::kSwitchXDD] = flag ? 1 : 0;
+    }
+    // -UserDir:<off|path>: "off" puts the user data next to the game data, a full path replaces it
+    if (SwitchValue(commandLine, "UserDir", value)) {
+        std::string lowered = Lower(value);
+        if (lowered == "off" || lowered == "disabled") {
+            userDataDirectory_ = dataDirectory_.ToChar();
+        } else if (IsFullPath(cRZString(value.c_str()))) {
+            userDataDirectory_ = value.c_str();
+        }
+    }
+    // -CPUCount:<n> (a no-op on this platform: SC4SetCPUUsageCount does nothing)
+    if (SwitchValue(commandLine, "CPUCount", value)) (void)std::atoi(value.c_str());
+    // -AutoZoomChange:<on|off> -> render property 37
+    if (SwitchValue(commandLine, "AutoZoomChange", value) && renderProperties_) {
+        if (ParseOnOff(Lower(value), flag)) renderProperties_->SetBoolValue(0x25, flag);
+    }
+}
+
+// ---- start-up resolution ------------------------------------------------------------------------------------
+
+void cSC4App::FixStartupResolutionValuesIfNeeded(std::uint32_t& width, std::uint32_t& height) {
+    if (IsStartupResolutionOK(width, height)) return;
+    std::uint32_t area = height * width;
+    std::uint32_t newHeight, newWidth;
+    if (area < 480000) { newHeight = 600; newWidth = 800; }
+    else if (area < 0xc0000) { newHeight = 0x300; newWidth = 0x400; }
+    else if (area < 0xf3000) { newHeight = 0x360; newWidth = 0x480; }
+    else if (area < 0x140000) { newHeight = 0x400; newWidth = 0x500; }
+    else if (area < 0x1d4c00) { newHeight = 0x4b0; newWidth = 0x640; }
+    else if (area < 0x278d00) { newHeight = 0x5a0; newWidth = 0x708; }
+    else { newWidth = area < 0x300000 ? 0x800 : 0x400; newHeight = area < 0x300000 ? 0x600 : 0x300; }
+    width = newWidth;
+    height = newHeight;
+}
+
+// The listed sizes (the width may be larger, the height must match), or anything when -CustomResolution is on.
+bool cSC4App::IsStartupResolutionOK(std::uint32_t width, std::uint32_t height) {
+    std::string value;
+    bool custom = false;
+    if (commandLine_ && SwitchValue(*commandLine_, "CustomResolution", value) && ParseOnOff(Lower(value), custom) && custom) return true;
+    if (height < 600) return false;
+    struct Size { std::uint32_t width, height; };
+    static constexpr Size kSizes[] = {{800, 600}, {0x400, 0x300}, {0x480, 0x360}, {0x500, 0x400}, {0x690, 0x41a},
+                                      {0x640, 0x4b0}, {0x708, 0x5a0}, {0x800, 0x600}};
+    for (const Size& size : kSizes)
+        if (width >= size.width && height == size.height) return true;
+    return false;
+}
+
+// ---- preferences file ---------------------------------------------------------------------------------------
+
+// Reads the 0x1734-byte record (version 0x15) of "<user data>/<app>.cfg"; a missing or foreign file leaves the
+// defaults in place. A successful read also clears "first run after install".
+void cSC4App::ReadPreferences() {
+    cRZAutoRefCount<cGZDBSegmentPackedFile> segment(new cGZDBSegmentPackedFile());
+    if (!segment->Init()) return;
+    cRZString path;
+    GetAppPreferencesFilePath(path);
+    segment->SetPath(path);
+    if (segment->Open(true, false)) {
+        {
+            sc4::cSC4AutoLoadRecord record(static_cast<cIGZPersistDBSegment*>(segment.get()), sc4::kPreferencesRecordType,
+                                           sc4::kPreferencesRecordGroup, sc4::kPreferencesRecordInstance);
+            if (record.GetRecord() && record.GetVersion() == sc4::kPreferencesRecordVersion) {
+                sc4::SC4Preferences loaded;                    // starts from the defaults
+                if (record.GetRecord()->GetFieldVoid(loaded.data(), sc4::kPreferencesSize)) {
+                    std::memcpy(preferences_.data(), loaded.data(), sc4::kPreferencesSize);
+                    runFirstTimeAfterInstall_ = false;
+                }
+            }
+            record.Close();
+        }
+        segment->Close();
+    }
+    segment->Shutdown();
+}
+
+// Writes the preferences over the old file. The per-run fields (player name from the command line, IME flag) are
+// reset in memory first, so they are never saved.
+void cSC4App::SavePreferences() {
+    cRZAutoRefCount<cGZDBSegmentPackedFile> segment(new cGZDBSegmentPackedFile());
+    if (!segment->Init()) return;
+    std::uint8_t* prefs = preferences_.data();
+    preferences_.Set<std::uint32_t>(sc4::prefs::kAppResetFlag, 1);
+    std::memset(prefs + sc4::prefs::kAppResetBlock, 0, 0x40);
+    prefs[sc4::prefs::kAppResetByte] = 1;
+    cRZString path;
+    GetAppPreferencesFilePath(path);
+    cRZFile::Remove(path);
+    segment->SetPath(path);
+    if (segment->Open(true, true)) {
+        {
+            sc4::cSC4AutoSaveRecord record(static_cast<cIGZPersistDBSegment*>(segment.get()), sc4::kPreferencesRecordType,
+                                           sc4::kPreferencesRecordGroup, sc4::kPreferencesRecordInstance,
+                                           sc4::kPreferencesRecordVersion);
+            if (record.GetRecord()) {
+                record.GetRecord()->SetFieldVoid(prefs, sc4::kPreferencesSize);
+                record.Close();
+            }
+        }
+        segment->Shutdown();
+        return;
+    }
+    segment->Shutdown();
 }
