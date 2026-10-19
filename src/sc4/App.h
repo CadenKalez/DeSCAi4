@@ -9,8 +9,11 @@
 // The data directories are cached strings; the ones that are empty are derived from another directory on first use.
 #pragma once
 #include <cstdint>
+#include <functional>
 #include <list>
+#include <map>
 #include <memory>
+#include <string>
 
 #include "gz/GZApp.h"
 #include "gz/WinInterfaces.h"
@@ -24,6 +27,7 @@
 #include "sc4/ISC4App.h"
 
 class cIGZFrameWork;
+class cRZCOMDllDirector;
 
 namespace sc4 {
 
@@ -41,6 +45,21 @@ class IDisplayInfo {
 public:
     virtual ~IDisplayInfo() = default;
     virtual void GetNthNativeResolution(int index, int& width, int& height) = 0;
+};
+
+// Collaborators of AddSystemServices / AddCOMDirectors whose classes are not recovered yet, or that live in the
+// platform layer. All optional: an empty entry skips the step.
+struct AppStartupHooks {
+    // MacPreferences::GetBoolean(kShowFps)
+    std::function<bool()> showFpsPreference;
+    // GetSC4AudioCOMDirector()
+    std::function<cRZCOMDllDirector*()> audioDirector;
+    // the graphics system (cIGZGraphicSystem2) was created: hand it the application's .ini path
+    std::function<void(cIGZUnknown* graphicSystem, const cIGZString& iniPath)> configureGraphicSystem;
+    // the script service exists: register cSC4ScriptServiceResourceFactory with it
+    std::function<void(cIGZUnknown* scriptService)> registerScriptResourceFactory;
+    // the WWW system was created: set its cache directory, enable it and hook the HTML UI
+    std::function<void(cIGZUnknown* wwwSystem, const cIGZString& cacheDirectory)> configureWWWSystem;
 };
 
 }  // namespace sc4
@@ -113,6 +132,16 @@ public:
     void FixStartupResolutionValuesIfNeeded(std::uint32_t& width, std::uint32_t& height);   // @ 0x10000acba
     bool IsStartupResolutionOK(std::uint32_t width, std::uint32_t height);                  // @ 0x10000ad7a
 
+    // --- start-up: directors and system services
+    void FindAndPossiblyFixIniFiles();                             // @ 0x100010c06
+    void AddCOMDirectors();                                        // @ 0x1000062aa
+    void AddSystemServices();                                      // @ 0x100006372
+    using ServiceFactory = std::function<cIGZUnknown*()>;
+    // The built-in class used when COM cannot create a service (cGZFileSystem, cGZFontSys, ...), by class name.
+    void SetServiceFactory(const std::string& className, ServiceFactory factory) { serviceFactories_[className] = std::move(factory); }
+    sc4::AppStartupHooks& StartupHooks() { return startupHooks_; }
+    void SetFramework(cIGZFrameWork* framework) { framework_ = framework; }
+
     // --- host seams (the original reached these through RZ:: / MacDisplay::)
     void SetCommandLineSource(cIGZCmdLine* commandLine) { commandLine_ = commandLine; }   // cGZFramework::FrameWork()->CommandLine()
     void SetRenderProperties(sc4::cSC4RenderProperties* properties);
@@ -175,7 +204,7 @@ private:
     cISC4Nation* nation_ = nullptr;                      // +0x90
     cRZAutoRefCount<cISC4RegionalCity>* regionalCity_ = nullptr;   // +0x98 (set by RequestNewCity / LoadCity)
     cISC4City* city_ = nullptr;                          // +0xa0
-    bool fieldA8_ = false;                               // +0xa8
+    bool iniFilesChecked_ = false;                       // +0xa8
     cRZString appName_;                                  // +0xb0 (the executable's file name)
     cRZString appDirectory_;                             // +0xd8
     cRZString cdAppDirectory_;                           // +0x100
@@ -230,6 +259,9 @@ private:
 
     sc4::IDisplayInfo* display_ = nullptr;
     cIGZCmdLine* commandLine_ = nullptr;
+    cIGZFrameWork* framework_ = nullptr;
+    sc4::AppStartupHooks startupHooks_;
+    std::map<std::string, ServiceFactory> serviceFactories_;
     std::uint32_t requestedGraphicsDriver_ = 0;          // +0x7b8 (set by the -d switch)
     cISC4Region* (*regionOf_)(cISC4Nation*) = nullptr;
 };

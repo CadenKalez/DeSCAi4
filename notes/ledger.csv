@@ -18358,3 +18358,6 @@ address,symbol,unique_name,source,status,evidence
 0x10002ab4b,RZGetFrameWork(),RZGetFrameWork,src/gz/GZCOMDirector.cpp|h,recovered,framework/COM accessors
 0x10003f2d4,GZCOM(),GZCOM,src/gz/GZCOMDirector.cpp|h,recovered,framework/COM accessors
 0x100040180,RZGetCOMDllDirector(),RZGetCOMDllDirector,src/gz/GZCOMDirector.cpp|h,recovered,framework/COM accessors
+0x1000062aa,cSC4App::AddCOMDirectors(),AddCOMDirectors,src/sc4/AppStartup.cpp,recovered,cSC4App: COM directors and system services start-up (seams for unrecovered service classes); test sc4_app
+0x100006372,cSC4App::AddSystemServices(),AddSystemServices,src/sc4/AppStartup.cpp,recovered-partial,cSC4App: COM directors and system services start-up (seams for unrecovered service classes); test sc4_app
+0x100010c06,cSC4App::FindAndPossiblyFixIniFiles(),FindAndPossiblyFixIniFiles,src/sc4/AppStartup.cpp,recovered-partial,cSC4App: COM directors and system services start-up (seams for unrecovered service classes); test sc4_app

@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #include "rz/cRZCmdLine.h"
+#include "gz/GZFramework.h"
 #include "sc4/App.h"
 #include "sc4/AppPreferences.h"
 
@@ -155,6 +156,32 @@ int main() {
         CHECK(std::memcmp(a->Preferences().data(), b->Preferences().data(), sc4::kPreferencesSize) == 0);
         a->Release(); b->Release();
         std::string cleanup = "rm -rf " + std::string(dir); std::system(cleanup.c_str());
+    }
+
+
+    // ---- AddCOMDirectors / AddSystemServices against the real framework
+    {
+        struct Fake final : cRZSystemService {
+            Fake(std::uint32_t id) : cRZSystemService(id, 1000) {}
+            bool QueryInterface(std::uint32_t iid, void** out) override { (void)iid; *out = static_cast<cIGZSystemService*>(this); AddRef(); return true; }
+            std::uint32_t AddRef() override { return cRZSystemService::AddRef(); }
+            std::uint32_t Release() override { return cRZSystemService::Release(); }
+        };
+        auto* f = new cGZFramework();
+        cGZFramework::sSetFrameWork(f);
+        f->COM().RealInit();
+        auto* a = new cSC4App("T", f->AppView()); a->AddRef();
+        a->SetFramework(f);
+        a->SetDirectories("/g/", "/g/Data/", "/u/");
+        struct { const char* name; std::uint32_t id; } fakes[] = {{"cGZAllocatorService", 0x3a}, {"cGZFileSystem", 0x3b}, {"nGZLog::cService", 0x3e}, {"cGZRegistry", 0x3f},
+            {"cRZLanguageManager", 0x40}, {"cGZPersistResourceManager", 0x41}, {"cSC4AudioAEMSEventSystem", 0x42}};
+        for (auto& fake : fakes) { std::uint32_t id = fake.id; a->SetServiceFactory(fake.name, [id]() -> cIGZUnknown* { return static_cast<cIGZUnknown*>(static_cast<cIGZSystemService*>(new Fake(id))); }); }
+        a->StartupHooks().showFpsPreference = [] { return true; };
+        a->AddCOMDirectors();
+        a->AddSystemServices();
+        void* out = nullptr;
+        for (auto& fake : fakes) CHECK(f->GetSystemService(fake.id, kGZIID_cIGZSystemService, &out));
+        CHECK(!f->GetSystemService(0x99, kGZIID_cIGZSystemService, &out));
     }
 
     // preferences blob defaults
