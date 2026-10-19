@@ -18924,3 +18924,27 @@ address,symbol,unique_name,source,status,evidence
 0x1000c2610,cSC4FloraBlockingOccupantFilter::~cSC4FloraBlockingOccupantFilter(),DestructAndDelete,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
 0x1000c263e,cSC4FloraBlockingOccupantFilter::Write(cIGZOStream&) const,Write,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
 0x1000c2652,non-virtual thunk to cSC4FloraBlockingOccupantFilter::Write(cIGZOStream&) const,WriteThunk,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x100031d40,"cRZDirectory::cRZDirectory(cRZString const&, bool, bool, bool)",Construct_cRZString_const_bool_bool_bool,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100031ebe,cRZDirectory::MakeSurePathEndsWithSeparator(),MakeSurePathEndsWithSeparator,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100031f06,cRZDirectory::ReadDirectoryEntries(),ReadDirectoryEntries,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100032722,"cRZDirectory::cRZDirectory(cRZString const&, bool, bool, bool)",Construct_cRZString_const_bool_bool_boolWrapper,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100032736,cRZDirectory::~cRZDirectory(),Destruct,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x10003276c,cRZDirectory::~cRZDirectory(),DestructAndDelete,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100032776,cRZDirectory::GetDirectoryEntryCount(),GetDirectoryEntryCount,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100032ed6,cRZDirectory::DoesDirectoryListContainEntry(cRZString const&),DoesDirectoryListContainEntry,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x10003304c,"cRZDirectory::ReadDirectorySpecificEntriesIntoStringList(std::__1::list<cRZString, std::__1::allocator<cRZString>>&, unsigned int)",ReadDirectorySpecificEntriesIntoStringList,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x1000336a0,"cRZDirectory::ReadDirectoryFileEntriesIntoStringListRecursive(cRZString const&, std::__1::list<cRZString, std::__1::allocator<cRZString>>&, bool)",ReadDirectoryFileEntriesIntoStringListRecursive,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100033afc,"cRZDirectory::ChangeDirectory(cRZString const&, bool)",ChangeDirectory,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100033b32,"cRZDirectory::ReadDirectoryFileEntriesIntoStringList(std::__1::list<cRZString, std::__1::allocator<cRZString>>&)",ReadDirectoryFileEntriesIntoStringList,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100033b42,"cRZDirectory::ReadDirectoryDirectoryEntriesIntoStringList(std::__1::list<cRZString, std::__1::allocator<cRZString>>&, unsigned int)",ReadDirectoryDirectoryEntriesIntoStringList,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100033b52,cRZDirectory::DoesDirectoryExist(cRZString const&),DoesDirectoryExist,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100033b66,cRZDirectory::CreateDirectoryA(cRZString const&),CreateDirectoryA,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100033eea,cRZDirectory::DoesAnyEntryExistThatMatchesPattern(cRZString const&),DoesAnyEntryExistThatMatchesPattern,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100033f08,"cRZDirectory::RemoveDirectoryA(cRZString const&, bool)",RemoveDirectoryA,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100033f9a,cRZDirectory::GetNthEntry(unsigned int),GetNthEntry,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100033fca,"cRZDirectory::SetNewDirectoryEntryFilter(cRZString const&, bool)",SetNewDirectoryEntryFilter,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100034104,"cRZDirectory::SplitDirectoryPath(cRZString const&, cRZString&, cRZString&)",SplitDirectoryPath,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x10003436e,"cRZDirectory::AlphabetizeEntryList(std::__1::list<cRZString, std::__1::allocator<cRZString>>&)",AlphabetizeEntryList,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100034a6b,"SplitDirectory(char const*, char (*) [256], int&)",Construct_char_const_char_256_int,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x100034c11,"SplitDirectory(cRZString const&, cRZString*, int&)",Construct_cRZString_const_cRZString_intWrapper,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x1007fa00f,MacDirectoryExists(char const*),Construct_char_const,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
