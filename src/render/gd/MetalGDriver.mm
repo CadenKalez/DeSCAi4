@@ -9,6 +9,8 @@
 
 #include "render/GDIndexOps.h"
 #include "render/SimGL.h"
+#include "render/TextureStageData.h"
+#include "render/gd/TextureTable.h"
 #include "render/gd/MetalGDriver.h"
 
 namespace gd {
@@ -25,19 +27,28 @@ using namespace metal;
 
 constant bool kAlphaTest [[function_constant(0)]];
 constant int  kAlphaFunc [[function_constant(1)]];
-constant bool kTexture0  [[function_constant(2)]];
 constant bool useAlphaTest = is_function_constant_defined(kAlphaTest) ? kAlphaTest : false;
 constant int  alphaFunc    = is_function_constant_defined(kAlphaFunc) ? kAlphaFunc : 7;
-constant bool useTexture0  = is_function_constant_defined(kTexture0) ? kTexture0 : false;
+// Texture stages (D3D texture-stage operations, as cTextureStageData emits them): per stage s the function constants are
+// 3+7s on, +1 colour op, +2/+3 colour args, +4 alpha op, +5/+6 alpha args.
+constant bool s0On [[function_constant(3)]];  constant int s0Cop [[function_constant(4)]];  constant int s0Ca1 [[function_constant(5)]];
+constant int s0Ca2 [[function_constant(6)]];  constant int s0Aop [[function_constant(7)]];  constant int s0Aa1 [[function_constant(8)]];
+constant int s0Aa2 [[function_constant(9)]];
+constant bool s1On [[function_constant(10)]]; constant int s1Cop [[function_constant(11)]]; constant int s1Ca1 [[function_constant(12)]];
+constant int s1Ca2 [[function_constant(13)]]; constant int s1Aop [[function_constant(14)]]; constant int s1Aa1 [[function_constant(15)]];
+constant int s1Aa2 [[function_constant(16)]];
+constant bool stage0 = is_function_constant_defined(s0On) ? s0On : false;
+constant bool stage1 = is_function_constant_defined(s1On) ? s1On : false;
 
 struct DrawConstants {
     float4x4 view;
     float4x4 proj;
+    float4 textureFactor;
     uint stride;      // bytes per vertex (0x18 or 0x20)
     uint alphaRef;    // 0..255
     uint pad0, pad1;
 };
-struct VOut { float4 position [[position]]; float4 color; float2 uv; };
+struct VOut { float4 position [[position]]; float4 color; float2 uv0; float2 uv1; };
 
 vertex VOut gd_vs(uint vid [[vertex_id]], const device uchar* v [[buffer(0)]], constant DrawConstants& c [[buffer(1)]]) {
     const device uchar* p = v + vid * c.stride;
@@ -46,14 +57,58 @@ vertex VOut gd_vs(uint vid [[vertex_id]], const device uchar* v [[buffer(0)]], c
     VOut o;
     o.position = c.proj * (c.view * float4(pos, 1.0));
     o.color = float4(col) * (1.0 / 255.0);
-    o.uv = c.stride >= 0x18 ? float2(*(const device packed_float2*)(p + 16)) : float2(0.0);
+    o.uv0 = c.stride >= 0x18 ? float2(*(const device packed_float2*)(p + 16)) : float2(0.0);
+    o.uv1 = c.stride >= 0x20 ? float2(*(const device packed_float2*)(p + 24)) : o.uv0;
     return o;
 }
 
+static float4 stageArg(int a, float4 diffuse, float4 current, float4 tex, float4 tf) {
+    int base = a & 0xf;
+    float4 v = base == 0 ? diffuse : (base == 1 ? current : (base == 2 ? tex : tf));
+    if ((a & 0x10) != 0) v = 1.0 - v;          // complement
+    if ((a & 0x20) != 0) v = float4(v.a);      // alpha replicate
+    return v;
+}
+static float4 stageOp(int op, float4 a1, float4 a2, float4 current, float4 diffuse, float4 tex, float4 tf, bool colour) {
+    float4 r;
+    switch (op) {
+    case 2: r = a1; break;
+    case 3: r = a2; break;
+    case 4: r = a1 * a2; break;
+    case 5: r = a1 * a2 * 2.0; break;
+    case 6: r = a1 * a2 * 4.0; break;
+    case 7: r = a1 + a2; break;
+    case 8: r = a1 + a2 - 0.5; break;
+    case 9: r = (a1 + a2 - 0.5) * 2.0; break;
+    case 12: r = a1 * diffuse.a + a2 * (1.0 - diffuse.a); break;
+    case 13: r = a1 * tex.a + a2 * (1.0 - tex.a); break;
+    case 14: r = a1 * tf.a + a2 * (1.0 - tf.a); break;
+    case 16: r = a1 * current.a + a2 * (1.0 - current.a); break;
+    case 24: r = float4(4.0 * dot(a1.rgb - 0.5, a2.rgb - 0.5)); break;
+    default: r = current; break;
+    }
+    return clamp(r, 0.0, 1.0);
+}
+static float4 runStage(int cop, int ca1, int ca2, int aop, int aa1, int aa2, float4 diffuse, float4 current, float4 tex, float4 tf) {
+    float4 out = current;
+    if (cop > 1) {
+        float4 c = stageOp(cop, stageArg(ca1, diffuse, current, tex, tf), stageArg(ca2, diffuse, current, tex, tf), current, diffuse, tex, tf, true);
+        out.rgb = c.rgb;
+    }
+    if (cop > 1 && aop > 1) {
+        float4 a = stageOp(aop, stageArg(aa1, diffuse, current, tex, tf), stageArg(aa2, diffuse, current, tex, tf), current, diffuse, tex, tf, false);
+        out.a = a.a;
+    }
+    return out;
+}
+
 fragment float4 gd_fs(VOut in [[stage_in]], constant DrawConstants& c [[buffer(1)]],
-                      texture2d<float> t0 [[texture(0)]], sampler s0 [[sampler(0)]]) {
-    float4 color = in.color;
-    if (useTexture0) color *= t0.sample(s0, in.uv);
+                      texture2d<float> t0 [[texture(0)]], texture2d<float> t1 [[texture(1)]],
+                      sampler sm0 [[sampler(0)]], sampler sm1 [[sampler(1)]]) {
+    float4 diffuse = in.color;
+    float4 color = diffuse;
+    if (stage0) color = runStage(s0Cop, s0Ca1, s0Ca2, s0Aop, s0Aa1, s0Aa2, diffuse, color, t0.sample(sm0, in.uv0), c.textureFactor);
+    if (stage1) color = runStage(s1Cop, s1Ca1, s1Ca2, s1Aop, s1Aa1, s1Aa2, diffuse, color, t1.sample(sm1, in.uv1), c.textureFactor);
     if (useAlphaTest) {
         uint a = uint(round(color.a * 255.0));
         bool pass;
@@ -88,6 +143,7 @@ namespace {
 
 struct DrawConstants {
     simd_float4x4 view, proj;
+    simd_float4 textureFactor;
     std::uint32_t stride, alphaRef, pad0, pad1;
 };
 struct ClearConstants {
@@ -111,14 +167,20 @@ MTLCompareFunction Compare(eGDTestFunc f) {
     return table[f & 7];
 }
 
+// One texture stage as the D3D texture-stage states describe it (cTextureStageData::Apply* emit these).
+struct StageCfg {
+    std::uint32_t texture = 0;
+    int colorOp = 1, colorArg1 = 2, colorArg2 = 1, alphaOp = 1, alphaArg1 = 2, alphaArg2 = 1;   // the shim's start-up values
+    int magFilter = 1, minFilter = 1, mipFilter = 1, addressU = 1, addressV = 1;
+    bool Active() const { return colorOp > 1; }
+};
+
 struct PipelineKey {
     bool blend, alphaTest;
     std::uint8_t src, dst, alphaFunc;
-    bool texture0;
-    std::uint32_t Pack() const {
-        return (blend ? 1u : 0u) | (alphaTest ? 2u : 0u) | (texture0 ? 4u : 0u) | std::uint32_t(src) << 4 | std::uint32_t(dst) << 8 |
-               std::uint32_t(alphaFunc) << 12;
-    }
+    bool on[2];
+    std::uint8_t ops[2][6];   // colour op, args, alpha op, args
+    bool operator<(const PipelineKey& o) const { return std::memcmp(this, &o, sizeof *this) < 0; }
 };
 
 }  // namespace
@@ -156,12 +218,83 @@ struct cMetalGDriver::Impl {
     int ringIndex = 0;
     std::size_t ringOffset = 0;
 
-    std::map<std::uint32_t, id<MTLRenderPipelineState>> pipelines;
+    std::map<PipelineKey, id<MTLRenderPipelineState>> pipelines;
+    std::map<std::uint64_t, id<MTLSamplerState>> samplers;
     std::map<std::uint32_t, id<MTLDepthStencilState>> depthStates;
     id<MTLRenderPipelineState> clearPipeline = nil;
     id<MTLSamplerState> sampler = nil;
     id<MTLTexture> whiteTexture = nil;
     std::uint32_t draws = 0;
+
+    // ---- textures and stages ----
+    struct Backend final : ITextureBackend {
+        Impl* m;
+        explicit Backend(Impl* impl) : m(impl) {}
+        bool CreateSurface(std::uint32_t texId, std::uint32_t format, std::uint32_t w, std::uint32_t h, std::uint32_t mips) override {
+            MTLPixelFormat pf = MTLPixelFormatBGRA8Unorm;
+            if (format == kFmtDXT1) pf = MTLPixelFormatBC1_RGBA;
+            else if (format == kFmtDXT3) pf = MTLPixelFormatBC2_RGBA;
+            else if (format == kFmtDXT5) pf = MTLPixelFormatBC3_RGBA;
+            int maxLevels = 1;
+            for (std::uint32_t d = std::max(w, h); d > 1; d >>= 1) ++maxLevels;
+            const NSUInteger levels = std::max<NSUInteger>(1, std::min<NSUInteger>(mips, maxLevels));
+            MTLTextureDescriptor* d = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pf width:w height:h mipmapped:levels > 1];
+            d.mipmapLevelCount = levels;
+            d.storageMode = MTLStorageModeShared;
+            d.usage = MTLTextureUsageShaderRead;
+            id<MTLTexture> t = [m->device newTextureWithDescriptor:d];
+            if (!t) return false;
+            m->textures[texId] = t;
+            return true;
+        }
+        void DestroySurface(std::uint32_t texId) override { m->textures.erase(texId); }
+        bool UploadLevel(std::uint32_t texId, std::uint32_t level, std::uint32_t x, std::uint32_t y, std::uint32_t w, std::uint32_t h, const std::uint8_t* data, bool compressed) override {
+            auto it = m->textures.find(texId);
+            if (it == m->textures.end() || level >= it->second.mipmapLevelCount) return false;
+            NSUInteger bytesPerRow = static_cast<NSUInteger>(w) * 4;
+            if (compressed) bytesPerRow = ((w + 3) / 4) * (it->second.pixelFormat == MTLPixelFormatBC1_RGBA ? 8 : 16);
+            [it->second replaceRegion:MTLRegionMake2D(x, y, w, h) mipmapLevel:level withBytes:data bytesPerRow:bytesPerRow];
+            return true;
+        }
+    } backend{this};
+    cTextureTable table{&backend};
+    std::map<std::uint32_t, id<MTLTexture>> textures;
+    nSGLDX7::cTextureStageData records[2];
+    StageCfg cfg[2];
+    bool anyStageDirty = false, bindMode = false;
+    std::uint32_t stageCount = 2;
+
+    // Applies a stage record's D3D texture-stage states to the stage configuration.
+    struct StageHost final : nSGLDX7::ITextureStageHost {
+        Impl* m;
+        explicit StageHost(Impl* impl) : m(impl) {}
+        bool IsTextureUsable(std::uint32_t id) override { return m->table.HasTexture(id); }
+        void BindTexture(int stage, std::uint32_t id) override { m->cfg[stage & 1].texture = id; }
+        void SetTextureStageState(int stage, int state, int value) override {
+            StageCfg& c = m->cfg[stage & 1];
+            switch (state) {
+            case nSGLDX7::kTssColorOp: c.colorOp = value; break;
+            case nSGLDX7::kTssColorArg1: c.colorArg1 = value; break;
+            case nSGLDX7::kTssColorArg2: c.colorArg2 = value; break;
+            case nSGLDX7::kTssAlphaOp: c.alphaOp = value; break;
+            case nSGLDX7::kTssAlphaArg1: c.alphaArg1 = value; break;
+            case nSGLDX7::kTssAlphaArg2: c.alphaArg2 = value; break;
+            case nSGLDX7::kTssAddressU: c.addressU = value; break;
+            case nSGLDX7::kTssAddressV: c.addressV = value; break;
+            case nSGLDX7::kTssMagFilter: c.magFilter = value; break;
+            case nSGLDX7::kTssMinFilter: c.minFilter = value; break;
+            case nSGLDX7::kTssMipFilter: c.mipFilter = value; break;
+            default: break;
+            }
+        }
+    } stageHost{this};
+
+    void ApplyDirtyStages() {
+        if (!anyStageDirty) return;
+        for (std::uint32_t i = 0; i < stageCount; ++i)
+            if (records[i].dirty) records[i].ApplyState(static_cast<int>(i), stageHost);
+        anyStageDirty = false;
+    }
 
     void EndEncoder() {
         if (enc) {
@@ -207,14 +340,21 @@ struct cMetalGDriver::Impl {
     }
 
     id<MTLRenderPipelineState> Pipeline(const PipelineKey& k) {
-        auto it = pipelines.find(k.Pack());
+        auto it = pipelines.find(k);
         if (it != pipelines.end()) return it->second;
         MTLFunctionConstantValues* fc = [MTLFunctionConstantValues new];
-        bool alphaTest = k.alphaTest, tex0 = k.texture0;
+        bool alphaTest = k.alphaTest;
         int alphaFunc = k.alphaFunc;
         [fc setConstantValue:&alphaTest type:MTLDataTypeBool atIndex:0];
         [fc setConstantValue:&alphaFunc type:MTLDataTypeInt atIndex:1];
-        [fc setConstantValue:&tex0 type:MTLDataTypeBool atIndex:2];
+        for (int st = 0; st < 2; ++st) {
+            bool on = k.on[st];
+            const int base = 3 + st * 7;
+            [fc setConstantValue:&on type:MTLDataTypeBool atIndex:base];
+            int v[6];
+            for (int i = 0; i < 6; ++i) v[i] = k.ops[st][i];
+            for (int i = 0; i < 6; ++i) [fc setConstantValue:&v[i] type:MTLDataTypeInt atIndex:base + 1 + i];
+        }
         NSError* err = nil;
         MTLRenderPipelineDescriptor* d = [MTLRenderPipelineDescriptor new];
         d.vertexFunction = [library newFunctionWithName:@"gd_vs" constantValues:fc error:&err];
@@ -228,8 +368,23 @@ struct cMetalGDriver::Impl {
         }
         id<MTLRenderPipelineState> p = [device newRenderPipelineStateWithDescriptor:d error:&err];
         if (!p) NSLog(@"cMetalGDriver pipeline error: %@", err);
-        pipelines[k.Pack()] = p;
+        pipelines[k] = p;
         return p;
+    }
+    id<MTLSamplerState> Sampler(const StageCfg& c) {
+        const std::uint64_t key = std::uint64_t(c.magFilter) | std::uint64_t(c.minFilter) << 4 | std::uint64_t(c.mipFilter) << 8 |
+                                  std::uint64_t(c.addressU) << 12 | std::uint64_t(c.addressV) << 16;
+        auto it = samplers.find(key);
+        if (it != samplers.end()) return it->second;
+        MTLSamplerDescriptor* d = [MTLSamplerDescriptor new];
+        d.magFilter = c.magFilter == 2 ? MTLSamplerMinMagFilterLinear : MTLSamplerMinMagFilterNearest;
+        d.minFilter = c.minFilter == 2 ? MTLSamplerMinMagFilterLinear : MTLSamplerMinMagFilterNearest;
+        d.mipFilter = c.mipFilter == 3 ? MTLSamplerMipFilterLinear : (c.mipFilter == 2 ? MTLSamplerMipFilterNearest : MTLSamplerMipFilterNotMipmapped);
+        d.sAddressMode = c.addressU == 3 ? MTLSamplerAddressModeClampToEdge : MTLSamplerAddressModeRepeat;
+        d.tAddressMode = c.addressV == 3 ? MTLSamplerAddressModeClampToEdge : MTLSamplerAddressModeRepeat;
+        id<MTLSamplerState> st = [device newSamplerStateWithDescriptor:d];
+        samplers[key] = st;
+        return st;
     }
     id<MTLDepthStencilState> DepthState(bool test, eGDTestFunc func, bool write) {
         const std::uint32_t key = (test ? 1u : 0u) | (write ? 2u : 0u) | (func & 7) << 2;
@@ -304,6 +459,7 @@ std::unique_ptr<cMetalGDriver> cMetalGDriver::Create(void* caMetalLayer, std::ui
     m.sampler = [m.device newSamplerStateWithDescriptor:sd];
     MTLTextureDescriptor* wd = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm width:1 height:1 mipmapped:NO];
     m.whiteTexture = [m.device newTextureWithDescriptor:wd];
+    m.table.Init();
     const std::uint32_t white = 0xffffffff;
     [m.whiteTexture replaceRegion:MTLRegionMake2D(0, 0, 1, 1) mipmapLevel:0 withBytes:&white bytesPerRow:4];
     return d;
@@ -318,8 +474,116 @@ void cMetalGDriver::DepthFunc(eGDTestFunc f) { cGDriverBase::DepthFunc(f); }
 void cMetalGDriver::DepthMask(bool e) { cGDriverBase::DepthMask(e); }
 void cMetalGDriver::BlendFunc(eGDBlend s, eGDBlend d) { cGDriverBase::BlendFunc(s, d); }
 void cMetalGDriver::AlphaFunc(eGDTestFunc f, float ref) { cGDriverBase::AlphaFunc(f, ref); }
-void cMetalGDriver::Enable(eGDDriverState s) { cGDriverBase::Enable(s); }
-void cMetalGDriver::Disable(eGDDriverState s) { cGDriverBase::Disable(s); }
+void cMetalGDriver::Enable(eGDDriverState s) {
+    cGDriverBase::Enable(s);
+    if (s == state::Texturing) MarkStage(true);
+}
+void cMetalGDriver::Disable(eGDDriverState s) {
+    cGDriverBase::Disable(s);
+    if (s == state::Texturing) MarkStage(false);
+}
+
+// ---- textures (nSGLDX7::cGDriver slots; the stage records are the shipped cTextureStageData) ----
+void cMetalGDriver::MarkStage(bool enabled) {
+    Impl& m = *impl_;
+    auto& r = m.records[mirror_.currentStage & 1];
+    r.textureEnabled = enabled ? 1 : 0;
+    r.dirty = 1;
+    m.anyStageDirty = true;
+}
+
+void cMetalGDriver::TexStage(std::uint32_t stage) {
+    if (stage < impl_->stageCount) cGDriverBase::TexStage(stage);
+    else impl_->error = 2;
+}
+
+void cMetalGDriver::GenTextures(int count, std::uint32_t* ids) {
+    for (int i = 0; i < count; ++i) ids[i] = impl_->table.NewTexture();
+}
+void cMetalGDriver::DeleteTextures(int count, const std::uint32_t* ids) {
+    for (int i = 0; i < count; ++i)
+        if (ids[i] != 0) impl_->table.FreeTexture(ids[i]);
+}
+bool cMetalGDriver::IsTexture(std::uint32_t id) { return impl_->table.IsValid(id); }
+
+void cMetalGDriver::BindTexture(eGDTextureTarget target, std::uint32_t id) {
+    Impl& m = *impl_;
+    if (target != 0) {
+        m.error = 1;
+        return;
+    }
+    m.bindMode = true;
+    TextureParams p;
+    if (!m.table.GetTextureParams(id, p)) m.table.GetTextureParams(0, p);
+    auto& r = m.records[mirror_.currentStage & 1];
+    m.anyStageDirty = true;
+    r.dirty = 1;
+    r.appliedEnvMode = 0xffffffffu;
+    r.magFilter = p.magFilter;
+    r.minFilter = p.minFilter;
+    r.wrapS = p.wrapS;
+    r.wrapT = p.wrapT;
+    r.textureId = id;
+    r.textureHasAlpha = m.table.HasAlpha(id) ? 1 : 0;
+}
+
+void cMetalGDriver::SetTexture(std::uint32_t id, std::uint32_t stage) {
+    Impl& m = *impl_;
+    auto& r = m.records[stage & 1];
+    if (r.textureId == id) return;
+    m.bindMode = false;
+    m.anyStageDirty = true;
+    r.dirty = 1;
+    r.appliedEnvMode = 0xffffffffu;
+    r.textureId = id;
+    r.textureHasAlpha = m.table.HasAlpha(id) ? 1 : 0;
+}
+std::uint32_t cMetalGDriver::GetTexture(std::uint32_t stage) const { return impl_->records[stage & 1].textureId; }
+
+void cMetalGDriver::TexParameter(eGDTextureTarget, eGDTextureParamType param, eGDTextureParam value) {
+    Impl& m = *impl_;
+    auto& r = m.records[mirror_.currentStage & 1];
+    if (m.bindMode && !m.table.SetTextureParam(r.textureId, param, value)) {
+        m.error = 1;
+        return;
+    }
+    std::uint32_t* field = nullptr;
+    switch (param) {
+    case 0: field = &r.magFilter; break;
+    case 1: field = &r.minFilter; break;
+    case 2: field = &r.wrapS; break;
+    case 3: field = &r.wrapT; break;
+    default: break;
+    }
+    if (field) {
+        if (*field == value) return;
+        *field = value;
+    }
+    m.anyStageDirty = true;
+    r.dirty = 1;
+}
+
+void cMetalGDriver::TexEnv(eGDTextureEnvTarget target, eGDTextureEnvParamType param, eGDTextureEnvModeParam mode) {
+    cGDriverBase::TexEnv(target, param, mode);   // keeps the mirror the render-state assertion checks
+    Impl& m = *impl_;
+    auto& r = m.records[mirror_.currentStage & 1];
+    m.anyStageDirty = true;
+    r.dirty = 1;
+    r.envMode = mode;
+}
+
+std::uint32_t cMetalGDriver::CreateTexture(eGDInternalTextureFormat format, std::uint32_t width, std::uint32_t height, std::uint32_t mips, eGDTextureHintFlags hint) {
+    Impl& m = *impl_;
+    const std::uint32_t id = m.table.NewTexture();
+    if (!m.table.CreateTexture(id, hint, format, width, height, mips)) m.error = 3;
+    return id;
+}
+
+void cMetalGDriver::LoadTextureLevel(std::uint32_t id, std::uint32_t level, std::uint32_t x, std::uint32_t y, std::uint32_t w, std::uint32_t h,
+                                     eGDTextureFormat format, eGDType type, std::uint32_t rowLength, const void* pixels) {
+    Impl& m = *impl_;
+    if (!m.table.LoadTextureLevel(id, level, x, y, w, h, format, type, rowLength, pixels)) m.error = 3;
+}
 void cMetalGDriver::ClearColor(float r, float g, float b, float a) { cGDriverBase::ClearColor(r, g, b, a); }
 void cMetalGDriver::Flush() {}   // draws are encoded immediately; nothing is queued
 int cMetalGDriver::GetError() { int e = impl_->error; impl_->error = 0; return e; }
@@ -473,22 +737,42 @@ void cMetalGDriver::DrawElements(eGDPrimType mode, int count, eGDType indexType,
 void cMetalGDriver::Encode(int primitive, std::size_t vertexOffset, int vertexCount, const std::uint16_t* indices, int indexCount) {
     Impl& s = *impl_;
     s.BeginEncoder(pendingClearDepth_, pendingClearRGBA_);
-    PipelineKey key{mirror_.blend, mirror_.alphaTest, static_cast<std::uint8_t>(mirror_.blendSrc),
-                    static_cast<std::uint8_t>(mirror_.blendDst), static_cast<std::uint8_t>(mirror_.alphaFunc), false};
+    s.ApplyDirtyStages();
+    PipelineKey key{};
+    key.blend = mirror_.blend;
+    key.alphaTest = mirror_.alphaTest;
+    key.src = static_cast<std::uint8_t>(mirror_.blendSrc);
+    key.dst = static_cast<std::uint8_t>(mirror_.blendDst);
+    key.alphaFunc = static_cast<std::uint8_t>(mirror_.alphaFunc);
+    for (int st = 0; st < 2; ++st) {
+        const StageCfg& c = s.cfg[st];
+        const bool on = c.Active() && s.table.HasTexture(c.texture) && s.textures.count(c.texture);
+        key.on[st] = on;
+        if (on) {
+            const std::uint8_t ops[6] = {std::uint8_t(c.colorOp), std::uint8_t(c.colorArg1), std::uint8_t(c.colorArg2),
+                                         std::uint8_t(c.alphaOp), std::uint8_t(c.alphaArg1), std::uint8_t(c.alphaArg2)};
+            std::memcpy(key.ops[st], ops, 6);
+        }
+    }
     [s.enc setRenderPipelineState:s.Pipeline(key)];
     [s.enc setDepthStencilState:s.DepthState(mirror_.depthTest, mirror_.depthFunc, mirror_.depthWrite)];
     s.SetRasterState(mirror_);
     DrawConstants dc;
     dc.view = s.view;
     dc.proj = s.proj;
+    dc.textureFactor = simd_make_float4(1, 1, 1, 1);
     dc.stride = static_cast<std::uint32_t>(s.stride);
     dc.alphaRef = AlphaRefByte(mirror_.alphaRef);
     dc.pad0 = dc.pad1 = 0;
     [s.enc setVertexBytes:&dc length:sizeof dc atIndex:1];
     [s.enc setFragmentBytes:&dc length:sizeof dc atIndex:1];
     [s.enc setVertexBuffer:s.ring[s.ringIndex] offset:vertexOffset atIndex:0];
-    [s.enc setFragmentTexture:s.whiteTexture atIndex:0];
-    [s.enc setFragmentSamplerState:s.sampler atIndex:0];
+    for (int st = 0; st < 2; ++st) {
+        id<MTLTexture> tex = s.whiteTexture;
+        if (key.on[st]) tex = s.textures[s.cfg[st].texture];
+        [s.enc setFragmentTexture:tex atIndex:st];
+        [s.enc setFragmentSamplerState:(key.on[st] ? s.Sampler(s.cfg[st]) : s.sampler) atIndex:st];
+    }
     const MTLPrimitiveType type = static_cast<MTLPrimitiveType>(primitive);
     if (indices) {
         std::size_t iOff;

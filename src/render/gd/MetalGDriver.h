@@ -52,8 +52,23 @@ public:
     int VertexFormatStride(eGDVertexFormat format) const override;
     int GetError() override;
 
+    // textures (handle semantics of the shipped driver: see TextureTable.h)
+    void GenTextures(int count, std::uint32_t* ids) override;
+    void DeleteTextures(int count, const std::uint32_t* ids) override;
+    bool IsTexture(std::uint32_t texture) override;
+    void BindTexture(eGDTextureTarget target, std::uint32_t texture) override;
+    void TexParameter(eGDTextureTarget target, eGDTextureParamType param, eGDTextureParam value) override;
+    void TexEnv(eGDTextureEnvTarget target, eGDTextureEnvParamType param, eGDTextureEnvModeParam mode) override;
+    using cGDriverBase::TexEnv;
+    void TexStage(std::uint32_t stage) override;
+    void SetTexture(std::uint32_t texture, std::uint32_t stage) override;
+    std::uint32_t GetTexture(std::uint32_t stage) const override;
+    std::uint32_t CreateTexture(eGDInternalTextureFormat format, std::uint32_t width, std::uint32_t height, std::uint32_t mipLevels, eGDTextureHintFlags hint) override;
+    void LoadTextureLevel(std::uint32_t texture, std::uint32_t level, std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height, eGDTextureFormat format, eGDType type, std::uint32_t rowLength, const void* pixels) override;
+
 private:
     cMetalGDriver();
+    void MarkStage(bool enabled);
     void Encode(int primitive, std::size_t vertexOffset, int vertexCount, const std::uint16_t* indices, int indexCount);
     float pendingClearRGBA_[4] = {0, 0, 0, 0};
     double pendingClearDepth_ = 1.0;

@@ -15,6 +15,7 @@
 #include "gdriver_on_gl.h"
 #include "render/MetalGL.h"
 #include "render/gd/MetalGDriver.h"
+#include "render/gd/TextureTable.h"
 
 using namespace gd;
 
@@ -98,6 +99,27 @@ static void Quad(cIGZGDriver& d, float x0, float y0, float x1, float y1, float z
     d.DrawArrays(prim::Quads, 0, 4);
 }
 
+static std::uint32_t MakeTexture(cIGZGDriver& d, std::uint32_t w, std::uint32_t h, const std::vector<std::uint32_t>& argb, std::uint32_t format = kFmtARGB8888) {
+    const std::uint32_t id = d.CreateTexture(format, w, h, 1, 0);
+    d.LoadTextureLevel(id, 0, 0, 0, w, h, 3, 1, 0, argb.data());   // (BGRA, unsigned byte) = 0xAARRGGBB words
+    return id;
+}
+static void UseTexture(cIGZGDriver& d, std::uint32_t id, std::uint32_t env, std::uint32_t mag = 0, std::uint32_t wrap = 3) {
+    d.TexStage(0);
+    d.SetTexture(id, 0);
+    d.Enable(state::Texturing);
+    d.TexEnv(0, 0, env);
+    d.TexParameter(0, 0, mag);
+    d.TexParameter(0, 1, mag);
+    d.TexParameter(0, 2, wrap);
+    d.TexParameter(0, 3, wrap);
+}
+static void TexQuad(cIGZGDriver& d, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, std::uint8_t r = 255, std::uint8_t g = 255, std::uint8_t b = 255, std::uint8_t a = 255) {
+    const Vtx q[4] = {{x0, y0, 0.5f, r, g, b, a, u0, v1}, {x1, y0, 0.5f, r, g, b, a, u1, v1}, {x1, y1, 0.5f, r, g, b, a, u1, v0}, {x0, y1, 0.5f, r, g, b, a, u0, v0}};
+    d.InterleavedArrays(vf::V3F_C4UB_T2F, sizeof(Vtx), q);
+    d.DrawArrays(prim::Quads, 0, 4);
+}
+
 struct Scene { const char* name; int tolerance; std::function<void(cIGZGDriver&)> run; };
 
 int main() {
@@ -170,7 +192,64 @@ int main() {
                 Quad(d, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 200, 100, 50, 255);
             }},
         };
-        for (const Scene& s : scenes) {
+        const std::vector<std::uint32_t> checker = {0xffff0000, 0xff00ff00, 0xff0000ff, 0xffffff00,
+                                                    0xff00ffff, 0xffff00ff, 0xff808080, 0xffffffff,
+                                                    0xff804020, 0xff208040, 0xff402080, 0xff102030,
+                                                    0xffa0b0c0, 0xff0a0b0c, 0xffc0b0a0, 0xff123456};
+        const std::vector<std::uint32_t> sprite = {0xffff0000, 0x00000000, 0xff00ff00, 0x00000000,
+                                                   0x00000000, 0xff0000ff, 0x00000000, 0xffffff00,
+                                                   0xffff00ff, 0x00000000, 0xff00ffff, 0x00000000,
+                                                   0x00000000, 0xffffffff, 0x00000000, 0x80ff8000};
+        const std::vector<Scene> texScenes = {
+            {"tex_modulate", 0, [&](cIGZGDriver& d) {
+                Reset(d);
+                UseTexture(d, MakeTexture(d, 4, 4, checker), 1);
+                TexQuad(d, -0.8f, -0.8f, 0.8f, 0.8f, 0, 0, 1, 1, 255, 255, 255, 255);
+            }},
+            {"tex_modulate_tint", 1, [&](cIGZGDriver& d) {
+                Reset(d);
+                UseTexture(d, MakeTexture(d, 4, 4, checker), 1);
+                TexQuad(d, -0.8f, -0.8f, 0.8f, 0.8f, 0, 0, 1, 1, 200, 150, 255, 128);
+            }},
+            {"tex_replace", 0, [&](cIGZGDriver& d) {
+                Reset(d);
+                UseTexture(d, MakeTexture(d, 4, 4, checker), 0);
+                TexQuad(d, -0.8f, -0.8f, 0.8f, 0.8f, 0, 0, 1, 1, 10, 20, 30, 255);
+            }},
+            {"tex_sprite_alpha_test", 0, [&](cIGZGDriver& d) {
+                Reset(d);
+                d.Enable(state::AlphaTest);
+                d.AlphaFunc(test::Greater, 0.5f);
+                UseTexture(d, MakeTexture(d, 4, 4, sprite), 1);
+                TexQuad(d, -0.8f, -0.8f, 0.8f, 0.8f, 0, 0, 1, 1);
+            }},
+            {"tex_sprite_blend", 2, [&](cIGZGDriver& d) {
+                Reset(d);
+                Quad(d, -0.9f, -0.9f, 0.9f, 0.9f, 0.9f, 40, 40, 160, 255);
+                d.Enable(state::Blend);
+                d.BlendFunc(blend::SrcAlpha, blend::InvSrcAlpha);
+                UseTexture(d, MakeTexture(d, 4, 4, sprite), 1);
+                TexQuad(d, -0.8f, -0.8f, 0.8f, 0.8f, 0, 0, 1, 1);
+            }},
+            {"tex_linear_clamp", 2, [&](cIGZGDriver& d) {
+                Reset(d);
+                UseTexture(d, MakeTexture(d, 4, 4, checker), 0, 1, 2);
+                TexQuad(d, -0.8f, -0.8f, 0.8f, 0.8f, -0.25f, -0.25f, 1.25f, 1.25f);
+            }},
+            {"tex_repeat", 0, [&](cIGZGDriver& d) {
+                Reset(d);
+                UseTexture(d, MakeTexture(d, 4, 4, checker), 0, 0, 3);
+                TexQuad(d, -0.9f, -0.9f, 0.9f, 0.9f, 0, 0, 3, 2);
+            }},
+            {"tex_565_quantised", 0, [&](cIGZGDriver& d) {
+                Reset(d);
+                UseTexture(d, MakeTexture(d, 4, 4, checker, kFmtRGB565), 0);
+                TexQuad(d, -0.8f, -0.8f, 0.8f, 0.8f, 0, 0, 1, 1);
+            }},
+        };
+        std::vector<Scene> allScenes = scenes;
+        allScenes.insert(allScenes.end(), texScenes.begin(), texScenes.end());
+        for (const Scene& s : allScenes) {
             const Frame native = RunNative(s.run);
             const Frame ref = RunReference(s.run);
             if (native.empty() || ref.empty()) { std::printf("no Metal device: skipping the harness\n"); return 0; }
@@ -180,6 +259,9 @@ int main() {
             WritePNG(base + ".native.png", native);
             WritePNG(base + ".ref.png", ref);
             WritePNG(base + ".diff.png", diff);
+            bool drew = s.name == std::string("clear");
+            for (std::size_t i = 0; i < native.size() && !drew; i += 4) drew = (native[i] | native[i + 1] | native[i + 2]) != 0;
+            CHECK(drew);   // 'equal to the reference' must not mean 'both empty'
             std::printf("%-18s max diff %3d, pixels over %d: %d  %s\n", s.name, d.maxDiff, s.tolerance, d.badPixels, d.badPixels == 0 ? "ok" : "MISMATCH");
             if (d.badPixels != 0) ++failures;
         }
@@ -195,6 +277,33 @@ int main() {
             const Frame culled = RunNative(scenes[5].run);
             CHECK(at(culled, 38, 98, 2) == 255);                                            // the counter-clockwise (front) triangle is drawn
             CHECK(at(culled, 100, 36, 1) == 0);                                             // the clockwise one is culled
+        }
+        // ---- texture handles / errors (observable driver behaviour) ----
+        {
+            auto drv = cMetalGDriver::Create(nullptr, W, H);
+            std::uint32_t ids[3];
+            drv->GenTextures(3, ids);
+            CHECK(ids[0] == 1 && ids[1] == 2 && ids[2] == 3);     // texture 0 is the built-in white texel
+            CHECK(drv->IsTexture(0) && drv->IsTexture(2) && !drv->IsTexture(9));
+            drv->DeleteTextures(2, ids + 1);                       // frees 2 then 3
+            CHECK(!drv->IsTexture(2) && !drv->IsTexture(3));
+            std::uint32_t again[2];
+            drv->GenTextures(2, again);
+            CHECK(again[0] == 3 && again[1] == 2);                 // most recently freed first
+            CHECK(drv->CreateTexture(kFmtARGB8888, 5000, 4, 1, 0) != 0 && drv->GetError() == 3);   // too wide: handle still returned, error 3
+            CHECK(drv->GetError() == 0);                           // reading the error clears it
+            drv->TexStage(2);
+            CHECK(drv->GetError() == 2);                           // only two stages
+            drv->BindTexture(1, 5);
+            CHECK(drv->GetError() == 1);                           // only target 0
+            drv->SetTexture(7, 1);
+            CHECK(drv->GetTexture(1) == 7);
+            drv->TexStage(0);
+            drv->BindTexture(0, 1);
+            drv->TexParameter(0, 3, 9);                            // bind mode: persisted on the texture
+            drv->BindTexture(0, 1);
+            drv->TexParameter(0, 9, 1);                            // unknown parameter type on a bound texture -> error 1
+            CHECK(drv->GetError() == 1);
         }
         // ---- analytic checks the reference cannot do ----
         {   // clear colour quantisation: ARGB 8-bit, round-half-even(f*256) with 256 -> 255

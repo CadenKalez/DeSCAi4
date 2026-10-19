@@ -2,10 +2,12 @@
 // cIGZGDriver is GL-shaped, so this is a thin, independent second implementation of the same semantics; the native
 // cMetalGDriver is compared against it pixel by pixel. Test-only; implements just the calls the diff scenes use.
 #pragma once
+#include <map>
 #include <vector>
 
 #include "render/GDIndexOps.h"
 #include "render/GLApi.h"
+#include "render/gd/TextureTable.h"
 #include "render/gd/GDriverBase.h"
 
 namespace gd {
@@ -68,7 +70,62 @@ public:
     }
     void Flush() override {}
 
+    // ---- textures: the same observable slots, implemented on GL objects ----
+    void GenTextures(int n, std::uint32_t* ids) override { for (int i = 0; i < n; ++i) ids[i] = nextTexture_++; }
+    std::uint32_t CreateTexture(eGDInternalTextureFormat fmt, std::uint32_t w, std::uint32_t h, std::uint32_t mips, eGDTextureHintFlags) override {
+        const std::uint32_t id = nextTexture_++;
+        tex_[id] = {fmt, w, h, mips, 0};
+        return id;
+    }
+    void LoadTextureLevel(std::uint32_t id, std::uint32_t level, std::uint32_t x, std::uint32_t y, std::uint32_t w, std::uint32_t h,
+                          eGDTextureFormat format, eGDType type, std::uint32_t rowLength, const void* pixels) override {
+        Tex& t = tex_[id];
+        std::uint32_t src;
+        if (!nSGLDX7::TranslateGDFormatToSourceFormat(static_cast<int>(format), type, &src)) return;
+        std::vector<std::uint8_t> bgra;
+        const int rowBytes = static_cast<int>(((rowLength ? rowLength : w) * nSGLDX7::GetSourceFormatNumBits(src)) >> 3);
+        if (!ConvertToBGRA8(src, t.format, pixels, rowBytes, static_cast<int>(w), static_cast<int>(h), bgra)) return;
+        if (!t.glId) { std::uint32_t g; gl_->GenTextures(1, &g); t.glId = g; }
+        gl_->ActiveTexture(sgl::gl::TEXTURE0);
+        gl_->BindTexture(sgl::gl::TEXTURE_2D, t.glId);
+        if (x == 0 && y == 0) gl_->TexImage2D(sgl::gl::TEXTURE_2D, static_cast<int>(level), 0x8058, w, h, 0, 0x80e1, 0x8367, bgra.data());
+        else gl_->TexSubImage2D(sgl::gl::TEXTURE_2D, static_cast<int>(level), x, y, w, h, 0x80e1, 0x8367, bgra.data());
+    }
+    void BindTexture(eGDTextureTarget, std::uint32_t id) override { stageTexture_[stage_] = id; }
+    void SetTexture(std::uint32_t id, std::uint32_t stage) override { stageTexture_[stage & 1] = id; }
+    void TexStage(std::uint32_t s) override { cGDriverBase::TexStage(s); stage_ = s & 1; }
+    void TexEnv(eGDTextureEnvTarget t, eGDTextureEnvParamType p, eGDTextureEnvModeParam mode) override { cGDriverBase::TexEnv(t, p, mode); env_[stage_] = mode; }
+    void TexParameter(eGDTextureTarget, eGDTextureParamType param, eGDTextureParam value) override {
+        if (param == 0) mag_[stage_] = value;
+        else if (param == 1) min_[stage_] = value;
+        else if (param == 2) wrapS_[stage_] = value;
+        else if (param == 3) wrapT_[stage_] = value;
+    }
+
 private:
+    struct Tex { std::uint32_t format, w, h, mips; std::uint32_t glId; };
+    void ApplyTexture() {   // stage 0 only (the diff scenes use one stage)
+        const bool on = mirror_.stage[0].enabled && tex_.count(stageTexture_[0]) && tex_[stageTexture_[0]].glId;
+        gl_->ActiveTexture(sgl::gl::TEXTURE0);
+        if (!on) { gl_->Disable(sgl::gl::TEXTURE_2D); return; }
+        Tex& t = tex_[stageTexture_[0]];
+        gl_->Enable(sgl::gl::TEXTURE_2D);
+        gl_->BindTexture(sgl::gl::TEXTURE_2D, t.glId);
+        static const std::uint32_t minMap[8] = {0x2600, 0x2601, 0x2600, 0x2601, 0x2700, 0x2701, 0x2702, 0x2703};
+        gl_->TexParameteri(sgl::gl::TEXTURE_2D, 0x2800, mag_[0] == 1 ? 0x2601 : 0x2600);
+        gl_->TexParameteri(sgl::gl::TEXTURE_2D, 0x2801, minMap[min_[0] & 7]);
+        gl_->TexParameteri(sgl::gl::TEXTURE_2D, 0x2802, wrapS_[0] == 2 ? 0x2900 : 0x2901);
+        gl_->TexParameteri(sgl::gl::TEXTURE_2D, 0x2803, wrapT_[0] == 2 ? 0x2900 : 0x2901);
+        const bool hasAlpha = nSGLDX7::GetFormatInfoNumAlphaBits(static_cast<int>(t.format)) > 1;
+        if (env_[0] == 0) {   // replace
+            gl_->TexEnvi(0x2300, 0x8571, 0x1e01); gl_->TexEnvi(0x2300, 0x8580, 0x1702);
+            gl_->TexEnvi(0x2300, 0x8572, 0x1e01); gl_->TexEnvi(0x2300, 0x8588, 0x1702);
+        } else {              // modulate; an alpha-less texture leaves the incoming alpha alone
+            gl_->TexEnvi(0x2300, 0x8571, 0x2100); gl_->TexEnvi(0x2300, 0x8580, 0x1702); gl_->TexEnvi(0x2300, 0x8581, 0x8578);
+            if (hasAlpha) { gl_->TexEnvi(0x2300, 0x8572, 0x2100); gl_->TexEnvi(0x2300, 0x8588, 0x1702); gl_->TexEnvi(0x2300, 0x8589, 0x8578); }
+            else { gl_->TexEnvi(0x2300, 0x8572, 0x1e01); gl_->TexEnvi(0x2300, 0x8588, 0x8578); }
+        }
+    }
     static std::uint32_t Blend(eGDBlend b) {
         static const std::uint32_t t[11] = {0, 1, 0x300, 0x301, 0x302, 0x303, 0x304, 0x305, 0x306, 0x307, 0x308};
         return t[b];
@@ -91,7 +148,11 @@ private:
         }
     }
     void Rebase(int first) {
+        ApplyTexture();
         const std::uint8_t* b = base_ + static_cast<std::size_t>(first) * stride_;
+        gl_->ClientActiveTexture(sgl::gl::TEXTURE0);
+        gl_->EnableClientState(sgl::gl::TEXTURE_COORD_ARRAY);
+        gl_->TexCoordPointer(2, sgl::gl::FLOAT, stride_, b + 16);
         gl_->EnableClientState(sgl::gl::VERTEX_ARRAY);
         gl_->VertexPointer(3, sgl::gl::FLOAT, stride_, b);
         gl_->EnableClientState(sgl::gl::COLOR_ARRAY);
@@ -101,6 +162,10 @@ private:
     eGDMatrixTarget target_ = 0;
     const std::uint8_t* base_ = nullptr;
     int stride_ = 24;
+    std::uint32_t nextTexture_ = 1;
+    std::map<std::uint32_t, Tex> tex_;
+    std::uint32_t stageTexture_[2] = {0, 0}, env_[2] = {1, 1}, mag_[2] = {0, 0}, min_[2] = {0, 0}, wrapS_[2] = {3, 3}, wrapT_[2] = {3, 3};
+    std::uint32_t stage_ = 0;
 };
 
 }  // namespace gd

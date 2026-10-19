@@ -7,3 +7,6 @@ src/render/gd/GDriverBase.cpp
 src/render/GDIndexOps.cpp
 src/render/SimGL.cpp
 src/sc4/PackedRenderState.cpp
+src/render/gd/TextureTable.cpp
+src/render/TexelOps.cpp
+src/render/TextureStageData.cpp
