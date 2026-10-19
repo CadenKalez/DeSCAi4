@@ -19085,3 +19085,18 @@ address,symbol,unique_name,source,status,evidence
 0x100759b5e,cSC4BuildingSelectWinProc::IsStyleActive(unsigned int),IsStyleActive,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
 0x100759bd0,cSC4BuildingSelectWinProc::HideWindow(),HideWindow,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
 0x100759be2,cSC4BuildingSelectWinProc::IsVisible(),IsVisible,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x100376430,cSC4EstablishCityWinProc::cSC4EstablishCityWinProc(cIGZWinGen*),Construct_cIGZWinGen,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
+0x1003764b8,cSC4EstablishCityWinProc::InitDialog(),InitDialog,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
+0x10037653c,cSC4EstablishCityWinProc::cSC4EstablishCityWinProc(cIGZWinGen*),Construct_cIGZWinGenWrapper,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
+0x100376546,cSC4EstablishCityWinProc::~cSC4EstablishCityWinProc(),Destruct,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
+0x1003765a2,cSC4EstablishCityWinProc::~cSC4EstablishCityWinProc(),DestructAndDelete,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
+0x1003765ac,cSC4EstablishCityWinProc::~cSC4EstablishCityWinProc(),DestructBody,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
+0x1003765da,"cSC4EstablishCityWinProc::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
+0x1003765fc,cSC4EstablishCityWinProc::AddRef(),AddRef,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
+0x10037660a,cSC4EstablishCityWinProc::Release(),Release,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
+0x100376626,cSC4EstablishCityWinProc::GZOnCharacter(char),GZOnCharacter,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
+0x1003767a2,cSC4EstablishCityWinProc::ValidateCityAndMayorNames(),ValidateCityAndMayorNames,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
+0x100376a0a,cSC4EstablishCityWinProc::EndDialog(bool),EndDialog,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
+0x100376afa,"cSC4EstablishCityWinProc::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessage,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
+0x100376bf8,cSC4EstablishCityWinProc::DoCommand(cGZMessage&),DoCommand,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
+0x100376d10,cSC4EstablishCityWinProc::Shutdown(),Shutdown,src/sc4/EstablishCityWinProc.cpp,recovered,scripts/tests/sc4_establishcitywinproc_test.cpp
