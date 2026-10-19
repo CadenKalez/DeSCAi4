@@ -18661,3 +18661,71 @@ address,symbol,unique_name,source,status,evidence
 0x1003b6b1a,"cGZGimexFactory::TranslateGimex8ToGZBuffer8(cGZGimexInfo*, void*, cIGZBuffer*)",TranslateGimex8ToGZBuffer8,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
 0x1003b6b94,"cGZGimexFactory::TranslateGimex8ToGZBuffer16(cGZGimexInfo*, void*, cIGZBuffer*)",TranslateGimex8ToGZBuffer16,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
 0x1003b6d78,"cGZGimexFactory::TranslateGimex8ToGZBuffer32(cGZGimexInfo*, void*, cIGZBuffer*)",TranslateGimex8ToGZBuffer32,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x10045ebca,cSC4FireOccupant::cSC4FireOccupant(),Construct,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045ebe0,cSC4FireOccupant::cSC4FireOccupant(),ConstructWrapper,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045ec9c,cSC4FireOccupant::~cSC4FireOccupant(),Destruct,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045ed48,cSC4FireOccupant::~cSC4FireOccupant(),DestructAndDelete,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045ed52,non-virtual thunk to cSC4FireOccupant::~cSC4FireOccupant(),DestructThunk,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045ed60,non-virtual thunk to cSC4FireOccupant::~cSC4FireOccupant(),DestructAndDeleteThunk,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045ed6e,cSC4FireOccupant::~cSC4FireOccupant(),DestructBody,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045ed9c,non-virtual thunk to cSC4FireOccupant::~cSC4FireOccupant(),DestructBodyThunk_ed9c,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045edaa,non-virtual thunk to cSC4FireOccupant::~cSC4FireOccupant(),DestructBodyThunk_edaa,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045edb8,cSC4FireOccupant::Init(),Init,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045ee28,non-virtual thunk to cSC4FireOccupant::Init(),InitThunk,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045ee3a,cSC4FireOccupant::Shutdown(),Shutdown,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045ef70,non-virtual thunk to cSC4FireOccupant::Shutdown(),ShutdownThunk,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045ef82,cSC4FireOccupant::SetHosed(int),SetHosed,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045efa4,cSC4FireOccupant::SetTarget(cISC4Occupant*),SetTarget,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045f1be,cSC4FireOccupant::SetStage(unsigned int),SetStage,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045f22a,cSC4FireOccupant::CreateFlames(),CreateFlames,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004600ec,cSC4FireOccupant::ViewUpdate(),ViewUpdate,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460262,cSC4FireOccupant::Write(cIGZOStream&) const,Write,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460324,non-virtual thunk to cSC4FireOccupant::Write(cIGZOStream&) const,WriteThunk_0324,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460332,non-virtual thunk to cSC4FireOccupant::Write(cIGZOStream&) const,WriteThunk_0332,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460340,non-virtual thunk to cSC4FireOccupant::Write(cIGZOStream&) const,WriteThunk_0340,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10046034e,cSC4FireOccupant::Read(cIGZIStream&),Read,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004604a6,non-virtual thunk to cSC4FireOccupant::Read(cIGZIStream&),ReadThunk_04a6,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004604b4,non-virtual thunk to cSC4FireOccupant::Read(cIGZIStream&),ReadThunk_04b4,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004604c2,non-virtual thunk to cSC4FireOccupant::Read(cIGZIStream&),ReadThunk_04c2,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004604d0,cSC4FireOccupant::GetPosition(float*),GetPosition,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004604f8,non-virtual thunk to cSC4FireOccupant::GetPosition(float*),GetPositionThunk,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460524,cSC4FireOccupant::SetPosition(float const*),SetPosition,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10046052a,non-virtual thunk to cSC4FireOccupant::SetPosition(float const*),SetPositionThunk,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460530,"cSC4FireOccupant::GetBoundingBox(float*, float*)",GetBoundingBox,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460558,"non-virtual thunk to cSC4FireOccupant::GetBoundingBox(float*, float*)",GetBoundingBoxThunk,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460584,cSC4FireOccupant::Extinguish(unsigned int),Extinguish,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004605a6,"cSC4FireOccupant::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004605c8,"non-virtual thunk to cSC4FireOccupant::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_05c8,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004605ee,"non-virtual thunk to cSC4FireOccupant::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_05ee,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460614,"non-virtual thunk to cSC4FireOccupant::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_0614,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10046063a,"non-virtual thunk to cSC4FireOccupant::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_063a,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460660,cSC4FireOccupant::SetVisible(bool),SetVisible,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004606e4,cSC4FireOccupant::AddRef(),AddRef,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004606f2,cSC4FireOccupant::Release(),Release,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460700,cSC4FireOccupant::AsOccupant(),AsOccupant,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10046070a,cSC4FireOccupant::GetTarget() const,GetTarget,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460718,cSC4FireOccupant::GetStage() const,GetStage,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460722,cSC4FireOccupant::GetMaxStage() const,GetMaxStage,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10046072c,cSC4FireOccupant::GetCounter() const,GetCounter,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460736,cSC4FireOccupant::SetCounter(unsigned int),SetCounter,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460740,cSC4FireOccupant::GetHosed() const,GetHosed,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10046074a,cSC4FireOccupant::GetFamily() const,GetFamily,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460756,cSC4FireOccupant::SetFamily(unsigned int),SetFamily,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460762,cSC4FireOccupant::GetGZCLSID() const,GetGZCLSID,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10046076e,non-virtual thunk to cSC4FireOccupant::AddRef(),AddRefThunk_076e,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460778,non-virtual thunk to cSC4FireOccupant::Release(),ReleaseThunk_0778,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100460790,non-virtual thunk to cSC4FireOccupant::GetGZCLSID() const,GetGZCLSIDThunk_0790,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10046079c,non-virtual thunk to cSC4FireOccupant::AddRef(),AddRefThunk_079c,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004607aa,non-virtual thunk to cSC4FireOccupant::Release(),ReleaseThunk_07aa,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004607b8,non-virtual thunk to cSC4FireOccupant::GetGZCLSID() const,GetGZCLSIDThunk_07b8,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004607c4,non-virtual thunk to cSC4FireOccupant::AddRef(),AddRefThunk_07c4,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004607d2,non-virtual thunk to cSC4FireOccupant::Release(),ReleaseThunk_07d2,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004607e8,non-virtual thunk to cSC4FireOccupant::AddRef(),AddRefThunk_07e8,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x1004607f6,non-virtual thunk to cSC4FireOccupant::Release(),ReleaseThunk_07f6,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045e7cc,cSC4Flame::cSC4Flame(),Construct,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045e840,cSC4Flame::Update(unsigned int),Update,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045e92c,cSC4Flame::UpdateTransform(),UpdateTransform,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045ea20,cSC4Flame::Shutdown(),Shutdown,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045ea6e,cSC4Flame::SetVisible(bool),SetVisible,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045eaa8,cSC4Flame::Write(cIGZOStream&) const,Write,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x10045eb08,cSC4Flame::Read(cIGZIStream&),Read,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
