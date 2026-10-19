@@ -43,7 +43,8 @@ cSC4App::cSC4App(const char* moduleName, IGZAppFramework* framework) : cGZApp(mo
     timer410_.Start();
     timer428_.Start();
     timer440_.Start();
-    // (the original also calls SL::OnAppCreate(cISC4App*) here and builds the tutorial registry)
+    SL::OnAppCreate(static_cast<cISC4App*>(this));
+    // (the original also builds the tutorial registry here)
 }
 
 cSC4App::~cSC4App() {

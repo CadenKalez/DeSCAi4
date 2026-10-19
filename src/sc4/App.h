@@ -24,6 +24,7 @@
 #include "rz/cRZCmdLine.h"
 #include "sc4/AppPreferences.h"
 #include "sc4/RenderProperties.h"
+#include "sc4/ServiceLocator.h"
 #include "sc4/ISC4App.h"
 
 class cIGZFrameWork;
@@ -80,6 +81,8 @@ public:
     // --- cISC4App accessors
     void GetAppName(cIGZString& out) const override;               // @ 0x1000122b2
     cISC4City* GetCity() const override { return city_; }          // @ 0x10001231a
+    SL::IWinSC4App* WinSC4App() const { return winSC4App_; }
+    void SetWinSC4App(SL::IWinSC4App* window) { winSC4App_ = window; }
     std::uint8_t* GetPreferences() const override { return const_cast<sc4::SC4Preferences*>(&preferences_)->data(); }   // @ 0x100012336
     cSC4NewCitySpecification* GetNewCitySpecification() override { return reinterpret_cast<cSC4NewCitySpecification*>(newCitySpecification_); }   // @ 0x100012352
     void GetAppDirectory(cIGZString& out) override { out.AssignFromCString(appDirectory_.ToChar()); }               // @ 0x10001236e
@@ -200,7 +203,7 @@ private:
     std::uint32_t appState_ = 0;                         // +0x78
     bool field7c_ = false;                               // +0x7c
     cIGZWin* mainWindow_ = nullptr;                      // +0x80
-    void* field88_ = nullptr;                            // +0x88
+    SL::IWinSC4App* winSC4App_ = nullptr;                // +0x88 (the application window object, bound by Init)
     cISC4Nation* nation_ = nullptr;                      // +0x90
     cRZAutoRefCount<cISC4RegionalCity>* regionalCity_ = nullptr;   // +0x98 (set by RequestNewCity / LoadCity)
     cISC4City* city_ = nullptr;                          // +0xa0
