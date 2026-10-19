@@ -18729,3 +18729,39 @@ address,symbol,unique_name,source,status,evidence
 0x10045ea6e,cSC4Flame::SetVisible(bool),SetVisible,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
 0x10045eaa8,cSC4Flame::Write(cIGZOStream&) const,Write,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
 0x10045eb08,cSC4Flame::Read(cIGZIStream&),Read,src/sc4/FireOccupant.cpp,recovered,scripts/tests/sc4_fireoccupant_test.cpp
+0x100614b10,cGZBufferResource::cGZBufferResource(),Construct,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614b86,cGZBufferResource::~cGZBufferResource(),Destruct,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614be4,cGZBufferResource::~cGZBufferResource(),DestructAndDelete,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614bee,cGZBufferResource::~cGZBufferResource(),DestructBody,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614c1c,"cGZBufferResource::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614c92,"non-virtual thunk to cGZBufferResource::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614ca0,cGZBufferResource::AddRef(),AddRef,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614caa,non-virtual thunk to cGZBufferResource::AddRef(),AddRefThunk,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614cb8,cGZBufferResource::Release(),Release,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614cc2,non-virtual thunk to cGZBufferResource::Release(),ReleaseThunk,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614cd0,cGZBufferResource::DebugInstanceTag(cIGZString&),DebugInstanceTag,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614cda,cGZBufferResource::DebugClassTag(cIGZString&),DebugClassTag,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614ce2,cGZBufferResource::DebugTypeTag(cIGZString&),DebugTypeTag,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614cea,cGZBufferResource::SetBuffer(cIGZBuffer*),SetBuffer,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614d20,non-virtual thunk to cGZBufferResource::SetBuffer(cIGZBuffer*),SetBufferThunk,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614d56,cGZBufferResource::GetBuffer(cIGZBuffer**) const,GetBuffer,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614d7c,non-virtual thunk to cGZBufferResource::GetBuffer(cIGZBuffer**) const,GetBufferThunk,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614da2,"cGZBufferResource::GetBufferAs(unsigned int, void**) const",GetBufferAs,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614dbc,"non-virtual thunk to cGZBufferResource::GetBufferAs(unsigned int, void**) const",GetBufferAsThunk,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614dd6,"cGZBufferResource::SaveToSerialRecord(cIGZPersistDBSerialRecord*, unsigned int) const",SaveToSerialRecord,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100614e54,cGZBufferResource::save_v2(cIGZPersistDBSerialRecord*) const,save_v2,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x10061504c,cGZBufferResource::save_bitmap_24(cIGZPersistDBSerialRecord*) const,save_bitmap_24,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x1006152e2,"non-virtual thunk to cGZBufferResource::SaveToSerialRecord(cIGZPersistDBSerialRecord*, unsigned int) const",SaveToSerialRecordThunk,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x1006152f0,"cGZBufferResource::LoadFromSerialRecord(cIGZPersistDBSerialRecord*, cGZBufferColorType const&)",LoadFromSerialRecord,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100615494,"cGZBufferResource::load_bitmap(cIGZPersistDBSerialRecord*, cGZBufferColorType const&)",load_bitmap,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100615680,"cGZBufferResource::load_v0(cIGZPersistDBSerialRecord*, cGZBufferResource::tGZBuffResHdrV0 const&, cGZBufferColorType const&)",load_v0,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x10061578c,"cGZBufferResource::load_v1(cIGZPersistDBSerialRecord*, cGZBufferResource::tGZBuffResHdr const&, cGZBufferColorType const&)",load_v1,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100615924,"cGZBufferResource::load_v2(cIGZPersistDBSerialRecord*, cGZBufferResource::tGZBuffResHdr const&, cGZBufferColorType const&)",load_v2,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100615b32,"non-virtual thunk to cGZBufferResource::LoadFromSerialRecord(cIGZPersistDBSerialRecord*, cGZBufferColorType const&)",LoadFromSerialRecordThunk,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100615b4a,"cGZBufferResource::translate_bmp(tagBITMAPINFO const&, unsigned char const*)",translate_bmp,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100615c2a,"cGZBufferResource::translate_4_to_16(tagBITMAPINFO const&, unsigned char const*)",translate_4_to_16,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100615d68,"cGZBufferResource::translate_8_to_8(tagBITMAPINFO const&, unsigned char const*)",translate_8_to_8,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100615e04,"cGZBufferResource::translate_8_to_16(tagBITMAPINFO const&, unsigned char const*)",translate_8_to_16,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100615f22,"cGZBufferResource::translate_24_to_16(tagBITMAPINFO const&, unsigned char const*)",translate_24_to_16,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100615ff4,"cGZBufferResource::translate_24_to_24(tagBITMAPINFO const&, unsigned char const*)",translate_24_to_24,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
+0x100616082,"cGZBufferResource::translate_24_to_32(tagBITMAPINFO const&, unsigned char const*)",translate_24_to_32,src/gz/BufferResource.cpp,recovered,scripts/tests/gz_bufferresource_test.cpp
