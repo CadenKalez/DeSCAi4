@@ -48,6 +48,27 @@ public:
     virtual void GetNthNativeResolution(int index, int& width, int& height) = 0;
 };
 
+// The graphics system as the application configures it before start-up (cIGZGraphicSystem / cIGZGraphicSystem2 of the
+// service 0xc416025c; the method names are those of cGZGraphicSystem's vtable).
+class IGraphicSystemControl {
+public:
+    virtual ~IGraphicSystemControl() = default;
+    struct DisplayMetrics { std::uint32_t width = 0, height = 0, depth = 0; };
+    virtual DisplayMetrics GetScreenMetrics() = 0;                                    // group 2 slot 10
+    virtual void PreInitSetDesiredGameResolution(const DisplayMetrics& metrics) = 0;  // group 2 slot 53
+    virtual void PreInitSetWindowedMode(bool windowed) = 0;                           // group 2 slot 55
+    virtual void DisableScreenBuffer() = 0;                                           // group 3 slot 14
+    virtual void EnableCursorEmulation(bool enable) = 0;                              // group 3 slot 21
+    virtual void EnablePageFlipping(bool enable) = 0;                                 // group 3 slot 22
+    virtual bool IsPageFlippingEnabled() = 0;                                         // group 3 slot 23
+    virtual void SetDefaultDriverClassID(std::uint32_t driverClass) = 0;              // group 3 slot 8
+};
+
+// The file system service's directories (cGZFileSystem vslots 0x20 / 0x50 / 0x38 / 0x58).
+struct FileSystemDirectories {
+    std::string appDirectory, cdAppDirectory, dataDirectory, cdDataDirectory;
+};
+
 // Collaborators of AddSystemServices / AddCOMDirectors whose classes are not recovered yet, or that live in the
 // platform layer. All optional: an empty entry skips the step.
 struct AppStartupHooks {
@@ -59,6 +80,22 @@ struct AppStartupHooks {
     std::function<void(cIGZUnknown* graphicSystem, const cIGZString& iniPath)> configureGraphicSystem;
     // the script service exists: register cSC4ScriptServiceResourceFactory with it
     std::function<void(cIGZUnknown* scriptService)> registerScriptResourceFactory;
+    // RZ::GS(): the graphics system (null while it is not recovered / created)
+    std::function<IGraphicSystemControl*()> graphicSystem;
+    // RZ::FS(): the file system service's directories
+    std::function<bool(FileSystemDirectories&)> fileSystemDirectories;
+    // CFBundleCopyBundleURL + "Contents/GameData": the game data inside the application bundle
+    std::function<std::string()> bundleGameDataDirectory;
+    // SC4GetInstalledLanguageAndCountryIDs (the Mac build reports none)
+    std::function<bool(std::uint32_t& language, std::uint32_t& country)> installedLanguage;
+    // the -GZLog / -GZShutdownLog switches (the log files are set up by the debug runtime)
+    std::function<void(cIGZCmdLine&)> configureLogging;
+    // for every `-x:<code>` switch (in order, each consumed once): cGZCheatCodeManager::DoDefaultCheatCodeProcessing
+    std::function<void(const cIGZString& cheatCode)> processCheatCode;
+    // SC4GamePause(pause, true, true, true, true): pause/resume the whole game
+    std::function<void(bool pause)> gamePause;
+    // the simulator's tick interval (city -> simulator vslot 0xf8) for the preference's speed setting
+    std::function<void(std::uint32_t ticks)> setSimulatorTickInterval;
     // the WWW system was created: set its cache directory, enable it and hook the HTML UI
     std::function<void(cIGZUnknown* wwwSystem, const cIGZString& cacheDirectory)> configureWWWSystem;
 };
@@ -137,6 +174,10 @@ public:
 
     // --- start-up: directors and system services
     void FindAndPossiblyFixIniFiles();                             // @ 0x100010c06
+    bool PreFrameWorkInit() override;                              // @ 0x100004b20
+    int AddCodePlugins(const cRZString& directory);                // @ 0x1000073de (count of plugins added)
+    void FindAndRegisterAllAvailableLanguages();                   // @ 0x100007d56
+    void DoPreferencesChanged(bool initial);                       // @ 0x1000080b2
     void AddCOMDirectors();                                        // @ 0x1000062aa
     void AddSystemServices();                                      // @ 0x100006372
     using ServiceFactory = std::function<cIGZUnknown*()>;
@@ -170,8 +211,8 @@ public:
 
     // --- remaining virtuals of cISC4App / cGZApp (see AppPending.cpp until they are recovered)
     bool OnIdle(std::uint32_t elapsed) override;
-    void RunMessageServerPump(std::uint32_t a, std::uint32_t b, std::uint32_t c) override;
-    void RunMessageServer2Pump(std::uint32_t a, std::uint32_t b, std::uint32_t c) override;
+    void RunMessageServerPump(std::uint32_t minimum, std::uint32_t maximum, std::uint32_t timeLimitMs) override;     // @ 0x10000efc0
+    void RunMessageServer2Pump(std::uint32_t minimum, std::uint32_t maximum, std::uint32_t timeLimitMs) override;   // @ 0x10000f07e
     bool RequestNewCity(cRZAutoRefCount<cISC4RegionalCity>* city) override;
     bool RequestLoadCity() override;
     bool RequestCloseCity(bool a) override;
@@ -185,12 +226,13 @@ public:
     bool SaveCity(const cRZString& path, bool a) override;
     void SavePreferences() override;                               // @ 0x10000f670
     void ReadPreferences();                                        // @ 0x10000f35c
-    void EnableFullGamePauseOnAppFocusLoss(bool enable) override;
+    void EnableFullGamePauseOnAppFocusLoss(bool enable) override;   // @ 0x10000f2ba
+    void GainLoseFocus(bool gained);                               // @ 0x10000f2f2
+    void FullGamePause(bool pause);                                // @ 0x10000f322
     bool AddDynamicLibraryByName(const cIGZString& name, cRZString* resolvedPath, bool required) override;
     bool AddDynamicLibraryByPath(const cIGZString& path, bool required) override;
     bool Init() override;
     bool Shutdown() override;
-    bool PreFrameWorkInit() override;
     bool PostFrameWorkInit() override;
     bool PreFrameWorkShutdown() override;
     bool LoadRegistry() override;
@@ -245,6 +287,8 @@ private:
     cIGZUnknown* stringDetokenizer_ = nullptr;           // +0x688
     cIGZUnknown* winLocationSaver_ = nullptr;            // +0x690
     std::list<ShutdownCallbackData> shutdownCallbacks_;  // +0x698
+    bool pauseOnFocusLoss_ = false;                      // +0x6b0
+    bool gamePaused_ = false;                            // +0x6b1
     FileChangeNotification pluginWatcher_;               // +0x6b8
     FileChangeNotification dataWatcher_;                 // +0x708
     sc4::cSC4RenderProperties* renderProperties_ = nullptr;   // +0x760
@@ -262,6 +306,7 @@ private:
 
     sc4::IDisplayInfo* display_ = nullptr;
     cIGZCmdLine* commandLine_ = nullptr;
+    cIGZCmdLine* CommandLineInUse();
     cIGZFrameWork* framework_ = nullptr;
     sc4::AppStartupHooks startupHooks_;
     std::map<std::string, ServiceFactory> serviceFactories_;

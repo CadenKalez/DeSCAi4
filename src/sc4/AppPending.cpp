@@ -16,8 +16,6 @@ bool cSC4App::DoMessage(cGZMessage&) { Pending("DoMessage(cGZMessage&)"); }
 bool cSC4App::DoMessage(cIGZMessage2*) { Pending("DoMessage(cIGZMessage2*)"); }
 bool cSC4App::DoMessage(cIGZWin*, cGZMessage&) { Pending("DoMessage(cIGZWin*, cGZMessage&)"); }
 bool cSC4App::OnIdle(std::uint32_t) { Pending("OnIdle"); }
-void cSC4App::RunMessageServerPump(std::uint32_t, std::uint32_t, std::uint32_t) { Pending("RunMessageServerPump"); }
-void cSC4App::RunMessageServer2Pump(std::uint32_t, std::uint32_t, std::uint32_t) { Pending("RunMessageServer2Pump"); }
 bool cSC4App::RequestNewCity(cRZAutoRefCount<cISC4RegionalCity>*) { Pending("RequestNewCity"); }
 bool cSC4App::RequestLoadCity() { Pending("RequestLoadCity"); }
 bool cSC4App::RequestCloseCity(bool) { Pending("RequestCloseCity"); }
@@ -29,12 +27,10 @@ bool cSC4App::LoadCity(const cRZString&, cRZAutoRefCount<cISC4RegionalCity>*) { 
 bool cSC4App::CloseCity() { Pending("CloseCity"); }
 bool cSC4App::SaveCity(bool) { Pending("SaveCity(bool)"); }
 bool cSC4App::SaveCity(const cRZString&, bool) { Pending("SaveCity(path, bool)"); }
-void cSC4App::EnableFullGamePauseOnAppFocusLoss(bool) { Pending("EnableFullGamePauseOnAppFocusLoss"); }
 bool cSC4App::AddDynamicLibraryByName(const cIGZString&, cRZString*, bool) { Pending("AddDynamicLibraryByName"); }
 bool cSC4App::AddDynamicLibraryByPath(const cIGZString&, bool) { Pending("AddDynamicLibraryByPath"); }
 bool cSC4App::Init() { Pending("Init"); }
 bool cSC4App::Shutdown() { Pending("Shutdown"); }
-bool cSC4App::PreFrameWorkInit() { Pending("PreFrameWorkInit"); }
 bool cSC4App::PostFrameWorkInit() { Pending("PostFrameWorkInit"); }
 bool cSC4App::PreFrameWorkShutdown() { Pending("PreFrameWorkShutdown"); }
 bool cSC4App::LoadRegistry() { Pending("LoadRegistry"); }

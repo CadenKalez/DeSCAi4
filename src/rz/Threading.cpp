@@ -1,5 +1,7 @@
 #include "rz/Threading.h"
 
+#include "platform/MacTools.h"
+
 #include <cerrno>
 #include <cstring>
 #include <ctime>
@@ -72,3 +74,5 @@ bool FileChangeNotification::GetWatchedDirectory(cIGZString& out) const {
     out.Copy(directory_);
     return true;
 }
+
+void cRZThread::SleepCurrentThread(std::uint32_t microseconds) { MacTools::Sleep(microseconds / 1000); }

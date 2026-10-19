@@ -7,11 +7,16 @@
 #include <string>
 
 #include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <vector>
 #include <unistd.h>
 
 #include "rz/cRZCmdLine.h"
 #include "gz/GZFramework.h"
+#include "rz/LanguageManager.h"
 #include "sc4/App.h"
+#include "sc4/AppPlatform.h"
 #include "sc4/AppPreferences.h"
 
 static int failures = 0;
@@ -125,7 +130,7 @@ int main() {
         CHECK(p.Get<std::uint8_t>(sc4::prefs::kImeEnabled) == 0);
         CHECK(p.Get<std::uint32_t>(sc4::prefs::kVideoWidth) == 1280 && p.Get<std::uint32_t>(sc4::prefs::kVideoHeight) == 1024 && p.Get<std::uint32_t>(sc4::prefs::kVideoColorDepth) == 32);
         CHECK(p.Get<std::uint8_t>(sc4::prefs::kFullScreen) == 0);
-        CHECK(std::strcmp(reinterpret_cast<const char*>(p.data() + sc4::prefs::kPlayerName), "Mayor Bob") == 0);
+        CHECK(std::strcmp(reinterpret_cast<const char*>(p.data() + sc4::prefs::kLanguageName), "Mayor Bob") == 0);
         CHECK(p.Get<std::uint8_t>(sc4::prefs::kAudioEnabled) == 0 && p.Get<std::uint8_t>(sc4::prefs::kAudioEnabledMirror) == 0);
         CHECK(p.Get<std::uint32_t>(sc4::prefs::kMusicEnabled) == 1);
         CHECK(p.Get<float>(sc4::prefs::kSimulatorParameter) == 75.5f && p.Get<std::uint8_t>(sc4::prefs::kSwitchXDD) == 1);
@@ -143,9 +148,9 @@ int main() {
         a->AppNameString() = "Tst";
         a->Preferences().Set<std::uint32_t>(sc4::prefs::kVideoWidth, 1600);
         a->Preferences().Set<float>(sc4::prefs::kSimulatorParameter, 12.5f);
-        std::memcpy(a->Preferences().data() + sc4::prefs::kPlayerName, "temp", 5);
+        std::memcpy(a->Preferences().data() + sc4::prefs::kLanguageName, "temp", 5);
         a->SavePreferences();
-        CHECK(a->Preferences().Get<std::uint32_t>(sc4::prefs::kAppResetFlag) == 1 && a->Preferences().data()[sc4::prefs::kPlayerName] == 0);
+        CHECK(a->Preferences().Get<std::uint32_t>(sc4::prefs::kAppResetFlag) == 1 && a->Preferences().data()[sc4::prefs::kLanguageName] == 0);
         auto* b = new cSC4App("Tst"); b->AddRef();
         b->SetDirectories("/g/", "/g/Data/", user.c_str());
         b->AppNameString() = "Tst";
@@ -182,6 +187,69 @@ int main() {
         void* out = nullptr;
         for (auto& fake : fakes) CHECK(f->GetSystemService(fake.id, kGZIID_cIGZSystemService, &out));
         CHECK(!f->GetSystemService(0x99, kGZIID_cIGZSystemService, &out));
+    }
+
+
+    // ---- PreFrameWorkInit end to end (real framework, real language manager, fake graphics system)
+    {
+        struct Graphics final : sc4::IGraphicSystemControl {
+            DisplayMetrics screen{1440, 900, 32};
+            std::vector<std::string> log; DisplayMetrics desired; bool windowed = true; std::uint32_t driver = 0;
+            DisplayMetrics GetScreenMetrics() override { return screen; }
+            void PreInitSetDesiredGameResolution(const DisplayMetrics& m) override { desired = m; log.push_back("resolution"); }
+            void PreInitSetWindowedMode(bool w) override { windowed = w; log.push_back("windowed"); }
+            void DisableScreenBuffer() override { log.push_back("disable"); }
+            void EnableCursorEmulation(bool e) override { log.push_back(e ? "cursor-on" : "cursor-off"); }
+            void EnablePageFlipping(bool) override { log.push_back("flip"); }
+            bool IsPageFlippingEnabled() override { return true; }
+            void SetDefaultDriverClassID(std::uint32_t d) override { driver = d; log.push_back("driver"); }
+        };
+        char dir[] = "/tmp/sc4pfiXXXXXX"; CHECK(mkdtemp(dir));
+        std::string root = dir;
+        std::filesystem::create_directories(root + "/Data/English");
+        std::ofstream(root + "/Data/English/text.str") << "x";
+        std::filesystem::create_directories(root + "/Data/German");
+        std::ofstream(root + "/Data/German/data.dat") << "x";
+        std::filesystem::create_directories(root + "/Data/French");        // no string tables: not available
+        SetDocumentsFolderProvider([&](std::string& out) { out = root + "/Documents"; return true; });
+        std::filesystem::create_directories(root + "/Documents");
+
+        auto* f = new cGZFramework();
+        cGZFramework::sSetFrameWork(f);
+        f->COM().RealInit();
+        auto* a = new cSC4App("T", f->AppView()); a->AddRef();
+        a->SetFramework(f);
+        auto* languages = new cRZLanguageManager();
+        a->SetServiceFactory("cRZLanguageManager", [languages]() -> cIGZUnknown* { return static_cast<cIGZUnknown*>(static_cast<cIGZSystemService*>(languages)); });
+        Graphics graphics;
+        a->StartupHooks().graphicSystem = [&] { return &graphics; };
+        a->StartupHooks().fileSystemDirectories = [&](sc4::FileSystemDirectories& d) { d.appDirectory = root + "/App/"; d.cdAppDirectory = root + "/CD/"; d.dataDirectory = root + "/Data/"; d.cdDataDirectory = root + "/CDData/"; return true; };
+        a->StartupHooks().bundleGameDataDirectory = [&] { return root + "/Data"; };
+        cRZCmdLine line("sc4 -r1280x1024x32 -d:opengl -cursormode:blit");
+        f->SetCommandLine(line);
+        CHECK(a->PreFrameWorkInit());
+        CHECK(a->Preferences().Get<std::uint32_t>(sc4::prefs::kVideoWidth) == 1280);
+        CHECK(graphics.log.size() >= 6 && graphics.log[0] == "disable" && graphics.log[1] == "cursor-on" && graphics.log[2] == "flip");
+        // the data directories, the derived ones, the user data directory
+        CHECK(Get(&cSC4App::GetPluginDirectory, *a) == root + "/Data/Plugins/");
+        CHECK(Get(&cSC4App::GetUserDataDirectory, *a) == root + "/Documents/SimCity 4/");
+        CHECK(std::filesystem::is_directory(root + "/Documents/SimCity 4"));
+        CHECK(Get(&cSC4App::GetAppDirectory, *a) == root + "/App/");
+        // languages: English and German are available (string tables / data), French is not
+        for (std::uint32_t id = 1; id <= 0x2c; ++id) {
+            cRZString folder;
+            if (!languages->GetLanguageDirectoryName(folder, id)) continue;
+            std::string name = folder.ToChar();
+            if (name == "English" || name == "German") CHECK(languages->CanSwitchToLanguage(id));
+            if (name == "French") CHECK(!languages->CanSwitchToLanguage(id));
+        }
+        CHECK(languages->GetCurrentLanguage() == a->Preferences().Get<std::uint32_t>(sc4::prefs::kLanguageId));
+        CHECK(graphics.driver == 0xc4554841u);                           // -d:opengl
+        CHECK(a->Preferences().data()[sc4::prefs::kVideoHardwareDriver] == 0xff);   // not the DirectX id: flagged "other"
+        CHECK(!graphics.windowed);                                        // 1280x1024 does not fit the 1440x900 desktop -> full screen
+        CHECK(a->GetRenderProperties() != nullptr);
+        a->Release();
+        std::string cleanup = "rm -rf " + root; std::system(cleanup.c_str());
     }
 
     // preferences blob defaults

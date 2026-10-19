@@ -11,6 +11,13 @@
 #include "gz/cIGZString.h"
 #include "rz/cRZString.h"
 
+// cRZThread (only the static the application uses)
+class cRZThread {
+public:
+    // @ 0x100038c5e: microseconds, passed on as milliseconds (MacTools::Sleep(us / 1000))
+    static void SleepCurrentThread(std::uint32_t microseconds);
+};
+
 class cRZMutex {
 public:
     explicit cRZMutex(const cIGZString& name);

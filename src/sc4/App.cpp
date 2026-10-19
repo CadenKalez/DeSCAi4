@@ -6,6 +6,8 @@
 #include <cstring>
 #include <string>
 
+#include "gz/GZCOMDirector.h"
+#include "gz/cIGZFrameWork.h"
 #include "rz/LanguageManager.h"
 #include "rz/cRZFile.h"
 #include "rz/cRZMessage2Standard.h"
@@ -236,6 +238,13 @@ cISC4RegionalCity* cSC4App::GetRegionalCity() {
     return regionalCity_->get();   // (the original AddRefs and Releases once, a no-op)
 }
 
+// The command line the switches are read from: the injected one, else the framework's (cGZFramework::CommandLine()).
+cIGZCmdLine* cSC4App::CommandLineInUse() {
+    if (commandLine_) return commandLine_;
+    cIGZFrameWork* framework = framework_ ? framework_ : RZGetFramework();
+    return framework ? framework->CommandLine() : nullptr;
+}
+
 // ---- command line -------------------------------------------------------------------------------------------
 
 namespace {
@@ -272,7 +281,7 @@ void cSC4App::SetRenderProperties(sc4::cSC4RenderProperties* properties) {
 }
 
 void cSC4App::ReadCommandLine() {
-    cIGZCmdLine& commandLine = *commandLine_;
+    cIGZCmdLine& commandLine = *CommandLineInUse();
     std::uint8_t* prefs = preferences_.data();
     std::string value;
     bool flag = false;
@@ -306,7 +315,7 @@ void cSC4App::ReadCommandLine() {
 
     // -g<p...>
     if (SwitchValue(commandLine, "g", value) && !value.empty() && (static_cast<unsigned char>(value[0]) | 0x20) == 'p')
-        prefs[sc4::prefs::kAppFlag4a4] = 1;
+        prefs[sc4::prefs::kPauseOnFocusLoss] = 1;
 
     // -d<driver>: "opengl", "soft", "dx" / "directx", else a hexadecimal id
     requestedGraphicsDriver_ = 0;
@@ -328,7 +337,7 @@ void cSC4App::ReadCommandLine() {
             if (!value.empty() && value.back() == '"') value.pop_back();
         }
         if (value.size() > 0x3f) value.resize(0x3f);
-        std::memcpy(prefs + sc4::prefs::kPlayerName, value.c_str(), value.size() + 1);
+        std::memcpy(prefs + sc4::prefs::kLanguageName, value.c_str(), value.size() + 1);
     }
 
     // -audio / -sound
@@ -387,7 +396,7 @@ void cSC4App::FixStartupResolutionValuesIfNeeded(std::uint32_t& width, std::uint
 bool cSC4App::IsStartupResolutionOK(std::uint32_t width, std::uint32_t height) {
     std::string value;
     bool custom = false;
-    if (commandLine_ && SwitchValue(*commandLine_, "CustomResolution", value) && ParseOnOff(Lower(value), custom) && custom) return true;
+    if (CommandLineInUse() && SwitchValue(*CommandLineInUse(), "CustomResolution", value) && ParseOnOff(Lower(value), custom) && custom) return true;
     if (height < 600) return false;
     struct Size { std::uint32_t width, height; };
     static constexpr Size kSizes[] = {{800, 600}, {0x400, 0x300}, {0x480, 0x360}, {0x500, 0x400}, {0x690, 0x41a},
@@ -452,4 +461,49 @@ void cSC4App::SavePreferences() {
         return;
     }
     segment->Shutdown();
+}
+
+
+// ---- focus and the message pumps ----------------------------------------------------------------------------
+
+void cSC4App::EnableFullGamePauseOnAppFocusLoss(bool enable) {
+    preferences_.data()[sc4::prefs::kPauseOnFocusLoss] = enable ? 1 : 0;
+    pauseOnFocusLoss_ = enable;
+}
+
+void cSC4App::GainLoseFocus(bool gained) {
+    if (pauseOnFocusLoss_ && gamePaused_ != !gained) FullGamePause(!gained);
+}
+
+void cSC4App::FullGamePause(bool pause) {
+    if (gamePaused_ == pause) return;
+    gamePaused_ = pause;
+    if (startupHooks_.gamePause) startupHooks_.gamePause(pause);
+}
+
+namespace {
+// Delivers queued messages one tick at a time: at most `maximum` ticks, stopping when the queue is empty or, once more
+// than `minimum` ticks ran, when `timeLimitMs` have passed.
+template <class Server>
+void PumpMessages(Server* server, std::uint32_t minimum, std::uint32_t maximum, std::uint32_t timeLimitMs) {
+    if (!server) return;
+    cRZTimer timer(cRZTimer::kMilliseconds);
+    timer.Start();
+    if (maximum == 0) return;
+    std::uint32_t ticks = 0;
+    do {
+        if (server->GetMessageQueueSize() == 0) break;
+        server->OnTick(0);
+        if (minimum < ticks && timeLimitMs < timer.GetElapsedTimeU32()) break;
+        ++ticks;
+    } while (ticks < maximum);
+}
+}  // namespace
+
+void cSC4App::RunMessageServerPump(std::uint32_t minimum, std::uint32_t maximum, std::uint32_t timeLimitMs) {
+    PumpMessages(SL::spMS, minimum, maximum, timeLimitMs);
+}
+
+void cSC4App::RunMessageServer2Pump(std::uint32_t minimum, std::uint32_t maximum, std::uint32_t timeLimitMs) {
+    PumpMessages(SL::spMS2, minimum, maximum, timeLimitMs);
 }

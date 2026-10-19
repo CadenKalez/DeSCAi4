@@ -18386,3 +18386,23 @@ address,symbol,unique_name,source,status,evidence
 0x1003f78a0,SL::Terrain(),Terrain,src/sc4/ServiceLocator.cpp|h,recovered,"SL service locator (global manager pointers, staged init); test sc4_servicelocator"
 0x1003f7980,SL::SS(),SS,src/sc4/ServiceLocator.cpp|h,recovered,"SL service locator (global manager pointers, staged init); test sc4_servicelocator"
 0x1003f7990,SL::RM(),RM,src/sc4/ServiceLocator.cpp|h,recovered,"SL service locator (global manager pointers, staged init); test sc4_servicelocator"
+0x100004b20,cSC4App::PreFrameWorkInit(),PreFrameWorkInit,src/sc4/AppStartup.cpp,recovered-partial,"cSC4App PreFrameWorkInit chain: directories, instance guard, graphics set-up, plugins, languages, preferences applied; test sc4_app"
+0x1000073de,cSC4App::AddCodePlugins(cRZString const&),AddCodePlugins,src/sc4/AppStartup.cpp,recovered,"cSC4App PreFrameWorkInit chain: directories, instance guard, graphics set-up, plugins, languages, preferences applied; test sc4_app"
+0x100007d56,cSC4App::FindAndRegisterAllAvailableLanguages(),FindAndRegisterAllAvailableLanguages,src/sc4/AppStartup.cpp,recovered,"cSC4App PreFrameWorkInit chain: directories, instance guard, graphics set-up, plugins, languages, preferences applied; test sc4_app"
+0x1000080b2,cSC4App::DoPreferencesChanged(bool),DoPreferencesChanged,src/sc4/AppStartup.cpp,recovered-partial,"cSC4App PreFrameWorkInit chain: directories, instance guard, graphics set-up, plugins, languages, preferences applied; test sc4_app"
+0x100008682,non-virtual thunk to cSC4App::PreFrameWorkInit(),PreFrameWorkInitThunk_8682,src/sc4/AppStartup.cpp,recovered,"cSC4App PreFrameWorkInit chain: directories, instance guard, graphics set-up, plugins, languages, preferences applied; test sc4_app"
+0x100008690,non-virtual thunk to cSC4App::PreFrameWorkInit(),PreFrameWorkInitThunk_8690,src/sc4/AppStartup.cpp,recovered,"cSC4App PreFrameWorkInit chain: directories, instance guard, graphics set-up, plugins, languages, preferences applied; test sc4_app"
+0x10000efc0,"cSC4App::RunMessageServerPump(unsigned int, unsigned int, unsigned int)",RunMessageServerPump,src/sc4/App.cpp,recovered,focus/pause handling and the message pumps; test sc4_app
+0x10000f074,"non-virtual thunk to cSC4App::RunMessageServerPump(unsigned int, unsigned int, unsigned int)",RunMessageServerPumpThunk,src/sc4/App.cpp,recovered,focus/pause handling and the message pumps; test sc4_app
+0x10000f07e,"cSC4App::RunMessageServer2Pump(unsigned int, unsigned int, unsigned int)",RunMessageServer2Pump,src/sc4/App.cpp,recovered,focus/pause handling and the message pumps; test sc4_app
+0x10000f132,"non-virtual thunk to cSC4App::RunMessageServer2Pump(unsigned int, unsigned int, unsigned int)",RunMessageServer2PumpThunk,src/sc4/App.cpp,recovered,focus/pause handling and the message pumps; test sc4_app
+0x10000f2ba,cSC4App::EnableFullGamePauseOnAppFocusLoss(bool),EnableFullGamePauseOnAppFocusLoss,src/sc4/App.cpp,recovered,focus/pause handling and the message pumps; test sc4_app
+0x10000f2d6,non-virtual thunk to cSC4App::EnableFullGamePauseOnAppFocusLoss(bool),EnableFullGamePauseOnAppFocusLossThunk,src/sc4/App.cpp,recovered,focus/pause handling and the message pumps; test sc4_app
+0x10000f2f2,cSC4App::GainLoseFocus(bool),GainLoseFocus,src/sc4/App.cpp,recovered,focus/pause handling and the message pumps; test sc4_app
+0x10000f322,cSC4App::FullGamePause(bool),FullGamePause,src/sc4/App.cpp,recovered,focus/pause handling and the message pumps; test sc4_app
+0x100038d80,SC4SetupFPU(),SC4SetupFPU,src/sc4/AppPlatform.cpp|h,recovered,"application platform functions (Documents/SimCity 4, no-op hooks)"
+0x100039486,SC4DisableOSMessageBoxAlerts(),SC4DisableOSMessageBoxAlerts,src/sc4/AppPlatform.cpp|h,recovered,"application platform functions (Documents/SimCity 4, no-op hooks)"
+0x10003972c,"SC4GetUserDataDirectory(cIGZString&, bool)",SC4GetUserDataDirectory,src/sc4/AppPlatform.cpp|h,recovered,"application platform functions (Documents/SimCity 4, no-op hooks)"
+0x10003a547,"SC4GetInstalledLanguageAndCountryIDs(unsigned int&, unsigned int&)",SC4GetInstalledLanguageAndCountryIDs,src/sc4/AppPlatform.cpp|h,recovered,"application platform functions (Documents/SimCity 4, no-op hooks)"
+0x10003a555,SC4SetCPUUsageCount(int),SC4SetCPUUsageCount,src/sc4/AppPlatform.cpp|h,recovered,"application platform functions (Documents/SimCity 4, no-op hooks)"
+0x100038c5e,cRZThread::SleepCurrentThread(unsigned int),SleepCurrentThread,src/rz/Threading.cpp|h,recovered,cRZThread::SleepCurrentThread

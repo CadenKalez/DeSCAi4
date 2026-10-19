@@ -5,7 +5,23 @@
 #include "gz/cIGZSystemService.h"
 #include "rz/COMDirectors.h"
 #include "rz/cRZOStream.h"
+#include "rz/cRZFile.h"
+#include "rz/cRZVersion.h"
+#include "rz/LanguageManager.h"
+#include "rz/Threading.h"
+#include "rz/cRZIniFile.h"
+#include "rz/cRZSysServPtr.h"
+#include "rz/cRZTimer.h"
 #include "sc4/App.h"
+#include "sc4/AppPlatform.h"
+#include "sc4/RenderProperties.h"
+
+#include <algorithm>
+#include <cctype>
+#include <filesystem>
+#include <string>
+#include <vector>
+#include <fnmatch.h>
 
 namespace {
 constexpr std::uint32_t kSystemServiceIid = kGZIID_cIGZSystemService;   // 0x287fb697
@@ -146,4 +162,292 @@ void cSC4App::AddSystemServices() {
 void cSC4App::FindAndPossiblyFixIniFiles() {
     if (iniFilesChecked_) return;
     iniFilesChecked_ = true;
+}
+
+
+// ---- PreFrameWorkInit ---------------------------------------------------------------------------------------
+
+namespace {
+std::string LowerCase(std::string text) {
+    for (char& c : text) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    return text;
+}
+
+bool CommandLineValue(cIGZCmdLine& commandLine, const char* name, std::string& value) {
+    cRZString text;
+    if (!commandLine.IsSwitchPresent(cRZString(name), text, true)) return false;
+    value = text.ToChar();
+    return true;
+}
+
+// each of the derived directories: "<base>Plugins/" and friends
+void DeriveFrom(cRZString& target, const cRZString& base, const char* name) {
+    if (target.Strlen() != 0) return;
+    target = base.ToChar();
+    target.AppendChars(name, static_cast<std::uint32_t>(std::strlen(name)));
+    target.AppendChars("/", 1);
+}
+}  // namespace
+
+// Start-up before the framework initialises the services: debug level, the executable's directories, preferences,
+// the single-instance guard, then the directors and services. Returns false when another instance is running.
+bool cSC4App::PreFrameWorkInit() {
+    cIGZFrameWork* framework = framework_ ? framework_ : RZGetFramework();
+    SC4SetupFPU();
+    SC4DisableOSMessageBoxAlerts();
+
+    cIGZCmdLine& commandLine = *framework->CommandLine();
+    std::string value;
+    if (CommandLineValue(commandLine, "DebugLevel", value)) {
+        value = LowerCase(value);
+        framework->SetDebugLevel(value == "none" ? 0 : value == "logging" ? 1 : 2);
+    }
+
+    // the executable: <app directory>/<name>; the data directory starts out as the application directory
+    // (cRZFile::GetPathDirectory yields an empty string - kept - so the file system service supplies the real ones below)
+    cRZVersion version;
+    cRZString modulePath, name;
+    version.GetModulePath(modulePath);
+    cRZFile::GetPathDirectory(modulePath, appDirectory_);
+    cRZFile::GetPathName(modulePath, appName_, false);
+    dataDirectory_ = appDirectory_.ToChar();
+    if (startupHooks_.bundleGameDataDirectory) {
+        std::string bundleData = startupHooks_.bundleGameDataDirectory();
+        if (!bundleData.empty()) dataDirectory_ = (bundleData + "/").c_str();
+    }
+    SC4GetUserDataDirectory(userDataDirectory_, true);
+
+    SetRenderProperties(new sc4::cSC4RenderProperties());
+    ReadPreferences();
+    ReadCommandLine();
+
+    // only one instance at a time, unless -AllowMultipleInstances; -Restart waits up to 30 s for the old one to leave
+    bool locked = instanceMutex_.TryLock();
+    bool allowMultiple = commandLine.IsSwitchPresent(cRZString("AllowMultipleInstances"));
+    if (!allowMultiple && !locked) {
+        if (!commandLine.IsSwitchPresent(cRZString("Restart"))) return false;
+        cRZTimer timer(cRZTimer::kSeconds);
+        timer.Start();
+        bool acquired = false;
+        while (timer.GetElapsedTimeU32() < 30) {
+            if (instanceMutex_.TryLock()) { acquired = true; break; }
+            cRZThread::SleepCurrentThread(200000);
+        }
+        if (!acquired) return false;
+    }
+
+    AddCOMDirectors();
+    AddSystemServices();
+
+    // the graphics system: no hardware cursor for -cursormode b..., a 1024x768 default game resolution
+    sc4::IGraphicSystemControl* graphics = startupHooks_.graphicSystem ? startupHooks_.graphicSystem() : nullptr;
+    if (graphics) {
+        graphics->DisableScreenBuffer();
+        bool blitCursor = false;
+        if (CommandLineValue(commandLine, "cursormode", value)) {
+            value = LowerCase(value);
+            blitCursor = !value.empty() && value[0] == 'b';
+        }
+        graphics->EnableCursorEmulation(blitCursor);
+        if (blitCursor && graphics->IsPageFlippingEnabled()) graphics->EnablePageFlipping(false);
+        sc4::IGraphicSystemControl::DisplayMetrics screen = graphics->GetScreenMetrics();
+        graphics->PreInitSetDesiredGameResolution({1024, 768, screen.depth});
+    }
+
+    // the directories the file system service reports replace the guesses; the plugin / sku directories derive from them
+    sc4::FileSystemDirectories directories;
+    if (startupHooks_.fileSystemDirectories && startupHooks_.fileSystemDirectories(directories)) {
+        appDirectory_ = directories.appDirectory.c_str();
+        cdAppDirectory_ = directories.cdAppDirectory.c_str();
+        dataDirectory_ = directories.dataDirectory.c_str();
+        cdDataDirectory_ = directories.cdDataDirectory.c_str();
+        DeriveFrom(pluginDirectory_, dataDirectory_, "Plugins");
+        DeriveFrom(cdPluginDirectory_, cdDataDirectory_, "Plugins");
+        DeriveFrom(skuSpecificDirectory_, dataDirectory_, "Sku_Data");
+        if (userDataDirectory_.Strlen() == 0) SC4GetUserDataDirectory(userDataDirectory_, true);
+    }
+
+    AddCodePlugins(cRZString());
+    if (startupHooks_.configureLogging) startupHooks_.configureLogging(commandLine);
+    FindAndRegisterAllAvailableLanguages();
+    DoPreferencesChanged(true);
+    return true;
+}
+
+// ---- code plugins -------------------------------------------------------------------------------------------
+
+// The shared libraries ("*.so") of a plugin directory are added to the COM registry unless their .ini says
+// [Admin] Enabled=false|0; an empty `directory` means the plugin directory and then the user plugin directory.
+int cSC4App::AddCodePlugins(const cRZString& directory) {
+    if (directory.Strlen() == 0) {
+        int added = 0;
+        cRZString plugins;
+        GetPluginDirectory(plugins);
+        if (plugins.Strlen() != 0) added = AddCodePlugins(plugins);
+        GetUserPluginDirectory(plugins);
+        if (plugins.Strlen() != 0) added += AddCodePlugins(plugins);
+        return added;
+    }
+    std::error_code error;
+    if (!std::filesystem::is_directory(directory.ToChar(), error)) return 0;
+    auto* com = dynamic_cast<cGZCOM*>(GZCOM());
+    if (!com) return 0;
+    // libraries that are already registered are skipped
+    std::vector<std::string> known;
+    com->EnumerateLibraries(+[](cGZCOMLibrary* library, void* context) {
+        cRZString path;
+        library->GetPath(path);
+        static_cast<std::vector<std::string>*>(context)->push_back(path.ToChar());
+        return true;
+    }, &known);
+    int added = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(directory.ToChar(), error)) {
+        if (!entry.is_regular_file() || entry.path().extension() != ".so") continue;
+        cRZString libraryPath(directory);
+        libraryPath.AppendChars(entry.path().filename().c_str(), static_cast<std::uint32_t>(entry.path().filename().string().size()));
+        cRZString iniPath(directory);
+        std::string stem = entry.path().stem().string() + ".ini";
+        iniPath.AppendChars(stem.c_str(), static_cast<std::uint32_t>(stem.size()));
+        if (std::find(known.begin(), known.end(), std::string(libraryPath.ToChar())) != known.end()) continue;
+        bool add = true;
+        if (cRZFile::FileExists(iniPath)) {
+            cRZIniFile ini(iniPath);
+            cRZString enabled;
+            if (ini.ReadEntry(cRZString("Admin"), cRZString("Enabled"), enabled)) {
+                std::string text = LowerCase(enabled.ToChar());
+                if (text == "false" || text == "0") add = false;
+            }
+        }
+        if (add) {
+            com->AddLibrary(libraryPath);
+            ++added;                           // counted whether or not the library loaded
+        }
+    }
+    return added;
+}
+
+
+// ---- languages and preference changes -------------------------------------------------------------------------
+
+namespace {
+using LanguageManagerPtr = cRZSysServPtr<cIGZLanguageManager, kGZSID_cRZLanguageManager, kGZIID_cIGZLanguageManager>;
+
+// cRZDirectory::DoesAnyEntryExistThatMatchesPattern: a file name in the pattern's directory matches the glob
+bool AnyEntryMatches(const std::string& directory, const char* pattern) {
+    std::error_code error;
+    if (!std::filesystem::is_directory(directory, error)) return false;
+    for (const auto& entry : std::filesystem::directory_iterator(directory, error)) {
+        if (fnmatch(pattern, entry.path().filename().c_str(), 0) == 0) return true;
+    }
+    return false;
+}
+}  // namespace
+
+// A language is available when its folder under the data directory holds string tables (*.str*) or data (*.dat).
+void cSC4App::FindAndRegisterAllAvailableLanguages() {
+    LanguageManagerPtr languages;
+    cRZString directoryName;
+    for (std::uint32_t language = 1; language <= 0x2c; ++language) {
+        if (!languages->GetLanguageDirectoryName(directoryName, language)) continue;
+        std::string folder = std::string(dataDirectory_.ToChar()) + directoryName.ToChar() + "/";
+        if (AnyEntryMatches(folder, "*.str*") || AnyEntryMatches(folder, "*.dat")) languages->AddAvailableLanguage(language);
+    }
+}
+
+// Applies the preferences: pause-on-focus-loss, and (at start-up) the language, the window mode / resolution, the
+// graphics driver, the simulator speed and the "-x" cheat switches.
+void cSC4App::DoPreferencesChanged(bool initial) {
+    std::uint8_t* prefs = preferences_.data();
+    EnableFullGamePauseOnAppFocusLoss(prefs[sc4::prefs::kPauseOnFocusLoss] != 0);
+    if (initial) {
+        prefs[0x4eb] = 0;
+        LanguageManagerPtr languages;
+        if (languages) {
+            std::uint32_t language = 1;
+            cRZString requested(reinterpret_cast<const char*>(prefs + sc4::prefs::kLanguageName));
+            bool chosen = false;
+            // 1. the language asked for with -l (by English name, else by local name)
+            if (requested.Strlen() != 0) {
+                bool found = languages->GetLanguageIDFromLanguageEnglishName(requested, language) ||
+                             languages->GetLanguageIDFromLanguageLocalName(requested, language);
+                chosen = found && languages->CanSwitchToLanguage(language);
+            }
+            if (!chosen) {
+                // 2. the installer's language, 3. the system language, 4. the first language that can be switched to
+                std::uint32_t installedCountry = 0;
+                bool installed = startupHooks_.installedLanguage ? startupHooks_.installedLanguage(language, installedCountry)
+                                                                 : SC4GetInstalledLanguageAndCountryIDs(language, installedCountry);
+                chosen = installed && languages->CanSwitchToLanguage(language);
+                if (!chosen) {
+                    language = languages->GetCurrentSystemLanguage();
+                    chosen = languages->CanSwitchToLanguage(language);
+                    for (std::uint32_t candidate = 1; !chosen && candidate < 0x2d; ++candidate) {
+                        if (languages->CanSwitchToLanguage(candidate)) { language = candidate; chosen = true; }
+                    }
+                }
+            }
+            if (chosen) {
+                languages->SetCurrentLanguage(language);
+                preferences_.Set<std::uint32_t>(sc4::prefs::kLanguageId, language);
+            }
+        }
+
+        if (sc4::IGraphicSystemControl* graphics = startupHooks_.graphicSystem ? startupHooks_.graphicSystem() : nullptr) {
+            sc4::IGraphicSystemControl::DisplayMetrics screen = graphics->GetScreenMetrics();
+            if (screen.depth != 16 && screen.depth != 32) prefs[sc4::prefs::kFullScreen] = 1;
+            // a window that does not fit on the desktop becomes full screen
+            if (prefs[sc4::prefs::kFullScreen] == 0 &&
+                (screen.width < preferences_.Get<std::uint32_t>(sc4::prefs::kVideoWidth) ||
+                 screen.height < preferences_.Get<std::uint32_t>(sc4::prefs::kVideoHeight)))
+                prefs[sc4::prefs::kFullScreen] = 1;
+            sc4::IGraphicSystemControl::DisplayMetrics desired;
+            desired.width = preferences_.Get<std::uint32_t>(sc4::prefs::kVideoWidth);
+            desired.height = preferences_.Get<std::uint32_t>(sc4::prefs::kVideoHeight);
+            desired.depth = preferences_.Get<std::uint32_t>(sc4::prefs::kVideoColorDepth);
+            if (desired.depth == 0) {
+                if (screen.depth != 0) desired.depth = screen.depth;
+            } else if (desired.depth != screen.depth && prefs[sc4::prefs::kFullScreen] == 0) {
+                desired.depth = screen.depth;
+            }
+            graphics->PreInitSetDesiredGameResolution(desired);
+            graphics->PreInitSetWindowedMode(prefs[sc4::prefs::kFullScreen] == 0);
+
+            // the graphics driver: -d wins; otherwise the stored hardware flag decides (0 = software, 1 = hardware)
+            std::uint32_t driver = requestedGraphicsDriver_;
+            std::uint8_t& hardware = prefs[sc4::prefs::kVideoHardwareDriver];
+            if (driver == 0) {
+                driver = hardware == 1 ? 0xbadb6906u : 0u;
+                if (hardware == 0) driver = 0x7aca35c6u;
+                if (driver != 0) graphics->SetDefaultDriverClassID(driver);
+            } else {
+                if (driver == 0x7aca35c6u) {
+                    hardware = 0;
+                } else {
+                    hardware = driver == 0xbadb6906u ? 1 : 0xff;
+                }
+                graphics->SetDefaultDriverClassID(driver);
+            }
+        }
+    }
+
+    // the simulator speed setting picks one of eight tick intervals
+    if (cISC4City* city = GetCity()) {
+        (void)city;
+        static constexpr std::uint32_t kTickTable[8] = {5, 10, 15, 20, 30, 45, 60, 80};
+        int index = static_cast<int>((preferences_.Get<float>(sc4::prefs::kSimulatorParameter) * 8.0f) / 101.0f);
+        index = index < 0 ? 0 : index;
+        if (startupHooks_.setSimulatorTickInterval) startupHooks_.setSimulatorTickInterval(kTickTable[index < 8 ? index : 7]);
+    }
+
+    // -x:<cheat> switches run their cheat code once each and are consumed from a private copy of the command line
+    if (cheatCodeManager_ && startupHooks_.processCheatCode) {
+        cRZCmdLine copy(*(framework_ ? framework_ : RZGetFramework())->CommandLine());
+        cRZString code;
+        while (copy.IsSwitchPresent(cRZString("x"), code, true)) {
+            startupHooks_.processCheatCode(code);
+            int index = copy.GetIndexOfSwitch(cRZString("x"), 0);
+            if (index < 0) break;
+            copy.EraseArgument(index);
+        }
+    }
 }
