@@ -19441,3 +19441,14 @@ address,symbol,unique_name,source,status,evidence
 0x100011656,"cSC4App::AddDynamicLibraryByPath(cIGZString const&, bool)",AddDynamicLibraryByPath,src/sc4/AppShutdown.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
 0x10000997e,cSC4App::PostFrameWorkInit(),PostFrameWorkInit,src/sc4/AppPost.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
 0x10000a2be,cSC4App::FindTestScript(cRZString&),FindTestScript,src/sc4/AppPost.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x1001e9090,"SC4OpenSaveGame(cIGZString const&, bool, bool)",SC4OpenSaveGame,src/sc4/SaveGame.cpp,recovered,scripts/tests/sc4_savegame_test.cpp
+0x1001e9148,SC4ReadAppLoadSaveVersion(cIGZPersistDBSegment*),SC4ReadAppLoadSaveVersion,src/sc4/SaveGame.cpp,recovered,scripts/tests/sc4_savegame_test.cpp
+0x1001e91b6,SC4CloseSaveGame(cIGZPersistDBSegment*),SC4CloseSaveGame,src/sc4/SaveGame.cpp,recovered,scripts/tests/sc4_savegame_test.cpp
+0x1001e9453,"SC4ReadStringRecord(cIGZPersistDBSegment*, unsigned int, unsigned int, cIGZString&)",SC4ReadStringRecord,src/sc4/SaveGame.cpp,recovered,scripts/tests/sc4_savegame_test.cpp
+0x1001e94ea,"SC4WriteStringRecord(cIGZPersistDBSegment*, unsigned int, unsigned int, cIGZString const&)",SC4WriteStringRecord,src/sc4/SaveGame.cpp,recovered,scripts/tests/sc4_savegame_test.cpp
+0x1001e9585,SC4WriteAppLoadSaveVersion(cIGZPersistDBSegment*),SC4WriteAppLoadSaveVersion,src/sc4/SaveGame.cpp,recovered,scripts/tests/sc4_savegame_test.cpp
+0x1001e95c3,"SC4ReadRegionalCity(cIGZString const&, cISC4RegionalCity*&)",SC4ReadRegionalCity_String_cISC4RegionalCity,src/sc4/SaveGame.cpp,recovered,scripts/tests/sc4_savegame_test.cpp
+0x1001e9603,"SC4ReadRegionalCity(cIGZPersistDBSegment*, cISC4RegionalCity*&)",SC4ReadRegionalCity_cIGZPersistDBSegment_cISC4RegionalCity,src/sc4/SaveGame.cpp,recovered,scripts/tests/sc4_savegame_test.cpp
+0x1001e9799,"SC4WriteRegionalCity(cIGZString const&, cISC4RegionalCity const*)",SC4WriteRegionalCity_String_cISC4RegionalCity_const,src/sc4/SaveGame.cpp,recovered,scripts/tests/sc4_savegame_test.cpp
+0x1001e97dc,"SC4WriteRegionalCity(cIGZPersistDBSegment*, cISC4RegionalCity const*)",SC4WriteRegionalCity_cIGZPersistDBSegment_cISC4RegionalCity_const,src/sc4/SaveGame.cpp,recovered,scripts/tests/sc4_savegame_test.cpp
+0x1001e9ff4,SC4CreateCitySerialNumber(),SC4CreateCitySerialNumber,src/sc4/SaveGame.cpp,recovered,scripts/tests/sc4_savegame_test.cpp
