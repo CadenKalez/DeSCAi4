@@ -1,0 +1,107 @@
+// cSC4App: accessors, derived directories, ini / preferences file names, shutdown callbacks, video option mapping,
+// and the preferences blob defaults.
+#include <cstdio>
+#include <cstring>
+#include <map>
+#include <string>
+
+#include "sc4/App.h"
+#include "sc4/AppPreferences.h"
+
+static int failures = 0;
+#define CHECK(c) do { if (!(c)) { std::printf("FAIL line %d: %s\n", __LINE__, #c); ++failures; } } while (0)
+
+namespace {
+struct Options final : sc4::IVideoOptionStore {
+    std::map<int, int> values;
+    void SetOption(int option, int value) override { values[option] = value; }
+    int GetOption(int option) override { auto it = values.find(option); return it == values.end() ? 0 : it->second; }
+};
+struct Display final : sc4::IDisplayInfo {
+    void GetNthNativeResolution(int index, int& w, int& h) override { w = 1000 + index; h = 700 + index; }
+};
+std::string Get(void (cSC4App::*getter)(cIGZString&), cSC4App& app) { cRZString s; (app.*getter)(s); return s.ToChar(); }
+std::string Get(void (cSC4App::*getter)(cIGZString&) const, cSC4App& app) { cRZString s; (app.*getter)(s); return s.ToChar(); }
+bool Shut(void* flag) { ++*static_cast<int*>(flag); return true; }
+}  // namespace
+
+int main() {
+    auto* app = new cSC4App("SimCity 4");
+    app->AddRef();
+    CHECK(app->GetServiceID() == 0x66 && app->GetServicePriority() == -2000000);
+    CHECK(app->GetAppState() == 0 && !app->GetDebugFunctionalityEnabled() && app->GetPopupDialogsEnabled());
+    CHECK(app->IsRunFirstTimeAfterInstall());
+    app->SetDebugFunctionalityEnabled(true); CHECK(app->GetDebugFunctionalityEnabled());
+    app->SetPopupDialogsEnabled(false); CHECK(!app->GetPopupDialogsEnabled());
+
+    // directories: cached ones return what was set, derived ones come from the user data directory
+    app->SetDirectories("/Games/SC4/", "/Games/SC4/Data/", "/Users/me/SC4/");
+    CHECK(Get(&cSC4App::GetAppDirectory, *app) == "/Games/SC4/");
+    cRZString out;
+    app->GetDataDirectory(out, -1); CHECK(std::strcmp(out.ToChar(), "/Games/SC4/Data/") == 0);
+    CHECK(Get(&cSC4App::GetUserPluginDirectory, *app) == "/Users/me/SC4/Plugins/");
+    CHECK(Get(&cSC4App::GetRegionsDirectory, *app) == "/Users/me/SC4/Regions/");
+    CHECK(Get(&cSC4App::GetMySimDirectory, *app) == "/Users/me/SC4/MySim/");
+    CHECK(Get(&cSC4App::GetAlbumDirectory, *app) == "/Users/me/SC4/Albums/");
+    CHECK(Get(&cSC4App::GetHTTPCacheDirectory, *app) == "/Users/me/SC4/HTTPCache/");
+    CHECK(Get(&cSC4App::GetTempDirectory, *app) == "/Users/me/SC4/Temp/");
+    CHECK(Get(&cSC4App::GetExceptionReportsDirectory, *app) == "/Users/me/SC4/Exception Reports/");
+    CHECK(Get(&cSC4App::GetTestScriptDirectory, *app) == "/Games/SC4/Data/Scripts/TestScripts/");
+
+    // ini / cfg names: default names while the executable name is not known
+    CHECK(Get(&cSC4App::GetAppIniFileName, *app) == "SimCity 4.ini");
+    app->AppNameString() = "SC4Mac";
+    CHECK(Get(&cSC4App::GetAppIniFileName, *app) == "SC4Mac.ini");
+    CHECK(Get(&cSC4App::GetAppPreferencesFileName, *app) == "SC4Mac.cfg");
+    CHECK(Get(&cSC4App::GetAppPreferencesFilePath, *app) == "/Users/me/SC4/SC4Mac.cfg");
+    CHECK(Get(&cSC4App::GetAppIniFilePath, *app) == "/Users/me/SC4/SC4Mac.ini");   // no .ini beside the (fake) app directory
+
+    // shutdown callbacks
+    int calls = 0;
+    CHECK(app->RegisterShutdownCallbackFunction(Shut, &calls));
+    CHECK(app->UnregisterShutdownCallbackFunction(Shut, &calls));
+    CHECK(!app->UnregisterShutdownCallbackFunction(Shut, &calls));
+
+    // video preferences <-> option store
+    Options options; Display display;
+    app->SetVideoOptionStore(&options); app->SetDisplayInfo(&display);
+    cISC4App::SC4VideoPreferences prefs;
+    auto* b = reinterpret_cast<std::uint8_t*>(&prefs);
+    for (int i = 1; i <= 0xc; ++i) b[i] = static_cast<std::uint8_t>(i);
+    b[0x1c] = 9;
+    app->ApplyVideoPreferences(prefs);
+    CHECK(options.values[0] == 1 && options.values[1] == 2 && options.values[2] == 3 && options.values[3] == 4);
+    CHECK(options.values[4] == 5 && options.values[5] == 6 && options.values[6] == 7 && options.values[7] == 8);
+    CHECK(options.values[8] == 9 && options.values[9] == 10 && options.values[10] == 0xc && options.values[0xf] == 9);
+    options.values[0xb] = 2; options.values[0xc] = 1;
+    cISC4App::SC4VideoPreferences got;
+    app->GetAutoVideoPreferences(&got);
+    CHECK(reinterpret_cast<std::uint8_t*>(&got)[1] == 1 && reinterpret_cast<std::uint8_t*>(&got)[0xb] == 1);
+    CHECK(got.screenWidth == 1002 && got.screenHeight == 702 && got.colorDepth == 32);
+    options.values[0xc] = 0; app->GetAutoVideoPreferences(&got); CHECK(got.colorDepth == 16);
+    options.values[0xc] = 7; got.colorDepth = 24; app->GetAutoVideoPreferences(&got); CHECK(got.colorDepth == 24);
+
+    // interface lookup
+    void* iface = nullptr;
+    CHECK(app->QueryInterface(kGZIID_cISC4App, &iface) && iface == static_cast<cISC4App*>(app));
+    CHECK(app->QueryInterface(0x452294aa, &iface) && iface == static_cast<cIGZMessageTarget2*>(app));
+    CHECK(app->QueryInterface(0xc6ae7085, &iface) && iface == static_cast<cIGZWinMessageFilter*>(app));
+    CHECK(app->QueryInterface(0xca263481, &iface) && iface == static_cast<cIGZMessageTarget*>(app));
+    CHECK(app->QueryInterface(kGZIID_cIGZApp, &iface) && iface == static_cast<cIGZApp*>(app));
+    CHECK(!app->QueryInterface(0x1234, &iface));
+
+    // preferences blob defaults
+    sc4::SC4Preferences p;
+    CHECK(sc4::SC4Preferences::size() == 0x1734);
+    CHECK(p.Get<std::uint8_t>(0x004) == 1 && p.Get<std::uint32_t>(0x008) == 0x400 && p.Get<std::uint32_t>(0x00c) == 0x320);
+    CHECK(p.Get<std::uint8_t>(0x04 + 0x28) == 1 && p.Get<std::uint8_t>(0x04 + 0x24) == 0 && p.Get<std::uint8_t>(0x04 + 0x63) == 1);
+    CHECK(p.Get<std::uint32_t>(0x470) == 0x42480000 && p.Get<std::uint8_t>(0x49c) == 1);
+    CHECK(p.Get<std::uint32_t>(0x4a8) == 1 && p.Get<std::uint32_t>(0x4a4 + 0x48) == 0x1000101);
+    CHECK(p.Get<std::uint8_t>(sc4::prefs::kVideoAutoConfigure) == 1 && p.Get<std::uint8_t>(sc4::prefs::kVideoHardwareDriver) == 1);
+    CHECK(p.Get<std::uint32_t>(sc4::prefs::kVideoWidth) == 1024 && p.Get<std::uint32_t>(sc4::prefs::kVideoHeight) == 768);
+    CHECK(p.Get<std::uint8_t>(0xf28) == 3 && p.Get<std::uint16_t>(0xf16) == 0x103);
+
+    app->Release(); app->Release();
+    std::printf(failures ? "FAILED\n" : "OK\n");
+    return failures ? 1 : 0;
+}
