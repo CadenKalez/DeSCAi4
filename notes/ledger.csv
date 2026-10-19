@@ -19149,3 +19149,20 @@ address,symbol,unique_name,source,status,evidence
 0x1002425aa,cSC4BudgetUIIncomeWinProc::SetInfoPerTaxType(cISC4BudgetSimulator::TaxType),SetInfoPerTaxType,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
 0x10024272e,"cSC4BudgetUIIncomeWinProc::SetFormattedAmountInTextControl(unsigned int, long long)",SetFormattedAmountInTextControl,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
 0x10024281a,cSC4BudgetUIIncomeWinProc::RecalculateTotals(),RecalculateTotals,src/sc4/BudgetDialogs.cpp,recovered,scripts/tests/sc4_budgetdialogs_test.cpp
+0x1003585ba,cSC4PanelUIWinProc::cSC4PanelUIWinProc(),Construct,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x1003585d2,cSC4PanelUIWinProc::~cSC4PanelUIWinProc(),Destruct,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x1003585e2,cSC4PanelUIWinProc::~cSC4PanelUIWinProc(),DestructAndDelete,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x1003585ec,"cSC4PanelUIWinProc::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x10035860e,cSC4PanelUIWinProc::AddRef(),AddRef,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x10035861c,cSC4PanelUIWinProc::Release(),Release,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x100358638,"cSC4PanelUIWinProc::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessage,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x10075a3f0,cSC4RegionSignpostAnimatorWinProc::AddRef(),AddRef,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x10075a3fe,non-virtual thunk to cSC4RegionSignpostAnimatorWinProc::AddRef(),AddRefThunk,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x10075a408,cSC4RegionSignpostAnimatorWinProc::Release(),Release,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x10075a416,non-virtual thunk to cSC4RegionSignpostAnimatorWinProc::Release(),ReleaseThunk,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x10075a420,"cSC4RegionSignpostAnimatorWinProc::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x10075a442,"cSC4RegionSignpostAnimatorWinProc::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessage,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x10075e6fe,cSC4RegionSignpostAnimatorWinProc::~cSC4RegionSignpostAnimatorWinProc(),Destruct,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x10075e762,cSC4RegionSignpostAnimatorWinProc::~cSC4RegionSignpostAnimatorWinProc(),DestructAndDelete,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x10075e7e4,non-virtual thunk to cSC4RegionSignpostAnimatorWinProc::~cSC4RegionSignpostAnimatorWinProc(),DestructThunk,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x10075e846,non-virtual thunk to cSC4RegionSignpostAnimatorWinProc::~cSC4RegionSignpostAnimatorWinProc(),DestructAndDeleteThunk,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
