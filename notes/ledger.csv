@@ -18833,3 +18833,43 @@ address,symbol,unique_name,source,status,evidence
 0x1000c9d28,cSC4ParkManager::BeginZooEscape(),BeginZooEscape,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
 0x1000c9f56,cSC4ParkManager::GetGZCLSID() const,GetGZCLSID,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
 0x1000c9f62,non-virtual thunk to cSC4ParkManager::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000ef516,cSC4HistoryWarehouse::Init(),Init,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef62e,cSC4HistoryWarehouse::Shutdown(),Shutdown,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef6a0,cSC4HistoryWarehouse::FinalRelease(),FinalRelease,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef6fc,"cSC4HistoryWarehouse::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef730,"non-virtual thunk to cSC4HistoryWarehouse::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_f730,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef73e,"non-virtual thunk to cSC4HistoryWarehouse::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_f73e,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef74c,cSC4HistoryWarehouse::AddRef(),AddRef,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef75a,non-virtual thunk to cSC4HistoryWarehouse::AddRef(),AddRefThunk_f75a,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef768,non-virtual thunk to cSC4HistoryWarehouse::AddRef(),AddRefThunk_f768,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef776,cSC4HistoryWarehouse::Release(),Release,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef792,non-virtual thunk to cSC4HistoryWarehouse::Release(),ReleaseThunk_f792,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef7f8,non-virtual thunk to cSC4HistoryWarehouse::Release(),ReleaseThunk_f7f8,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef85e,cSC4HistoryWarehouse::DoMessage(cIGZMessage2*),DoMessage,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef91c,"cSC4HistoryWarehouse::Store(unsigned int, int)",Store,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000efa1e,"cSC4HistoryWarehouse::SetSize(unsigned int, int)",SetSize,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000efa82,cSC4HistoryWarehouse::DoDailySimulation(unsigned int),DoDailySimulation,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000efbea,non-virtual thunk to cSC4HistoryWarehouse::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000efbf8,cSC4HistoryWarehouse::Write(cIGZOStream&) const,Write,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000efd06,non-virtual thunk to cSC4HistoryWarehouse::Write(cIGZOStream&) const,WriteThunk,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000efd14,cSC4HistoryWarehouse::Read(cIGZIStream&),Read,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000f0032,non-virtual thunk to cSC4HistoryWarehouse::Read(cIGZIStream&),ReadThunk,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000f0040,cSC4HistoryWarehouse::VariableCoalesce(unsigned int),VariableCoalesce,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000f0270,cSC4HistoryWarehouse::GetKeyVector(unsigned int),GetKeyVector,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000f03f4,"cSC4HistoryWarehouse::GetCount(unsigned int, cIGZDate const&, cIGZDate const&, float&)",GetCount,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000f0466,"cSC4HistoryWarehouse::GetTrend(unsigned int, cIGZDate const&, cIGZDate const&, float&, float&)",GetTrend,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000f0546,"cSC4HistoryWarehouse::GetMinMaxAverage(unsigned int, cIGZDate const&, cIGZDate const&, float&, float&, float&)",GetMinMaxAverage,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000f07e4,"cSC4HistoryWarehouse::GetPoint(unsigned int, cIGZDate const&, float&)",GetPoint,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000f08ac,"cSC4HistoryWarehouse::Coalesce(unsigned int, cIGZDate const&, cIGZDate const&, int)",Coalesce,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000f0964,"cSC4HistoryWarehouse::Dispose(unsigned int, cIGZDate const&, cIGZDate const&)",Dispose_uint_cIGZDate_const_cIGZDate_const,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000f0a16,cSC4HistoryWarehouse::Dispose(unsigned int),Dispose_uint,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000f0a60,"cSC4HistoryWarehouse::RecordHistoryData(unsigned int, int)",RecordHistoryData,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000f0af8,"cSC4HistoryWarehouse::SetHistoryDataQueueLength(unsigned int, unsigned int)",SetHistoryDataQueueLength,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000f0b02,cSC4HistoryWarehouse::GetGZCLSID() const,GetGZCLSID,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000f0b0e,non-virtual thunk to cSC4HistoryWarehouse::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000eee9c,"cVecRange::cVecRange(std::__1::list<cSC4HistoryNode, std::__1::allocator<cSC4HistoryNode>>&, cIGZDate const&, cIGZDate const&, bool)",Construct_std_1_list_cSC4HistoryNode_std_1_allocator_cSC4HistoryNode_cIGZDate_const_cIGZDate_const_bool,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef0b8,"cVecRange::Coalesce(unsigned int, cRZDate const&, cRZDate const&, cISC4HistoryWarehouse::eCoalesce)",Coalesce,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef2fc,"cStatVecRange::cStatVecRange(std::__1::list<cSC4HistoryNode, std::__1::allocator<cSC4HistoryNode>>&, cIGZDate const&, cIGZDate const&)",Construct_std_1_list_cSC4HistoryNode_std_1_allocator_cSC4HistoryNode_cIGZDate_const_cIGZDate_const,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef346,cStatVecRange::ComputeMeans(),ComputeMeans,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef3d0,cStatVecRange::ComputeStandardDeviations(),ComputeStandardDeviations,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
+0x1000ef46e,cStatVecRange::ComputePearsonsCorrelation(),ComputePearsonsCorrelation,src/sc4/HistoryWarehouse.cpp,recovered,scripts/tests/sc4_historywarehouse_test.cpp
