@@ -377,6 +377,228 @@ cGZWWWWin32COMDirector::cGZWWWWin32COMDirector() {
 }
 
 
+cSC4COMDirector::cSC4COMDirector() {
+    if (cRZCOMDllDirector* process = RZGetCOMDllDirector()) {
+        cIGZCOM* com = GZCOM();
+        { cRZCOMDllDirector* child = SC4GetSC4ScriptedWindowCOMDirector(); process->AddDirector(child); child->OnStart(com); }
+        { cRZCOMDllDirector* child = GetSC4GDriversCOMDirector(); process->AddDirector(child); child->OnStart(com); }
+        { cRZCOMDllDirector* child = GetFontComDirector(); process->AddDirector(child); }
+        { cRZCOMDllDirector* child = GetGZDrawCOMDllDirector(); process->AddDirector(child); child->OnStart(com); }
+        { cRZCOMDllDirector* child = GetGZGraphicCOMDllDirector(); process->AddDirector(child); }
+        { cRZCOMDllDirector* child = GetGZResManCOMDirector(); process->AddDirector(child); }
+        { cRZCOMDllDirector* child = GetGZResourceCOMDirectorW32(); process->AddDirector(child); child->OnStart(com); }
+        { cRZCOMDllDirector* child = GetGZWinCOMDllDirector(); process->AddDirector(child); }
+        { cRZCOMDllDirector* child = GetGimexCOMDllDirector(); process->AddDirector(child); child->OnStart(com); }
+        { cRZCOMDllDirector* child = GetSC4ResourceLibCOMDirector(); process->AddDirector(child); child->OnStart(com); }
+        { cRZCOMDllDirector* child = GetGZScriptCOMDirector(); process->AddDirector(child); child->OnStart(com); }
+        { cRZCOMDllDirector* child = GetGZUIScriptCOMDirector(); process->AddDirector(child); child->OnStart(com); }
+        { cRZCOMDllDirector* child = SC4AutomataGetCOMDirector(); process->AddDirector(child); child->OnStart(com); }
+        { cRZCOMDllDirector* child = GetSCLuaCOMDirector(); process->AddDirector(child); child->OnStart(com); }
+    }
+    AddCls(gzcom::kCLSID_cGZMessageServer2, +[]() -> cIGZUnknown* { return DirectorMake("cGZMessageServer2"); });
+    AddCls(gzcom::kCLSID_cGZMessageQueueManager2, +[]() -> cIGZUnknown* { return DirectorMake("cGZMessageQueueManager2"); });
+    AddCls(gzcom::kCLSID_cRZMessage2Standard, +[]() -> cIGZUnknown* { return DirectorMake("cRZMessage2Standard"); });
+    AddCls(gzcom::kCLSID_cGZLuaScriptServer, +[]() -> cIGZUnknown* { return DirectorMake("cGZLuaScriptServer"); });
+    AddCls(gzcom::kCLSID_cGZWinLuaScriptConsole, +[]() -> cIGZUnknown* { return DirectorMake("cGZWinLuaScriptConsole"); });
+    AddCls(gzcom::kCLSID_cGZWinLuaScriptView, +[]() -> cIGZUnknown* { return DirectorMake("cGZWinLuaScriptView"); });
+    AddCls(gzcom::kCLSID_cGZWinLuaScriptViewCallStack, +[]() -> cIGZUnknown* { return DirectorMake("cGZWinLuaScriptViewCallStack"); });
+    AddCls(gzcom::kCLSID_cGZWinLuaScriptViewVariables, +[]() -> cIGZUnknown* { return DirectorMake("cGZWinLuaScriptViewVariables"); });
+    AddCls(gzcom::kCLSID_cGZWinLuaScriptViewBreakpoints, +[]() -> cIGZUnknown* { return DirectorMake("cGZWinLuaScriptViewBreakpoints"); });
+    AddCls(gzcom::kCLSID_cSC43DRender, +[]() -> cIGZUnknown* { return DirectorMake("cSC43DRender"); });
+    AddCls(gzcom::kCLSID_cS3DCamera, +[]() -> cIGZUnknown* { return DirectorMake("cS3DCamera"); });
+    AddCls(gzcom::kCLSID_cSC4CameraControl, +[]() -> cIGZUnknown* { return DirectorMake("cSC4CameraControl"); });
+    AddCls(gzcom::kCLSID_cSC4AnimationTickManager, +[]() -> cIGZUnknown* { return DirectorMake("cSC4AnimationTickManager"); });
+    AddCls(gzcom::kCLSID_cSC4ModelMaker, +[]() -> cIGZUnknown* { return DirectorMake("cSC4ModelMaker"); });
+    AddCls(gzcom::kCLSID_cS3DFSHTextureFactory, +[]() -> cIGZUnknown* { return DirectorMake("cS3DFSHTextureFactory"); });
+    AddCls(gzcom::kCLSID_cS3DResModelFactory, +[]() -> cIGZUnknown* { return DirectorMake("cS3DResModelFactory"); });
+    AddCls(gzcom::kCLSID_cSC4Demand, +[]() -> cIGZUnknown* { return DirectorMake("cSC4Demand"); });
+    AddCls(gzcom::kCLSID_cSC4PropPlacementPropertiesFactory, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PropPlacementPropertiesFactory"); });
+    AddCls(gzcom::kCLSID_cSC4PathInfoFactory, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PathInfoFactory"); });
+    AddCls(gzcom::kCLSID_cSTESurfaceWater, +[]() -> cIGZUnknown* { return DirectorMake("cSTESurfaceWater"); });
+    AddCls(gzcom::kCLSID_cSTETerrain, +[]() -> cIGZUnknown* { return DirectorMake("cSTETerrain"); });
+    AddCls(gzcom::kCLSID_cSTETerrainView3D, +[]() -> cIGZUnknown* { return DirectorMake("cSTETerrainView3D"); });
+    AddCls(gzcom::kCLSID_cSC424HourClock, +[]() -> cIGZUnknown* { return DirectorMake("cSC424HourClock"); });
+    AddCls(gzcom::kCLSID_cSC4City, +[]() -> cIGZUnknown* { return DirectorMake("cSC4City"); });
+    AddCls(gzcom::kCLSID_cSC4RegionalCity, +[]() -> cIGZUnknown* { return DirectorMake("cSC4RegionalCity"); });
+    AddCls(gzcom::kCLSID_cSC4Demolition, +[]() -> cIGZUnknown* { return DirectorMake("cSC4Demolition"); });
+    AddCls(gzcom::kCLSID_cSC4NetworkManager, +[]() -> cIGZUnknown* { return DirectorMake("cSC4NetworkManager"); });
+    AddCls(gzcom::kCLSID_cSC4DispatchManager, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DispatchManager"); });
+    AddCls(gzcom::kCLSID_cSC4PropManager, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PropManager"); });
+    AddCls(gzcom::kCLSID_cSC4ZoneManager, +[]() -> cIGZUnknown* { return DirectorMake("cSC4ZoneManager"); });
+    AddCls(gzcom::kCLSID_cSC4LotConfigurationManager, +[]() -> cIGZUnknown* { return DirectorMake("cSC4LotConfigurationManager"); });
+    AddCls(gzcom::kCLSID_cSC4PropDeveloper, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PropDeveloper"); });
+    AddCls(gzcom::kCLSID_cSC4WealthRequester, +[]() -> cIGZUnknown* { return DirectorMake("cSC4WealthRequester"); });
+    AddCls(gzcom::kCLSID_cSC4NetworkLotManager, +[]() -> cIGZUnknown* { return DirectorMake("cSC4NetworkLotManager"); });
+    AddCls(gzcom::kCLSID_cSC4GrowthDeveloper, +[]() -> cIGZUnknown* { return DirectorMake("cSC4GrowthDeveloper"); });
+    AddCls(gzcom::kCLSID_cSC4Lot, +[]() -> cIGZUnknown* { return DirectorMake("cSC4Lot"); });
+    AddCls(gzcom::kCLSID_cSC4BusinessUnit, +[]() -> cIGZUnknown* { return DirectorMake("cSC4BusinessUnit"); });
+    AddCls(gzcom::kCLSID_cSC4ZoneDeveloper, +[]() -> cIGZUnknown* { return DirectorMake("cSC4ZoneDeveloper"); });
+    AddCls(gzcom::kCLSID_cSC4LotDeveloper, +[]() -> cIGZUnknown* { return DirectorMake("cSC4LotDeveloper"); });
+    AddCls(gzcom::kCLSID_cSC4TractDeveloper, +[]() -> cIGZUnknown* { return DirectorMake("cSC4TractDeveloper"); });
+    AddCls(gzcom::kCLSID_cSC4HistoryWarehouse, +[]() -> cIGZUnknown* { return DirectorMake("cSC4HistoryWarehouse"); });
+    AddCls(gzcom::kCLSID_cSC4TrafficNetworkMap, +[]() -> cIGZUnknown* { return DirectorMake("cSC4TrafficNetworkMap"); });
+    AddCls(gzcom::kCLSID_cSC4LandfillDeveloper, +[]() -> cIGZUnknown* { return DirectorMake("cSC4LandfillDeveloper"); });
+    AddCls(gzcom::kCLSID_cSC4AirportDeveloper, +[]() -> cIGZUnknown* { return DirectorMake("cSC4AirportDeveloper"); });
+    AddCls(gzcom::kCLSID_cSC4SeaportDeveloper, +[]() -> cIGZUnknown* { return DirectorMake("cSC4SeaportDeveloper"); });
+    AddCls(gzcom::kCLSID_cSC4ParkManager, +[]() -> cIGZUnknown* { return DirectorMake("cSC4ParkManager"); });
+    AddCls(gzcom::kCLSID_cSC4CityDetailManager, +[]() -> cIGZUnknown* { return DirectorMake("cSC4CityDetailManager"); });
+    AddCls(gzcom::kCLSID_cSC4EffectsParser, +[]() -> cIGZUnknown* { return DirectorMake("cSC4EffectsParser"); });
+    AddCls(gzcom::kCLSID_cSC4EffectsManager, +[]() -> cIGZUnknown* { return DirectorMake("cSC4EffectsManager"); });
+    AddCls(gzcom::kCLSID_cSC4EffectsResource, +[]() -> cIGZUnknown* { return DirectorMake("cSC4EffectsResource"); });
+    AddCls(gzcom::kCLSID_cSC4EffectsResourceFactory, +[]() -> cIGZUnknown* { return DirectorMake("cSC4EffectsResourceFactory"); });
+    AddCls(gzcom::kCLSID_cSC4ConfigRuleManager, +[]() -> cIGZUnknown* { return DirectorMake("cSC4ConfigRuleManager"); });
+    AddCls(gzcom::kCLSID_cS3DTextureBindingFactory, +[]() -> cIGZUnknown* { return DirectorMake("cS3DTextureBindingFactory"); });
+    AddCls(gzcom::kCLSID_cS3DMaterialManager, +[]() -> cIGZUnknown* { return DirectorMake("cS3DMaterialManager"); });
+    AddCls(0x49b9e601, &cSC4COMDirector::CreateSC4SimGridBool8);
+    AddCls(0x49b9e602, &cSC4COMDirector::CreateSC4SimGridUint8);
+    AddCls(0x49b9e603, &cSC4COMDirector::CreateSC4SimGridSint8);
+    AddCls(0x49b9e604, &cSC4COMDirector::CreateSC4SimGridUint16);
+    AddCls(0x49b9e605, &cSC4COMDirector::CreateSC4SimGridSint16);
+    AddCls(0x49b9e606, &cSC4COMDirector::CreateSC4SimGridUint32);
+    AddCls(0x49b9e607, &cSC4COMDirector::CreateSC4SimGridSint32);
+    AddCls(0x49b9e608, &cSC4COMDirector::CreateSC4SimGridUint64);
+    AddCls(0x49b9e609, &cSC4COMDirector::CreateSC4SimGridSint64);
+    AddCls(0x49b9e60a, &cSC4COMDirector::CreateSC4SimGridFloat32);
+    AddCls(0x49b9e60b, &cSC4COMDirector::CreateSC4SimGridFloat64);
+    AddCls(gzcom::kCLSID_cSC4OccupantManager, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OccupantManager"); });
+    AddCls(gzcom::kCLSID_cSC4Occupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4Occupant"); });
+    AddCls(gzcom::kCLSID_cSC4BuildingOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4BuildingOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4PipeOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PipeOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4SubwayOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4SubwayOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4PipeConnectionOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PipeConnectionOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4SubwayConnectionOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4SubwayConnectionOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4FireOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4FireOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4PowerLineOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PowerLineOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4PowerPoleOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PowerPoleOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4NetworkOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4NetworkOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4NetworkOccupantWithPreBuiltModel, +[]() -> cIGZUnknown* { return DirectorMake("cSC4NetworkOccupantWithPreBuiltModel"); });
+    AddCls(gzcom::kCLSID_cSC4NetworkBridgeOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4NetworkBridgeOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4NetworkTunnelOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4NetworkTunnelOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4PylonOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PylonOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4PropOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PropOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4PropOccupantTerrainDecal, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PropOccupantTerrainDecal"); });
+    AddCls(gzcom::kCLSID_cSC4PropOccupantVisualEffect, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PropOccupantVisualEffect"); });
+    AddCls(gzcom::kCLSID_cSC4PropOccupantAutomataController, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PropOccupantAutomataController"); });
+    AddCls(gzcom::kCLSID_cSC4PropOccupantBurntBuilding, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PropOccupantBurntBuilding"); });
+    AddCls(gzcom::kCLSID_cSC4FloraOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4FloraOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4ConstructionOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4ConstructionOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4FoundationOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4FoundationOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4LotBaseTextureOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4LotBaseTextureOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4LotRetainingWallOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4LotRetainingWallOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4LandfillOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4LandfillOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4SignpostOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4SignpostOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4TextDecalOccupant, +[]() -> cIGZUnknown* { return DirectorMake("cSC4TextDecalOccupant"); });
+    AddCls(gzcom::kCLSID_cSC4OccupantFilter, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OccupantFilter"); });
+    AddCls(gzcom::kCLSID_cSC4DefaultOccupantFilter, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DefaultOccupantFilter"); });
+    AddCls(gzcom::kCLSID_cSC4OccupantTypeFilter, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OccupantTypeFilter"); });
+    AddCls(gzcom::kCLSID_cSC4OccupantTypesFilter, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OccupantTypesFilter"); });
+    AddCls(gzcom::kCLSID_cSC4ComplexViewOccupantFilter, +[]() -> cIGZUnknown* { return DirectorMake("cSC4ComplexViewOccupantFilter"); });
+    AddCls(gzcom::kCLSID_cSC4OccupantTypesFilterHashed, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OccupantTypesFilterHashed"); });
+    AddCls(gzcom::kCLSID_cSC4RealisticOccupantFilter, +[]() -> cIGZUnknown* { return DirectorMake("cSC4RealisticOccupantFilter"); });
+    AddCls(gzcom::kCLSID_cSC4NetworkOccupantFilter, +[]() -> cIGZUnknown* { return DirectorMake("cSC4NetworkOccupantFilter"); });
+    AddCls(gzcom::kCLSID_cSC4ViewLevelOccupantFilter, +[]() -> cIGZUnknown* { return DirectorMake("cSC4ViewLevelOccupantFilter"); });
+    AddCls(gzcom::kCLSID_cSC4StringSpecificationOccupantFilter, +[]() -> cIGZUnknown* { return DirectorMake("cSC4StringSpecificationOccupantFilter"); });
+    AddCls(gzcom::kCLSID_cSC4PipeCustomView, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PipeCustomView"); });
+    AddCls(gzcom::kCLSID_cSC4SubwayCustomView, +[]() -> cIGZUnknown* { return DirectorMake("cSC4SubwayCustomView"); });
+    AddCls(gzcom::kCLSID_cSC4NetworkLayoutCustomView, +[]() -> cIGZUnknown* { return DirectorMake("cSC4NetworkLayoutCustomView"); });
+    AddCls(gzcom::kCLSID_cSC4Simulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4Simulator"); });
+    AddCls(gzcom::kCLSID_cSC4WeatherSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4WeatherSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4FloraSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4FloraSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4AuraSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4AuraSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4BudgetSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4BudgetSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4BuildingDevelopmentSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4BuildingDevelopmentSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4CommercialSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4CommercialSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4CrimeSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4CrimeSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4DemandSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DemandSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4DepartmentBudget, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DepartmentBudget"); });
+    AddCls(gzcom::kCLSID_cSC4LineItem, +[]() -> cIGZUnknown* { return DirectorMake("cSC4LineItem"); });
+    AddCls(gzcom::kCLSID_cSC4FireProtectionSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4FireProtectionSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4FlammabilitySimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4FlammabilitySimulator"); });
+    AddCls(gzcom::kCLSID_cSC4IndustrialSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4IndustrialSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4LandValueSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4LandValueSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4NeighborsSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4NeighborsSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4NeighborConnection, +[]() -> cIGZUnknown* { return DirectorMake("cSC4NeighborConnection"); });
+    AddCls(gzcom::kCLSID_cSC4NeighborDeal, +[]() -> cIGZUnknown* { return DirectorMake("cSC4NeighborDeal"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4PlumbingSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PlumbingSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4PoliceSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PoliceSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4PollutionSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PollutionSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4PowerSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PowerSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4ResidentialSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4ResidentialSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4TrafficSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4TrafficSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4CivicBuildingSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4CivicBuildingSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4MySimAgentSimulator, +[]() -> cIGZUnknown* { return DirectorMake("cSC4MySimAgentSimulator"); });
+    AddCls(gzcom::kCLSID_cSC4PoliceHelicopterDispatchSource, +[]() -> cIGZUnknown* { return DirectorMake("cSC4PoliceHelicopterDispatchSource"); });
+    AddCls(gzcom::kCLSID_cSC4FirePlaneDispatchSource, +[]() -> cIGZUnknown* { return DirectorMake("cSC4FirePlaneDispatchSource"); });
+    AddCls(gzcom::kCLSID_cSC4DisasterLayer, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DisasterLayer"); });
+    AddCls(gzcom::kCLSID_cSC4DisasterManagerFire, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DisasterManagerFire"); });
+    AddCls(gzcom::kCLSID_cSC4DisasterInstanceFire, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DisasterInstanceFire"); });
+    AddCls(gzcom::kCLSID_cSC4DisasterManagerEarthquake, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DisasterManagerEarthquake"); });
+    AddCls(gzcom::kCLSID_cSC4DisasterInstanceEarthquake, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DisasterInstanceEarthquake"); });
+    AddCls(gzcom::kCLSID_cSC4DisasterManagerPipeBurst, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DisasterManagerPipeBurst"); });
+    AddCls(gzcom::kCLSID_cSC4DisasterInstancePipeBurst, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DisasterInstancePipeBurst"); });
+    AddCls(gzcom::kCLSID_cSC4DisasterManagerVolcano, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DisasterManagerVolcano"); });
+    AddCls(gzcom::kCLSID_cSC4DisasterInstanceVolcano, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DisasterInstanceVolcano"); });
+    AddCls(gzcom::kCLSID_cSC4DisasterManagerRiot, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DisasterManagerRiot"); });
+    AddCls(gzcom::kCLSID_cSC4DisasterInstanceRiot, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DisasterInstanceRiot"); });
+    AddCls(gzcom::kCLSID_cSC4DisasterManagerEffect, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DisasterManagerEffect"); });
+    AddCls(gzcom::kCLSID_cSC4DisasterManagerToxic, +[]() -> cIGZUnknown* { return DirectorMake("cSC4DisasterManagerToxic"); });
+    AddCls(gzcom::kCLSID_cSC4Advice, +[]() -> cIGZUnknown* { return DirectorMake("cSC4Advice"); });
+    AddCls(gzcom::kCLSID_cSC4Advisor, +[]() -> cIGZUnknown* { return DirectorMake("cSC4Advisor"); });
+    AddCls(gzcom::kCLSID_cSC4AdvisorSystem, +[]() -> cIGZUnknown* { return DirectorMake("cSC4AdvisorSystem"); });
+    AddCls(gzcom::kCLSID_cSC4AdviceSubject, +[]() -> cIGZUnknown* { return DirectorMake("cSC4AdviceSubject"); });
+    AddCls(gzcom::kCLSID_cSC4RewardAdvice, +[]() -> cIGZUnknown* { return DirectorMake("cSC4RewardAdvice"); });
+    AddCls(gzcom::kCLSID_cSC4MySimAdvice, +[]() -> cIGZUnknown* { return DirectorMake("cSC4MySimAdvice"); });
+    AddCls(gzcom::kCLSID_cSC4AdviceNeghborDeal, +[]() -> cIGZUnknown* { return DirectorMake("cSC4AdviceNeghborDeal"); });
+    AddCls(gzcom::kCLSID_cSC4MySimBalloonAdvice, +[]() -> cIGZUnknown* { return DirectorMake("cSC4MySimBalloonAdvice"); });
+    AddCls(gzcom::kCLSID_cSC4AdvisorSafety, +[]() -> cIGZUnknown* { return DirectorMake("cSC4AdvisorSafety"); });
+    AddCls(gzcom::kCLSID_cSC4AdvisorUtility, +[]() -> cIGZUnknown* { return DirectorMake("cSC4AdvisorUtility"); });
+    AddCls(gzcom::kCLSID_cSC4AdvisorTraffic, +[]() -> cIGZUnknown* { return DirectorMake("cSC4AdvisorTraffic"); });
+    AddCls(gzcom::kCLSID_cSC4AdvisorFinance, +[]() -> cIGZUnknown* { return DirectorMake("cSC4AdvisorFinance"); });
+    AddCls(gzcom::kCLSID_cSC4AdvisorCityPlanning, +[]() -> cIGZUnknown* { return DirectorMake("cSC4AdvisorCityPlanning"); });
+    AddCls(gzcom::kCLSID_cSC4AdvisorHQ, +[]() -> cIGZUnknown* { return DirectorMake("cSC4AdvisorHQ"); });
+    AddCls(gzcom::kCLSID_cSC4AdvisorBase, +[]() -> cIGZUnknown* { return DirectorMake("cSC4AdvisorBase"); });
+    AddCls(gzcom::kCLSID_cSC4AdvisorCitySituations, +[]() -> cIGZUnknown* { return DirectorMake("cSC4AdvisorCitySituations"); });
+    AddCls(gzcom::kCLSID_cSC4CitySituationAdvice, +[]() -> cIGZUnknown* { return DirectorMake("cSC4CitySituationAdvice"); });
+    AddCls(gzcom::kCLSID_cSC4TutorialSystem, +[]() -> cIGZUnknown* { return DirectorMake("cSC4TutorialSystem"); });
+    AddCls(gzcom::kCLSID_cSC4MySim, +[]() -> cIGZUnknown* { return DirectorMake("cSC4MySim"); });
+    AddCls(gzcom::kCLSID_cSC4MySimDispatch, +[]() -> cIGZUnknown* { return DirectorMake("cSC4MySimDispatch"); });
+    AddCls(gzcom::kCLSID_cSC4MyStreetSim, +[]() -> cIGZUnknown* { return DirectorMake("cSC4MyStreetSim"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceSimple, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceSimple"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceCarpoolIncentive, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceCarpoolIncentive"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceCleanAir, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceCleanAir"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceCommunityCPRTraining, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceCommunityCPRTraining"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceFreeClinics, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceFreeClinics"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceJuniorSportsLeague, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceJuniorSportsLeague"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceLandfillGasRecovery, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceLandfillGasRecovery"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceLegalizeGambling, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceLegalizeGambling"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceMandatorySmokeDetectors, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceMandatorySmokeDetectors"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceNeighborhoodWatch, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceNeighborhoodWatch"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceNuclearFreeZone, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceNuclearFreeZone"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinancePaperReductionAct, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinancePaperReductionAct"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinancePowerConservation, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinancePowerConservation"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceProReadingCampaign, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceProReadingCampaign"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceShuttleService, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceShuttleService"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceTireRecycling, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceTireRecycling"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceTouristPromotion, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceTouristPromotion"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceTrashPresort, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceTrashPresort"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceVehicleEmissionStandard, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceVehicleEmissionStandard"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceWaterConservation, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceWaterConservation"); });
+    AddCls(gzcom::kCLSID_cSC4OrdinanceYouthCurfew, +[]() -> cIGZUnknown* { return DirectorMake("cSC4OrdinanceYouthCurfew"); });
+}
+
+cIGZUnknown* cSC4COMDirector::CreateSC4SimGridBool8() { return DirectorMake("CreateSC4SimGridBool8"); }
+cIGZUnknown* cSC4COMDirector::CreateSC4SimGridUint8() { return DirectorMake("CreateSC4SimGridUint8"); }
+cIGZUnknown* cSC4COMDirector::CreateSC4SimGridSint8() { return DirectorMake("CreateSC4SimGridSint8"); }
+cIGZUnknown* cSC4COMDirector::CreateSC4SimGridUint16() { return DirectorMake("CreateSC4SimGridUint16"); }
+cIGZUnknown* cSC4COMDirector::CreateSC4SimGridSint16() { return DirectorMake("CreateSC4SimGridSint16"); }
+cIGZUnknown* cSC4COMDirector::CreateSC4SimGridUint32() { return DirectorMake("CreateSC4SimGridUint32"); }
+cIGZUnknown* cSC4COMDirector::CreateSC4SimGridSint32() { return DirectorMake("CreateSC4SimGridSint32"); }
+cIGZUnknown* cSC4COMDirector::CreateSC4SimGridUint64() { return DirectorMake("CreateSC4SimGridUint64"); }
+cIGZUnknown* cSC4COMDirector::CreateSC4SimGridSint64() { return DirectorMake("CreateSC4SimGridSint64"); }
+cIGZUnknown* cSC4COMDirector::CreateSC4SimGridFloat32() { return DirectorMake("CreateSC4SimGridFloat32"); }
+cIGZUnknown* cSC4COMDirector::CreateSC4SimGridFloat64() { return DirectorMake("CreateSC4SimGridFloat64"); }
+
 cRZCOMDllDirector* GetGZWin32COMDllDirector() { static cGZWin32COMDirector director; return &director; }
 cRZCOMDllDirector* GetGZScriptCOMDirector() { static cGZScriptCOMDirector director; return &director; }
 cRZCOMDllDirector* GetGimexCOMDllDirector() { static cGXCOMDirector director; return &director; }
@@ -396,5 +618,6 @@ cRZCOMDllDirector* GetSC4GDriversCOMDirector() { static cSC4GDriversCOMDirector 
 cRZCOMDllDirector* GetSCLuaCOMDirector() { static cSCLuaCOMDirector director; return &director; }
 cRZCOMDllDirector* GetGZWWWCOMDllDirector() { static cGZWWWCOMDirector director; return &director; }
 cRZCOMDllDirector* GetGZWWWWin32COMDllDirector() { static cGZWWWWin32COMDirector director; return &director; }
+cRZCOMDllDirector* SC4GetCOMDirector() { static cSC4COMDirector director; return &director; }
 
 }  // namespace gz

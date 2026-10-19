@@ -74,6 +74,18 @@ int main() {
     CHECK(GetSCLuaCOMDirector()->GetDirectorID() == 0xca107f8b && GetGZDrawCOMDllDirector()->GetDirectorID() == 0xb2ea939);
     CHECK(GetGZGraphicCOMDllDirector()->GetDirectorID() == 0x246b917a && GetSC4GDriversCOMDirector()->GetDirectorID() == 0x64b2a903);
     CHECK(GetGZWWWCOMDllDirector()->GetDirectorID() == 0x649b0fbe && GetGZWWWWin32COMDllDirector()->GetDirectorID() == 0xa49b0fd1);
+    // the main game director: its own class table, and its children joined the process-wide director
+    {
+        std::size_t before = 0;
+        count = 0; RZGetCOMDllDirector()->EnumClassObjects(&Count, nullptr); before = static_cast<std::size_t>(count);
+        cSC4COMDirector sc4;
+        CHECK(sc4.GetDirectorID() == 0x63cc0af8);
+        count = 0; sc4.EnumClassObjects(&Count, nullptr);
+        CHECK(count > 150);
+        count = 0; RZGetCOMDllDirector()->EnumClassObjects(&Count, nullptr);
+        CHECK(static_cast<std::size_t>(count) > before);              // quirk: the children were added to the process director, not to sc4
+        CHECK(SC4GetCOMDirector()->GetDirectorID() == 0x63cc0af8);
+    }
     // Lua factories hand out interfaces of whatever the registered maker builds
     RegisterDirectorMaker("cSCLua", +[]() -> cIGZUnknown* { return new Product(); });
     void* lua = nullptr;

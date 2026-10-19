@@ -5,7 +5,9 @@
 #include <utility>
 #include <vector>
 
+#include "gz/GZCOMDirector.h"
 #include "gz/cGZAllocator.h"
+#include "rz/cRZSysServPtr.h"
 #include "gz/cIGZIStream.h"
 #include "gz/cIGZOStream.h"
 #include "rz/cRZIStream.h"
@@ -41,9 +43,54 @@ cGZFramework::cGZFramework() {
 
 cGZFramework::~cGZFramework() = default;
 
+cIGZCOMDirector* cGZFramework::ProcessDirector() { return sProcessDirector ? sProcessDirector : RZGetCOMDllDirector(); }
+
+namespace {
+// What the directors and RZ:: service pointers reach the framework through.
+class DirectorBridge final : public IDirectorFramework {
+public:
+    explicit DirectorBridge(cGZFramework& framework) : framework_(framework) {}
+    void AddSystemService(cIGZUnknown* service) override {
+        cIGZSystemService* asService = nullptr;
+        if (service && service->QueryInterface(kGZIID_cIGZSystemService, reinterpret_cast<void**>(&asService))) {
+            framework_.AddSystemService(asService);
+            asService->Release();
+        }
+    }
+    void AddHooks(cIGZFrameWorkHooks* hooks) override { framework_.AddHook(hooks); }
+    // vslots 0x48 / 0x50 of the framework: AddToTick / RemoveFromTick
+    void RegisterSystemService(cIGZUnknown* service) override {
+        cIGZSystemService* asService = nullptr;
+        if (service && service->QueryInterface(kGZIID_cIGZSystemService, reinterpret_cast<void**>(&asService))) {
+            framework_.AddToTick(asService);
+            asService->Release();
+        }
+    }
+    void UnregisterSystemService(cIGZUnknown* service) override {
+        cIGZSystemService* asService = nullptr;
+        if (service && service->QueryInterface(kGZIID_cIGZSystemService, reinterpret_cast<void**>(&asService))) {
+            framework_.RemoveFromTick(asService);
+            asService->Release();
+        }
+    }
+private:
+    cGZFramework& framework_;
+};
+DirectorBridge* g_bridge = nullptr;
+
+bool ResolveFrameworkService(std::uint32_t serviceId, std::uint32_t interfaceId, void** out) {
+    return cGZFramework::FrameWork() && cGZFramework::FrameWork()->GetSystemService(serviceId, interfaceId, out);
+}
+}  // namespace
+
 void cGZFramework::sSetFrameWork(cGZFramework* framework) {
     sFrameWork = framework;
     sSavedFrameWork = framework;
+    SetRZFramework(static_cast<cIGZFrameWork*>(framework));
+    SetRZServiceResolver(&ResolveFrameworkService);
+    delete g_bridge;
+    g_bridge = new DirectorBridge(*framework);
+    SetDirectorFramework(g_bridge);
     framework->AddRef();
     framework->AddRef();
 }

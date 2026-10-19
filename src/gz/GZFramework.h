@@ -137,7 +137,7 @@ public:
 private:
     // IGZCOMHost
     cIGZUnknown* Framework() override { return static_cast<cIGZFrameWork*>(this); }
-    cIGZCOMDirector* ProcessDirector() override { return sProcessDirector; }
+    cIGZCOMDirector* ProcessDirector() override;
     void CurrentAppPath(cIGZString&) override {}
 
     struct AppFrameworkView final : IGZAppFramework {
