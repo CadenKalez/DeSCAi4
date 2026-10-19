@@ -19067,3 +19067,21 @@ address,symbol,unique_name,source,status,evidence
 0x100039a9f,"SC4CreateWindowFromScript(cGZPersistResourceKey const&, cIGZWin*, unsigned int)",Construct_cGZPersistResourceKey_const_cIGZWin_uint,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
 0x100039b38,"SC4CreateWindowFromScript(unsigned int, cIGZWin*, unsigned int, unsigned int, void**)",Construct_uint_cIGZWin_uint_uint_voidWrapper,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
 0x100039bf7,"SC4CreateWindowFromScript(cGZPersistResourceKey const&, cIGZWin*, unsigned int, unsigned int, void**)",Construct_cGZPersistResourceKey_const_cIGZWin_uint_uint_void,src/sc4/DialogWinProcs.cpp,recovered,scripts/tests/sc4_dialogwinprocs_test.cpp
+0x10075913c,cSC4BuildingSelectWinProc::cSC4BuildingSelectWinProc(cIGZWin*),Construct_cIGZWin,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x100759182,cSC4BuildingSelectWinProc::~cSC4BuildingSelectWinProc(),Destruct,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x100759232,cSC4BuildingSelectWinProc::Shutdown(),Shutdown,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x1007592a8,cSC4BuildingSelectWinProc::~cSC4BuildingSelectWinProc(),DestructAndDelete,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x1007592b2,cSC4BuildingSelectWinProc::~cSC4BuildingSelectWinProc(),DestructBody,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x1007592e0,"cSC4BuildingSelectWinProc::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x1007592fe,cSC4BuildingSelectWinProc::AddRef(),AddRef,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x10075930c,cSC4BuildingSelectWinProc::Release(),Release,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x100759328,cSC4BuildingSelectWinProc::Init(),Init,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x100759570,"cSC4BuildingSelectWinProc::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessage,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x1007597ca,cSC4BuildingSelectWinProc::SetExpanded(bool),SetExpanded,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x10075981c,cSC4BuildingSelectWinProc::AddActiveStyle(unsigned int),AddActiveStyle,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x1007598da,cSC4BuildingSelectWinProc::RemoveActiveStyle(unsigned int),RemoveActiveStyle,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x10075999a,cSC4BuildingSelectWinProc::EnableStyleButtons(),EnableStyleButtons,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x100759a22,cSC4BuildingSelectWinProc::ShowWindow(),ShowWindow,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x100759b5e,cSC4BuildingSelectWinProc::IsStyleActive(unsigned int),IsStyleActive,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x100759bd0,cSC4BuildingSelectWinProc::HideWindow(),HideWindow,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
+0x100759be2,cSC4BuildingSelectWinProc::IsVisible(),IsVisible,src/sc4/BuildingSelectWinProc.cpp,recovered,scripts/tests/sc4_buildingselectwinproc_test.cpp
