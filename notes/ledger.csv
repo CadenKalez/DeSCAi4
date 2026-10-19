@@ -18948,3 +18948,61 @@ address,symbol,unique_name,source,status,evidence
 0x100034a6b,"SplitDirectory(char const*, char (*) [256], int&)",Construct_char_const_char_256_int,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
 0x100034c11,"SplitDirectory(cRZString const&, cRZString*, int&)",Construct_cRZString_const_cRZString_intWrapper,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
 0x1007fa00f,MacDirectoryExists(char const*),Construct_char_const,src/rz/cRZDirectory.cpp,recovered,scripts/tests/rz_directory_test.cpp
+0x1003f8c10,cGZFileSystem::cGZFileSystem(),Construct,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f8fac,cGZFileSystem::cGZFileSystem(),ConstructWrapper,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f8fb6,cGZFileSystem::~cGZFileSystem(),Destruct,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f90fe,cGZFileSystem::~cGZFileSystem(),DestructAndDelete,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f9108,non-virtual thunk to cGZFileSystem::~cGZFileSystem(),DestructThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f9116,cGZFileSystem::~cGZFileSystem(),DestructBody,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f9144,non-virtual thunk to cGZFileSystem::~cGZFileSystem(),DestructAndDeleteThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f9152,"cGZFileSystem::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f9174,"non-virtual thunk to cGZFileSystem::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_9174,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f919a,"non-virtual thunk to cGZFileSystem::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_919a,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f91c0,cGZFileSystem::AddRef(),AddRef,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f91ca,non-virtual thunk to cGZFileSystem::AddRef(),AddRefThunk_91ca,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f91d8,non-virtual thunk to cGZFileSystem::AddRef(),AddRefThunk_91d8,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f91e6,cGZFileSystem::Release(),Release,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f91f0,non-virtual thunk to cGZFileSystem::Release(),ReleaseThunk_91f0,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f91fe,non-virtual thunk to cGZFileSystem::Release(),ReleaseThunk_91fe,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f920c,cGZFileSystem::Init(),Init,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f9214,cGZFileSystem::Shutdown(),Shutdown,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f921c,cGZFileSystem::AppDrive(),AppDrive,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f9258,non-virtual thunk to cGZFileSystem::AppDrive(),AppDriveThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f9296,cGZFileSystem::AppDirectory(),AppDirectory,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f92d2,non-virtual thunk to cGZFileSystem::AppDirectory(),AppDirectoryThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f9310,cGZFileSystem::AppName(),AppName,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f9356,non-virtual thunk to cGZFileSystem::AppName(),AppNameThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f939c,cGZFileSystem::AppExtension(),AppExtension,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f93e2,non-virtual thunk to cGZFileSystem::AppExtension(),AppExtensionThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f9428,cGZFileSystem::DataDirectory(),DataDirectory,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f996a,non-virtual thunk to cGZFileSystem::DataDirectory(),DataDirectoryThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f9978,cGZFileSystem::PlugInDirectory(),PlugInDirectory,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f9b7e,non-virtual thunk to cGZFileSystem::PlugInDirectory(),PlugInDirectoryThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f9b8c,cGZFileSystem::GetAndSplitApplicationPath(),GetAndSplitApplicationPath,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f9f7c,cGZFileSystem::CDAppDrive(),CDAppDrive,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003f9ff6,non-virtual thunk to cGZFileSystem::CDAppDrive(),CDAppDriveThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fa004,cGZFileSystem::CDAppDirectory(),CDAppDirectory,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fa048,non-virtual thunk to cGZFileSystem::CDAppDirectory(),CDAppDirectoryThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fa08e,cGZFileSystem::CDDataDirectory(),CDDataDirectory,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fa0d2,non-virtual thunk to cGZFileSystem::CDDataDirectory(),CDDataDirectoryThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fa118,cGZFileSystem::CDPlugInDirectory(),CDPlugInDirectory,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fa15c,non-virtual thunk to cGZFileSystem::CDPlugInDirectory(),CDPlugInDirectoryThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fa1a2,cGZFileSystem::FindCDDrive(),FindCDDrive,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fa256,non-virtual thunk to cGZFileSystem::FindCDDrive(),FindCDDriveThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fa264,cGZFileSystem::ValidateCDPath(),ValidateCDPath,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003facdc,cGZFileSystem::SetDataDirectory(cIGZString const&),SetDataDirectory,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fad46,non-virtual thunk to cGZFileSystem::SetDataDirectory(cIGZString const&),SetDataDirectoryThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fad54,cGZFileSystem::SetPluginDirectory(cIGZString const&),SetPluginDirectory,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fadbe,non-virtual thunk to cGZFileSystem::SetPluginDirectory(cIGZString const&),SetPluginDirectoryThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fadd4,cGZFileSystem::UseCDIniFile(bool),UseCDIniFile,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fade2,cGZFileSystem::AllowRecursiveCDSearch(bool),AllowRecursiveCDSearch,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fadf0,cGZFileSystem::SetExpectedCDName(cIGZString const&),SetExpectedCDName,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fae02,cGZFileSystem::SetExpectedCDAppPath(cIGZString const&),SetExpectedCDAppPath,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fae14,cGZFileSystem::GetPluginDirectoryName(cIGZString&),GetPluginDirectoryName,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fae54,cGZFileSystem::SetPluginDirectoryName(cIGZString const&),SetPluginDirectoryName,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fae66,non-virtual thunk to cGZFileSystem::UseCDIniFile(bool),UseCDIniFileThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fae74,non-virtual thunk to cGZFileSystem::AllowRecursiveCDSearch(bool),AllowRecursiveCDSearchThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fae82,non-virtual thunk to cGZFileSystem::SetExpectedCDName(cIGZString const&),SetExpectedCDNameThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003fae94,non-virtual thunk to cGZFileSystem::SetExpectedCDAppPath(cIGZString const&),SetExpectedCDAppPathThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003faea6,non-virtual thunk to cGZFileSystem::GetPluginDirectoryName(cIGZString&),GetPluginDirectoryNameThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
+0x1003faeea,non-virtual thunk to cGZFileSystem::SetPluginDirectoryName(cIGZString const&),SetPluginDirectoryNameThunk,src/gz/FileSystem.cpp,recovered,scripts/tests/gz_filesystem_test.cpp
