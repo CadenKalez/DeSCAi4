@@ -19166,3 +19166,81 @@ address,symbol,unique_name,source,status,evidence
 0x10075e762,cSC4RegionSignpostAnimatorWinProc::~cSC4RegionSignpostAnimatorWinProc(),DestructAndDelete,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
 0x10075e7e4,non-virtual thunk to cSC4RegionSignpostAnimatorWinProc::~cSC4RegionSignpostAnimatorWinProc(),DestructThunk,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
 0x10075e846,non-virtual thunk to cSC4RegionSignpostAnimatorWinProc::~cSC4RegionSignpostAnimatorWinProc(),DestructAndDeleteThunk,src/sc4/SmallWinProcs.cpp,recovered,scripts/tests/sc4_smallwinprocs_test.cpp
+0x1001ef29e,cSC4Simulator::cSC4Simulator(),Construct,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef55c,cSC4Simulator::~cSC4Simulator(),Destruct,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef6c2,cSC4Simulator::~cSC4Simulator(),DestructAndDelete,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef6cc,non-virtual thunk to cSC4Simulator::~cSC4Simulator(),DestructThunk,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef6da,non-virtual thunk to cSC4Simulator::~cSC4Simulator(),DestructAndDeleteThunk,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef6e8,cSC4Simulator::~cSC4Simulator(),DestructBody,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef716,non-virtual thunk to cSC4Simulator::~cSC4Simulator(),DestructBodyThunk_f716,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef724,non-virtual thunk to cSC4Simulator::~cSC4Simulator(),DestructBodyThunk_f724,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef732,"cSC4Simulator::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef766,"non-virtual thunk to cSC4Simulator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_f766,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef774,"non-virtual thunk to cSC4Simulator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_f774,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef782,"non-virtual thunk to cSC4Simulator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_f782,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef790,"non-virtual thunk to cSC4Simulator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_f790,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef79e,cSC4Simulator::AddRef(),AddRef,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef7ac,non-virtual thunk to cSC4Simulator::AddRef(),AddRefThunk_f7ac,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef7ba,non-virtual thunk to cSC4Simulator::AddRef(),AddRefThunk_f7ba,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef7c8,non-virtual thunk to cSC4Simulator::AddRef(),AddRefThunk_f7c8,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef7d6,non-virtual thunk to cSC4Simulator::AddRef(),AddRefThunk_f7d6,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef7e4,cSC4Simulator::Release(),Release,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef804,non-virtual thunk to cSC4Simulator::Release(),ReleaseThunk_f804,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef828,non-virtual thunk to cSC4Simulator::Release(),ReleaseThunk_f828,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef84c,non-virtual thunk to cSC4Simulator::Release(),ReleaseThunk_f84c,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef870,non-virtual thunk to cSC4Simulator::Release(),ReleaseThunk_f870,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001ef894,cSC4Simulator::Init(),Init,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001efbdc,cSC4Simulator::ReadSimulatorTunableValues(),ReadSimulatorTunableValues,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001efd52,cSC4Simulator::DoSetSimSpeed(int),DoSetSimSpeed,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001efdae,non-virtual thunk to cSC4Simulator::Init(),InitThunk,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001efdc0,cSC4Simulator::Shutdown(),Shutdown,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001eff42,non-virtual thunk to cSC4Simulator::Shutdown(),ShutdownThunk,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001eff54,cSC4Simulator::Write(cIGZOStream&) const,Write,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f001e,non-virtual thunk to cSC4Simulator::Write(cIGZOStream&) const,WriteThunk,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f002c,cSC4Simulator::Read(cIGZIStream&),Read,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f0162,non-virtual thunk to cSC4Simulator::Read(cIGZIStream&),ReadThunk,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f0170,cSC4Simulator::DoMessage(cIGZMessage2*),DoMessage,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f0438,"cSC4Simulator::DoCheatCode(unsigned int, cIGZString*)",DoCheatCode,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f05c4,non-virtual thunk to cSC4Simulator::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f05d6,cSC4Simulator::SimulateTimePassage(),SimulateTimePassage,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f093e,cSC4Simulator::SetSimSpeed(int),SetSimSpeed,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f0964,"cSC4Simulator::PostMessageServerMessage(unsigned int, unsigned int, unsigned int, unsigned int)",PostMessageServerMessage,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f0a1e,cSC4Simulator::SetSimTime(int),SetSimTime,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f0a28,cSC4Simulator::GetSimStartDate(cIGZDate&) const,GetSimStartDate,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f0a4c,cSC4Simulator::GetSimStartDateStatic(cIGZDate&),GetSimStartDateStatic,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f0a6a,"cSC4Simulator::SendAgentMessage(cSC4Simulator::AgentInfo const&, unsigned int, unsigned int, unsigned int, unsigned int)",SendAgentMessage,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f0b22,cSC4Simulator::OnTick(unsigned int),OnTick,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f0c58,cSC4Simulator::SimulateAgents(),SimulateAgents,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f0e18,cSC4Simulator::SimulateIdleTime(),SimulateIdleTime,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f0f42,non-virtual thunk to cSC4Simulator::OnTick(unsigned int),OnTickThunk,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f0f54,cSC4Simulator::BeginNewInterval(int),BeginNewInterval,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f1062,"cSC4Simulator::GetSimDate(int*, int*, int*, int*, int*) const",GetSimDate_int_int_int_int_int,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f1100,cSC4Simulator::Pause(),Pause,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f1128,cSC4Simulator::HiddenPause(),HiddenPause,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f1150,cSC4Simulator::EmergencyPause(),EmergencyPause,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f11a0,cSC4Simulator::Resume(),Resume,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f11c4,cSC4Simulator::HiddenResume(),HiddenResume,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f11e2,cSC4Simulator::EmergencyResume(),EmergencyResume,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f1224,"cSC4Simulator::AddAgent(cIGZMessageTarget2*, int, cIGZString const&, unsigned int)",AddAgent,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f13e6,"cSC4Simulator::RemoveAgent(cIGZMessageTarget2*, int)",RemoveAgent_cIGZMessageTarget2_int,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f14ac,cSC4Simulator::RemoveAgent(cIGZMessageTarget2*),RemoveAgent_cIGZMessageTarget2,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f14f2,cSC4Simulator::RemoveAllAgents(int),RemoveAllAgents_int,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f1546,cSC4Simulator::RemoveAllAgents(),RemoveAllAgents_void,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f15a4,"cSC4Simulator::EnumerateAgentsByName(std::__1::vector<cRZString, std::__1::allocator<cRZString>>&)",EnumerateAgentsByName,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f178e,cSC4Simulator::GetAgentEnabled(cIGZString const&),GetAgentEnabled,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f182c,"cSC4Simulator::SetAgentEnabled(cIGZString const&, bool)",SetAgentEnabled,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f18ca,cSC4Simulator::SetCityEstablished(bool),SetCityEstablished,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f1952,cSC4Simulator::GetAnimationTimeDilation(),GetAnimationTimeDilation,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f19ca,cSC4Simulator::GetSimDate() const,GetSimDate_void,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f19d8,cSC4Simulator::GetSimDateNumber() const,GetSimDateNumber,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f19ea,cSC4Simulator::IsPaused() const,IsPaused,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f19f8,cSC4Simulator::IsHiddenPaused() const,IsHiddenPaused,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f1a06,cSC4Simulator::IsEmergencyPaused() const,IsEmergencyPaused,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f1a14,cSC4Simulator::IsAnyPaused() const,IsAnyPaused,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f1a30,cSC4Simulator::GetSimSpeed() const,GetSimSpeed,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f1a3a,cSC4Simulator::GetSimTime() const,GetSimTime,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f1a44,cSC4Simulator::SetMaxMillisecondsPerTick(unsigned int),SetMaxMillisecondsPerTick,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f1a50,cSC4Simulator::GetGZCLSID() const,GetGZCLSID,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1001f1a5c,non-virtual thunk to cSC4Simulator::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x10070e58e,cSC4LimitTimerCalibrator::cSC4LimitTimerCalibrator(),Construct,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x10070e5e4,cSC4LimitTimerCalibrator::Tick(),Tick,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
