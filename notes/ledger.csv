@@ -18899,3 +18899,28 @@ address,symbol,unique_name,source,status,evidence
 0x1003f4ab0,"SC4Percentage::SC4Percentage(float, bool)",Construct_float_bool,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
 0x1003f7db0,"SC4Percentage::SC4Percentage(float, bool)",Construct_float_boolWrapper,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
 0x10003903e,"SC4GamePause(bool, bool, bool, bool, bool)",Construct_bool_bool_bool_bool_bool,src/sc4/AutoHelpers.cpp,recovered,scripts/tests/sc4_autohelpers_test.cpp
+0x100359d32,cSC4AnimatableOccupantFilter::IsOccupantIncluded(cISC4Occupant*),IsOccupantIncluded,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x100359dda,cSC4AnimatableOccupantFilter::~cSC4AnimatableOccupantFilter(),Destruct,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x100359de4,cSC4AnimatableOccupantFilter::~cSC4AnimatableOccupantFilter(),DestructAndDelete,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x100359d7c,cSC4VisibleAnimatableOccupantFilter::IsOccupantIncluded(cISC4Occupant*),IsOccupantIncluded,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x100359e1a,cSC4VisibleAnimatableOccupantFilter::~cSC4VisibleAnimatableOccupantFilter(),Destruct,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x100359e24,cSC4VisibleAnimatableOccupantFilter::~cSC4VisibleAnimatableOccupantFilter(),DestructAndDelete,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x10045e770,cSC4ActiveFireOccupantFilter::IsOccupantIncluded(cISC4Occupant*),IsOccupantIncluded,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1004606a4,cSC4ActiveFireOccupantFilter::~cSC4ActiveFireOccupantFilter(),Destruct,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1004606ae,cSC4ActiveFireOccupantFilter::~cSC4ActiveFireOccupantFilter(),DestructAndDelete,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1003ec5a6,cSC4AudioAmbienceManagerOccupantFilter::IsOccupantIncluded(cISC4Occupant*),IsOccupantIncluded,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1003ec5ce,cSC4AudioAmbienceManagerOccupantFilter::IsOccupantTypeIncluded(unsigned int),IsOccupantTypeIncluded,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1003ec624,cSC4AudioAmbienceManagerOccupantFilter::IsPropertyHolderIncluded(cISCPropertyHolder*),IsPropertyHolderIncluded,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1003ec62c,cSC4AudioAmbienceManagerOccupantFilter::AddRef(),AddRef,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1003ec63a,cSC4AudioAmbienceManagerOccupantFilter::Release(),Release,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1003ec656,"cSC4AudioAmbienceManagerOccupantFilter::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1003c1f5a,cSC4PlaceLotOccupantFilter::IsOccupantIncluded(cISC4Occupant*),IsOccupantIncluded,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1003c1f82,cSC4PlaceLotOccupantFilter::IsOccupantTypeIncluded(unsigned int),IsOccupantTypeIncluded,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1003c1f9c,cSC4PlaceLotOccupantFilter::IsPropertyHolderIncluded(cISCPropertyHolder*),IsPropertyHolderIncluded,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1003c1fa4,cSC4PlaceLotOccupantFilter::~cSC4PlaceLotOccupantFilter(),Destruct,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1003c1fae,cSC4PlaceLotOccupantFilter::~cSC4PlaceLotOccupantFilter(),DestructAndDelete,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1000c254a,cSC4FloraBlockingOccupantFilter::IsOccupantIncluded(cISC4Occupant*),IsOccupantIncluded,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1000c2606,cSC4FloraBlockingOccupantFilter::~cSC4FloraBlockingOccupantFilter(),Destruct,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1000c2610,cSC4FloraBlockingOccupantFilter::~cSC4FloraBlockingOccupantFilter(),DestructAndDelete,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1000c263e,cSC4FloraBlockingOccupantFilter::Write(cIGZOStream&) const,Write,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
+0x1000c2652,non-virtual thunk to cSC4FloraBlockingOccupantFilter::Write(cIGZOStream&) const,WriteThunk,src/sc4/OccupantFilters3.cpp,recovered,scripts/tests/sc4_occupantfilters3_test.cpp
