@@ -192,7 +192,7 @@ public:
     // the segment is entirely outside.
     static bool ClipRect(int* x0, int* y0, int* x1, int* y1, int minX, int minY, int maxX, int maxY);
 
-private:
+protected:
     bool ready_ = false;                                // +0x10
     cGZBufferColorType colorType_;                      // +0x14
     cRZRect area_;                                      // +0x1c

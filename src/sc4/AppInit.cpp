@@ -42,7 +42,7 @@ bool cSC4App::Init() {
     cIGZFrameWork* framework = framework_ ? framework_ : RZGetFramework();
     cIGZWinMgr* windowManager = RZ::WM();
     gz::cIGZWinCtrlMgr* controlManager = RZ::WCM();
-    sc4::IGraphicSystemControl* graphics = startupHooks_.graphicSystem ? startupHooks_.graphicSystem() : nullptr;
+    IGraphicSystemControl* graphics = startupHooks_.graphicSystem ? startupHooks_.graphicSystem() : nullptr;
     cIGZCOM* com = GZCOM();
     std::uint8_t* prefs = preferences_.data();
     auto alert = [&](const std::string& text) { if (startupHooks_.messageBox) startupHooks_.messageBox(text, "SimCity 4"); };
@@ -83,8 +83,8 @@ bool cSC4App::Init() {
     }
     if (prefs[sc4::prefs::kVideoAutoConfigure] != 0) {
         GetAutoVideoPreferences(reinterpret_cast<SC4VideoPreferences*>(prefs + sc4::prefs::kVideoAutoConfigure));
-        sc4::IGraphicSystemControl::DisplayMetrics game = graphics->GetGameMetrics();
-        sc4::IGraphicSystemControl::DisplayMetrics screen = graphics->GetScreenMetrics();
+        IGraphicSystemControl::DisplayMetrics game = graphics->GetGameMetrics();
+        IGraphicSystemControl::DisplayMetrics screen = graphics->GetScreenMetrics();
         preferences_.Set<std::uint32_t>(sc4::prefs::kVideoWidth, game.width);
         preferences_.Set<std::uint32_t>(sc4::prefs::kVideoHeight, game.height);
         preferences_.Set<std::uint32_t>(sc4::prefs::kVideoColorDepth, screen.depth);

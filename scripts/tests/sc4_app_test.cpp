@@ -200,7 +200,7 @@ int main() {
 
     // ---- PreFrameWorkInit end to end (real framework, real language manager, fake graphics system)
     {
-        struct Graphics final : sc4::IGraphicSystemControl {
+        struct Graphics final : IGraphicSystemControl {
             DisplayMetrics screen{1440, 900, 32};
             std::vector<std::string> log; DisplayMetrics desired; bool windowed = true; std::uint32_t driver = 0;
             DisplayMetrics GetScreenMetrics() override { return screen; }
@@ -218,6 +218,9 @@ int main() {
             gd::cIGZGDriver* GetGDriverByIndex(int) override { return nullptr; }
             void SetGDriver(gd::cIGZGDriver*) override {}
             void SetForceNoTranslucency(bool, float) override {}
+            cIGZBuffer* CreateBuffer() override { return nullptr; }
+            void RenderBufferToScreen(cIGZBuffer*, const cRZRect&, const cRZRect&) override {}
+            void LazyFlush() override {}
         };
         char dir[] = "/tmp/sc4pfiXXXXXX"; CHECK(mkdtemp(dir));
         std::string root = dir;
@@ -270,7 +273,7 @@ int main() {
 
     // ---- Init: failure without a canvas, success with the resources set up
     {
-        struct Graphics final : sc4::IGraphicSystemControl {
+        struct Graphics final : IGraphicSystemControl {
             bool ready = true; bool forced = false;
             DisplayMetrics GetScreenMetrics() override { return {1440, 900, 32}; }
             void PreInitSetDesiredGameResolution(const DisplayMetrics&) override {}
@@ -287,6 +290,9 @@ int main() {
             gd::cIGZGDriver* GetGDriverByIndex(int) override { return nullptr; }
             void SetGDriver(gd::cIGZGDriver*) override {}
             void SetForceNoTranslucency(bool force, float) override { forced = force; }
+            cIGZBuffer* CreateBuffer() override { return nullptr; }
+            void RenderBufferToScreen(cIGZBuffer*, const cRZRect&, const cRZRect&) override {}
+            void LazyFlush() override {}
         };
         struct Options final : sc4::IVideoOptionStore {
             void SetOption(int, int) override {}

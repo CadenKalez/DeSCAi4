@@ -241,7 +241,7 @@ bool cSC4App::PreFrameWorkInit() {
     AddSystemServices();
 
     // the graphics system: no hardware cursor for -cursormode b..., a 1024x768 default game resolution
-    sc4::IGraphicSystemControl* graphics = startupHooks_.graphicSystem ? startupHooks_.graphicSystem() : nullptr;
+    IGraphicSystemControl* graphics = startupHooks_.graphicSystem ? startupHooks_.graphicSystem() : nullptr;
     if (graphics) {
         graphics->DisableScreenBuffer();
         bool blitCursor = false;
@@ -251,7 +251,7 @@ bool cSC4App::PreFrameWorkInit() {
         }
         graphics->EnableCursorEmulation(blitCursor);
         if (blitCursor && graphics->IsPageFlippingEnabled()) graphics->EnablePageFlipping(false);
-        sc4::IGraphicSystemControl::DisplayMetrics screen = graphics->GetScreenMetrics();
+        IGraphicSystemControl::DisplayMetrics screen = graphics->GetScreenMetrics();
         graphics->PreInitSetDesiredGameResolution({1024, 768, screen.depth});
     }
 
@@ -400,15 +400,15 @@ void cSC4App::DoPreferencesChanged(bool initial) {
             }
         }
 
-        if (sc4::IGraphicSystemControl* graphics = startupHooks_.graphicSystem ? startupHooks_.graphicSystem() : nullptr) {
-            sc4::IGraphicSystemControl::DisplayMetrics screen = graphics->GetScreenMetrics();
+        if (IGraphicSystemControl* graphics = startupHooks_.graphicSystem ? startupHooks_.graphicSystem() : nullptr) {
+            IGraphicSystemControl::DisplayMetrics screen = graphics->GetScreenMetrics();
             if (screen.depth != 16 && screen.depth != 32) prefs[sc4::prefs::kFullScreen] = 1;
             // a window that does not fit on the desktop becomes full screen
             if (prefs[sc4::prefs::kFullScreen] == 0 &&
                 (screen.width < preferences_.Get<std::uint32_t>(sc4::prefs::kVideoWidth) ||
                  screen.height < preferences_.Get<std::uint32_t>(sc4::prefs::kVideoHeight)))
                 prefs[sc4::prefs::kFullScreen] = 1;
-            sc4::IGraphicSystemControl::DisplayMetrics desired;
+            IGraphicSystemControl::DisplayMetrics desired;
             desired.width = preferences_.Get<std::uint32_t>(sc4::prefs::kVideoWidth);
             desired.height = preferences_.Get<std::uint32_t>(sc4::prefs::kVideoHeight);
             desired.depth = preferences_.Get<std::uint32_t>(sc4::prefs::kVideoColorDepth);

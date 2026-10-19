@@ -18449,3 +18449,80 @@ address,symbol,unique_name,source,status,evidence
 0x10001226e,cSC4App::WindowShutdown(),WindowShutdown,src/sc4/AppInit.cpp|AppResources.cpp,recovered,"cSC4App::Init spine (graphics checks, driver, video options, messages, cheat codes, managers, resources, window), SetupResources, SetupPackedFileSegment, idle housekeeping, window setup; test sc4_app"
 0x1000b0a3c,cSC4App::SetupResources(),SetupResources,src/sc4/AppInit.cpp|AppResources.cpp,recovered,"cSC4App::Init spine (graphics checks, driver, video options, messages, cheat codes, managers, resources, window), SetupResources, SetupPackedFileSegment, idle housekeeping, window setup; test sc4_app"
 0x1000b1f30,"SetupPackedFileSegment(cRZString const&, bool, bool)",SetupPackedFileSegment,src/sc4/AppInit.cpp|AppResources.cpp,recovered,"cSC4App::Init spine (graphics checks, driver, video options, messages, cheat codes, managers, resources, window), SetupResources, SetupPackedFileSegment, idle housekeeping, window setup; test sc4_app"
+0x10062013c,cGZScreenBuffer::cGZScreenBuffer(),Construct,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x1006201bc,cGZScreenBuffer::~cGZScreenBuffer(),Destruct,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x10062022a,cGZScreenBuffer::~cGZScreenBuffer(),DestructAndDelete,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620234,cGZScreenBuffer::~cGZScreenBuffer(),DestructBody,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620262,cGZScreenBuffer::SetGraphicSystem(cIGZGraphicSystem*),SetGraphicSystem,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620268,"cGZScreenBuffer::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x10062028a,"non-virtual thunk to cGZScreenBuffer::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_028a,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x1006202b0,"non-virtual thunk to cGZScreenBuffer::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_02b0,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x1006202d6,cGZScreenBuffer::AddRef(),AddRef,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x1006202e4,non-virtual thunk to cGZScreenBuffer::AddRef(),AddRefThunk_02e4,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x1006202f2,non-virtual thunk to cGZScreenBuffer::AddRef(),AddRefThunk_02f2,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620300,cGZScreenBuffer::Release(),Release,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x10062031c,non-virtual thunk to cGZScreenBuffer::Release(),ReleaseThunk_031c,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x10062033c,non-virtual thunk to cGZScreenBuffer::Release(),ReleaseThunk_033c,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x10062035c,"cGZScreenBuffer::Init(unsigned int, unsigned int, bool, cGZBufferColorType)",Init,src/gz/ScreenBuffer.cpp|h,recovered-partial,screen buffer over the graphic system driver; test gz_screenbuffer
+0x10062069a,"non-virtual thunk to cGZScreenBuffer::Init(unsigned int, unsigned int, bool, cGZBufferColorType)",InitThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x1006206aa,cGZScreenBuffer::Shutdown(),Shutdown,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620746,non-virtual thunk to cGZScreenBuffer::Shutdown(),ShutdownThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620758,cGZScreenBuffer::Uninitialize(),Uninitialize,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x10062076e,non-virtual thunk to cGZScreenBuffer::Uninitialize(),UninitializeThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620784,cGZScreenBuffer::ActiveDrawBuffer(),ActiveDrawBuffer,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x1006207cc,non-virtual thunk to cGZScreenBuffer::ActiveDrawBuffer(),ActiveDrawBufferThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x1006207da,cGZScreenBuffer::Lock(cIGZBuffer::eLockFlags),Lock,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x10062080e,cGZScreenBuffer::Unlock(cIGZBuffer::eLockFlags),Unlock,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620824,cGZScreenBuffer::LockFrontSurface(cIGZBuffer::eLockFlags),LockFrontSurface,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620832,non-virtual thunk to cGZScreenBuffer::LockFrontSurface(cIGZBuffer::eLockFlags),LockFrontSurfaceThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620846,cGZScreenBuffer::UnlockFrontSurface(cIGZBuffer::eLockFlags),UnlockFrontSurface,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620854,non-virtual thunk to cGZScreenBuffer::UnlockFrontSurface(cIGZBuffer::eLockFlags),UnlockFrontSurfaceThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620868,cGZScreenBuffer::ModifyAppWindow(cRZRect&),ModifyAppWindow,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x10062090c,non-virtual thunk to cGZScreenBuffer::ModifyAppWindow(cRZRect&),ModifyAppWindowThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x10062091e,cGZScreenBuffer::Swap(),Swap,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620968,non-virtual thunk to cGZScreenBuffer::Swap(),SwapThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620976,cGZScreenBuffer::IsReady(),IsReady,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620980,non-virtual thunk to cGZScreenBuffer::IsReady(),IsReadyThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x10062098e,cGZScreenBuffer::AdjustClientRect(cRZRect&),AdjustClientRect,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x1006209ac,non-virtual thunk to cGZScreenBuffer::AdjustClientRect(cRZRect&),AdjustClientRectThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x1006209ca,cGZScreenBuffer::AdjustClientPoint(cRZPoint&),AdjustClientPoint,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x1006209dc,non-virtual thunk to cGZScreenBuffer::AdjustClientPoint(cRZPoint&),AdjustClientPointThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x1006209ee,"cGZScreenBuffer::Blt(cIGZBuffer*, cRZRect const&, cRZRect const&, cRZRect const*)",Blt,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620a42,"cGZScreenBuffer::Fill(unsigned int, cRZRect const&, cRZRect*)",Fill_uint_cRZRect_const_cRZRect,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620bf2,"cGZScreenBuffer::Fill(unsigned int, int, int, int, int, cRZRect*)",Fill_uint_int_int_int_int_cRZRect,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620c28,"cGZScreenBuffer::Fill(unsigned int, cRZRect*)",Fill_uint_cRZRect,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620c84,cGZScreenBuffer::GetBufferArea() const,GetBufferArea_void,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620c8e,cGZScreenBuffer::GetBufferArea(cRZRect&) const,GetBufferArea_cRZRect,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620d5e,cGZScreenBuffer::AsIGZBuffer(),AsIGZBuffer,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620d68,cGZScreenBuffer::Restore(),Restore,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620d70,cGZScreenBuffer::IsInitialized(),IsInitialized,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620d7a,cGZScreenBuffer::GetAppWindow(cRZRect&),GetAppWindow,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620d90,cGZScreenBuffer::IsPageFlipping(),IsPageFlipping,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620d98,cGZScreenBuffer::DisableFlipping(int),DisableFlipping,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620da0,cGZScreenBuffer::DisableComposing(int),DisableComposing,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620da8,cGZScreenBuffer::EnableBackgroundPicturePreview(),EnableBackgroundPicturePreview,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620dae,cGZScreenBuffer::DisableBackgroundPicturePreview(),DisableBackgroundPicturePreview,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620db4,cGZScreenBuffer::DumpBufferInformation(),DumpBufferInformation,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620dba,cGZScreenBuffer::GetCurrentBackBufferIndex(),GetCurrentBackBufferIndex,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620dc2,cGZScreenBuffer::SetActiveBackBufferSurface(unsigned int),SetActiveBackBufferSurface,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620dca,cGZScreenBuffer::GetBufferWidthInPixels() const,GetBufferWidthInPixels,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620dd6,cGZScreenBuffer::GetBufferHeightInPixels() const,GetBufferHeightInPixels,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620de2,cGZScreenBuffer::RefreshVRAMPreferenceSetting(),RefreshVRAMPreferenceSetting,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620de8,cGZScreenBuffer::PaletteChangedNotification(),PaletteChangedNotification,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620df0,"cGZScreenBuffer::FloodFill(int, int, unsigned int)",FloodFill,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620df8,non-virtual thunk to cGZScreenBuffer::AsIGZBuffer(),AsIGZBufferThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620e02,non-virtual thunk to cGZScreenBuffer::Restore(),RestoreThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620e0a,non-virtual thunk to cGZScreenBuffer::IsInitialized(),IsInitializedThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620e14,non-virtual thunk to cGZScreenBuffer::GetAppWindow(cRZRect&),GetAppWindowThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620e2a,non-virtual thunk to cGZScreenBuffer::IsPageFlipping(),IsPageFlippingThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620e32,non-virtual thunk to cGZScreenBuffer::DisableFlipping(int),DisableFlippingThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620e3a,non-virtual thunk to cGZScreenBuffer::DisableComposing(int),DisableComposingThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620e42,non-virtual thunk to cGZScreenBuffer::GetCurrentBackBufferIndex(),GetCurrentBackBufferIndexThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620e4a,non-virtual thunk to cGZScreenBuffer::SetActiveBackBufferSurface(unsigned int),SetActiveBackBufferSurfaceThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620e52,non-virtual thunk to cGZScreenBuffer::GetBufferWidthInPixels() const,GetBufferWidthInPixelsThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620e5e,non-virtual thunk to cGZScreenBuffer::GetBufferHeightInPixels() const,GetBufferHeightInPixelsThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620e6a,non-virtual thunk to cGZScreenBuffer::RefreshVRAMPreferenceSetting(),RefreshVRAMPreferenceSettingThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620e70,non-virtual thunk to cGZScreenBuffer::PaletteChangedNotification(),PaletteChangedNotificationThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620e78,non-virtual thunk to cGZScreenBuffer::EnableBackgroundPicturePreview(),EnableBackgroundPicturePreviewThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620e7e,non-virtual thunk to cGZScreenBuffer::DisableBackgroundPicturePreview(),DisableBackgroundPicturePreviewThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
+0x100620e84,non-virtual thunk to cGZScreenBuffer::DumpBufferInformation(),DumpBufferInformationThunk,src/gz/ScreenBuffer.cpp|h,recovered,screen buffer over the graphic system driver; test gz_screenbuffer
