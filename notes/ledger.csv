@@ -18803,3 +18803,33 @@ address,symbol,unique_name,source,status,evidence
 0x1005fb750,cSC4VisualEffect::ApplyParams(),ApplyParams,src/sc4/VisualEffect.cpp,recovered,scripts/tests/sc4_visualeffect_test.cpp
 0x1005fb7e4,cSC4VisualEffect::CheckIfStopped(),CheckIfStopped,src/sc4/VisualEffect.cpp,recovered,scripts/tests/sc4_visualeffect_test.cpp
 0x1005fb928,"cSC4VisualEffect::AddComponentEffect(cISC4ComponentEffect*, cS3DTransform*)",AddComponentEffect,src/sc4/VisualEffect.cpp,recovered,scripts/tests/sc4_visualeffect_test.cpp
+0x1000c8f7e,cSC4ParkManager::cSC4ParkManager(),Construct,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c907c,cSC4ParkManager::~cSC4ParkManager(),Destruct,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c90e4,cSC4ParkManager::~cSC4ParkManager(),DestructAndDelete,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c90ee,cSC4ParkManager::~cSC4ParkManager(),DestructBody,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c911c,cSC4ParkManager::Init(),Init,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9308,cSC4ParkManager::ReadTuningParams(),ReadTuningParams,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9464,cSC4ParkManager::Shutdown(),Shutdown,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9572,cSC4ParkManager::ReleaseOccupantList(ilist<cISC4Occupant*>&),ReleaseOccupantList,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c95a4,"cSC4ParkManager::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c95e8,"non-virtual thunk to cSC4ParkManager::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_95e8,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c95f6,"non-virtual thunk to cSC4ParkManager::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_95f6,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9604,cSC4ParkManager::AddRef(),AddRef,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9612,non-virtual thunk to cSC4ParkManager::AddRef(),AddRefThunk_9612,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9620,non-virtual thunk to cSC4ParkManager::AddRef(),AddRefThunk_9620,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c962e,cSC4ParkManager::Release(),Release,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c966c,non-virtual thunk to cSC4ParkManager::Release(),ReleaseThunk_966c,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c96a4,non-virtual thunk to cSC4ParkManager::Release(),ReleaseThunk_96a4,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c96dc,cSC4ParkManager::Write(cIGZOStream&) const,Write,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9722,non-virtual thunk to cSC4ParkManager::Write(cIGZOStream&) const,WriteThunk,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9730,cSC4ParkManager::Read(cIGZIStream&),Read,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9792,non-virtual thunk to cSC4ParkManager::Read(cIGZIStream&),ReadThunk,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c97a0,cSC4ParkManager::DoMessage(cIGZMessage2*),DoMessage,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9842,cSC4ParkManager::DoMonthlySimulation(),DoMonthlySimulation,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9944,cSC4ParkManager::DoOccupantInserted(cISC4Occupant*),DoOccupantInserted,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9b52,cSC4ParkManager::DoOccupantRemoved(cISC4Occupant*),DoOccupantRemoved,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9c80,non-virtual thunk to cSC4ParkManager::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9c92,cSC4ParkManager::GetLotWhereOccupantResides(cISC4Occupant*),GetLotWhereOccupantResides,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9d28,cSC4ParkManager::BeginZooEscape(),BeginZooEscape,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9f56,cSC4ParkManager::GetGZCLSID() const,GetGZCLSID,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
+0x1000c9f62,non-virtual thunk to cSC4ParkManager::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/ParkManager.cpp,recovered,scripts/tests/sc4_parkmanager_test.cpp
