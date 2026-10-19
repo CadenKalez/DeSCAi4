@@ -86,6 +86,7 @@ declare -a TESTS=(
  "sc4_packedrenderstate:$T/sc4_packedrenderstate_test.cpp $S/sc4/PackedRenderState.cpp $S/render/gd/GDriverBase.cpp -I$T"
  "gd_texturetable:$T/gd_texturetable_test.cpp $S/render/gd/TextureTable.cpp $S/render/GDIndexOps.cpp $S/render/TexelOps.cpp -I$T"
  "gd_videomodes:$T/gd_videomodes_test.cpp $S/render/gd/VideoModes.cpp -I$T"
+ "gz_framework:$T/gz_framework_test.cpp $S/gz/GZFramework.cpp $S/gz/cGZCOM.cpp $S/gz/COMLibrary.cpp $S/rz/cRZCOMDllDirector.cpp $S/rz/cRZDate.cpp $S/rz/cRZRandom.cpp $S/gz/GZApp.cpp $S/gz/cGZAllocator.cpp $S/rz/cRZCmdLine.cpp $S/rz/cRZString.cpp $S/rz/cRZCriticalSection.cpp $S/rz/cRZStream.cpp"
  "sc4_backingstore:$T/sc4_backingstore_test.cpp $S/sc4/BackingStore.cpp -I$T"
  "gz_drawcontextasbuffer:$T/gz_drawcontextasbuffer_test.cpp $S/gz/DrawContextAsBuffer.cpp $S/gz/Buffer.cpp -I$T"
  "gz_rzdraw:$T/gz_rzdraw_test.cpp $S/gz/RZDraw.cpp $S/gz/Buffer.cpp"
