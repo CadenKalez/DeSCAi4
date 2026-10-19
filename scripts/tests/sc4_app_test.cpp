@@ -221,6 +221,9 @@ int main() {
             cIGZBuffer* CreateBuffer() override { return nullptr; }
             void RenderBufferToScreen(cIGZBuffer*, const cRZRect&, const cRZRect&) override {}
             void LazyFlush() override {}
+            cRZRect CanvasRect() override { return cRZRect{0, 0, 640, 480}; }
+            bool IsFullScreenMode() override { return false; }
+            std::uint32_t GetScreenPixelFormatBits() override { return 32; }
         };
         char dir[] = "/tmp/sc4pfiXXXXXX"; CHECK(mkdtemp(dir));
         std::string root = dir;
@@ -293,6 +296,9 @@ int main() {
             cIGZBuffer* CreateBuffer() override { return nullptr; }
             void RenderBufferToScreen(cIGZBuffer*, const cRZRect&, const cRZRect&) override {}
             void LazyFlush() override {}
+            cRZRect CanvasRect() override { return cRZRect{0, 0, 640, 480}; }
+            bool IsFullScreenMode() override { return false; }
+            std::uint32_t GetScreenPixelFormatBits() override { return 32; }
         };
         struct Options final : sc4::IVideoOptionStore {
             void SetOption(int, int) override {}

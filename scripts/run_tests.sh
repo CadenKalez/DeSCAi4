@@ -92,6 +92,7 @@ declare -a TESTS=(
  "gz_rzservices:$T/gz_rzservices_test.cpp $S/gz/RZServices.cpp $S/gz/GZFramework.cpp $S/gz/GZCOMDirector.cpp $S/rz/cRZSysServPtr.cpp $S/gz/cGZCOM.cpp $S/gz/COMLibrary.cpp $S/rz/cRZCOMDllDirector.cpp $S/rz/cRZDate.cpp $S/rz/cRZRandom.cpp $S/gz/GZApp.cpp $S/gz/cGZAllocator.cpp $S/rz/cRZCmdLine.cpp $S/rz/cRZString.cpp $S/rz/cRZCriticalSection.cpp $S/rz/cRZStream.cpp $S/rz/LanguageManager.cpp $S/rz/StringConversion.cpp $S/rz/TextEncoding.cpp $S/rz/RZStringUtils.cpp $S/rz/RZConvert.cpp $S/rz/CharLength.cpp $S/platform/MacTools.cpp"
  "sc4_winlocationsaver:$T/sc4_winlocationsaver_test.cpp $S/sc4/WinLocationSaver.cpp $S/sc4/ServiceLocator.cpp $S/sc4/AppPreferences.cpp $S/gz/Win.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp"
  "gz_screenbuffer:$T/gz_screenbuffer_test.cpp $S/gz/ScreenBuffer.cpp $S/gz/Buffer.cpp $S/render/gd/GDriverBase.cpp"
+ "gz_canvas:$T/gz_canvas_test.cpp $S/gz/CanvasW32.cpp $S/gz/cGZInputMessages.cpp $S/gz/GZCOMDirector.cpp $S/gz/RZServices.cpp $S/platform/WinCompat.cpp $S/render/gd/GDriverBase.cpp $S/render/gd/VideoModes.cpp $S/rz/LanguageManager.cpp $S/rz/StringConversion.cpp $S/rz/TextEncoding.cpp $S/rz/RZStringUtils.cpp $S/rz/RZConvert.cpp $S/rz/CharLength.cpp $S/rz/cRZString.cpp $S/platform/MacTools.cpp $S/rz/cRZCOMDllDirector.cpp"
  "sc4_backingstore:$T/sc4_backingstore_test.cpp $S/sc4/BackingStore.cpp -I$T"
  "gz_drawcontextasbuffer:$T/gz_drawcontextasbuffer_test.cpp $S/gz/DrawContextAsBuffer.cpp $S/gz/Buffer.cpp -I$T"
  "gz_rzdraw:$T/gz_rzdraw_test.cpp $S/gz/RZDraw.cpp $S/gz/Buffer.cpp"

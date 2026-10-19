@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "gz/Buffer.h"
+#include "rz/cRZPoint.h"
 #include "render/gd/IGZGDriver.h"
 
 // The graphics system as the application configures it before start-up (cIGZGraphicSystem / cIGZGraphicSystem2 of the
@@ -32,6 +33,10 @@ public:
     // used by cGZScreenBuffer
     virtual cIGZBuffer* CreateBuffer() = 0;                                           // group 2 slot 4
     virtual void RenderBufferToScreen(cIGZBuffer* buffer, const cRZRect& source, const cRZRect& destination) = 0;   // group 3 slot 13
-    virtual void LazyFlush() = 0;                                                     // group 3 slot 16
+    virtual void LazyFlush() = 0;
+    // used by cGZCanvasW32
+    virtual cRZRect CanvasRect() = 0;                                                 // group 2 slot 16
+    virtual bool IsFullScreenMode() = 0;                                              // group 2 slot 12
+    virtual std::uint32_t GetScreenPixelFormatBits() = 0;                             // group 3 slot 15 (the format descriptor's first word)                                                     // group 3 slot 16
 };
 

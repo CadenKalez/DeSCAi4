@@ -39,6 +39,9 @@ struct Graphics final : IGraphicSystemControl {
     cIGZBuffer* CreateBuffer() override { return nullptr; }
     void RenderBufferToScreen(cIGZBuffer*, const cRZRect&, const cRZRect&) override { ++renders; }
     void LazyFlush() override { ++flushes; }
+    cRZRect CanvasRect() override { return cRZRect{0, 0, 640, 480}; }
+    bool IsFullScreenMode() override { return false; }
+    std::uint32_t GetScreenPixelFormatBits() override { return 32; }
 };
 }  // namespace
 
