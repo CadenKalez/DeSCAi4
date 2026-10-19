@@ -19244,3 +19244,14 @@ address,symbol,unique_name,source,status,evidence
 0x1001f1a5c,non-virtual thunk to cSC4Simulator::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
 0x10070e58e,cSC4LimitTimerCalibrator::cSC4LimitTimerCalibrator(),Construct,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
 0x10070e5e4,cSC4LimitTimerCalibrator::Tick(),Tick,src/sc4/Simulator.cpp,recovered,scripts/tests/sc4_simulator_test.cpp
+0x1003a2c42,cSC4GamePreferencesWinProc::cSC4GamePreferencesWinProc(),Construct,src/sc4/GamePreferencesWinProc.cpp,recovered,scripts/tests/sc4_gamepreferenceswinproc_test.cpp
+0x1003a2c64,cSC4GamePreferencesWinProc::DoModalWin(),DoModalWin,src/sc4/GamePreferencesWinProc.cpp,recovered,scripts/tests/sc4_gamepreferenceswinproc_test.cpp
+0x1003a2dbe,cSC4GamePreferencesWinProc::EndDialog(),EndDialog,src/sc4/GamePreferencesWinProc.cpp,recovered,scripts/tests/sc4_gamepreferenceswinproc_test.cpp
+0x1003a2e8c,cSC4GamePreferencesWinProc::ShowDialog(cSC4GamePreferencesWinProc::eGameWindowType),ShowDialog,src/sc4/GamePreferencesWinProc.cpp,recovered,scripts/tests/sc4_gamepreferenceswinproc_test.cpp
+0x1003a3436,cSC4GamePreferencesWinProc::Shutdown(),Shutdown,src/sc4/GamePreferencesWinProc.cpp,recovered,scripts/tests/sc4_gamepreferenceswinproc_test.cpp
+0x1003a3446,"cSC4GamePreferencesWinProc::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/GamePreferencesWinProc.cpp,recovered,scripts/tests/sc4_gamepreferenceswinproc_test.cpp
+0x1003a3468,cSC4GamePreferencesWinProc::AddRef(),AddRef,src/sc4/GamePreferencesWinProc.cpp,recovered,scripts/tests/sc4_gamepreferenceswinproc_test.cpp
+0x1003a3476,cSC4GamePreferencesWinProc::Release(),Release,src/sc4/GamePreferencesWinProc.cpp,recovered,scripts/tests/sc4_gamepreferenceswinproc_test.cpp
+0x1003a3492,cSC4GamePreferencesWinProc::FinalRelease(),FinalRelease,src/sc4/GamePreferencesWinProc.cpp,recovered,scripts/tests/sc4_gamepreferenceswinproc_test.cpp
+0x1003a34e4,"cSC4GamePreferencesWinProc::DoWinProcMessage(cIGZWin*, cGZMessage&)",DoWinProcMessage,src/sc4/GamePreferencesWinProc.cpp,recovered,scripts/tests/sc4_gamepreferenceswinproc_test.cpp
+0x1003a357e,"cSC4GamePreferencesWinProc::HandleControlMessage(unsigned int, cIGZWin*)",HandleControlMessage,src/sc4/GamePreferencesWinProc.cpp,recovered,scripts/tests/sc4_gamepreferenceswinproc_test.cpp
