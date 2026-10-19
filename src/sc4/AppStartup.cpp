@@ -5,6 +5,7 @@
 #include "gz/cIGZSystemService.h"
 #include "rz/COMDirectors.h"
 #include "rz/cRZOStream.h"
+#include "gz/RZServices.h"
 #include "rz/cRZFile.h"
 #include "rz/cRZVersion.h"
 #include "rz/LanguageManager.h"
@@ -256,7 +257,14 @@ bool cSC4App::PreFrameWorkInit() {
 
     // the directories the file system service reports replace the guesses; the plugin / sku directories derive from them
     sc4::FileSystemDirectories directories;
-    if (startupHooks_.fileSystemDirectories && startupHooks_.fileSystemDirectories(directories)) {
+    bool haveDirectories = false;
+    if (startupHooks_.fileSystemDirectories) {
+        haveDirectories = startupHooks_.fileSystemDirectories(directories);
+    } else if (cIGZFileSystem* files = RZ::FS()) {
+        directories = {files->AppDirectory(), files->CDAppDirectory(), files->DataDirectory(), files->CDDataDirectory()};
+        haveDirectories = true;
+    }
+    if (haveDirectories) {
         appDirectory_ = directories.appDirectory.c_str();
         cdAppDirectory_ = directories.cdAppDirectory.c_str();
         dataDirectory_ = directories.dataDirectory.c_str();

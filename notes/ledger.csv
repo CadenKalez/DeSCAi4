@@ -18406,3 +18406,18 @@ address,symbol,unique_name,source,status,evidence
 0x10003a547,"SC4GetInstalledLanguageAndCountryIDs(unsigned int&, unsigned int&)",SC4GetInstalledLanguageAndCountryIDs,src/sc4/AppPlatform.cpp|h,recovered,"application platform functions (Documents/SimCity 4, no-op hooks)"
 0x10003a555,SC4SetCPUUsageCount(int),SC4SetCPUUsageCount,src/sc4/AppPlatform.cpp|h,recovered,"application platform functions (Documents/SimCity 4, no-op hooks)"
 0x100038c5e,cRZThread::SleepCurrentThread(unsigned int),SleepCurrentThread,src/rz/Threading.cpp|h,recovered,cRZThread::SleepCurrentThread
+0x1001278a0,RZ::ADir(cRZString&),ADir,src/gz/RZServices.cpp|h,recovered-partial,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
+0x1001279a6,RZ::FS(),FS,src/gz/RZServices.cpp|h,recovered,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
+0x100127a12,RZ::DDir(cRZString&),DDir,src/gz/RZServices.cpp|h,recovered-partial,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
+0x100127b18,RZ::MS(),MS,src/gz/RZServices.cpp|h,recovered,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
+0x100127b84,RZ::MS2(),MS2,src/gz/RZServices.cpp|h,recovered,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
+0x100127bf0,RZ::TS(),TS,src/gz/RZServices.cpp|h,recovered,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
+0x100127c5c,RZ::RDD(),RDD,src/gz/RZServices.cpp|h,recovered,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
+0x100127cc8,RZ::GS(),GS,src/gz/RZServices.cpp|h,recovered,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
+0x100127d34,RZ::WM(),WM,src/gz/RZServices.cpp|h,recovered,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
+0x100127da0,RZ::WCM(),WCM,src/gz/RZServices.cpp|h,recovered,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
+0x100127e0c,RZ::SS(),SS,src/gz/RZServices.cpp|h,recovered,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
+0x100127e78,RZ::SM(),SM,src/gz/RZServices.cpp|h,recovered,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
+0x100127ee4,RZ::HM(),HM,src/gz/RZServices.cpp|h,recovered,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
+0x100127f50,RZ::FO(),FO,src/gz/RZServices.cpp|h,recovered,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
+0x100127fbc,RZ::LM(),LM,src/gz/RZServices.cpp|h,recovered,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
