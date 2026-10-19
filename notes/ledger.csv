@@ -18421,3 +18421,18 @@ address,symbol,unique_name,source,status,evidence
 0x100127ee4,RZ::HM(),HM,src/gz/RZServices.cpp|h,recovered,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
 0x100127f50,RZ::FO(),FO,src/gz/RZServices.cpp|h,recovered,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
 0x100127fbc,RZ::LM(),LM,src/gz/RZServices.cpp|h,recovered,RZ:: framework-service accessors (cached bare pointers); test gz_rzservices
+0x1002a649a,cSLWinLocationSaver::cSLWinLocationSaver(),Construct,src/sc4/WinLocationSaver.cpp|h,recovered,window location persistence in the preference blob; test sc4_winlocationsaver
+0x1002a64cc,cSLWinLocationSaver::~cSLWinLocationSaver(),Destruct,src/sc4/WinLocationSaver.cpp|h,recovered,window location persistence in the preference blob; test sc4_winlocationsaver
+0x1002a6508,cSLWinLocationSaver::~cSLWinLocationSaver(),DestructAndDelete,src/sc4/WinLocationSaver.cpp|h,recovered,window location persistence in the preference blob; test sc4_winlocationsaver
+0x1002a6512,cSLWinLocationSaver::~cSLWinLocationSaver(),DestructBody,src/sc4/WinLocationSaver.cpp|h,recovered,window location persistence in the preference blob; test sc4_winlocationsaver
+0x1002a6540,cSLWinLocationSaver::AddRef(),AddRef,src/sc4/WinLocationSaver.cpp|h,recovered,window location persistence in the preference blob; test sc4_winlocationsaver
+0x1002a654e,cSLWinLocationSaver::Release(),Release,src/sc4/WinLocationSaver.cpp|h,recovered,window location persistence in the preference blob; test sc4_winlocationsaver
+0x1002a656a,"cSLWinLocationSaver::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/WinLocationSaver.cpp|h,recovered,window location persistence in the preference blob; test sc4_winlocationsaver
+0x1002a6594,cSLWinLocationSaver::Init(),Init,src/sc4/WinLocationSaver.cpp|h,recovered,window location persistence in the preference blob; test sc4_winlocationsaver
+0x1002a663c,cSLWinLocationSaver::Shutdown(),Shutdown,src/sc4/WinLocationSaver.cpp|h,recovered,window location persistence in the preference blob; test sc4_winlocationsaver
+0x1002a671e,cSLWinLocationSaver::SaveWindowLocation(cIGZWin*),SaveWindowLocation_cIGZWin,src/sc4/WinLocationSaver.cpp|h,recovered,window location persistence in the preference blob; test sc4_winlocationsaver
+0x1002a6798,"cSLWinLocationSaver::SaveWindowLocation(unsigned int, int, int)",SaveWindowLocation_uint_int_int,src/sc4/WinLocationSaver.cpp|h,recovered,window location persistence in the preference blob; test sc4_winlocationsaver
+0x1002a688a,"cSLWinLocationSaver::GetWindowRestoreLocation(cIGZWin*, int&, int&, bool)",GetWindowRestoreLocation_cIGZWin_int_int_bool,src/sc4/WinLocationSaver.cpp|h,recovered,window location persistence in the preference blob; test sc4_winlocationsaver
+0x1002a68f0,"cSLWinLocationSaver::GetWindowRestoreLocation(unsigned int, int&, int&, bool)",GetWindowRestoreLocation_uint_int_int_bool,src/sc4/WinLocationSaver.cpp|h,recovered,window location persistence in the preference blob; test sc4_winlocationsaver
+0x1002a693e,"cSLWinLocationSaver::RestoreWindowLocation(cIGZWin*, bool)",RestoreWindowLocation_cIGZWin_bool,src/sc4/WinLocationSaver.cpp|h,recovered,window location persistence in the preference blob; test sc4_winlocationsaver
+0x1002a6a3c,"cSLWinLocationSaver::RestoreWindowLocation(unsigned int, bool)",RestoreWindowLocation_uint_bool,src/sc4/WinLocationSaver.cpp|h,recovered,window location persistence in the preference blob; test sc4_winlocationsaver

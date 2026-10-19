@@ -102,7 +102,7 @@ struct AppStartupHooks {
 
 }  // namespace sc4
 
-class cSC4App final : public cIGZMessageTarget, public cIGZMessageTarget2, public cIGZWinMessageFilter,
+class cSC4App final : public SL::IApplicationWindowSource, public cIGZMessageTarget, public cIGZMessageTarget2, public cIGZWinMessageFilter,
                       public cISC4App, public cGZApp {
 public:
     using SC4VideoPreferences = sc4::SC4VideoPreferences;
@@ -118,7 +118,7 @@ public:
     // --- cISC4App accessors
     void GetAppName(cIGZString& out) const override;               // @ 0x1000122b2
     cISC4City* GetCity() const override { return city_; }          // @ 0x10001231a
-    SL::IWinSC4App* WinSC4App() const { return winSC4App_; }
+    SL::IWinSC4App* WinSC4App() const override { return winSC4App_; }
     void SetWinSC4App(SL::IWinSC4App* window) { winSC4App_ = window; }
     std::uint8_t* GetPreferences() const override { return const_cast<sc4::SC4Preferences*>(&preferences_)->data(); }   // @ 0x100012336
     cSC4NewCitySpecification* GetNewCitySpecification() override { return reinterpret_cast<cSC4NewCitySpecification*>(newCitySpecification_); }   // @ 0x100012352

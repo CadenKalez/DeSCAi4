@@ -1,12 +1,13 @@
 #include "sc4/ServiceLocator.h"
 
+#include "gz/GZApp.h"
 #include "gz/cIGZFrameWork.h"
-#include "sc4/App.h"
 
 namespace SL {
 
 cISC4App* spSC4 = nullptr;
-cIGZUnknown *spCCM = nullptr, *spCommandServer = nullptr, *spRenderProperties = nullptr, *spGF = nullptr, *spPreferences = nullptr,
+std::uint8_t* spPreferences = nullptr;
+cIGZUnknown *spCCM = nullptr, *spCommandServer = nullptr, *spRenderProperties = nullptr, *spGF = nullptr,
     *spStringDetokenizer = nullptr, *spWinLocationSaver = nullptr, *spGlyphTextureManager = nullptr, *spLua = nullptr,
     *spGS = nullptr, *spGS2 = nullptr, *spGDriver = nullptr, *spFeatureManager = nullptr, *spRDD = nullptr, *spSS = nullptr,
     *spTextureBindingFactory = nullptr;
@@ -70,7 +71,7 @@ bool OnAppInit1() {
     spCommandServer = g_framework ? ServiceNonOwning(0xeb903a32, 0xcb90253a) : nullptr;
     spRenderProperties = spSC4->GetRenderProperties();
     spGF = spSC4->GetGimexFactory();
-    spPreferences = reinterpret_cast<cIGZUnknown*>(spSC4->GetPreferences());
+    spPreferences = spSC4->GetPreferences();
     spStringDetokenizer = spSC4->GetStringDetokenizer();
     spWinLocationSaver = spSC4->GetWinLocationSaver();
     spGlyphTextureManager = spSC4->GetGlyphTextureManager();
@@ -106,7 +107,7 @@ bool OnAppInit2() {
     cIGZFrameWork* framework = g_framework ? g_framework : nullptr;
     if (!framework) return true;
     // the application object is the cSC4App behind the framework's cIGZApp view (+0x48); its window slot is +0x88
-    if (auto* app = dynamic_cast<cSC4App*>(framework->Application())) spWinSC4App = app->WinSC4App();
+    if (auto* app = dynamic_cast<IApplicationWindowSource*>(framework->Application())) spWinSC4App = app->WinSC4App();
     return true;
 }
 

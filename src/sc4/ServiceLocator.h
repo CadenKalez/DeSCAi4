@@ -97,6 +97,13 @@ public:
     virtual IView3DSystems* View3D() = 0;
 };
 
+// The application object seen from the locator: it owns the main window object (cSC4App +0x88).
+class IApplicationWindowSource {
+public:
+    virtual ~IApplicationWindowSource() = default;
+    virtual IWinSC4App* WinSC4App() const = 0;
+};
+
 // The terrain's view (terrain vslot 0x210).
 class ITerrainViewSource {
 public:
@@ -106,7 +113,8 @@ public:
 
 // ---- the pointers
 extern cISC4App* spSC4;                       // OnAppCreate
-extern cIGZUnknown *spCCM, *spCommandServer, *spRenderProperties, *spGF, *spPreferences, *spStringDetokenizer,
+extern std::uint8_t* spPreferences;           // the 0x1734-byte preference blob
+extern cIGZUnknown *spCCM, *spCommandServer, *spRenderProperties, *spGF, *spStringDetokenizer,
     *spWinLocationSaver, *spGlyphTextureManager, *spLua, *spGS, *spGS2, *spGDriver, *spFeatureManager, *spRDD, *spSS,
     *spTextureBindingFactory;
 extern cIGZPersistResourceManager* spRM;
