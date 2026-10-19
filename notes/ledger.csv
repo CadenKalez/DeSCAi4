@@ -18614,3 +18614,50 @@ address,symbol,unique_name,source,status,evidence
 0x10061bbd0,cGZCanvasW32::Class() const,Class,src/gz/CanvasW32.cpp|h,recovered,"canvas: native events to input messages, video-mode window creation; test gz_canvas"
 0x10061bbd8,non-virtual thunk to cGZCanvasW32::Class() const,ClassThunk,src/gz/CanvasW32.cpp|h,recovered,"canvas: native events to input messages, video-mode window creation; test gz_canvas"
 0x10061bbe0,non-virtual thunk to cGZCanvasW32::MessageServer() const,MessageServerThunk,src/gz/CanvasW32.cpp|h,recovered,"canvas: native events to input messages, video-mode window creation; test gz_canvas"
+0x1003b4e70,cGZGimexFactory::GetResMan(),GetResMan,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b4eec,cGZGimexFactory::GetGraphicSystem(),GetGraphicSystem,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b4f58,cGZGimexFactory::cGZGimexFactory(),Construct,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b4fc8,cGZGimexFactory::~cGZGimexFactory(),Destruct,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b5026,cGZGimexFactory::~cGZGimexFactory(),DestructAndDelete,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b5030,non-virtual thunk to cGZGimexFactory::~cGZGimexFactory(),DestructThunk,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b503e,cGZGimexFactory::~cGZGimexFactory(),DestructBody,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b506c,non-virtual thunk to cGZGimexFactory::~cGZGimexFactory(),DestructAndDeleteThunk,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b507a,"cGZGimexFactory::QueryInterface(unsigned int, void**)",QueryInterface,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b50a2,"non-virtual thunk to cGZGimexFactory::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b50b0,cGZGimexFactory::AddRef(),AddRef,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b50be,non-virtual thunk to cGZGimexFactory::AddRef(),AddRefThunk,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b50cc,cGZGimexFactory::Release(),Release,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b50ec,non-virtual thunk to cGZGimexFactory::Release(),ReleaseThunk,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b5110,cGZGimexFactory::CreateBuffer(cIGZBuffer**),CreateBuffer,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b5160,"cGZGimexFactory::LoadWithReader(cIGZGimexReader*, unsigned int, cIGZBuffer*, int)",LoadWithReader,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b531c,"cGZGimexFactory::TranslateGimexToGZBuffer(cGZGimexInfo*, void*, cIGZBuffer*)",TranslateGimexToGZBuffer,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b56d8,"cGZGimexFactory::LoadFromFile(cIGZString const&, cIGZBuffer*, int)",LoadFromFile_String_cIGZBuffer_int_56d8,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b57ac,"cGZGimexFactory::LoadFromFile(cIGZString const&, cIGZBuffer**, int)",LoadFromFile_String_cIGZBuffer_int_57ac,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b5808,"cGZGimexFactory::CreateFromFile(cIGZFile*, unsigned int, cIGZBuffer**, int)",CreateFromFile,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b5872,"cGZGimexFactory::LoadFromFile(cIGZFile*, unsigned int, cIGZBuffer*, int)",LoadFromFile_cIGZFile_uint_cIGZBuffer_int,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b5908,"cGZGimexFactory::CreateFromResource(cGZPersistResourceKey&, unsigned int, cIGZBuffer**, int)",CreateFromResource,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b59b8,"cGZGimexFactory::LoadFromResource(cGZPersistResourceKey&, unsigned int, cIGZBuffer*, int)",LoadFromResource,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b5a68,"cGZGimexFactory::CreateFromSerialRecord(cIGZPersistDBSerialRecord*, unsigned int, cIGZBuffer**, int)",CreateFromSerialRecord,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b5ad2,"cGZGimexFactory::LoadFromSerialRecord(cIGZPersistDBSerialRecord*, unsigned int, cIGZBuffer*, int)",LoadFromSerialRecord,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b5b68,"cGZGimexFactory::SaveWithWriter(cIGZGimexWriter*, unsigned int, cIGZBuffer*, cRZRect&, unsigned int)",SaveWithWriter,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b5d94,"cGZGimexFactory::TranslateGZBufferToGimex(cIGZBuffer*, cRZRect&, cGZGimexInfo*, void*)",TranslateGZBufferToGimex,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b61c8,"cGZGimexFactory::SaveToFile(cIGZString const&, cIGZBuffer*, unsigned int)",SaveToFile_String_cIGZBuffer_uint,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b621e,"cGZGimexFactory::SaveToFile(cIGZString const&, cIGZBuffer*, cRZRect&, unsigned int)",SaveToFile_String_cIGZBuffer_cRZRect_uint,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b62d4,"cGZGimexFactory::SaveToFile(cIGZFile*, unsigned int, cIGZBuffer*, unsigned int)",SaveToFile_cIGZFile_uint_cIGZBuffer_uint,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b6334,"cGZGimexFactory::SaveToFile(cIGZFile*, unsigned int, cIGZBuffer*, cRZRect&, unsigned int)",SaveToFile_cIGZFile_uint_cIGZBuffer_cRZRect_uint,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b63d2,"cGZGimexFactory::SaveToResource(cGZPersistResourceKey&, cIGZPersistDBSegment*, unsigned int, cIGZBuffer*, unsigned int)",SaveToResource_cGZPersistResourceKey_cIGZPersistDBSegment_uint_cIGZBuffer_uint,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b6438,"cGZGimexFactory::SaveToResource(cGZPersistResourceKey&, cIGZPersistDBSegment*, unsigned int, cIGZBuffer*, cRZRect&, unsigned int)",SaveToResource_cGZPersistResourceKey_cIGZPersistDBSegment_uint_cIGZBuffer_cRZRect_uint,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b6514,"cGZGimexFactory::SaveToSerialRecord(cIGZPersistDBSerialRecord*, unsigned int, cIGZBuffer*, unsigned int)",SaveToSerialRecord_cIGZPersistDBSerialRecord_uint_cIGZBuffer_uint,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b6578,"cGZGimexFactory::SaveToSerialRecord(cIGZPersistDBSerialRecord*, unsigned int, cIGZBuffer*, cRZRect&, unsigned int)",SaveToSerialRecord_cIGZPersistDBSerialRecord_uint_cIGZBuffer_cRZRect_uint,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b6616,"cGZGimexFactory::CreateInstance(unsigned int, unsigned int, void**)",CreateInstance_uint_uint_void,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b6640,"non-virtual thunk to cGZGimexFactory::CreateInstance(unsigned int, unsigned int, void**)",CreateInstance_uint_uint_voidThunk,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b666e,"cGZGimexFactory::CreateInstance(unsigned int, unsigned int, void**, unsigned int, cIGZUnknown*)",CreateInstance_uint_uint_void_uint_cIGZUnknown,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b670e,"non-virtual thunk to cGZGimexFactory::CreateInstance(unsigned int, unsigned int, void**, unsigned int, cIGZUnknown*)",CreateInstance_uint_uint_void_uint_cIGZUnknownThunk,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b6718,"cGZGimexFactory::SerialRead(cIGZPersistResource&, cIGZPersistDBSerialRecord&)",SerialRead,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b6780,"non-virtual thunk to cGZGimexFactory::SerialRead(cIGZPersistResource&, cIGZPersistDBSerialRecord&)",SerialReadThunk,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b678e,"cGZGimexFactory::SerialWrite(cIGZPersistResource&, cIGZPersistDBSerialRecord&)",SerialWrite,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b67fe,"non-virtual thunk to cGZGimexFactory::SerialWrite(cIGZPersistResource&, cIGZPersistDBSerialRecord&)",SerialWriteThunk,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b680c,"cGZGimexFactory::TranslateGimex24ToGZBufferARGB4444Dither(cGZGimexInfo*, void*, cIGZBuffer*)",TranslateGimex24ToGZBufferARGB4444Dither,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b6b1a,"cGZGimexFactory::TranslateGimex8ToGZBuffer8(cGZGimexInfo*, void*, cIGZBuffer*)",TranslateGimex8ToGZBuffer8,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b6b94,"cGZGimexFactory::TranslateGimex8ToGZBuffer16(cGZGimexInfo*, void*, cIGZBuffer*)",TranslateGimex8ToGZBuffer16,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
+0x1003b6d78,"cGZGimexFactory::TranslateGimex8ToGZBuffer32(cGZGimexInfo*, void*, cIGZBuffer*)",TranslateGimex8ToGZBuffer32,src/gz/GimexFactory.cpp,recovered,scripts/tests/gz_gimexfactory_test.cpp
