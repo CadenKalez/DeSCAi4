@@ -19268,3 +19268,152 @@ address,symbol,unique_name,source,status,evidence
 0x1002f2f7e,cSC4TimeDisplayMiniWindowWinProc::EndDialog(),EndDialog,src/sc4/TimeDisplayMiniWindowWinProc.cpp,recovered,scripts/tests/sc4_timedisplayminiwindowwinproc_test.cpp
 0x1002f3050,cSC4TimeDisplayMiniWindowWinProc::UpdateTimeDisplay(),UpdateTimeDisplay,src/sc4/TimeDisplayMiniWindowWinProc.cpp,recovered,scripts/tests/sc4_timedisplayminiwindowwinproc_test.cpp
 0x1002f319e,cSC4TimeDisplayMiniWindowWinProc::DoModelessWin(),DoModelessWin,src/sc4/TimeDisplayMiniWindowWinProc.cpp,recovered,scripts/tests/sc4_timedisplayminiwindowwinproc_test.cpp
+0x100600ec0,nSCRes::cFileParser::cFileParser(),cFileParser,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x10060102c,nSCRes::cFileParser::~cFileParser(),~cFileParser_102c,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100601152,nSCRes::cFileParser::~cFileParser(),~cFileParser_1152,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x10060115c,non-virtual thunk to nSCRes::cFileParser::~cFileParser(),~cFileParserThunk_115c,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x10060116a,nSCRes::cFileParser::~cFileParser(),~cFileParser_116a,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100601186,non-virtual thunk to nSCRes::cFileParser::~cFileParser(),~cFileParserThunk_1186,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1006011aa,"nSCRes::cFileParser::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1006011cc,"non-virtual thunk to nSCRes::cFileParser::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_11cc,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1006011f2,"non-virtual thunk to nSCRes::cFileParser::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_11f2,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100601218,nSCRes::cFileParser::AddRef(),AddRef,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100601226,non-virtual thunk to nSCRes::cFileParser::AddRef(),AddRefThunk_1226,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100601234,non-virtual thunk to nSCRes::cFileParser::AddRef(),AddRefThunk_1234,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x10060123e,nSCRes::cFileParser::Release(),Release,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x10060124c,non-virtual thunk to nSCRes::cFileParser::Release(),ReleaseThunk_124c,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x10060125a,non-virtual thunk to nSCRes::cFileParser::Release(),ReleaseThunk_125a,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100601264,nSCRes::cFileParser::Init(),Init,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x10060126c,nSCRes::cFileParser::Shutdown(),Shutdown,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1006012a0,nSCRes::cFileParser::DoMessage(cIGZMessage2*),DoMessage,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1006012ca,non-virtual thunk to nSCRes::cFileParser::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1006012f4,nSCRes::cFileParser::SetParser(nSCRes::cICommandParser*),SetParser,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x10060138e,"nSCRes::cFileParser::AddInputFilePath(char const*, unsigned short)",AddInputFilePath,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1006019c4,nSCRes::cFileParser::ParseFiles(),ParseFiles_void,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1006019e6,"nSCRes::cFileParser::ParseFiles(int, int)",ParseFiles_int_int,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100601d10,"nSCRes::cFileParser::DoParseFile(char const*, char const*)",DoParseFile,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x10060281e,nSCRes::cFileParser::SetParseFilesModified(bool),SetParseFilesModified,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100602828,nSCRes::cFileParser::ErrorString() const,ErrorString,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100602836,nSCRes::cFileParser::Parser() const,Parser,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100602840,nSCRes::cFileParser::NumInputFiles() const,NumInputFiles,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100602858,nSCRes::cFileParser::InputFilePath(int) const,InputFilePath,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100602872,nSCRes::cFileParser::ParseFilesModified() const,ParseFilesModified,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005b99a4,nSCRes::cCommandParser::cCommandParser(),cCommandParser,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005b9a8e,nSCRes::cCommandParser::~cCommandParser(),~cCommandParser_9a8e,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005b9bf8,nSCRes::cCommandParser::~cCommandParser(),~cCommandParser_9bf8,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005b9c0a,nSCRes::cCommandParser::~cCommandParser(),~cCommandParser_9c0a,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005b9c40,"nSCRes::cCommandParser::ParseCommandArguments(std::__1::vector<cRZString, std::__1::allocator<cRZString>>&)",ParseCommandArguments,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005b9f0e,"nSCRes::cCommandParser::cMacroDefinition::AddCommand(std::__1::vector<cRZString, std::__1::allocator<cRZString>> const&)",AddCommand,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005b9fc6,nSCRes::cCommandParser::SubstituteVariables(cRZString&),SubstituteVariables,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba508,"nSCRes::cCommandParser::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba546,"virtual thunk to nSCRes::cCommandParser::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba558,nSCRes::cCommandParser::AddRef(),AddRef,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba566,virtual thunk to nSCRes::cCommandParser::AddRef(),AddRefThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba57e,nSCRes::cCommandParser::Release(),Release,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba59e,virtual thunk to nSCRes::cCommandParser::Release(),ReleaseThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba5cc,nSCRes::cCommandParser::Init(),Init,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba5da,virtual thunk to nSCRes::cCommandParser::Init(),InitThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba5f8,nSCRes::cCommandParser::Shutdown(),Shutdown,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba672,nSCRes::cCommandParser::ClearMacros(),ClearMacros,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba76e,virtual thunk to nSCRes::cCommandParser::Shutdown(),ShutdownThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba780,nSCRes::cCommandParser::ParseBegin(),ParseBegin,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba802,virtual thunk to nSCRes::cCommandParser::ParseBegin(),ParseBeginThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba814,nSCRes::cCommandParser::ParseEndSuccess(),ParseEndSuccess,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba81a,virtual thunk to nSCRes::cCommandParser::ParseEndSuccess(),ParseEndSuccessThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba820,nSCRes::cCommandParser::ParseEnd(),ParseEnd,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba832,virtual thunk to nSCRes::cCommandParser::ParseEnd(),ParseEndThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba84c,nSCRes::cCommandParser::ParseCommand(char const*),ParseCommand,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba980,virtual thunk to nSCRes::cCommandParser::ParseCommand(char const*),ParseCommandThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ba992,"nSCRes::cCommandParser::SetVariable(char const*, char const*)",SetVariable,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005baad8,"virtual thunk to nSCRes::cCommandParser::SetVariable(char const*, char const*)",SetVariableThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005baaea,nSCRes::cCommandParser::PushNamespace(char const*),PushNamespace,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bab60,virtual thunk to nSCRes::cCommandParser::PushNamespace(char const*),PushNamespaceThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bab72,nSCRes::cCommandParser::PopNamespace(),PopNamespace,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005baba8,virtual thunk to nSCRes::cCommandParser::PopNamespace(),PopNamespaceThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005babe6,nSCRes::cCommandParser::PurgeNamespace(char const*),PurgeNamespace,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bb3a8,virtual thunk to nSCRes::cCommandParser::PurgeNamespace(char const*),PurgeNamespaceThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bb3ba,nSCRes::cCommandParser::State(),State,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bb3c4,virtual thunk to nSCRes::cCommandParser::State(),StateThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bb3d8,nSCRes::cCommandParser::ReadyToParse() const,ReadyToParse,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bb3e0,virtual thunk to nSCRes::cCommandParser::ReadyToParse() const,ReadyToParseThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bb3e8,nSCRes::cCommandParser::Variable(char const*) const,Variable,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bb52c,virtual thunk to nSCRes::cCommandParser::Variable(char const*) const,VariableThunk,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bb540,nSCRes::cCommandParser::RegisterCommands(),RegisterCommands,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bb77e,"nSCRes::cCommandParser::RegisterCommand(char const*, nSCRes::cSimpleCommand*)",RegisterCommand,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bb7ec,"nSCRes::cCommandParser::cMacroDefinition::SubstituteParams(cRZString&, std::__1::vector<cRZString, std::__1::allocator<cRZString>> const&)",SubstituteParams,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005b97c2,nSCRes::cBlockCommand::cBlockCommand(),cBlockCommand,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005b97fc,nSCRes::cBlockCommand::~cBlockCommand(),~cBlockCommand_97fc,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005b989e,nSCRes::cBlockCommand::~cBlockCommand(),~cBlockCommand_989e,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005b98a4,nSCRes::cBlockCommand::~cBlockCommand(),~cBlockCommand_98a4,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005b98aa,nSCRes::cBlockCommand::StartBlock(nSCRes::cICommandParser*),StartBlock,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005b98ec,"nSCRes::cBlockCommand::RegisterCommand(char const*, nSCRes::cSimpleCommand*)",RegisterCommand,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005b999e,nSCRes::cBlockCommand::EndBlock(nSCRes::cICommandParser*),EndBlock,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005b97bc,nSCRes::cSimpleCommand::RegisterCommands(),RegisterCommands,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x10056ebb0,nSCRes::cParseError::What() const,What,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005fd60c,"nSCRes::cParseError::cParseError(unsigned int, char const*, ...)",cParseError_uint_char_const,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005fd7ee,"nSCRes::cParseError::cParseError(char const*, ...)",cParseError_char_const,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x10060287c,nSCRes::cParseError::~cParseError(),~cParseError,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bbea6,nSCRes::cEndBlockCommand::~cEndBlockCommand(),~cEndBlockCommand_bea6,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bbeac,nSCRes::cEndBlockCommand::~cEndBlockCommand(),~cEndBlockCommand_beac,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bbeee,"nSCRes::cEndBlockCommand::Parse(std::__1::vector<cRZString, std::__1::allocator<cRZString>>&, nSCRes::cCommandParser*)",Parse,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bbf5e,nSCRes::cVersionCommand::~cVersionCommand(),~cVersionCommand_bf5e,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bbf64,nSCRes::cVersionCommand::~cVersionCommand(),~cVersionCommand_bf64,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bbf6e,"nSCRes::cVersionCommand::Parse(std::__1::vector<cRZString, std::__1::allocator<cRZString>>&, nSCRes::cCommandParser*)",Parse,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bbfde,nSCRes::cListCommandsCommand::~cListCommandsCommand(),~cListCommandsCommand_bfde,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bbfe4,nSCRes::cListCommandsCommand::~cListCommandsCommand(),~cListCommandsCommand_bfe4,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bbfee,"nSCRes::cListCommandsCommand::Parse(std::__1::vector<cRZString, std::__1::allocator<cRZString>>&, nSCRes::cCommandParser*)",Parse,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bc028,nSCRes::cTraceCommand::~cTraceCommand(),~cTraceCommand_c028,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bc02e,nSCRes::cTraceCommand::~cTraceCommand(),~cTraceCommand_c02e,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bc038,"nSCRes::cTraceCommand::Parse(std::__1::vector<cRZString, std::__1::allocator<cRZString>>&, nSCRes::cCommandParser*)",Parse,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bc080,nSCRes::cSetCommand::~cSetCommand(),~cSetCommand_c080,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bc086,nSCRes::cSetCommand::~cSetCommand(),~cSetCommand_c086,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bc090,"nSCRes::cSetCommand::Parse(std::__1::vector<cRZString, std::__1::allocator<cRZString>>&, nSCRes::cCommandParser*)",Parse,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bc9a0,nSCRes::cEvalCommand::~cEvalCommand(),~cEvalCommand_c9a0,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bc9a6,nSCRes::cEvalCommand::~cEvalCommand(),~cEvalCommand_c9a6,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bc9b0,"nSCRes::cEvalCommand::Parse(std::__1::vector<cRZString, std::__1::allocator<cRZString>>&, nSCRes::cCommandParser*)",Parse,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bca56,nSCRes::cDefineCommand::~cDefineCommand(),~cDefineCommand_ca56,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bca5c,nSCRes::cDefineCommand::~cDefineCommand(),~cDefineCommand_ca5c,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bca66,"nSCRes::cDefineCommand::Parse(std::__1::vector<cRZString, std::__1::allocator<cRZString>>&, nSCRes::cCommandParser*)",Parse,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bcb9e,nSCRes::cEndDefCommand::~cEndDefCommand(),~cEndDefCommand_cb9e,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bcba4,nSCRes::cEndDefCommand::~cEndDefCommand(),~cEndDefCommand_cba4,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bcbae,"nSCRes::cEndDefCommand::Parse(std::__1::vector<cRZString, std::__1::allocator<cRZString>>&, nSCRes::cCommandParser*)",Parse,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bce5c,nSCRes::cCreateCommand::~cCreateCommand(),~cCreateCommand_ce5c,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bce62,nSCRes::cCreateCommand::~cCreateCommand(),~cCreateCommand_ce62,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bce6c,"nSCRes::cCreateCommand::Parse(std::__1::vector<cRZString, std::__1::allocator<cRZString>>&, nSCRes::cCommandParser*)",Parse,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bd234,nSCRes::cArrayCreateCommand::~cArrayCreateCommand(),~cArrayCreateCommand_d234,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bd23a,nSCRes::cArrayCreateCommand::~cArrayCreateCommand(),~cArrayCreateCommand_d23a,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bd244,"nSCRes::cArrayCreateCommand::Parse(std::__1::vector<cRZString, std::__1::allocator<cRZString>>&, nSCRes::cCommandParser*)",Parse,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bd4ec,nSCRes::cNamespaceCommand::~cNamespaceCommand(),~cNamespaceCommand_d4ec,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bd4f6,nSCRes::cNamespaceCommand::~cNamespaceCommand(),~cNamespaceCommand_d4f6,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bd586,"nSCRes::cNamespaceCommand::Parse(std::__1::vector<cRZString, std::__1::allocator<cRZString>>&, nSCRes::cCommandParser*)",Parse,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bd61a,nSCRes::cNamespaceCommand::EndBlock(nSCRes::cCommandParser*),EndBlock,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bd524,"nSCRes::cBlockCommandT<nSCRes::cCommandParser>::Parse(std::__1::vector<cRZString, std::__1::allocator<cRZString>>&, nSCRes::cICommandParser*)",Parse,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bd55c,nSCRes::cBlockCommandT<nSCRes::cCommandParser>::EndBlock(nSCRes::cICommandParser*),EndBlock,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005bbeb6,"nSCRes::cSimpleCommandT<nSCRes::cCommandParser>::Parse(std::__1::vector<cRZString, std::__1::allocator<cRZString>>&, nSCRes::cICommandParser*)",Parse,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100051d46,cRZTextFile::cRZTextFile(),Construct,src/rz/cRZTextFile.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100051dcc,cRZTextFile::cRZTextFile(char const*),Construct_char_constWrapper,src/rz/cRZTextFile.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100051e52,"cRZTextFile::Open(int, int, int)",Open,src/rz/cRZTextFile.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100051ed2,cRZTextFile::ReadLine(cIGZString&),ReadLine,src/rz/cRZTextFile.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100052330,"cRZTextFile::WriteLine(void const*, unsigned int)",WriteLine,src/rz/cRZTextFile.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100052388,cRZTextFile::~cRZTextFile(),Destruct,src/rz/cRZTextFile.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1000523e8,cRZTextFile::~cRZTextFile(),DestructAndDelete,src/rz/cRZTextFile.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005fd9eb,"nSCRes::SplitIntoArguments(std::__1::vector<cRZString, std::__1::allocator<cRZString>>*, cRZString const&)",SplitIntoArguments,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005fe046,nSCRes::CountArguments(cRZString const&),CountArguments,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005fe497,"nSCRes::FindSwitchIndex(std::__1::vector<cRZString, std::__1::allocator<cRZString>> const&, char const*)",FindSwitchIndex,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005fe61c,"nSCRes::FindNonSwitchIndices(std::__1::vector<int, std::__1::allocator<int>>*, std::__1::vector<cRZString, std::__1::allocator<cRZString>> const&, int)",FindNonSwitchIndices,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005fe7b3,"nSCRes::FindSwitchArgumentIndices(std::__1::vector<int, std::__1::allocator<int>>*, std::__1::vector<cRZString, std::__1::allocator<cRZString>>&, char const*, int)",FindSwitchArgumentIndices,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005fe9af,"nSCRes::UnhandledSwitchesArePresent(std::__1::vector<cRZString, std::__1::allocator<cRZString>> const&)",UnhandledSwitchesArePresent,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005feaba,"nSCRes::FindUnhandledSwitchIndices(std::__1::vector<int, std::__1::allocator<int>>*, std::__1::vector<cRZString, std::__1::allocator<cRZString>> const&)",FindUnhandledSwitchIndices,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005fec15,"nSCRes::NextToken(cRZString&, char const*)",NextToken,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005fede6,nSCRes::ParseFloat(cRZString const&),ParseFloat,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005feef7,nSCRes::ParseInt(cRZString const&),ParseInt,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005fef93,nSCRes::ParseUint(cRZString const&),ParseUint,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ff01f,nSCRes::ParseBool(cRZString const&),ParseBool,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ff223,nSCRes::ParseColor(cRZString const&),ParseColor,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ff2f5,nSCRes::ParseColorAlpha(cRZString const&),ParseColorAlpha,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ff40d,nSCRes::ParseVector2(cRZString const&),ParseVector2,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ff4fd,nSCRes::ParseVector3(cRZString const&),ParseVector3,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ff62b,"nSCRes::ParseEnum(cRZString const&, nSCRes::cEnumParseInfo const*, nSCRes::cEnumParseInfo const*)",ParseEnum,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ff77c,"nSCRes::EnumToString(int, nSCRes::cEnumParseInfo const*, nSCRes::cEnumParseInfo const*)",EnumToString,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ff7c3,"nSCRes::StrToDEnglish(char const*, char**)",StrToDEnglish,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x1005ff84b,"nSCRes::DToStrEnglish(double, cRZString&)",DToStrEnglish,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
