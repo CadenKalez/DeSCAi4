@@ -19417,3 +19417,20 @@ address,symbol,unique_name,source,status,evidence
 0x1005ff77c,"nSCRes::EnumToString(int, nSCRes::cEnumParseInfo const*, nSCRes::cEnumParseInfo const*)",EnumToString,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
 0x1005ff7c3,"nSCRes::StrToDEnglish(char const*, char**)",StrToDEnglish,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
 0x1005ff84b,"nSCRes::DToStrEnglish(double, cRZString&)",DToStrEnglish,src/sc4/SCResParser.cpp,recovered,scripts/tests/sc4_scresparser_test.cpp
+0x100011f14,"cSC4App::PostCityMessage(cISC4City*, unsigned int, unsigned int, unsigned int, bool)",PostCityMessage,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x100044510,"cSC4App::Write(cIGZOStream&, cIGZPersistDBSegment*) const",Write,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x100044576,"cSC4App::Read(cIGZIStream&, cIGZPersistDBSegment*)",Read,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x10004464e,cSC4App::RequestNewCity(cRZAutoRefCount<cISC4RegionalCity>*),RequestNewCity,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x1000446f0,cSC4App::RequestLoadCity(),RequestLoadCity,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x100044836,cSC4App::DoLoadCityUI(cRZString&),DoLoadCityUI,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x1000448fa,cSC4App::RequestCloseCity(bool),RequestCloseCity,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x100044a68,"cSC4App::RequestSaveCity(bool, bool)",RequestSaveCity,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x100044f12,"cSC4App::RequestQuit(bool, bool)",RequestQuit,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x1000450ce,cSC4App::RequestQuitFromRegion(bool),RequestQuitFromRegion,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x1000451e6,cSC4App::RequestGoToRegionView(bool),RequestGoToRegionView,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x100045366,cSC4App::Quit(),Quit,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x1000453d4,cSC4App::NewCity(),NewCity,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x1000455d8,"cSC4App::LoadCity(cRZString const&, cRZAutoRefCount<cISC4RegionalCity>*)",LoadCity,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x100045be8,cSC4App::UnregisterCityDBSegment(),UnregisterCityDBSegment,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x100045c58,cSC4App::CloseCity(),CloseCity,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x100045e68,cSC4App::PartialCloseCity(),PartialCloseCity,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp

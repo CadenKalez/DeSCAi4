@@ -29,6 +29,8 @@
 #include "sc4/RenderProperties.h"
 #include "sc4/ServiceLocator.h"
 #include "sc4/ISC4App.h"
+#include "sc4/ISC4City.h"
+#include "sc4/ISC4RegionalCity.h"
 
 class cIGZFrameWork;
 class cRZCOMDllDirector;
@@ -114,6 +116,41 @@ struct AppStartupHooks {
     std::function<void()> registerSegmentCategoryCallback;
     // the WWW system was created: set its cache directory, enable it and hook the HTML UI
     std::function<void(cIGZUnknown* wwwSystem, const cIGZString& cacheDirectory)> configureWWWSystem;
+};
+
+
+// Collaborators of the city life cycle (new / load / save / close / quit) that are not recovered yet.
+struct AppCityHooks {
+    // cSLString(group, instance): a localised UI string (LTEXT)
+    std::function<std::string(std::uint32_t group, std::uint32_t instance)> loadText;
+    // nSC4UI::GenericNotificationDialog(title, text)
+    std::function<void(const std::string& title, const std::string& text)> notify;
+    // nSC4UI::GenericConfirmationDialog(title, text, null, null): true when the player confirmed
+    std::function<bool(const std::string& title, const std::string& text)> confirm;
+    // nSC4UI::DoScriptedModalDialog(script instance, window id): the id of the control that closed it
+    std::function<int(std::uint32_t scriptInstance, std::uint32_t windowId)> scriptedModal;
+    // new cSC4City: the app takes the reference the hook returns
+    std::function<cISC4City*()> createCity;
+    // cWinSC4App::DestroyCurrentScreen / CreateCityScreen / CreateRegionScreen
+    std::function<void()> destroyCurrentScreen, createCityScreen, createRegionScreen;
+    // SC4WriteRegionalCity / SC4ReadRegionalCity (the regional city records of a city file)
+    std::function<bool(cIGZPersistDBSegment*, cISC4RegionalCity*)> writeRegionalCity;
+    std::function<bool(cIGZPersistDBSegment*, cRZAutoRefCount<cISC4RegionalCity>& out)> readRegionalCity;
+    // SC4ReadAppLoadSaveVersion: the file's save version (0 when unreadable)
+    std::function<std::uint32_t(cIGZPersistDBSegment*)> readLoadSaveVersion;
+    // new cSC4DBSegment (the city file's segment), already set to a save version with `setSaveVersion`
+    std::function<cIGZPersistDBSegment*()> createCitySegment;
+    std::function<bool(cIGZPersistDBSegment*, std::uint32_t version)> setSaveVersion;
+    // the app record of a city file: open the stream {0x49dd6f4c, 0x49dd6f4e, 1} for reading / writing
+    std::function<bool(cIGZPersistDBSegment*, std::uint32_t version, std::function<bool(cIGZIStream&)> reader)> readAppRecord;
+    // RZ::GS() vslot 0x88 (called twice before the city is closed on the way out)
+    std::function<void()> flushGraphics;
+    // cRZAutoCursor(0xf): the busy cursor around the long operations (begin / end)
+    std::function<void(bool begin)> busy;
+    // CloseCity's tail: the region screen re-selects/refreshes the closed city (region vslot 0x68 / 0x88 / 0x78)
+    std::function<void(cISC4RegionalCity* city, const std::string& savePath)> regionCityClosed;
+    // the shutdown path of the framework: cIGZFrameWork::Quit(0)
+    std::function<void()> quitFramework;
 };
 
 }  // namespace sc4
@@ -205,6 +242,7 @@ public:
     // The built-in class used when COM cannot create a service (cGZFileSystem, cGZFontSys, ...), by class name.
     void SetServiceFactory(const std::string& className, ServiceFactory factory) { serviceFactories_[className] = std::move(factory); }
     sc4::AppStartupHooks& StartupHooks() { return startupHooks_; }
+    sc4::AppCityHooks& CityHooks() { return cityHooks_; }
     void SetFramework(cIGZFrameWork* framework) { framework_ = framework; }
 
     // --- host seams (the original reached these through RZ:: / MacDisplay::)
@@ -263,6 +301,17 @@ public:
     void ShutdownWinCtrlMgr();                                     // @ 0x10000c7ca
     void SetupFontSet();                                           // @ 0x10000c7d0
     bool PreFrameWorkShutdown() override;
+    // the city life cycle (AppCity.cpp)
+    bool NewCity();                                                // @ 0x1000453d4
+    bool Quit();                                          // @ 0x100045366
+    bool PartialCloseCity();                                       // @ 0x100045e68
+    void UnregisterCityDBSegment();                                // @ 0x100045be8
+    bool DoLoadCityUI(cRZString& path);                            // @ 0x100044836
+    bool Write(cIGZOStream& stream, cIGZPersistDBSegment* segment) const;   // @ 0x100044510
+    bool Read(cIGZIStream& stream, cIGZPersistDBSegment* segment);          // @ 0x100044576
+    void PostCityMessage(cISC4City* city, std::uint32_t type, std::uint32_t data2, std::uint32_t data3, bool post);   // @ 0x100011f14
+    bool DoCityObliteration();                                     // @ 0x100047350 (not recovered)
+    void LaunchExceptionReportUploader();                          // @ 0x10000f146 (not recovered)
     bool LoadRegistry() override;
     bool OnTick(std::uint32_t elapsed) override;
 
@@ -340,6 +389,9 @@ private:
     cIGZCmdLine* CommandLineInUse();
     cIGZFrameWork* framework_ = nullptr;
     sc4::AppStartupHooks startupHooks_;
+    sc4::AppCityHooks cityHooks_;
+    cIGZPersistDBSegment* citySegment_ = nullptr;        // +0x7a8 (the registered city file segment)
+    static bool sMacQuitDialogIsShowing_;
     std::map<std::string, ServiceFactory> serviceFactories_;
     std::uint32_t requestedGraphicsDriver_ = 0;          // +0x7b8 (set by the -d switch)
     cISC4Region* (*regionOf_)(cISC4Nation*) = nullptr;

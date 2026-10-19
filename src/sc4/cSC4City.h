@@ -24,6 +24,8 @@
 #pragma once
 #include <array>
 #include <cstdint>
+
+#include "sc4/ISC4City.h"
 #include <list>
 #include <vector>
 
@@ -107,7 +109,7 @@ public:
     virtual bool FileExists(const cIGZString& /*path*/) { return false; }
 };
 
-class cSC4City final : public cIGZSerializable {
+class cSC4City final : public cISC4City, public cIGZSerializable {
 public:
     enum DifficultyLevel : std::uint32_t { kDifficultyEasy = 0, kDifficultyMedium = 1, kDifficultyHard = 2 };
     enum CitySizeType : int { kSizeSmall = 0, kSizeMedium = 1, kSizeLarge = 2 };
@@ -123,22 +125,22 @@ public:
     bool Read(cIGZIStream& stream) override;
     std::uint32_t GetGZCLSID() const override { return kCityClassId; }
 
-    bool Init();
-    bool Shutdown();
+    bool Init() override;
+    bool Shutdown() override;
     void CreateCityComponents();
 
     // identity
     std::uint32_t GetCitySerialNumber() const { return serialNumber_; }
-    void SetCitySerialNumber(std::uint32_t n) { serialNumber_ = n; }
+    void SetCitySerialNumber(std::uint32_t n) override { serialNumber_ = n; }
     std::uint32_t GetNewOccupantSerialNumber() { return ++occupantSerial_; }   // (returns the old+1)
     bool GetOriginalLanguageAndCountry(int& language, int& country) const { language = originalLanguage_; country = originalCountry_; return true; }
     bool GetLastLanguageAndCountry(int& language, int& country) const { language = lastLanguage_; country = lastCountry_; return true; }
-    void GetCitySaveFilePath(cIGZString& out) const { out.Copy(saveFilePath_); }
-    void SetCitySaveFilePath(const cIGZString& path) { saveFilePath_.AssignFromIGZString(path); }
+    void GetCitySaveFilePath(cIGZString& out) const override { out.Copy(saveFilePath_); }
+    void SetCitySaveFilePath(const cIGZString& path) override { saveFilePath_.AssignFromIGZString(path); }
     void GetCityName(cIGZString& out) const { out.AssignFromChars(cityName_.Data(), cityName_.Strlen()); }
     void SetCityName(const cIGZString& name);
     bool GetCityNameChanged() const { return cityNameChanged_; }
-    void SetCityNameChanged(bool changed) { cityNameChanged_ = changed; }
+    void SetCityNameChanged(bool changed) override { cityNameChanged_ = changed; }
     void GetMayorName(cIGZString& out) const { out.AssignFromChars(mayorName_.Data(), mayorName_.Strlen()); }
     void SetMayorName(const cIGZString& name);
     void GetCityDescription(cIGZString& out) const { out.AssignFromChars(description_.Data(), description_.Strlen()); }
@@ -176,7 +178,7 @@ public:
     // save control / UI locks
     void EnableSave() { if (saveDisableCount_ != 0) --saveDisableCount_; }
     void DisableSave() { ++saveDisableCount_; }
-    bool IsSaveDisabled() const { return saveDisableCount_ != 0; }
+    bool IsSaveDisabled() const override { return saveDisableCount_ != 0; }
     void UIIncreaseLockCount() { ++uiLockCount_; }
     void UIDecreaseLockCount() { if (uiLockCount_ != 0) --uiLockCount_; }
     std::uint32_t UIGetLockCount() const { return uiLockCount_; }

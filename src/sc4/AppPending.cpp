@@ -12,19 +12,7 @@ namespace {
 }
 }  // namespace
 
-bool cSC4App::DoMessage(cGZMessage&) { Pending("DoMessage(cGZMessage&)"); }
-bool cSC4App::DoMessage(cIGZMessage2*) { Pending("DoMessage(cIGZMessage2*)"); }
 bool cSC4App::DoMessage(cIGZWin*, cGZMessage&) { Pending("DoMessage(cIGZWin*, cGZMessage&)"); }
-bool cSC4App::RequestNewCity(cRZAutoRefCount<cISC4RegionalCity>*) { Pending("RequestNewCity"); }
-bool cSC4App::RequestLoadCity() { Pending("RequestLoadCity"); }
-bool cSC4App::RequestCloseCity(bool) { Pending("RequestCloseCity"); }
-bool cSC4App::RequestSaveCity(bool, bool) { Pending("RequestSaveCity"); }
-bool cSC4App::RequestQuit(bool, bool) { Pending("RequestQuit"); }
-bool cSC4App::RequestQuitFromRegion(bool) { Pending("RequestQuitFromRegion"); }
-bool cSC4App::RequestGoToRegionView(bool) { Pending("RequestGoToRegionView"); }
-bool cSC4App::LoadCity(const cRZString&, cRZAutoRefCount<cISC4RegionalCity>*) { Pending("LoadCity"); }
-bool cSC4App::CloseCity() { Pending("CloseCity"); }
-bool cSC4App::SaveCity(bool) { Pending("SaveCity(bool)"); }
 bool cSC4App::SaveCity(const cRZString&, bool) { Pending("SaveCity(path, bool)"); }
 bool cSC4App::AddDynamicLibraryByName(const cIGZString&, cRZString*, bool) { Pending("AddDynamicLibraryByName"); }
 bool cSC4App::AddDynamicLibraryByPath(const cIGZString&, bool) { Pending("AddDynamicLibraryByPath"); }
@@ -34,3 +22,5 @@ bool cSC4App::PreFrameWorkShutdown() { Pending("PreFrameWorkShutdown"); }
 bool cSC4App::LoadRegistry() { Pending("LoadRegistry"); }
 void cSC4App::ShutdownWinCtrlMgr() { Pending("ShutdownWinCtrlMgr"); }
 void cSC4App::SetupFontSet() { Pending("SetupFontSet"); }
+bool cSC4App::DoCityObliteration() { Pending("DoCityObliteration"); }
+void cSC4App::LaunchExceptionReportUploader() { Pending("LaunchExceptionReportUploader"); }
