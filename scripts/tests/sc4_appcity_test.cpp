@@ -127,6 +127,12 @@ int main() {
     state.SetType(0xcbb5bb45); app->DoMessage(&state); CHECK(app->GetAppState() == 1);
     state.SetType(0x26d31ec2); app->DoMessage(&state); CHECK(app->GetAppState() == 0);
 
+    // plug-in libraries and shutdown
+    CHECK(!app->AddDynamicLibraryByPath(cRZString("/nonexistent/lib.so"), true));
+    CHECK(![&] { cRZString dir("/nonexistent/"); return app->AddDynamicLibraryByName(cRZString("nothing"), &dir, false); }());
+    CHECK(app->PreFrameWorkShutdown());
+    CHECK(app->Shutdown());
+
     SL::spMS2 = nullptr;
     app->Release();
     if (failures == 0) std::puts("sc4_appcity: all passed");

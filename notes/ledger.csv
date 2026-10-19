@@ -19434,3 +19434,8 @@ address,symbol,unique_name,source,status,evidence
 0x100045be8,cSC4App::UnregisterCityDBSegment(),UnregisterCityDBSegment,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
 0x100045c58,cSC4App::CloseCity(),CloseCity,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
 0x100045e68,cSC4App::PartialCloseCity(),PartialCloseCity,src/sc4/AppCity.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x10000a5f4,cSC4App::PreFrameWorkShutdown(),PreFrameWorkShutdown,src/sc4/AppShutdown.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x10000a74c,cSC4App::Shutdown(),Shutdown,src/sc4/AppShutdown.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x10000c7ca,cSC4App::ShutdownWinCtrlMgr(),ShutdownWinCtrlMgr,src/sc4/AppShutdown.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x10001136a,"cSC4App::AddDynamicLibraryByName(cIGZString const&, cRZString*, bool)",AddDynamicLibraryByName,src/sc4/AppShutdown.cpp,recovered,scripts/tests/sc4_appcity_test.cpp
+0x100011656,"cSC4App::AddDynamicLibraryByPath(cIGZString const&, bool)",AddDynamicLibraryByPath,src/sc4/AppShutdown.cpp,recovered,scripts/tests/sc4_appcity_test.cpp

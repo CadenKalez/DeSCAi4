@@ -85,6 +85,8 @@ struct AppStartupHooks {
     // names: cSC4GlyphTextureManager, cSCStringDetokenizer, cSLWinLocationSaver, cSC4FeatureManager, cSC4ToolTipManager,
     // cSC4MissingPluginDataReporter, cSC4Nation, cSC4TutorialRegistry
     std::function<void(const char* className, cIGZUnknown* object)> initializeManager;
+    // the matching Shutdown calls of Shutdown(): (class name, object); the application releases the objects it owns
+    std::function<void(const char* className, cIGZUnknown* object)> shutdownManager;
     // cWinSC4App::cWinSC4App(app): the application window, added to the main window
     struct ApplicationWindow { cIGZWin* window = nullptr; SL::IWinSC4App* application = nullptr; };
     std::function<ApplicationWindow(cSC4App&)> createApplicationWindow;
