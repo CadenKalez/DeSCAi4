@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "render/gd/GDriverBase.h"
+#include "render/gd/VideoModes.h"
 
 namespace gd {
 
@@ -20,7 +21,7 @@ constexpr std::uint32_t kClearColor = 0x4000, kClearDepth = 0x1000, kClearStenci
 class cMetalGDriver final : public cGDriverBase {
 public:
     // `caMetalLayer` may be null (headless). Size is the drawable size in pixels.
-    static std::unique_ptr<cMetalGDriver> Create(void* caMetalLayer, std::uint32_t width, std::uint32_t height);
+    static std::unique_ptr<cMetalGDriver> Create(void* caMetalLayer, std::uint32_t width, std::uint32_t height, IModeSource* modes = nullptr);
     ~cMetalGDriver() override;
 
     // ---- presentation / test hooks (not part of cIGZGDriver) ----
@@ -51,6 +52,10 @@ public:
     void GetViewport(std::uint32_t out[4]) override;
     int VertexFormatStride(eGDVertexFormat format) const override;
     int GetError() override;
+    int CountVideoModes() override;
+    bool GetVideoModeInfo(std::uint32_t index, sGDMode& mode) override;
+    bool GetVideoModeInfo(sGDMode& mode) override;
+    bool SetVideoMode(int mode, void* window, bool windowed, bool vsync) override;
 
     // textures (handle semantics of the shipped driver: see TextureTable.h)
     void GenTextures(int count, std::uint32_t* ids) override;

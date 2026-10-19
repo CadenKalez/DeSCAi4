@@ -258,6 +258,8 @@ struct cMetalGDriver::Impl {
         }
     } backend{this};
     cTextureTable table{&backend};
+    std::unique_ptr<cVideoModeList> modeList;
+    sGDMode currentMode{};
     std::map<std::uint32_t, id<MTLTexture>> textures;
     nSGLDX7::cTextureStageData records[2];
     StageCfg cfg[2];
@@ -426,12 +428,12 @@ struct cMetalGDriver::Impl {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-cMetalGDriver::cMetalGDriver() : impl_(new Impl) {}
+cMetalGDriver::cMetalGDriver() : impl_(new Impl) { impl_->currentMode.id = -1; }
 cMetalGDriver::~cMetalGDriver() {
     if (impl_) impl_->Submit(false);   // never release an open encoder
 }
 
-std::unique_ptr<cMetalGDriver> cMetalGDriver::Create(void* caMetalLayer, std::uint32_t width, std::uint32_t height) {
+std::unique_ptr<cMetalGDriver> cMetalGDriver::Create(void* caMetalLayer, std::uint32_t width, std::uint32_t height, IModeSource* modes) {
     std::unique_ptr<cMetalGDriver> d(new cMetalGDriver);
     Impl& m = *d->impl_;
     m.device = MTLCreateSystemDefaultDevice();
@@ -460,6 +462,7 @@ std::unique_ptr<cMetalGDriver> cMetalGDriver::Create(void* caMetalLayer, std::ui
     MTLTextureDescriptor* wd = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm width:1 height:1 mipmapped:NO];
     m.whiteTexture = [m.device newTextureWithDescriptor:wd];
     m.table.Init();
+    if (modes) m.modeList = std::make_unique<cVideoModeList>(modes);
     const std::uint32_t white = 0xffffffff;
     [m.whiteTexture replaceRegion:MTLRegionMake2D(0, 0, 1, 1) mipmapLevel:0 withBytes:&white bytesPerRow:4];
     return d;
@@ -820,6 +823,52 @@ bool cMetalGDriver::ReadBack(std::vector<std::uint8_t>& bgra, std::uint32_t& wid
     width = s.width;
     height = s.height;
     bgra.assign(static_cast<const std::uint8_t*>([staging contents]), static_cast<const std::uint8_t*>([staging contents]) + rowBytes * s.height);
+    return true;
+}
+
+}  // namespace gd
+
+namespace gd {
+
+// ---- video modes (list contents and order: VideoModes.h) ----
+int cMetalGDriver::CountVideoModes() { return impl_->modeList ? impl_->modeList->CountVideoModes() : 0; }
+
+bool cMetalGDriver::GetVideoModeInfo(std::uint32_t index, sGDMode& mode) {
+    if (!impl_->modeList || !impl_->modeList->GetVideoModeInfo(index, mode)) {
+        impl_->error = 2;
+        return false;
+    }
+    return true;
+}
+
+bool cMetalGDriver::GetVideoModeInfo(sGDMode& mode) {
+    mode = impl_->currentMode;
+    return true;
+}
+
+// Selects a mode: the drawable and targets take the mode's size. -1 releases the current mode.
+bool cMetalGDriver::SetVideoMode(int mode, void*, bool, bool) {
+    Impl& m = *impl_;
+    m.Submit(true);
+    if (mode == -1) {
+        m.currentMode.id = -1;
+        return true;
+    }
+    sGDMode info{};
+    if (!m.modeList || mode < 0 || !m.modeList->GetVideoModeInfo(static_cast<std::uint32_t>(mode), info)) {
+        m.error = 2;
+        return false;
+    }
+    m.currentMode = info;
+    if (info.width != m.width || info.height != m.height) {
+        m.width = info.width;
+        m.height = info.height;
+        m.MakeTargets();
+        m.vx = m.vy = 0;
+        m.vw = m.width;
+        m.vh = m.height;
+        m.scissor = false;
+    }
     return true;
 }
 

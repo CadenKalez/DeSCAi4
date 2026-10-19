@@ -16,6 +16,7 @@
 #include "render/MetalGL.h"
 #include "render/gd/MetalGDriver.h"
 #include "render/gd/TextureTable.h"
+#include "render/gd/VideoModes.h"
 
 using namespace gd;
 
@@ -304,6 +305,29 @@ int main() {
             drv->BindTexture(0, 1);
             drv->TexParameter(0, 9, 1);                            // unknown parameter type on a bound texture -> error 1
             CHECK(drv->GetError() == 1);
+        }
+        {   // video modes through the driver slots, and mode selection resizing the targets
+            struct Src final : IModeSource {
+                int NumModes() override { return 2; }
+                void NthMode(int n, int& w, int& h, int& d) override { w = n ? 64 : 32; h = n ? 48 : 24; d = 32; }
+                void WindowMaxSizes(int& w, int& h) override { w = 9999; h = 9999; }
+            } src;
+            auto drv = cMetalGDriver::Create(nullptr, W, H, &src);
+            CHECK(drv->CountVideoModes() == 4 + 12);               // 2 modes x 2 entries + the 12 stock windowed sizes
+            sGDMode m{};
+            CHECK(drv->GetVideoModeInfo(2, m) && m.width == 64 && m.height == 48 && m.id == 2);
+            CHECK(!drv->GetVideoModeInfo(99, m) && drv->GetError() == 2);
+            drv->GetVideoModeInfo(m);
+            CHECK(m.id == -1);                                     // no mode selected yet
+            CHECK(drv->SetVideoMode(2, nullptr, true, false));
+            drv->GetVideoModeInfo(m);
+            CHECK(m.id == 2 && m.width == 64);
+            drv->ClearColor(0, 1, 0, 1); drv->Clear(kClearColor | kClearDepth);
+            std::vector<std::uint8_t> px; std::uint32_t w, h;
+            drv->ReadBack(px, w, h);
+            CHECK(w == 64 && h == 48 && px[1] == 255);
+            CHECK(!drv->SetVideoMode(500, nullptr, true, false) && drv->GetError() == 2);
+            CHECK(drv->SetVideoMode(-1, nullptr, true, false));
         }
         // ---- analytic checks the reference cannot do ----
         {   // clear colour quantisation: ARGB 8-bit, round-half-even(f*256) with 256 -> 255

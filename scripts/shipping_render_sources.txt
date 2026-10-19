@@ -10,3 +10,4 @@ src/sc4/PackedRenderState.cpp
 src/render/gd/TextureTable.cpp
 src/render/TexelOps.cpp
 src/render/TextureStageData.cpp
+src/render/gd/VideoModes.cpp
