@@ -3,8 +3,9 @@
 scripts/tests/renderstates.inc (one `{...}` initializer per distinct tuple, with the first call site as a comment).
 Non-literal sites (computed from properties / materials) are listed on stdout.  Needs the Ghidra MCP backend."""
 import bisect, json, pathlib, re, urllib.parse, urllib.request
+import sys as _s, pathlib as _p; _s.path.insert(0, str(_p.Path(__file__).resolve().parent)); from ghidra_conn import BASE
 root = pathlib.Path(__file__).resolve().parent.parent
-def get(url): return json.load(urllib.request.urlopen("http://127.0.0.1:8089/" + url, timeout=300))
+def get(url): return json.load(urllib.request.urlopen(BASE + "/" + url, timeout=300))
 PACK = "0x100771d00"
 refs = [r for r in get(f"get_xrefs_to?address={PACK}&limit=500")["references"] if not r["type"].startswith("DATA")]
 syms = sorted((int(l.split(" ", 1)[0], 16), l.rstrip("\n").split(" ", 1)[1]) for l in (root / "notes/symbols-functions-demangled.txt").open())

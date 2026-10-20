@@ -10,6 +10,7 @@ Construct*, destructors Destruct* (first = body, with-delete = ...AndDelete). --
 Skips addresses already in the ledger.
 """
 import argparse, collections, csv, json, pathlib, re, subprocess, sys, urllib.request
+import sys as _s, pathlib as _p; _s.path.insert(0, str(_p.Path(__file__).resolve().parent)); from ghidra_conn import BASE
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 ap = argparse.ArgumentParser()
 ap.add_argument("--class", dest="cls", required=True)
@@ -80,7 +81,7 @@ for a_, n in list(names.items()):
 have = {r["address"] for r in csv.DictReader((ROOT/"notes/ledger.csv").open())}
 def ghidra_rename(addr, new):
     body = json.dumps({"old_name": f"0x{addr:x}", "new_name": new, "strict_mode": "off"}).encode()
-    req = urllib.request.Request("http://127.0.0.1:8089/rename_function", body, {"Content-Type": "application/json"})
+    req = urllib.request.Request(BASE + "/rename_function", body, {"Content-Type": "application/json"})
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
             return json.load(r).get("status") == "success"
