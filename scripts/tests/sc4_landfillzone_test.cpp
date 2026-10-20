@@ -305,8 +305,16 @@ void TestUpdateZone() {
     CHECK(zone.Heaps()[0].hasGarbage && !zone.Heaps()[1].hasGarbage);
     // heap (0,0) now has garbage: UpdateSurroundingTiles created four tiles around the vertex
     CHECK(host.created.size() >= 3);
-    // an empty tile (id 0x2f10000) places the empty cell texture instead of an occupant
-    CHECK(!host.emptyTextures.empty());
+    // a heap with garbage sets its own bit in all four surrounding masks (4, 2, 8, 1), so no cell gets the empty tile (mask 0)
+    CHECK(host.emptyTextures.empty());   // verified against the table at 0x100afef74 and UpdateSurroundingTiles 0x1000adb22
+    // a heap with no garbage and no garbage neighbours: all four masks are 0 -> table entry 0 (id 0x2f10000) places the
+    // empty cell texture instead of an occupant
+    {
+        Host hostE;
+        cSC4LandfillZone isolated(&hostE, FullRegion(0, 0, 3, 3));
+        isolated.UpdateSurroundingTiles(isolated.Heaps()[0]);
+        CHECK(hostE.emptyTextures.size() == 4 && hostE.created.empty());
+    }
 
     // budget limited by availability
     available = 3;
@@ -406,9 +414,12 @@ void TestEdges() {
     host.network.insert({11, 23});   // bottom edge z1+1
     CHECK(zone.GetFirstRoadTileNeighbor(x, z) && x == 11 && z == 23);
     host.network.clear();
-    host.network.insert({14, 19});   // corners are not scanned by the vertical edges' loops... top loop is x<xhi
+    host.network.insert({14, 19});   // top-right corner: missed by the top loop (x < xHigh) but the right edge loop starts at zLow = z0-1
+    CHECK(zone.GetFirstRoadTileNeighbor(x, z) && x == 14 && z == 19);   // verified against 0x1000af650
+    host.network.clear();
+    host.network.insert({15, 20});   // two cells outside the zone: not scanned; failure returns the region's (x0, z0)
     CHECK(!zone.GetFirstRoadTileNeighbor(x, z) && x == 10 && z == 20);
-    // the loops are exclusive at the high end: (14, 19) is missed, (13, 19) is hit
+    // (13, 19) is on the top-edge row and is hit first
     host.network.insert({13, 19});
     CHECK(zone.GetFirstRoadTileNeighbor(x, z) && x == 13 && z == 19);
 }
@@ -555,9 +566,15 @@ void TestLevelAndPopulate() {
     CHECK(!zone.Region()->Test(12, 22));
     CHECK(t.refs == 1);
     CHECK(host.emptyTextures.empty());
+    // a cell whose bit was cleared stays cleared (PopulateZone only ever clears bits; verified against 0x1000aff38)
     host.zoneTypes[{12, 21}] = 0xe;
     zone.PopulateZone();
-    CHECK(zone.Region()->Test(12, 21) == true);
+    CHECK(zone.Region()->Test(12, 21) == false);
+    CHECK(host.emptyTextures.empty());
+    // a set cell with zone type 0xe, no network, no tile and no base texture gets the empty cell texture and keeps its bit
+    cSC4LandfillZone single(&host, FullRegion(12, 21, 12, 21));
+    single.PopulateZone();
+    CHECK(single.Region()->Test(12, 21) == true);
     CHECK(host.emptyTextures.size() == 1 && host.emptyTextures[0] == std::make_pair(12, 21));
 }
 
@@ -603,6 +620,8 @@ void TestStream() {
     host.network.clear();
     zone.UpdateZone(available);   // not connected -> zot
     CHECK(zone.Zot() != nullptr);
+    // UpdateZone decays and redistributes garbage (verified against 0x1000ae124), so round-trip whatever the heap holds now
+    const cGarbageHeap savedHeap2 = zone.Heaps()[2];
     PortMemoryOStream out;
     CHECK(zone.Write(out));
     // layout: u16 version 4, 4 x s32, 3*2 bit bytes, s32 columns, s32 rows, 6 heaps of 2+4+4+2+2+4+4 = 22 bytes, bool, prop byte
@@ -617,7 +636,7 @@ void TestStream() {
     CHECK(loaded.Region()->Test(10, 20) && !loaded.Region()->Test(11, 21) && loaded.Region()->Test(12, 21));
     CHECK(loaded.Region()->Test(13, 22) && loaded.Region()->Test(10, 22));   // reloaded as set
     CHECK(loaded.HeapColumns() == 3 && loaded.HeapRows() == 2 && loaded.Heaps().size() == 6);
-    CHECK(loaded.Heaps()[2].garbage == 12 && loaded.Heaps()[2].capacity == 40 && loaded.Heaps()[2].hasGarbage);
+    CHECK(loaded.Heaps()[2].garbage == savedHeap2.garbage && loaded.Heaps()[2].capacity == savedHeap2.capacity && loaded.Heaps()[2].hasGarbage == savedHeap2.hasGarbage);
     CHECK(!loaded.Heaps()[5].valid && loaded.Heaps()[4].valid);
     CHECK(loaded.Heaps()[4].id == 4);
     CHECK(!loaded.Connected() && loaded.Zot() != nullptr);
