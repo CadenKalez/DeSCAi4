@@ -5,7 +5,7 @@ import re, sys, pathlib
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT/"scripts"))
 src = (ROOT/"scripts/dec.py").read_text().split("q = urllib")[0]
-ns = {}
+ns = {"__file__": str(ROOT/"scripts/dec.py")}
 exec(src.replace("import json, re, sys, urllib.parse, urllib.request", "import re"), ns)
 clean, DECL = ns["clean"], ns["DECL"]
 group, cls = sys.argv[1], sys.argv[2]

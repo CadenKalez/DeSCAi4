@@ -1,5 +1,11 @@
 # SC4-Decomp
 
+<!-- progress:start -->
+![decompiled](https://img.shields.io/badge/decompiled-57.0%25-yellow)
+
+`███████████░░░░░░░░░` **57.0%** — 15,322 of 26,880 game functions recovered, 11,558 remaining (details: [notes/progress.md](notes/progress.md))
+<!-- progress:end -->
+
 Reverse-engineering / decompilation workspace for **SimCity 4 Deluxe Edition (Aspyr macOS port, Steam, v1.2.1 build 185949)**.
 Analysis is done in Ghidra, driven by Claude Code through a Ghidra MCP server.
 

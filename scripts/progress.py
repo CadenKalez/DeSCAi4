@@ -119,6 +119,26 @@ def main():
     out.append(f"\nPending (blocked on a dependency): {len(pend)} functions in the ledger.")
     text = "\n".join(out)+"\n"
     (ROOT/"notes/progress.md").write_text(text)
+    # README meter: static shields.io badge + text bar between markers (works in a private repo)
+    pct = nrec/ngame*100
+    filled = round(pct/5)
+    bar = "█"*filled + "░"*(20-filled)
+    color = "red" if pct < 25 else "orange" if pct < 50 else "yellow" if pct < 75 else "green"
+    block = ("<!-- progress:start -->\n"
+             f"![decompiled](https://img.shields.io/badge/decompiled-{pct:.1f}%25-{color})\n\n"
+             f"`{bar}` **{pct:.1f}%** — {nrec:,} of {ngame:,} game functions recovered, {ngame-nrec:,} remaining "
+             "(details: [notes/progress.md](notes/progress.md))\n"
+             "<!-- progress:end -->")
+    rd = ROOT/"README.md"
+    if rd.exists():
+        import re as _re
+        t = rd.read_text()
+        if "<!-- progress:start -->" in t:
+            t = _re.sub(r"<!-- progress:start -->.*?<!-- progress:end -->", lambda m: block, t, flags=_re.S)
+        else:
+            head, sep, rest = t.partition("\n\n")
+            t = head + "\n\n" + block + "\n\n" + rest
+        rd.write_text(t)
     print(text)
 
 main()
