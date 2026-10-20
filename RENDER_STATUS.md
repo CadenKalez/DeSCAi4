@@ -34,3 +34,9 @@ backing store) must be ported to Metal driver services (`IBackingStore`), not em
 * **Gate:** `scripts/verify_shipping_render.sh` builds them, then runs `otool -L` and `nm` over the check binary (and `build/sc4`
   if built) and fails on any OpenGL link or GL/D3D7/DirectDraw/shim/MetalGL/GDriverOnGL symbol. It must pass before any
   rendering milestone is called done. Last run: pass (render_ship_check, build/sc4).
+
+## Terrain view smoke test
+`scripts/run_terrain_shot.sh` renders a procedural terrain through the recovered `cSTETerrainView3D` (src/sc4/cSTETerrainView3D*.cpp) into the
+native Metal driver (headless) and writes `work/shots/terrain_shot.png`: height-coloured land, water surface with shoreline alpha, city-edge
+cliffs, water box. Not the game boot path: no textures yet (the texture-less colour pass only), a demo camera (culling off), and the draw context
+is a small adapter in `scripts/terrain_shot.mm` (`ITerrainDrawContext` -> `cIGZGDriver`). Booting the real game still needs the city component classes.
