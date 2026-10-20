@@ -1,5 +1,6 @@
 // cSC4LandfillZone / cGarbageHeap / SC4CellRegion::Inflate with a fake host. Expected values are derived by hand from
 // the decompiled formulas (0x1000ac9c0..0x1000b011a).
+#include <vector>
 #include <cmath>
 #include <cstdio>
 #include <map>
@@ -62,6 +63,8 @@ struct FakeOcc : ILandfillOccupantRef {
     void RemoveFromCity() override { removed = true; }
     int TextureKind() override { return kind; }
 };
+
+std::vector<FakeProp*> gDeferredProps;   // props freed at the end of main, after the zones that reference them
 
 struct Host : ILandfillZoneHost {
     LandfillTunables tunables;
@@ -211,7 +214,7 @@ void TestHeapStream() {
     h.x = 3; h.z = 7; h.valid = false; h.hasGarbage = true; h.garbage = 55; h.capacity = 90;
     PortMemoryOStream out;
     CHECK(h.Write(out));
-    PortMemoryIStream in(out.Data().data(), out.Data().size());
+    PortMemoryIStream in(out.bytes().data(), out.bytes().size());
     cGarbageHeap r;
     CHECK(r.Read(in));
     CHECK(r.x == 3 && r.z == 7 && !r.valid && r.hasGarbage && r.garbage == 55 && r.capacity == 90);
@@ -472,8 +475,9 @@ void TestZotSpiral() {
     ez.AddZot();
     CHECKF(h2.prop->pos[0], 12 * 16.0f);
     CHECKF(h2.prop->pos[2], 22 * 16.0f);
-    delete host.prop;
-    delete h2.prop;
+    // the zones still hold a reference to their props: free the props only after the zones are gone
+    gDeferredProps.push_back(host.prop);
+    gDeferredProps.push_back(h2.prop);
 }
 
 void TestCostsAndTerrain() {
@@ -602,12 +606,12 @@ void TestStream() {
     PortMemoryOStream out;
     CHECK(zone.Write(out));
     // layout: u16 version 4, 4 x s32, 3*2 bit bytes, s32 columns, s32 rows, 6 heaps of 2+4+4+2+2+4+4 = 22 bytes, bool, prop byte
-    CHECK(out.Data().size() == 2 + 16 + 6 + 8 + 6 * 22 + 1 + 1);
-    CHECK(out.Data()[0] == 4 && out.Data()[1] == 0);
+    CHECK(out.bytes().size() == 2 + 16 + 6 + 8 + 6 * 22 + 1 + 1);
+    CHECK(out.bytes()[0] == 4 && out.bytes()[1] == 0);
 
     Host host2;
     cSC4LandfillZone loaded(&host2);
-    PortMemoryIStream in(out.Data().data(), out.Data().size());
+    PortMemoryIStream in(out.bytes().data(), out.bytes().size());
     CHECK(loaded.Read(in));
     CHECK(loaded.Region()->bounds.x0 == 10 && loaded.Region()->bounds.z1 == 22);
     CHECK(loaded.Region()->Test(10, 20) && !loaded.Region()->Test(11, 21) && loaded.Region()->Test(12, 21));
@@ -617,9 +621,8 @@ void TestStream() {
     CHECK(!loaded.Heaps()[5].valid && loaded.Heaps()[4].valid);
     CHECK(loaded.Heaps()[4].id == 4);
     CHECK(!loaded.Connected() && loaded.Zot() != nullptr);
-    delete host.prop;
-    delete host2.prop;
-    host.prop = nullptr;
+    gDeferredProps.push_back(host.prop);
+    gDeferredProps.push_back(host2.prop);
 
     // version 3 stream: connected flag byte only
     PortMemoryOStream v3;
@@ -630,7 +633,7 @@ void TestStream() {
     cGarbageHeap h;
     h.Write(v3);
     v3.SetUint8(1);
-    PortMemoryIStream v3in(v3.Data().data(), v3.Data().size());
+    PortMemoryIStream v3in(v3.bytes().data(), v3.bytes().size());
     Host host3;
     cSC4LandfillZone old(&host3);
     CHECK(old.Read(v3in) && old.Connected() && old.Zot() == nullptr);
@@ -653,6 +656,7 @@ int main() {
     TestLevelAndPopulate();
     TestAddRegion();
     TestStream();
+    for (FakeProp* p : gDeferredProps) delete p;
     if (failures) { std::printf("%d failures\n", failures); return 1; }
     std::printf("ok\n");
     return 0;
