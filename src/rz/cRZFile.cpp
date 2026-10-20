@@ -14,7 +14,7 @@ namespace {
 
 // macOS open(2) flag values used by the original binary.
 constexpr int kOpenReadWrite = 2, kOpenWriteOnly = 1;
-constexpr int kOpenCreate = 0x200, kOpenTruncate = 0x400, kOpenExclusive = 0x800;
+constexpr int kOpenCreate = O_CREAT, kOpenTruncate = O_TRUNC, kOpenExclusive = O_EXCL;   // macOS: 0x200, 0x400, 0x800 (symbolic so Linux builds map correctly)
 constexpr int kFilePermissions = 0x180;  // 0600
 constexpr int kErrAccess = 0x20000002, kErrExists = 0x20000001;
 
@@ -601,7 +601,7 @@ static bool MakeUniqueTempFile(const std::string& dir, std::string prefix, std::
     int stamp = static_cast<int>(std::time(nullptr));
     for (int attempt = 0; attempt < 10000; ++attempt) {
         std::string candidate = BuildTempName(dir.c_str(), prefix, stamp, ext);
-        int fd = ::open(candidate.c_str(), 0xa00, kFilePermissions);  // O_CREAT | O_EXCL
+        int fd = ::open(candidate.c_str(), O_CREAT | O_EXCL, kFilePermissions);  // 0xa00 on macOS
         if (fd != -1) {
             ::close(fd);
             result = candidate;
