@@ -477,4 +477,86 @@ void cSC4TrafficSimulator::InvalidateIntersectionData(int x0, int z0, int x1, in
     dirtyZ1_ = std::max(dirtyZ1_, z1);
 }
 
+// ---- subnetworks ---------------------------------------------------------------------------------------------
+
+void cSC4TrafficSimulator::ClearSubnetworks() {
+    nextSubnetworkId_ = 1;
+    for (auto& column : grid_)
+        for (auto& cell : column)
+            for (NetworkInfo& info : cell) info.subnetwork.fill(0);
+}
+
+void cSC4TrafficSimulator::GetSubnetworksForLot(const cISCPropertyHolder* lot, std::vector<std::uint32_t>& out) const {
+    out.clear();
+    cSCPropertyHelp::GetPropertyValue(lot, kLotSubnetworksProperty, out);
+}
+
+namespace {
+void AppendNetworkSubnetworks(const NetworkInfo& info, std::vector<std::uint32_t>& out) {
+    for (std::uint16_t id : info.subnetwork)
+        if (id != 0 && std::find(out.begin(), out.end(), id) == out.end()) out.push_back(id);
+}
+}  // namespace
+
+// Road cells (network type 1) only; cells outside the grid are skipped. An inverted rectangle yields nothing.
+void cSC4TrafficSimulator::GetSubnetworksInRectangle(const TrafficCellRect& rect, std::vector<std::uint32_t>& out) const {
+    out.clear();
+    for (int x = rect.x0; x <= rect.x1; ++x)
+        for (int z = rect.z0; z <= rect.z1; ++z)
+            if (const NetworkInfo* info = GetNetworkInfo(1, x, z)) AppendNetworkSubnetworks(*info, out);
+}
+
+void cSC4TrafficSimulator::GetSubnetworksInRegion(const TrafficCellRegion& region, std::vector<std::uint32_t>& out) const {
+    out.clear();
+    for (int x = region.bounds.x0; x <= region.bounds.x1; ++x)
+        for (int z = region.bounds.z0; z <= region.bounds.z1; ++z)
+            if (region.Contains(x, z))
+                if (const NetworkInfo* info = GetNetworkInfo(1, x, z)) AppendNetworkSubnetworks(*info, out);
+}
+
+// False when either lot has no (or an empty) subnetwork list.
+bool cSC4TrafficSimulator::AreLotsConnected(const cISCPropertyHolder* a, const cISCPropertyHolder* b) const {
+    std::vector<std::uint32_t> first, second;
+    if (!cSCPropertyHelp::GetPropertyValue(a, kLotSubnetworksProperty, first)) return false;
+    if (!cSCPropertyHelp::GetPropertyValue(b, kLotSubnetworksProperty, second)) return false;
+    for (std::uint32_t id : first)
+        if (std::find(second.begin(), second.end(), id) != second.end()) return true;
+    return false;
+}
+
+// Largest count of `occupantType` over the lot's subnetworks; ids past the published vector (and id 0's entry
+// like any other) are handled as in the original: only the bound check applies.
+std::uint32_t cSC4TrafficSimulator::GetConnectedOccupantCount(const cISCPropertyHolder* lot, std::uint32_t occupantType) const {
+    std::vector<std::uint32_t> ids;
+    if (!cSCPropertyHelp::GetPropertyValue(lot, kLotSubnetworksProperty, ids)) return 0;
+    std::uint32_t best = 0;
+    for (std::uint32_t id : ids) {
+        if (id >= subnetworks_.size()) continue;
+        const auto it = subnetworks_[id].occupantsByType.find(occupantType);
+        if (it != subnetworks_[id].occupantsByType.end() && it->second > best) best = it->second;
+    }
+    return best;
+}
+
+// Destination types 0..3; anything else gives 0.
+std::uint32_t cSC4TrafficSimulator::GetConnectedDestinationCount(const cISCPropertyHolder* lot, int destinationType) const {
+    if (destinationType >= 4) return 0;
+    std::vector<std::uint32_t> ids;
+    if (!cSCPropertyHelp::GetPropertyValue(lot, kLotSubnetworksProperty, ids)) return 0;
+    std::uint32_t best = 0;
+    for (std::uint32_t id : ids)
+        if (id < subnetworks_.size() && subnetworks_[id].destinations[std::size_t(destinationType)] > best)
+            best = subnetworks_[id].destinations[std::size_t(destinationType)];
+    return best;
+}
+
+// One entry per published subnetwork (entry 0 stays 0), the count of `occupantType` where present.
+void cSC4TrafficSimulator::GetOccupantCountForAllSubnetworks(std::uint32_t occupantType, std::vector<std::uint32_t>& out) const {
+    out.assign(subnetworks_.size(), 0);
+    for (std::size_t i = 1; i < subnetworks_.size(); ++i) {
+        const auto it = subnetworks_[i].occupantsByType.find(occupantType);
+        if (it != subnetworks_[i].occupantsByType.end()) out[i] = it->second;
+    }
+}
+
 }  // namespace sc4

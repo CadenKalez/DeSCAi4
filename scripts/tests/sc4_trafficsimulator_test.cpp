@@ -273,6 +273,47 @@ int main() {
     sim.GetIntersectionDirtyRect(x0, z0, x1, z1);
     CHECK(sim.IntersectionDirty() && x0 == 2 && z0 == 5 && x1 == 9 && z1 == 7);
 
+    // ---- subnetworks
+    {
+        cSC4TrafficSimulator net(&host, &random);
+        net.InitGrid(8, 8);
+        net.AddNetworkInfo(1, 1, 1)->subnetwork = {1, 0, 2, 0};
+        net.AddNetworkInfo(1, 2, 1)->subnetwork = {2, 3, 0, 0};
+        net.AddNetworkInfo(2, 3, 1)->subnetwork = {9, 0, 0, 0};   // not a road: ignored
+        std::vector<std::uint32_t> ids;
+        net.GetSubnetworksInRectangle({0, 0, 3, 3}, ids);
+        CHECK(ids == (std::vector<std::uint32_t>{1, 2, 3}));
+        net.GetSubnetworksInRectangle({4, 4, 2, 2}, ids);
+        CHECK(ids.empty());
+        TrafficCellRegion region;
+        region.bounds = {1, 1, 2, 1};
+        region.mask = {{true}, {false}};
+        net.GetSubnetworksInRegion(region, ids);
+        CHECK(ids == (std::vector<std::uint32_t>{1, 2}));
+
+        net.Subnetworks().resize(4);
+        net.Subnetworks()[2].occupantsByType = {{0x10, 7}, {0x20, 3}};
+        net.Subnetworks()[3].occupantsByType = {{0x10, 11}};
+        net.Subnetworks()[2].destinations = {5, 6, 7, 8};
+        net.Subnetworks()[3].destinations = {9, 1, 1, 1};
+        cSCPropertyHolder lotA, lotB, lotC, lotNone;
+        cSCPropertyHelp::SetPropertyValue(&lotA, kLotSubnetworksProperty, std::vector<std::uint32_t>{2, 3, 99});
+        cSCPropertyHelp::SetPropertyValue(&lotB, kLotSubnetworksProperty, std::vector<std::uint32_t>{3});
+        cSCPropertyHelp::SetPropertyValue(&lotC, kLotSubnetworksProperty, std::vector<std::uint32_t>{1});
+        CHECK(net.AreLotsConnected(&lotA, &lotB) && !net.AreLotsConnected(&lotA, &lotC) && !net.AreLotsConnected(&lotA, &lotNone));
+        CHECK(net.GetConnectedOccupantCount(&lotA, 0x10) == 11 && net.GetConnectedOccupantCount(&lotA, 0x20) == 3);
+        CHECK(net.GetConnectedOccupantCount(&lotA, 0x30) == 0 && net.GetConnectedOccupantCount(&lotNone, 0x10) == 0);
+        CHECK(net.GetConnectedDestinationCount(&lotA, 0) == 9 && net.GetConnectedDestinationCount(&lotA, 3) == 8);
+        CHECK(net.GetConnectedDestinationCount(&lotA, 4) == 0);
+        net.GetSubnetworksForLot(&lotA, ids);
+        CHECK(ids == (std::vector<std::uint32_t>{2, 3, 99}));
+        net.GetOccupantCountForAllSubnetworks(0x10, ids);
+        CHECK(ids == (std::vector<std::uint32_t>{0, 0, 7, 11}));
+        net.ClearSubnetworks();
+        net.GetSubnetworksInRectangle({0, 0, 7, 7}, ids);
+        CHECK(ids.empty() && net.NextSubnetworkId() == 1);
+    }
+
     if (failures) return 1;
     std::printf("sc4_trafficsimulator: all passed\n");
     return 0;
