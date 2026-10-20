@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "gz/cGZDBSegmentDirectoryFiles.h"
+#include "rz/nRZHash.h"
 
 static int failures = 0;
 #define CHECK(c) do { if (!(c)) { std::printf("FAIL line %d: %s\n", __LINE__, #c); ++failures; } } while (0)
@@ -115,6 +116,7 @@ void TestConverter() {
 }  // namespace
 
 int main() {
+    setenv("TMPDIR", "/tmp", 0);   // rewrite mode copies the record to a temp file (cRZFile::MakeTempPathName)
     TestExtensionMap();
     TestConverter();
 
@@ -160,7 +162,7 @@ int main() {
         CHECK(seg->ExtensionMap()->ExtensionToRESID(cRZString("png"), resid) && resid == 0x11);
         CHECK(seg->ExtensionMap()->ExtensionToRESID(cRZString("tga"), resid) && resid == 0x22);
         CHECK(!seg->ExtensionMap()->ExtensionToRESID(cRZString("zzz"), resid));
-        CHECK(seg->ExtensionMap()->Size() == 2);
+        CHECK(seg->ExtensionMap()->Size() == 4);   // Init and Open both feed the multimap from the registry (no duplicate check, Open does not clear it)
 
         // BuildKeyList read the directory: type png (0x11) group 7 inst 1; png group 9 inst 2; tga g=4 inst 3
         // (the group of "0000000300000004" is 4).
@@ -315,10 +317,10 @@ int main() {
 
         // extension map copy-out
         cIGZPersistRESIDtoExtensionMap* mapCopy = nullptr;
-        CHECK(seg->GetRESIDtoExtensionMap(&mapCopy) && mapCopy && mapCopy->Size() == 2);
+        CHECK(seg->GetRESIDtoExtensionMap(&mapCopy) && mapCopy && mapCopy->Size() == 4);   // (Init and Open each fed the map)
         mapCopy->Release();
         seg->AddExtensionAssociation(0x44, cRZString("dat"));
-        CHECK(seg->ExtensionMap()->Size() == 3);
+        CHECK(seg->ExtensionMap()->Size() == 5);
 
         // interfaces
         cIGZPersistDBSegmentDirectoryFiles* dirIf = nullptr;
@@ -339,7 +341,7 @@ int main() {
         seg->GetPath(got);
         CHECK(got.str() == "a/b/");
         CHECK(seg->Shutdown());
-        CHECK(seg->Path().str().empty() && seg->GroupId() == 0);
+        CHECK(seg->Path().str().empty() && seg->GroupId() == 0 && seg->GetSegmentID() == 0);   // Shutdown clears +0x68 and +0x6c together
         CHECK(seg->Release() == 0);                                               // FinalRelease deletes
     }
 

@@ -197,6 +197,7 @@ bool cGZDBSegmentDirectoryFiles::Shutdown() {
         nextInstance_ = 1;
         path_.str().clear();
         groupId_ = 0;
+        segmentId_ = 0;                          // the binary clears +0x68 and +0x6c with one 8-byte store
         allowPrefix_ = true;
         allowSuffix_ = false;
         if (directory_) {
@@ -595,11 +596,13 @@ bool cGZDBSegmentDirectoryFiles::BuildKeyList() {
     if (!cRZDirectory::DoesDirectoryExist(path_)) return false;
     std::list<cRZString> files;
     directory_->ReadDirectoryFileEntriesIntoStringList(files);
+    // Quirk: the binary keeps one extension string for the whole loop and only overwrites it when a file has an
+    // extension, so a file without one reuses the extension of the file before it.
+    cRZString extensionString;
     for (const cRZString& file : files) {
         char drive[256], dir[256], name[256], ext[256];
         Splitpath(file.ToChar(), drive, dir, name, ext);
         cRZString nameString(name);
-        cRZString extensionString;
         if (ext[0] != '\0') extensionString.AssignFromCString(ext + 1);          // without the dot
         cGZPersistResourceKey key{};
         if (GetKeyFromFileName(nameString, extensionString, key) && records_.find(key) == records_.end()) {

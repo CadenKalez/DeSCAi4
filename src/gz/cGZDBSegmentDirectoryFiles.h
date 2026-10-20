@@ -124,7 +124,7 @@ public:
 private:
     cIGZPersistDBSegmentDirectoryFiles* segment_ = nullptr;   // +8
     bool allowPrefix_ = true;                                  // +0x10
-    bool allowSuffix_ = true;                                  // +0x11
+    bool allowSuffix_ = false;                                 // +0x11 (the ctor stores 0x0001 at +0x10)
     std::uint32_t unknown14_ = 0;                              // +0x14
 };
 
