@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cfloat>
+#include <cmath>
 #include <cstring>
 
 #include "sc4/SCPropertyHelp.h"
