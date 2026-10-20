@@ -16,6 +16,7 @@ declare -a TESTS=(
  "sc4_demand:$T/sc4_demand_test.cpp $S/sc4/cSC4Demand.cpp $S/rz/cRZStream.cpp $S/rz/cRZString.cpp"
  "sc4_terrain:$T/sc4_terrain_test.cpp $S/sc4/cSTETerrain.cpp $S/gz/cGZDBSegmentPackedFile.cpp $S/gz/cGZDBRecords.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/gz/cGZPersistDBSegment.cpp $S/gz/cGZPersistResourceKeyList.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp $S/rz/cRZFastCompression3.cpp $S/rz/cRZVariant.cpp"
  "sc4_simgrid:$T/sc4_simgrid_test.cpp $S/sc4/cSC4SimGrid.cpp $S/rz/cRZStream.cpp $S/rz/cRZString.cpp"
+ "ecs_jobsystem:$T/ecs_jobsystem_test.cpp -lpthread"
  "rz_fastcompression:$T/rz_fastcompression_test.cpp $S/rz/cRZFastCompression3.cpp $S/rz/cRZString.cpp $S/dbpf/DBPFReader.cpp"
  "rz_variant:$T/rz_variant_test.cpp $S/rz/cRZVariant.cpp $S/rz/cRZString.cpp"
  "rz_inifile:$T/rz_inifile_test.cpp $S/rz/cRZIniFile.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp $S/rz/RZStringUtils.cpp $S/rz/RZConvert.cpp"
