@@ -3,7 +3,7 @@
 
 A class's code is laid out contiguously by source file: the constructors are named after the class, and the file ends with
 the static initialiser `__GLOBAL__sub_I_<File>.cpp`. This script finds the constructors (functions named exactly like the
-class), takes everything from the first one up to the next static initialiser, prints the address list and writes the
+class), takes everything from the first one up to the first static initialiser after it, prints the address list and writes the
 decompiled code to work/<group>/<Class>.txt (work/ is gitignored: it is derived from the game binary).
 
 usage: scripts/class_dump.py cSC4Foo [--group sc4] [--list] [--lo 0xADDR --hi 0xADDR]
@@ -55,8 +55,7 @@ else:
     if not ctors:
         raise SystemExit(f"no function named {a.cls}; pass --lo/--hi")
     lo = min(ctors)
-    end = max(ctors)
-    hi = next((ad for ad, n in rows if ad > end and n.startswith("__GLOBAL__sub_I_")), None)
+    hi = next((ad for ad, n in rows if ad > lo and n.startswith("__GLOBAL__sub_I_")), None)
     if hi is None:
         raise SystemExit("no static initialiser after the constructors; pass --hi")
 
