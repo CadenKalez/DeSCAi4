@@ -1,0 +1,218 @@
+// Entity and service interfaces the city situation code (cSC4CitySituationAdvice / cSC4CitySituationManager) talks to.
+// The original reaches all of them through the SL::sp* globals and raw vslots; the port replaces those with the small
+// interfaces below (the original vslot offsets are in the comments, [inferred] where the meaning was derived from the
+// callers rather than from a symbol). Everything here is a seam: the engine side implements it, the tests fake it.
+#pragma once
+#include <cstdint>
+#include <string>
+#include <vector>
+
+#include "gz/cIGZUnknown.h"
+#include "rz/cRZString.h"
+
+namespace sc4 {
+
+class ISituationAutomaton;
+class cISC4CitySituationAdvice;
+
+// iids used by QueryInterface on occupants
+constexpr std::uint32_t kGZIID_cISC4Automaton = 0xa9b40f05;
+constexpr std::uint32_t kGZIID_cISC4NetworkOccupant = 0xa821ef94;
+
+// Occupant property that excludes an automaton occupant from the situation system (HandleInsertOccupant).
+constexpr std::uint32_t kPropertyNoSituationAutomaton = 0x029244db;
+
+class ISituationPropertyHolder {
+public:
+    virtual ~ISituationPropertyHolder() = default;
+    virtual bool HasProperty(std::uint32_t propertyId) = 0;   // vslot 0x18
+};
+
+// cISC4Occupant
+class ISituationOccupant : public cIGZUnknown {
+public:
+    virtual ISituationPropertyHolder* PropertyHolder() = 0;   // 0x30
+    virtual std::uint32_t OccupantType() = 0;                 // 0x38 (e.g. 0x480e6151)
+    virtual void Position(float xyz[3]) = 0;                  // 0x40
+    virtual void SetPosition(const float xyz[3]) = 0;         // 0x48 [inferred] (coverage target occupant)
+    virtual bool IsInGroup(std::uint32_t group) = 0;          // 0xb0
+    // QueryInterface(0xa9b40f05) without keeping the reference; null when the occupant is not an automaton.
+    virtual ISituationAutomaton* AsAutomaton() = 0;
+    // QueryInterface(0xa821ef94) = cISC4NetworkOccupant
+    virtual bool IsNetworkOccupant() = 0;
+    virtual bool NetworkFlagsMatch(std::uint32_t networkFlags) = 0;   // network occupant vslot 0x48
+    virtual void NetworkCell(int& x, int& z) = 0;                      // network occupant vslot 0x1d8
+};
+
+// cISC4Automaton
+class ISituationAutomaton : public cIGZUnknown {
+public:
+    virtual ISituationOccupant* Occupant() = 0;                    // 0x30
+    virtual void Position(float xyz[3]) = 0;                       // 0x38
+    virtual void Velocity(float xyz[3]) = 0;                       // 0x78 [inferred] (heading vector, CheckEscapeCitySuccess)
+    virtual void SetPlayerControl(bool on) = 0;                    // 0x68 [inferred] (false releases the player drive)
+    virtual void SetFlag(std::uint32_t flag, bool on) = 0;         // 0xf0
+    virtual bool CheckFlag(std::uint32_t flag) = 0;                // 0xf8
+    virtual void AddListener(void* listenerView) = 0;              // 0x138 (the manager's message-target view)
+    virtual void RemoveListener(void* listenerView) = 0;           // 0x140
+    virtual ISituationAutomaton* PursuitTarget() = 0;              // 0x1c0 -> object whose +0x38 is the chased automaton
+    virtual int AutomatonType() = 0;                               // 0x1d8 (0x34 = pursuit car; (type | 0x20) == 0x34 excluded from driving)
+    virtual void SendCommand(std::uint32_t commandId) = 0;         // 0x1e8 (sound / animation hook)
+    virtual int FirstIndicator() = 0;                              // 0x218 -> first node with a non-zero value at +0xf0 (0 = none)
+    virtual void OnSituationAttached() = 0;                        // 0x220
+};
+
+// cISC4AutomataManager (vehicle, aircraft, pedestrian and watercraft managers, in that order)
+class ISituationAutomataManager : public cIGZUnknown {
+public:
+    virtual void BeginPlayerDrive() = 0;                           // 0x48 [inferred] (called when the countdown starts)
+    virtual void EndPlayerDrive() = 0;                             // 0x50 [inferred] (called when the countdown ends)
+    virtual bool HandlesGroup(std::uint32_t group) = 0;            // 0xf0
+    // Alert nearby automata of `group` to chase `target` within `radius` (0xb0).
+    virtual void AlertGroup(float radius, std::uint32_t group, ISituationAutomaton* target, bool flag) = 0;
+    // 0x100: appends the automata of the group to `out`
+    virtual void GetInstancesOfGroup(std::uint32_t group, std::vector<ISituationAutomaton*>& out) = 0;
+    virtual void ReleaseInstances(std::vector<ISituationAutomaton*>& list) = 0;   // 0x108
+    // 0x80: finds a free spawn position for a new automaton of `group` near `from`; fills `spawnPosition`.
+    virtual bool FindSpawnPosition(float minDistance, float maxDistance, std::uint32_t group, const float from[3], float spawnPosition[3],
+                                   std::uint32_t flags) = 0;
+    // 0x78: creates an automaton of `group` at `spawnPosition`; returns a counted reference (or null).
+    virtual ISituationAutomaton* CreateAutomaton(std::uint32_t group, const float spawnPosition[3], std::uint32_t flags) = 0;
+};
+
+// cSC4DispatchVehicleView (the on-screen indicators)
+class ISituationDispatchView {
+public:
+    virtual ~ISituationDispatchView() = default;
+    virtual void ShowAllIndicators(int indicatorType, bool show) = 0;
+    virtual void SetIndicatorMax(int indicatorType, int max) = 0;
+    virtual std::uint32_t TrackOccupant(ISituationOccupant* occupant, int indicatorType, int indicatorValue, int flags) = 0;
+    virtual void UntrackOccupant(std::uint32_t trackId, bool force) = 0;
+    virtual void FlashIndicator(std::uint32_t trackId, bool on, float intensity) = 0;
+};
+
+// cISC4Lot as the situations need it
+class ISituationLot {
+public:
+    virtual ~ISituationLot() = default;
+    virtual void Bounds(int& x0, int& z0, int& x1, int& z1) = 0;   // vslot 0x70
+};
+class ISituationLotManager {
+public:
+    virtual ~ISituationLotManager() = default;
+    virtual ISituationLot* LotOfOccupant(ISituationOccupant* occupant) = 0;   // vslot 0x70
+};
+
+// Transform handed to an effect (vslot 0x40/0x38): a 16-bit header (0x0101 for the plain one-shot effects, 0x0503 for the
+// target arrow), a 3x3 rotation and the world position.
+struct SituationEffectTransform {
+    std::uint16_t header = 0x0101;
+    float rotation[9] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+    float position[3] = {0, 0, 0};
+};
+
+// cISC4VisualEffect (effects manager products). Reference counted.
+class ISituationEffect : public cIGZUnknown {
+public:
+    virtual void Start(bool restart) = 0;                          // 0x18
+    virtual void Stop(bool immediately) = 0;                       // 0x20
+    virtual void SetTransform(const SituationEffectTransform& transform) = 0;   // 0x38 / 0x40
+    virtual void SetCellRect(const float rect[4]) = 0;             // 0x60(0xc, rect, 4): x0, z0, x1, z1 in cells
+};
+class ISituationEffectsManager {
+public:
+    virtual ~ISituationEffectsManager() = default;
+    // 0x30: creates the named effect; returns a counted reference in `out` (an existing reference is released), false when unknown.
+    virtual bool CreateEffect(const char* name, ISituationEffect*& out) = 0;
+};
+
+// The mission's moving "actor" kept at +0xb58 (set by message 0xcc0d905f): used for the position of service missions.
+class ISituationMissionActor : public cIGZUnknown {
+public:
+    virtual bool IsValid() = 0;                    // 0x28
+    virtual bool IsHidden() = 0;                   // 0x30
+    virtual void Position(float xyz[3]) = 0;       // 0x78 (translation of its transform)
+};
+
+// The MySim the "mysim_mission" situations are bound to (kept at +0xbe8).
+class ISituationMySim : public cIGZUnknown {
+public:
+    virtual ISituationOccupant* FindMissionOccupant() = 0;   // 0x58()->0x18(): the sim's current occupant (for group 0x193a)
+    virtual void PrepareScript() = 0;                        // 0x220 (called before script calls of mysim missions)
+};
+
+// Pure geometry/city queries
+class ISituationCity {
+public:
+    virtual ~ISituationCity() = default;
+    virtual int CellsX() = 0;                                  // 0x2e8
+    virtual int CellsZ() = 0;                                  // 0x2f0
+    virtual float CellSizeXMeters() = 0;                       // 0x2d8
+    virtual void WorldToCell(float x, float z, int& cellX, int& cellZ) = 0;   // 0x2f8
+    virtual void CellToWorld(int cellX, int cellZ, float xyz[3]) = 0;         // 0x308 (y is the terrain height at the cell)
+};
+class ISituationZoneManager {
+public:
+    virtual ~ISituationZoneManager() = default;
+    virtual int ZoneTypeAt(int x, int z) = 0;                  // zone grid (vslot 0x28 of the manager) vslot 0x38
+};
+class ISituationTerrain {
+public:
+    virtual ~ISituationTerrain() = default;
+    virtual bool IsWaterAt(int x, int z) = 0;                  // vslot 0x110
+    virtual float HeightAt(float x, float z) = 0;              // vslot 0x60
+    virtual float SurfaceWaterDepthAt(int x, int z) = 0;       // spSurfaceWater vslot 0x30
+    virtual bool IsCellWaterZoneCandidate(int x, int z) = 0;   // spSurfaceWater vslot 0x38 (x, z, 2, 0)
+};
+class ISituationTrafficNetwork {
+public:
+    virtual ~ISituationTrafficNetwork() = default;
+    virtual bool HasNetworkAt(int x, int z) = 0;               // vslot 0x70 != 0
+    // vslot 0x68: network occupants at the cell; true when one answers the flag test (vslot 0x48 of the occupant)
+    virtual bool CellHasNetworkWithFlags(int x, int z, std::uint32_t networkFlags) = 0;
+};
+class ISituationOccupantManager {
+public:
+    virtual ~ISituationOccupantManager() = default;
+    // vslot 0x128: occupants inside the box that pass the group filter (null group list = any), optionally within a distance
+    // band of `center` ([minDistanceSquared, inf) when minDistanceSquared > 0). Returned in the manager's list order.
+    virtual std::vector<ISituationOccupant*> OccupantsInBox(const float boxMin[3], const float boxMax[3], const std::vector<std::uint32_t>& groups,
+                                                           const float center[3], float minDistanceSquared, std::uint32_t maxCount) = 0;
+    virtual std::vector<ISituationOccupant*> NetworkOccupantsInBox(const float boxMin[3], const float boxMax[3], std::uint32_t networkFlags,
+                                                                  const float center[3], float minDistanceSquared) = 0;
+    virtual void ReleaseOccupants(std::vector<ISituationOccupant*>& list) = 0;   // vslot 0x180
+    // Occupants of `group` visible in the camera frustum (falls back to the whole city); the group filter of FindOccupantByGroup.
+    virtual std::vector<ISituationOccupant*> VisibleOccupantsOfGroup(std::uint32_t group, bool wholeCityFallback) = 0;
+};
+class ISituationNeighborConnection {
+public:
+    virtual ~ISituationNeighborConnection() = default;
+    virtual void Cell(int& x, int& z) = 0;                     // vslot 0x30
+};
+class ISituationNeighborSim {
+public:
+    virtual ~ISituationNeighborSim() = default;
+    virtual std::vector<ISituationNeighborConnection*> Connections() = 0;   // vslot 0x80
+};
+class ISituationAuraSim {
+public:
+    virtual ~ISituationAuraSim() = default;
+    virtual void AddAura(float x, float z, float radius, float magnitude) = 0;   // vslot 0x30
+};
+class ISituationBudgetSim {
+public:
+    virtual ~ISituationBudgetSim() = default;
+    virtual void AddMoney(long long amount) = 0;               // vslot 0x38
+};
+// The landfill lot object kept at +0xaf8 (its +0x10 points at the lot rectangle x0, z0, x1, z1).
+class ISituationLandfillLot : public cIGZUnknown {
+public:
+    virtual const int* Rect() = 0;
+};
+class ISituationLandfillDeveloper {
+public:
+    virtual ~ISituationLandfillDeveloper() = default;
+    virtual ISituationLandfillLot* LandfillLotAt(int cellX, int cellZ) = 0;   // vslot 0x60 (counted)
+};
+
+}  // namespace sc4

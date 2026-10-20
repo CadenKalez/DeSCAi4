@@ -9,7 +9,7 @@ A dependency is a direct callee that belongs to another class which still has un
 function that is unrecovered). Indirect (virtual) calls are not visible, so the score is only a first filter."""
 import collections, csv, json, pathlib, re, sys, urllib.parse, urllib.request
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-BASE = "http://127.0.0.1:8089"
+from ghidra_conn import BASE
 OUT = ROOT/"work/triage.json"
 sys.argv, args = sys.argv[:1], sys.argv[1:]
 exec((ROOT/"scripts/progress.py").read_text().split("def main():")[0])

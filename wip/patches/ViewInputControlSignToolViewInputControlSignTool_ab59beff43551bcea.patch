@@ -1,0 +1,480 @@
+diff --git a/src/sc4/ViewInputControlSignTool.cpp b/src/sc4/ViewInputControlSignTool.cpp
+new file mode 100644
+index 0000000..b87fb9f
+--- /dev/null
++++ b/src/sc4/ViewInputControlSignTool.cpp
+@@ -0,0 +1,342 @@
++#include "sc4/ViewInputControlSignTool.h"
++
++#include <cstring>
++#include <string>
++
++#include "rz/CharLength.h"
++#include "rz/TextEncoding.h"
++#include "sc4/OccupantFilters.h"
++
++namespace sc4 {
++
++static ISignToolHost* g_signHost = nullptr;
++ISignToolHost* SignToolHost() { return g_signHost; }
++void SetSignToolHost(ISignToolHost* host) { g_signHost = host; }
++
++namespace {
++constexpr std::uint32_t kToolId = 0x8b4ce5a0;       // low half of 0x6b72fecf8b4ce5a0
++constexpr std::uint32_t kToolCursorId = 0x6b72fecf; // high half (written into +0x14)
++constexpr unsigned kMaxGlyphs = 0x21;
++
++bool IsMultiByteCodePage(int codePage) { return codePage == 8 || codePage > 99; }
++
++// cvttss2si to 64 bits followed by the original's unsigned fix-up for values >= 2^63.
++std::uint64_t FloatToU64(float v) {
++    const float limit = 9.223372e18f;
++    if (!(limit > v)) {   // ucomiss + cmovbe: also taken for NaN
++        auto big = static_cast<std::int64_t>(v - limit);
++        return static_cast<std::uint64_t>(big) ^ 0x8000000000000000ull;
++    }
++    return static_cast<std::uint64_t>(static_cast<std::int64_t>(v));
++}
++}  // namespace
++
++cSC4ViewInputControlSignTool::cSC4ViewInputControlSignTool() = default;
++
++cSC4ViewInputControlSignTool::~cSC4ViewInputControlSignTool() {
++    if (clipboard_) clipboard_->Release();
++    if (selection_) selection_->Release();
++}
++
++bool cSC4ViewInputControlSignTool::QueryInterface(std::uint32_t iid, void** out) {
++    if (iid == kGZIID_cIGZMessageTargetLegacy) {
++        *out = static_cast<cIGZMessageTarget*>(this);
++        AddRef();
++        return true;
++    }
++    if (iid == 1 || iid == kGZIID_cISC4ViewInputControl) {
++        *out = static_cast<cSC4ViewInputControl*>(this);
++        AddRef();
++        return true;
++    }
++    return false;
++}
++
++bool cSC4ViewInputControlSignTool::Init() {
++    if (!initialized_) {
++        id_ = kToolId;
++        cursorId_ = kToolCursorId;
++        codePage_ = GetCurrentFrameworkCodePage();
++
++        ISignToolHost* host = SignToolHost();
++        cIGZClipboardManager* clipboard = host->ClipboardManager();
++        if (clipboard_ != clipboard) {
++            cIGZClipboardManager* old = clipboard_;
++            if (clipboard) clipboard->AddRef();
++            clipboard_ = clipboard;
++            if (old) old->Release();
++        }
++        if (cIGZMessageServer* server = host->MessageServer())
++            server->AddNotification(static_cast<cIGZMessageTarget*>(this), kSignToolMessage);
++        host->SetPropDeveloperMode(1);
++        cSC4ViewInputControl::Init();
++    }
++    return true;
++}
++
++bool cSC4ViewInputControlSignTool::Shutdown() {
++    if (initialized_) {
++        if (state_ == kEditing) {
++            selection_->SetEditMode(false);
++            selection_->SetDynamic(true);
++        }
++        SetSelection(nullptr);
++        if (clipboard_) {
++            cIGZClipboardManager* c = clipboard_;
++            clipboard_ = nullptr;
++            c->Release();
++        }
++        if (cIGZMessageServer* server = SignToolHost()->MessageServer())
++            server->RemoveNotification(static_cast<cIGZMessageTarget*>(this), kSignToolMessage);
++        cSC4ViewInputControl::Shutdown();
++    }
++    return true;
++}
++
++// A sign that is deselected keeps living only when it carries text; empty signs are removed from the prop manager.
++void cSC4ViewInputControlSignTool::SetSelection(cISC4SignpostOccupant* sign) {
++    if (selection_ == sign) return;
++    if (selection_) {
++        cRZString current;
++        selection_->GetText(current);
++        if (current.Strlen() != 0)
++            selection_->SetDynamic(false);
++        else
++            SignToolHost()->RemoveProp(selection_->AsOccupant());
++    }
++    cISC4SignpostOccupant* old = selection_;
++    if (old != sign) {
++        if (sign) sign->AddRef();
++        selection_ = sign;
++        if (old) old->Release();
++    }
++    if (sign) sign->SetDynamic(true);
++}
++
++bool cSC4ViewInputControlSignTool::OnMouseDownL(int x, int y, std::uint32_t) {
++    if (state_ == kEditing) {
++        state_ = kIdle;
++        selection_->SetEditMode(false);
++        selection_->SetDynamic(true);
++        return true;
++    }
++    ISignToolHost* host = SignToolHost();
++    ISignToolRenderer* renderer = host->Renderer();
++    if (!renderer) return true;
++
++    cSC4SignpostFilter* filter = new cSC4SignpostFilter();
++    filter->AddRef();
++    IPickedObject* picked = nullptr;
++    if (renderer->PickObject(x, y, filter, &picked)) {
++        if (picked) {
++            if (cIGZUnknown* owner = picked->GetOwner()) {
++                cISC4SignpostOccupant* sign = nullptr;
++                void* iface = nullptr;
++                if (owner->QueryInterface(kGZIID_cISC4SignpostOccupant, &iface)) {
++                    sign = static_cast<cISC4SignpostOccupant*>(iface);
++                    // (the original compares against the current selection while editing here, which cannot happen:
++                    // state 3 returned above)
++                    state_ = kPressed;
++                    SetSelection(sign);
++                    float p[3] = {0, 0, 0};
++                    sign->AsOccupant()->GetPosition(p);
++                    host->ProjectToViewport(p);
++                    dragOffsetX_ = static_cast<int>(p[0]) - x;
++                    dragOffsetY_ = static_cast<int>(p[1]) - y;
++                    host->PlaySound(kSignToolSoundGroup, kSignToolSoundGrab);
++                }
++                if (sign) sign->Release();
++            }
++            picked->Release();
++        }
++        filter->Release();
++        return true;
++    }
++
++    float p[3] = {0, 0, 0};
++    if (!renderer->PickTerrain(x, y, p, false, true)) {
++        filter->Release();
++        return false;
++    }
++    cISC4SignpostOccupant* sign = host->CreateSignpost();
++    sign->AddRef();
++    host->AddProp(sign->AsOccupant());
++    SetSelection(sign);
++    const float altitude = host->TerrainAltitude(p[0], p[2]);
++    const float sea = host->SeaLevel();
++    p[1] = sea > altitude ? sea : altitude;
++    sign->AsOccupant()->SetPosition(p);
++    state_ = kEditing;
++    text_.Resize(0);
++    savedText_.Resize(0);
++    sign->SetText(text_);
++    sign->SetEditMode(true);
++    host->PlaySound(kSignToolSoundGroup, kSignToolSoundPlace);
++    sign->Release();
++    filter->Release();
++    return true;
++}
++
++bool cSC4ViewInputControlSignTool::OnMouseUpL(int, int, std::uint32_t) {
++    bool startEditing = false;
++    if (state_ == kDragging) {
++        cRZString current;
++        selection_->GetText(current);
++        const std::uint32_t length = current.Strlen();
++        SignToolHost()->PlaySound(kSignToolSoundGroup, kSignToolSoundPlace);
++        startEditing = (length == 0);   // a dragged empty sign goes straight into text editing
++    } else if (state_ == kPressed) {
++        startEditing = true;            // a plain click on a sign edits it
++    } else {
++        // idle / editing: nothing to do, and the final "not editing -> idle" reset below still runs
++        if (state_ != kEditing) state_ = kIdle;
++        return true;
++    }
++    if (startEditing) {
++        state_ = kEditing;
++        selection_->GetText(text_);
++        selection_->SetEditMode(true);
++        savedText_.Copy(text_);   // std::string copy of the text (+0x68 -> +0x90)
++    }
++    if (state_ != kEditing) state_ = kIdle;
++    return true;
++}
++
++bool cSC4ViewInputControlSignTool::OnMouseMove(int x, int y, std::uint32_t) {
++    ISignToolHost* host = SignToolHost();
++    if (state_ == kDragging || state_ == kPressed) {
++        if (state_ == kPressed) {
++            if (!selection_) return true;
++            state_ = kDragging;
++        }
++        ISignToolRenderer* renderer = host->Renderer();
++        if (!renderer) return true;
++        float p[3] = {0, 0, 0};
++        if (renderer->PickTerrain(dragOffsetX_ + x, dragOffsetY_ + y, p, false, true) && selection_)
++            selection_->AsOccupant()->SetPosition(p);
++    }
++    if (state_ != kIdle) return true;
++
++    // hover: select the sign under the cursor, deselect when there is none
++    ISignToolRenderer* renderer = host->Renderer();
++    cSC4SignpostFilter* filter = new cSC4SignpostFilter();
++    filter->AddRef();
++    IPickedObject* picked = nullptr;
++    if (!renderer->PickObject(x, y, filter, &picked)) {
++        SetSelection(nullptr);
++    } else if (picked) {
++        if (picked->GetOwner()) {
++            cISC4SignpostOccupant* sign = nullptr;
++            void* iface = nullptr;
++            if (picked->GetOwner()->QueryInterface(kGZIID_cISC4SignpostOccupant, &iface)) {
++                sign = static_cast<cISC4SignpostOccupant*>(iface);
++                SetSelection(sign);
++            }
++            if (sign) sign->Release();
++        }
++        picked->Release();
++    }
++    filter->Release();
++    return true;
++}
++
++bool cSC4ViewInputControlSignTool::DoMessage(cGZMessage& message) {
++    if (message.type == kSignToolMessage && state_ == kEditing && selection_) {
++        message.param1 = 1;
++        float box[6] = {1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f};
++        selection_->AsOccupant()->GetBoundingBox(&box[0], &box[3]);
++        // the box centre in x and z, the top of the box in y
++        float centreX = (box[0] + box[3]) * 0.5f;
++        float centreZ = (box[2] + box[5]) * 0.5f;
++        float point[3] = {centreX, box[4], centreZ};
++        SignToolHost()->ProjectToViewport(point);
++        message.param2 = FloatToU64(point[0]);
++        message.param3 = FloatToU64(point[1]);
++    }
++    return false;
++}
++
++bool cSC4ViewInputControlSignTool::OnCharacter(char c) {
++    if (state_ != kEditing) return false;
++    const bool multiByte = IsMultiByteCodePage(codePage_);
++    if (c == '\b') {
++        int length = static_cast<int>(text_.Strlen());
++        if (length > 0) {
++            if (!multiByte) {
++                length -= 1;
++            } else {
++                length -= static_cast<int>(GetPreviousCharLength(text_.Data() + length, static_cast<unsigned>(length), codePage_));
++            }
++            text_.Resize(static_cast<std::uint32_t>(length));
++            selection_->SetText(text_);
++        }
++    } else if (c != 0x1b) {
++        if (c == '\r') {
++            selection_->SetEditMode(false);
++            selection_->SetDynamic(true);
++            SetSelection(nullptr);
++            state_ = kIdle;
++        } else if (static_cast<unsigned char>(c) >= 0x20) {
++            if (!multiByte) {
++                pendingChar_.AssignFromChars(&c, 1);
++            } else {
++                if (pendingChar_.Strlen() == 0 && IsLeadByte(c, codePage_)) {
++                    pendingChar_.AssignFromChars(&c, 1);
++                    return true;
++                }
++                pendingChar_.AppendChars(&c, 1);
++                const std::size_t have = pendingChar_.Strlen();
++                const int follow = GetFollowByteCount(pendingChar_.Data()[0], codePage_);
++                if (have < static_cast<std::size_t>(static_cast<std::int64_t>(follow + 1))) return true;
++            }
++            AppendText(pendingChar_);
++            pendingChar_.Resize(0);
++        }
++    }
++    return true;
++}
++
++void cSC4ViewInputControlSignTool::AppendText(const cIGZString& text) {
++    unsigned glyphs = GetGlyphCountFromString(text_.Data(), text_.Strlen(), codePage_);
++    const std::uint32_t size = text.Strlen();
++    const char* data = text.Data();
++    if (size != 0 && glyphs < kMaxGlyphs) {
++        std::uint32_t pos = 0;
++        do {
++            ++glyphs;
++            const std::uint32_t length = static_cast<std::uint32_t>(GetCharLength(data + pos, size - pos, codePage_));
++            if (data[pos] != '\n') text_.AppendChars(data + pos, length);
++            pos += length;
++        } while (pos < size && glyphs < kMaxGlyphs);
++    }
++    selection_->SetText(text_);
++}
++
++bool cSC4ViewInputControlSignTool::OnKeyDown(std::uint32_t key, std::uint32_t mods) {
++    if (state_ == kEditing) {
++        if (key == 0x1b) {
++            if (selection_) {
++                selection_->SetText(savedText_);
++                text_.Copy(savedText_);
++            }
++            return false;
++        }
++        if (key == 0x56 && (mods & 7) == 2) {
++            cRZString clip;
++            if (clipboard_ && clipboard_->GetClipboardText(clip, 0)) AppendText(clip);
++        }
++        return true;
++    }
++    if (key == 0x2e && selection_) {
++        cISC4Occupant* occupant = selection_->AsOccupant();
++        if (occupant) occupant->AddRef();
++        SetSelection(nullptr);
++        SignToolHost()->RemoveProp(occupant);
++        state_ = kIdle;
++        if (occupant) occupant->Release();
++        return true;
++    }
++    return false;
++}
++
++}  // namespace sc4
+diff --git a/src/sc4/ViewInputControlSignTool.h b/src/sc4/ViewInputControlSignTool.h
+new file mode 100644
+index 0000000..312b813
+--- /dev/null
++++ b/src/sc4/ViewInputControlSignTool.h
+@@ -0,0 +1,126 @@
++// cSC4ViewInputControlSignTool — the view tool that places and edits signposts (text signs) on the terrain
++// (functions 0x1006ca19c..0x1006cb2e0 plus the destructor body at 0x1006cb3c2; class id inherited from
++// cSC4ViewInputControl, tool id 0x8b4ce5a0). The object has a second base at +0x40 (cIGZMessageTarget, iid 0xe98b2f57) that
++// receives message 0xbe10a20 ("where is the sign being edited on screen?").
++// State (+0x48): 0 hovering / idle, 1 pressed on an existing sign, 2 dragging a sign, 3 editing the text.
++// Layout: +0x48 state, +0x50 selected signpost (referenced), +0x58/+0x5c screen offset between the sign and the grab
++// point, +0x60 current text (cRZString, string at +0x68), +0x88 text before editing (cRZString, string at +0x90), +0xb0
++// framework code page, +0xb8 partial multibyte character (cRZString, string at +0xc0), +0xe0 clipboard manager.
++// Quirks kept:
++//  * Init writes the 64-bit constant 0x6b72fecf8b4ce5a0 at +0x10, i.e. tool id 0x8b4ce5a0 AND cursor id 0x6b72fecf.
++//  * A click while editing (state 3) only ends the edit mode; it neither deselects nor removes an empty sign.
++//  * OnKeyDown in state 3 returns false for Escape (which restores the saved text but keeps editing) and true for every
++//    other key; Ctrl+V (key 0x56 with (mods & 7) == 2) pastes the clipboard text through AppendText.
++//  * The sign text is limited to 0x21 glyphs and "\n" characters are dropped; a "\n" still counts as a glyph.
++//  * Mouse down on an existing sign plays sound 0x2c16da45; creating a sign and finishing a drag/click play 0x2c16da29.
++//  * DoMessage always returns false (it only fills the message parameters).
++//  * The y of a new sign is max(terrain altitude, sea level) (maxss: the sea level wins only when strictly greater).
++//  * OnMouseMove in the hover state dereferences the renderer without a null check (the original did); the drag path
++//    and OnMouseDownL check it.
++#pragma once
++#include <cstdint>
++
++#include "gz/WinInterfaces.h"
++#include "gz/ClipboardManager.h"
++#include "gz/cGZMessageServer.h"
++#include "rz/cRZString.h"
++#include "sc4/Occupant.h"
++#include "sc4/OccupantManager.h"
++#include "sc4/ViewInputControl.h"
++
++namespace sc4 {
++
++constexpr std::uint32_t kGZIID_cISC4SignpostOccupant = 0x4b44fbe2;
++constexpr std::uint32_t kGZIID_cIGZMessageTargetLegacy = 0xe98b2f57;
++constexpr std::uint32_t kSignToolMessage = 0x0be10a20;   // asks the tool for the screen position of the edited sign
++constexpr std::uint32_t kSignToolSoundGroup = 0xea451903;
++constexpr std::uint32_t kSignToolSoundPlace = 0x2c16da29;
++constexpr std::uint32_t kSignToolSoundGrab = 0x2c16da45;
++
++// cISC4SignpostOccupant as the tool uses it (vslots 0x18..0x38 of the sign's first vtable).
++class cISC4SignpostOccupant : public cIGZUnknown {
++public:
++    virtual cISC4Occupant* AsOccupant() = 0;                  // 0x18
++    virtual void SetText(const cIGZString& text) = 0;         // 0x20
++    virtual void GetText(cIGZString& text) = 0;               // 0x28
++    virtual void SetDynamic(bool dynamic) = 0;                // 0x30
++    virtual void SetEditMode(bool editing) = 0;               // 0x38
++};
++
++// What the renderer's occupant pick hands back (vslot 0x18 returns the owning object, queried for the signpost).
++class IPickedObject : public cIGZUnknown {
++public:
++    virtual cIGZUnknown* GetOwner() = 0;                      // 0x18
++};
++
++// SL::spRenderer
++class ISignToolRenderer {
++public:
++    virtual ~ISignToolRenderer() = default;
++    virtual bool PickObject(int x, int y, cISC4OccupantFilter* filter, IPickedObject** out) = 0;   // vslot 0x200
++    virtual bool PickTerrain(int x, int y, float out[3], bool flagA, bool flagB) = 0;               // vslot 0x1e8
++};
++
++// The services behind SL::spRenderer / spTerrain / spPropManager / spPropDeveloper / spViewUtilities / spSS and the
++// framework system services.
++class ISignToolHost {
++public:
++    virtual ~ISignToolHost() = default;
++    virtual ISignToolRenderer* Renderer() = 0;
++    virtual float TerrainAltitude(float x, float z) = 0;              // terrain vslot 0x60
++    virtual float SeaLevel() = 0;                                     // terrain vslot 0xe8
++    virtual void AddProp(cISC4Occupant* occupant) = 0;                // prop manager vslot 0xa0
++    virtual void RemoveProp(cISC4Occupant* occupant) = 0;             // prop manager vslot 0xe8
++    virtual void SetPropDeveloperMode(int mode) = 0;                  // prop developer vslot 0x40
++    virtual cISC4SignpostOccupant* CreateSignpost() = 0;              // new cSC4SignpostOccupant, caller owns one reference
++    virtual void ProjectToViewport(float point[3]) = 0;               // SC4ViewUtilities::ProjectPointToViewportCoordinates2D
++    virtual void PlaySound(std::uint32_t group, std::uint32_t id) = 0;   // sound system vslot 0x50
++    virtual cIGZMessageServer* MessageServer() = 0;                   // framework service 0x64063387 (may be null)
++    virtual cIGZClipboardManager* ClipboardManager() = 0;             // framework service 0x27ebfffd (may be null)
++};
++ISignToolHost* SignToolHost();
++void SetSignToolHost(ISignToolHost* host);
++
++class cSC4ViewInputControlSignTool : public cSC4ViewInputControl, public cIGZMessageTarget {
++public:
++    enum State : int { kIdle = 0, kPressed = 1, kDragging = 2, kEditing = 3 };
++
++    cSC4ViewInputControlSignTool();                             // @ 0x1006ca19c
++    ~cSC4ViewInputControlSignTool() override;                   // @ 0x1006cb3c2 (+ 0x1006cb2d6, 0x1006cb2e0)
++
++    // both bases are cIGZUnknown: one override serves both (thunks 0x1006ca5a0 / 0x1006ca5d0 / 0x1006ca5e8)
++    bool QueryInterface(std::uint32_t iid, void** out) override;   // @ 0x1006ca57e
++    std::uint32_t AddRef() override { return cSC4ViewInputControl::AddRef(); }       // @ 0x1006ca5c6
++    std::uint32_t Release() override { return cSC4ViewInputControl::Release(); }     // @ 0x1006ca5de
++
++    bool Init() override;                                       // @ 0x1006ca23c
++    bool Shutdown() override;                                   // @ 0x1006ca37c
++    bool OnCharacter(char c) override;                          // @ 0x1006cadec
++    bool OnKeyDown(std::uint32_t key, std::uint32_t mods) override;        // @ 0x1006cb16e
++    bool OnMouseDownL(int x, int y, std::uint32_t mods) override;          // @ 0x1006ca5f6
++    bool OnMouseUpL(int x, int y, std::uint32_t mods) override;            // @ 0x1006ca9a0
++    bool OnMouseMove(int x, int y, std::uint32_t mods) override;           // @ 0x1006caab6
++    bool DoMessage(cGZMessage& message) override;               // @ 0x1006cacb4 (thunk 0x1006cadda)
++
++    void SetSelection(cISC4SignpostOccupant* sign);             // @ 0x1006ca466
++    void AppendText(const cIGZString& text);                    // @ 0x1006cb06c
++
++    State GetState() const { return static_cast<State>(state_); }
++    cISC4SignpostOccupant* Selection() const { return selection_; }
++    const cRZString& Text() const { return text_; }
++    const cRZString& SavedText() const { return savedText_; }
++    int CodePage() const { return codePage_; }
++    void SetCodePageForTest(int codePage) { codePage_ = codePage; }
++
++private:
++    int state_ = kIdle;                          // +0x48
++    cISC4SignpostOccupant* selection_ = nullptr;   // +0x50
++    int dragOffsetX_ = 0, dragOffsetY_ = 0;      // +0x58, +0x5c
++    cRZString text_;                             // +0x60
++    cRZString savedText_;                        // +0x88
++    int codePage_ = 0;                           // +0xb0
++    cRZString pendingChar_;                      // +0xb8
++    cIGZClipboardManager* clipboard_ = nullptr;  // +0xe0
++};
++
++}  // namespace sc4

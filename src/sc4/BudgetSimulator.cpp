@@ -11,6 +11,8 @@ namespace sc4 {
 
 namespace {
 IBudgetSimEnvironment* g_environment = nullptr;
+IBudgetSimServices* g_services = nullptr;
+constexpr std::uint32_t kInitMessages[4] = {0x26d31ec4, 0x29222f02, 0x08dac3e8, 0x08dac3e7};
 std::string LowerCase(std::string s) {
     for (char& c : s) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     return s;
@@ -98,12 +100,130 @@ void cSC4BudgetSimulator::ApplyStartingFunds() {
     }
 }
 
+void cSC4BudgetSimulator::SetServices(IBudgetSimServices* services) { g_services = services; }
+
+// 0x10021e330. Quirks kept: the cheat codes register before the funds are initialised; the start-of-game funds
+// and tax reset only run for a city that was not loaded from a save (+0x20); history ids 0xaabaaa9f.. (12 tax
+// types) are sized to 365 days and the funds history gets funds/1000. The original re-reads the tunables from
+// the simulator itself; here the caller feeds the exemplar through ReadSimulatorTunableValues beforehand.
+bool cSC4BudgetSimulator::Init() {
+    if (initialised_) return true;
+    initialised_ = true;
+    if (g_services) {
+        g_services->RegisterSimulatorNotifications(this);
+        g_services->AcquireServices();
+        for (std::uint32_t m : kInitMessages) g_services->SubscribeMessage(m);
+        g_services->RegisterCheatCodes();
+    }
+    if (!loaded_) {
+        ApplyStartingFunds();
+        if (g_services)
+            for (std::uint32_t i = 0; i < 12; ++i) g_services->ResetHistory(0xaabaaa9f + i, 365);
+        if (g_environment) g_environment->AddHistory(kBudgetHistoryFunds, funds_ / 1000);
+    }
+    if (legacyTaxFlag_) {
+        const int d = g_environment ? g_environment->DifficultyLevel() : 0;
+        taxTypes_[8].rate = static_cast<std::size_t>(d) < tunables_.defaultTaxRate.size() ? tunables_.defaultTaxRate[d] : 0.0f;
+    }
+    if (g_services) g_services->RegisterGameDataNodes(this);
+    return true;
+}
+
+// The department teardown is unconditional here (the original only runs it when initialised); the service
+// teardown follows the original order.
 void cSC4BudgetSimulator::Shutdown() {
+    if (initialised_) {
+        initialised_ = false;
+        if (g_services) {
+            g_services->UnregisterGameDataNodes(this);
+            g_services->UnregisterCheatCodes();
+            g_services->ReleaseServices();
+            for (std::uint32_t m : kInitMessages) g_services->UnsubscribeMessage(m);
+        }
+    }
     for (auto& entry : departments_) {
         entry.second->Shutdown();
         entry.second->Release();
     }
     departments_.clear();
+    if (g_services) g_services->UnregisterSimulator(this);
+}
+
+void cSC4BudgetSimulator::sExchangeFunds(cSC4BudgetSimulator* sim, std::int64_t& value, bool write) {
+    if (!sim) return;
+    if (write) sim->SetTotalFunds(value);
+    else value = sim->GetTotalFunds();
+}
+
+void cSC4BudgetSimulator::sDepositFunds(cSC4BudgetSimulator* sim, const std::int64_t* amount) {
+    if (sim && amount) sim->DepositFunds(*amount);
+}
+
+void cSC4BudgetSimulator::ShowBudgetWindow() {
+    if (g_services) g_services->ShowBudgetDialog(expenseView);
+}
+
+bool cSC4BudgetSimulator::DoMessage(const BudgetMessage& m) {
+    switch (static_cast<std::uint32_t>(m.type)) {
+    case 0x230e27ac: {                                       // cheat string
+        const std::uint32_t cheat = static_cast<std::uint32_t>(m.data1);
+        if (cheat == 0x493f4fe6) {                            // "<cheat> <amount>": set the funds
+            std::size_t sp = m.text.find(' ');
+            if (sp == std::string::npos) return false;        // argc < 2
+            while (sp < m.text.size() && m.text[sp] == ' ') ++sp;
+            if (sp >= m.text.size()) return false;
+            SetTotalFunds(std::strtoll(m.text.c_str() + sp, nullptr, 10));
+            return true;
+        }
+        if (cheat == 0x4ab87766) { SetTotalFunds(GetTotalFunds() + 1000); return true; }
+        if (cheat == 0xcbf31943) {                            // +10000 and an increasingly likely disaster
+            if (g_services && g_services->CityCheatsEnabled()) {
+                DepositFunds(10000);
+                ++cheatCounter_;
+                const double chance = static_cast<double>(1.0f - 1.0f / (static_cast<float>(cheatCounter_) * 0.2f + 1.0f));
+                if (g_services->RandomDouble() < chance && g_services->HasDisasterLayer()) {
+                    float w = 0, h = 0;
+                    g_services->CityCellSize(w, h);
+                    const double a = static_cast<double>(w * 0.125f * 3.0f);
+                    const float x = static_cast<float>(static_cast<double>(w) * g_services->RandomDouble() * 0.25 + a);
+                    const double b = static_cast<double>(h * 0.125f * 3.0f);
+                    const int z = static_cast<int>(static_cast<double>(h) * g_services->RandomDouble() * 0.25 + b);
+                    if (g_services->SpawnDisasterAt(static_cast<int>(x), z)) cheatCounter_ = 0;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+    case 0x26d31ec4: {                                       // new city: funds and default tax rates only
+        const int d = g_environment ? g_environment->DifficultyLevel() : 0;
+        if (static_cast<std::size_t>(d) < tunables_.startingFunds.size())
+            funds_ = monthStartFunds_ = tunables_.startingFunds[d];
+        PostFundsChangedMessage();
+        for (TaxType& tax : taxTypes_)
+            tax.rate = static_cast<std::size_t>(d) < tunables_.defaultTaxRate.size() ? tunables_.defaultTaxRate[d] : 0.0f;
+        return true;
+    }
+    case 0x29222f02:                                         // budget dialog announcements
+        if (m.data1 == 0x892230f2) expenseView = true;
+        else if (m.data1 == 0xc92230ee) expenseView = false;
+        else return true;
+        ShowBudgetWindow();
+        return true;
+    case 0x66956810: PostFundsChangedMessage(); return true;
+    case 0x66956816: DoMonthlySimulation(); return true;
+    case 0x66956814:                                         // idle: publish the tax rates (x10, rounded to even)
+        if (g_environment)
+            for (int i = 0; i < 12; ++i)
+            {
+                const float biased = taxTypes_[i].rate * 10.0f + 12582912.0f;   // magic-number round to nearest even
+                std::int32_t bits;
+                std::memcpy(&bits, &biased, sizeof bits);
+                g_environment->AddHistory(0xaabaaa9f + i, bits - 0x4b400000);
+            }
+        return true;
+    default: return true;
+    }
 }
 
 // ------------------------------------------------------------------------------------------------ funds

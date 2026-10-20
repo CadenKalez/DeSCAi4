@@ -3,6 +3,7 @@
 symbol names). usage: scripts/dec_addrs.py 0xaddr [0xaddr ...]   or   --grep REGEX (match symbol names)"""
 import sys, json, re, urllib.parse, urllib.request, pathlib
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT/"scripts")); from ghidra_conn import BASE
 args = sys.argv[1:]
 names = {}
 for line in (ROOT/"notes/symbols-functions-demangled.txt").read_text(errors="replace").splitlines():
@@ -18,7 +19,7 @@ else:
 for i in range(0, len(addrs), 20):
     chunk = addrs[i:i+20]
     q = urllib.parse.urlencode({"functions": ",".join(f"0x{a:x}" for a in chunk), "fields": "decompiled_code", "include_call_context": "false"})
-    with urllib.request.urlopen(f"http://127.0.0.1:8089/get_functions?{q}", timeout=180) as r:
+    with urllib.request.urlopen(f"{BASE}/get_functions?{q}", timeout=180) as r:
         data = json.load(r).get("functions", {})
     for a in chunk:
         d = data.get(f"0x{a:x}") or data.get(hex(a)) or next((v for k, v in data.items() if int(k, 16) == a), None)

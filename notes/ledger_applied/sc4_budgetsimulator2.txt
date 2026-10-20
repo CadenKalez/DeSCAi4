@@ -1,0 +1,15 @@
+SOURCE src/sc4/BudgetSimulator.cpp|h
+EVIDENCE scripts/tests/sc4_budgetsimulator2_test.cpp (Init order, new-city funds/taxes/history, registry callbacks, DoMessage cheats/dialog/idle, Shutdown order); the other ~80 functions were ported earlier. NEW in this pass: Init, Shutdown (full), DoMessage, DoMessageThunk, sExchangeFunds, sDepositFunds, ShowBudgetWindow
+0x10021e330 InitBudgetSimulatorFull
+0x10021f010 sExchangeFundsRegistry
+0x10021f186 sDepositFundsRegistry
+0x10021f1fc ShutdownBudgetSimulatorFull
+0x1002201fc DoMessageBudgetSimulatorFull
+0x100220b80 DoMessageThunkBudgetSimulatorFull
+0x100222fa4 ShowBudgetWindowFull
+SKIPPED:
+0x10021ee1b AddNode registry template: covered by IBudgetSimServices::RegisterGameDataNodes (framework seam)
+0x10021ef31 AddValue total_funds registry template: framework seam
+0x10021f0a8 AddValue deposit_funds registry template: framework seam
+0x100222164 std::vector<double>::assign libc++ template instantiation
+0x100223084 libc++ container helpers (0x100223084..0x100223c2e: clear/destroy/__assign_multi/__push_back_slow_path/__split_buffer/erase) not game code

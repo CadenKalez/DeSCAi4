@@ -1,0 +1,571 @@
+diff --git a/src/sc4/NetworkTool.h b/src/sc4/NetworkTool.h
+new file mode 100644
+index 0000000..30d8b5b
+--- /dev/null
++++ b/src/sc4/NetworkTool.h
+@@ -0,0 +1,565 @@
++// cSC4NetworkTool — the network placement tool (roads, rail, highways, pipes, ...). Recovered from Sim City 4 Deluxe
++// Edition 1.2.1 (code 0x1001862bc..0x1001906fc; vtable 0x100a7a928 (cISC4NetworkTool + cIGZUnknown) and 0x100a7abd0
++// (cIGZMessageTarget2 + the neighbourhood callbacks); object size 0x630+; interface ids 1 / 0xa74ca15 (self) and
++// 0x452294aa (message target at +8)). One tool instance exists per network type (eNetworkType, 13 types).
++//
++// Object layout of the original (offsets are kept next to the members below): +0x10 vector (freed in the dtor),
++// +0x28 refcount, +0x2c initialised, +0x30 world cache, +0x80 terrain / +0x88 occupant manager / +0x90 city sub-object
++// (all held with a reference between Init and Shutdown), +0x98 "final placement" flag (false = preview only), +0xa0
++// dragged steps (12 bytes: first cell, last cell, kind), +0xb8 dragged cells, +0xd4 total steps, +0xdc valid steps,
++// +0xe8 set of cells to solve, +0x110 solved cells (12 bytes), +0x128 / +0x138 / +0x150 hash sets (the +0x138 chain
++// holds the cells whose position changed), +0x178 intersections (0x38), +0x190 bridges (0x38), +0x1a8 tunnels (0x10),
++// +0x1c0 additional edge draws (0x14), +0x1d8 view/zoom index, +0x1e0 / +0x1f8 neighbour connections (0x18),
++// +0x210 anchor points, +0x228 / +0x328 vertex height constraint solvers, +0x428 foreign-type mask, +0x430 preview,
++// +0x438 possible bridges, +0x450/+0x454 preferred bridge / altitude override, +0x458 placement mode, +0x45c failure
++// state, +0x460 demolition region, +0x468 highlighted occupants, +0x480 demolition cost, +0x488 cell preview
++// occupants, +0x4a4 cell size, +0x4a8 cell size * tan(slope), +0x4ac/+0x4b0 city cells x/z (+0x4b4/+0x4b8 vertex
++// grid strides), +0x500.. placement parameters copied from the network type info, +0x620 type info, +0x628 network
++// type, +0x62c all-types mask of this tool's family, +0x630 OR filter.
++//
++// Scope: every function of the class' source file between the constructor and ReloadNetworkSpecificInfo. The
++// solver half of the class (SolveNetwork, SmoothenNetwork, GetCellInfo, ComputeDraggedCells, PlaceNetwork,
++// DoAdditionalDraws, ... at 0x1001b..., 0x10071...) is not part of this port and sits behind protected virtual hooks
++// named like the original functions. Services the original reaches through the SL::sp* globals are injected through
++// INetworkToolHost.
++//
++// Quirks kept:
++//  * GetNetworkHeightForTerrainHeight is an identity function (it returns its argument).
++//  * cSC4NetworkTool::Release deletes the tool at a reference count of 1 or less.
++//  * DetermineSupportType starts from 0 and keeps the largest of 2 - (rise < pylon threshold) over all four corners.
++//  * AttemptNeighborConnections returns early (false) in many "cannot connect" cases without clearing the partially
++//    filled local state; it only appends to the two connection lists once every check passed.
++//  * ReloadNetworkTypeInfo seeds hard-coded resource keys / group ids per network type (kept as data tables).
++#pragma once
++#include <cstdint>
++#include <list>
++#include <map>
++#include <memory>
++#include <set>
++#include <string>
++#include <unordered_map>
++#include <unordered_set>
++#include <vector>
++
++#include "gz/cGZPersistResourceKey.h"
++#include "gz/cIGZMessage2.h"
++#include "gz/cIGZString.h"
++#include "sc4/Occupant.h"
++#include "sc4/OccupantManager.h"
++#include "sc4/TileNeighborhood.h"
++
++namespace sc4 {
++
++constexpr int kNetworkTypeCount = 13;
++constexpr std::uint32_t kGZIID_cISC4NetworkTool = 0xa74ca15;
++constexpr std::uint32_t kMessageNetworkToolZoom = 0xa6b79602;   // payload: new view/zoom index (stored at +0x1d8)
++constexpr std::uint32_t kGZIID_cSC4NetworkTunnelOccupant = 0x8a4bd52b;
++constexpr std::uint32_t kGZIID_cSC4NetworkPreBuiltModel = 0x49c1a034;
++constexpr std::uint32_t kGZIID_cSC4NetworkBridgeOccupant = 0x49cc1bcd;
++constexpr std::uint32_t kGZIID_cISC4NetworkOccupant = 0xa821ef94;
++constexpr std::uint32_t kGZIID_cISC4PowerPoleOccupant = 0xa8c86142;
++constexpr std::uint32_t kOccupantTypeNetworkPole = 0x2890d4de;
++constexpr std::uint32_t kExemplarTypeNetworkPiece = 0x6534284a;
++constexpr std::uint32_t kStringGroupNetworkFailure = 0x2a592fd1;
++constexpr std::uint32_t kMessageOccupantDemolishedNotice = 0xaa7a014d;
++
++// ---- data tables (read from the executable) -------------------------------------------------------------------
++extern const std::uint32_t kFlagForNetworkType[kNetworkTypeCount];            // 0x100a19aa0: 1 << type, except type 12 = 0x1000
++extern const std::uint32_t kNetworkPlacementExemplarIDs[kNetworkTypeCount];   // 0x100a19ae0
++extern const float kAltitudeForNetworkType[kNetworkTypeCount];                // 0x100a19b20 (15.5 for 2, 8, 9)
++extern const int kNetworkNextX[4], kNetworkNextZ[4];                          // 0x100a19b60 / 0x100a19b70
++extern const int kNetworkTypeToNeighborConnectionType[kNetworkTypeCount];     // 0x100a19b80
++extern const int kNetworkMultitypePriority[kNetworkTypeCount];                // 0x100a19bc0
++extern const std::uint8_t kEdgesToFixVertex[4];                               // 0x100a19bf4 {3, 9, 0xc, 6}
++
++// ---- data records ---------------------------------------------------------------------------------------------
++struct NetPoint { std::uint32_t x = 0, z = 0; };   // SC4Point<unsigned int>
++
++class INetworkToolOccupant;
++
++// cSC4NetworkCellInfo: what the tool knows about one tile of the placement. Only the fields the tool code touches
++// are named; the rest of the 0xc4+ byte record belongs to the solver.
++struct NetworkCellInfo {
++    std::uint32_t x = 0, z = 0;                  // +0, +4
++    std::uint32_t networkFlags = 0;              // +8 flags of the network types on the tile
++    INetworkToolOccupant* occupant = nullptr;    // +0x10 (reference counted)
++    bool isNewPiece = false;                     // +0x18 costs money (unless freeOfCharge)
++    std::uint32_t hood[kNetworkTypeCount] = {};  // +0x20 packed tile neighbourhood per network type
++    std::uint32_t hoodAll = 0;                   // +0x54 (index 13): the combined neighbourhood
++    std::uint8_t oneWayDirections = 0;           // +0x58
++    bool placed = false;                         // +0x59 the tile got (or keeps) its occupant
++    bool freeOfCharge = false;                   // +0x5a
++    std::uint8_t occupantManagerResult = 0;      // +0x5c
++    bool offsetHeights = false;                  // +0x5e height indices carry the +100000 bridge offset
++    float height[4] = {};                        // +0x60 solved network height at the 4 tile corners
++    float lowLimit[4] = {}, highLimit[4] = {};   // +0x70 / +0x74, stride 8: height constraint per corner
++    std::uint32_t vertex[4] = {};                // +0xb0 terrain vertex index of the 4 corners
++    int solvedIndex = -1;                        // +0xc0 index into the solved cell list (-1 = none)
++};
++
++struct DraggedStep { int firstCell = 0, lastCell = 0, kind = 0; };   // tDraggedStep (12 bytes)
++struct SolvedCell {                                                  // tSolvedCell (12 bytes)
++    std::uint32_t pieceId = 0;       // +0
++    std::uint8_t rotationFlip = 0;   // +4 rotation | flip << 7
++    std::uint32_t cell = 0;          // +8 x | z << 16
++};
++struct Tunnel {                      // tTunnel / tImmovablePortion (16 bytes)
++    float startElevation = 0, endElevation = 0;   // +0 / +4
++    int firstStep = 0, lastStep = 0;               // +8 / +0xc (indices into the dragged steps)
++};
++struct BridgePiece { std::uint32_t data[4] = {}; };   // tBridgePiece (opaque to the tool)
++struct Bridge {                      // tBridge (0x38 bytes)
++    std::uint32_t networkType = 0;   // +0
++    std::uint32_t firstCell = 0, lastCell = 0;   // +4 / +8 (dragged cell indices)
++    int bridgeType = 0;              // +0xc index into the type info's bridge list
++    float altitude = 0;              // +0x10
++    float referenceAltitude = 0;     // +0x14
++    bool isLandBridge = false;       // +0x18
++    std::vector<BridgePiece> pieces; // +0x20
++};
++struct Intersection {                // tIntersection (0x38 bytes)
++    std::uint32_t ruleId = 0;        // +0
++    int x = 0, z = 0;                // +4 / +8
++    std::uint32_t reserved[2] = {};  // +0xc
++    int stepIndex = 0;               // +0x14 compared with the valid step count
++    std::vector<std::uint32_t> cells;// +0x20 solved cell packs covered by the intersection
++};
++struct AdditionalDraw {              // tAdditionalDraw (0x14 bytes)
++    int x = 0, z = 0;
++    std::uint32_t tile = 0, networkType = 0;
++    std::uint8_t edgeA = 0, edgeB = 0;
++};
++struct NeighborConnection {          // tNeighborConnection (0x18 bytes)
++    std::uint32_t cell = 0;          // +0 x | z << 16
++    std::uint32_t edgeMask = 0;      // +4
++    std::uint32_t x = 0, z = 0;      // +8 / +0xc city border position (0xffffffff or the city size = off map)
++    std::uint32_t connectionType = 0;// +0x10
++    bool flag = false;               // +0x14
++};
++struct NeighborConnectionInfo { std::uint32_t x = 0, z = 0, type = 0; bool flag = false; };   // cISC4NetworkTool::NeighborConnectionInfo
++
++struct NetworkBridgeTypeInfo {
++    std::uint32_t bitmapKeyA = 0, bitmapKeyB = 0;   // +0x1b0 / +0x1b4
++    int baseCost = 0;                               // +0x1b8
++    int tileCost = 0;                               // +0x1bc
++    std::string name;                               // +0x1c8
++};
++struct NetworkSupportStructInfo { std::vector<std::uint32_t> pieces; };   // opaque to the tool, handed to AddSupportStructures
++
++// The parts of cSC4NetworkTypeInfo (0x180 bytes per type, static array sNetworkTypeInfo at 0x100b23190) the tool reads.
++struct NetworkTypeInfo {
++    std::uint32_t viewInputControlId = 0;           // +8
++    std::uint32_t exemplarGroup = 0;                // +0xc
++    std::uint32_t cursorId = 0;                     // +0x14
++    std::uint32_t directionalCursorBase = 0;        // +0x18
++    int penWidth = 1, penHeight = 1;                // +0x1c / +0x20
++    std::vector<NetworkBridgeTypeInfo> bridges;     // +0x40 (0x200 bytes each)
++    std::unordered_map<std::uint32_t, NetworkSupportStructInfo> supports;   // +0x58
++    std::uint8_t blockA[0x26] = {};                 // +0x80: placement parameters; the float at +0x98 is the slope angle
++    float slopeAngle = 0;                           // +0x98 (inside blockA in the original)
++    std::vector<std::uint32_t> list528;             // +0xa8
++    float heightTolerance = 0, supportThreshold = 0;// +0xc0 / +0xc4
++    std::uint32_t blockBRest[6] = {};               // +0xc8..+0xdf
++    std::vector<std::uint32_t> tunnelPieceIds;      // +0xe0
++    std::vector<std::uint32_t> tunnelPieceRotations;// +0xf8
++    std::vector<float> tunnelPieceDepth;            // +0x110
++    std::uint32_t blockC0 = 0, blockC1 = 0, blockC2 = 0, blockC3 = 0;   // +0x128..+0x137
++    int bridgeTileCost = 0, tunnelTileCost = 0;     // +0x140 / +0x144 (copied to +0x5c0 / +0x5c4)
++    float heightCostScale = 0;                      // +0x148 (+0x5c8)
++    int demolitionCost = 0;                         // +0x14c (+0x5cc)
++    std::vector<std::uint32_t> list5d0;             // +0x150
++    std::uint32_t tileCost = 0;                     // +0x13c: cost of one new piece
++    std::uint32_t overrideMask = 0;                 // +0x168: bit j = this type may overwrite type j on a shared tile
++};
++
++// cIntRule (nSC4Networks): one highway intersection rule.
++struct IntersectionTileInfo { int pieceOffset = 0; std::uint8_t rotationFlip = 0; };
++class INetworkIntersectionRule {
++public:
++    virtual ~INetworkIntersectionRule() = default;
++    virtual std::uint32_t Id() const = 0;
++    virtual const std::vector<std::pair<int, int>>& PieceOffsets() const = 0;       // +0x78..+0x80: tiles carrying pieces
++    virtual const std::vector<std::pair<int, int>>& FootprintOffsets() const = 0;   // +0x38..+0x40: cells to clear
++    virtual const IntersectionTileInfo* GetTileInfo(int dx, int dz) const = 0;
++    virtual int PieceBase() const = 0;        // +0x14c
++    virtual int PieceStep() const = 0;        // +0x150 (0 = pieces get the stub id 0)
++    virtual int Cost() const = 0;             // +0x12c
++    virtual int GetTypeAtOrigin() const = 0;
++    virtual bool IsInteractive() const = 0;   // +0xd0 string id != 0
++    virtual std::uint32_t PromptStringId() const = 0;   // +0xd0
++    virtual const std::string& EffectName() const = 0;  // +0xe8
++    virtual float EffectOffsetX() const = 0;  // rule+8 -> +8
++    virtual float EffectOffsetZ() const = 0;  // rule+8 -> +0xc
++    virtual std::uint8_t EffectRotation() const = 0;    // rule+8 -> +4
++    virtual bool EffectFlip() const = 0;      // rule+8 -> +5
++};
++
++// ---- service interfaces ---------------------------------------------------------------------------------------
++// A network occupant as the tool sees it (cISC4NetworkOccupant, plus the tunnel / pre built model subclasses; vslots
++// of vtable 0x100a81d38 in the comments).
++class INetworkToolOccupant {
++public:
++    virtual ~INetworkToolOccupant() = default;
++    virtual void AddRef() = 0;                                              // 0x08
++    virtual void Release() = 0;                                             // 0x10
++    virtual void Init(const float (*corners)[3]) = 0;                       // 0x18 the four tile corners
++    virtual bool HasNetworkFlag(std::uint32_t f) = 0;                       // 0x40
++    virtual void SetNetworkFlag(std::uint32_t f) = 0;                       // 0x50
++    virtual void ClearNetworkFlag(std::uint32_t f) = 0;                     // 0x58
++    virtual std::uint32_t GetNetworkFlag() = 0;                             // 0x60
++    virtual void SetUsable(bool on) = 0;                                    // 0xa0
++    virtual bool IsPlaced() = 0;                                            // 0xa8
++    virtual bool IsOfType(int networkType) = 0;                             // 0xb0
++    virtual std::uint32_t PieceId() = 0;                                    // 0xb8
++    virtual std::uint8_t GetRotationAndFlip() = 0;                          // 0xd0
++    virtual void SetQuadDraw(std::uint32_t pieceId, std::uint8_t rotationFlip) = 0;   // 0xf0
++    virtual void SetEdgeTypesFlag(int networkType, std::uint32_t config) = 0;         // 0x128
++    virtual std::uint32_t GetEdgeTypesFlag(int networkType) = 0;                      // 0x130
++    virtual void SetEdgeType(int networkType, int edge, int type) = 0;                // 0x138
++    virtual void SetPathIDOverride(std::uint32_t id) = 0;                   // 0x198
++    virtual float GetAltitude(float x, float z) = 0;                        // 0x1c0
++    virtual void GetNormal(float x, float z, float out[3]) = 0;             // 0x1c8
++    virtual void GetOccupiedCell(std::uint32_t& x, std::uint32_t& z) = 0;   // 0x1d8
++    virtual void SetCostOfDemolition(int cost) = 0;                         // 0x200
++    virtual std::uint8_t GetOneWayDirections() = 0;                         // 0x228
++    virtual void SetOneWayDirections(std::uint8_t d) = 0;                   // 0x230
++    virtual void SetComplexPieceOrigin(int x, int z) = 0;                   // 0x240
++    virtual void GetPosition(float* xyz) = 0;                               // 0x290 (pre built model: the model origin)
++    virtual cISC4Occupant* AsOccupant() = 0;                                // 0x180
++    // subclass access (QueryInterface with the class id succeeds)
++    virtual bool IsPreBuiltModel() = 0;                                     // QI 0x49c1a034
++    virtual void AddModel(std::uint32_t exemplarInstance, const float offset[3], std::uint8_t rotationFlip) = 0;   // AddModel(exemplar,...)
++    virtual void AddSupportModel(std::uint32_t modelId, float rotation, const float offset[3]) = 0;
++    virtual void RecomputeShearTransform() = 0;
++    virtual INetworkToolOccupant* TunnelOtherEnd() = 0;                     // QI 0x8a4bd52b: GetOtherEndOccupant (null when not a tunnel)
++    virtual bool IsTunnel() = 0;
++    virtual void SetTunnelOtherEnd(INetworkToolOccupant* other) = 0;
++};
++
++class INetworkToolTerrain {
++public:
++    virtual ~INetworkToolTerrain() = default;
++    virtual float CellSize() = 0;                                  // 0x30
++    virtual float VertexHeight(std::uint32_t vertex) = 0;          // 0x68
++    virtual void SetVertexHeight(std::uint32_t vertex, float h) = 0;   // 0x188
++    virtual float MaxHeight() = 0;                                 // 0xc0
++    virtual void BeginTerrainEdit() = 0;                           // 0x2b8
++    virtual void ModifyRegion(int a, int b, const std::uint32_t rect[4], int mode) = 0;   // 0x228 (x0, z0, x1, z1)
++    virtual void EndTerrainEdit() = 0;                             // 0x2c0
++};
++
++// cSC4NetworkPreview (the ghost drawn while dragging)
++class INetworkPreview {
++public:
++    virtual ~INetworkPreview() = default;
++    virtual void Clear() = 0;
++    virtual void Erase(const NetPoint& cell) = 0;
++    virtual void AddUntexturedSelection(const NetPoint& cell, std::uint32_t color, const float* heights, float altitude, bool offset) = 0;
++    virtual void AddTexturedSelection(const NetPoint& cell, std::uint32_t color, const float* heights, const cGZPersistResourceKey& texture,
++                                      std::uint8_t rotation, bool flip, float altitude, bool offset) = 0;
++    virtual void AdjustCellHeights(const NetPoint& cell, const float* heights, bool offset) = 0;
++};
++
++// cSC4VertexHtConstraintSatisfier
++class IVertexHeightSatisfier {
++public:
++    virtual ~IVertexHeightSatisfier() = default;
++    virtual void Init(float minHeight, float maxHeight) = 0;
++    virtual void Shutdown() = 0;
++    virtual void InsertFixedVertex(int vertex, float height) = 0;
++    virtual void GetHeight(int vertex, float* out) = 0;
++};
++
++// cSC4NetworkWorldCache (+0x30)
++class INetworkWorldCache {
++public:
++    virtual ~INetworkWorldCache() = default;
++    virtual void Clear() = 0;
++    virtual const NetworkCellInfo* GetCell(std::uint32_t packed) = 0;
++};
++
++class INetworkToolHost;
++class NetworkTool;
++
++// The effect shown at a potential highway intersection (cIGZVisualEffect-like).
++class INetworkEffect {
++public:
++    virtual ~INetworkEffect() = default;
++    virtual void SetTransform(const float transform[16], const float extra[4]) = 0;   // vslot 0x38 (placement matrix)
++    virtual void Show(bool immediate) = 0;                                              // vslot 0x18
++    virtual void Hide(bool immediate) = 0;                                              // vslot 0x20
++};
++
++class INetworkToolHost {
++public:
++    virtual ~INetworkToolHost() = default;
++    // singletons
++    virtual INetworkToolTerrain* Terrain() = 0;
++    virtual cISC4OccupantManager* OccupantManager() = 0;
++    virtual int CityCellsX() = 0;                                    // city vslot 0x2e8
++    virtual int CityCellsZ() = 0;                                    // city vslot 0x2f0
++    virtual void* CitySubObject() = 0;                               // city vslot 0x108 (kept, never used)
++    virtual int ViewZoomIndex() = 0;                                 // renderer vslot 0x50 -> +0x14
++    virtual void AddPreviewToRenderer(INetworkPreview* preview, int layer, int priority) = 0;   // renderer 0x100
++    virtual void RemovePreviewFromRenderer(INetworkPreview* preview) = 0;                       // renderer 0x108
++    virtual void AddMessageNotification(NetworkTool* tool, std::uint32_t message) = 0;          // message server 0x28
++    virtual void RemoveMessageNotification(NetworkTool* tool, std::uint32_t message) = 0;       // message server 0x30
++    virtual void PostOccupantDemolished(cISC4Occupant* occupant) = 0;                          // message 0xaa7a014d (data = occupant)
++    // resources
++    virtual bool NetworkExemplarExists(std::uint32_t group, std::uint32_t instance) = 0;       // spRM key {0x6534284a, group, instance}
++    virtual std::unique_ptr<std::uint32_t> FindExemplar(std::uint32_t group, std::uint32_t instance) { (void)group; (void)instance; return nullptr; }
++    virtual bool LoadString(std::uint32_t group, std::uint32_t id, std::string& out) = 0;       // SC4LoadString
++    // network manager / neighbours / demolition
++    virtual const NetworkTypeInfo& TypeInfo(int networkType) = 0;                               // sNetworkTypeInfo[type]
++    virtual NetworkSupportStructInfo* FindSupportInfo(int networkType, std::uint32_t piece) = 0;
++    virtual INetworkIntersectionRule* FindIntersectionRule(std::uint32_t id) = 0;               // sIntersectionRules
++    virtual std::vector<INetworkIntersectionRule*> AllIntersectionRules() = 0;
++    virtual std::uint32_t NetworkTextureInstance(int pieceZoomIndex, std::uint8_t* rotationFlip) = 0;   // NetworkManager vslot 0x68
++    virtual std::vector<cISC4Occupant*> ConnectedStructureOccupants(cISC4Occupant* occupant) = 0;      // NetworkManager vslot 0x60 (AddRef'd)
++    virtual void RemoveNetworkOccupant(NetworkTool* tool, cISC4Occupant* occupant, bool& outBool) = 0;   // NetworkManager vslot 0x40
++    virtual std::unique_ptr<NetworkTool> CreateAuxTool(int networkType, int mode) = 0;           // NetworkManager vslot 0x28 (type 2, 1)
++    virtual void DemolishOccupant(cISC4Occupant* occupant) = 0;      // spDemolition 0x40(1, occ, 1, 0x2001, 0, 0, 0)
++    virtual void DemolishRegion(void* region) = 0;                   // spDemolition 0x30(1, region, 1, 0x2001, 0, filter, ...)
++    virtual int NeighborSimConnectionAt(int connectionType, int x, int z) = 0;                   // neighbours simulator vslot 0x58 (non zero = taken)
++    virtual std::int64_t NeighborSimRegionAt(int x, int z) = 0;      // vslot 0x60
++    virtual void NeighborSimRemoveConnections(int connectionType, std::uint32_t x, std::uint32_t z) = 0;   // vslot 0x38
++    virtual void NeighborSimAddConnection(std::uint32_t type, std::uint32_t x, std::uint32_t z, bool flag) = 0;   // vslot 0x30
++    virtual bool NeighborSimAvailable() = 0;
++    virtual bool CityDrivesOnLeft() = 0;                             // language manager vslot 0x128 -> 0xc8
++    virtual std::int64_t CityBudget() = 0;                           // budget vslot 0x30
++    virtual void SpendBudget(std::int64_t amount) = 0;               // budget vslot 0x40
++    virtual bool ConfirmDialog(const std::string& text) = 0;         // nSC4UI::GenericConfirmationDialog
++    virtual void PlaySound(std::uint32_t id) = 0;                    // sound server vslot 0x50(1, id, 0,0,0)
++    virtual std::unique_ptr<INetworkEffect> CreateEffect(const std::string& name) = 0;           // effects manager vslot 0x30
++    virtual std::unique_ptr<INetworkPreview> CreatePreview() = 0;
++    virtual std::unique_ptr<IVertexHeightSatisfier> CreateHeightSatisfier() = 0;
++    virtual std::unique_ptr<INetworkWorldCache> CreateWorldCache() = 0;
++    virtual std::unique_ptr<INetworkToolOccupant> CreateNetworkOccupant(std::uint32_t occupantClass) = 0;   // new cSC4NetworkOccupant (0 / 0x49c1a034 / 0x49cc1bcd / 0x8a4bd52b)
++    virtual void MarkOccupantsUsable(const std::list<INetworkToolOccupant*>& occupants, bool usable) = 0;   // cSC4NetworkConstructionCrew
++    virtual bool ComputeDemolitionRegion(const std::vector<NetPoint>& cells, void*& region, std::int64_t& cost,
++                                         std::set<cISC4Occupant*>& occupants, cISC4OccupantFilter* filter) = 0;   // cSC4NetworkRoutines
++    virtual void UpdateHighlights(std::set<cISC4Occupant*>& current, std::set<cISC4Occupant*>& wanted) = 0;      // cSC4NetworkRoutines
++    virtual void ReleaseRegion(void* region) = 0;                    // delete the cRZCellMap of the demolition region
++    virtual void IdentifyWaterAndLandBridgeTypes(const std::vector<NetworkBridgeTypeInfo>& bridges, std::vector<int>& water, std::vector<int>& land) = 0;
++    virtual void RegisterStaticShutdown() = 0;                       // spSC4 vslot 0x218(StaticShutdown, 0)
++};
++
++// ---- the tool -------------------------------------------------------------------------------------------------
++class NetworkTool {
++public:
++    NetworkTool(INetworkToolHost& host, int networkType);   // constructor 0x1001862bc
++    virtual ~NetworkTool();                                  // 0x100186748 / 0x100186c34
++
++    // statics (0x100186d04 / 0x100186d3e)
++    static bool StaticInit(INetworkToolHost& host);
++    static void StaticShutdown();
++    static bool sbInited;
++
++    // IUnknown (0x100186c62 / 0x100186c7e / 0x100186cc2); the +8 base has thunks 0x100186c70 / 0x100186c9e / 0x100186cf6
++    std::uint32_t AddRef() { return ++refCount_; }
++    std::uint32_t Release();   // deletes `this` (through the deleting destructor) when the count is 1 or less
++    bool QueryInterface(std::uint32_t iid, void** out, bool secondary = false);
++
++    // lifecycle
++    bool Init();                         // 0x100187752
++    bool Shutdown();                     // 0x100187ce8
++    void Reset();                        // 0x10018fdaa
++    bool DoMessage(cIGZMessage2* message);   // 0x100188822 (thunk 0x100188858)
++
++    // placement
++    bool PlaceNetworkOccupants(int x0, int z0, int x1, int z1, std::uint32_t typeMask, NetworkTool* helper, bool clearCache, int networkType);   // 0x10018f5b2
++    void PlaceNetworkOccupantById(int x, int z, std::uint32_t pieceId, bool usable, int networkType);                     // 0x1001890fa
++    bool OccupantExists(int x, int z, std::uint32_t typeMask, std::uint32_t& hood);                                        // 0x10018fe2e
++    int GetCostOfSolution();             // 0x10018888e
++    bool QueryUserForPotentialIntersections();   // 0x10018b106 (void in the original)
++    void DestroyOccupantsAndResolve(const std::vector<INetworkToolOccupant*>& occupants);   // 0x10018cfb0
++    void CreateNetworkOccupant(NetworkCellInfo& cell, INetworkToolOccupant*& out, float (*corners)[3], std::uint32_t occupantClass);   // 0x100188492
++    int DetermineSupportType(const NetworkCellInfo& cell);   // 0x10018879c
++    void ClearNetworkOccsFromCell(std::uint32_t x, std::uint32_t z, cISC4OccupantFilter* filter);   // 0x100188118
++    void CopyTunnelElevationConstraintsIntoCellInfo(std::vector<Tunnel>& out);   // 0x10018831a
++    cISC4Occupant* GetOccupantExemplarMissing() { return nullptr; }
++    bool GetNetworkOccupant(std::uint32_t x, std::uint32_t z, cISC4OccupantFilter* filter, cISC4Occupant*& out);   // 0x100188b76
++    void GetPaddedRectAroundCell(std::uint32_t x, std::uint32_t z, std::uint32_t rect[4], std::uint32_t pad);       // 0x100188b2c
++    NetworkSupportStructInfo* GetSupportStructureInfo(std::uint32_t pieceId);   // 0x100188c0e
++    void InsertHighwayIntersectionPiece(NetworkCellInfo& cell, std::list<INetworkToolOccupant*>* out, bool usable,
++                                        std::uint32_t pieceId, std::uint32_t rotationFlip, int originX, int originZ, std::uint32_t pathOverride);   // 0x100188c40
++    void SetExemplarForOccupant(INetworkToolOccupant* occupant, std::uint32_t pieceId, const float offset[3], std::uint8_t rotationFlip, std::uint32_t group);   // 0x100188eaa
++    void InsertHighwayIntersection(int x, int z, std::uint32_t ruleId, std::list<INetworkToolOccupant*>* out, bool finalPlacement, bool usable);   // 0x100188f5a
++    void InsertHighwayIntersectionPieces(std::list<INetworkToolOccupant*>* out);   // 0x10018908e
++    bool AdjacentHorizontallyToMultitype(std::uint32_t x, std::uint32_t z, std::uint32_t mask);   // 0x1001892ea
++    bool AdjacentVerticallyToMultitype(std::uint32_t x, std::uint32_t z, std::uint32_t mask);     // 0x10018936c
++    void InsertNetworkOccupant(NetworkCellInfo& cell, const SolvedCell& solved, std::list<INetworkToolOccupant*>* out);   // 0x1001893f2
++    void InsertOccupantsForSolvedCells(std::vector<SolvedCell>& cells, std::list<INetworkToolOccupant*>* out, bool usable);   // 0x10018a13c
++    INetworkToolOccupant* InsertTunnelPiece(std::uint8_t direction, std::uint8_t index, NetworkCellInfo& cell);   // 0x10018a75e
++    void InsertTunnelPieces(int networkType);   // 0x10018aba6
++    static bool IsSimpleDiagonalNetwork(const NetworkCellInfo& cell, int networkType);   // 0x10018b0a0
++    bool InsertIsolatedHighwayIntersection(int x, int z, std::uint32_t ruleId, bool finalPlacement);   // 0x10018b7ca
++    bool AttemptNeighborConnections(bool flag, int networkType);   // 0x10018bdc6
++    void MarkNeighborConnections();   // 0x10018c578
++    void PlaceNeighborConnections();  // 0x10018c640
++    void MarkPositionChangedExistingOccupantsAsNewlySolved();   // 0x10018c712
++    void MarkTerrainChangedExistingOccupantsAsNewlySolved(const std::vector<std::uint32_t>& vertices);   // 0x10018c8aa
++    void AddEdgesToTile(int x, int z, std::uint32_t tile, int networkType, std::uint8_t a, std::uint8_t b);   // 0x10018cae4
++    void AddCellPreview(NetworkCellInfo& cell, const SolvedCell& solved);   // 0x10018cb48
++    void SetTerrainHilight();   // 0x10018cd24
++    void SetQuadTrianglesToDraw(INetworkToolOccupant* occupant, const cSC4TileNeighborhoodCompact& hood);   // 0x10018ce2c
++    static int GetNetworkTypeFromFlag(std::uint32_t flags);   // 0x10018f58a
++    static int GetFirstNetworkTypeFromFlags(std::uint32_t flags);   // 0x100190386
++    void GetFailureReasonString(int reason, std::string& out);   // 0x10018fe7a
++    int UpdateOccupantHighlights(int result);   // 0x10018ff72
++    void ClearOccupantHighlights();   // 0x1001901a6
++    void DestroyHilightedOccupants(); // 0x1001902b2
++    void UpdatePositionChangedPreviewsForPreviousSegments();   // 0x1001903b4
++    void ClearCellPreviews();   // 0x10018803e
++    bool IsValidSolutionPos(std::uint8_t metaPos, int originX, int originZ, std::uint32_t conflictMask);   // see TileNeighborhood below
++
++    // bridge / state accessors
++    bool GetPossibleBridges(std::vector<int>& out);   // 0x100187e88
++    int GetPreferredBridge() const { return preferredBridge_; }                 // 0x100187ec8
++    void SetPreferredBridge(int b) { preferredBridge_ = b; }                    // 0x100187ed4
++    float GetBridgeAltitudeOverride() const { return bridgeAltitudeOverride_; } // 0x100187ee0
++    void SetBridgeAltitudeOverride(float a) { bridgeAltitudeOverride_ = a; }    // 0x100187eee
++    void GetBridgeName(cIGZString& out, int bridgeType);                        // 0x100187efc
++    int GetMajorBridge() const;                                                 // 0x100187f42
++    bool GetMajorBridgeReferenceAltitude(float& out) const;                     // 0x100187f62
++    bool GetMajorBridgeAltitude(float& out) const;                              // 0x100187f84
++    bool IsMajorBridgeLandBridge() const;                                       // 0x100187fa6
++    bool GetBridgeBitmapKey(int bridgeType, std::uint32_t& a, std::uint32_t& b) const;   // 0x100187fc8
++    bool GetPossibleNeighborConnection(NeighborConnectionInfo& out) const;      // 0x10018800a
++    void UpdateOnZoneChange() {}                                                // 0x100190604
++    void SetTraceFinal(bool) {}                                                 // 0x100190618
++    void SetValidStepCount(int n) { validStepCount_ = n; SetTerrainHilight(); } // 0x100190628
++    int GetValidStepCount() const { return validStepCount_; }                   // 0x100190638
++    int GetTotalStepCount() const { return totalStepCount_; }                   // 0x100190650
++    void GetLastValidPoint(NetPoint& out) const;                                // 0x100190668
++    std::uint32_t ViewInputControlId() const { return typeInfo_->viewInputControlId; }              // 0x1001906a0
++    std::uint32_t CursorId() const { return typeInfo_->cursorId; }                                  // 0x1001906b0
++    std::uint32_t DirectionalCursorBase() const { return typeInfo_->directionalCursorBase; }        // 0x1001906c0
++    void PenWidth(int& w, int& h) const { w = typeInfo_->penWidth; h = typeInfo_->penHeight; }       // 0x1001906d0
++    float GetNetworkHeightForTerrainHeight(float h) const { return h; }          // 0x1001906f0 (identity)
++    void ReloadNetworkSpecificInfo(std::uint32_t) {}                             // 0x1001906fc
++    void ReloadCheck() {}                                                        // 0x10018774c
++    int NetworkType() const { return networkType_; }
++
++    // ---- state (public: the solver half and the tests work on it) ----
++    INetworkToolHost& host_;
++    int networkType_;                                  // +0x628
++    std::uint32_t refCount_ = 0;                       // +0x28 (the first AddRef makes it 1)
++    bool inited_ = false;                              // +0x2c
++    std::unique_ptr<INetworkWorldCache> worldCache_;   // +0x30
++    INetworkToolTerrain* terrain_ = nullptr;           // +0x80
++    cISC4OccupantManager* occupantManager_ = nullptr;  // +0x88
++    void* citySub_ = nullptr;                          // +0x90
++    bool finalPlacement_ = false;                      // +0x98
++    bool flag9b_ = true;                               // +0x9b (set by DestroyOccupantsAndResolve; the ctor stores 1 in +0x9a)
++    std::vector<DraggedStep> steps_;                   // +0xa0
++    std::vector<NetPoint> draggedCells_;               // +0xb8
++    int totalStepCount_ = 0;                           // +0xd4
++    int stepFlag_ = 1;                                 // +0xd8
++    int validStepCount_ = 0;                           // +0xdc
++    int dirA_ = 0, dirB_ = 0;                          // +0xe0 / +0xe4
++    std::unordered_set<std::uint32_t> cellsToSolve_;   // +0xe8
++    std::vector<SolvedCell> solvedCells_;              // +0x110
++    std::unordered_set<std::uint32_t> positionChangedCells_;   // +0x128/+0x138
++    std::unordered_set<std::uint32_t> set150_;         // +0x150
++    std::vector<Intersection> intersections_;          // +0x178
++    std::vector<Bridge> bridges_;                      // +0x190
++    std::vector<Tunnel> tunnels_;                      // +0x1a8
++    std::vector<AdditionalDraw> additionalDraws_;      // +0x1c0
++    int zoomIndex_ = 0;                                // +0x1d8
++    std::vector<NeighborConnection> connections_;      // +0x1e0 (pending, marked by MarkNeighborConnections)
++    std::vector<NeighborConnection> placedConnections_;// +0x1f8
++    std::vector<NetPoint> anchorPoints_;               // +0x210
++    std::unique_ptr<IVertexHeightSatisfier> heightSolver_;       // +0x228
++    std::unique_ptr<IVertexHeightSatisfier> heightSolver2_;      // +0x328
++    std::uint32_t foreignTypeMask_ = 0;                // +0x428 (~flag & 0x1f4f)
++    std::unique_ptr<INetworkPreview> preview_;         // +0x430
++    std::vector<int> possibleBridges_;                 // +0x438
++    int preferredBridge_ = -1;                         // +0x450
++    float bridgeAltitudeOverride_ = -1.0f;             // +0x454
++    int placementMode_ = 1;                            // +0x458 (3 while PlaceNetworkOccupants runs)
++    std::uint32_t failureState_ = 0;                   // +0x45c
++    void* demolitionRegion_ = nullptr;                 // +0x460
++    std::set<cISC4Occupant*> highlighted_;             // +0x468
++    std::int64_t demolitionCost_ = 0;                  // +0x480
++    std::set<cISC4Occupant*> cellPreviewOccupants_;    // +0x488
++    bool flag4a0_ = true;                              // +0x4a0
++    float cellSize_ = 0;                               // +0x4a4
++    float cellSizeTimesSlope_ = 0;                     // +0x4a8
++    std::uint32_t cityCellsX_ = 0, cityCellsZ_ = 0;    // +0x4ac / +0x4b0
++    std::uint32_t vertexStrideX_ = 0, vertexStrideZ_ = 0;   // +0x4b4 / +0x4b8
++    std::uint8_t blockA_[0x26] = {};                   // +0x500
++    float slopeAngle_ = 0;                             // +0x518
++    std::vector<std::uint32_t> list528_;               // +0x528
++    float heightTolerance_ = 0, supportThreshold_ = 0; // +0x540 / +0x544
++    std::vector<std::uint32_t> tunnelPieceIds_;        // +0x560
++    std::vector<std::uint32_t> tunnelPieceRotations_;  // +0x578
++    std::vector<float> tunnelPieceDepth_;              // +0x590
++    int bridgeTileCost_ = 0, tunnelTileCost_ = 0;      // +0x5c0 / +0x5c4
++    float heightCostScale_ = 0;                        // +0x5c8
++    int demolitionCostPerPiece_ = 0;                   // +0x5cc
++    std::vector<std::uint32_t> list5d0_;               // +0x5d0
++    std::vector<int> waterBridgeTypes_, landBridgeTypes_;   // +0x5e8 / +0x600
++    bool hasBridges_ = false;                          // +0x618
++    const NetworkTypeInfo* typeInfo_ = nullptr;        // +0x620
++    std::uint32_t allTypesMask_ = 0;                   // +0x62c
++    class OrFilter;
++    std::unique_ptr<cISC4OccupantFilter> orFilter_;    // +0x630 (cSC4NetworkORFilter: occupants whose network flag matches allTypesMask_)
++
++    // ---- hooks into the unrecovered solver half (virtual dispatch of the original) ----
++    virtual NetworkCellInfo* GetCellInfo(std::uint32_t packed) = 0;                       // 0x1001b4bc0
++    virtual float GetNetworkVertexHt(int vertexIndex) = 0;                                 // vslot 0x258
++    virtual bool DrawNetworkLine(NetPoint& a, NetPoint& b, bool flag, int networkType) = 0;   // vslot 0x90
++    virtual bool PlaceNetwork(bool clearCache, void* crew, bool a, bool b, int networkType) = 0;   // 0x100719fdc
++    virtual int SolveNetwork(int networkType, bool flag) = 0;                              // 0x1001b5e8e
++    virtual bool SmoothenNetwork(int pass) = 0;                                            // 0x1001b14a0
++    virtual bool CanTilesBeSupportedOnTerrain(int networkType) = 0;                        // vslot 0x1d0
++    virtual void UpdateTerrainHeights(std::vector<std::uint32_t>& vertices) = 0;           // vslot 0x1d8
++    virtual void BuildSetOfCellsToBeSolved() = 0;                                          // 0x1001b86cc
++    virtual bool SolveMultiTypeSeparation(const NetPoint& cell, int networkType, int& pieceOffset, std::uint8_t& rotation, bool& flip) = 0;   // 0x1001b7d7c
++    virtual void AddSupportStructures(INetworkToolOccupant* occupant, NetworkCellInfo& cell, NetworkSupportStructInfo* info, int type) = 0;   // 0x100415b4a
++    virtual void DoAdditionalDraws() = 0;                                                  // 0x10071ccc2
++    virtual void MarkHighwayIntersectionPieces(bool flag) = 0;                             // 0x10071e428
++    virtual void CreateCellInfosForCurrentPlacementTiles(int networkType) = 0;             // vslot 0x248
++    virtual void StartPlacing() = 0;                                                       // vslot 0x240
++    virtual void ComputeDraggedCellsHook() {}
++
++private:
++    friend class NetworkToolTestAccess;
++};
++
++// ReloadNetworkTypeInfo (0x100186f9c): seeds the 13 network type records. `Config` receives what the ini reading
++// (LoadBridgeTypes / LoadSupports / LoadPlacementParams / LoadComplete / LoadTilePatternVerifiers) needs.
++struct NetworkTypeSeed {
++    int type;                       // network type index (the record's slot)
++    std::uint32_t primaryKind;      // first word of the record (1 / 2 / 0)
++    std::uint64_t keyA;             // resource key words seeded into the record
++    std::uint64_t keyB;
++    std::uint64_t keyC;
++    std::uint32_t evaluatorFlag;    // second LoadEvaluator argument
++    const char* bridgeSection;      // ini section for LoadBridgeTypes
++    std::uint32_t bridgeBaseId;     // 0x1000 + ...
++    std::uint32_t bridgeKind;       // last LoadBridgeTypes argument
++    bool loadsSupports;
++    std::uint32_t placementParamsId;
++    bool streetFlag;                // DAT_100b236b5 = 1 for the street record
++};
++extern const NetworkTypeSeed kNetworkTypeSeeds[];
++extern const int kNetworkTypeSeedCount;
++
++class INetworkTypeInfoLoader {
++public:
++    virtual ~INetworkTypeInfoLoader() = default;
++    virtual void Clear(int slot) = 0;
++    virtual void SeedKeys(int slot, const NetworkTypeSeed& seed) = 0;
++    virtual void LoadEvaluator(int slot, bool flag) = 0;
++    virtual void LoadBridgeTypes(int slot, const char* section, std::uint32_t baseId, std::uint32_t kind) = 0;
++    virtual void LoadSupports(int slot, std::uint32_t id) = 0;
++    virtual void LoadPlacementParams(int slot, std::uint32_t id) = 0;
++    virtual void SetStreetFlag(int slot) = 0;
++    virtual void LoadComplete(int slot) = 0;
++    virtual void LoadTilePatternVerifiers(const char* section) = 0;
++};
++void ReloadNetworkTypeInfo(INetworkTypeInfoLoader& loader);   // 0x100186f9c
++
++}  // namespace sc4

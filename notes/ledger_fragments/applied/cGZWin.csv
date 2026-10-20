@@ -1,0 +1,5 @@
+0x10016d3fc,cGZFadeTmpWin::cGZFadeTmpWin(),FadeTmpWinConstruct,src/gz/Win.cpp|h,recovered-partial,"Marks the window with param 0xe6e998fe; original takes the window manager from the global service, port takes it as an argument; test gz_win_render"
+0x10016d4c0,cGZFadeTmpWin::~cGZFadeTmpWin(),FadeTmpWinDestruct,src/gz/Win.cpp|h,recovered,"Defaulted: only chains to cGZWin::~cGZWin; test gz_win_render"
+0x10016d4ca,cGZFadeTmpWin::~cGZFadeTmpWin() [deleting],FadeTmpWinDeletingDestruct,src/gz/Win.cpp|h,recovered,"Defaulted: only chains to cGZWin::~cGZWin; test gz_win_render"
+0x10016d470,cGZFadeTmpWin::Plot(),FadeTmpWinPlot,src/gz/Win.cpp|h,recovered,"Compared with Ghidra decompilation (mgr DestroyWindow vslot 0xb8, Invalidate vslot 0x2e0); test gz_win_render"
+0x10016c104,cGZFadeTmpWin::StealBuffer(cIGZWin*),FadeTmpWinStealBuffer,src/gz/Win.cpp|h,recovered,"Compared with Ghidra decompilation incl. flag mask 0xffd8ffde|0x230021 and vslots; test gz_win_render"

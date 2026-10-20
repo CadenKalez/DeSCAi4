@@ -1,0 +1,1416 @@
+diff --git a/scripts/tests/gz_dbsegmentdirectoryfiles_test.cpp b/scripts/tests/gz_dbsegmentdirectoryfiles_test.cpp
+new file mode 100644
+index 0000000..012b41b
+--- /dev/null
++++ b/scripts/tests/gz_dbsegmentdirectoryfiles_test.cpp
+@@ -0,0 +1,409 @@
++// Test of cGZDBSegmentDirectoryFiles / cGZRESIDtoExtensionMap / cGZFileNameToResKeyConverterDefault with real temp files.
++// Expected values are derived by hand from the decompiled logic (file naming "%8.8x" / "%8.8x%8.8x", hex-run parsing
++// rules of GetKeyFromFileName, the registry category callback grammar, the AddFile / DoFileChangeCheck behaviour).
++#include <cstdio>
++#include <cstdlib>
++#include <string>
++#include <vector>
++#include <sys/stat.h>
++#include <unistd.h>
++
++#include "gz/cGZDBSegmentDirectoryFiles.h"
++
++static int failures = 0;
++#define CHECK(c) do { if (!(c)) { std::printf("FAIL line %d: %s\n", __LINE__, #c); ++failures; } } while (0)
++
++namespace {
++void WriteAll(const std::string& path, const std::string& data) {
++    FILE* f = std::fopen(path.c_str(), "wb");
++    std::fwrite(data.data(), 1, data.size(), f);
++    std::fclose(f);
++}
++std::string ReadAll(const std::string& path) {
++    std::string out;
++    if (FILE* f = std::fopen(path.c_str(), "rb")) {
++        char buf[64];
++        std::size_t n;
++        while ((n = std::fread(buf, 1, sizeof buf, f)) > 0) out.append(buf, n);
++        std::fclose(f);
++    }
++    return out;
++}
++bool Exists(const std::string& path) { struct stat st; return ::stat(path.c_str(), &st) == 0; }
++
++struct FakeRegistry : cIGZRegistryCategories {
++    int calls = 0;
++    bool result = true;
++    std::string category;
++    DirectoryFilesCategoryCallback callback = nullptr;
++    void* user = nullptr;
++    // Feeds entries to the registered callback the way the registry does.
++    std::vector<std::pair<std::string, std::string>> entries;
++    bool RegisterCategoryCallback(const char* cat, DirectoryFilesCategoryCallback cb, void* u) override {
++        ++calls;
++        category = cat;
++        callback = cb;
++        user = u;
++        if (!result) return false;
++        for (auto& e : entries) cb(cRZString(e.first.c_str()), cRZString(e.second.c_str()), u);
++        return true;
++    }
++};
++
++struct KeyList : cIGZPersistResourceKeyList {
++    std::vector<cGZPersistResourceKey> keys;
++    bool Insert(const cGZPersistResourceKey& k) override { keys.push_back(k); return true; }
++    bool Insert(const cIGZPersistResourceKeyList&) override { return false; }
++    bool Erase(const cGZPersistResourceKey&) override { return false; }
++    bool EraseAll() override { keys.clear(); return true; }
++    void EnumKeys(ResourceKeyEnumFn, void*) const override {}
++    bool IsPresent(const cGZPersistResourceKey&) override { return false; }
++    std::uint32_t Size() const override { return static_cast<std::uint32_t>(keys.size()); }
++    const cGZPersistResourceKey* GetKey(std::uint32_t i) const override { return &keys[i]; }
++    std::uint32_t AddRef() override { return 1; }
++    std::uint32_t Release() override { return 1; }
++    bool QueryInterface(std::uint32_t, void**) override { return false; }
++};
++struct OnlyType : cIGZPersistResourceKeyFilter {
++    std::uint32_t type;
++    explicit OnlyType(std::uint32_t t) : type(t) {}
++    bool IsKeyIncluded(const cGZPersistResourceKey& k) override { return k.type == type; }
++    std::uint32_t AddRef() override { return 1; }
++    std::uint32_t Release() override { return 1; }
++    bool QueryInterface(std::uint32_t, void**) override { return false; }
++};
++
++void TestExtensionMap() {
++    cGZRESIDtoExtensionMap* map = new cGZRESIDtoExtensionMap(1);
++    CHECK(map->Size() == 0);
++    CHECK(map->AddRESIDtoExtensionAssociation(0x10, cRZString("png")));
++    CHECK(map->AddRESIDtoExtensionAssociation(0x20, cRZString("Exemplar")));
++    CHECK(map->AddRESIDtoExtensionAssociation(0x10, cRZString("jpg")));      // duplicate keys are kept
++    CHECK(map->Size() == 3);
++    cRZString ext;
++    std::uint32_t id = 0x10;
++    CHECK(map->RESIDToExtension(id, ext) && ext.str() == "png");              // first one wins
++    id = 0x99;
++    CHECK(!map->RESIDToExtension(id, ext));
++    std::uint32_t resid = 0;
++    CHECK(map->ExtensionToRESID(cRZString("EXEMPLAR"), resid) && resid == 0x20);   // case-insensitive
++    CHECK(map->ExtensionToRESID(cRZString(".exemplar"), resid) && resid == 0x20);  // a leading dot is ignored
++    CHECK(map->ExtensionToRESID(cRZString("jpg"), resid) && resid == 0x10);
++    CHECK(!map->ExtensionToRESID(cRZString("tga"), resid));
++    CHECK(!map->ExtensionToRESID(cRZString("..exemplar"), resid));
++    cIGZPersistRESIDtoExtensionMap* copy = nullptr;
++    CHECK(map->QueryInterface(0xa56c8cfd, reinterpret_cast<void**>(&copy)) && copy);   // AddRef -> 2
++    cGZRESIDtoExtensionMap other(5);
++    other.Copy(map);
++    CHECK(other.Size() == 3);
++    other.EraseAll();
++    CHECK(other.Size() == 0);
++    void* none = nullptr;
++    CHECK(!map->QueryInterface(0x1234, &none));
++    CHECK(copy->Release() == 1);                                              // 2 -> 1
++    CHECK(map->Release() == 0);                                               // deletes
++}
++
++void TestConverter() {
++    cGZFileNameToResKeyConverterDefault conv;
++    cGZPersistResourceKey key{1, 2, 3};
++    CHECK(!conv.FileNameToKey(cRZString("0123456789abcdef.png"), key) && key.type == 1);
++    CHECK(!conv.IsFileNameValid(cRZString("12345678.png")));
++    cRZString unused;
++    CHECK(!conv.KeyToFileName(key, unused));
++}
++}  // namespace
++
++int main() {
++    TestExtensionMap();
++    TestConverter();
++
++    const char* tmp = std::getenv("TMPDIR");
++    const std::string base = std::string(tmp ? tmp : "/tmp") + "/sdfseg_test_" + std::to_string(::getpid());
++    const std::string dir = base + "/data/";
++    mkdir(base.c_str(), 0755);
++    mkdir((base + "/data").c_str(), 0755);
++
++    // ---- files -----------------------------------------------------------------------------------------------
++    WriteAll(dir + "00000001.png", "AAAA");                       // instance 1, default group
++    WriteAll(dir + "0000000200000009.png", "BBBBBB");             // instance 2, group 9 (prefix form)
++    WriteAll(dir + "0000000300000004.tga", "C");                  // type tga
++    WriteAll(dir + "notes.txt", "x");                             // not a key
++    WriteAll(dir + "short.png", "x");                             // < 8 chars of hex -> not a key (text keys off)
++
++    // ---- registry / services ----------------------------------------------------------------------------------
++    FakeRegistry registry;
++    registry.entries = {{"00000007", " 11 :png, 22:TGA ,"}, {"00000008", "33:zzz"}};
++    DirectoryFilesServices services;
++    services.registry = &registry;
++    services.dataDirectory = [&]() -> const char* { return base.c_str(); };
++    services.languageDirectory = [](cRZString& out) { out.AssignFromCString("English"); };
++    SetDirectoryFilesServices(services);
++
++    {
++        auto* seg = new cGZDBSegmentDirectoryFiles();
++        seg->AddRef();
++        CHECK(!seg->IsOpen() && seg->GetSegmentID() == 0 && seg->GroupId() == 0);
++        CHECK(!seg->Open(true, true));                                     // not initialised
++        CHECK(!seg->DoFileChangeCheck());
++
++        // Init(): "%DataDirectory%" is replaced; the text in front is dropped.
++        cRZString path("ignored%DataDirectory%/data");
++        CHECK(seg->Init(7, &path, false));
++        CHECK(registry.calls == 2 && registry.category == "CN_DBSDF");     // Init + Open
++        CHECK(seg->IsOpen());
++        CHECK(seg->GetSegmentID() == 7 && seg->GroupId() == 7);
++        CHECK(seg->Path().str() == dir.substr(0, dir.size() - 1) + "/" || seg->Path().str() == base + "/data/");
++        CHECK(!seg->Init(7, &path, false));                                // already initialised
++        // the callback fed the extension map for group 7 only
++        std::uint32_t resid = 0;
++        CHECK(seg->ExtensionMap()->ExtensionToRESID(cRZString("png"), resid) && resid == 0x11);
++        CHECK(seg->ExtensionMap()->ExtensionToRESID(cRZString("tga"), resid) && resid == 0x22);
++        CHECK(!seg->ExtensionMap()->ExtensionToRESID(cRZString("zzz"), resid));
++        CHECK(seg->ExtensionMap()->Size() == 2);
++
++        // BuildKeyList read the directory: type png (0x11) group 7 inst 1; png group 9 inst 2; tga g=4 inst 3
++        // (the group of "0000000300000004" is 4).
++        KeyList keys;
++        CHECK(seg->GetResourceKeyList(&keys, nullptr) == 3);
++        // ordering is (type, group, instance): png(0x11) 7:1 and 9:2 first, then tga(0x22) 4:3
++        CHECK(keys.keys.size() == 3);
++        CHECK(keys.keys[0].type == 0x11 && keys.keys[0].group == 7 && keys.keys[0].instance == 1);
++        CHECK(keys.keys[1].type == 0x11 && keys.keys[1].group == 9 && keys.keys[1].instance == 2);
++        CHECK(keys.keys[2].type == 0x22 && keys.keys[2].group == 4 && keys.keys[2].instance == 3);
++        OnlyType onlyTga(0x22);
++        CHECK(seg->GetRecordCount(&onlyTga) == 1 && seg->GetRecordCount(nullptr) == 3);
++
++        // sizes / reads
++        cGZPersistResourceKey k1{0x11, 7, 1}, k2{0x11, 9, 2}, kMissing{0x11, 7, 99};
++        CHECK(seg->TestForRecord(k1) && !seg->TestForRecord(kMissing));
++        CHECK(seg->GetRecordSize(k1) == 4 && seg->GetRecordSize(k2) == 6 && seg->GetRecordSize(kMissing) == 0xffffffffu);
++        char buf[16] = {};
++        std::uint32_t size = 16;
++        CHECK(seg->ReadRecord(k2, buf, size) == 6 && size == 6 && std::string(buf, 6) == "BBBBBB");
++        size = 3;
++        CHECK(seg->ReadRecord(k2, buf, size) == 3 && size == 3 && std::string(buf, 3) == "BBB");   // clamped to the capacity
++        size = 16;
++        CHECK(seg->ReadRecord(k2, nullptr, size) == 6 && size == 0);            // size query
++        size = 16;
++        CHECK(seg->ReadRecord(kMissing, buf, size) == 0xffffffffu && size == 0);
++        CHECK(!seg->WriteRecord(k1, buf, 1));                                   // not implemented
++
++        // names
++        cRZString name;
++        CHECK(seg->GetFileNameFromKey(k1, name) && name.str() == "00000001.png");
++        CHECK(!seg->GetFileNameFromKey(kMissing, name));
++        cRZString full;
++        CHECK(seg->GetFilePathFromKey(k2, full) && full.str() == seg->Path().str() + "0000000200000009.png");
++        cRZString shortName, longName, ext;
++        cGZPersistResourceKey tmpKey{0x11, 7, 0xABCDEF};                        // default group -> "%8.8x"
++        CHECK(seg->getFileNameFromKey(tmpKey, shortName, ext) && shortName.str() == "00abcdef" && ext.str() == "png");
++        tmpKey.group = 5;                                                       // other group -> instance then group
++        CHECK(seg->getFileNameFromKey(tmpKey, longName, ext) && longName.str() == "00abcdef00000005");
++        tmpKey.type = 0x77;                                                     // type without extension
++        CHECK(!seg->getFileNameFromKey(tmpKey, longName, ext));
++
++        // key parsing rules
++        cGZPersistResourceKey parsed{};
++        CHECK(seg->GetKeyFromFileName(cRZString("0000abcd"), cRZString("png"), parsed) &&
++              parsed.type == 0x11 && parsed.group == 7 && parsed.instance == 0xabcd);
++        CHECK(seg->GetKeyFromFileName(cRZString("deadbeef00000002"), cRZString(".PNG"), parsed) &&
++              parsed.group == 2 && parsed.instance == 0xdeadbeef);
++        CHECK(seg->GetKeyFromFileName(cRZString("0000abcdXYZ"), cRZString("png"), parsed) && parsed.instance == 0xabcd);   // prefix
++        CHECK(!seg->GetKeyFromFileName(cRZString("0000abc"), cRZString("png"), parsed));      // 7 digits
++        CHECK(!seg->GetKeyFromFileName(cRZString("zz0000abcd"), cRZString("png"), parsed));   // suffix form is off
++        CHECK(!seg->GetKeyFromFileName(cRZString("00000001"), cRZString("bad"), parsed));     // unknown extension
++        seg->SetAllowedIDPositions(false, true);
++        CHECK(seg->GetKeyFromFileName(cRZString("zz0000abcd"), cRZString("png"), parsed) && parsed.instance == 0xabcd && parsed.group == 7);
++        CHECK(seg->GetKeyFromFileName(cRZString("pp1111111122222222"), cRZString("png"), parsed) &&
++              parsed.instance == 0x11111111 && parsed.group == 0x22222222);                   // 16 digits: instance then group
++        CHECK(!seg->GetKeyFromFileName(cRZString("0000abcdXY"), cRZString("png"), parsed));   // prefix form now off, no trailing hex
++        seg->SetAllowedIDPositions(true, false);
++        seg->SetAllowTextAsKey(true);
++        CHECK(seg->GetKeyFromFileName(cRZString("notes"), cRZString("png"), parsed) &&
++              parsed.instance == (nRZHash::CRC24("notes", false) | 0xff000000u));
++        seg->SetAllowTextAsKey(false);
++        CHECK(seg->IsFileNameValid(cRZString("/some/dir/00000005.png")) && seg->IsFileNameValid(cRZString("00000005.TGA")));
++        CHECK(!seg->IsFileNameValid(cRZString("00000005.exe")) && !seg->IsFileNameValid(cRZString("nothing")));
++
++        // GenerateNewKey: counts up from 1 and skips used instances (type 0x11 group 7 instance 1 exists)
++        cGZPersistResourceKey generated{};
++        CHECK(seg->GenerateNewKey(0x11, generated) && generated.type == 0x11 && generated.group == 7 && generated.instance == 2);
++        CHECK(seg->GenerateNewKey(0x11, generated) && generated.instance == 3);
++
++        // open for read: two readers share, a writer is refused; reading a record being written is refused
++        cIGZPersistDBRecord* r1 = nullptr;
++        cIGZPersistDBRecord* r2 = nullptr;
++        CHECK(seg->OpenRecord(k1, &r1, 1) && r1);
++        CHECK(seg->OpenRecord(k1, &r2, 1) && r2);
++        CHECK(!seg->DeleteRecord(k1));                                           // open handles
++        cIGZPersistDBRecord* w = nullptr;
++        CHECK(!seg->OpenRecord(k1, &w, 2) && !w);
++        CHECK(r1->GetSize() == 4);
++        char rb[4] = {};
++        CHECK(r1->GetFieldVoid(rb, 4) && std::string(rb, 4) == "AAAA");
++        CHECK(seg->CloseRecord(&r1) && seg->CloseRecord(&r2));
++        CHECK(!seg->OpenRecord(kMissing, &r1, 1));                               // reading a missing key fails
++        CHECK(!seg->OpenRecord(k1, &r1, 0));
++
++        // rewrite: backup copy, new content replaces the file
++        CHECK(seg->OpenRecord(k1, &w, 2) && w);
++        CHECK(seg->GetRecordSize(k1) == 0);                                      // truncated, writer knows its size
++        CHECK(w->SetFieldVoid("NEWDATA", 7));
++        CHECK(seg->GetRecordSize(k1) == 7);
++        size = 16;
++        CHECK(seg->ReadRecord(k1, buf, size) == 0xffffffffu && size == 0);       // single writer blocks reads
++        cIGZPersistDBRecord* rd = nullptr;
++        CHECK(!seg->OpenRecord(k1, &rd, 1));                                     // writer present
++        CHECK(seg->CloseRecord(&w));
++        CHECK(ReadAll(dir + "00000001.png") == "NEWDATA");
++
++        // rewrite then abort restores the original
++        CHECK(seg->OpenRecord(k2, &w, 2) && w);
++        CHECK(w->SetFieldVoid("zz", 2));
++        CHECK(seg->AbortRecord(&w));
++        CHECK(ReadAll(dir + "0000000200000009.png") == "BBBBBB");
++
++        // create: the key is not yet in the segment; the file must already exist (no create bit) -> fails otherwise
++        cGZPersistResourceKey fresh{0x11, 7, 0x55};
++        cIGZPersistDBRecord* c = nullptr;
++        CHECK(!seg->CreateNewRecord(fresh, &c) && !c);
++        CHECK(!seg->TestForRecord(fresh));
++        WriteAll(dir + "00000055.png", "");
++        CHECK(seg->CreateNewRecord(fresh, &c) && c);
++        CHECK(c->SetFieldVoid("fresh", 5));
++        CHECK(seg->TestForRecord(fresh));
++        CHECK(seg->CloseRecord(&c));
++        CHECK(ReadAll(dir + "00000055.png") == "fresh");
++        CHECK(seg->GetRecordSize(fresh) == 5);
++
++        // delete removes the file
++        CHECK(seg->DeleteRecord(fresh) && !seg->TestForRecord(fresh) && !Exists(dir + "00000055.png"));
++        CHECK(!seg->DeleteRecord(fresh));
++
++        // EnumerateRecordFiles
++        CHECK(seg->EnumerateRecordFiles(nullptr, 0) == 3);
++        cRZString a, b;
++        cIGZString* slots[3] = {&a, &b, nullptr};
++        CHECK(seg->EnumerateRecordFiles(slots, 5) == 2);                          // stops at the first null slot
++        CHECK(a.str() == "00000001.png" && b.str() == "0000000200000009.png");
++        CHECK(seg->EnumerateRecordFiles(slots, 1) == 1);
++
++        // AddFile: adding answers false but registers; removal answers true
++        WriteAll(dir + "00000009.png", "n");
++        CHECK(!seg->AddFile(cRZString("00000009.png"), true));
++        cGZPersistResourceKey added{0x11, 7, 9};
++        CHECK(seg->TestForRecord(added));
++        CHECK(seg->AddFile(cRZString("00000009.png"), false) && !seg->TestForRecord(added));
++        CHECK(!seg->AddFile(cRZString("00000009.png"), false));
++
++        // file change check: a new file appears, an old one disappears
++        WriteAll(dir + "0000000A.PNG", "n");                                      // upper case extension, new
++        std::remove((dir + "0000000300000004.tga").c_str());                      // gone
++        CHECK(seg->DoFileChangeCheck());
++        CHECK(seg->TestForRecord({0x11, 7, 0xA}));
++        CHECK(!seg->TestForRecord({0x22, 4, 3}));
++        CHECK(!seg->DoFileChangeCheck());                                         // nothing changed now
++
++        // change-detection switch
++        CHECK(!seg->GetFileChangeDetection());
++        CHECK(seg->SetFileChangeDetection(false, 1));                             // interval clamps to 15
++        CHECK(seg->SetFileChangeDetection(true, 300));                            // arms the timer (one-shot, 300..600 s)
++        CHECK(seg->GetFileChangeDetection());
++        CHECK(seg->SetFileChangeDetection(false, 0));
++        CHECK(!seg->GetFileChangeDetection());
++
++        // extension map copy-out
++        cIGZPersistRESIDtoExtensionMap* mapCopy = nullptr;
++        CHECK(seg->GetRESIDtoExtensionMap(&mapCopy) && mapCopy && mapCopy->Size() == 2);
++        mapCopy->Release();
++        seg->AddExtensionAssociation(0x44, cRZString("dat"));
++        CHECK(seg->ExtensionMap()->Size() == 3);
++
++        // interfaces
++        cIGZPersistDBSegmentDirectoryFiles* dirIf = nullptr;
++        CHECK(seg->QueryInterface(0x856c8cf7, reinterpret_cast<void**>(&dirIf)) && dirIf);
++        CHECK(dirIf->AsIDBSegment() == static_cast<cIGZPersistDBSegment*>(seg));
++        dirIf->Release();
++        cIGZPersistDBSegment* segIf = nullptr;
++        CHECK(seg->QueryInterface(0x656b8f0c, reinterpret_cast<void**>(&segIf)) && segIf == static_cast<cIGZPersistDBSegment*>(seg));
++        segIf->Release();
++        CHECK(seg->Flush());
++
++        // SetPath only while closed
++        CHECK(!seg->SetPath(cRZString("/elsewhere")));
++        CHECK(seg->Close() && !seg->IsOpen());
++        CHECK(!seg->TestForRecord(k1));                                           // everything dropped
++        CHECK(seg->SetPath(cRZString("a\\b")) && seg->Path().str() == "a/b/");
++        cRZString got;
++        seg->GetPath(got);
++        CHECK(got.str() == "a/b/");
++        CHECK(seg->Shutdown());
++        CHECK(seg->Path().str().empty() && seg->GroupId() == 0);
++        CHECK(seg->Release() == 0);                                               // FinalRelease deletes
++    }
++
++    // ---- Init variations ---------------------------------------------------------------------------------------
++    {
++        services.registry = nullptr;                                              // no registry service -> still works
++        SetDirectoryFilesServices(services);
++        auto* seg = new cGZDBSegmentDirectoryFiles();
++        seg->AddRef();
++        // "%Language%" is replaced by the language directory (prefix kept)
++        mkdir((base + "/English").c_str(), 0755);
++        cRZString path((base + "/%Language%").c_str());
++        CHECK(seg->Init(3, &path, true));
++        CHECK(seg->Path().str() == base + "/English/");
++        CHECK(seg->IsOpen() && seg->GetRecordCount(nullptr) == 0);
++        CHECK(seg->Release() == 0);
++    }
++    {
++        // a failing registry registration returns false from Init (and Open) but leaves it initialised
++        FakeRegistry failing;
++        failing.result = false;
++        services.registry = &failing;
++        SetDirectoryFilesServices(services);
++        auto* seg = new cGZDBSegmentDirectoryFiles();
++        seg->AddRef();
++        cRZString path(dir.c_str());
++        CHECK(!seg->Init(5, &path, false) && failing.calls == 1 && !seg->IsOpen());
++        CHECK(seg->Open(true, false) == false && failing.calls == 2 && seg->IsOpen());   // flags stay set
++        CHECK(seg->Release() == 0);
++    }
++    {
++        // a missing directory: write open is refused, read open succeeds as far as the flags go but lists nothing
++        services.registry = nullptr;
++        SetDirectoryFilesServices(services);
++        auto* seg = new cGZDBSegmentDirectoryFiles();
++        seg->AddRef();
++        cRZString path((base + "/nothere").c_str());
++        CHECK(!seg->Init(2, &path, false) && !seg->IsOpen());                     // Open(true,true) fails -> Shutdown
++        CHECK(seg->Path().str().empty());
++        CHECK(seg->Init(2, &path, false) == false);
++        CHECK(seg->Release() == 0);
++    }
++
++    {
++        // ":filenameasinstanceid" switches text keys on for the segment of the entry's group
++        FakeRegistry text;
++        text.entries = {{"00000004", "11:png:filenameasinstanceid"}};
++        services.registry = &text;
++        SetDirectoryFilesServices(services);
++        auto* seg = new cGZDBSegmentDirectoryFiles();
++        seg->AddRef();
++        cRZString path(dir.c_str());
++        CHECK(seg->Init(4, &path, false) && seg->IsOpen());
++        cGZPersistResourceKey parsed{};
++        CHECK(seg->GetKeyFromFileName(cRZString("short"), cRZString("png"), parsed) &&
++              parsed.type == 0x11 && parsed.group == 4 &&
++              parsed.instance == (nRZHash::CRC24("short", false) | 0xff000000u));
++        CHECK(seg->TestForRecord(parsed));                  // short.png was listed by BuildKeyList
++        CHECK(seg->GetRecordCount(nullptr) >= 1);
++        CHECK(seg->Release() == 0);
++    }
++
++    SetDirectoryFilesServices(DirectoryFilesServices{});
++    std::system(("rm -rf '" + base + "'").c_str());
++    if (failures == 0) std::printf("ok\n");
++    return failures == 0 ? 0 : 1;
++}
+diff --git a/src/gz/cGZDBSegmentDirectoryFiles.cpp b/src/gz/cGZDBSegmentDirectoryFiles.cpp
+new file mode 100644
+index 0000000..03a2d6d
+--- /dev/null
++++ b/src/gz/cGZDBSegmentDirectoryFiles.cpp
+@@ -0,0 +1,725 @@
++#include "gz/cGZDBSegmentDirectoryFiles.h"
++
++#include <cctype>
++#include <cstdlib>
++#include <cstring>
++#include <strings.h>
++#include <vector>
++
++#include "rz/RZStringUtils.h"
++#include "rz/cRZFile.h"
++#include "rz/nRZHash.h"
++
++namespace {
++DirectoryFilesServices g_services;
++
++// isxdigit of a signed char the way the binary tests it: negative values never count.
++bool IsHexDigit(char c) { return c >= 0 && std::isxdigit(static_cast<unsigned char>(c)) != 0; }
++
++std::uint32_t HexField(const char* text) {          // strtoul(<8 chars>, 0, 16) on a private 8-character copy
++    char buffer[9];
++    std::memcpy(buffer, text, 8);
++    buffer[8] = '\0';
++    return static_cast<std::uint32_t>(std::strtoul(buffer, nullptr, 16));
++}
++}  // namespace
++
++void SetDirectoryFilesServices(const DirectoryFilesServices& services) { g_services = services; }
++const DirectoryFilesServices& GetDirectoryFilesServices() { return g_services; }
++
++// ---------------------------------------------------------------------------------------------------------------
++// cGZRESIDtoExtensionMap
++
++bool cGZRESIDtoExtensionMap::QueryInterface(std::uint32_t iid, void** out) {
++    if (iid == kGZIID_cIGZPersistRESIDtoExtensionMap || iid == kGZIID_cIGZUnknown) {
++        *out = static_cast<cIGZPersistRESIDtoExtensionMap*>(this);
++        AddRef();
++        return true;
++    }
++    return false;
++}
++
++std::uint32_t cGZRESIDtoExtensionMap::Release() {
++    if (refCount_ > 1) return --refCount_;
++    delete this;                    // vslot 0x48: the deleting destructor
++    return 0;
++}
++
++bool cGZRESIDtoExtensionMap::AddRESIDtoExtensionAssociation(std::uint32_t resid, const cIGZString& extension) {
++    // The original descends the tree like an upper_bound insert: equal keys are appended after the existing ones.
++    entries_.emplace(resid, cRZString(std::string(extension.ToChar(), extension.Strlen()).c_str()));
++    return true;
++}
++
++bool cGZRESIDtoExtensionMap::RESIDToExtension(const std::uint32_t& resid, cIGZString& extension) {
++    for (const auto& entry : entries_) {
++        if (entry.first == resid) {
++            extension.AssignFromCString(entry.second.ToChar());
++            return true;
++        }
++    }
++    return false;
++}
++
++bool cGZRESIDtoExtensionMap::ExtensionToRESID(const cIGZString& extension, std::uint32_t& resid) {
++    const std::uint32_t length = extension.Strlen();
++    for (const auto& entry : entries_) {
++        const std::uint32_t stored = entry.second.Strlen();
++        if (length == stored) {
++            if (strncasecmp(extension.Data(), entry.second.ToChar(), length) == 0) {
++                resid = entry.first;
++                return true;
++            }
++        } else if (stored + 1 == length && length != 0 && extension.Data()[0] == '.') {
++            // a leading dot on the lookup string is ignored
++            if (strncasecmp(extension.Data() + 1, entry.second.ToChar(), length - 1) == 0) {
++                resid = entry.first;
++                return true;
++            }
++        }
++    }
++    return false;
++}
++
++void cGZRESIDtoExtensionMap::Copy(const cIGZPersistRESIDtoExtensionMap* other) {
++    EraseAll();
++    // The original walks the other object's tree directly (it only ever copies from this class).
++    const auto* source = static_cast<const cGZRESIDtoExtensionMap*>(other);
++    for (const auto& entry : source->entries_) AddRESIDtoExtensionAssociation(entry.first, entry.second);
++}
++
++// ---------------------------------------------------------------------------------------------------------------
++// cGZFileNameToResKeyConverterDefault
++
++bool cGZFileNameToResKeyConverterDefault::IsFileNameValid(const cIGZString& fileName) {
++    cGZPersistResourceKey key{};
++    return FileNameToKey(fileName, key);
++}
++
++// @ 0x1004d7842. The binary splits the name at the last '.' and reads hexadecimal fields from it exactly like the
++// segment does, but never stores a key and always returns false (the function ends in XOR EAX,EAX); the parse has no
++// side effects, so only the result is kept.
++bool cGZFileNameToResKeyConverterDefault::FileNameToKey(const cIGZString&, cGZPersistResourceKey&) { return false; }
++
++// ---------------------------------------------------------------------------------------------------------------
++// cGZDBSegmentDirectoryFiles
++
++void cGZDBSegmentDirectoryFiles::RecordData::EraseRecord(cIGZPersistDBRecord* record) {
++    for (auto it = records.begin(); it != records.end(); ++it) {
++        cGZDBSDFRecord* held = it->get();
++        cIGZPersistDBRecord* view = held ? static_cast<cIGZPersistDBRecord*>(held) : nullptr;
++        if (view == record) {
++            records.erase(it);
++            return;
++        }
++    }
++}
++
++cGZDBSegmentDirectoryFiles::cGZDBSegmentDirectoryFiles() = default;
++
++cGZDBSegmentDirectoryFiles::~cGZDBSegmentDirectoryFiles() {
++    Shutdown();
++    // timer_ (cRZCallbackTimer::DestructInPlace), the maps and the path are destroyed by the members.
++}
++
++void cGZDBSegmentDirectoryFiles::FinalRelease() {
++    Shutdown();                                  // vslot 0x28
++    cGZPersistDBSegment::FinalRelease();
++}
++
++bool cGZDBSegmentDirectoryFiles::QueryInterface(std::uint32_t iid, void** out) {
++    if (iid == kGZIID_cIGZPersistDBSegmentDirectoryFiles) {
++        *out = static_cast<cIGZPersistDBSegmentDirectoryFiles*>(this);
++        AddRef();
++        return true;
++    }
++    return cGZPersistDBSegment::QueryInterface(iid, out);
++}
++
++bool cGZDBSegmentDirectoryFiles::SetSegmentID(const std::uint32_t& id) {
++    segmentId_ = id;
++    if (groupId_ == 0) groupId_ = id;            // the default group follows the segment id until one is set
++    return true;
++}
++
++bool cGZDBSegmentDirectoryFiles::Init() {
++    if (!initialized_) initialized_ = true;
++    return true;
++}
++
++bool cGZDBSegmentDirectoryFiles::Init(std::uint32_t segmentId, const cIGZString* path, bool) {
++    if (initialized_) return false;
++    initialized_ = true;
++    requireDirectoryForWrite_ = true;
++    flag2a_ = false;
++    SetSegmentID(segmentId);
++    path_.AssignFromIGZString(*path);
++
++    if (g_services.registry &&
++        !g_services.registry->RegisterCategoryCallback(kGZCATNAME_cGZPersistDBSegmentDirectoryFiles,
++                                                       &CreateDBSegmentDirectoryFilesCallback, this)) {
++        return false;
++    }
++
++    // "<anything>%DataDirectory%<rest>" becomes "<data directory><rest>": the text in front of the token is dropped.
++    {
++        const std::string& text = path_.str();
++        const std::size_t at = text.find("%DataDirectory%");
++        if (at != std::string::npos && g_services.dataDirectory) {
++            const char* dataDirectory = g_services.dataDirectory();
++            std::string rest = text.substr(at + 15);
++            path_.str() = std::string(dataDirectory) + rest;
++        }
++    }
++    // "<front>%Language%<rest>" becomes "<front><language directory><rest>".
++    {
++        const std::string& text = path_.str();
++        const std::size_t at = text.find("%Language%");
++        if (at != std::string::npos && g_services.languageDirectory) {
++            cRZString language;
++            g_services.languageDirectory(language);
++            std::string front = text.substr(0, at);
++            std::string rest = text.substr(at + 10);
++            path_.str() = front + language.str() + rest;
++        }
++    }
++
++    if (SetPath(path_) && Open(true, true)) return true;
++    Shutdown();
++    return false;
++}
++
++bool cGZDBSegmentDirectoryFiles::Shutdown() {
++    if (initialized_) {
++        initialized_ = false;
++        timer_.Stop();
++        if ((openFlags_ & 3) != 0) Close();      // vslot 0xf0
++        nextInstance_ = 1;
++        path_.str().clear();
++        groupId_ = 0;
++        allowPrefix_ = true;
++        allowSuffix_ = false;
++        if (directory_) {
++            delete directory_;
++            directory_ = nullptr;
++        }
++        extensionMap_.EraseAll();
++        records_.clear();
++    }
++    return true;
++}
++
++bool cGZDBSegmentDirectoryFiles::Open(bool read, bool write) {
++    if ((openFlags_ & 3) != 0) return true;
++    if (!initialized_ || (!read && !write) || path_.Strlen() == 0) {
++        openFlags_ = 0;
++        return false;
++    }
++    openFlags_ = read ? 1u : 0u;
++    if (write) {
++        openFlags_ = (read ? 1u : 0u) | 2u;
++        if (requireDirectoryForWrite_ && !cRZDirectory::DoesDirectoryExist(path_)) {
++            openFlags_ = 0;
++            return false;
++        }
++    }
++    if (!directory_) directory_ = new cRZDirectory(path_, false, false, false);
++    if (g_services.registry &&
++        !g_services.registry->RegisterCategoryCallback(kGZCATNAME_cGZPersistDBSegmentDirectoryFiles,
++                                                       &CreateDBSegmentDirectoryFilesCallback, this)) {
++        return false;                            // (the flags stay set, as in the binary)
++    }
++    const bool built = BuildKeyList();           // vslot 0x180
++    if (built && changeDetection_) StartBackgroundThread();
++    return built;
++}
++
++void cGZDBSegmentDirectoryFiles::StartBackgroundThread() {
++    if (!timer_.IsRunning()) {
++        const std::int32_t seconds = random_.RandomSint32RangeUniform(static_cast<std::int32_t>(detectionInterval_),
++                                                                      static_cast<std::int32_t>(detectionInterval_) * 2);
++        timer_.SetCallbackFunction(&StaticBackgroundThreadFunction, this);
++        timer_.StartOneShot(static_cast<std::uint32_t>(seconds) * 1000u,
++                            static_cast<cIGZPersistDBSegmentDirectoryFiles*>(this));
++    }
++}
++
++void cGZDBSegmentDirectoryFiles::StaticBackgroundThreadFunction(void* segment) {
++    static_cast<cGZDBSegmentDirectoryFiles*>(segment)->DoFileChangeCheck();     // vslot 0xc8
++}
++
++bool cGZDBSegmentDirectoryFiles::Close() {
++    if ((openFlags_ & 3) != 0) {
++        CloseOpenRecords();
++        openFlags_ = 0;
++        extensionMap_.EraseAll();
++        records_.clear();
++        if (directory_) {
++            delete directory_;
++            directory_ = nullptr;
++        }
++    }
++    return true;
++}
++
++void cGZDBSegmentDirectoryFiles::CloseOpenRecords() {
++    for (auto& entry : records_) {
++        RecordData& data = entry.second;
++        if (!data.records.empty()) {
++            for (auto& record : data.records) record->CloseInternal();          // vslot 0x78
++            data.records.clear();
++        }
++    }
++}
++
++void cGZDBSegmentDirectoryFiles::GetPath(cIGZString& out) const { out.AssignFromChars(path_.ToChar(), path_.Strlen()); }
++
++bool cGZDBSegmentDirectoryFiles::SetPath(const cIGZString& path) {
++    if ((openFlags_ & 3) != 0) return false;
++    path_.AssignFromIGZString(path);
++    SC4AdjustPathSeparatorsForPlatform(path_, path_);
++    // (an empty path reads the byte in front of the buffer in the binary, which is never '/')
++    if (path_.str().empty() || path_.str().back() != '/') path_.str().push_back('/');
++    return true;
++}
++
++std::uint32_t cGZDBSegmentDirectoryFiles::GetRecordCount(cIGZPersistResourceKeyFilter* filter) {
++    return GetResourceKeyList(nullptr, filter);                                  // vslot 0x118
++}
++
++std::uint32_t cGZDBSegmentDirectoryFiles::GetResourceKeyList(cIGZPersistResourceKeyList* list,
++                                                             cIGZPersistResourceKeyFilter* filter) {
++    std::uint32_t count = 0;
++    for (const auto& entry : records_) {
++        if (!filter || filter->IsKeyIncluded(entry.first)) {
++            if (list) list->Insert(entry.first);
++            ++count;
++        }
++    }
++    return count;
++}
++
++cRZString cGZDBSegmentDirectoryFiles::RecordPath(const RecordData& data) const {
++    return cRZString((path_.str() + data.fileName.str()).c_str());
++}
++
++bool cGZDBSegmentDirectoryFiles::DoTestForRecord(const cGZPersistResourceKey& key) { return records_.find(key) != records_.end(); }
++
++bool cGZDBSegmentDirectoryFiles::DoOpenRecord(const cGZPersistResourceKey& key, cIGZPersistDBRecord** record,
++                                              std::uint32_t flags) {
++    if ((flags & 2) != 0) return OpenRecordInternal(key, record, cIGZPersistDBSDFRecord::kModeRewrite);
++    if ((flags & 1) == 0) return false;
++    return OpenRecordInternal(key, record, cIGZPersistDBSDFRecord::kModeRead);
++}
++
++bool cGZDBSegmentDirectoryFiles::DoOpenRecordForWrite(const cGZPersistResourceKey& key, cIGZPersistDBRecord** record) {
++    return OpenRecordInternal(key, record, cIGZPersistDBSDFRecord::kModeRewrite);
++}
++
++bool cGZDBSegmentDirectoryFiles::DoCreateNewRecord(const cGZPersistResourceKey& key, cIGZPersistDBRecord** record) {
++    return OpenRecordInternal(key, record, cIGZPersistDBSDFRecord::kModeCreate);
++}
++
++bool cGZDBSegmentDirectoryFiles::DoCloseRecord(cIGZPersistDBRecord* record) {
++    const cGZPersistResourceKey key = record->GetKey();
++    auto it = records_.find(key);
++    if (it == records_.end()) return false;
++    for (auto& held : it->second.records) {
++        cGZDBSDFRecord* sdf = held.get();
++        if (sdf && static_cast<cIGZPersistDBRecord*>(sdf) == record) {
++            sdf->CloseInternal();                                                 // vslot 0x78
++            it->second.EraseRecord(record);
++            return true;
++        }
++    }
++    return false;
++}
++
++bool cGZDBSegmentDirectoryFiles::DoAbortRecord(cIGZPersistDBRecord* record) {
++    const cGZPersistResourceKey key = record->GetKey();
++    auto it = records_.find(key);
++    if (it == records_.end()) return false;
++    for (auto& held : it->second.records) {
++        cGZDBSDFRecord* sdf = held.get();
++        if (sdf && static_cast<cIGZPersistDBRecord*>(sdf) == record) {
++            sdf->AbortInternal();                                                 // vslot 0x80
++            it->second.EraseRecord(record);
++            return true;
++        }
++    }
++    return false;
++}
++
++bool cGZDBSegmentDirectoryFiles::DoDeleteRecord(const cGZPersistResourceKey& key) {
++    if (!initialized_) return false;
++    auto it = records_.find(key);
++    if (it == records_.end() || !it->second.records.empty()) return false;
++    cRZString path = RecordPath(it->second);
++    records_.erase(it);
++    cRZFile::Remove(path);
++    return true;
++}
++
++std::uint32_t cGZDBSegmentDirectoryFiles::DoGetRecordSize(const cGZPersistResourceKey& key) {
++    if (!initialized_) return 0xffffffffu;
++    auto it = records_.find(key);
++    if (it == records_.end()) return 0xffffffffu;
++    if (!it->second.records.empty()) {
++        std::uint32_t size = 0xffffffffu;
++        for (auto& record : it->second.records) {
++            if ((record->GetAccessFlags() & 0xfffffffeu) == 2) size = record->GetSize();   // writers know their size
++        }
++        if (size != 0xffffffffu) return size;
++    }
++    return cRZFile::GetLength(RecordPath(it->second));
++}
++
++std::uint32_t cGZDBSegmentDirectoryFiles::DoReadRecord(const cGZPersistResourceKey& key, void* buffer,
++                                                       std::uint32_t& size) {
++    std::uint32_t result = 0xffffffffu;
++    std::uint32_t bytes = 0;
++    if (initialized_) {
++        auto it = records_.find(key);
++        bytes = 0;
++        if (it != records_.end()) {
++            // A key with exactly one open handle that is a writer cannot be read.
++            const bool writerOnly = it->second.records.size() == 1 &&
++                                    (it->second.records.front()->GetAccessFlags() & 0xfffffffeu) == 2;
++            if (!writerOnly) {
++                cRZString path = RecordPath(it->second);
++                if (buffer == nullptr) {
++                    result = cRZFile::GetLength(path);
++                    bytes = 0;
++                } else {
++                    cRZFile file(path);
++                    if (!file.Open(1, 2, 1)) {
++                        result = 0xffffffffu;
++                        bytes = 0;
++                    } else {
++                        const std::uint32_t length = file.Length();
++                        bytes = size;
++                        if (length < size) bytes = length;
++                        size = bytes;
++                        file.ReadWithCount(buffer, size);
++                        bytes = size;
++                        file.Close();
++                        result = bytes;
++                    }
++                }
++            }
++        }
++    }
++    size = bytes;
++    return result;
++}
++
++bool cGZDBSegmentDirectoryFiles::GetRESIDtoExtensionMap(cIGZPersistRESIDtoExtensionMap** out) {
++    auto* copy = new cGZRESIDtoExtensionMap(1);
++    copy->Copy(&extensionMap_);
++    *out = copy;
++    return true;
++}
++
++bool cGZDBSegmentDirectoryFiles::GetFileNameFromKey(const cGZPersistResourceKey& key, cIGZString& out) {
++    auto it = records_.find(key);
++    if (it != records_.end()) out.Copy(it->second.fileName);
++    return it != records_.end();
++}
++
++bool cGZDBSegmentDirectoryFiles::getFileNameFromKey(const cGZPersistResourceKey& key, cRZString& name,
++                                                    cRZString& extension) {
++    if (!extensionMap_.RESIDToExtension(key.type, extension)) return false;
++    // "%8.8x" (instance) for the default group, "%8.8x%8.8x" (instance, group) otherwise
++    if (key.group == groupId_) name.Sprintf("%8.8x", key.instance);
++    else name.Sprintf("%8.8x%8.8x", key.instance, key.group);
++    return true;
++}
++
++bool cGZDBSegmentDirectoryFiles::createFileNameFromKey(const cGZPersistResourceKey& key, cRZString& name,
++                                                       cRZString& extension) {
++    return getFileNameFromKey(key, name, extension);                             // vslot 0x190
++}
++
++bool cGZDBSegmentDirectoryFiles::GetFilePathFromKey(const cGZPersistResourceKey& key, cIGZString& out) {
++    cRZString fileName;
++    if (!GetFileNameFromKey(key, fileName)) return false;                        // vslot 0x88
++    out.Copy(path_);
++    out.AppendChars(fileName.Data(), fileName.Strlen());
++    return true;
++}
++
++bool cGZDBSegmentDirectoryFiles::GetKeyFromFileName(const cIGZString& name, const cIGZString& extension,
++                                                    cGZPersistResourceKey& key) {
++    std::uint32_t group = groupId_;
++    std::uint32_t instance = 0;
++    const std::uint32_t length = name.Strlen();
++    bool haveInstance = false;
++    if (length > 7) {
++        const char* text = name.ToChar();
++        if (allowPrefix_) {
++            // "<instance:8 hex>[<group:8 hex>]..." — count the hex digits at the front (at most 16)
++            const int limit = length < 0x10 ? static_cast<int>(length) : 0x10;
++            int run = 0;
++            while (run < limit && IsHexDigit(text[run])) ++run;
++            if (run >= 8) {
++                instance = HexField(text);
++                if (length >= 0x10 && run >= 0x10) group = HexField(text + 8);
++                haveInstance = true;
++            }
++        }
++        if (!haveInstance && allowSuffix_) {
++            // "...<instance:8 hex>[<group:8 hex>]" — count the hex digits at the end (at most 16)
++            const int limit = length > 0xf ? static_cast<int>(length) - 0x10 : 0;
++            int index = static_cast<int>(length);
++            do {
++                --index;
++                if (index < limit || !IsHexDigit(text[index])) break;
++            } while (true);
++            const std::uint32_t run = length - static_cast<std::uint32_t>(index) - 1;
++            if (run > 7) {
++                if (run < 0x10) {
++                    instance = HexField(text + length - 8);
++                } else {
++                    group = HexField(text + length - 8);
++                    instance = HexField(text + length - 16);
++                }
++                haveInstance = true;
++            }
++        }
++    }
++    if (!haveInstance) {
++        if (!allowText_) return false;
++        instance = nRZHash::CRC24(name.ToChar(), false) | 0xff000000u;
++    }
++    if (!extensionMap_.ExtensionToRESID(extension, key.type)) return false;
++    key.group = group;
++    key.instance = instance;
++    return true;
++}
++
++bool cGZDBSegmentDirectoryFiles::IsFileNameValid(const cIGZString& fileName) {
++    cRZString name, extension;
++    cRZFile::GetPathName(fileName, name, false);
++    cRZFile::GetPathExtension(fileName, extension);
++    if (extension.Strlen() != 0 && extension.Data()[0] == '.') extension.str().erase(0, 1);
++    cGZPersistResourceKey key{};
++    return GetKeyFromFileName(name, extension, key);                             // vslot 0x98
++}
++
++bool cGZDBSegmentDirectoryFiles::GenerateNewKey(std::uint32_t type, cGZPersistResourceKey& key) {
++    if (!initialized_) return false;
++    key.group = groupId_;
++    key.type = type;
++    while (nextInstance_ != 0xffffffffu) {
++        key.instance = nextInstance_++;
++        if (records_.find(key) == records_.end()) return true;
++    }
++    return false;
++}
++
++std::uint32_t cGZDBSegmentDirectoryFiles::EnumerateRecordFiles(cIGZString** names, std::uint32_t count) {
++    std::lock_guard<std::recursive_mutex> guard(mutex_);                          // the critical section at +0x18
++    if (names == nullptr) return static_cast<std::uint32_t>(records_.size());
++    std::uint32_t n = 0;
++    if (!records_.empty() && count != 0) {
++        auto it = records_.begin();
++        while (names[n] != nullptr) {
++            names[n]->AssignFromChars(it->second.fileName.ToChar(), it->second.fileName.Strlen());
++            ++it;
++            ++n;
++            if (it == records_.end() || count <= n) break;
++        }
++    }
++    return n;
++}
++
++bool cGZDBSegmentDirectoryFiles::SetFileChangeDetection(bool enable, std::uint32_t intervalSeconds) {
++    if (changeDetection_ != enable) {
++        if (enable) {
++            if (initialized_) StartBackgroundThread();
++        } else {
++            timer_.Stop();
++        }
++        changeDetection_ = enable;
++    }
++    detectionInterval_ = intervalSeconds > 0xf ? intervalSeconds : 0xf;           // at least 15 seconds
++    return true;
++}
++
++bool cGZDBSegmentDirectoryFiles::OpenRecordInternal(const cGZPersistResourceKey& key, cIGZPersistDBRecord** record,
++                                                    cIGZPersistDBSDFRecord::dbsdfFlags mode) {
++    if (mode == 0 || !initialized_) return false;
++    auto existing = records_.find(key);
++    if (existing == records_.end()) {
++        if (mode == cIGZPersistDBSDFRecord::kModeRead) return false;              // a read needs an existing file
++    } else if (!existing->second.records.empty()) {
++        // Open handles exist: only another reader may join readers.
++        const bool joinReaders = mode == cIGZPersistDBSDFRecord::kModeRead &&
++                                 existing->second.records.front()->GetAccessFlags() == 1;
++        if (!joinReaders) return false;
++    }
++
++    cRZString name, extension;
++    if (mode == cIGZPersistDBSDFRecord::kModeCreate) {
++        createFileNameFromKey(key, name, extension);                              // vslot 0x198
++        name.str().push_back('.');
++        name.str().append(extension.str());
++    } else {
++        GetFileNameFromKey(key, name);                                            // vslot 0x88
++    }
++    cRZString fullPath((path_.str() + name.str()).c_str());
++
++    auto* sdf = new cGZDBSDFRecord(static_cast<cIGZPersistDBSegment*>(this));
++    sdf->AddRef();
++    if (!sdf->Init(key, fullPath, mode)) {
++        sdf->Release();
++        return false;
++    }
++    if (existing == records_.end()) {
++        RecordData& data = records_[key];
++        data.records.push_back(cRZAutoRefCount<cGZDBSDFRecord>(sdf));
++        data.fileName = name;
++    } else {
++        existing->second.records.push_back(cRZAutoRefCount<cGZDBSDFRecord>(sdf));
++    }
++    if (!sdf->QueryInterface(kGZIID_cIGZPersistDBRecord, reinterpret_cast<void**>(record))) {
++        records_[key].EraseRecord(static_cast<cIGZPersistDBRecord*>(sdf));
++        sdf->Release();
++        return false;
++    }
++    sdf->Release();
++    return true;
++}
++
++bool cGZDBSegmentDirectoryFiles::BuildKeyList() {
++    if (!cRZDirectory::DoesDirectoryExist(path_)) return false;
++    std::list<cRZString> files;
++    directory_->ReadDirectoryFileEntriesIntoStringList(files);
++    for (const cRZString& file : files) {
++        char drive[256], dir[256], name[256], ext[256];
++        Splitpath(file.ToChar(), drive, dir, name, ext);
++        cRZString nameString(name);
++        cRZString extensionString;
++        if (ext[0] != '\0') extensionString.AssignFromCString(ext + 1);          // without the dot
++        cGZPersistResourceKey key{};
++        if (GetKeyFromFileName(nameString, extensionString, key) && records_.find(key) == records_.end()) {
++            RecordData data;
++            data.fileName = file;
++            records_.emplace(key, std::move(data));
++        }
++    }
++    return true;
++}
++
++bool cGZDBSegmentDirectoryFiles::AddFile(const cRZString& fileName, bool add) {
++    if (!add) {
++        // Remove the record whose (lower-cased) file name equals `fileName`, unless it has open handles.
++        for (auto it = records_.begin(); it != records_.end(); ++it) {
++            if (!it->second.records.empty()) continue;
++            cRZString lower(it->second.fileName);
++            lower.MakeLower();
++            if (lower.str() == fileName.str()) {
++                records_.erase(it);
++                return true;
++            }
++        }
++        return false;
++    }
++    cRZString name, extension;
++    cRZFile::GetPathName(fileName, name, false);
++    cRZFile::GetPathExtension(fileName, extension);
++    if (extension.Strlen() != 0) extension.str().erase(0, 1);                    // (unconditional here)
++    cGZPersistResourceKey key{};
++    if (GetKeyFromFileName(name, extension, key) && records_.find(key) == records_.end()) {
++        RecordData data;
++        data.fileName = fileName;
++        records_.emplace(key, std::move(data));
++    }
++    return false;                                                                 // sic: adding always answers false
++}
++
++bool cGZDBSegmentDirectoryFiles::DoFileChangeCheck() {
++    if (!initialized_) return false;
++    cRZDirectory directory(path_, false, false, false);
++    std::list<cRZString> files;
++    bool result = false;
++    if (directory.ReadDirectoryFileEntriesIntoStringList(files) && !files.empty()) {
++        const std::uint32_t known = EnumerateRecordFiles(nullptr, 0);
++        int valid = 0;
++        for (auto it = files.begin(); it != files.end();) {
++            if (!IsFileNameValid(*it)) {
++                it = files.erase(it);
++            } else {
++                it->MakeLower();
++                ++valid;
++                ++it;
++            }
++        }
++        if (known != 0 && valid != 0) {
++            std::vector<cRZString*> recorded(known);
++            std::vector<cIGZString*> slots(known);
++            for (std::uint32_t i = 0; i < known; ++i) slots[i] = recorded[i] = new cRZString();
++            EnumerateRecordFiles(slots.data(), known);
++            for (cRZString* s : recorded) s->MakeLower();
++
++            std::uint32_t matched = 0;
++            for (auto it = files.begin(); it != files.end();) {
++                bool found = false;
++                for (std::uint32_t i = 0; i < known && !found; ++i) {
++                    if (recorded[i] && recorded[i]->str() == it->str()) {
++                        delete recorded[i];
++                        recorded[i] = nullptr;
++                        it = files.erase(it);
++                        ++matched;
++                        found = true;
++                    }
++                }
++                if (!found) ++it;
++            }
++            if (matched < known) {
++                // records whose file disappeared
++                for (cRZString* s : recorded)
++                    if (s) AddFile(*s, false);
++                result = true;
++            }
++            if (!files.empty()) {
++                // files that are new
++                result = true;
++                for (const cRZString& file : files) AddFile(file, true);
++            }
++            for (cRZString* s : recorded) delete s;
++        }
++    }
++    if (changeDetection_) {
++        const std::int32_t seconds = random_.RandomSint32RangeUniform(static_cast<std::int32_t>(detectionInterval_),
++                                                                      static_cast<std::int32_t>(detectionInterval_) * 2);
++        timer_.StartOneShot(static_cast<std::uint32_t>(seconds) * 1000u,
++                            static_cast<cIGZPersistDBSegmentDirectoryFiles*>(this));
++    }
++    return result;
++}
++
++// Registry callback for category "CN_DBSDF": entries are "<segment id hex>" = "<type hex>:<ext>[:filenameasinstanceid],...".
++void cGZDBSegmentDirectoryFiles::CreateDBSegmentDirectoryFilesCallback(const cIGZString& key, const cIGZString& value,
++                                                                       void* user) {
++    auto* segment = static_cast<cGZDBSegmentDirectoryFiles*>(user);
++    if (RZAtoUint32HexA(key.ToChar()) != segment->groupId_) return;
++    cRZString rest(value);
++    cRZString token;
++    do {
++        rest.SplitTokenAtDelimiter(',', token);
++        token.Trim();
++        if (token.Strlen() != 0) {
++            token.MakeLower();
++            cRZString typeText = token.SplitToken(":");
++            const std::uint32_t resid = RZAtoUint32HexA(typeText.ToChar());
++            const std::size_t at = token.str().find(":filenameasinstanceid");
++            if (at != std::string::npos) {
++                segment->SetAllowTextAsKey(true);
++                token.str().erase(at);
++            }
++            segment->extensionMap_.AddRESIDtoExtensionAssociation(resid, token);
++        }
++        if (token.Strlen() == 0) break;
++    } while (rest.Strlen() != 0);
++}
+diff --git a/src/gz/cGZDBSegmentDirectoryFiles.h b/src/gz/cGZDBSegmentDirectoryFiles.h
+new file mode 100644
+index 0000000..38bd8c5
+--- /dev/null
++++ b/src/gz/cGZDBSegmentDirectoryFiles.h
+@@ -0,0 +1,264 @@
++// cGZDBSegmentDirectoryFiles — a database segment whose records are loose files in one directory (the "SDF" segment;
++// iid 0x856c8cf7 for the directory interface). Recovered from Sim City 4 Deluxe Edition 1.2.1: the class lives at
++// 0x1004d3a90..0x1004d7d42 (+ 0x1004d89d0..0x1004d8a4a for the inline accessors); the record object it hands out is
++// cGZDBSDFRecord (gz/cGZDBSDFRecord.h, already ported), the helper map of this file is cGZRESIDtoExtensionMap
++// (iid 0xa56c8cfd) and cGZFileNameToResKeyConverterDefault (0x1004d77e4..0x1004d7cde) is the unused default converter.
++//
++// Original layout (primary vtable 0x100ab7d90, the cGZPersistDBSegment base sits at +8 with vtable 0x100ab7f40):
++//   +0x28 initialized, +0x29 "writing needs an existing directory" (1 after Init), +0x2a (1 in the ctor, 0 after Init;
++//   never read), +0x2c next instance id for GenerateNewKey (starts at 1), +0x30 open flags (bit0 read, bit1 write),
++//   +0x38 cRZString directory (always ends in '/'), +0x60 cRZDirectory*, +0x68 default group id, +0x6c segment id,
++//   +0x70 allow "instance[group]" prefix, +0x71 allow "[instance]group" suffix, +0x72 allow text file names (CRC24),
++//   +0x78 cGZRESIDtoExtensionMap, +0xa0 map<key, RecordData> (RecordData = file name + list of open records),
++//   +0xb8 file change detection on, +0xbc detection interval in seconds (default 0x78), +0xc0 cRZCallbackTimer,
++//   +0xf8 cRZRandom (seed 0xffffffff).
++//
++// File names: "<instance:8 hex>.<ext>" for the default group, "<instance:8><group:8>.<ext>" otherwise; the extension
++// comes from the RESID (type) <-> extension map, which the registry category "CN_DBSDF" fills (see
++// CreateDBSegmentDirectoryFilesCallback: "<type hex>:<ext>[:filenameasinstanceid], ..." for the segment whose id equals
++// the category entry's key).
++//
++// Quirks kept:
++//  * Init(id, path, bool): the third argument is ignored; a failing registry registration returns false and leaves the
++//    segment initialized; a failing SetPath/Open shuts it down.
++//  * Open() leaves the open flags set when the registry registration or BuildKeyList fails.
++//  * the extension map is a multimap (AddRESIDtoExtensionAssociation never rejects duplicates, lookups find the first).
++//  * AddFile(name, true) always returns false (even when the file was added); AddFile(name, false) returns true when a
++//    record without open handles was removed.
++//  * DoFileChangeCheck does nothing when the segment has no records or the directory has no valid files.
++//  * DoWriteRecord is not implemented (returns false); Flush() always returns true.
++//  * map ordering is (type, group, instance), the std::less of cGZPersistResourceKey in the binary.
++//  * the base's reference count is not atomic here (the original uses an interlocked add on the same field).
++// Not recovered / behind seams: the framework registry (DirectoryFilesServices::registry), file system and language
++// manager services; the timer's SDL thread is cRZCallbackTimer.
++#pragma once
++#include <cstdint>
++#include <functional>
++#include <list>
++#include <map>
++
++#include "gz/cGZDBSDFRecord.h"
++#include "gz/cGZPersistDBSegment.h"
++#include "rz/cRZAutoRefCount.h"
++#include "rz/cRZCallbackTimer.h"
++#include "rz/cRZDirectory.h"
++#include "rz/cRZRandom.h"
++#include "rz/cRZString.h"
++
++constexpr std::uint32_t kGZIID_cIGZPersistDBSegmentDirectoryFiles = 0x856c8cf7;
++constexpr std::uint32_t kGZIID_cIGZPersistRESIDtoExtensionMap = 0xa56c8cfd;
++constexpr char kGZCATNAME_cGZPersistDBSegmentDirectoryFiles[] = "CN_DBSDF";   // string at 0x1009f562f
++
++// cIGZPersistRESIDtoExtensionMap — vtable 0x100ab8670.
++class cIGZPersistRESIDtoExtensionMap : public cIGZUnknown {
++public:
++    virtual bool AddRESIDtoExtensionAssociation(std::uint32_t resid, const cIGZString& extension) = 0;   // [3]
++    virtual bool ExtensionToRESID(const cIGZString& extension, std::uint32_t& resid) = 0;                // [4]
++    virtual bool RESIDToExtension(const std::uint32_t& resid, cIGZString& extension) = 0;                // [5]
++    virtual void EraseAll() = 0;                                                                         // [6]
++    virtual void Copy(const cIGZPersistRESIDtoExtensionMap* other) = 0;                                  // [7]
++    virtual std::uint32_t Size() = 0;                                                                    // [10]
++    virtual ~cIGZPersistRESIDtoExtensionMap() = default;                                                 // [8],[9]
++};
++
++class cGZRESIDtoExtensionMap final : public cIGZPersistRESIDtoExtensionMap {
++public:
++    explicit cGZRESIDtoExtensionMap(std::uint32_t initialRefCount = 1) : refCount_(initialRefCount) {}
++    ~cGZRESIDtoExtensionMap() override = default;                                                    // @ 0x1004d3c1c / 0x1004d89d0
++
++    bool QueryInterface(std::uint32_t iid, void** out) override;                                     // @ 0x1004d7cf6 (1, 0xa56c8cfd)
++    std::uint32_t AddRef() override { return ++refCount_; }                                          // @ 0x1004d7d18
++    std::uint32_t Release() override;                                                                // @ 0x1004d7d26
++    bool AddRESIDtoExtensionAssociation(std::uint32_t resid, const cIGZString& extension) override;  // @ 0x1004d5e16
++    bool ExtensionToRESID(const cIGZString& extension, std::uint32_t& resid) override;               // @ 0x1004d5bc8
++    bool RESIDToExtension(const std::uint32_t& resid, cIGZString& extension) override;               // @ 0x1004d56c2
++    void EraseAll() override { entries_.clear(); }                                                   // @ 0x1004d49d0
++    void Copy(const cIGZPersistRESIDtoExtensionMap* other) override;                                 // @ 0x1004d7d42
++    std::uint32_t Size() override { return static_cast<std::uint32_t>(entries_.size()); }            // @ 0x1004d7dbc
++
++private:
++    std::uint32_t refCount_;                         // +8
++    std::multimap<std::uint32_t, cRZString> entries_;   // +0x10
++};
++
++// cIGZPersistDBSegmentDirectoryFiles — the directory interface (primary vtable slots 3..25).
++class cIGZPersistDBSegmentDirectoryFiles : public cIGZUnknown {
++public:
++    virtual cIGZPersistDBSegment* AsIDBSegment() = 0;                                            // [3] +0x18
++    virtual bool Init() = 0;                                                                     // [4]
++    virtual bool Shutdown() = 0;                                                                 // [5]
++    virtual bool Init(std::uint32_t segmentId, const cIGZString* path, bool unused) = 0;         // [6]
++    virtual const cRZString& Path() const = 0;                                                   // [7]
++    virtual void GetPath(cIGZString& out) const = 0;                                             // [8]
++    virtual bool SetPath(const cIGZString& path) = 0;                                            // [9]
++    virtual void SetDefaultGroupId(std::uint32_t group) = 0;                                     // [10]
++    virtual std::uint32_t GroupId() const = 0;                                                   // [11]
++    virtual cGZRESIDtoExtensionMap* ExtensionMap() = 0;                                          // [12]
++    virtual bool GetRESIDtoExtensionMap(cIGZPersistRESIDtoExtensionMap** out) = 0;               // [13]
++    virtual void AddExtensionAssociation(std::uint32_t resid, const cIGZString& extension) = 0;  // [14]
++    virtual void SetAllowedIDPositions(bool prefix, bool suffix) = 0;                            // [15]
++    virtual void SetAllowTextAsKey(bool allow) = 0;                                              // [16]
++    virtual bool GetFileNameFromKey(const cGZPersistResourceKey& key, cIGZString& out) = 0;      // [17]
++    virtual bool GetFilePathFromKey(const cGZPersistResourceKey& key, cIGZString& out) = 0;      // [18]
++    virtual bool GetKeyFromFileName(const cIGZString& name, const cIGZString& extension,
++                                    cGZPersistResourceKey& key) = 0;                             // [19]
++    virtual bool IsFileNameValid(const cIGZString& fileName) = 0;                                // [20]
++    virtual bool GenerateNewKey(std::uint32_t type, cGZPersistResourceKey& key) = 0;             // [21]
++    virtual std::uint32_t EnumerateRecordFiles(cIGZString** names, std::uint32_t count) = 0;     // [22]
++    virtual bool GetFileChangeDetection() = 0;                                                   // [23]
++    virtual bool SetFileChangeDetection(bool enable, std::uint32_t intervalSeconds) = 0;         // [24]
++    virtual bool DoFileChangeCheck() = 0;                                                        // [25]
++};
++
++// cGZFileNameToResKeyConverterDefault — vtable 0x100ab80a0. Never wired to anything in the binary; FileNameToKey
++// parses the name and throws the result away, always answering false (so IsFileNameValid is always false too).
++class cGZFileNameToResKeyConverterDefault {
++public:
++    cGZFileNameToResKeyConverterDefault() = default;                              // @ 0x1004d77e4
++    virtual ~cGZFileNameToResKeyConverterDefault() = default;                     // @ 0x1004d780a / 0x1004d7810 / 0x1004d7816
++    virtual bool IsFileNameValid(const cIGZString& fileName);                     // @ 0x1004d781c
++    virtual bool FileNameToKey(const cIGZString& fileName, cGZPersistResourceKey& key);   // @ 0x1004d7842
++    virtual bool KeyToFileName(const cGZPersistResourceKey&, cIGZString&) { return false; }   // @ 0x1004d7cd6
++    virtual void SetDBSegment(cIGZPersistDBSegmentDirectoryFiles* segment) { segment_ = segment; }   // @ 0x1004d7cde
++
++private:
++    cIGZPersistDBSegmentDirectoryFiles* segment_ = nullptr;   // +8
++    bool allowPrefix_ = true;                                  // +0x10
++    bool allowSuffix_ = true;                                  // +0x11
++    std::uint32_t unknown14_ = 0;                              // +0x14
++};
++
++// The framework registry service (service 0x25076b9e, iid 0xa237613c) as far as the segment uses it: slot 7 registers a
++// callback for a category of the registry (the callback is fed every key/value entry of that category).
++using DirectoryFilesCategoryCallback = void (*)(const cIGZString& key, const cIGZString& value, void* user);
++class cIGZRegistryCategories {
++public:
++    virtual bool RegisterCategoryCallback(const char* category, DirectoryFilesCategoryCallback callback, void* user) = 0;
++protected:
++    ~cIGZRegistryCategories() = default;
++};
++
++// The framework services Init / Open reach through RZGetFramework(); any may be null (then that step is skipped, as in
++// the binary when the framework does not offer the service).
++struct DirectoryFilesServices {
++    cIGZRegistryCategories* registry = nullptr;
++    // cIGZFileSystem::DataDirectory() (service 0x2073215d), used for "%DataDirectory%"; unset = no file system service.
++    std::function<const char*()> dataDirectory;
++    // cIGZLanguageManager::GetLanguageDirectoryName(out, 0) (service 0x441e5070), used for "%Language%"; unset = none.
++    std::function<void(cRZString& out)> languageDirectory;
++};
++void SetDirectoryFilesServices(const DirectoryFilesServices& services);
++const DirectoryFilesServices& GetDirectoryFilesServices();
++
++class cGZDBSegmentDirectoryFiles final : public cIGZPersistDBSegmentDirectoryFiles, public cGZPersistDBSegment {
++public:
++    struct RecordData {
++        cRZString fileName;                                          // +0x30 in the tree node
++        std::list<cRZAutoRefCount<cGZDBSDFRecord>> records;          // +0x58
++        void EraseRecord(cIGZPersistDBRecord* record);               // @ 0x1004d5016
++    };
++    struct KeyLess {
++        bool operator()(const cGZPersistResourceKey& a, const cGZPersistResourceKey& b) const noexcept {
++            if (a.type != b.type) return a.type < b.type;
++            if (a.group != b.group) return a.group < b.group;
++            return a.instance < b.instance;
++        }
++    };
++    using RecordMap = std::map<cGZPersistResourceKey, RecordData, KeyLess>;
++
++    cGZDBSegmentDirectoryFiles();                                    // @ 0x1004d3a90 / 0x1004d3c38
++
++    // cIGZUnknown (both views)
++    bool QueryInterface(std::uint32_t iid, void** out) override;     // @ 0x1004d3d96 / 0x1004d3db8
++    std::uint32_t AddRef() override { return cGZPersistDBSegment::AddRef(); }     // @ 0x1004d3dde / 0x1004d3df0
++    std::uint32_t Release() override { return cGZPersistDBSegment::Release(); }   // @ 0x1004d3e02 / 0x1004d3e22
++
++    // cIGZPersistDBSegmentDirectoryFiles
++    cIGZPersistDBSegment* AsIDBSegment() override { return static_cast<cIGZPersistDBSegment*>(this); }   // @ 0x1004d560c
++    bool Init() override;                                            // @ 0x1004d3ece / 0x1004d3ee0
++    bool Shutdown() override;                                        // @ 0x1004d48cc / 0x1004d49fe
++    bool Init(std::uint32_t segmentId, const cIGZString* path, bool unused) override;   // @ 0x1004d3ef2 / 0x1004d48bc
++    const cRZString& Path() const override { return path_; }         // @ 0x1004d89fe
++    void GetPath(cIGZString& out) const override;                    // @ 0x1004d4d6e / 0x1004d4da2
++    bool SetPath(const cIGZString& path) override;                   // @ 0x1004d4dda / 0x1004d4e3c
++    void SetDefaultGroupId(std::uint32_t group) override { groupId_ = group; }   // @ 0x1004d8a08
++    std::uint32_t GroupId() const override { return groupId_; }      // @ 0x1004d8a12
++    cGZRESIDtoExtensionMap* ExtensionMap() override { return &extensionMap_; }   // @ 0x1004d8a1c
++    bool GetRESIDtoExtensionMap(cIGZPersistRESIDtoExtensionMap** out) override;   // @ 0x1004d55b0
++    void AddExtensionAssociation(std::uint32_t resid, const cIGZString& extension) override {   // @ 0x1004d5e08
++        extensionMap_.AddRESIDtoExtensionAssociation(resid, extension);
++    }
++    void SetAllowedIDPositions(bool prefix, bool suffix) override { allowPrefix_ = prefix; allowSuffix_ = suffix; }   // @ 0x1004d5812
++    void SetAllowTextAsKey(bool allow) override { allowText_ = allow; }   // @ 0x1004d5820
++    bool GetFileNameFromKey(const cGZPersistResourceKey& key, cIGZString& out) override;   // @ 0x1004d5616
++    bool GetFilePathFromKey(const cGZPersistResourceKey& key, cIGZString& out) override;   // @ 0x1004d5754
++    bool GetKeyFromFileName(const cIGZString& name, const cIGZString& extension, cGZPersistResourceKey& key) override;   // @ 0x1004d582a
++    bool IsFileNameValid(const cIGZString& fileName) override;       // @ 0x1004d5d00
++    bool GenerateNewKey(std::uint32_t type, cGZPersistResourceKey& key) override;   // @ 0x1004d65d8
++    std::uint32_t EnumerateRecordFiles(cIGZString** names, std::uint32_t count) override;   // @ 0x1004d6640
++    bool GetFileChangeDetection() override { return changeDetection_; }   // @ 0x1004d72bc
++    bool SetFileChangeDetection(bool enable, std::uint32_t intervalSeconds) override;   // @ 0x1004d72c8
++    bool DoFileChangeCheck() override;                               // @ 0x1004d7332
++
++    // cIGZPersistDBSegment
++    bool Open(bool read, bool write) override;                       // @ 0x1004d4a10 / 0x1004d4be6
++    bool IsOpen() const override { return (openFlags_ & 3) != 0; }   // @ 0x1004d8a26 / 0x1004d8a3c
++    bool Close() override;                                           // @ 0x1004d4bfc / 0x1004d4d5c
++    bool Flush() override { return true; }                           // @ 0x1004d8a34 / 0x1004d8a4a
++    std::uint32_t GetSegmentID() const override { return segmentId_; }   // @ 0x1004d3e8a / 0x1004d3e94
++    bool SetSegmentID(const std::uint32_t& id) override;             // @ 0x1004d3e9e / 0x1004d3eb6
++    std::uint32_t GetRecordCount(cIGZPersistResourceKeyFilter* filter) override;   // @ 0x1004d4e4a / 0x1004d4e64
++    std::uint32_t GetResourceKeyList(cIGZPersistResourceKeyList* list, cIGZPersistResourceKeyFilter* filter) override;   // @ 0x1004d4e82 / 0x1004d4f2c
++    using cGZPersistDBSegment::GetResourceKeyList;
++
++    // derived virtuals of the primary vtable (+0x178..+0x198)
++    virtual bool OpenRecordInternal(const cGZPersistResourceKey& key, cIGZPersistDBRecord** record,
++                                    cIGZPersistDBSDFRecord::dbsdfFlags mode);   // @ 0x1004d6088
++    virtual bool BuildKeyList();                                     // @ 0x1004d674e
++    virtual bool AddFile(const cRZString& fileName, bool add);       // @ 0x1004d6d3a
++    virtual bool getFileNameFromKey(const cGZPersistResourceKey& key, cRZString& name, cRZString& extension);   // @ 0x1004d565a
++    virtual bool createFileNameFromKey(const cGZPersistResourceKey& key, cRZString& name, cRZString& extension);   // @ 0x1004d5742
++
++    static void StaticBackgroundThreadFunction(void* segment);       // @ 0x1004d77d6
++    // The registry callback (CreateDBSegmentDirectoryFilesCallback @ 0x1004d4566).
++    static void CreateDBSegmentDirectoryFilesCallback(const cIGZString& key, const cIGZString& value, void* segment);
++
++protected:
++    ~cGZDBSegmentDirectoryFiles() override;                          // @ 0x1004d3c42 / 0x1004d3d5a (+ thunks 0x1004d3d4c, 0x1004d3d88)
++    void FinalRelease() override;                                    // @ 0x1004d3e46 / 0x1004d3e68
++    bool DoTestForRecord(const cGZPersistResourceKey& key) override;           // @ 0x1004d5104 / 0x1004d512e
++    std::uint32_t DoGetRecordSize(const cGZPersistResourceKey& key) override;  // @ 0x1004d5296 / 0x1004d53b8
++    bool DoOpenRecord(const cGZPersistResourceKey& key, cIGZPersistDBRecord** record, std::uint32_t flags) override;   // @ 0x1004d4f3a / 0x1004d4f70
++    bool DoCreateNewRecord(const cGZPersistResourceKey& key, cIGZPersistDBRecord** record) override;   // @ 0x1004d516e / 0x1004d5184
++    bool DoCloseRecord(cIGZPersistDBRecord* record) override;        // @ 0x1004d4f7e / 0x1004d504c
++    bool DoAbortRecord(cIGZPersistDBRecord* record) override;        // @ 0x1004d505a / 0x1004d50f6
++    bool DoDeleteRecord(const cGZPersistResourceKey& key) override;  // @ 0x1004d51a0 / 0x1004d5288
++    std::uint32_t DoReadRecord(const cGZPersistResourceKey& key, void* buffer, std::uint32_t& size) override;   // @ 0x1004d53c6 / 0x1004d5592
++    bool DoWriteRecord(const cGZPersistResourceKey&, void*, std::uint32_t) override { return false; }   // @ 0x1004d55a0 / 0x1004d55a8
++    virtual bool DoOpenRecordForWrite(const cGZPersistResourceKey& key, cIGZPersistDBRecord** record);   // @ 0x1004d5158
++
++private:
++    void CloseOpenRecords();                                         // @ 0x1004d4cc4
++    void StartBackgroundThread();                                    // @ 0x1004d4b82
++    RecordMap::iterator FindRecord(const cGZPersistResourceKey& key) { return records_.find(key); }
++    cRZString RecordPath(const RecordData& data) const;
++
++    bool initialized_ = false;                   // +0x28
++    bool requireDirectoryForWrite_ = false;      // +0x29
++    bool flag2a_ = true;                         // +0x2a
++    std::uint32_t nextInstance_ = 1;             // +0x2c
++    std::uint32_t openFlags_ = 0;                // +0x30
++    cRZString path_;                             // +0x38
++    cRZDirectory* directory_ = nullptr;          // +0x60
++    std::uint32_t groupId_ = 0;                  // +0x68
++    std::uint32_t segmentId_ = 0;                // +0x6c
++    bool allowPrefix_ = true;                    // +0x70
++    bool allowSuffix_ = false;                   // +0x71 (ctor writes 0x0001 to +0x70/+0x71)
++    bool allowText_ = false;                     // +0x72
++    cGZRESIDtoExtensionMap extensionMap_{0};     // +0x78
++    RecordMap records_;                          // +0xa0
++    bool changeDetection_ = false;               // +0xb8
++    std::uint32_t detectionInterval_ = 0x78;     // +0xbc
++    cRZCallbackTimer timer_;                     // +0xc0
++    cRZRandom random_{0xffffffffu};              // +0xf8
++};

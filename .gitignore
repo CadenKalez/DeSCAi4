@@ -38,3 +38,4 @@ build/
 
 # bulk decompiler exports (derived from the game binary)
 work/
+.claude/worktrees/

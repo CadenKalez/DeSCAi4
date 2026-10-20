@@ -1,0 +1,1772 @@
+diff --git a/scripts/tests/sc4_landfillzone_test.cpp b/scripts/tests/sc4_landfillzone_test.cpp
+new file mode 100644
+index 0000000..9dabf21
+--- /dev/null
++++ b/scripts/tests/sc4_landfillzone_test.cpp
+@@ -0,0 +1,659 @@
++// cSC4LandfillZone / cGarbageHeap / SC4CellRegion::Inflate with a fake host. Expected values are derived by hand from
++// the decompiled formulas (0x1000ac9c0..0x1000b011a).
++#include <cmath>
++#include <cstdio>
++#include <map>
++#include <set>
++
++#include "rz/PortMemoryStreams.h"
++#include "sc4/LandfillZone.h"
++#include "sc4/SCPropertyHelp.h"
++
++static int failures = 0;
++#define CHECK(c) do { if (!(c)) { std::printf("FAIL line %d: %s\n", __LINE__, #c); ++failures; } } while (0)
++#define CHECKF(a, b) do { if (std::fabs((double)(a) - (double)(b)) > 1e-4) { std::printf("FAIL line %d: %s=%g != %g\n", __LINE__, #a, (double)(a), (double)(b)); ++failures; } } while (0)
++
++using namespace sc4;
++
++namespace {
++
++struct FakeEffect : ILandfillEffect {
++    int refs = 1;
++    std::map<std::uint32_t, bool> flags;
++    bool enabled = true, stopped = false, started = false;
++    float matrix[13] = {};
++    void AddRef() override { ++refs; }
++    void Release() override { --refs; }
++    void SetFlag(std::uint32_t f, bool on) override { flags[f] = on; }
++    void SetEnabled(bool on) override { enabled = on; }
++    void SetTransform(const float m[13]) override { for (int i = 0; i < 13; ++i) matrix[i] = m[i]; }
++    void Start(int) override { started = true; }
++    void Stop(bool) override { stopped = true; }
++};
++struct FakeProp : ILandfillProp {
++    int refs = 1, state = 0;
++    float pos[3] = {};
++    void AddRef() override { ++refs; }
++    void Release() override { --refs; }
++    void SetState(int s) override { state = s; }
++};
++struct FakeTile : ILandfillTile {
++    int refs = 1;
++    bool removed = false, empty = false, initialised = false;
++    float pos[3] = {};
++    int layer = -1;
++    std::uint32_t id = 0;
++    int orientation = 0;
++    cSCPropertyHolder props;
++    void Release() override { --refs; }
++    void RemoveFromCity() override { removed = true; }
++    void GetPosition(float xyz[3]) override { for (int i = 0; i < 3; ++i) xyz[i] = pos[i]; }
++    void SetPosition(const float xyz[3]) override { for (int i = 0; i < 3; ++i) pos[i] = xyz[i]; }
++    bool IsEmptyTile() override { return empty; }
++    void SetLayer(int l) override { layer = l; }
++    void SetEmpty(bool e) override { empty = e; }
++    void Init() override { initialised = true; }
++    cISCPropertyHolder* Properties() override { return &props; }
++};
++struct FakeOcc : ILandfillOccupantRef {
++    int kind = 0, refs = 1;
++    bool removed = false;
++    void Release() override { --refs; }
++    void RemoveFromCity() override { removed = true; }
++    int TextureKind() override { return kind; }
++};
++
++struct Host : ILandfillZoneHost {
++    LandfillTunables tunables;
++    int cellsX = 64, cellsZ = 64;
++    int tileCapacity = 100;
++    std::set<std::pair<int, int>> network, baseTextures;
++    std::map<std::pair<int, int>, int> zoneTypes;
++    std::map<std::pair<int, int>, FakeTile*> tiles;
++    std::vector<std::uint32_t> networkIds;
++    std::map<std::uint32_t, std::vector<int>> flagsByType;
++    std::vector<std::pair<int, int>> activeOn, activeOff, dezoned, emptyTextures;
++    std::vector<std::pair<std::pair<int, int>, std::pair<std::uint32_t, int>>> created;   // (cell, (id, orientation))
++    std::vector<FakeTile*> allTiles;
++    std::vector<FakeOcc*> incompatible, baseTexList;
++    int supply = 0, landfilled = 0, nextRand = 1, rands = 0, refreshes = 0, levelCalls = 0, devCalls = 0;
++    LandfillRect lastLevel;
++    float lastLevelHeight = 0;
++    FakeProp* prop = nullptr;
++    FakeEffect generator, attractor, flock;
++    bool haveFlock = true;
++    std::vector<std::string> effectNames;
++    int removedEffects = 0, removedProps = 0;
++    float adjust = 0;
++    std::pair<int, int> lastTileCell{-1, -1};
++
++    const LandfillTunables& Tunables() override { return tunables; }
++    int CityCellsX() override { return cellsX; }
++    int CityCellsZ() override { return cellsZ; }
++    void CellToWorld(int x, int z, float& wx, float& wz) override { wx = x * 16.0f; wz = z * 16.0f; }
++    bool HasNetworkAt(int x, int z) override { return network.count({x, z}) != 0; }
++    float AltitudeAt(float wx, float wz) override { return 100.0f + wx * 0.0f + wz * 0.0f; }
++    float TerrainHeightAt(float, float) override { return 105.0f; }
++    float AdjustedHeight(float, float) override { return adjust; }
++    void LevelTerrainRect(const LandfillRect& r, float h) override { lastLevel = r; lastLevelHeight = h; ++levelCalls; }
++    void RefreshBuildingDevelopmentRect(const LandfillRect& r) override { lastLevel = r; ++devCalls; }
++    int ZoneTypeAt(int x, int z) override { auto it = zoneTypes.find({x, z}); return it == zoneTypes.end() ? 0 : it->second; }
++    void DezoneCell(int x, int z) override { dezoned.push_back({x, z}); }
++    int LandfillTileCapacity() override { return tileCapacity; }
++    void AddToGarbageSupply(int a) override { supply += a; }
++    void GarbagePutInLandfill(int a) override { landfilled += a; }
++    void SetActiveLandfill(int x, int z, bool on) override { (on ? activeOn : activeOff).push_back({x, z}); }
++    std::vector<std::uint32_t> NetworkIdsInRegion(const LandfillCellRegion&) override { return networkIds; }
++    std::vector<int> NetworkFlagsForDeveloperType(std::uint32_t t) override { return flagsByType[t]; }
++    ILandfillTile* FindLandfillTile(int x, int z) override {
++        auto it = tiles.find({x, z});
++        if (it == tiles.end()) return nullptr;
++        ++it->second->refs;
++        return it->second;
++    }
++    bool HasBaseTexture(int x, int z) override { return baseTextures.count({x, z}) != 0; }
++    std::vector<ILandfillOccupantRef*> ListBaseTextures(int, int) override { return {baseTexList.begin(), baseTexList.end()}; }
++    std::vector<ILandfillOccupantRef*> ListIncompatibleOccupants(int, int) override { return {incompatible.begin(), incompatible.end()}; }
++    ILandfillTile* LoadLandfillTile(std::uint32_t id, int o) override {
++        auto* t = new FakeTile();
++        t->id = id;
++        t->orientation = o;
++        allTiles.push_back(t);
++        return t;
++    }
++    void AddOccupant(ILandfillTile* t) override {
++        auto* ft = static_cast<FakeTile*>(t);
++        created.push_back({{int(ft->pos[0] / 16), int(ft->pos[2] / 16)}, {ft->id, ft->orientation}});
++    }
++    void RefreshOccupant(ILandfillTile*) override { ++refreshes; }
++    void PlaceEmptyCellTexture(int x, int z) override { emptyTextures.push_back({x, z}); }
++    ILandfillProp* CreateZotProp(const float p[3]) override {
++        prop = new FakeProp();
++        for (int i = 0; i < 3; ++i) prop->pos[i] = p[i];
++        return prop;
++    }
++    void RemoveProp(ILandfillProp*) override { ++removedProps; }
++    bool WriteProp(cIGZOStream& s, ILandfillProp* p) override { s.SetUint8(p ? 1 : 0); return true; }
++    ILandfillProp* ReadProp(cIGZIStream& s) override {
++        std::uint8_t present = 0;
++        s.GetUint8(present);
++        if (!present) return nullptr;
++        prop = new FakeProp();
++        return prop;
++    }
++    ILandfillEffect* CreateEffect(const char* name, const float p[3]) override {
++        effectNames.push_back(name);
++        FakeEffect& e = effectNames.size() == 1 ? generator : attractor;
++        e.matrix[0] = p[0]; e.matrix[1] = p[1]; e.matrix[2] = p[2];
++        return &e;
++    }
++    void RemoveEffect(ILandfillEffect*) override { ++removedEffects; }
++    ILandfillEffect* CreateAmbientEffect(const char* name) override {
++        effectNames.push_back(name);
++        return haveFlock ? &flock : nullptr;
++    }
++    int Rand() override { ++rands; return nextRand; }
++};
++
++LandfillCellRegion FullRegion(int x0, int z0, int x1, int z1) { return LandfillCellRegion::Make(x0, z0, x1, z1, true); }
++
++void TestRegion() {
++    LandfillCellRegion r = LandfillCellRegion::Make(2, 3, 4, 5, false);
++    CHECK(r.rowCount == 3 && r.bitCount == 3 && r.wordCount == 1);
++    CHECK(!r.Test(3, 4));
++    r.SetBit(3, 4, true);
++    CHECK(r.Test(3, 4));
++    CHECK(!r.Test(1, 4) && !r.Test(3, 6) && !r.Test(5, 4));
++    LandfillCellRegion wide = LandfillCellRegion::Make(0, 0, 0, 31, false);
++    CHECK(wide.wordCount == 1);   // 32 bits
++    LandfillCellRegion wide2 = LandfillCellRegion::Make(0, 0, 0, 32, false);
++    CHECK(wide2.wordCount == 2);  // 33 bits
++    // inflate a single cell
++    LandfillCellRegion one = LandfillCellRegion::Make(5, 5, 5, 5, true);
++    LandfillCellRegion plus = one;
++    plus.Inflate(0);
++    CHECK(plus.bounds.x0 == 4 && plus.bounds.z0 == 4 && plus.bounds.x1 == 6 && plus.bounds.z1 == 6);
++    CHECK(plus.rowCount == 3 && plus.bitCount == 3);
++    int count = 0;
++    for (int x = 4; x <= 6; ++x) for (int z = 4; z <= 6; ++z) count += plus.Test(x, z) ? 1 : 0;
++    CHECK(count == 5);
++    CHECK(plus.Test(5, 5) && plus.Test(4, 5) && plus.Test(6, 5) && plus.Test(5, 4) && plus.Test(5, 6));
++    CHECK(!plus.Test(4, 4) && !plus.Test(6, 6));
++    LandfillCellRegion diag = one;
++    diag.Inflate(1);
++    count = 0;
++    for (int x = 4; x <= 6; ++x) for (int z = 4; z <= 6; ++z) count += diag.Test(x, z) ? 1 : 0;
++    CHECK(count == 9);
++}
++
++void TestHeapDecay() {
++    LandfillTunables t;
++    t.decayRate = 0.1f;
++    t.maxGarbageToDecayPerMonthPerZone = 5;
++    cGarbageHeap h;
++    CHECK(h.valid && !h.hasGarbage && h.garbage == 0);
++    CHECK(h.DecayGarbage(t) == 0);
++    h.garbage = 25;   // 2.5 rounds to even: 2
++    CHECK(h.DecayGarbage(t) == 2 && h.garbage == 23);
++    h.garbage = 4;    // 0.4 -> 0 -> forced to 1
++    CHECK(h.DecayGarbage(t) == 1 && h.garbage == 3);
++    h.garbage = 1000;  // 100 -> clamped to 5
++    CHECK(h.DecayGarbage(t) == 5 && h.garbage == 995);
++    t.decayRate = 1.0f;
++    t.maxGarbageToDecayPerMonthPerZone = 100;
++    h.garbage = 3;
++    CHECK(h.DecayGarbage(t) == 3 && h.garbage == 0);
++    CHECK(RoundFloatToEvenInt(3.5f) == 4 && RoundFloatToEvenInt(2.5f) == 2 && RoundFloatToEvenInt(-1.5f) == -2);
++}
++
++void TestHeapStream() {
++    cGarbageHeap h;
++    h.x = 3; h.z = 7; h.valid = false; h.hasGarbage = true; h.garbage = 55; h.capacity = 90;
++    PortMemoryOStream out;
++    CHECK(h.Write(out));
++    PortMemoryIStream in(out.Data().data(), out.Data().size());
++    cGarbageHeap r;
++    CHECK(r.Read(in));
++    CHECK(r.x == 3 && r.z == 7 && !r.valid && r.hasGarbage && r.garbage == 55 && r.capacity == 90);
++    const std::uint8_t bad[2] = {3, 0};
++    PortMemoryIStream badIn(bad, 2);
++    cGarbageHeap b;
++    CHECK(!b.Read(badIn));
++}
++
++void TestConstructionAndCapacity() {
++    Host host;
++    cSC4LandfillZone zone(&host, FullRegion(10, 20, 13, 22));   // 4 x 3 cells
++    CHECK(zone.HeapColumns() == 3 && zone.HeapRows() == 2 && zone.Heaps().size() == 6);
++    CHECK(zone.Heaps()[4].x == 1 && zone.Heaps()[4].z == 1 && zone.Heaps()[4].id == 1);
++    CHECK(zone.GetCellCount() == 12);
++    CHECK(zone.GetNumValidHeaps() == 6);
++    CHECK(zone.CalculateGarbageHeapCapacity(0) == 0);
++    CHECK(zone.CalculateGarbageHeapCapacity(6) == 200);       // 100 * 12 / 6
++    CHECK(zone.CalculateGarbageHeapCapacity(5) == 240);       // 1200 / 5
++    CHECK(zone.CalculateGarbageHeapCapacity(7) == 171);       // 171.43
++    zone.Heaps()[2].valid = false;
++    zone.Heaps()[0].garbage = 300;
++    zone.Heaps()[1].garbage = 50;
++    CHECK(zone.RecalculateCapacity() == 1200);    // 5 valid heaps: 240 each
++    CHECK(zone.Heaps()[2].capacity == 0 && zone.Heaps()[3].capacity == 240);
++    CHECK(zone.Heaps()[0].garbage == 240 && host.supply == 60);
++    CHECK(zone.Heaps()[1].garbage == 50);
++    CHECK(zone.TotalCapacity() == 1200);
++    int avail, garbage, cap;
++    zone.GetCapacity(avail, garbage, cap);
++    CHECK(cap == 1200 && garbage == 290 && avail == 910);
++    CHECK(zone.GetAvailableCapacity() == 910);
++    // redistribution: 290 garbage, 1200 capacity, 5 valid heaps -> share 240 each until exhausted
++    zone.RedistributeGarbage();
++    CHECK(zone.Heaps()[0].garbage == 240 && zone.Heaps()[1].garbage == 50 && zone.Heaps()[2].garbage == 0);
++    CHECK(zone.Heaps()[3].garbage == 0 && zone.Heaps()[4].garbage == 0);
++    // Release with refcount 0 destroys the zone: the zone above is on the stack so only use AddRef/QueryInterface
++    void* out = nullptr;
++    CHECK(zone.QueryInterface(0x452294aa, &out) && out == &zone);
++    CHECK(zone.QueryInterface(1, &out));
++    CHECK(!zone.QueryInterface(2, &out));
++    CHECK(zone.DoMessage(nullptr));
++    CHECK(zone.AddRef() == 3);   // two QueryInterface calls added references
++    cSC4LandfillZone empty(&host);
++    CHECK(empty.Heaps().empty() && empty.GetNumValidHeaps() == 0);
++}
++
++void TestUpdateZone() {
++    Host host;
++    host.tunables.decayRate = 0.0f;
++    host.tunables.maxGarbageToDecayPerMonthPerZone = 10;
++    host.tunables.maxGarbageToTakePerMonthPerTile = 5;
++    host.networkIds = {0, 1};
++    host.flagsByType[0x4400] = {0, 1};   // the last developer type answers for network 1
++    cSC4LandfillZone zone(&host, FullRegion(10, 20, 12, 22));   // 3x3 cells, 2x2 heaps
++    CHECK(zone.IsZoneConnected());
++    host.flagsByType[0x4400] = {0, 0};
++    CHECK(!zone.IsZoneConnected());
++    host.flagsByType[0x1010] = {1};      // network 0 flagged on the first type
++    CHECK(zone.IsZoneConnected());
++    host.flagsByType[0x1010] = {};
++    host.flagsByType[0x3320] = {0, 0, 1};   // network id 2 is not in the list
++    CHECK(!zone.IsZoneConnected());
++
++    // not connected: a zot is added, nothing is taken
++    int available = 1000;
++    zone.RecalculateCapacity();   // 100*9/4 = 225 each
++    CHECK(zone.Heaps()[0].capacity == 225);
++    zone.UpdateZone(available);
++    CHECK(!zone.Connected() && zone.Zot() != nullptr && host.prop->state == 3);
++    CHECK(available == 1000 && host.landfilled == 0);
++    // centre of (10..12, 20..22) is (11, 21); height = terrain 105 + 3
++    CHECKF(host.prop->pos[0], 11 * 16.0f);
++    CHECKF(host.prop->pos[1], 108.0f);
++    CHECKF(host.prop->pos[2], 21 * 16.0f);
++
++    // connected: budget = min(1000, 9 cells * 5) = 45; each heap takes min(45 left, 225)
++    host.flagsByType[0x4400] = {0, 1};
++    host.network.clear();
++    available = 1000;
++    zone.UpdateZone(available);
++    CHECK(zone.Connected() && zone.Zot() == nullptr && host.removedProps == 1);
++    CHECK(zone.Heaps()[0].garbage > 0 || zone.Heaps()[1].garbage > 0);
++    // the first heap takes all 45 (room 225); the others take 0; then redistribution spreads 45 over 4 valid heaps
++    CHECK(available == 955 && host.landfilled == 45 && host.supply == -45);
++    // after redistribution: capacity total 900, valid 4 -> share 225; garbage 45 goes to the first heap (min(45, 225))
++    CHECK(zone.Heaps()[0].garbage == 45 && zone.Heaps()[1].garbage == 0);
++    CHECK(zone.Heaps()[0].hasGarbage && !zone.Heaps()[1].hasGarbage);
++    // heap (0,0) now has garbage: UpdateSurroundingTiles created four tiles around the vertex
++    CHECK(host.created.size() >= 3);
++    // an empty tile (id 0x2f10000) places the empty cell texture instead of an occupant
++    CHECK(!host.emptyTextures.empty());
++
++    // budget limited by availability
++    available = 3;
++    zone.UpdateZone(available);
++    CHECK(available == 0 && host.landfilled == 48);
++}
++
++void TestSurroundingTiles() {
++    Host host;
++    cSC4LandfillZone zone(&host, FullRegion(10, 20, 13, 22));   // 3x2 heaps
++    zone.Heaps()[1].hasGarbage = true;   // heap (1,0)
++    zone.UpdateSurroundingTiles(zone.Heaps()[1]);
++    // cells: A (11,20) mask = self<<2 = 4 -> table[4] = 0x34e0000 o1; B (12,20) mask = self<<1 = 2 -> 0x34e0000 o2;
++    // C (11,21) mask = self<<3 = 8 -> 0x34e0000 o0; D (12,21) mask = self = 1 -> 0x34e0000 o3
++    CHECK(host.created.size() == 4);
++    CHECK(host.created[0].first == std::make_pair(11, 20) && host.created[0].second == std::make_pair(0x034e0000u, 1));
++    CHECK(host.created[1].first == std::make_pair(12, 20) && host.created[1].second == std::make_pair(0x034e0000u, 2));
++    CHECK(host.created[2].first == std::make_pair(11, 21) && host.created[2].second == std::make_pair(0x034e0000u, 0));
++    CHECK(host.created[3].first == std::make_pair(12, 21) && host.created[3].second == std::make_pair(0x034e0000u, 3));
++    CHECK(host.activeOff.size() == 4 && host.activeOn.size() == 4);
++    for (FakeTile* t : host.allTiles) CHECK(t->layer == 2 && !t->empty && t->initialised && t->refs == 0);
++    CHECK(host.allTiles[0]->pos[1] == 100.0f);
++    // neighbouring heaps with garbage change the masks: heaps (0,0) and (2,0) too -> A sees (0,0) as bit1 etc.
++    host.created.clear();
++    zone.Heaps()[0].hasGarbage = true;
++    zone.Heaps()[2].hasGarbage = true;
++    zone.UpdateSurroundingTiles(zone.Heaps()[1]);
++    // A (hx=1,hz=0): (0,-1)=0 | (0,0)<<1 = 2 | self<<2 = 4 | (1,-1)<<3 = 0 -> 6 -> 0x2f90000 o2
++    // B: (1,-1)=0 | self<<1 = 2 | (2,0)<<2 = 4 | (2,-1)<<3 = 0 -> 6
++    // C: (0,0)=1 | (0,1)<<1 = 0 | (1,1)<<2 = 0 | self<<3 = 8 -> 9 -> 0x2f90000 o0
++    // D: self=1 | (1,1)<<1 = 0 | (2,1)<<2 = 0 | (2,0)<<3 = 8 -> 9
++    CHECK(host.created.size() == 4);
++    CHECK(host.created[0].second == std::make_pair(0x02f90000u, 2));
++    CHECK(host.created[1].second == std::make_pair(0x02f90000u, 2));
++    CHECK(host.created[2].second == std::make_pair(0x02f90000u, 0));
++    CHECK(host.created[3].second == std::make_pair(0x02f90000u, 0));
++    // all-neighbour tile re-randomises: heap (1,1) with all four heaps lit -> cell D of... use heap (1,0) region
++    cSC4LandfillZone big(&host, FullRegion(0, 0, 4, 4));   // 4x4 heaps
++    for (auto& h : big.Heaps()) h.hasGarbage = true;
++    host.created.clear();
++    host.nextRand = 7;   // 7 & 3 = 3 -> orientation 6
++    big.UpdateSurroundingTiles(big.Heaps()[5]);   // heap (1,1): A (1,1) mask 15
++    CHECK(host.created.size() == 4);
++    CHECK(host.created[0].second == std::make_pair(0x02fa0000u, 6));
++    CHECK(host.rands == 4);
++    // an existing tile and incompatible occupants are removed first
++    FakeTile existing;
++    host.tiles[{1, 1}] = &existing;
++    FakeOcc occ;
++    host.incompatible.push_back(&occ);
++    host.created.clear();
++    big.UpdateSurroundingTiles(big.Heaps()[5]);
++    CHECK(existing.removed && occ.removed && occ.refs == 1 - 4);
++}
++
++void TestEmptyTileAndMissingExemplar() {
++    Host host;
++    cSC4LandfillZone zone(&host, FullRegion(10, 20, 13, 22));
++    // lone heap state false everywhere: cell mask 0 is the empty tile id -> empty texture placed when none exists
++    zone.UpdateSurroundingTiles(zone.Heaps()[0]);   // hasGarbage false: masks all 0
++    CHECK(host.emptyTextures.size() == 4 && host.created.empty());
++    host.baseTextures.insert({10, 20});
++    host.emptyTextures.clear();
++    zone.UpdateSurroundingTiles(zone.Heaps()[0]);
++    CHECK(host.emptyTextures.size() == 3);
++}
++
++void TestEdges() {
++    Host host;
++    cSC4LandfillZone zone(&host, FullRegion(10, 20, 13, 22));
++    // invalidation: cell (11, 21) -> heaps (1,1) (1,0) (0,1) (0,0)
++    zone.InvalidateSurroundingHeaps(11, 21);
++    CHECK(!zone.Heaps()[4].valid && !zone.Heaps()[1].valid && !zone.Heaps()[3].valid && !zone.Heaps()[0].valid);
++    CHECK(zone.Heaps()[2].valid && zone.Heaps()[5].valid);
++    // the last column (13): hx = 3 = columns -> only (hx-1, ...) heaps
++    cSC4LandfillZone z2(&host, FullRegion(10, 20, 13, 22));
++    z2.InvalidateSurroundingHeaps(13, 22);   // hx = 3, hz = 2 = rows: (hx-1, hz-1) = (2,1)
++    int invalid = 0;
++    for (auto& h : z2.Heaps()) invalid += h.valid ? 0 : 1;
++    CHECK(invalid == 1 && !z2.Heaps()[5].valid);
++    z2.InvalidateSurroundingHeaps(9, 20);   // hx < 0
++    invalid = 0;
++    for (auto& h : z2.Heaps()) invalid += h.valid ? 0 : 1;
++    CHECK(invalid == 1);
++
++    // first road neighbour: network at (9, 21) left of the zone
++    host.network.insert({9, 21});
++    int x = 0, z = 0;
++    CHECK(zone.GetFirstRoadTileNeighbor(x, z) && x == 9 && z == 21);
++    host.network.clear();
++    host.network.insert({11, 19});   // top edge row z0-1
++    CHECK(zone.GetFirstRoadTileNeighbor(x, z) && x == 11 && z == 19);
++    host.network.clear();
++    host.network.insert({14, 20});   // right edge: x1+1
++    CHECK(zone.GetFirstRoadTileNeighbor(x, z) && x == 14 && z == 20);
++    host.network.clear();
++    host.network.insert({11, 23});   // bottom edge z1+1
++    CHECK(zone.GetFirstRoadTileNeighbor(x, z) && x == 11 && z == 23);
++    host.network.clear();
++    host.network.insert({14, 19});   // corners are not scanned by the vertical edges' loops... top loop is x<xhi
++    CHECK(!zone.GetFirstRoadTileNeighbor(x, z) && x == 10 && z == 20);
++    // the loops are exclusive at the high end: (14, 19) is missed, (13, 19) is hit
++    host.network.insert({13, 19});
++    CHECK(zone.GetFirstRoadTileNeighbor(x, z) && x == 13 && z == 19);
++}
++
++void TestInitShutdown() {
++    Host host;
++    host.tunables.garbageTruckGeneratorName = "gen";
++    host.tunables.garbageTruckAttractorName = "att";
++    host.network.insert({9, 21});
++    auto* zone = new cSC4LandfillZone(&host, FullRegion(10, 20, 13, 22));
++    zone->AddRef();
++    CHECK(zone->Init());
++    CHECK(zone->FirstRoadX() == 9 && zone->FirstRoadZ() == 21);
++    CHECK(host.effectNames.size() == 3 && host.effectNames[0] == "gen" && host.effectNames[1] == "att" &&
++          host.effectNames[2] == "flock_of_seagulls");
++    CHECK(host.generator.flags[8] && host.generator.flags[0x100] && host.attractor.flags[8]);
++    CHECKF(host.generator.matrix[0], 9 * 16.0f);
++    CHECKF(host.generator.matrix[1], 100.0f);
++    CHECKF(host.generator.matrix[2], 21 * 16.0f);
++    CHECK(host.generator.refs == 2 && host.attractor.refs == 2);
++    CHECK(host.flock.started);
++    // seagull transform: centre cell (11, 21), height altitude + 64
++    CHECKF(host.flock.matrix[0], 1); CHECKF(host.flock.matrix[4], 1); CHECKF(host.flock.matrix[8], 1);
++    CHECKF(host.flock.matrix[9], 11 * 16.0f); CHECKF(host.flock.matrix[10], 164.0f);
++    CHECKF(host.flock.matrix[11], 21 * 16.0f); CHECKF(host.flock.matrix[12], 1);
++    CHECKF(zone->LevelHeight(), 100.0f);
++    CHECK(zone->Init());   // second call does nothing
++    CHECK(host.effectNames.size() == 3);
++    // AddZot, then shutdown removes it
++    zone->AddZot();
++    CHECK(zone->Zot() != nullptr);
++    FakeProp* prop = host.prop;
++    // Release at refcount 1 shuts down and deletes
++    CHECK(zone->Release() == 0);
++    CHECK(host.flock.stopped && host.flock.refs == 0);
++    CHECK(!host.generator.enabled && !host.attractor.enabled && host.removedEffects == 2);
++    CHECK(host.generator.refs == 1 && host.attractor.refs == 1);
++    CHECK(host.removedProps == 1 && prop->refs == 0);
++    delete prop;
++
++    // no seagull effect available
++    Host h2;
++    h2.haveFlock = false;
++    auto* z2 = new cSC4LandfillZone(&h2, FullRegion(0, 0, 3, 3));
++    z2->Init();
++    CHECK(z2->Seagulls() == nullptr && z2->TruckGenerator() != nullptr);
++    z2->Release();
++}
++
++void TestZotSpiral() {
++    Host host;
++    // region where the centre cell is missing: spiral finds the nearest set cell
++    LandfillCellRegion r = LandfillCellRegion::Make(10, 20, 14, 24, false);
++    r.SetBit(12, 24, true);
++    cSC4LandfillZone zone(&host, r);
++    zone.AddZot();
++    CHECK(zone.Zot() != nullptr);
++    CHECKF(host.prop->pos[0], 12 * 16.0f);
++    CHECKF(host.prop->pos[2], 24 * 16.0f);
++    // empty region: fall back to the centre
++    Host h2;
++    LandfillCellRegion e = LandfillCellRegion::Make(10, 20, 14, 24, false);
++    cSC4LandfillZone ez(&h2, e);
++    ez.AddZot();
++    CHECKF(h2.prop->pos[0], 12 * 16.0f);
++    CHECKF(h2.prop->pos[2], 22 * 16.0f);
++    delete host.prop;
++    delete h2.prop;
++}
++
++void TestCostsAndTerrain() {
++    Host host;
++    host.tunables.defaultLandfillTileCost = 7;
++    cSC4LandfillZone zone(&host, FullRegion(10, 20, 11, 21));   // 4 cells
++    CHECK(zone.GetLandfillTileCost(10, 20) == 7);
++    FakeTile tile;
++    cSCPropertyHelp::SetPropertyValue(&tile.props, kLandfillTileCostProperty, std::int64_t(50));
++    host.tiles[{10, 20}] = &tile;
++    CHECK(zone.GetLandfillTileCost(10, 20) == 50 && tile.refs == 1);
++    CHECK(zone.GetMaintenanceCost() == 50 + 7 * 3);
++
++    // terrain change: tile at height 100, terrain 105 -> moves when allowed
++    tile.pos[0] = 160; tile.pos[1] = 100; tile.pos[2] = 320;
++    host.adjust = 104;
++    zone.HandleCellTerrainChange(10, 20);
++    CHECK(tile.pos[1] == 100.0f && host.refreshes == 0);   // moveWithTerrain off
++    host.tunables.moveWithTerrain = true;
++    zone.HandleCellTerrainChange(10, 20);
++    CHECK(tile.pos[1] == 105.0f && host.refreshes == 1);   // max(terrain 105, adjusted 104)
++    host.adjust = 110;
++    tile.pos[1] = 100;
++    zone.HandleCellTerrainChange(10, 20);
++    CHECK(tile.pos[1] == 110.0f);
++    tile.pos[1] = 105.1f;   // |diff| < 0.25: untouched
++    zone.HandleCellTerrainChange(10, 20);
++    CHECK(tile.pos[1] == 105.1f);
++    // an "empty" tile gets dezoned
++    tile.empty = true;
++    tile.pos[1] = 100;
++    zone.HandleCellTerrainChange(10, 20);
++    CHECK(!zone.Region()->Test(10, 20) && host.dezoned.size() == 1 && tile.removed);
++    CHECK(zone.GetCellCount() == 3);
++    // a missing tile dezones its cell as well
++    zone.HandleTerrainChange({11, 21, 30, 30});
++    CHECK(!zone.Region()->Test(11, 21) && host.dezoned.size() == 2);
++    CHECK(zone.GetCellCount() == 2);
++    CHECK(!zone.IsCompletelyDezoned());
++    zone.DezoneCell(10, 21, false, false);
++    zone.DezoneCell(11, 20, false, false);
++    CHECK(host.dezoned.size() == 2);
++    CHECK(zone.GetCellCount() == 0);
++    CHECK(zone.IsCompletelyDezoned());
++    // base textures: only kind 1 are removed
++    FakeOcc a, b;
++    a.kind = 1; b.kind = 2;
++    host.baseTexList = {&a, &b};
++    zone.DezoneCell(10, 20, false, true);
++    CHECK(a.removed && !b.removed && a.refs == 0 && b.refs == 0);
++}
++
++void TestLevelAndPopulate() {
++    Host host;
++    cSC4LandfillZone zone(&host, FullRegion(10, 20, 12, 22));
++    zone.LevelRect({-3, 5, 100, 100}, 12.5f, true);
++    CHECKF(zone.LevelHeight(), 12.5f);
++    CHECK(host.lastLevel.x0 == 0 && host.lastLevel.z0 == 5 && host.lastLevel.x1 == 64 && host.lastLevel.z1 == 64);
++    CHECKF(host.lastLevelHeight, 12.5f);
++    zone.LevelRect({-3, 5, 7, 8}, 1.0f, false);
++    CHECK(host.devCalls == 1 && host.lastLevel.x0 == -3 && host.lastLevel.z1 == 8);
++
++    // populate: cells with zone type 0xe and no network keep their bit and get an empty texture; others lose their bit
++    host.zoneTypes[{10, 20}] = 0xe;
++    host.zoneTypes[{11, 20}] = 0xe;
++    host.network.insert({11, 20});
++    host.zoneTypes[{10, 21}] = 3;
++    FakeTile t;
++    host.tiles[{10, 20}] = &t;
++    host.baseTextures.insert({12, 22});
++    zone.PopulateZone();
++    CHECK(zone.Region()->Test(10, 20));          // zone type 0xe, tile present
++    CHECK(!zone.Region()->Test(11, 20));         // network present
++    CHECK(!zone.Region()->Test(10, 21));         // wrong zone type
++    CHECK(!zone.Region()->Test(12, 22));
++    CHECK(t.refs == 1);
++    CHECK(host.emptyTextures.empty());
++    host.zoneTypes[{12, 21}] = 0xe;
++    zone.PopulateZone();
++    CHECK(zone.Region()->Test(12, 21) == true);
++    CHECK(host.emptyTextures.size() == 1 && host.emptyTextures[0] == std::make_pair(12, 21));
++}
++
++void TestAddRegion() {
++    Host host;
++    cSC4LandfillZone zone(&host, FullRegion(10, 20, 12, 22));   // 2x2 heaps
++    zone.SetLevelHeight(9.0f);
++    zone.Heaps()[3].garbage = 77;
++    zone.Heaps()[3].hasGarbage = true;
++    zone.Heaps()[3].capacity = 99;
++    LandfillCellRegion extra = LandfillCellRegion::Make(13, 20, 14, 21, false);
++    extra.SetBit(13, 20, true);
++    extra.SetBit(14, 21, true);
++    zone.AddRegionToZone(extra);
++    const LandfillRect& b = zone.Region()->bounds;
++    CHECK(b.x0 == 10 && b.z0 == 20 && b.x1 == 14 && b.z1 == 22);
++    CHECK(zone.HeapColumns() == 4 && zone.HeapRows() == 2 && zone.Heaps().size() == 8);
++    CHECK(zone.Region()->Test(10, 20) && zone.Region()->Test(13, 20) && zone.Region()->Test(14, 21));
++    CHECK(!zone.Region()->Test(14, 20) && !zone.Region()->Test(13, 21));
++    // old heap (1,1) is copied by its own x/z
++    const cGarbageHeap& moved = zone.Heaps()[1 * 4 + 1];
++    CHECK(moved.garbage == 77 && moved.hasGarbage && moved.capacity == 99 && moved.x == 1 && moved.z == 1);
++    CHECK(host.devCalls == 2);   // one LevelRect per added cell, using the zone's level height
++    CHECK(host.lastLevel.x0 == 14 && host.lastLevel.z0 == 21 && host.lastLevel.x1 == 15 && host.lastLevel.z1 == 22);
++    CHECK(zone.GetCellCount() == 9 + 2);
++    // cells outside the merged region invalidate surrounding heaps: (14,20) lies outside -> heaps around it
++    CHECK(!zone.Heaps()[0 * 4 + 3].valid);
++}
++
++void TestStream() {
++    Host host;
++    host.tunables.garbageTruckGeneratorName = "gen";
++    LandfillCellRegion r = FullRegion(10, 20, 13, 22);
++    r.SetBit(11, 21, false);
++    r.SetBit(13, 22, false);   // last row/column: not stored, reloaded as set
++    r.SetBit(10, 22, false);   // last column of the first row: not stored either
++    cSC4LandfillZone zone(&host, r);
++    zone.Heaps()[2].garbage = 12;
++    zone.Heaps()[2].capacity = 40;
++    zone.Heaps()[2].hasGarbage = true;
++    zone.Heaps()[5].valid = false;
++    int available = 0;
++    host.network.clear();
++    zone.UpdateZone(available);   // not connected -> zot
++    CHECK(zone.Zot() != nullptr);
++    PortMemoryOStream out;
++    CHECK(zone.Write(out));
++    // layout: u16 version 4, 4 x s32, 3*2 bit bytes, s32 columns, s32 rows, 6 heaps of 2+4+4+2+2+4+4 = 22 bytes, bool, prop byte
++    CHECK(out.Data().size() == 2 + 16 + 6 + 8 + 6 * 22 + 1 + 1);
++    CHECK(out.Data()[0] == 4 && out.Data()[1] == 0);
++
++    Host host2;
++    cSC4LandfillZone loaded(&host2);
++    PortMemoryIStream in(out.Data().data(), out.Data().size());
++    CHECK(loaded.Read(in));
++    CHECK(loaded.Region()->bounds.x0 == 10 && loaded.Region()->bounds.z1 == 22);
++    CHECK(loaded.Region()->Test(10, 20) && !loaded.Region()->Test(11, 21) && loaded.Region()->Test(12, 21));
++    CHECK(loaded.Region()->Test(13, 22) && loaded.Region()->Test(10, 22));   // reloaded as set
++    CHECK(loaded.HeapColumns() == 3 && loaded.HeapRows() == 2 && loaded.Heaps().size() == 6);
++    CHECK(loaded.Heaps()[2].garbage == 12 && loaded.Heaps()[2].capacity == 40 && loaded.Heaps()[2].hasGarbage);
++    CHECK(!loaded.Heaps()[5].valid && loaded.Heaps()[4].valid);
++    CHECK(loaded.Heaps()[4].id == 4);
++    CHECK(!loaded.Connected() && loaded.Zot() != nullptr);
++    delete host.prop;
++    delete host2.prop;
++    host.prop = nullptr;
++
++    // version 3 stream: connected flag byte only
++    PortMemoryOStream v3;
++    v3.SetUint16(3);
++    v3.SetSint32(0); v3.SetSint32(0); v3.SetSint32(1); v3.SetSint32(1);
++    v3.SetUint8(1);
++    v3.SetSint32(1); v3.SetSint32(1);
++    cGarbageHeap h;
++    h.Write(v3);
++    v3.SetUint8(1);
++    PortMemoryIStream v3in(v3.Data().data(), v3.Data().size());
++    Host host3;
++    cSC4LandfillZone old(&host3);
++    CHECK(old.Read(v3in) && old.Connected() && old.Zot() == nullptr);
++}
++
++}  // namespace
++
++int main() {
++    TestRegion();
++    TestHeapDecay();
++    TestHeapStream();
++    TestConstructionAndCapacity();
++    TestUpdateZone();
++    TestSurroundingTiles();
++    TestEmptyTileAndMissingExemplar();
++    TestEdges();
++    TestInitShutdown();
++    TestZotSpiral();
++    TestCostsAndTerrain();
++    TestLevelAndPopulate();
++    TestAddRegion();
++    TestStream();
++    if (failures) { std::printf("%d failures\n", failures); return 1; }
++    std::printf("ok\n");
++    return 0;
++}
+diff --git a/src/sc4/LandfillZone.cpp b/src/sc4/LandfillZone.cpp
+new file mode 100644
+index 0000000..c06da60
+--- /dev/null
++++ b/src/sc4/LandfillZone.cpp
+@@ -0,0 +1,841 @@
++#include "sc4/LandfillZone.h"
++
++#include <algorithm>
++#include <cmath>
++#include <cstring>
++
++#include "gz/StreamOps.h"
++#include "sc4/DisasterManagers.h"
++#include "sc4/SCPropertyHelp.h"
++#include "sc4/SimStreamOps.h"
++
++namespace sc4 {
++
++namespace {
++
++// DAT_100afef74: tile id and stored orientation for each 4-bit neighbour mask (stride 12; the third column is unused).
++struct TileShape { std::uint32_t id; int orientation; };
++TileShape g_tileTable[16] = {
++    {0x02f10000, 0}, {0x034e0000, 3}, {0x034e0000, 2}, {0x02f90000, 3}, {0x034e0000, 1}, {0x034f0000, 0},
++    {0x02f90000, 2}, {0x02fb0000, 3}, {0x034e0000, 0}, {0x02f90000, 0}, {0x034f0000, 2}, {0x02fb0000, 0},
++    {0x02f90000, 1}, {0x02fb0000, 1}, {0x02fb0000, 2}, {0x02fa0000, 0},
++};
++
++// DAT_100a169c0: developer types whose networks make the zone "connected".
++constexpr std::uint32_t kDeveloperTypes[12] = {0x1010, 0x1020, 0x1030, 0x3110, 0x3120, 0x3130,
++                                               0x3320, 0x3330, 0x4200, 0x4300, 0x4100, 0x4400};
++
++constexpr const char* kSeagullEffectName = "flock_of_seagulls";
++
++int RandomOrientation(int r) {
++    // (r - ((((uint)(r >> 31) >> 30) + r) & 0x7ffffffc)) * 2
++    const std::uint32_t bias = static_cast<std::uint32_t>(r >> 31) >> 30;
++    const std::uint32_t masked = (bias + static_cast<std::uint32_t>(r)) & 0x7ffffffcu;
++    return static_cast<int>(static_cast<std::uint32_t>(r) - masked) * 2;
++}
++
++}  // namespace
++
++int RoundFloatToEvenInt(float v) {
++    const float biased = v + 12582912.0f;
++    std::uint32_t bits;
++    std::memcpy(&bits, &biased, sizeof(bits));
++    return static_cast<int>(bits - 0x4b400000u);
++}
++
++// ---- SC4CellRegion<int> ----------------------------------------------------------------------------------------
++
++void LandfillCellRegion::ResetMap(std::uint32_t rowsN, std::uint32_t bitsN, bool fill) {
++    rowCount = rowsN;
++    bitCount = bitsN;
++    wordCount = (bitsN >> 5) + 1 - ((bitsN & 0x1f) == 0 ? 1u : 0u);
++    rows.assign(rowsN, std::vector<std::uint32_t>(wordCount, fill ? 0xffffffffu : 0u));
++}
++
++LandfillCellRegion LandfillCellRegion::Make(int x0, int z0, int x1, int z1, bool fill) {
++    LandfillCellRegion r;
++    r.bounds = {x0, z0, x1, z1};
++    r.ResetMap(static_cast<std::uint32_t>(x1 + 1 - x0), static_cast<std::uint32_t>(z1 + 1 - z0), fill);
++    return r;
++}
++
++bool LandfillCellRegion::Test(int x, int z) const {
++    const std::uint32_t dx = static_cast<std::uint32_t>(x - bounds.x0);
++    const std::uint32_t dz = static_cast<std::uint32_t>(z - bounds.z0);
++    if (dx >= rowCount || dz >= bitCount || dx >= rows.size()) return false;
++    return ((rows[dx][dz >> 5] >> (dz & 0x1f)) & 1u) != 0;
++}
++
++void LandfillCellRegion::SetBit(int x, int z, bool on) {
++    const std::uint32_t dx = static_cast<std::uint32_t>(x - bounds.x0);
++    const std::uint32_t dz = static_cast<std::uint32_t>(z - bounds.z0);
++    if (dx >= rows.size() || (dz >> 5) >= rows[dx].size()) return;   // the original does not check
++    if (on) rows[dx][dz >> 5] |= 1u << (dz & 0x1f);
++    else rows[dx][dz >> 5] &= ~(1u << (dz & 0x1f));
++}
++
++void LandfillCellRegion::Inflate(int neighborType) {
++    const int nx0 = bounds.x0 - 1, nz0 = bounds.z0 - 1, nx1 = bounds.x1 + 1, nz1 = bounds.z1 + 1;
++    const std::uint32_t newRows = static_cast<std::uint32_t>(nx1 - nx0 + 1);
++    const std::uint32_t newBits = static_cast<std::uint32_t>((nz1 - nz0) + 1);
++    LandfillCellRegion grown;
++    grown.ResetMap(newRows, newBits, false);
++    if (bounds.x0 <= bounds.x1 && bounds.z0 <= bounds.z1) {
++        auto set = [&](std::uint32_t row, std::uint32_t bit) {
++            if (row < grown.rows.size() && (bit >> 5) < grown.wordCount) grown.rows[row][bit >> 5] |= 1u << (bit & 0x1f);
++        };
++        for (std::uint32_t i = 0; i <= static_cast<std::uint32_t>(bounds.x1 - bounds.x0); ++i) {
++            for (std::uint32_t j = 0; j <= static_cast<std::uint32_t>(bounds.z1 - bounds.z0); ++j) {
++                if (i >= rows.size() || (j >> 5) >= rows[i].size()) continue;
++                if (((rows[i][j >> 5] >> (j & 0x1f)) & 1u) == 0) continue;
++                // the source cell lands at (i + 1, j + 1) of the grown map
++                set(i + 1, j + 1);
++                set(i, j + 1);
++                set(i + 2, j + 1);
++                set(i + 1, j);
++                set(i + 1, j + 2);
++                if (neighborType == 1) {
++                    set(i, j);
++                    set(i, j + 2);
++                    set(i + 2, j);
++                    set(i + 2, j + 2);
++                }
++            }
++        }
++    }
++    bounds = {nx0, nz0, nx1, nz1};
++    rowCount = grown.rowCount;
++    bitCount = grown.bitCount;
++    wordCount = grown.wordCount;
++    rows = std::move(grown.rows);
++}
++
++// ---- cGarbageHeap ----------------------------------------------------------------------------------------------
++
++std::uint32_t cGarbageHeap::DecayGarbage(const LandfillTunables& t) {
++    const std::uint32_t g = garbage;
++    if (g == 0) return 0;
++    const float scaled = static_cast<float>(g) * t.decayRate;
++    std::uint32_t decay = static_cast<std::uint32_t>(RoundFloatToEvenInt(scaled));
++    if (decay == 0) decay = 1;
++    else if (t.maxGarbageToDecayPerMonthPerZone < decay) decay = t.maxGarbageToDecayPerMonthPerZone;
++    if (g < decay) decay = g;
++    garbage = g - decay;
++    return decay;
++}
++
++bool cGarbageHeap::Write(cIGZOStream& stream) const {
++    stream.SetUint16(2);
++    stream.SetUint32(static_cast<std::uint32_t>(x));
++    stream.SetUint32(static_cast<std::uint32_t>(z));
++    stream.SetUint16(valid ? 1 : 0);
++    stream.SetUint16(hasGarbage ? 1 : 0);
++    stream.SetUint32(garbage);
++    stream.SetUint32(capacity);
++    return !stream.GetError();
++}
++
++bool cGarbageHeap::Read(cIGZIStream& stream) {
++    std::uint16_t version = 0;
++    stream.GetUint16(version);
++    if (version == 2) {
++        std::uint32_t v = 0;
++        stream.GetUint32(v);
++        x = static_cast<int>(v);
++        stream.GetUint32(v);
++        z = static_cast<int>(v);
++        std::uint16_t flag = 0;
++        stream.GetUint16(flag);
++        valid = flag == 1;
++        stream.GetUint16(flag);
++        hasGarbage = flag == 1;
++        stream.GetUint32(garbage);
++        stream.GetUint32(capacity);
++    }
++    return version == 2;
++}
++
++// ---- construction ----------------------------------------------------------------------------------------------
++
++cSC4LandfillZone::cSC4LandfillZone(ILandfillZoneHost* host) : host_(host) {}
++
++cSC4LandfillZone::cSC4LandfillZone(ILandfillZoneHost* host, const LandfillCellRegion& region) : host_(host) {
++    region_ = new LandfillCellRegion(region);
++    columns_ = region_->bounds.x1 - region_->bounds.x0;
++    rows_ = region_->bounds.z1 - region_->bounds.z0;
++    heapCount_ = rows_ * columns_;
++    heaps_.clear();
++    if (heapCount_ > 0) BuildHeaps();
++}
++
++void cSC4LandfillZone::BuildHeaps() {
++    for (int z = 0; z < rows_; ++z) {
++        for (int x = 0; x < columns_; ++x) {
++            cGarbageHeap heap;
++            heap.x = x;
++            heap.z = z;
++            heap.id = z;
++            heaps_.push_back(heap);
++        }
++    }
++}
++
++cSC4LandfillZone::~cSC4LandfillZone() {
++    if (zot_) zot_->Release();
++}
++
++std::uint32_t cSC4LandfillZone::AddRef() { return ++refCount_; }
++
++std::uint32_t cSC4LandfillZone::Release() {
++    if (refCount_ < 2) {
++        Shutdown();
++        delete this;
++        return 0;
++    }
++    return --refCount_;
++}
++
++bool cSC4LandfillZone::QueryInterface(std::uint32_t iid, void** out) {
++    if (iid == 1 || iid == kGZIID_cISC4LandfillZoneMessageTarget) {
++        *out = this;
++        AddRef();
++        return true;
++    }
++    return false;
++}
++
++bool cSC4LandfillZone::DoMessage(void*) { return true; }
++
++bool cSC4LandfillZone::Init() {
++    if (!initialised_) {
++        initialised_ = true;
++        // the original now takes AddRef'd pointers to the city, occupant manager, terrain, pollution simulator,
++        // effects managers and zone manager; the host owns them here
++        InitZoneEffects();
++        if (levelHeight_ == 0.0f && region_) {
++            float wx, wz;
++            host_->CellToWorld((region_->bounds.x1 + region_->bounds.x0) / 2, (region_->bounds.z1 + region_->bounds.z0) / 2, wx, wz);
++            levelHeight_ = host_->AltitudeAt(wx, wz);
++        }
++    }
++    return true;
++}
++
++void cSC4LandfillZone::InitZoneEffects() {
++    GetFirstRoadTileNeighbor(roadX_, roadZ_);
++    float wx, wz;
++    host_->CellToWorld(roadX_, roadZ_, wx, wz);
++    const float alt = host_->AltitudeAt(wx, wz);
++    const float pos[3] = {wx, alt, wz};
++    const LandfillTunables& t = host_->Tunables();
++    if (!generator_) {
++        generator_ = host_->CreateEffect(t.garbageTruckGeneratorName, pos);
++        if (generator_) {
++            generator_->AddRef();
++            generator_->SetFlag(8, true);
++            generator_->SetFlag(0x100, true);
++        }
++    }
++    if (!attractor_) {
++        attractor_ = host_->CreateEffect(t.garbageTruckAttractorName, pos);
++        if (attractor_) {
++            attractor_->AddRef();
++            attractor_->SetFlag(8, true);
++        }
++    }
++    if (!seagulls_) {
++        ILandfillEffect* flock = host_->CreateAmbientEffect(kSeagullEffectName);
++        if (flock) {
++            seagulls_ = flock;
++            float cx, cz;
++            host_->CellToWorld((region_->bounds.x1 + region_->bounds.x0) / 2, (region_->bounds.z1 + region_->bounds.z0) / 2, cx, cz);
++            const float height = host_->AltitudeAt(cx, cz) + 64.0f;
++            const float matrix[13] = {1, 0, 0, 0, 1, 0, 0, 0, 1, cx, height, cz, 1.0f};
++            seagulls_->SetTransform(matrix);
++            seagulls_->Start(0);
++        }
++    }
++}
++
++bool cSC4LandfillZone::Shutdown() {
++    ShutdownZoneEffects();
++    if (!initialised_) return true;
++    initialised_ = false;
++    RemoveZot();
++    delete region_;
++    region_ = nullptr;
++    return true;
++}
++
++void cSC4LandfillZone::ShutdownZoneEffects() {
++    if (seagulls_) {
++        seagulls_->Stop(true);
++        seagulls_->Release();
++        seagulls_ = nullptr;
++    }
++    if (generator_) {
++        generator_->SetEnabled(false);
++        host_->RemoveEffect(generator_);
++        generator_->Release();
++        generator_ = nullptr;
++    }
++    if (attractor_) {
++        attractor_->SetEnabled(false);
++        host_->RemoveEffect(attractor_);
++        attractor_->Release();
++        attractor_ = nullptr;
++    }
++}
++
++void cSC4LandfillZone::RemoveZot() {
++    if (!zot_) return;
++    host_->RemoveProp(zot_);
++    ILandfillProp* prop = zot_;
++    zot_ = nullptr;
++    prop->Release();
++}
++
++void cSC4LandfillZone::AddZot() {
++    if (zot_ || !region_) return;
++    const LandfillRect& b = region_->bounds;
++    const int centerX = (b.x1 + b.x0) / 2, centerZ = (b.z1 + b.z0) / 2;
++    SpiralIterator spiral;
++    spiral.x = centerX;
++    spiral.z = centerZ;
++    spiral.targetX = centerX + 1;
++    spiral.targetZ = centerZ;
++    spiral.minX = b.x0;
++    spiral.minZ = b.z0;
++    spiral.maxX = std::max(b.x1, b.x0);
++    spiral.maxZ = std::max(b.z1, b.z0);
++    spiral.mode = 1;
++    spiral.direction = 1;
++    spiral.state = 0;
++    spiral.onZ = 1;
++    spiral.edgesHit = 0;
++    spiral.turns = 0;
++    if (centerX < b.x0 || centerZ < b.z0 || spiral.maxX < centerX || spiral.maxZ < centerZ) {
++        spiral.state = 2;
++        spiral.edgesHit = 0xf;
++    }
++    int cellX = centerX, cellZ = centerZ;
++    while (!region_->Test(cellX, cellZ)) {
++        if (!spiral.GetNext(cellX, cellZ)) {
++            cellX = centerX;
++            cellZ = centerZ;
++            break;
++        }
++    }
++    float wx, wz;
++    host_->CellToWorld(cellX, cellZ, wx, wz);
++    const float height = host_->TerrainHeightAt(wx, wz);
++    const float pos[3] = {wx, height + 3.0f, wz};
++    zot_ = host_->CreateZotProp(pos);
++    if (zot_) zot_->SetState(3);   // the original calls through a null prop when creation fails
++}
++
++// ---- streams ---------------------------------------------------------------------------------------------------
++
++bool cSC4LandfillZone::Write(cIGZOStream& stream) const {
++    stream.SetUint16(static_cast<std::uint16_t>(kLandfillZoneStreamVersion));
++    const LandfillRect& b = region_->bounds;
++    stream.SetSint32(b.x0);
++    stream.SetSint32(b.z0);
++    stream.SetSint32(b.x1);
++    stream.SetSint32(b.z1);
++    for (int x = b.x0; x < b.x1; ++x) {          // exclusive upper bounds (quirk)
++        for (int z = b.z0; z < b.z1; ++z) stream.SetUint8(region_->Test(x, z) ? 1 : 0);
++    }
++    stream.SetSint32(columns_);
++    stream.SetSint32(rows_);
++    for (const cGarbageHeap& heap : heaps_) heap.Write(stream);
++    stream << connected_;
++    host_->WriteProp(stream, zot_);
++    return !stream.GetError();
++}
++
++bool cSC4LandfillZone::Read(cIGZIStream& stream) {
++    std::uint16_t version = 0;
++    stream.GetUint16(version);
++    std::int32_t x0 = 0, z0 = 0, x1 = 0, z1 = 0;
++    stream.GetSint32(x0);
++    stream.GetSint32(z0);
++    stream.GetSint32(x1);
++    stream.GetSint32(z1);
++    delete region_;   // the original overwrites the pointer
++    region_ = new LandfillCellRegion(LandfillCellRegion::Make(x0, z0, x1, z1, true));
++    for (int x = x0; x < x1; ++x) {
++        for (int z = z0; z < z1; ++z) {
++            std::uint8_t bit = 0;
++            stream.GetUint8(bit);
++            region_->SetBit(x, z, bit != 0);
++        }
++    }
++    stream.GetSint32(columns_);
++    stream.GetSint32(rows_);
++    heapCount_ = rows_ * columns_;
++    for (int i = 0; i < heapCount_; ++i) {
++        cGarbageHeap heap;
++        heap.Read(stream);
++        heap.id = i;
++        heaps_.push_back(heap);
++    }
++    if (version == 3) {
++        std::uint8_t flag = 0;
++        stream.GetUint8(flag);
++        connected_ = flag != 0;
++    }
++    if (version > 3) {
++        stream >> connected_;
++        if (zot_) {
++            ILandfillProp* old = zot_;
++            zot_ = nullptr;
++            old->Release();
++        }
++        zot_ = host_->ReadProp(stream);
++    }
++    return !stream.GetError();
++}
++
++// ---- capacity --------------------------------------------------------------------------------------------------
++
++int cSC4LandfillZone::GetNumValidHeaps() const {
++    int n = 0;
++    for (int i = 0; i < heapCount_ && i < static_cast<int>(heaps_.size()); ++i) n += heaps_[i].valid ? 1 : 0;
++    return n;
++}
++
++int cSC4LandfillZone::GetCellCount() {
++    if (!cellCountDirty_) return cellCount_;
++    cellCount_ = 0;
++    int count = 0;
++    const LandfillRect& b = region_->bounds;
++    for (int x = b.x0; x <= b.x1; ++x) {
++        for (int z = b.z0; z <= b.z1; ++z) {
++            if (region_->Test(x, z)) {
++                ++count;
++                cellCount_ = count;
++            }
++        }
++    }
++    cellCountDirty_ = false;
++    return count;
++}
++
++int cSC4LandfillZone::CalculateGarbageHeapCapacity(int validHeaps) {
++    if (validHeaps < 1) return 0;
++    const int cells = GetCellCount();
++    const int perTile = host_->LandfillTileCapacity();
++    const float total = static_cast<float>(static_cast<std::uint32_t>(perTile * cells));
++    const float share = total / static_cast<float>(validHeaps);
++    return RoundFloatToEvenInt(share);
++}
++
++int cSC4LandfillZone::RecalculateCapacity() {
++    int valid = 0;
++    for (int i = 0; i < heapCount_ && i < static_cast<int>(heaps_.size()); ++i) valid += heaps_[i].valid ? 1 : 0;
++    const std::uint32_t perHeap = static_cast<std::uint32_t>(CalculateGarbageHeapCapacity(valid));
++    for (cGarbageHeap& heap : heaps_) {
++        heap.capacity = heap.valid ? perHeap : 0;
++        if (heap.capacity < heap.garbage) {
++            host_->AddToGarbageSupply(static_cast<int>(heap.garbage - heap.capacity));
++            heap.garbage = heap.capacity;
++        }
++    }
++    totalCapacity_ = static_cast<std::int32_t>(perHeap * static_cast<std::uint32_t>(valid));
++    return totalCapacity_;
++}
++
++void cSC4LandfillZone::RedistributeGarbage() {
++    if (heaps_.empty()) return;
++    int totalCapacity = 0, totalGarbage = 0;
++    for (const cGarbageHeap& heap : heaps_) {
++        totalCapacity += static_cast<int>(heap.capacity);
++        totalGarbage += static_cast<int>(heap.garbage);
++    }
++    if (totalGarbage <= 0 || heapCount_ <= 0) return;
++    int valid = 0;
++    for (int i = 0; i < heapCount_ && i < static_cast<int>(heaps_.size()); ++i) valid += heaps_[i].valid ? 1 : 0;
++    if (valid <= 0) return;
++    for (cGarbageHeap& heap : heaps_) {
++        if (!heap.valid) continue;
++        int share = totalCapacity / valid;
++        if (totalGarbage <= share) share = totalGarbage;
++        totalGarbage -= share;
++        heap.garbage = static_cast<std::uint32_t>(share);
++    }
++}
++
++void cSC4LandfillZone::GetCapacity(int& available, int& garbage, int& capacity) const {
++    garbage = 0;
++    capacity = 0;
++    available = 0;
++    for (const cGarbageHeap& heap : heaps_) {
++        capacity += static_cast<int>(heap.capacity);
++        garbage += static_cast<int>(heap.garbage);
++        available += static_cast<int>(heap.capacity) - static_cast<int>(heap.garbage);
++    }
++}
++
++int cSC4LandfillZone::GetAvailableCapacity() const {
++    int available = 0;
++    for (const cGarbageHeap& heap : heaps_) available = (available + static_cast<int>(heap.capacity)) - static_cast<int>(heap.garbage);
++    return available;
++}
++
++// ---- costs -----------------------------------------------------------------------------------------------------
++
++std::int64_t cSC4LandfillZone::GetLandfillTileCost(int x, int z) {
++    std::int64_t cost = host_->Tunables().defaultLandfillTileCost;
++    ILandfillTile* tile = host_->FindLandfillTile(x, z);
++    if (tile) {
++        std::int64_t value = cost;
++        if (cSCPropertyHelp::GetPropertyValue(tile->Properties(), kLandfillTileCostProperty, value)) cost = value;
++        tile->Release();
++    }
++    return cost;
++}
++
++std::int64_t cSC4LandfillZone::GetMaintenanceCost() {
++    std::int64_t total = 0;
++    const LandfillRect& b = region_->bounds;
++    if (b.x1 < b.x0) return 0;
++    for (int x = b.x0; x <= b.x1; ++x)
++        for (int z = b.z0; z <= b.z1; ++z)
++            if (region_->Test(x, z)) total += GetLandfillTileCost(x, z);
++    return total;
++}
++
++// ---- monthly update --------------------------------------------------------------------------------------------
++
++void cSC4LandfillZone::UpdateZone(int& garbageAvailable) {
++    connected_ = IsZoneConnected();
++    if (!connected_) AddZot();
++    else RemoveZot();
++    const int cells = GetCellCount();
++    const LandfillTunables& t = host_->Tunables();
++    if (!heaps_.empty()) {
++        std::int32_t budget = cells * t.maxGarbageToTakePerMonthPerTile;
++        if (garbageAvailable <= budget) budget = garbageAvailable;
++        for (std::size_t i = 0; i < heaps_.size(); ++i) {
++            cGarbageHeap& heap = heaps_[i];
++            if (!heap.valid) continue;
++            heap.DecayGarbage(t);
++            std::uint32_t taken = 0;
++            const std::uint32_t room = heap.capacity - heap.garbage;
++            if (room != 0 && static_cast<std::int32_t>(budget) > 0 && connected_) {
++                taken = static_cast<std::uint32_t>(budget) <= room ? static_cast<std::uint32_t>(budget) : room;
++                heap.garbage += taken;
++                host_->AddToGarbageSupply(-static_cast<int>(taken));
++                host_->GarbagePutInLandfill(static_cast<int>(taken));
++            }
++            garbageAvailable -= static_cast<int>(taken);
++            budget -= static_cast<std::int32_t>(taken);
++            if (heap.garbage == 0) {
++                if (heap.hasGarbage) {
++                    heap.hasGarbage = false;
++                    UpdateSurroundingTiles(heap);
++                }
++            } else if (!heap.hasGarbage) {
++                heap.hasGarbage = true;
++                UpdateSurroundingTiles(heap);
++            }
++        }
++    }
++    RedistributeGarbage();
++}
++
++bool cSC4LandfillZone::IsZoneConnected() {
++    LandfillCellRegion inflated = *region_;
++    inflated.Inflate(0);
++    const std::vector<std::uint32_t> networks = host_->NetworkIdsInRegion(inflated);
++    for (std::uint32_t type : kDeveloperTypes) {
++        const std::vector<int> flags = host_->NetworkFlagsForDeveloperType(type);
++        for (std::uint32_t id : networks) {
++            if (id < flags.size() && flags[id] != 0) return true;
++        }
++    }
++    return false;
++}
++
++// ---- tiles -----------------------------------------------------------------------------------------------------
++
++bool cSC4LandfillZone::HeapHasGarbage(int x, int z) const {
++    if (x < 0 || z < 0 || x >= columns_ || z >= rows_) return false;
++    const std::size_t index = static_cast<std::size_t>(columns_) * static_cast<std::size_t>(z) + static_cast<std::size_t>(x);
++    return index < heaps_.size() && heaps_[index].hasGarbage;
++}
++
++void cSC4LandfillZone::UpdateSurroundingTiles(const cGarbageHeap& heap) {
++    // The heap at (hx, hz) is a vertex; the four cells around it each pick a tile from the garbage state of the four
++    // heaps that touch the cell. Mask bits run around the cell: A (hx,hz) = (hx-1,hz-1),(hx-1,hz),(hx,hz),(hx,hz-1);
++    // B (hx+1,hz) = (hx,hz-1),(hx,hz),(hx+1,hz),(hx+1,hz-1); C (hx,hz+1) = (hx-1,hz),(hx-1,hz+1),(hx,hz+1),(hx,hz);
++    // D (hx+1,hz+1) = (hx,hz),(hx,hz+1),(hx+1,hz+1),(hx+1,hz).
++    const int hx = heap.x, hz = heap.z;
++    const unsigned self = heap.hasGarbage ? 1u : 0u;
++    auto g = [&](int x, int z) -> unsigned { return HeapHasGarbage(x, z) ? 1u : 0u; };
++    const unsigned maskA = g(hx - 1, hz - 1) | (g(hx - 1, hz) << 1) | (self << 2) | (g(hx, hz - 1) << 3);
++    const unsigned maskB = g(hx, hz - 1) | (self << 1) | (g(hx + 1, hz) << 2) | (g(hx + 1, hz - 1) << 3);
++    const unsigned maskC = g(hx - 1, hz) | (g(hx - 1, hz + 1) << 1) | (g(hx, hz + 1) << 2) | (self << 3);
++    const unsigned maskD = self | (g(hx, hz + 1) << 1) | (g(hx + 1, hz + 1) << 2) | (g(hx + 1, hz) << 3);
++    const unsigned masks[4] = {maskA, maskB, maskC, maskD};
++    const int dx[4] = {0, 1, 0, 1}, dz[4] = {0, 0, 1, 1};
++    // (the original also tests `table[0].id == 0x2fa0000` first; entry 0 is 0x2f10000 so that never fires)
++    for (int i = 0; i < 4; ++i) {
++        const int cellX = hx + region_->bounds.x0 + dx[i];
++        const int cellZ = hz + region_->bounds.z0 + dz[i];
++        TileShape& shape = g_tileTable[masks[i]];
++        const std::uint32_t id = shape.id;
++        int orientation;
++        if (id == kLandfillTileRandomOrientationId) {
++            orientation = RandomOrientation(host_->Rand());
++            shape.orientation = orientation;
++        } else {
++            orientation = shape.orientation;
++        }
++        RemoveLandfillTile(cellX, cellZ);
++        CreateLandfillOccupant(cellX, cellZ, id, orientation);
++    }
++}
++
++void cSC4LandfillZone::InvalidateSurroundingHeaps(int x, int z) {
++    const int hx = x - region_->bounds.x0;
++    if (hx < 0) return;
++    const int hz = z - region_->bounds.z0;
++    auto invalidate = [&](int ix, int iz) {
++        const std::size_t index = static_cast<std::size_t>(columns_) * static_cast<std::size_t>(iz) + static_cast<std::size_t>(ix);
++        if (index < heaps_.size() && heaps_[index].valid) heaps_[index].valid = false;
++    };
++    if (hz >= 0 && hx < columns_ && hz < rows_) invalidate(hx, hz);
++    if (hz > 0 && hx < columns_ && hz <= rows_) invalidate(hx, hz - 1);
++    if (hx > 0) {
++        if (hz >= 0 && hx <= columns_ && hz < rows_) invalidate(hx - 1, hz);
++        if (hz > 0 && hx <= columns_ && hz <= rows_) invalidate(hx - 1, hz - 1);
++    }
++}
++
++void cSC4LandfillZone::RemoveLandfillTile(int x, int z) {
++    ILandfillTile* tile = host_->FindLandfillTile(x, z);
++    if (tile) {
++        tile->RemoveFromCity();
++        tile->Release();
++    }
++    host_->SetActiveLandfill(x, z, false);
++}
++
++bool cSC4LandfillZone::CreateLandfillOccupant(int x, int z, std::uint32_t tileId, int orientation) {
++    RemoveIncompatibleOccupants(x, z);
++    if (tileId == g_tileTable[0].id) {
++        if (!host_->HasBaseTexture(x, z)) SetEmptyCellTexture(x, z);
++        return true;
++    }
++    ILandfillTile* tile = host_->LoadLandfillTile(tileId, orientation);
++    if (!tile) return false;   // the original dereferences null here
++    // (the original also has an "empty tile" arm after the id test, which cannot be reached)
++    tile->SetLayer(2);
++    host_->SetActiveLandfill(x, z, true);
++    tile->SetEmpty(false);
++    float wx, wz;
++    host_->CellToWorld(x, z, wx, wz);
++    const float pos[3] = {wx, host_->AltitudeAt(wx, wz), wz};
++    tile->SetPosition(pos);
++    tile->Init();
++    host_->AddOccupant(tile);
++    tile->Release();
++    return true;
++}
++
++void cSC4LandfillZone::SetEmptyCellTexture(int x, int z) { host_->PlaceEmptyCellTexture(x, z); }
++
++void cSC4LandfillZone::RemoveIncompatibleOccupants(int x, int z) {
++    std::vector<ILandfillOccupantRef*> list = host_->ListIncompatibleOccupants(x, z);
++    for (ILandfillOccupantRef* occupant : list) occupant->RemoveFromCity();
++    for (ILandfillOccupantRef* occupant : list) occupant->Release();
++}
++
++void cSC4LandfillZone::RemoveBaseTexture(int x, int z) {
++    std::vector<ILandfillOccupantRef*> list = host_->ListBaseTextures(x, z);
++    for (ILandfillOccupantRef* occupant : list) {
++        if (occupant->TextureKind() == 1) occupant->RemoveFromCity();
++        occupant->Release();
++    }
++}
++
++bool cSC4LandfillZone::GetFirstRoadTileNeighbor(int& outX, int& outZ) {
++    const LandfillRect& b = region_->bounds;
++    const int cityX = host_->CityCellsX(), cityZ = host_->CityCellsZ();
++    int xLow = b.x0 - 1;
++    if (b.x0 < 1) xLow = 0;
++    int xHigh = b.x1 + 1;
++    if (cityX - 1 <= b.x1) xHigh = cityX - 1;
++    const int zBelow = b.z0 - 1;
++    int zHigh = b.z1 + 1;
++    if (cityZ - 1 <= b.z1) zHigh = cityZ - 1;
++    int zLow = 0;
++    if (0 < b.z0) {   // top edge
++        zLow = zBelow;
++        for (int x = xLow; x < xHigh; ++x) {
++            if (host_->HasNetworkAt(x, zBelow)) { outX = x; outZ = zBelow; return true; }
++        }
++    }
++    if (b.z1 < zHigh) {   // bottom edge
++        for (int x = xLow; x < xHigh; ++x) {
++            if (host_->HasNetworkAt(x, zHigh)) { outX = x; outZ = zHigh; return true; }
++        }
++    }
++    if (xLow < b.x0) {   // left edge
++        for (int z = zLow; z < zHigh; ++z) {
++            if (host_->HasNetworkAt(xLow, z)) { outX = xLow; outZ = z; return true; }
++        }
++    }
++    if (b.x1 < xHigh) {   // right edge
++        for (int z = zLow; z < zHigh; ++z) {
++            if (host_->HasNetworkAt(xHigh, z)) { outX = xHigh; outZ = z; return true; }
++        }
++    }
++    outX = b.x0;
++    outZ = b.z0;
++    return false;
++}
++
++// ---- zone editing ----------------------------------------------------------------------------------------------
++
++void cSC4LandfillZone::DezoneCell(int x, int z, bool updateZoneManager, bool removeTile) {
++    RemoveZot();
++    if (removeTile) {
++        RemoveLandfillTile(x, z);
++        RemoveBaseTexture(x, z);
++    }
++    region_->SetBit(x, z, false);
++    InvalidateSurroundingHeaps(x, z);
++    if (updateZoneManager) host_->DezoneCell(x, z);
++    cellCountDirty_ = true;
++}
++
++void cSC4LandfillZone::HandleTerrainChange(const LandfillRect& rect) {
++    const LandfillRect& b = region_->bounds;
++    // SC4Rect::IntersectRect (inclusive bounds)
++    const int x0 = std::max(rect.x0, b.x0), z0 = std::max(rect.z0, b.z0);
++    const int x1 = std::min(rect.x1, b.x1), z1 = std::min(rect.z1, b.z1);
++    if (x0 > x1 || z0 > z1) return;
++    for (int x = x0; x <= x1; ++x)
++        for (int z = z0; z <= z1; ++z)
++            if (region_->Test(x, z)) HandleCellTerrainChange(x, z);
++}
++
++void cSC4LandfillZone::HandleCellTerrainChange(int x, int z) {
++    if (!region_->Test(x, z)) return;
++    ILandfillTile* tile = host_->FindLandfillTile(x, z);
++    if (!tile) {
++        DezoneCell(x, z, true, true);
++        return;
++    }
++    float pos[3];
++    tile->GetPosition(pos);
++    const float terrain = host_->TerrainHeightAt(pos[0], pos[2]);
++    const float adjusted = host_->AdjustedHeight(terrain, pos[1]);
++    const float difference = std::fabs(pos[1] - terrain);
++    if (!(difference < 0.25f)) {
++        if (!tile->IsEmptyTile()) {
++            if (host_->Tunables().moveWithTerrain) {
++                pos[1] = terrain > adjusted ? terrain : adjusted;
++                tile->SetPosition(pos);
++                host_->RefreshOccupant(tile);
++            }
++        } else {
++            DezoneCell(x, z, true, true);
++        }
++    }
++    tile->Release();
++}
++
++bool cSC4LandfillZone::IsCompletelyDezoned() {
++    if (dezonedCache_) return true;
++    dezonedCache_ = true;
++    const LandfillRect& b = region_->bounds;
++    for (int x = b.x0; x <= b.x1; ++x) {
++        for (int z = b.z0; z <= b.z1; ++z) {
++            if (region_->Test(x, z)) {
++                dezonedCache_ = false;
++                return false;
++            }
++        }
++    }
++    return true;
++}
++
++void cSC4LandfillZone::LevelRect(const LandfillRect& rect, float height, bool useTerrain) {
++    levelHeight_ = height;
++    LandfillRect clamped;
++    clamped.x0 = rect.x0 < 0 ? 0 : rect.x0;
++    clamped.z0 = rect.z0 < 0 ? 0 : rect.z0;
++    clamped.x1 = rect.x1 < host_->CityCellsX() ? rect.x1 : host_->CityCellsX();
++    clamped.z1 = rect.z1 < host_->CityCellsZ() ? rect.z1 : host_->CityCellsZ();
++    if (useTerrain) host_->LevelTerrainRect(clamped, height);
++    else host_->RefreshBuildingDevelopmentRect(rect);
++}
++
++void cSC4LandfillZone::PopulateZone() {
++    const LandfillRect b = region_->bounds;
++    for (int x = b.x0; x <= b.x1; ++x) {
++        for (int z = b.z0; z <= b.z1; ++z) {
++            if (region_->Test(x, z)) {
++                if (host_->ZoneTypeAt(x, z) == 0xe && !host_->HasNetworkAt(x, z)) {
++                    ILandfillTile* tile = host_->FindLandfillTile(x, z);
++                    if (tile) {
++                        tile->Release();
++                    } else if (!host_->HasBaseTexture(x, z)) {
++                        RemoveIncompatibleOccupants(x, z);
++                        SetEmptyCellTexture(x, z);
++                    }
++                    if (!region_->Test(x, z)) InvalidateSurroundingHeaps(x, z);
++                } else {
++                    region_->SetBit(x, z, false);
++                }
++            } else if (!region_->Test(x, z)) {
++                InvalidateSurroundingHeaps(x, z);
++            }
++        }
++    }
++}
++
++void cSC4LandfillZone::AddRegionToZone(const LandfillCellRegion& added) {
++    RemoveZot();
++    const std::size_t oldCount = static_cast<std::size_t>(heapCount_ > 0 ? heapCount_ : 0);
++    const std::vector<cGarbageHeap> oldHeaps = heaps_;
++    const LandfillRect& cur = region_->bounds;
++    const int nx0 = std::min(cur.x0, added.bounds.x0), nz0 = std::min(cur.z0, added.bounds.z0);
++    const int nx1 = std::max(cur.x1, added.bounds.x1), nz1 = std::max(cur.z1, added.bounds.z1);
++    LandfillCellRegion merged = LandfillCellRegion::Make(nx0, nz0, nx1, nz1, false);
++    for (int x = cur.x0; x <= cur.x1; ++x)
++        for (int z = cur.z0; z <= cur.z1; ++z)
++            if (region_->Test(x, z)) merged.SetBit(x, z, true);
++    for (int x = added.bounds.x0; x <= added.bounds.x1; ++x) {
++        for (int z = added.bounds.z0; z <= added.bounds.z1; ++z) {
++            if (added.Test(x, z)) {
++                merged.SetBit(x, z, true);
++                LevelRect({x, z, x + 1, z + 1}, levelHeight_, false);
++            }
++        }
++    }
++    delete region_;
++    region_ = new LandfillCellRegion(merged);
++    columns_ = region_->bounds.x1 - region_->bounds.x0;
++    rows_ = region_->bounds.z1 - region_->bounds.z0;
++    heapCount_ = rows_ * columns_;
++    heaps_.clear();
++    BuildHeaps();
++    // old heaps go back by their zone-relative x/z (not shifted for a new origin: quirk)
++    for (std::size_t i = 0; i < oldCount && i < oldHeaps.size(); ++i) {
++        const cGarbageHeap& old = oldHeaps[i];
++        const long index = static_cast<long>(old.z) * columns_ + old.x;
++        if (index >= 0 && static_cast<std::size_t>(index) < heaps_.size()) heaps_[static_cast<std::size_t>(index)] = old;
++    }
++    const LandfillRect& b = region_->bounds;
++    for (int x = b.x0; x <= b.x1; ++x)
++        for (int z = b.z0; z <= b.z1; ++z)
++            if (!region_->Test(x, z)) InvalidateSurroundingHeaps(x, z);
++    cellCountDirty_ = true;
++}
++
++}  // namespace sc4
+diff --git a/src/sc4/LandfillZone.h b/src/sc4/LandfillZone.h
+new file mode 100644
+index 0000000..cd3cfc3
+--- /dev/null
++++ b/src/sc4/LandfillZone.h
+@@ -0,0 +1,254 @@
++// cSC4LandfillZone — one landfill zone: a connected set of landfill cells that accepts the city's garbage.
++// Recovered from SimCity 4 Deluxe Edition 1.2.1: cGarbageHeap / cSC4LandfillZone / SC4CellRegion<int>::Inflate live in
++// 0x1000ac9c0..0x1000b011a (ctor 0x1000acbac, region ctor 0x1000acc32, Init 0x1000acefe ... GetAvailableCapacity
++// 0x1000b011a). Message target iids 1 / 0x452294aa; no class id (the zone is owned by the landfill developer).
++//
++// Layout: +8 refcount, +0xc initialised, +0x10 region (SC4CellRegion*), +0x18 heap count, +0x1c heap rows (z),
++// +0x20 heap columns (x), +0x28 vector<cGarbageHeap> (0x28 bytes each), +0x40 "known dezoned" cache, +0x41 connected
++// to a road/rail developer network, +0x44 cached cell count, +0x48 cell count dirty, +0x4c total capacity,
++// +0x50 level height, +0x54 first road neighbour cell, +0x60 "zot" prop (marks an unconnected zone), +0x68 garbage truck
++// generator, +0x70 attractor, +0x78 seagull flock effect, +0x80 effect manager, +0x88 ambient effects, +0x90 city,
++// +0x98 terrain, +0xa0 pollution simulator, +0xa8 occupant manager, +0xb0 zone manager.
++// A cGarbageHeap is one grid vertex of the zone (+8 x, +0xc z, +0x10 valid, +0x11 holds garbage, +0x18 capacity,
++// +0x1c garbage, +0x20 id); the 16 landfill tile shapes around a vertex are chosen from the four heaps around a cell.
++//
++// Services (city, terrain, pollution/traffic/zone/occupant managers, prop and effect managers, rand) are injected
++// through ILandfillZoneHost; the original reaches them through SL::sp* globals and holds AddRef'd pointers (+0x80..+0xb0),
++// which the host owns here. Unrecovered callee bodies behind the seam: cSC4LotBaseTextureOccupant creation
++// (SetEmptyCellTexture), cSC4LandfillOccupant creation/exemplar load (CreateLandfillOccupant), the effect objects.
++//
++// Quirks kept: the heap grid is (x1-x0) x (z1-z0) while the region is inclusive, so the last row/column of cells has
++// no heap; Write/Read store the cell bits with exclusive upper bounds (the last row/column is reloaded as set);
++// AddRegionToZone copies the old heaps back by their zone-relative x/z without shifting for a changed origin;
++// CreateLandfillOccupant crashes in the original when the tile exemplar is missing (here it returns false);
++// the tile orientation of the all-neighbours tile (id 0x2fa0000) is re-randomised on every use.
++#pragma once
++#include <cstdint>
++#include <vector>
++
++#include "gz/cIGZIStream.h"
++#include "gz/cIGZOStream.h"
++#include "sc4/SCProperty.h"
++
++namespace sc4 {
++
++constexpr std::uint32_t kGZIID_cISC4LandfillZoneMessageTarget = 0x452294aa;
++constexpr std::uint32_t kLandfillOccupantType = 0x6a11bd2b;
++constexpr std::uint32_t kLandfillTileCostProperty = 0xea54d286;
++constexpr std::uint32_t kLandfillZoneStreamVersion = 4;
++constexpr std::uint32_t kLandfillTileEmptyId = 0x02f10000;                // table entry 0 (no neighbouring garbage)
++constexpr std::uint32_t kLandfillTileRandomOrientationId = 0x02fa0000;    // table entry 15
++
++struct LandfillRect { int x0 = 0, z0 = 0, x1 = 0, z1 = 0; };   // SC4Rect<int>
++
++// SC4CellRegion<int>: bounds (+0..+0xc, inclusive cells) and a cRZCellMap<bool> (+0x10): rowCount x bitCount bits.
++class LandfillCellRegion {
++public:
++    LandfillRect bounds;
++    std::uint32_t rowCount = 0, bitCount = 0, wordCount = 0;      // cell map +0x18, +0x1c, +0x20
++    std::vector<std::vector<std::uint32_t>> rows;                  // +0x28
++
++    LandfillCellRegion() = default;
++    // cRZCellMap<bool>(rows, bits, fill)
++    void ResetMap(std::uint32_t rowsN, std::uint32_t bitsN, bool fill);
++    static LandfillCellRegion Make(int x0, int z0, int x1, int z1, bool fill);   // map is (x1+1-x0) x (z1+1-z0)
++    bool Test(int x, int z) const;                                 // the bounds-checked bit test used everywhere
++    void SetBit(int x, int z, bool on);
++    void Inflate(int neighborType);                                // @ 0x1000ae73c; 1 also grows diagonally
++};
++
++struct LandfillTunables {   // cSC4LandfillDeveloper statics
++    float decayRate = 0.0f;                          // kLandfillDecayRate
++    std::uint32_t maxGarbageToDecayPerMonthPerZone = 0;
++    std::int32_t maxGarbageToTakePerMonthPerTile = 0;
++    std::int64_t defaultLandfillTileCost = 0;
++    bool moveWithTerrain = false;                    // kbMoveWithTerrain
++    const char* garbageTruckGeneratorName = "";
++    const char* garbageTruckAttractorName = "";
++};
++
++class ILandfillOccupantRef {   // a cISC4Occupant the zone found; Release() drops the reference
++public:
++    virtual ~ILandfillOccupantRef() = default;
++    virtual void Release() = 0;
++    virtual void RemoveFromCity() = 0;       // occupant manager vslot 0xa8 (occupant, 1, 3)
++    virtual int TextureKind() { return 0; }  // lot base texture occupant (iid 0x97f6d98) vslot 0x20
++};
++class ILandfillTile : public ILandfillOccupantRef {   // cSC4LandfillOccupant (iid 0x2a15f262)
++public:
++    virtual void GetPosition(float xyz[3]) = 0;         // occupant vslot 0x40
++    virtual void SetPosition(const float xyz[3]) = 0;   // occupant vslot 0x48 (CreateLandfillOccupant: 0x80)
++    virtual bool IsEmptyTile() = 0;                     // landfill occupant vslot 0x48
++    virtual void SetLayer(int layer) = 0;               // occupant vslot 0x60
++    virtual void SetEmpty(bool empty) = 0;              // +0x94
++    virtual void Init() = 0;                            // vslot 0x18
++    virtual cISCPropertyHolder* Properties() = 0;       // occupant vslot 0x30
++};
++class ILandfillProp {   // the "zot" prop (class 0x26bb767e)
++public:
++    virtual ~ILandfillProp() = default;
++    virtual void AddRef() = 0;
++    virtual void Release() = 0;
++    virtual void SetState(int state) = 0;            // vslot 0x60
++};
++class ILandfillEffect {
++public:
++    virtual ~ILandfillEffect() = default;
++    virtual void AddRef() = 0;
++    virtual void Release() = 0;
++    virtual void SetFlag(std::uint32_t flag, bool on) = 0;   // vslot 0x78
++    virtual void SetEnabled(bool on) = 0;                    // vslot 0xa0
++    virtual void SetTransform(const float matrix[13]) = 0;   // vslot 0x40: 3x3 rotation, position, scale
++    virtual void Start(int mode) = 0;                        // vslot 0x18
++    virtual void Stop(bool immediate) = 0;                   // vslot 0x20
++};
++
++class ILandfillZoneHost {
++public:
++    virtual ~ILandfillZoneHost() = default;
++    virtual const LandfillTunables& Tunables() = 0;
++    // city
++    virtual int CityCellsX() = 0;                                           // city vslot 0x2e8
++    virtual int CityCellsZ() = 0;                                           // city vslot 0x2f0
++    virtual void CellToWorld(int x, int z, float& wx, float& wz) = 0;       // city vslot 0x308
++    virtual bool HasNetworkAt(int x, int z) = 0;                            // city 0x140 -> vslot 0x50 (x, z, 0x1f4f, 1)
++    // terrain
++    virtual float AltitudeAt(float wx, float wz) = 0;                       // terrain vslot 0x60
++    virtual float TerrainHeightAt(float x, float z) = 0;                    // terrain vslot 0x98
++    virtual float AdjustedHeight(float terrainHeight, float y) = 0;         // terrain vslot 0xe8 (xmm0 = height, xmm1 = y)
++    virtual void LevelTerrainRect(const LandfillRect& rect, float height) = 0;   // terrain vslot 0x198 (.., 1, 5)
++    virtual void RefreshBuildingDevelopmentRect(const LandfillRect& rect) = 0;   // building dev sim 0x120 -> 0xa8
++    // zone manager
++    virtual int ZoneTypeAt(int x, int z) = 0;                               // vslot 0x60
++    virtual void DezoneCell(int x, int z) = 0;                              // vslot 0x58 (1x1 full mask)
++    // pollution simulator
++    virtual int LandfillTileCapacity() = 0;                                 // vslot 0xa8
++    virtual void AddToGarbageSupply(int amount) = 0;                        // vslot 0xe8
++    virtual void GarbagePutInLandfill(int amount) = 0;                      // vslot 0x198
++    virtual void SetActiveLandfill(int x, int z, bool on) = 0;              // vslot 0x190
++    // traffic simulator
++    virtual std::vector<std::uint32_t> NetworkIdsInRegion(const LandfillCellRegion& region) = 0;   // vslot 0x148
++    virtual std::vector<int> NetworkFlagsForDeveloperType(std::uint32_t type) = 0;                 // vslot 0x150
++    // occupant manager / resources
++    virtual ILandfillTile* FindLandfillTile(int x, int z) = 0;              // vslot 0x100, type 0x6a11bd2b
++    virtual bool HasBaseTexture(int x, int z) = 0;                          // vslot 0x100, type 0x497f6d9d
++    virtual std::vector<ILandfillOccupantRef*> ListBaseTextures(int x, int z) = 0;          // 0x140, type 0x497f6d9d
++    virtual std::vector<ILandfillOccupantRef*> ListIncompatibleOccupants(int x, int z) = 0; // 0x140, type 0x74758926
++    virtual ILandfillTile* LoadLandfillTile(std::uint32_t tileId, int orientation) = 0;     // exemplar {0x6534284a, 0x07bddf1c, id}; null if missing
++    virtual void AddOccupant(ILandfillTile* tile) = 0;                      // vslot 0xa0 (occupant, 0)
++    virtual void RefreshOccupant(ILandfillTile* tile) = 0;                  // vslot 0xc0 (occupant, 1) + message 0x99ef1145
++    virtual void PlaceEmptyCellTexture(int x, int z) = 0;                   // cSC4LotBaseTextureOccupant (unrecovered body)
++    // props
++    virtual ILandfillProp* CreateZotProp(const float position[3]) = 0;      // prop manager vslot 0xc8, id 0x107a0000
++    virtual void RemoveProp(ILandfillProp* prop) = 0;                       // city 0x118 -> vslot 0xe8
++    virtual bool WriteProp(cIGZOStream& stream, ILandfillProp* prop) = 0;   // SC4WriteGZSerializable
++    virtual ILandfillProp* ReadProp(cIGZIStream& stream) = 0;               // SC4ReadGZSerializable(0x26bb767e)
++    // effects
++    virtual ILandfillEffect* CreateEffect(const char* name, const float position[3]) = 0;   // effect manager vslot 0x28
++    virtual void RemoveEffect(ILandfillEffect* effect) = 0;                  // effect manager vslot 0x40
++    virtual ILandfillEffect* CreateAmbientEffect(const char* name) = 0;     // ambient effects vslot 0x30; null if unknown
++    virtual int Rand() = 0;                                                  // libc rand()
++};
++
++// cGarbageHeap (0x28 bytes)
++struct cGarbageHeap {
++    int x = 0, z = 0;                 // +8, +0xc
++    bool valid = true;                // +0x10
++    bool hasGarbage = false;          // +0x11
++    std::uint32_t capacity = 0;       // +0x18
++    std::uint32_t garbage = 0;        // +0x1c
++    int id = 0;                       // +0x20
++    std::uint32_t DecayGarbage(const LandfillTunables& t);   // @ 0x1000acb56
++    bool Write(cIGZOStream& stream) const;                    // @ 0x1000aca32
++    bool Read(cIGZIStream& stream);                           // @ 0x1000acaa4
++};
++
++int RoundFloatToEvenInt(float v);   // (int)(v + 12582912.0f) - 0x4b400000
++
++class cSC4LandfillZone {
++public:
++    explicit cSC4LandfillZone(ILandfillZoneHost* host);                           // @ 0x1000acbac
++    cSC4LandfillZone(ILandfillZoneHost* host, const LandfillCellRegion& region);  // @ 0x1000acc32
++    ~cSC4LandfillZone();                                                          // @ 0x1000ace74
++
++    std::uint32_t AddRef();                                  // @ 0x1000adaaa
++    std::uint32_t Release();                                 // @ 0x1000adab8 (destroys at refcount < 2)
++    bool QueryInterface(std::uint32_t iid, void** out);      // @ 0x1000adaea
++    bool DoMessage(void* message);                           // @ 0x1000adb0c, always true
++    bool Init();                                             // @ 0x1000acefe
++    bool Shutdown();                                         // @ 0x1000ad2de
++    bool Write(cIGZOStream& stream) const;                   // @ 0x1000ad56e
++    bool Read(cIGZIStream& stream);                          // @ 0x1000ad66a
++
++    int RecalculateCapacity();                               // @ 0x1000ad8e2
++    int GetNumValidHeaps() const;                            // @ 0x1000ad986
++    int CalculateGarbageHeapCapacity(int validHeaps);        // @ 0x1000ad9b6
++    int GetCellCount();                                      // @ 0x1000ada0a
++    std::int64_t GetMaintenanceCost();                       // @ 0x1000adfd4
++    std::int64_t GetLandfillTileCost(int x, int z);          // @ 0x1000ae062
++    void UpdateZone(int& garbageAvailable);                  // @ 0x1000ae124
++    bool IsZoneConnected();                                  // @ 0x1000ae238
++    void AddZot();                                           // @ 0x1000ae42a
++    void RemoveZot();                                        // @ 0x1000ad510
++    void RedistributeGarbage();                              // @ 0x1000ae682
++    void GetCapacity(int& available, int& garbage, int& capacity) const;   // @ 0x1000ae6f8
++    int GetAvailableCapacity() const;                        // @ 0x1000b011a
++    void AddRegionToZone(const LandfillCellRegion& region);  // @ 0x1000ae9fe
++    void InvalidateSurroundingHeaps(int x, int z);           // @ 0x1000aee92
++    void DezoneCell(int x, int z, bool updateZoneManager, bool removeTile);   // @ 0x1000af886
++    void HandleTerrainChange(const LandfillRect& rect);      // @ 0x1000afa7e
++    void HandleCellTerrainChange(int x, int z);              // @ 0x1000afb1c
++    bool IsCompletelyDezoned();                              // @ 0x1000afd60
++    void LevelRect(const LandfillRect& rect, float height, bool useTerrain);   // @ 0x1000afdf8
++    void PopulateZone();                                     // @ 0x1000aff38
++    void UpdateSurroundingTiles(const cGarbageHeap& heap);   // @ 0x1000adb22
++    bool GetFirstRoadTileNeighbor(int& x, int& z);           // @ 0x1000af650
++
++    // accessors for tests / the developer
++    const LandfillCellRegion* Region() const { return region_; }
++    std::vector<cGarbageHeap>& Heaps() { return heaps_; }
++    const std::vector<cGarbageHeap>& Heaps() const { return heaps_; }
++    int HeapColumns() const { return columns_; }
++    int HeapRows() const { return rows_; }
++    bool Connected() const { return connected_; }
++    float LevelHeight() const { return levelHeight_; }
++    void SetLevelHeight(float h) { levelHeight_ = h; }
++    int FirstRoadX() const { return roadX_; }
++    int FirstRoadZ() const { return roadZ_; }
++    std::int32_t TotalCapacity() const { return totalCapacity_; }
++    ILandfillProp* Zot() const { return zot_; }
++    ILandfillEffect* Seagulls() const { return seagulls_; }
++    ILandfillEffect* TruckGenerator() const { return generator_; }
++    ILandfillEffect* TruckAttractor() const { return attractor_; }
++
++private:
++    void InitZoneEffects();                                  // @ 0x1000ad096
++    void ShutdownZoneEffects();                              // @ 0x1000ad442
++    void RemoveLandfillTile(int x, int z);                   // @ 0x1000aef82
++    bool CreateLandfillOccupant(int x, int z, std::uint32_t tileId, int orientation);   // @ 0x1000af00c
++    void SetEmptyCellTexture(int x, int z);                  // @ 0x1000af28e
++    void RemoveIncompatibleOccupants(int x, int z);          // @ 0x1000af418
++    void RemoveBaseTexture(int x, int z);                    // @ 0x1000af508
++    void BuildHeaps();
++    bool HeapHasGarbage(int x, int z) const;
++
++    ILandfillZoneHost* host_;
++    std::uint32_t refCount_ = 0;                             // +8
++    bool initialised_ = false;                               // +0xc
++    LandfillCellRegion* region_ = nullptr;                   // +0x10
++    int heapCount_ = 0, rows_ = 0, columns_ = 0;             // +0x18, +0x1c, +0x20
++    std::vector<cGarbageHeap> heaps_;                        // +0x28
++    bool dezonedCache_ = false;                              // +0x40
++    bool connected_ = false;                                 // +0x41
++    int cellCount_ = 0;                                      // +0x44
++    bool cellCountDirty_ = true;                             // +0x48
++    std::int32_t totalCapacity_ = 0;                         // +0x4c
++    float levelHeight_ = 0.0f;                               // +0x50
++    int roadX_ = 0, roadZ_ = 0;                              // +0x54, +0x58
++    ILandfillProp* zot_ = nullptr;                           // +0x60
++    ILandfillEffect* generator_ = nullptr;                   // +0x68
++    ILandfillEffect* attractor_ = nullptr;                   // +0x70
++    ILandfillEffect* seagulls_ = nullptr;                    // +0x78
++};
++
++}  // namespace sc4

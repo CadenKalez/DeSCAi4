@@ -1,0 +1,401 @@
+diff --git a/src/sc4/View3DWin.h b/src/sc4/View3DWin.h
+new file mode 100644
+index 0000000..02deed6
+--- /dev/null
++++ b/src/sc4/View3DWin.h
+@@ -0,0 +1,395 @@
++// cSC4View3DWin — the city view window (class id 0xfa47b3f9 / iid 0xc6ae7085, object size 0x6b0; ctor 0x10077efc2,
++// code 0x10077efc2..0x100793e7e). This port covers the view-control core of the class: the view input control stack
++// and persistent list, mouse / key dispatch, scrolling (edge, keyboard and drag), zoom / rotation, view level and filter
++// state, cursor text, the cost indicator, global effect triggers and the last-selected bookkeeping. The GUI builders
++// (AddGUI, ProcessCommand, the panel and menu functions, city init / load / save plumbing) are listed as PARTIAL in
++// notes/ledger_pending/sc4_view3dwin.txt; they only create and drive GZ windows and belong with the UI layer.
++//
++// Layout (the window part is cGZWin at +0x18; the interface vtables sit at +0, +8, +0x10):
++//   +0x180 camera control      +0x188 renderer (cISC43DRender-like: zoom/rotation/pick)   +0x1bc modifier flags of the last event
++//   +0x1c0 key accelerator     +0x1e8/0x1f0/0x1f8 input control stack (vector, top = back)
++//   +0x200/0x208/0x210 persistent input controls   +0x238 sim pauser, +0x248 timer (ms), +0x260 hidden-pause flag
++//   +0x4d8 view filter info    +0x4e0 view level (1)   +0x4e4 scroll angle  +0x4e8 scroll speed  +0x4ec scrolling
++//   +0x4f0 1.0f  +0x4f4 bool  +0x4f5 stop requested  +0x4f8 stop speed  +0x4fc/+0x500 speed multipliers (0.2f edge / keyboard)
++//   +0x504/+0x508 keyboard scroll x / y  +0x50c/+0x510 edge scroll x / y  +0x514/+0x518 right-button press position
++//   +0x51c "mouse moved since press"  +0x520/+0x524 zoom limits (0 / 5)  +0x540 saved render properties
++//   +0x5a0 cost amount, +0x5a4 cost state (0 none, 1 shown, 2 fading), +0x5a8 colour kind, +0x5ac fade timer,
++//   +0x5b0/+0x5b4 cursor position, +0x5b8/+0x5bc fade start position, +0x5c0 text buffer, +0x5c8 cost widget,
++//   +0x5d0 cursor text widget, +0x5d8 cursor text list, +0x5f0 cursor icon, +0x628 contour display, +0x62c contour handle,
++//   +0x678 global effect trigger counts, +0x6a0..+0x6a9 last selected building / lot (value, then "set" flags).
++//
++// Quirks kept: GZOnCharacter's persistent loop is bounded by the size of the *stack*, not of the persistent list;
++// SetZoomLimits clamps against the arguments, not the stored limits; SetZoomAndRotation ignores its second argument;
++// RecalcScrollVelocity loads the edge direction before it clears it (so a mouse-move edge scroll fires once); all the
++// mouse handlers answer true; KeyDown / KeyUp (the window hooks) answer false (ProcessKeyDown / Up do the work).
++// Services behind seams (IView3DHost): city input gate, preferences, render properties, lighting, message server,
++// graphics / font drawing for the cost indicator, cursor text widget; the original uses the SL::sp* globals.
++#pragma once
++#include <cstdint>
++#include <list>
++#include <string>
++#include <unordered_map>
++#include <vector>
++
++#include "gz/WinInterfaces.h"
++#include "gz/cIGZMessage2.h"
++#include "rz/cRZAutoRefCount.h"
++#include "rz/cRZTimer.h"
++#include "sc4/RenderProperties.h"
++#include "sc4/ViewInputControl.h"
++
++namespace sc4 {
++
++constexpr std::uint32_t kGZCLSID_cSC4View3DWin = 0xfa47b3f9;
++constexpr std::uint32_t kGZIID_cISC4View3DWin = 0xc6ae7085;
++constexpr std::uint32_t kGZIID_cSC4View3DWinAlt = 0x452294aa;   // QueryInterface hands out the pointer at +8
++// messages posted by the view
++constexpr std::uint32_t kView3DMsgScrollBegin = 0xcad61e00, kView3DMsgScrollEnd = 0xead61e16;
++constexpr std::uint32_t kView3DMsgViewFilterChanging = 0x06cdb65a, kView3DMsgViewFilterChanged = 0x06cdb65b;
++constexpr std::uint32_t kView3DMsgViewLevelChanging = 0xc6cdbf1a, kView3DMsgViewLevelChanged = 0xc6cdbf1b;
++constexpr std::uint32_t kView3DMsgInputControlChanged = 0x09c8b8ea, kView3DMsgGlobalEffectTrigger = 0xaa375fe8;
++constexpr std::uint32_t kGZIID_cISC4Occupant = 0x26bb767e;
++constexpr std::uint32_t kGZIID_CostIndicatorBuffer = 0x86d72b57;
++constexpr std::uint32_t kCostIndicatorCursorId = 0xc16c4e1b;     // cursor restored when the control stack empties
++constexpr int kZoomLimitMin = 0, kZoomLimitMax = 5;
++constexpr std::uint32_t kPrefsRenderBoolScrollSimplify = 30;     // SL::spRenderProperties bool #30 (+0x7b8)
++
++// cISC4View3DWin::ViewInputControlStackOperation
++enum ViewInputControlStackOp : int { kStackOpKeep = 0, kStackOpPopCurrent = 1, kStackOpPopAll = 2 };
++
++// A bounding box / owner handed back by the renderer's model pick (vslot 0x200).
++class IPickedModel : public cIGZUnknown {
++public:
++    virtual cIGZUnknown* Owner() = 0;                    // vslot 0x18; the occupant interface is queried from it
++    virtual void GetBounds(float bounds[6]) = 0;         // vslot 0x40: {min xyz, max xyz}; callers pre-fill {1,1,1,0,0,0}
++};
++
++// The camera control (+0x180).
++class IView3DCamera {
++public:
++    virtual ~IView3DCamera() = default;
++    virtual int ZoomLevel() = 0;                         // int at +0x110
++    virtual int VirtualZoom() = 0;                       // GetVirtualZoom (0x10076bbc2): zoom + (float at +0xf8 > threshold)
++    virtual void SetViewTargetPosition(const float xyz[3]) = 0;   // 0x10076bf2a
++};
++
++// The renderer / view object at +0x188.
++class IView3DRenderer {
++public:
++    virtual ~IView3DRenderer() = default;
++    virtual void ScrollEnded() = 0;                      // vslot 0xa0
++    virtual bool SetZoom(int zoom) = 0;                  // vslot 0x118
++    virtual bool ZoomIn() = 0;                           // vslot 0x120
++    virtual bool ZoomOut() = 0;                          // vslot 0x128
++    virtual bool SetRotation(int rotation) = 0;          // vslot 0x130
++    virtual bool RotateLeft() = 0;                       // vslot 0x138
++    virtual bool RotateRight() = 0;                      // vslot 0x140
++    virtual bool SetZoomAndRotation(int zoom) = 0;       // vslot 0x148 (takes only the zoom)
++    virtual bool PickTerrain(int x, int y, float* xyz, int arg, bool flag) = 0;   // vslot 0x1e8
++    virtual bool PickModel(int x, int y, int arg, IPickedModel** out) = 0;        // vslot 0x200
++};
++
++// SL::spCity vslot 0x290: the input gate (tutorial / modal filter) that may veto or rewrite mouse positions.
++class ICityInputGate {
++public:
++    virtual ~ICityInputGate() = default;
++    virtual bool Active() = 0;                           // vslot 0x40
++    virtual bool FilterMouse(int* x, int* y, std::uint32_t mode) = 0;   // vslot 0x80 (mode: -1 down, 1 up, 0 move)
++    virtual bool EdgeScrollAllowed() = 0;                // vslot 0x48 (asked after a successful move filter)
++};
++
++// The sim pauser at +0x238 (vslots 0x50 / 0x68).
++class IViewSimPauser {
++public:
++    virtual ~IViewSimPauser() = default;
++    virtual void Pause() = 0;
++    virtual void Resume() = 0;
++};
++
++// The cost-indicator drawing surfaces: the text buffer (+0x5c0), the on-screen widget (+0x5c8) and the font.
++class ICostIndicatorView {
++public:
++    virtual ~ICostIndicatorView() = default;
++    virtual bool HasWidget() = 0;                        // +0x5c8 != 0
++    virtual bool HasSurface() = 0;                       // +0x5c0 != 0 && +0x5c8 != 0
++    virtual int BufferWidth() = 0;                       // buffer vslot 0x58
++    virtual int BufferHeight() = 0;                      // buffer vslot 0x60
++    virtual bool SetBufferAlpha(std::uint8_t alpha) = 0; // buffer QI 0x86d72b57 -> tint(255, 255, 255, alpha); false when absent
++    virtual void SetOuterArea(int l, int t, int r, int b) = 0;   // widget->window vslot 0x1b8 (SetArea)
++    virtual void SetInnerArea(int l, int t, int r, int b) = 0;   // widget vslot 0x40
++    virtual void ShowWidget() = 0;                       // vslot 0x228
++    virtual void HideWidget() = 0;                       // vslot 0x230
++    virtual bool MeasureText(const std::string& text, int rect[4]) = 0;   // font 0xe2b14587 (else 0x68963c4c) vslot 0x168; false without a font
++    virtual void PrepareBuffer() = 0;                    // if flags 0x8001 set: fill 0, clear the flags
++    virtual bool BeginText() = 0;                        // font vslot 0x1b8
++    virtual void DrawText(const std::string& text, const int rect[4], std::uint32_t color) = 0;   // font vslot 0x1a0 (mode 2, flags 0x8000000)
++    virtual void EndText() = 0;                          // font vslot 0x1c0
++    virtual std::uint32_t MakeColor(std::uint8_t r, std::uint8_t g, std::uint8_t b) = 0;   // graphics system vslot 0x118
++};
++
++// The cursor text widget (+0x5d0) and its sub-window (+8).
++class ICursorTextWidget {
++public:
++    virtual ~ICursorTextWidget() = default;
++    virtual void SetText1(const std::string& s) = 0;     // vslot 0x30
++    virtual void SetText2(const std::string& s) = 0;     // vslot 0x40
++    virtual void SetIcon(void* icon) = 0;                // vslot 0x60
++    virtual void SetPosition(int x, int y) = 0;          // vslot 0x78
++    virtual bool IsShown() = 0;                          // sub-window vslot 0x238
++    virtual void Show() = 0;                             // sub-window vslot 0x228
++    virtual void Hide() = 0;                             // sub-window vslot 0x230
++    virtual void Dismiss() = 0;                          // sub-window vslot 0x2e0
++};
++
++// The window part of the view.
++class IView3DWindow {
++public:
++    virtual ~IView3DWindow() = default;
++    virtual void SetCapture() = 0;                       // cGZWin::GZSetCapture
++    virtual bool AmCapturing() = 0;                      // cGZWin::GZAmCapturing
++    virtual void ReleaseCapture() = 0;                   // cGZWin::GZReleaseCapture
++    virtual int Width() = 0;                             // vslot 0x148
++    virtual int Height() = 0;                            // vslot 0x150
++    virtual cIGZCursor* LoadCursor(std::uint32_t id) = 0;        // cursor manager vslot 0x38
++    virtual void ApplyCursor(cIGZCursor* cursor) = 0;            // window vslot 0x2a8 (cursor, 1)
++    virtual bool MouseInWindow(int& x, int& y) = 0;      // window manager vslot 0x110 (window, &x, &y)
++    virtual cIGZWin* AsWin() = 0;                        // AsIGZWin (this + 0x18)
++};
++
++// SL::TerrainView()->vslot 0x90(0): the overlay layer that draws the contour lines.
++class IContourOverlay {
++public:
++    virtual ~IContourOverlay() = default;
++    virtual std::uint32_t AddContourLayer(std::uint32_t layerId) = 0;   // vslot 0x40 (layer 0x7f94205), returns a handle
++    virtual void RemoveContourLayer(std::uint32_t handle) = 0;          // vslot 0x78
++};
++
++// Services behind the SL::sp* globals.
++class IView3DHost {
++public:
++    virtual ~IView3DHost() = default;
++    virtual cIGZMessageServer2* MessageServer() = 0;                     // SL::spMS2
++    virtual void PostMessage2(std::uint32_t type) = 0;                    // SC4PostMessage2(type, 0, 0, 0, 0, nullptr)
++    virtual ICityInputGate* InputGate() = 0;                              // city vslot 0x290 (may be null)
++    virtual bool EdgeScrollPreference() = 0;                              // SL::spPreferences +0xf09
++    virtual bool ExtraZoomLevelEnabled() = 0;                             // spSC4 vslot 0x130 -> +0xf10 (true when the object is absent)
++    virtual bool GraphicsSystemFlag() = 0;                                // SL::spGS vslot 0x60
++    virtual cSC4RenderProperties* RenderProperties() = 0;                 // SL::spRenderProperties == spSC4 vslot 0x160
++    virtual std::uint32_t RenderPropertiesTag() = 0;                      // render properties +0x10
++    virtual void SetRenderPropertiesTag(std::uint32_t tag) = 0;
++    virtual void LightingScrollBegin(float delta) = 0;                    // lighting manager vslot 0x38 (&kColorYellow, 0.1f)
++    virtual void LightingScrollEnd() = 0;                                 // lighting manager vslot 0x40
++    virtual std::int64_t CityBalance() = 0;                               // city vslot 0x1a0 -> vslot 0x30 (0 without a budget)
++    virtual std::string MakeMoneyString(std::int64_t amount) = 0;         // SC4MakeMoneyString
++    virtual cSC4ViewInputControl* NewCityScrollControl() = 0;             // new cSC4ViewInputControlCityScroll (0x60 bytes)
++    virtual void StartCityScroll(cSC4ViewInputControl* control, int x, int y) = 0;   // cSC4ViewInputControlCityScroll::SetMouseScroll
++    virtual IContourOverlay* ContourOverlay() = 0;                        // SL::TerrainView()->vslot 0x90(0), may be null
++    virtual bool ProjectToViewport(float xyz[3]) = 0;                     // SC4ViewUtilities::ProjectPointToViewportCoordinates2D (in place; false when the service is absent)
++};
++
++// Pieces of the view's persistent state shared with callers.
++struct ViewFilterInformation { cIGZUnknown* filter = nullptr; };       // cSC4ViewFilterInformation (a counted pointer)
++struct ViewLevelInformation { std::int32_t level = 1; };               // cSC4ViewLevelInformation
++enum CursorTextIcon : std::int32_t { kCursorTextIconNone = 0, kCursorTextIconCoverage = 1 };   // value 1 shows the icon at +0x5f0
++
++struct CursorTextInfo {          // 0x70 bytes in the original list node
++    std::uint32_t id = 0;        // +0x10
++    std::uint32_t order = 0;     // +0x14
++    std::string text1;           // +0x18
++    std::string text2;           // +0x40
++    std::int32_t icon = 0;       // +0x68
++};
++
++class cSC4View3DWin final : public IViewInputView {
++public:
++    cSC4View3DWin(IView3DHost* host, IView3DWindow* window);    // 0x10077efc2
++    ~cSC4View3DWin();                                           // 0x10077f6f6
++
++    // cIGZUnknown (QueryInterface 0x10078145a, AddRef 0x1007814d6, Release 0x10078150a)
++    bool QueryInterface(std::uint32_t iid, void** out) override;
++    std::uint32_t AddRef() override { return ++refCount_; }
++    std::uint32_t Release() override;
++
++    // wiring done by Init / DoPreCityInit in the original
++    void SetCamera(IView3DCamera* camera) { camera_ = camera; }
++    void SetRenderer(IView3DRenderer* renderer) { renderer_ = renderer; }
++    void SetSimPauser(IViewSimPauser* pauser) { simPauser_ = pauser; }
++    void SetCostIndicatorView(ICostIndicatorView* view) { costView_ = view; }
++    void SetCursorTextWidget(ICursorTextWidget* widget, void* coverageIcon) { cursorWidget_ = widget; cursorIcon_ = coverageIcon; }
++    IView3DRenderer* GetRenderer() const { return renderer_; }                  // 0x100781548
++    void* GetModelMaker() const { return modelMaker_; }                          // 0x100793ab0
++    void SetModelMaker(void* maker) { modelMaker_ = maker; }
++    void* GetCoverageHelper() { return &coverageHelper_; }                       // 0x100793ad2 (this + 0x5f8)
++
++    // zoom / rotation (vslots 0x40..0x88)
++    void SetZoom(int zoom);                              // 0x100781e1a
++    bool ZoomIn();                                       // 0x100781fce
++    bool ZoomOut();                                      // 0x100782014
++    void SetZoomLimits(int minimum, int maximum);        // 0x100781e64
++    bool CanZoomIn();                                    // 0x100781ef2
++    bool CanZoomOut();                                   // 0x100781f18
++    void SetRotation(int rotation);                      // 0x100781f3e
++    void RotateLeft();                                   // 0x100781f6e
++    void RotateRight();                                  // 0x100781f9e
++    void SetZoomAndRotation(int zoom, int rotation);     // 0x10078205a
++    int ZoomMinimum() const { return zoomMin_; }
++    int ZoomMaximum() const { return zoomMax_; }
++
++    // view filter / level (vslots 0x90..0xb8)
++    void GetCurrentViewFilterInfo(ViewFilterInformation& out);          // 0x1007820a4
++    bool SetCurrentViewFilterInfo(ViewFilterInformation& in);           // 0x1007820ba
++    void GetCurrentViewLevelInfo(ViewLevelInformation& out) const;      // 0x100782230
++    void SetCurrentViewLevelInfo(const ViewLevelInformation& in);       // 0x10078223e
++    std::uint32_t GetCurrentViewLevel() const { return viewLevel_; }    // 0x10078235c
++    void SetCurrentViewLevel(std::uint32_t level);                      // 0x100782368
++
++    // input control stack (vslots 0xc0..0xf0)
++    cSC4ViewInputControl* GetCurrentViewInputControl();                          // 0x100782390
++    cSC4ViewInputControl* TopControl() override { return GetCurrentViewInputControl(); }
++    bool SetCurrentViewInputControl(cSC4ViewInputControl* control, ViewInputControlStackOp op);   // 0x1007823ae
++    void SendViewInputControlChangeMessage(cSC4ViewInputControl* from, cSC4ViewInputControl* to);   // 0x100782556
++    bool RemoveCurrentViewInputControl(bool keepCursor);                         // 0x100782660
++    void EndInput(int result) override { (void)result; RemoveCurrentViewInputControl(false); }   // vslot 0xd0 as used by the tools
++    bool RemoveAllViewInputControls(bool keepCursor);                            // 0x100782790
++    bool AddPersistentViewInputControl(cSC4ViewInputControl* control);           // 0x1007827b8
++    bool RemovePersistentViewInputControl(cSC4ViewInputControl* control);        // 0x10078283e
++    bool RemoveAllPersistentViewInputControls();                                 // 0x1007828c6
++    std::size_t StackSize() const { return stack_.size(); }
++    std::size_t PersistentCount() const { return persistent_.size(); }
++
++    // key accelerator (vslots 0xf8, 0x100)
++    cIGZWinKeyAccelerator* GetKeyAccelerator() const { return keyAccelerator_.get(); }   // 0x100781ab2
++    void SetKeyAccelerator(cIGZWinKeyAccelerator* accelerator);                           // 0x100781ac0
++
++    // scrolling (vslots 0x108..0x118)
++    void SetScrolling(bool scrolling, float angle, float speed);   // 0x100781b06
++    void DoScrollBegin();                                          // 0x100781b86
++    void DoScrollEnd();                                            // 0x100781908
++    bool ScrollStop();                                             // 0x100781cb4
++    void KillKeyboardScrolling();                                  // 0x100781cee
++    void RecalcScrollVelocity();                                   // 0x100781d04
++    bool IsScrolling() const { return scrolling_; }
++    float ScrollAngle() const { return scrollAngle_; }
++    float ScrollSpeed() const { return scrollSpeed_; }
++    bool ScrollStopRequested() const { return scrollStopRequested_; }
++    float ScrollStopSpeed() const { return scrollStopSpeed_; }
++    void SetKeyboardScroll(int x, int y) { keyboardScrollX_ = x; keyboardScrollY_ = y; }   // written by the key accelerators
++    int EdgeScrollX() const { return edgeScrollX_; }
++    int EdgeScrollY() const { return edgeScrollY_; }
++
++    // picking (vslots 0x120..0x138)
++    bool PickTerrain(int x, int y, float* xyz, bool flag);         // 0x10078292c
++    bool PickOccupant(int x, int y, cIGZUnknown** occupant);       // 0x100782962 (the occupant comes back AddRef'd)
++    void DisplayTerrainPickDebugString(int, int) {}                // 0x100783d74 (empty in the release build)
++    bool GetTerrainQueryEnabled() const { return terrainQueryEnabled_; }   // 0x100783d7a
++    void SetTerrainQueryEnabled(bool enabled) { terrainQueryEnabled_ = enabled; }
++
++    // cursor text (vslots 0x140, 0x148, 0x190)
++    void SetCursorText(std::uint32_t id, std::uint32_t order, const std::string* text1, const std::string* text2, std::int32_t icon);   // 0x10079132c
++    void ClearCursorText(std::uint32_t id);                        // 0x100791772
++    void CursorTextChanged();                                      // 0x10079155e
++    void UpdateCursorTextPositions(int x, int y);                  // 0x100783a60
++    void SetCursorTextPosition3D(const float xyz[3]);              // 0x100791cc4
++    const std::list<CursorTextInfo>& CursorTexts() const { return cursorTexts_; }
++
++    // cost indicator (vslots 0x150..0x160)
++    void SetCostIndicator(std::uint32_t amount) { SetCostIndicator(amount, amount); }   // 0x100793abe
++    void SetCostIndicator(std::uint32_t amount, std::uint32_t cost);                    // 0x100791802
++    void ClearCostIndicator(bool fade);                            // 0x100791c5a
++    void RenderCostIndicator();                                    // 0x1007918de
++    void SetCostIndicatorAlpha(std::uint8_t alpha);                // 0x100791c04
++    void UpdateCostIndicator(float elapsed);                       // 0x10078178a
++    int CostIndicatorState() const { return costState_; }
++    int CostIndicatorKind() const { return costKind_; }
++    float CostIndicatorTimer() const { return costTimer_; }
++
++    // global effect triggers (vslots 0x170..0x180)
++    bool GetGlobalEffectTriggerState(std::uint32_t trigger) const;   // 0x100792974
++    void AssertGlobalEffectTrigger(std::uint32_t trigger);           // 0x10079299e
++    void RetractGlobalEffectTrigger(std::uint32_t trigger);          // 0x100792a6c
++
++    // last selection (vslots 0x198..0x1b0)
++    std::uint32_t GetLastSelectedBuilding() const { return lastBuildingSet_ ? lastBuilding_ : 0; }   // 0x100793ae0
++    std::uint32_t GetLastSelectedLot() const { return lastLotSet_ ? lastLot_ : 0; }                   // 0x100793afa
++    void SetLastSelectedBuilding(std::uint32_t id) { lastBuilding_ = id; lastBuildingSet_ = true; }  // 0x100793b14
++    void SetLastSelectedLot(std::uint32_t id) { lastLot_ = id; lastLotSet_ = true; }                  // 0x100793b28
++    void SetErrorReportString(const char*) {}                                                          // 0x100781454 (empty)
++
++    // contour display toggle (0x10078fe00): the terrain view handle is kept as an opaque id
++    bool ToggleContourDisplay();
++
++    // temporary sim pause while the view moves (0x1007819e0, 0x100781a20)
++    void DoTemporarySimHiddenPause();
++    void DoTemporarySimHiddenResume();
++    bool SimHiddenPaused() const { return simHiddenPaused_; }
++
++    // GZ window hooks (the non-virtual thunks at +0x18 forward here)
++    bool GZOnCharacter(char c);                                    // 0x1007829f8
++    bool GZOnKeyDown(std::uint32_t, std::uint32_t) { return false; }   // 0x100782b82
++    bool GZOnKeyUp(std::uint32_t, std::uint32_t) { return false; }     // 0x100782b92
++    bool ProcessKeyDown(std::uint32_t key, std::uint32_t modifiers);   // 0x100782ba2
++    bool ProcessKeyUp(std::uint32_t key, std::uint32_t modifiers);     // 0x100782d20
++    bool GZOnMouseDownL(int x, int y, std::uint32_t flags);        // 0x100782e9e
++    bool GZOnMouseDownR(int x, int y, std::uint32_t flags);        // 0x100783068
++    bool GZOnMouseUpL(int x, int y, std::uint32_t flags);          // 0x100783268
++    bool GZOnMouseUpR(int x, int y, std::uint32_t flags);          // 0x100783474
++    bool GZOnMouseMove(int x, int y, std::uint32_t flags);         // 0x100783786
++    bool GZOnMouseWheel(int x, int y, std::uint32_t flags, int delta);   // 0x100783ae2
++    bool GZOnMouseExit();                                          // 0x100783c7a
++    std::uint32_t LastModifierFlags() const { return modifierFlags_; }
++
++private:
++    template <class F> bool DispatchTopDown(std::vector<cSC4ViewInputControl*>& list, F call, bool stopOnHandled);
++    static void CopyRenderProperties(cSC4RenderProperties& to, cSC4RenderProperties& from);
++
++    std::uint32_t refCount_ = 0;
++    IView3DHost* host_;
++    IView3DWindow* window_;
++    IView3DCamera* camera_ = nullptr;                  // +0x180
++    IView3DRenderer* renderer_ = nullptr;              // +0x188
++    void* modelMaker_ = nullptr;                       // +0x190
++    std::uint32_t modifierFlags_ = 0;                  // +0x1bc
++    cRZAutoRefCount<cIGZWinKeyAccelerator> keyAccelerator_;   // +0x1c0
++    bool terrainQueryEnabled_ = false;                 // +0x1ca
++    std::vector<cSC4ViewInputControl*> stack_;         // +0x1e8
++    std::vector<cSC4ViewInputControl*> persistent_;    // +0x200
++    IViewSimPauser* simPauser_ = nullptr;              // +0x238
++    cRZTimer hiddenTimer_{cRZTimer::kMilliseconds};    // +0x248
++    bool simHiddenPaused_ = false;                     // +0x260
++    cIGZUnknown* viewFilter_ = nullptr;                // +0x4d8
++    std::uint32_t viewLevel_ = 1;                      // +0x4e0
++    float scrollAngle_ = 0, scrollSpeed_ = 0;          // +0x4e4, +0x4e8
++    bool scrolling_ = false;                           // +0x4ec
++    float scrollUnit_ = 1.0f;                          // +0x4f0
++    bool scrollScaled_ = false;                        // +0x4f4
++    bool scrollStopRequested_ = false;                 // +0x4f5
++    float scrollStopSpeed_ = 0;                        // +0x4f8
++    float edgeSpeedFactor_ = 0.2f, keyboardSpeedFactor_ = 0.2f;   // +0x4fc, +0x500
++    int keyboardScrollX_ = 0, keyboardScrollY_ = 0;    // +0x504, +0x508
++    int edgeScrollX_ = 0, edgeScrollY_ = 0;            // +0x50c, +0x510
++    int pressX_ = 0, pressY_ = 0;                      // +0x514, +0x518
++    bool mouseMoved_ = false;                          // +0x51c
++    int zoomMin_ = 0, zoomMax_ = 5;                    // +0x520, +0x524
++    cSC4RenderProperties savedProps_;                  // +0x540
++    std::uint32_t savedPropsTag_ = 0;                  // +0x550
++    // cost indicator
++    ICostIndicatorView* costView_ = nullptr;
++    std::uint32_t costAmount_ = 0;                     // +0x5a0
++    int costState_ = 0;                                // +0x5a4
++    int costKind_ = 0;                                 // +0x5a8
++    float costTimer_ = 0;                              // +0x5ac
++    int costX_ = 0, costY_ = 0;                        // +0x5b0, +0x5b4
++    int costFadeX_ = 0, costFadeY_ = 0;                // +0x5b8, +0x5bc
++    // cursor text
++    ICursorTextWidget* cursorWidget_ = nullptr;        // +0x5d0
++    std::list<CursorTextInfo> cursorTexts_;            // +0x5d8
++    void* cursorIcon_ = nullptr;                       // +0x5f0
++    struct CoverageHelper { } coverageHelper_;         // +0x5f8 (cSC4CoverageRadiusEffectHelper, not recovered here)
++    std::unordered_map<std::uint32_t, std::uint32_t> triggers_;   // +0x678
++    std::uint32_t lastBuilding_ = 0, lastLot_ = 0;     // +0x6a0, +0x6a4
++    bool lastBuildingSet_ = false, lastLotSet_ = false;   // +0x6a8, +0x6a9
++    bool contourOn_ = false;                           // +0x628
++    std::uint32_t contourHandle_ = 0xffffffffu;        // +0x62c
++};
++
++}  // namespace sc4

@@ -1,0 +1,414 @@
+diff --git a/src/sc4/App.h b/src/sc4/App.h
+index 2b44bf4..05b5c08 100644
+--- a/src/sc4/App.h
++++ b/src/sc4/App.h
+@@ -14,6 +14,7 @@
+ #include <map>
+ #include <memory>
+ #include <string>
++#include <vector>
+ 
+ #include "gz/GZApp.h"
+ #include "gz/WinCtrlMgr.h"
+@@ -163,6 +164,40 @@ struct AppCityHooks {
+     std::function<void(cISC4RegionalCity* city, const std::string& savePath)> regionCityClosed;
+     // the shutdown path of the framework: cIGZFrameWork::Quit(0)
+     std::function<void()> quitFramework;
++
++    // --- SaveCity / DoCityObliteration (the city's own virtuals and neighbours that are not recovered as interfaces)
++    // city vslot 0x60 (called first by SaveCity, no arguments) and vslot 0x28 (the city's serial number)
++    std::function<void(cISC4City*)> prepareCitySave;
++    std::function<std::uint32_t(cISC4City*)> citySerialNumber;
++    // SC4CreateSavePathForCity("", serial, out): the path the city file of that serial number is saved under
++    std::function<std::string(std::uint32_t serial)> createSavePath;
++    // SL::spNeighborsSim vslot 0xa0(list, 1): the regional cities of the neighbour connections (borrowed)
++    std::function<std::vector<cISC4RegionalCity*>()> neighborRegionalCities;
++    // SC4WriteRegionalCity(path, city): writes the regional city record into the file at `path`
++    std::function<bool(const std::string& path, cISC4RegionalCity* city)> writeRegionalCityFile;
++    // city vslot 0x368 (SaveObliterated(segment)) and vslot 0xb8(false) (the obliteration reload flag)
++    std::function<void(cISC4City*, cIGZPersistDBSegment*)> saveObliterated;
++    std::function<void(cISC4City*, bool)> setCityReloadFlag;
++    // SC4ViewUtilities::GetZoomAndRotation / the 3D view's SetZoom (vslot 0x40) and SetRotation (vslot 0x70)
++    std::function<void(int& zoom, int& rotation)> getViewZoomAndRotation;
++    std::function<void(int zoom, int rotation)> setViewZoomAndRotation;
++    // The heightfield load dialog (cSC4WinLoadHeightField, with the remembered folder in the app ini): returns the chosen
++    // file; SL::spSC4's 512-byte path buffer receives it through `heightFieldChosen`. The Cocoa layer replaces the dialog.
++    std::function<bool(std::string& chosenPath)> chooseHeightField;
++    std::function<void(const std::string& path)> heightFieldChosen;
++};
++
++// The font services SetFontAlias / SetFontStyle reach (RZ::FO(), RZ::WCM(), CreateFontStyleFromSpecification and the font
++// style script vocabulary); empty entries skip their step.
++struct AppFontHooks {
++    bool fontSystemAvailable = true;                                               // RZ::FO() != null
++    std::function<void(const std::string& target, const std::string& alias)> setFontAlias;   // FO vslot 0x98(first, second)
++    // CreateFontStyleFromSpecification(spec, id): the style object (one reference, released afterwards) and its id; null when invalid
++    std::function<cIGZUnknown*(const std::string& specification, std::uint32_t& id)> createFontStyle;
++    // RZ::WCM() vslot 0x30(id, style) and vslot 0x138(id, new cRZString(name)); false when there is no control manager
++    std::function<bool(std::uint32_t id, cIGZUnknown* style, const std::string& name)> registerStyle;
++    // spFontStyleScriptVocabulary vslot 0x20(name, id)
++    std::function<void(const std::string& name, std::uint32_t id)> addToVocabulary;
+ };
+ 
+ }  // namespace sc4
+@@ -255,6 +290,7 @@ public:
+     void SetServiceFactory(const std::string& className, ServiceFactory factory) { serviceFactories_[className] = std::move(factory); }
+     sc4::AppStartupHooks& StartupHooks() { return startupHooks_; }
+     sc4::AppCityHooks& CityHooks() { return cityHooks_; }
++    sc4::AppFontHooks& FontHooks() { return fontHooks_; }
+     void SetFramework(cIGZFrameWork* framework) { framework_ = framework; }
+ 
+     // --- host seams (the original reached these through RZ:: / MacDisplay::)
+@@ -323,8 +359,18 @@ public:
+     bool Write(cIGZOStream& stream, cIGZPersistDBSegment* segment) const;   // @ 0x100044510
+     bool Read(cIGZIStream& stream, cIGZPersistDBSegment* segment);          // @ 0x100044576
+     void PostCityMessage(cISC4City* city, std::uint32_t type, std::uint32_t data2, std::uint32_t data3, bool post);   // @ 0x100011f14
+-    bool DoCityObliteration();                                     // @ 0x100047350 (not recovered)
+-    void LaunchExceptionReportUploader();                          // @ 0x10000f146 (not recovered)
++    bool DoCityObliteration();                                     // @ 0x100047350
++    bool SaveCityForObliteration(const cRZString& path);           // @ 0x1000475cc
++    void RegisterCityDBSegment(const cRZString& path);             // @ 0x100046d9e
++    // the segment the next NewCity (called by DoCityObliteration) reads the obliterated city from (+0x670)
++    cIGZPersistDBSegment* GetObliterationSegment() const { return obliterationSegment_; }
++    // cSC4App::SetFontAliasStatic / SetFontStyleStatic / SetFontStyle (the font style script callbacks)
++    static void SetFontAliasStatic(const cRZString& first, const cRZString& second, void* context);   // @ 0x10000ab6c
++    static void SetFontStyleStatic(const cRZString& name, const cRZString& specification, void* context);   // @ 0x10000aba8
++    void SetFontStyle(const cRZString& name, const cRZString& specification);                          // @ 0x10000abbc
++    // SKIPPED on the Mac build (see AppPending.cpp): LaunchExceptionReportUploader @ 0x10000f146, LoadRegistry (debug
++    // registry, @ 0x1000b20be) and SetupFontSet's Windows CJK font tables (@ 0x10000c7d0).
++    void LaunchExceptionReportUploader();
+     bool LoadRegistry() override;
+     bool OnTick(std::uint32_t elapsed) override;
+ 
+@@ -403,6 +449,8 @@ private:
+     cIGZFrameWork* framework_ = nullptr;
+     sc4::AppStartupHooks startupHooks_;
+     sc4::AppCityHooks cityHooks_;
++    sc4::AppFontHooks fontHooks_;
++    cIGZPersistDBSegment* obliterationSegment_ = nullptr;   // +0x670
+     cIGZPersistDBSegment* citySegment_ = nullptr;        // +0x7a8 (the registered city file segment)
+     static bool sMacQuitDialogIsShowing_;
+     std::map<std::string, ServiceFactory> serviceFactories_;
+diff --git a/src/sc4/AppCity.cpp b/src/sc4/AppCity.cpp
+index 15b2481..16aeb90 100644
+--- a/src/sc4/AppCity.cpp
++++ b/src/sc4/AppCity.cpp
+@@ -17,7 +17,9 @@
+ #include "rz/cRZVariant.h"
+ #include "sc4/App.h"
+ #include "sc4/AutoHelpers.h"
++#include "rz/cRZVersion.h"
+ #include "sc4/DBSegment.h"
++#include "sc4/SaveGame.h"
+ #include "sc4/ServiceLocator.h"
+ 
+ bool cSC4App::sMacQuitDialogIsShowing_ = false;
+@@ -436,3 +438,239 @@ bool cSC4App::CloseCity() {
+     if (SL::spRM) SL::spRM->ForceGarbageCollection();
+     return true;
+ }
++
++// ---- saving ------------------------------------------------------------------------------------------------------
++
++namespace {
++// The city file of a save lives next to its predecessor: the data goes to a temp file first, the old file is renamed to
++// "<path>_" while the new one moves into place, and the backup is dropped once the swap worked (or moved back if not).
++constexpr std::uint32_t kMessageSaveBegin = 0x26c63343, kMessageSaveWritten = 0x26c63344, kMessageSaveDone = 0x26c63345,
++                        kMessageSaveStart2 = 0x26c63346;
++constexpr std::uint32_t kVersionRecordType = 0xb7d45e0, kVersionRecordGroup = 0xb7d45e1, kVersionRecordInstance = 0xb7d45e2;
++constexpr std::uint32_t kAppRecordType = 0x49dd6f4c, kAppRecordGroup = 0x49dd6f4e;
++
++bool StringsEqual(const cRZString& a, const cRZString& b) {
++    return a.Strlen() == b.Strlen() && std::memcmp(a.ToChar(), b.ToChar(), a.Strlen()) == 0;
++}
++
++// A save message: segment, temp path, final path and the caller's flag byte (void1 is absent on the "done" message).
++cRZAutoRefCount<cRZMessage2Standard> MakeSaveMessage(std::uint32_t type, cIGZPersistDBSegment* segment, cRZString* tempPath,
++                                                      cRZString* savePath, bool flag) {
++    cRZAutoRefCount<cRZMessage2Standard> message(new cRZMessage2Standard());
++    message->SetType(type);
++    if (segment) message->SetVoid1(segment);
++    message->SetVoid2(tempPath);
++    message->SetVoid3(savePath);
++    message->SetData4(flag ? 1u : 0u);
++    return message;
++}
++}  // namespace
++
++// Saves the current city to `path`. The path actually written is the one SC4CreateSavePathForCity derives from the city's
++// serial number; the file the caller named is removed afterwards when that is a different one. Returns false without a
++// city. On failure the city keeps its old save path; on success the new file is registered as the city segment again and
++// the regional city records of the neighbour connections are rewritten.
++// Quirk kept: the "save begin" message is sent twice (0x26c63343 and 0x26c63346) with the same payload.
++bool cSC4App::SaveCity(const cRZString& path, bool flag) {
++    BusyScope busy(cityHooks_);
++    sc4::cSC4AutoFlushInputMessageQueue flush(1000);
++    sc4::cSC4AutoGamePause pause(false, true, true, true);
++    sc4::cSC4AutoDisableAppSwitching disableSwitching;
++    if (!city_) return false;
++
++    if (cityHooks_.prepareCitySave) cityHooks_.prepareCitySave(city_);
++    const std::uint32_t serial = cityHooks_.citySerialNumber ? cityHooks_.citySerialNumber(city_) : 0;
++    cRZString savePath(cityHooks_.createSavePath ? cityHooks_.createSavePath(serial).c_str() : "");
++    const bool removeNamedFile = !StringsEqual(savePath, path);
++
++    cRZString oldPath;
++    city_->GetCitySaveFilePath(oldPath);
++    city_->SetCitySaveFilePath(savePath);
++
++    cRZString tempPath, backupPath;
++    bool ok = false;
++    if (cRZFile::MakeTempPathName(tempPath, nullptr)) {
++        cRZAutoRefCount<cRZString> tempCopy(new cRZString(tempPath.ToChar()));
++        cRZAutoRefCount<cRZString> saveCopy(new cRZString(savePath.ToChar()));
++        cIGZPersistDBSegment* segment = cityHooks_.createCitySegment ? cityHooks_.createCitySegment() : nullptr;
++        if (segment) {
++            if (segment->Init()) {
++                segment->SetPath(tempPath);
++                if (segment->Open(false, true)) {
++                    cISC4DBSegment* sc4Segment = nullptr;
++                    segment->QueryInterface(sc4::kGZIID_cISC4DBSegment, reinterpret_cast<void**>(&sc4Segment));
++                    cRZAutoRefCount<cRZMessage2Standard> begin = MakeSaveMessage(kMessageSaveBegin, segment, tempCopy.get(), saveCopy.get(), flag);
++                    SendMessage(*begin);
++                    cRZAutoRefCount<cRZMessage2Standard> begin2 = MakeSaveMessage(kMessageSaveStart2, segment, tempCopy.get(), saveCopy.get(), flag);
++                    SendMessage(*begin2);
++                    sc4::SC4WriteAppLoadSaveVersion(segment);
++                    {
++                        // the four module version numbers of the build (always 0xffffffff on the Mac build)
++                        sc4::cSC4AutoSaveStream versionStream(segment, kVersionRecordType, kVersionRecordGroup, kVersionRecordInstance, 3);
++                        cRZVersion version;
++                        const std::uint32_t v0 = version.GetModuleVersion(0u), v1 = version.GetModuleVersion(1u),
++                                            v2 = version.GetModuleVersion(2u), v3 = version.GetModuleVersion(3u);
++                        if (cISC4DBSegmentOStream* stream = versionStream.GetStream()) {
++                            stream->SetUint32(v0);
++                            stream->SetUint32(v1);
++                            stream->SetUint32(v2);
++                            stream->SetUint32(v3);
++                        }
++                    }
++                    bool written = false;
++                    {
++                        sc4::cSC4AutoSaveStream appStream(segment, kAppRecordType, kAppRecordGroup, 1, 1);
++                        if (cISC4DBSegmentOStream* stream = appStream.GetStream()) {
++                            if (Write(*stream, segment)) {
++                                SendMessage(*MakeSaveMessage(kMessageSaveWritten, segment, tempCopy.get(), saveCopy.get(), flag));
++                                SendMessage(*MakeSaveMessage(kMessageSaveDone, nullptr, tempCopy.get(), saveCopy.get(), flag));
++                                written = true;
++                            }
++                        }
++                    }
++                    ok = written && sc4Segment && sc4Segment->SaveClassObjects();
++                    segment->Close();
++                    if (sc4Segment) sc4Segment->Release();
++                }
++                segment->Shutdown();
++            }
++            segment->Release();
++        }
++    }
++
++    UnregisterCityDBSegment();
++    if (ok) {
++        city_->SetCityNameChanged(false);
++        if (cRZFile::FileExists(savePath)) {
++            backupPath = (std::string(savePath.ToChar()) + "_").c_str();
++            if (cRZFile::FileExists(backupPath)) ok = cRZFile::Remove(backupPath);
++            if (ok) ok = cRZFile::Rename(savePath, backupPath);
++        }
++    }
++    if (ok) {
++        if (!cRZFile::Rename(tempPath, savePath)) {
++            cRZFile::Remove(tempPath);
++            if (backupPath.Strlen() != 0) cRZFile::Rename(backupPath, savePath);
++            ok = false;
++        } else if (backupPath.Strlen() != 0) {
++            cRZFile::Remove(backupPath);
++        }
++        if (removeNamedFile && cRZFile::FileExists(path)) cRZFile::Remove(path);
++    }
++    if (tempPath.Strlen() != 0) cRZFile::Remove(tempPath);   // (nothing left after a successful rename)
++
++    city_->SetCitySaveFilePath(ok ? savePath : oldPath);
++    cRZString currentPath;
++    city_->GetCitySaveFilePath(currentPath);
++    RegisterCityDBSegment(currentPath);
++
++    if (!ok) return false;
++    if (cityHooks_.neighborRegionalCities) {
++        for (cISC4RegionalCity* neighbor : cityHooks_.neighborRegionalCities()) {
++            cRZString neighborPath;
++            neighbor->GetCitySaveFilePath(neighborPath);
++            if (neighborPath.Strlen() != 0 && cityHooks_.writeRegionalCityFile) cityHooks_.writeRegionalCityFile(neighborPath.ToChar(), neighbor);
++        }
++    }
++    return true;
++}
++
++// Opens the city file read-only as a database segment and registers it with the resource manager as the city segment.
++void cSC4App::RegisterCityDBSegment(const cRZString& path) {
++    cIGZPersistDBSegment* segment = cityHooks_.createCitySegment ? cityHooks_.createCitySegment() : nullptr;
++    if (!segment) return;
++    segment->Init();
++    segment->SetPath(path);
++    if (!segment->Open(true, false)) {
++        segment->Shutdown();
++    } else {
++        citySegment_ = segment;
++        segment->AddRef();
++        if (SL::spRM) SL::spRM->RegisterDBSegmentBack(*segment);
++    }
++    segment->Release();
++}
++
++// ---- obliteration -----------------------------------------------------------------------------------------------
++
++// Writes the city (through its obliteration save, city vslot 0x368) into a database file at `path`.
++bool cSC4App::SaveCityForObliteration(const cRZString& path) {
++    sc4::cSC4AutoFlushInputMessageQueue flush(1000);
++    sc4::cSC4AutoGamePause pause(false, true, true, true);
++    cIGZPersistDBSegment* segment = cityHooks_.createCitySegment ? cityHooks_.createCitySegment() : nullptr;
++    if (!segment) return false;
++    if (segment->Init()) {
++        segment->SetPath(path);
++        if (segment->Open(false, true)) {
++            if (cityHooks_.saveObliterated && city_) cityHooks_.saveObliterated(city_, segment);
++            segment->Close();
++        }
++        segment->Shutdown();
++    }
++    segment->Release();
++    return true;   // (the original returns nothing meaningful)
++}
++
++// Saves the city to a temp file, closes it (deleting its file!), then re-creates it from the temp file through NewCity with
++// the obliteration segment set and saves it back under its old path. The view's zoom and rotation survive the round trip.
++// Quirk kept: when no temp path can be made the city is closed all the same and the function reports false.
++bool cSC4App::DoCityObliteration() {
++    cRZString tempPath, oldPath;
++    int zoom = 0, rotation = 0;
++    BusyScope busy(cityHooks_);
++    bool result = false;
++    if (cRZFile::MakeTempPathName(tempPath, nullptr)) {
++        result = true;
++        SaveCityForObliteration(tempPath);
++    }
++    if (cityHooks_.getViewZoomAndRotation) cityHooks_.getViewZoomAndRotation(zoom, rotation);
++    if (city_) {
++        city_->GetCitySaveFilePath(oldPath);
++        if (cityHooks_.setCityReloadFlag) cityHooks_.setCityReloadFlag(city_, false);
++    }
++    PartialCloseCity();
++    if (oldPath.Strlen() != 0) cRZFile::Remove(oldPath);
++
++    cIGZPersistDBSegment* segment = cityHooks_.createCitySegment ? cityHooks_.createCitySegment() : nullptr;
++    if (segment) {
++        segment->Init();
++        segment->SetPath(tempPath);
++        if (segment->Open(true, false)) {
++            obliterationSegment_ = segment;
++            NewCity();
++            if (city_) {
++                if (cityHooks_.setCityReloadFlag) cityHooks_.setCityReloadFlag(city_, false);
++                city_->SetCitySaveFilePath(oldPath);
++            }
++            obliterationSegment_ = nullptr;
++            segment->Close();
++            if (city_) SaveCity(oldPath, false);
++        }
++        if (cityHooks_.setViewZoomAndRotation) cityHooks_.setViewZoomAndRotation(zoom, rotation);
++        segment->Shutdown();
++        segment->Release();
++    } else if (cityHooks_.setViewZoomAndRotation) {
++        cityHooks_.setViewZoomAndRotation(zoom, rotation);
++    }
++    cRZFile::Remove(tempPath);
++    return result;
++}
++
++// ---- window messages ----------------------------------------------------------------------------------------------
++
++// The terrain-editor window's "load heightfield" button: window id 0x27df05be, message type 3 with parameter 0x287259f6.
++// Parameter 0x20 (cancel) just ends the dialog; 0x30 runs the file dialog and hands the chosen path to the game's 512-byte
++// path buffer. Returns true for every message of that window/parameter pair, false for anything else.
++bool cSC4App::DoMessage(cIGZWin* window, cGZMessage& message) {
++    if (window->GetID() != 0x27df05be || message.type != 3 || message.param1 != 0x287259f6) return false;
++    if (message.param2 != 0x30) {
++        if (message.param2 == 0x20) RZ::WM()->EndDialog(0xf, window, 0x20);
++        return true;
++    }
++    std::string chosen;
++    if (cityHooks_.chooseHeightField && cityHooks_.chooseHeightField(chosen) && cityHooks_.heightFieldChosen) {
++        if (chosen.size() > 0x1ff) chosen.resize(0x1ff);   // the destination buffer holds 512 bytes
++        cityHooks_.heightFieldChosen(chosen);
++    }
++    return true;
++}
+diff --git a/src/sc4/AppInit.cpp b/src/sc4/AppInit.cpp
+index 44fd5b8..6b6f674 100644
+--- a/src/sc4/AppInit.cpp
++++ b/src/sc4/AppInit.cpp
+@@ -321,3 +321,28 @@ void cSC4App::SetupWinCtrlMgr() {
+     }
+     if (startupHooks_.setupWinCtrlResources) startupHooks_.setupWinCtrlResources(controls);
+ }
++
++// ---- font style script callbacks ----------------------------------------------------------------------------------
++
++// The script command that aliases one font name to another: FO()->vslot 0x98(second, first) — note the swapped order.
++void cSC4App::SetFontAliasStatic(const cRZString& first, const cRZString& second, void* context) {
++    cSC4App* app = static_cast<cSC4App*>(context);
++    if (app && app->fontHooks_.fontSystemAvailable && app->fontHooks_.setFontAlias) app->fontHooks_.setFontAlias(second.ToChar(), first.ToChar());
++}
++
++// The script command that defines a named font style; the context is the application.
++void cSC4App::SetFontStyleStatic(const cRZString& name, const cRZString& specification, void* context) {
++    if (context) static_cast<cSC4App*>(context)->SetFontStyle(name, specification);
++}
++
++// Creates the style from its specification, registers it with the window control manager under the id the creation
++// returned, names it, and adds the name to the font style script vocabulary.
++void cSC4App::SetFontStyle(const cRZString& name, const cRZString& specification) {
++    if (!fontHooks_.fontSystemAvailable || !fontHooks_.createFontStyle) return;
++    std::uint32_t id = 0;
++    cIGZUnknown* style = fontHooks_.createFontStyle(specification.ToChar(), id);
++    if (!style) return;
++    if (fontHooks_.registerStyle && fontHooks_.registerStyle(id, style, name.ToChar()) && fontHooks_.addToVocabulary)
++        fontHooks_.addToVocabulary(name.ToChar(), id);
++    style->Release();
++}
+diff --git a/src/sc4/AppPending.cpp b/src/sc4/AppPending.cpp
+index 6cbbdd7..04f71bf 100644
+--- a/src/sc4/AppPending.cpp
++++ b/src/sc4/AppPending.cpp
+@@ -1,20 +1,13 @@
+-// cSC4App members whose decompilation has not been ported yet. Each aborts loudly instead of guessing; remove an
+-// entry here when its real implementation lands in App*.cpp. Nothing in this file is credited in the ledger.
+-#include <cstdio>
+-#include <cstdlib>
+-
++// cSC4App members that are deliberately not part of the Mac build. Each is a harmless no-op; nothing here is credited as
++// recovered in the ledger (they are listed under SKIPPED there).
++//  * LoadRegistry (0x1000b20be, thunks 0x1000b2d0c / 0x1000b2d1e, callbacks RegisterDBSegmentCallback 0x1000b269a and
++//    RegisterDBSegmentDirectoryFilesCallback 0x1000b2c22) and CreateDBSegmentCallback (0x1000b12e6): the developer registry
++//    that SetupResources only runs when debug functionality is enabled.
++//  * SetupFontSet (0x10000c7d0): registers the Windows system fonts (Arial, Courier New, MingLiU, ...) per CJK language; the
++//    Cocoa layer supplies the fonts on macOS.
++//  * LaunchExceptionReportUploader (0x10000f146): spawns the Windows crash-report uploader executable.
+ #include "sc4/App.h"
+ 
+-namespace {
+-[[noreturn]] void Pending(const char* name) {
+-    std::fprintf(stderr, "cSC4App::%s is not recovered yet\n", name);
+-    std::abort();
+-}
+-}  // namespace
+-
+-bool cSC4App::DoMessage(cIGZWin*, cGZMessage&) { Pending("DoMessage(cIGZWin*, cGZMessage&)"); }
+-bool cSC4App::SaveCity(const cRZString&, bool) { Pending("SaveCity(path, bool)"); }
+-bool cSC4App::LoadRegistry() { Pending("LoadRegistry"); }
+-void cSC4App::SetupFontSet() { Pending("SetupFontSet"); }
+-bool cSC4App::DoCityObliteration() { Pending("DoCityObliteration"); }
+-void cSC4App::LaunchExceptionReportUploader() { Pending("LaunchExceptionReportUploader"); }
++bool cSC4App::LoadRegistry() { return true; }
++void cSC4App::SetupFontSet() {}
++void cSC4App::LaunchExceptionReportUploader() {}

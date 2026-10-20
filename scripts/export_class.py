@@ -8,7 +8,8 @@ work/ is gitignored.
 """
 import argparse, json, pathlib, re, sys, urllib.parse, urllib.request, collections
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-BASE = "http://127.0.0.1:8089"
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from ghidra_conn import BASE
 
 src = (ROOT/"scripts/progress.py").read_text().replace("\nmain()\n", "\n")
 ns = {"__file__": str(ROOT/"scripts/progress.py")}

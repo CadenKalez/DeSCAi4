@@ -6,6 +6,7 @@ usage: scripts/ledger_add.py --source 'src/x.cpp|h' --status recovered --evidenc
 The symbol comes from notes/symbols-functions-demangled.txt; unique_name defaults to the method name.
 """
 import argparse, csv, json, pathlib, urllib.request
+import sys as _s, pathlib as _p; _s.path.insert(0, str(_p.Path(__file__).resolve().parent)); from ghidra_conn import BASE
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 ap = argparse.ArgumentParser()
 ap.add_argument("--source", required=True); ap.add_argument("--status", default="recovered")
@@ -18,7 +19,7 @@ for line in (ROOT/"notes/symbols-functions-demangled.txt").read_text(errors="rep
     k, _, n = line.partition(" "); sym.setdefault(int(k, 16), n)
 def ghidra_rename(addr, new_name):
     body = json.dumps({"old_name": f"0x{addr:x}", "new_name": new_name, "strict_mode": "off"}).encode()
-    req = urllib.request.Request("http://127.0.0.1:8089/rename_function", body, {"Content-Type": "application/json"})
+    req = urllib.request.Request(BASE + "/rename_function", body, {"Content-Type": "application/json"})
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
             return json.load(r).get("status") == "success"

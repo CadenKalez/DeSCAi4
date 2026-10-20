@@ -1,0 +1,408 @@
+diff --git a/src/sc4/AutomataScriptSystem.h b/src/sc4/AutomataScriptSystem.h
+new file mode 100644
+index 0000000..098d76e
+--- /dev/null
++++ b/src/sc4/AutomataScriptSystem.h
+@@ -0,0 +1,402 @@
++// cSC4AutomataScriptSystem — loads the automata (vehicles, pedestrians, aircraft, boats) configuration from Lua and keeps
++// the resulting tables. Recovered from Sim City 4 Deluxe Editionsub 1.2.1 (constructor 0x1001d5a90 .. GetGZCLSID
++// 0x1001de310, class id 0x4a1b664e, object size 0x130).
++//
++// Init() registers the system with the advance-time manager, creates the two built-in occupant groups ("vehicle" 0x4002,
++// "pedestrian" 0x4001), runs the script package 0x4a5e8f3f through a private Lua state and publishes the "automata" node of
++// the game-data registry with the commands create_automaton, create_controller, attach_controller,
++// attach_controller_group, detach_controller, detach_controller_group and get_source_building_count.
++// Reading the scripts fills
++//   * controller templates (+0xc8, by name): "attractor" (type 0x6a1628ba) and "generator" (type 0x4a1628c5) tables;
++//   * occupant groups (+0x38 by name, +0x88 by group id, +0xb0 list of the id-0 "special filter" groups) and automata
++//     groups (+0x60 by name) from "automata_group" / "occupant_group";
++//   * the drive-command key map (+0x108, key code -> ePlayerDriveCommand, default 0xd) from a binary table resource;
++//   * the track building group ids (+0xf0).
++// Each group template is reference counted: the name map, the automata map (+0x60) and the id map / special list hold one
++// reference each (CreateOccupantGroup adds them), ClearOccupantGroups releases them. Controller templates are owned by the
++// name map and deleted by ClearTemplates.
++//
++// Original layout of the system: +0x20 initialized, +0x24 refcount, +0x28 Lua state, +0x30 scripts-running flag, then the
++// containers listed above (hash tables use max load factor 1.0).
++//
++// Seams. The original reaches the Lua state through the cISCLua vtable (IAutomataLua here, same slot meaning; the
++// SCLuaHelp::ReadTableField/ReadTableAsArray/... and SCLuaTableRef helpers at 0x1001e61e0..0x1001e78b2 are re-implemented in
++// automata_lua because nothing else recovered provides them), and the other services through SL::sp* globals and
++// GZCOM/RZGetFramework (IAutomataHost). Template classes whose methods live in other address ranges (tControllerTemplate,
++// cSC4OccupantGroupTemplate, tBehaviorTemplate, tKeyEffect) are given the minimal layout this file uses.
++//
++// Quirks kept: the unconditional Pop(1) after walking a global table even when SCLuaTableRef found no table;
++// ImportAttractorTemplates/ImportGeneratorTemplates continue with an existing template of the wrong type after logging
++// it; the attractor "strength" table with no entries dereferences an empty vector in the original (0 is used here);
++// duplicate automata-group names are AddRef'd but not inserted; the behaviour sort uses the original comparison
++// (radius greater OR priority lower), which is not a strict weak order; sCreateAutomaton's ninth parameter is read and
++// dropped; DoMessage(cIGZMessage2*) reads the type and ignores it.
++#pragma once
++#include <cstdint>
++#include <list>
++#include <string>
++#include <unordered_map>
++#include <vector>
++
++#include "gz/cGZPersistResourceKey.h"
++#include "gz/CommandParameterSet.h"
++#include "gz/cIGZIStream.h"
++#include "gz/cIGZMessage2.h"
++#include "gz/cIGZOStream.h"
++#include "gz/cIGZUnknown.h"
++#include "gz/cIGZVariant.h"
++#include "sc4/GameDataRegistry.h"
++#include "sc4/cSC4ResponseCurve.h"
++
++namespace sc4 {
++
++constexpr std::uint32_t kGZCLSID_cSC4AutomataScriptSystem = 0x4a1b664e;
++constexpr std::uint32_t kControllerTypeAttractor = 0x6a1628ba;
++constexpr std::uint32_t kControllerTypeGenerator = 0x4a1628c5;
++constexpr std::uint32_t kAutomataScriptPackage = 0x4a5e8f3f;       // SCLuaHelp::LoadPackageScripts group
++constexpr std::uint32_t kAutomataMessageType = 0x87163754;         // DoMessage(cGZMessage&) accepts exactly this
++constexpr std::uint32_t kAutomataControllerIid = 0x26bb767e;       // iid of the controller objects in script commands
++constexpr std::uint32_t kAutomataAdvanceTimePriority = 0xc0;       // SL::ATM() register/unregister argument
++constexpr std::uint32_t kDriveCommandNone = 0xd;                   // GetDriveCommand default
++constexpr int kDriveCommandCount = 13;
++constexpr std::uint32_t kLuaOpenAllLibraries = 0x7e;
++
++// ---------------------------------------------------------------------------------------------------------------------
++// The Lua state as the system sees it: a subset of the Lua 4 style cISCLua adapter (vtable of cSCLua+0x80). The comment
++// gives the original vslot. Indexes are Lua stack indexes (positive absolute, negative relative to the top).
++class IAutomataLua {
++public:
++    virtual ~IAutomataLua() = default;
++    virtual void Release() = 0;                              // 0x10
++    virtual bool Open(std::uint32_t libraries) = 0;          // 0x18
++    virtual bool Close() = 0;                                // 0x20
++    virtual int GetTop() = 0;                                // 0x30
++    virtual void PushValue(int index) = 0;                   // 0x40
++    virtual void Pop(int count) = 0;                         // 0x58
++    virtual bool IsNumber(int index) = 0;                    // 0x70
++    virtual bool IsString(int index) = 0;                    // 0x78
++    virtual bool IsBoolean(int index) = 0;                   // 0x90
++    virtual std::uint32_t ToUint32(int index) = 0;           // 0xa8
++    virtual std::int32_t ToSint32(int index) = 0;            // 0xb0
++    virtual double ToNumber(int index) = 0;                  // 0xb8
++    virtual const char* ToString(int index) = 0;             // 0xc0
++    virtual void* ToUserTag(int index) = 0;                  // 0xe0
++    virtual bool ToBoolean(int index) = 0;                   // 0xe8
++    virtual void PushNil() = 0;                              // 0xf0
++    virtual void PushNumber(double value) = 0;               // 0xf8
++    virtual void PushString(const char* text) = 0;           // 0x108
++    virtual void GetGlobal(const char* name) = 0;            // 0x128 (pushes the global)
++    virtual void GetTable(int tableIndex) = 0;               // 0x130 (pops the key, pushes table[key])
++    virtual void RawGetI(int tableIndex, int n) = 0;         // 0x140
++    virtual void GetRef(int ref) = 0;                        // 0x158
++    virtual void SetGlobal(const char* name) = 0;            // 0x168 (pops the value)
++    virtual void RawSet(int tableIndex) = 0;                 // 0x178 (pops value and key)
++    virtual int Ref(bool lock) = 0;                          // 0x190 (pops the value)
++    virtual void Unref(int ref) = 0;                         // 0x1f0
++    virtual int Next(int tableIndex) = 0;                    // 0x1f8 (pops key, pushes next key and value; 0 at the end)
++    virtual int GetN(int tableIndex) = 0;                    // 0x200
++    // 0x220: registers one of the two script extensions that SCLuaHelp provides.
++    enum class Extension { Print, DofileFromResource };
++    virtual void Register(Extension which, const char* name) = 0;
++    virtual void PushUserData(void* pointer, int tag) = 0;   // 0x228
++    virtual bool IsTable(int index) = 0;                     // 0x240
++    virtual bool IsNil(int index) = 0;                       // 0x250
++};
++
++// SCLuaHelp::* and SCLuaTableRef (0x1001e61e0..0x1001e78b2), operating on an IAutomataLua.
++namespace automata_lua {
++// ReadTableField overloads: push table[name], read the value, pop. Return whether the field was present (bool overload:
++// whether it was a boolean).
++bool ReadTableField(IAutomataLua& lua, const char* name, float& out, int tableIndex);          // 0x1001e636c
++bool ReadTableField(IAutomataLua& lua, const char* name, std::uint32_t& out, int tableIndex);  // 0x1001e63ee
++bool ReadTableField(IAutomataLua& lua, const char* name, std::int32_t& out, int tableIndex);   // 0x1001e646c
++bool ReadTableField(IAutomataLua& lua, const char* name, bool& out, int tableIndex);           // 0x1001e64ea
++bool ReadTableField(IAutomataLua& lua, const char* name, std::string& out, int tableIndex);    // 0x1001e61e0
++// Pushes table[name] and returns true unless it is nil (nil is popped again).
++bool GetField(IAutomataLua& lua, const char* name, int tableIndex);                            // 0x1001e73c8
++// Array readers: a non-table is read as a one element array; an empty table gives false.
++bool ReadTableAsArray(IAutomataLua& lua, std::vector<std::string>& out, int index);            // 0x1001e6568
++bool ReadTableAsArray(IAutomataLua& lua, std::vector<float>& out, int index);                  // 0x1001e68e8
++bool ReadTableAsArray(IAutomataLua& lua, std::vector<std::uint32_t>& out, int index);          // 0x1001e6a06
++bool ReadTableAsArray(IAutomataLua& lua, std::vector<std::int32_t>& out, int index);           // 0x1001e6b20
++bool ReadTableAsList(IAutomataLua& lua, std::list<std::string>& out, int index);               // 0x1001e6c48
++// {lo, hi} from a number (both) or a two element array (a single element repeats).
++bool ReadTableRange(IAutomataLua& lua, const char* name, float out[2], int tableIndex);        // 0x1001e745e
++bool ReadTableRange(IAutomataLua& lua, const char* name, std::int32_t out[2], int tableIndex); // 0x1001e754c
++
++class TableRef {                                                                                // SCLuaTableRef
++public:
++    TableRef(IAutomataLua& lua, int index);          // 0x1001e763a
++    TableRef(IAutomataLua& lua, const char* global);  // 0x1001e76bc
++    bool begin();                                    // 0x1001e786e: positions on the first entry; false when empty
++    bool next();                                     // 0x1001e78b2
++    bool Done() const { return done_; }
++    int Index() const { return index_; }
++private:
++    IAutomataLua& lua_;
++    std::string name_;
++    int index_ = -1;
++    bool done_ = true;
++};
++}  // namespace automata_lua
++
++// ---------------------------------------------------------------------------------------------------------------------
++// Parameter blocks (tAutomataDriveParams is a 0xa0 byte union of float arrays; the airplane / helicopter / watercraft
++// importers fill it by field offset, the tables below give the Lua names in offset order, index = offset / 4).
++struct AutomataDriveParams {
++    float v[40] = {};
++};
++struct AutomataDriveFieldName { const char* name; int index; };
++extern const AutomataDriveFieldName kAirplaneDriveFields[18];
++extern const AutomataDriveFieldName kHelicopterDriveFields[13];
++extern const AutomataDriveFieldName kWatercraftDriveFields[40];
++
++// tAutomataPlayerDriveParams (0x94 bytes): two ints then floats; v[] index = (offset - 8) / 4.
++struct AutomataPlayerDriveParams {
++    std::int32_t minZoom = 0;        // +0 "MinZoom"
++    std::int32_t startingZoom = 0;   // +4 "StartingZoom"
++    float v[35] = {};
++};
++struct AutomataPlayerFieldName { const char* name; int offset; };
++extern const AutomataPlayerFieldName kPlayerDriveFields[33];   // float fields, "OffRoadTurnAngleRange" (+0x24/+0x28) is separate
++
++struct KeyEffect {              // tKeyEffect (0x80 bytes)
++    std::string fx, bone, controller;
++    std::uint32_t flags = 0;     // 1 hold, 2 one_shot, 4 hard_transition, 8 override, 0x10 has fx, 0x20 has controller
++};
++
++struct BehaviorTemplate {       // tBehaviorTemplate (0x98 bytes)
++    std::uint32_t state = 0;                 // +0
++    float radius = 0.0f;                     // +4
++    float percentage = 1.0f;                 // +8
++    std::uint32_t priority = 1;              // +0xc
++    std::vector<std::string> anims;          // +0x10
++    std::vector<std::uint32_t> sfx;          // +0x28
++    float timeout = 0.0f;                    // +0x40
++    bool finalState = false;                 // +0x44
++    float kphMultiply[2] = {1.0f, 1.0f};     // +0x48
++    std::int32_t kph[2] = {-1, -1};          // +0x50
++    float acceleration = 0.5f;               // +0x58
++    bool ignorePaths = false, ignoreRoads = false, ignoreTerrain = false, ignoreAttractors = false;   // +0x5c
++    bool avoidLots = false, avoidRoads = false;   // +0x60
++    float pathOffset = 0.0f;                 // +0x64
++    float walkDelay[2] = {10.0f, 15.0f};     // +0x68 random_walk.delay
++    float walkTurn[2] = {0.1f, 0.2f};        // +0x70 random_walk.turn
++    float walkStrength[2] = {1.0f, 1.0f};    // +0x78
++    float walkIdleDelay[2] = {0.0f, 0.0f};   // +0x80
++    float walkIdleTime[2] = {5.0f, 10.0f};   // +0x88
++    float deceleration = 0.5f;               // +0x90
++};
++
++// tControllerTemplate: the common part is shared by attractors and generators; the fields after +0x128 differ per type and
++// are kept side by side here.
++struct ControllerTemplate {
++    std::string name;                        // +0x10 (cRZString at +8)
++    std::uint32_t type = 0;                  // +0x30
++    float radius = 0.0f;                     // +0x38
++    cSC4ResponseCurve timeOfDay;             // +0x40
++    std::uint32_t calendar = 0xffffffff;     // +0x60 bit mask of months
++    std::vector<BehaviorTemplate> behaviors; // +0x68
++    std::list<std::uint32_t> effectTriggers; // +0x80
++    std::list<std::uint32_t> deactivateTriggers;   // +0x98
++    float lifetime = 0.0f, delay = 0.0f;     // +0xb0, +0xb4
++    std::uint32_t maxCount = 0;              // +0xb8
++    std::uint32_t lotFlags = 0;              // +0xbc
++    float exclusiveRadius = 0.0f;            // +0xc0
++    std::vector<std::uint32_t> sfx;          // +0xc8
++    std::vector<std::uint32_t> ignoreStates; // +0xe0
++    std::vector<std::uint32_t> groupIds;     // +0xf8 filled by LinkControllerTemplates
++    std::list<std::string> groupNames;       // +0x110 "automata"
++    // attractor only
++    cSC4ResponseCurve strengthCurve;         // +0x128
++    // generator only
++    float countValue = 0.0f;                 // +0x128
++    std::uint32_t countMode = 0;             // +0x12c 0 count, 1 occupancy_pct, 2 population_pct
++    std::int32_t groupCount[2] = {1, 1};     // +0x130
++    float rate = 0.0f;                       // +0x138
++    std::uint32_t rateScale = 0;             // +0x13c
++    std::uint32_t event = 0;                 // +0x140
++    float randomChance = 1.0f;               // +0x144
++    float radiusAlt = 0.0f;                  // +0x148 second "radius" element
++    std::uint32_t lifetimeCount = 0;         // +0x14c
++    std::uint8_t priority = 0;               // +0x150
++};
++
++// cSC4OccupantGroupTemplate (0x120 bytes), reference counted (AddRef slot 1, Release slot 2; created with count 0).
++struct OccupantGroupTemplate {
++    OccupantGroupTemplate* parentHandle = nullptr;   // +0x18 "__group_handle" resolved from the "_parent" reference
++    std::uint32_t groupId = 0;                       // +0x20
++    std::uint32_t classId = 0;                       // +0x24 "class_id"
++    float percentage = 1.0f;                         // +0x40
++    std::list<ControllerTemplate*> controllers;      // +0x48
++    std::unordered_map<std::string, std::uint32_t> anims;   // +0x60
++    std::list<cGZPersistResourceKey> models;         // +0x88
++    std::int16_t selfRef = -2;                       // +0xa0 Lua reference to the group's table
++    std::int16_t parentRef = -2;                     // +0xa2 Lua reference to "_parent"
++    std::list<std::int32_t> trailerGroupIds;         // +0xa8 resolved ids of "trailers"
++    std::list<std::string> trailerNames;             // +0xc0 "trailers" until LinkOccupantGroups
++    float kph[2] = {0.0f, 0.0f};                     // +0xd8
++    AutomataDriveParams* driveParams = nullptr;      // +0xe0 owned
++    AutomataPlayerDriveParams* playerDriveParams = nullptr;  // +0xe8 owned
++    std::uint32_t csiImage = 0;                      // +0xf0
++    std::uint32_t sourceBuilding = 0;                // +0xf4
++    std::unordered_map<std::uint8_t, KeyEffect> keyEffects;  // +0xf8
++
++    OccupantGroupTemplate() = default;
++    OccupantGroupTemplate(const OccupantGroupTemplate&) = delete;
++    OccupantGroupTemplate& operator=(const OccupantGroupTemplate&) = delete;
++    ~OccupantGroupTemplate();
++    std::uint32_t AddRef() { return ++refCount_; }
++    std::uint32_t Release();       // deletes the template when the last reference goes
++    std::uint32_t RefCount() const { return refCount_; }
++private:
++    std::uint32_t refCount_ = 0;
++};
++
++// ---------------------------------------------------------------------------------------------------------------------
++// The city's controller manager (SL::spCity vslot 0x178 result).
++class IAutomataControllerManager {
++public:
++    virtual ~IAutomataControllerManager() = default;
++    // vslot 0x28: creates a controller from the named template, attached to `attachTo` (may be null) and placed at `position` (may be null).
++    virtual cIGZUnknown* CreateController(cIGZUnknown* attachTo, const std::string& templateName, const float* position) = 0;
++    virtual void AttachControllerGroup(const std::string& name, cIGZUnknown* controller, int flags) = 0;   // 0x48
++    virtual void DetachController(cIGZUnknown* controller, const std::string& name) = 0;                   // 0x38
++    virtual void DetachControllerGroup(const std::string& name) = 0;                                       // 0x58
++};
++
++// Services replacing SL::sp*, GZCOM and RZGetFramework.
++class IAutomataHost {
++public:
++    virtual ~IAutomataHost() = default;
++    virtual IAutomataLua* CreateLua() = 0;                   // GZCOM class 0xea10c4a2; the caller owns one reference
++    // SCLuaHelp::LoadPackageScripts(lua, group, 0): runs the package's _config.lua; 0 on success, else the Lua error code.
++    virtual int LoadPackageScripts(IAutomataLua& lua, std::uint32_t group, int flags) = 0;
++    virtual sc4::cISC4GameDataRegistry* GameDataRegistry() = 0;   // system service 0xebe0e860 / 0xe898ed03; may be null
++    virtual void RegisterAdvanceTimeTarget(std::uint32_t priority) = 0;     // SL::ATM() vslot 0x28 with the message-target view (+8)
++    virtual void UnregisterAdvanceTimeTarget(std::uint32_t priority) = 0;   // SL::ATM() vslot 0x30
++    virtual IAutomataControllerManager* ControllerManager() = 0;            // SL::spCity vslot 0x178; may be null
++    // cSC4AutomataManager::StaticCreateAutomaton(type, position[3], flags, key, nullptr, 0), followed by the started-notification
++    // (vslot 0x220) on a non-null result.
++    virtual cIGZUnknown* CreateAutomaton(std::uint32_t type, const float position[3], std::uint32_t flags,
++                                         const cGZPersistResourceKey& key) = 0;
++    // The source-building count of building `id` from the vehicle (0), pedestrian (1), aircraft (2) and watercraft (3) manager.
++    virtual std::uint32_t SourceBuildingCount(int manager, std::uint32_t id) = 0;
++    // cSC4AutomataController::CreateTemplateInstance(name, type): null for an unknown type.
++    virtual ControllerTemplate* CreateControllerTemplateInstance(const std::string& name, std::uint32_t type);
++    // The drive-command key table resource {type 0xa2e3d533, group 0x6a231eaa, instance 0x0c0eaad0}: 13 rows of up to 8 key codes.
++    virtual bool OpenDriveCommandKeyTable() = 0;
++    virtual void ReadDriveCommandKeyRow(int row, std::uint32_t keys[8], std::uint32_t& count) = 0;   // count: capacity in, used out
++    virtual void CloseDriveCommandKeyTable() = 0;
++    virtual void Trace(const std::string& message) { (void)message; }   // diagnostics that the original formats into a throwaway string
++};
++
++class cSC4AutomataScriptSystem final : public cIGZUnknown {
++public:
++    explicit cSC4AutomataScriptSystem(IAutomataHost& host);                  // 0x1001d5a90 (+ alias 0x1001d5bcc)
++    ~cSC4AutomataScriptSystem();                                             // 0x1001d5bd6
++    cSC4AutomataScriptSystem(const cSC4AutomataScriptSystem&) = delete;
++    cSC4AutomataScriptSystem& operator=(const cSC4AutomataScriptSystem&) = delete;
++
++    // cIGZUnknown. The original has four interface views (+0 serializable, +8 message target, +0x10, +0x18 unknown) that
++    // answer iid 0x8a1b6647 / 0x452294aa / 0xe98b2f57 / 0xe4fda3d4 and 1; they all resolve to this object here.
++    bool QueryInterface(std::uint32_t iid, void** out) override;             // 0x1001ddd30 (+ thunks 0x1001ddd86/94/a2)
++    std::uint32_t AddRef() override;                                         // 0x1001dddb0 (+ thunks 0x1001dddbe/cc/da)
++    std::uint32_t Release() override;                                        // 0x1001ddde8 (+ thunks 0x1001dde46/66/86); FinalRelease 0x1001dde04
++    void FinalRelease();
++
++    std::uint32_t GetGZCLSID() const { return kGZCLSID_cSC4AutomataScriptSystem; }   // 0x1001de304 / 0x1001de310
++
++    bool Init();                                                             // 0x1001d5d0a
++    bool Shutdown();                                                         // 0x1001d6f5a
++    bool Write(cIGZOStream& stream) const;                                   // 0x1001d717a (+ thunk 0x1001d71a6)
++    bool Read(cIGZIStream& stream);                                          // 0x1001d71d2 (+ thunk 0x1001d7214)
++    bool DoMessage(cIGZMessage2& message);                                   // 0x1001d7256 (+ thunk 0x1001d7268)
++    bool DoMessage(std::uint32_t messageType) const;                         // cGZMessage& overload 0x1001d7280 (+ thunk 0x1001d7290)
++
++    // lookups
++    ControllerTemplate* GetControllerTemplate(const std::string& name) const;   // 0x1001d771a
++    OccupantGroupTemplate* GetOccupantGroup(const std::string& name) const;     // 0x1001d773e
++    OccupantGroupTemplate* GetOccupantGroup(std::uint32_t groupId) const;       // 0x1001d775e
++    OccupantGroupTemplate* GetAutomataGroup(const std::string& name) const;     // 0x1001d72a0
++    OccupantGroupTemplate* GetAutomataGroup(std::uint32_t groupId) const;       // 0x1001d72c0 (forwards to GetOccupantGroup(id))
++    std::uint32_t GetDriveCommand(std::uint32_t keyCode) const;                 // 0x1001ddcfe
++    const std::unordered_map<std::string, OccupantGroupTemplate*>& GetAutomataGroupMap() const { return automataGroups_; }          // 0x1001de2b8
++    const std::unordered_map<std::string, OccupantGroupTemplate*>& GetOccupantGroupNameMap() const { return groupsByName_; }       // 0x1001de2c2
++    const std::unordered_map<std::uint32_t, OccupantGroupTemplate*>& GetOccupantGroupIDMap() const { return groupsById_; }         // 0x1001de2cc
++    const std::list<OccupantGroupTemplate*>& GetSpecialFilterOccupantGroups() const { return specialGroups_; }                    // 0x1001de2da
++    const std::unordered_map<std::string, ControllerTemplate*>& GetControllerTemplateMap() const { return controllerTemplates_; } // 0x1001de2e8
++    const std::list<std::uint32_t>& GetTrackBuildingGroups() const { return trackBuildingGroups_; }                              // 0x1001de2f6
++
++    // creation
++    ControllerTemplate* CreateControllerTemplate(const std::string& name, std::uint32_t type);                 // 0x1001d72ce
++    OccupantGroupTemplate* CreateOccupantGroup(const std::string& name, std::uint32_t groupId, bool automata); // 0x1001d7798
++    void CreateDefaultOccupantGroups();                                      // 0x1001d60d4
++    void ClearTemplates();                                                   // 0x1001d7086
++    void ClearOccupantGroups();                                              // 0x1001d70c4
++
++    // script loading
++    bool ExecuteScripts();                                                   // 0x1001d61e6
++    bool InitScripts();                                                      // 0x1001d8210
++    bool ImportAttractorTemplates();                                         // 0x1001d8364
++    bool ImportGeneratorTemplates();                                         // 0x1001d88be
++    bool ImportAutomataGroups();                                             // 0x1001d8f52
++    bool ImportOccupantGroups();                                             // 0x1001d99c4
++    bool LinkControllerTemplates();                                          // 0x1001d9b9e
++    bool LinkOccupantGroups();                                               // 0x1001d9c74
++    bool ImportDriveCommandKeyMap();                                         // 0x1001d9f84
++    bool ImportTrackBuildingGroups();                                        // 0x1001da37c
++    OccupantGroupTemplate* ImportSingleOccupantGroup(const std::string& name, int tableIndex);   // 0x1001da596
++    bool ImportAirplaneParams(int tableIndex, AutomataDriveParams* out);     // 0x1001daec4
++    bool ImportHelicopterParams(int tableIndex, AutomataDriveParams* out);   // 0x1001db158
++    bool ImportWatercraftParams(int tableIndex, AutomataDriveParams* out);   // 0x1001db34c
++    bool ImportPlayerDriveParams(int tableIndex, AutomataPlayerDriveParams* out);   // 0x1001db8b8
++    bool ImportKeyEffectsTable(int tableIndex, OccupantGroupTemplate* group);        // 0x1001dbe26
++    bool ReadGUIDTable(int tableIndex, std::list<cGZPersistResourceKey>& out);       // 0x1001dc52e
++    bool ImportAutomataGroupNameList(int tableIndex, std::list<std::string>& out);   // 0x1001dc6ae
++    bool ImportTimeOfDayCurve(int tableIndex, ControllerTemplate& t);        // 0x1001dc704
++    bool ImportCalendarField(int tableIndex, ControllerTemplate& t);         // 0x1001dc902
++    bool ImportBehaviorTable(int tableIndex, ControllerTemplate& t);         // 0x1001dc9ce
++    bool ImportEffectTriggerList(int tableIndex, ControllerTemplate& t);     // 0x1001dd250
++    bool ImportControllerLifetime(int tableIndex, ControllerTemplate& t);    // 0x1001dd504
++    bool ImportLotFlags(int tableIndex, ControllerTemplate& t);              // 0x1001dd56c
++    bool ImportSFXList(int tableIndex, ControllerTemplate& t);               // 0x1001dd7be
++    bool ImportIgnoreStateList(int tableIndex, ControllerTemplate& t);       // 0x1001dd8ca
++
++    // 0x1001ddc44: a string variant (type 0x800e) is parsed as hex, anything else read as uint32 (0 on failure).
++    static std::uint32_t GetHexFromVariant(cIGZVariant& variant);
++
++    // game-data registry commands (static functions with the cISC4GameDataRegistry command signature; `context` is the system)
++    static bool sCreateAutomaton(void* context, cIGZCommandParameterSet* in, cIGZCommandParameterSet* out, sc4::cISC4GameDataRegistry* registry);          // 0x1001d6542
++    static bool sCreateController(void* context, cIGZCommandParameterSet* in, cIGZCommandParameterSet* out, sc4::cISC4GameDataRegistry* registry);        // 0x1001d6752
++    static bool sAttachController(void* context, cIGZCommandParameterSet* in, cIGZCommandParameterSet* out, sc4::cISC4GameDataRegistry* registry);        // 0x1001d68ec
++    static bool sAttachControllerGroup(void* context, cIGZCommandParameterSet* in, cIGZCommandParameterSet* out, sc4::cISC4GameDataRegistry* registry);   // 0x1001d6a7a
++    static bool sDetachController(void* context, cIGZCommandParameterSet* in, cIGZCommandParameterSet* out, sc4::cISC4GameDataRegistry* registry);        // 0x1001d6bb6
++    static bool sDetachControllerGroup(void* context, cIGZCommandParameterSet* in, cIGZCommandParameterSet* out, sc4::cISC4GameDataRegistry* registry);   // 0x1001d6cf0
++    static bool sGetSourceBuildingCount(void* context, cIGZCommandParameterSet* in, cIGZCommandParameterSet* out, sc4::cISC4GameDataRegistry* registry);   // 0x1001d6e2a
++
++    bool IsInitialized() const { return initialized_; }
++    IAutomataLua* Lua() const { return lua_; }
++
++private:
++    bool CommandGate(void* context, sc4::cISC4GameDataRegistry* registry) const;
++
++    IAutomataHost& host_;
++    bool initialized_ = false;           // +0x20
++    std::uint32_t refCount_ = 0;         // +0x24 (Release on a count of 0 or 1 destroys the object)
++    IAutomataLua* lua_ = nullptr;        // +0x28
++    bool scriptsRunning_ = false;        // +0x30
++    std::unordered_map<std::string, OccupantGroupTemplate*> groupsByName_;      // +0x38
++    std::unordered_map<std::string, OccupantGroupTemplate*> automataGroups_;    // +0x60
++    std::unordered_map<std::uint32_t, OccupantGroupTemplate*> groupsById_;      // +0x88
++    std::list<OccupantGroupTemplate*> specialGroups_;                           // +0xb0
++    std::unordered_map<std::string, ControllerTemplate*> controllerTemplates_;  // +0xc8
++    std::list<std::uint32_t> trackBuildingGroups_;                              // +0xf0
++    std::unordered_map<std::uint32_t, std::uint32_t> driveCommands_;            // +0x108
++};
++
++// The std::sort the original runs on the behaviour table (libc++ __sort with the comparison below).
++bool BehaviorLess(const BehaviorTemplate& a, const BehaviorTemplate& b);
++void SortBehaviorTemplates(std::vector<BehaviorTemplate>& v);
++
++}  // namespace sc4

@@ -75,6 +75,40 @@ public:
     virtual std::string BuildingName(std::uint32_t buildingType) = 0;
 };
 
+class cSC4BudgetSimulator;
+
+// Framework services used by Init / Shutdown / DoMessage / ShowBudgetWindow (new in the second port pass; the
+// original reaches them through SL::spSimulator, spMS2, spCity, spLandValueSim, spOrdinanceSim, spCCM, spSC4,
+// spDisasterLayer and the game data registry). Cheat registration is behind this seam so the macOS build can no-op it.
+class IBudgetSimServices {
+public:
+    virtual ~IBudgetSimServices() = default;
+    virtual void RegisterSimulatorNotifications(void* owner) = 0;     // spSimulator vslot 0x98 with types 0, 6 ("cSC4BudgetSimulator") and 4
+    virtual void UnregisterSimulator(void* owner) = 0;                // city vslot 0x190 object, vslot 0xa8
+    virtual void SubscribeMessage(std::uint32_t message) = 0;         // spMS2 vslot 0x28
+    virtual void UnsubscribeMessage(std::uint32_t message) = 0;       // spMS2 vslot 0x30
+    virtual void AcquireServices() = 0;                               // AddRef city, land value sim, ordinance sim, MS2
+    virtual void ReleaseServices() = 0;
+    virtual void RegisterCheatCodes() = 0;                            // 0xcbf31943 and 0x4ab87766; 0x493f4fe6 only when cheats are allowed
+    virtual void UnregisterCheatCodes() = 0;
+    virtual void RegisterGameDataNodes(cSC4BudgetSimulator* sim) = 0; // "budget" node, "total_funds" value, "deposit_funds" command
+    virtual void UnregisterGameDataNodes(cSC4BudgetSimulator* sim) = 0;
+    virtual void ResetHistory(std::uint32_t id, std::uint32_t days) = 0;   // history warehouse vslot 0x68
+    virtual bool CityCheatsEnabled() = 0;                             // city vslot 0xb0
+    virtual double RandomDouble() = 0;                                // sRandom.RandomDoubleUniform
+    virtual void CityCellSize(float& x, float& z) = 0;                // city vslots 0x2c8 / 0x2d0
+    virtual bool SpawnDisasterAt(int x, int z) = 0;                   // disaster layer object 0x42963812 vslot 0x38
+    virtual bool HasDisasterLayer() = 0;
+    virtual void ShowBudgetDialog(bool expense) = 0;                  // new cSC4BudgetUIExpenseWinProc (0x40) / IncomeWinProc (0x78), vslots 0x8, 0x10
+};
+
+// What DoMessage reads from a cIGZMessage2 (vslots 0x20 type, 0x48 data1, 0x78 -> 0x38 text).
+struct BudgetMessage {
+    std::int32_t type = 0;
+    std::int64_t data1 = 0;
+    std::string text;
+};
+
 class cSC4BudgetSimulator : public cIGZSerializable, public IBudgetHost {
 public:
     struct Bond {
@@ -142,6 +176,14 @@ public:
     cSC4ResponseCurve& LandValueCurve() { return landValueCurve_; }
     void ApplyStartingFunds();                           // message 0x26d31ec4: funds and tax rates for the difficulty
     void Shutdown();
+    bool Init();                                         // 0x10021e330
+    bool DoMessage(const BudgetMessage& message);        // 0x1002201fc
+    void ShowBudgetWindow();                             // 0x100222fa4
+    static void SetServices(IBudgetSimServices* services);
+    // game data registry callbacks (0x10021f010 / 0x10021f186); `sim` is the owner the registry resolves
+    static void sExchangeFunds(cSC4BudgetSimulator* sim, std::int64_t& value, bool write);
+    static void sDepositFunds(cSC4BudgetSimulator* sim, const std::int64_t* amount);   // null parameter = no-op
+    void SetLegacyTaxFlag(bool v) { legacyTaxFlag_ = v; }
 
     // funds
     void SetTotalFunds(std::int64_t value);
@@ -224,6 +266,8 @@ public:
 private:
     std::uint32_t refCount_ = 0;                        // +0x1c
     bool initialised_ = false;                          // +0x18
+    std::int32_t cheatCounter_ = 0;                     // +0x70 (in the original's gap before the department map)
+    bool legacyTaxFlag_ = false;                        // +0x6b0: when set Init resets tax type 8's rate to the default
     bool loaded_ = false;                               // +0x20
     std::int64_t funds_ = 0, monthStartFunds_ = 0;      // +0x48, +0x50
     std::int64_t borrowed_ = 0;                         // +0x58

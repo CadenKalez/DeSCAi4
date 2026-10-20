@@ -1,0 +1,522 @@
+diff --git a/src/sc4/Vehicle.h b/src/sc4/Vehicle.h
+new file mode 100644
+index 0000000..dad2fcc
+--- /dev/null
++++ b/src/sc4/Vehicle.h
+@@ -0,0 +1,516 @@
++// cSC4Vehicle — the road vehicle automaton (cars, buses, trucks...). Recovered from SimCity 4 Deluxe Edition 1.2.1
++// (class id 0x896e714a; constructor 0x1000dacf2, code 0x1000dac10..0x1000e2400 plus the accessors up to 0x1000e26a6).
++//
++// Class hierarchy: cSC4Vehicle < cSC4TrafficAutomaton < cSC4Automaton (neither base is ported yet). Objects have six vtable
++// pointers (+0 cISC4Automaton, +8 cISC4Occupant, +0x10, +0x18, +0x40, +0x68; the extra ones are the secondary interfaces,
++// hence the "non-virtual thunk" destructors/GetGZCLSID at 0x1000e263c..0x1000e26a6, which are not separate functions).
++//
++// What the vehicle adds to the automaton base (offsets of the original object):
++//   +0x398 headlight blink timer (seconds; sign = direction), +0x3a0/+0x3a8 headlight model instances,
++//   +0x3b0 distance travelled along the current path segment list, +0x3b4 current path point (vec3), +0x3c0 previous
++//   orientation (vec3), +0x3d0 path history (deque of {network occupant, path key}), +0x400 four motion-blur model
++//   instances, +0x420 the blur ring index. Both vec3 members start as kUninit3DVector (-1, -2, -3).
++//
++// The automaton base is reached through two seams, replacing the unported classes and the SL::sp* globals:
++//   * IVehicleBase  — the cSC4TrafficAutomaton/cSC4Automaton methods the vehicle calls (directly or by vslot);
++//   * IVehicleHost  — the city services (terrain, lot / occupant managers, traffic network map, effects, sound, renderer).
++// The base *data* the vehicle reads and writes (position, orientation, flags, speed tween, path...) is the plain struct
++// AutomatonData owned by the vehicle, so tests can set it directly. Every virtual that a derived vehicle class overrides or
++// that the original dispatched by vslot is a virtual member here; the ones the vehicle does not implement itself forward to
++// the base seam (comment "vslot 0x.."), matching the vtable of 0x100a70b68.
++//
++// Quirks kept: Read() reads the path history records and throws them away (and Write() writes a constant "uninitialised"
++// vector where the previous orientation would be); GetSpeedModifier() returns 1.0 downhill because the clamp compares the
++// already-scaled slope; FindPathIntersection() really returns a bool (Ghidra shows a string pointer); the player-drive code
++// multiplies by literal 0.0 terms (kept, they only matter for NaN/Inf).
++#pragma once
++#include <cstdint>
++#include <deque>
++#include <vector>
++
++#include "gz/StreamOps.h"
++#include "gz/cGZPersistResourceKey.h"
++#include "gz/cIGZIStream.h"
++#include "gz/cIGZOStream.h"
++
++namespace sc4 {
++
++constexpr std::uint32_t kGZCLSID_cSC4Vehicle = 0x896e714a;
++constexpr std::uint32_t kVehicleOccupantType = 0xc7cc75f1;      // +0x50 of the automaton, set by the constructor
++constexpr std::uint16_t kVehicleStreamVersion = 2;
++constexpr float kUninit3DVectorX = -1.0f, kUninit3DVectorY = -2.0f, kUninit3DVectorZ = -3.0f;   // cSC4Automaton::kUninit3DVector
++
++// automaton flag bits (+0xb8)
++constexpr std::uint32_t kAutoFlagMarkedForRemove = 0x1;        // GetMarkedForRemove
++constexpr std::uint32_t kAutoFlagSelfControlling = 0x2;
++constexpr std::uint32_t kAutoFlagReachedDestination = 0x4;
++constexpr std::uint32_t kAutoFlagDetectCollisions = 0x8;       // set from VehicleManager::sbDefaultCollide
++constexpr std::uint32_t kAutoFlagHasFinalSegment = 0x10;
++constexpr std::uint32_t kAutoFlagNeedsNewPoint = 0x20;         // end of the interpolated path reached
++constexpr std::uint32_t kAutoFlagSpecialRoute = 0x40;
++constexpr std::uint32_t kAutoFlagUnderBridge = 0x1000;
++constexpr std::uint32_t kAutoFlagOffRoad = 0x2000;             // player drive: not on a road
++constexpr std::uint32_t kAutoFlagMotionBlur = 0x80000;
++constexpr std::uint32_t kAutoFlagEndTrip = 0x1000000;
++constexpr std::uint32_t kAutoFlagDamaged = 0x8000000;          // set by UpdateAfterDamage when destroyed
++constexpr std::uint32_t kAutoFlagBumped = 0x10000000;          // set by HandleCollision
++constexpr std::uint32_t kAutoFlagSkipTown = 0x201180a;         // SkipTown sets this mask
++
++// automaton state ids (tAutomataState +8)
++constexpr int kStatePlummet = 0xe;
++constexpr int kStatePlayerDrive = 0x10;
++constexpr int kStateCollide = 0x14;
++constexpr int kStatePullOver = 0x15;
++
++// callback event ids (SendCallbackMessage)
++constexpr int kAutoEventPathEnded = 4, kAutoEventReachedDestination = 5, kAutoEventDispatched = 6;
++constexpr int kAutoEventPlayerDriveOnRoad = 10, kAutoEventDamaged = 0xb;
++
++constexpr std::uint32_t kMessageVehicleCollision = 0x49e64802;
++constexpr std::uint32_t kOccupantInterfaceAutomaton = 0xa9b40f05;   // QueryInterface id of cISC4Automaton on an occupant
++constexpr std::uint32_t kOccupantInterfaceCellOwner = 0xa8c86142;
++constexpr std::uint32_t kVehicleNetworkType = 0x1f4f;
++constexpr std::uint32_t kVehicleBridgeNetworkType = 0x40341004;
++
++// ---- tweened scalar (cSC4Automaton::TweenStruct) -----------------------------------------------------------------
++struct TweenStruct {
++    float start = 0, end = 0, duration = 0, elapsed = 0;
++    // The value now: end when no tween is running, otherwise start + clamp(elapsed / duration, 0, 1) * (end - start).
++    float Current() const;
++    // SetDesired @ 0x1000f1728: restarts the tween from the current value when `target` differs from the old end.
++    void SetDesired(float target, float time);
++};
++
++// ---- seam objects -----------------------------------------------------------------------------------------------
++class IVehicleModelInstance {   // cIS3DModelInstanceAnimated (reference counted through its virtual base)
++public:
++    virtual ~IVehicleModelInstance() = default;
++    virtual void Release() = 0;                                              // virtual-base vslot 0x10
++    virtual void SetTransform(const cS3DTransform& transform) = 0;           // vslot 0x50
++    virtual std::uintptr_t RendererHandle() = 0;                             // vslot 0x98
++    virtual void SetOpacity(bool enable, float opacity) = 0;                 // vslot 0x128 (enable, alpha)
++};
++
++class IVehicleEffect {          // cISC4VisualEffect
++public:
++    virtual ~IVehicleEffect() = default;
++    virtual void AddRef() = 0;                                               // vslot 8
++    virtual void Release() = 0;                                              // vslot 0x10
++    virtual void Stop(int how) = 0;                                          // vslot 0x20
++    virtual void SetTransform(const cS3DTransform& transform) = 0;           // vslot 0x40
++    virtual void Start(int how) = 0;                                         // vslot 0x18
++};
++
++class IVehicleOccupant {        // cISC4Occupant subset
++public:
++    virtual ~IVehicleOccupant() = default;
++    virtual void AddRef() = 0;
++    virtual void Release() = 0;
++    virtual void GetPosition(float xyz[3]) = 0;                              // vslot 0x40
++    virtual void GetBoundingBox(float minXyz[3], float maxXyz[3]) = 0;       // vslot 0x50
++    virtual bool HasType(std::uint32_t type) = 0;                            // vslot 0x48 (used with 0x1f4f / bridge ids)
++};
++
++class IVehicleAutomatonView {   // another automaton as the collision check sees it (cISC4Automaton)
++public:
++    virtual ~IVehicleAutomatonView() = default;
++    virtual void AddRef() = 0;
++    virtual void Release() = 0;
++    virtual bool CheckFlag(std::uint32_t flag) = 0;                          // vslot 0xf8
++    virtual bool ShouldCollideWith(void* thisVehicle) = 0;                   // vslot 0x280 (called on the *colliding* vehicle)
++    virtual void GetOrientation(float xyz[3]) = 0;                           // vslot 0x78
++    virtual float GetActualSpeed() = 0;                                      // vslot 0x130
++    virtual bool HandleCollision(void* collider, const cS3DVector3& at) = 0; // vslot 0x208
++};
++
++class IVehicleNetworkOccupant {   // cISC4NetworkOccupant
++public:
++    virtual ~IVehicleNetworkOccupant() = default;
++    virtual void AddRef() = 0;                                               // vslot 8
++    virtual void Release() = 0;                                              // vslot 0x10
++    virtual bool HasFlag(std::uint32_t flag) = 0;                            // vslot 0x40 (0x80000)
++    virtual bool IsType(std::uint32_t type) = 0;                             // vslot 0x48 (0x1f4f, 0x40341004)
++    virtual bool IsNetworkType(int networkType) = 0;                         // vslot 0xb0 (0..12, 2 = road, 0xc = rail)
++    virtual class IVehiclePathInfo* PathInfo() = 0;                          // vslot 0x188
++    virtual float Height(float x, float z) = 0;                              // vslot 0x1c0
++    virtual void GetCell(int& x, int& z) = 0;                                // vslot 0x1d8
++    virtual bool IsRaisedPiece() = 0;                                        // vslot 0x248
++    virtual bool QueryAutomatonInterface(std::uint32_t iid, void** out) = 0; // vslot 0
++};
++
++class IVehiclePathInfo {          // cISC4PathInfo
++public:
++    virtual ~IVehiclePathInfo() = default;
++    virtual void AddRef() = 0;
++    virtual void Release() = 0;
++    // vslot 0x20: the polyline of path `key`
++    virtual const std::vector<cS3DVector3>* GetPath(std::uint32_t key, int flags) = 0;
++    // vslot 0x28: path for edge/lane at a point
++    virtual const std::vector<cS3DVector3>* FindPath(int kind, std::uint8_t direction, std::uint8_t lane, const cS3DVector3* near,
++                                                     cS3DVector3* out, int flags) = 0;
++    // vslot 0x30: candidate path keys leaving through `direction` (xmm0 = 4.0 limit)
++    virtual void ListPathKeys(float limit, std::vector<std::uint32_t>& out, int kind, const cS3DVector3* near,
++                              std::uint8_t direction, std::uint8_t lane) = 0;
++    // vslot 0x98: snaps `point` onto the path and returns the segment index
++    virtual int SnapToPath(cS3DVector3* point, const std::vector<cS3DVector3>* path) = 0;
++    // vslot 0x138
++    virtual bool FindPathNear(std::uint32_t key, const cS3DVector3* from, const cS3DVector3* to, cS3DVector3* out,
++                              std::uint32_t* outKey, int* outIndex) = 0;
++};
++
++class IVehicleLeader {            // the automaton in front (this+0xf0)
++public:
++    virtual ~IVehicleLeader() = default;
++    virtual void AddRef() = 0;
++    virtual void Release() = 0;
++    virtual void GetPosition(float xyz[3]) = 0;                              // vslot 0x38
++    virtual void GetOrientation(float xyz[3]) = 0;                           // vslot 0x78
++    virtual float GetRadius() = 0;                                           // vslot 0x88
++    virtual float GetCurrentSpeed() = 0;                                     // vslot 0x110
++};
++
++// ---- automaton states ---------------------------------------------------------------------------------------------
++struct AutomataState {                // tAutomataState: +8 id
++    int id = 0;
++    float f40 = 0, f44 = 0;           // +0x40/+0x44 (set by the player-drive enter handler)
++    virtual ~AutomataState() = default;
++};
++
++// tAutomataPlayerDriveParams: the tuning of the vehicle type (from the automata group template, +0xe8).
++struct PlayerDriveParams {
++    float maxForwardSpeed = 0;        // +0x08
++    float maxReverseSpeed = 0;        // +0x0c
++    float accelerate = 0;             // +0x10
++    float brake = 0;                  // +0x14
++    float offRoadFactor = 0;          // +0x18
++    float rollingFriction = 0;        // +0x1c
++    float steerLimitFast = 0;         // +0x20
++    float steerRate = 0;              // +0x24
++    float steerRateFast = 0;          // +0x28
++    float steerRateIdle = 0;          // +0x2c
++    float steerReturn = 0;            // +0x30
++    float steerLimit = 0;             // +0x34
++    float gripBlend = 0;              // +0x38
++    float collisionMass = 1;          // +0x48
++    float damageLimit = 0;            // +0x5c
++};
++struct AutomataGroup {                // the automata group template: parent chain (+0x18) and drive params (+0xe8)
++    const AutomataGroup* parent = nullptr;
++    const PlayerDriveParams* driveParams = nullptr;
++};
++
++// tAutomataStatePlayerDrive
++struct PlayerDriveState : AutomataState {
++    float acceleration = 0;           // +0x38
++    float speed = 0;                  // +0x3c
++    cS3DVector3 heading;              // +0x48
++    cS3DVector3 backPos;              // +0x54
++    cS3DVector3 backDir;              // +0x60
++    float steer = 0;                  // +0x6c
++    std::uint32_t damage = 0;         // +0x70
++    std::uint64_t accident = 0;       // +0x80 (CreateAccident handle)
++    void* controls = nullptr;         // +0x90 (record whose first dword pair is the listener position)
++    IVehicleEffect* effect = nullptr; // +0x98
++    IVehicleNetworkOccupant* lastNetwork = nullptr;   // +0xa0
++    float throttle = 0, brakeInput = 0;               // +0xa8, +0xac (-1 = released)
++    float steerLeftInput = 0, steerRightInput = 0;    // +0xb0, +0xb4
++    float lastSteer = 0;              // +0xb8
++    bool turnLeft = false, turnRight = false;         // +0x112, +0x113
++    bool onRoad = false;              // +0x254
++};
++struct PlummetState : AutomataState { // state 0xe
++    float fall = 0;                   // +0x38 vertical speed
++    float wobbleDir = 0;              // +0x3c
++    float wobbleBase = 0;             // +0x40
++    float wobbleTime = 0;             // +0x44
++    float splashTime = 0;             // +0x48
++    IVehicleEffect* splash = nullptr; // +0x50
++};
++class IVehiclePullOverTarget {        // the object a pulled-over vehicle heads for (state +0x10)
++public:
++    virtual ~IVehiclePullOverTarget() = default;
++    virtual IVehicleOccupant* Occupant() = 0;                                // vslot 0x40
++    virtual bool ContainsPoint(const cS3DVector3& p, int flags) = 0;         // vslot 0xc8
++};
++struct PullOverState : AutomataState { // state 0x15
++    IVehiclePullOverTarget* target = nullptr;   // +0x10
++    float time = 0;                   // +0x38
++    cS3DVector3 direction;            // +0x3c
++    cS3DVector3 side;                 // +0x48
++};
++
++struct PathNode {                     // cSC4TrafficAutomaton::tPathNode (16 bytes)
++    IVehicleNetworkOccupant* network = nullptr;
++    std::uint32_t pathKey = 0;
++};
++
++// ---- the tuning table at 0x100b21880 (loaded from the automata exemplar) ----------------------------------------------
++struct VehicleTuning {
++    std::int32_t minSpeedUnits = 0, maxSpeedUnits = 0;   // +4/+8, in 1/3600 units (GetMaxSpeed = max / 3600)
++    float stopSpeedFactor = 1.0f;                        // +0x138
++    float pathOffsetMin = 0, pathOffsetMax = 0;          // +0x1ac/+0x1b0
++    float slopeDivisor = 1.0f, slopeLimit = 1.0f;        // +0x1b4/+0x1b8
++    float networkSpeedFactor[13] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};   // table at +0x158
++};
++
++// ---- host services ----------------------------------------------------------------------------------------------------
++class IVehicleLotBuilding {
++public:
++    virtual ~IVehicleLotBuilding() = default;
++    virtual IVehicleOccupant* Occupant() = 0;                                // vslot 0x18
++};
++class IVehicleLot {
++public:
++    virtual ~IVehicleLot() = default;
++    virtual void GetBounds(int rect[4]) = 0;                                 // vslot 0x70 (x0, z0, x1, z1)
++    virtual int Purpose() = 0;                                               // vslot 0xf8 (7 = building lot)
++    virtual int ZoneType() = 0;                                              // vslot 0x108
++    virtual IVehicleLotBuilding* Building() = 0;                             // vslot 0x180
++};
++
++class IVehicleHost {
++public:
++    virtual ~IVehicleHost() = default;
++    virtual const VehicleTuning& Tuning() = 0;
++    virtual bool DefaultCollide() = 0;                                       // cSC4VehicleManager::sbDefaultCollide
++    virtual bool DefaultHeadlights() = 0;                                    // cSC4VehicleManager::sbDefaultHeadlights
++    virtual bool LightingNight() = 0;                                        // lighting manager vslot 0x48
++    // city
++    virtual bool PositionInCity(float x, float z) = 0;                       // city vslot 0x310
++    virtual void PositionToCityCell(float x, float z, int& cx, int& cz) = 0; // city vslot 0x2f8
++    virtual void CityCellToPosition(int cx, int cz, float& x, float& z) = 0; // city vslot 0x300
++    virtual int CityCellsX() = 0;                                            // city vslot 0x2e8
++    virtual int CityCellsZ() = 0;                                            // city vslot 0x2f0
++    virtual float TerrainHeight(float x, float z) = 0;                       // terrain vslot 0x60
++    virtual float SurfaceHeight(float x, float z) = 0;                       // terrain vslot 0xf8 (water surface)
++    virtual bool IsWaterCell(int cx, int cz) = 0;                            // terrain vslot 0x110
++    virtual IVehicleLot* LotAt(int cx, int cz) = 0;                          // lot manager vslot 0x28
++    virtual float RoadHeightAt(float x, float z) = 0;                        // traffic network map vslot 0x90
++    virtual IVehicleNetworkOccupant* NetworkAtCell(int cx, int cz) = 0;      // traffic network map vslot 0x70 (first occupant)
++    virtual IVehicleNetworkOccupant* NetworkAfter(IVehicleNetworkOccupant* from) = 0;   // next entry of that cell list (+0x88)
++    virtual IVehicleNetworkOccupant* NeighbourNetwork(IVehicleNetworkOccupant* from, std::uint8_t direction) = 0;   // map vslot 0x78
++    virtual int TrafficDensityAt(float x, float z) = 0;                      // traffic simulator vslot 0xc8 (kind 1)
++    // occupants
++    virtual std::vector<IVehicleOccupant*> OccupantsInCellRect(int cx0, int cz0, int cx1, int cz1, std::uint32_t type) = 0;   // om 0x140
++    virtual IVehicleOccupant* OccupantAtCell(int cx, int cz, std::uint32_t type) = 0;                                          // om 0x100
++    virtual std::vector<IVehicleAutomatonView*> VehiclesInBox(const float min[3], const float max[3], std::uint32_t type,
++                                                              int flags, IVehicleOccupant* skip) = 0;                           // om 0x120
++    virtual bool CellOwnerAt(IVehicleOccupant* occupant, int& cx, int& cz) = 0;   // QueryInterface 0xa8c86142 then vslot 0x40
++    // messages / sound / effects
++    virtual void PostMessage(std::uint32_t message) = 0;                     // SC4PostMessage2
++    virtual void SoundOn(int id) = 0;                                        // AEMS vslot 0x28
++    virtual void SoundOff(int id) = 0;                                       // AEMS vslot 0x30
++    virtual IVehicleEffect* CreateEffect(const char* name) = 0;              // effects manager vslot 0x30 (caller owns one ref)
++    virtual IVehicleModelInstance* LoadAnimatedModel(const cGZPersistResourceKey& key) = 0;   // GetAnimatedModelFromResourceKey
++    virtual void RendererAdd(std::uintptr_t handle) = 0;                     // renderer vslot 0xe0
++    virtual void RendererUpdate(std::uintptr_t handle) = 0;                  // renderer vslot 0xf0
++    virtual void RendererRemove(std::uintptr_t handle) = 0;                  // renderer vslot 0xe8
++    virtual std::uint64_t CreateAccident(void* vehicleOccupant, int kind, int duration) = 0;   // cSC4TrafficAutomataManager::CreateAccident
++    virtual bool DisasterLayerActive() = 0;                                  // disaster layer vslot 0x50
++    virtual float DisasterDamageAt(int cx, int cz) = 0;                      // disaster layer 0xc4c90997 -> 0xa9b5ab9e iface vslot 0x28
++    // collision geometry (cSC4Automaton::AutomataOBB)
++    virtual bool OrientedBoxesCollide(void* self, IVehicleAutomatonView* other, float selfExtents[2], float otherExtents[2]) = 0;
++    virtual cS3DVector3 RandomDirection3() = 0;                              // nS3D::RandomDirection3(cRZRandom(0xffffffff))
++    // automaton random generator (cSC4Automaton::sRandom)
++    virtual std::int32_t RandomSint32Range(std::int32_t lo, std::int32_t hi) = 0;
++    virtual double RandomDoubleRange(double lo, double hi) = 0;
++    virtual double RandomDouble() = 0;
++    virtual std::uint32_t RandomUint32(std::uint32_t bound) = 0;
++    // player drive commands: the listener record at PlayerDriveState::controls is written through here
++    virtual void WriteListener(void* controls, float x, float z, float yawNegated, float y, float vx, float vz) = 0;
++};
++
++class cSC4Vehicle;
++
++// The cSC4TrafficAutomaton / cSC4Automaton code the vehicle chains to or dispatches into.
++class IVehicleBase {
++public:
++    virtual ~IVehicleBase() = default;
++    // direct base-class calls made by the vehicle's overrides
++    virtual bool BaseInit(cSC4Vehicle& v) = 0;                               // cSC4TrafficAutomaton::Init
++    virtual std::uint32_t BaseShutdown(cSC4Vehicle& v) = 0;                  // cSC4TrafficAutomaton::Shutdown
++    virtual std::uint32_t BaseDoAnimationTick(cSC4Vehicle& v, std::uint32_t a, float dt) = 0;
++    virtual bool BaseDoStateTick(cSC4Vehicle& v, float dt) = 0;
++    virtual bool BaseStartTrip(cSC4Vehicle& v, IVehicleNetworkOccupant* occupant, std::uint32_t key, bool flag) = 0;
++    virtual void BaseHandleEnterState(cSC4Vehicle& v, AutomataState* state) = 0;
++    virtual void BaseHandleNetworkOccupantRemoved(cSC4Vehicle& v) = 0;
++    virtual float BaseGetSpeedModifier(cSC4Vehicle& v) = 0;                  // cSC4Automaton::GetSpeedModifier
++    virtual bool BaseWrite(cSC4Vehicle& v, cIGZOStream& s) = 0;
++    virtual bool BaseRead(cSC4Vehicle& v, cIGZIStream& s) = 0;
++    virtual bool BaseDoPlayerDriveTick(cSC4Vehicle& v, float dt) = 0;        // cSC4Automaton::DoPlayerDriveTick
++    virtual bool BaseTranslatePlayerDriveCommands(cSC4Vehicle& v, PlayerDriveState* s, float dt) = 0;
++    virtual void BaseHandlePlayerDriveCommand(cSC4Vehicle& v, int command, bool pressed) = 0;
++    virtual void BaseDoCollideTick(cSC4Vehicle& v, float dt) = 0;
++    virtual void RemoveModelInstance(cSC4Vehicle& v, IVehicleModelInstance* instance) = 0;   // cSC4Automaton::RemoveModelInstance
++    // vslot calls into code the vehicle inherits unchanged
++    virtual void Remove(cSC4Vehicle& v, bool flag) = 0;                      // vslot 0x68
++    virtual void MoveTo(cSC4Vehicle& v, const cS3DVector3* position, const cS3DVector3* direction) = 0;   // vslot 0x80
++    virtual void SendCallbackMessage(cSC4Vehicle& v, int event, std::uint32_t data) = 0;   // vslot 0x368
++    virtual bool PushState(cSC4Vehicle& v, int stateId, int a, int b, int c, int d, int e, float duration) = 0;   // vslot 0x1a0
++    virtual void StartNamedEffects(cSC4Vehicle& v, const char* name, int a, bool b) = 0;   // vslot 0x160
++    virtual void StopNamedEffects(cSC4Vehicle& v, const char* name, int a) = 0;            // vslot 0x168
++    virtual void UpdateCollision(cSC4Vehicle& v) = 0;                        // vslot 0x540
++    virtual void UpdateAllEffects(cSC4Vehicle& v) = 0;                       // vslot 0x438 (UpdateGhostModel)
++    virtual AutomataState* FindState(cSC4Vehicle& v, int id) = 0;            // vslot 0x1c8
++    virtual const AutomataGroup* GetAutomataGroup(cSC4Vehicle& v) = 0;       // vslot 0x218
++    virtual void LoadAuxiliaryModel(cSC4Vehicle& v, int kind, IVehicleModelInstance*& out) = 0;   // vslot 0x350
++    virtual bool InterpolateAlongPath(cSC4Vehicle& v, float distance, const cS3DVector3* from, cS3DVector3* out, int* index,
++                                      const std::vector<cS3DVector3>* path, float* position) = 0;   // vslot 0x460
++    virtual void ChooseLookaheadPath(cSC4Vehicle& v, IVehicleNetworkOccupant* occupant, const cS3DVector3* at,
++                                     std::uint8_t* lane, int flag) = 0;      // vslot 0x590 (GetEdgeFromVector)
++    virtual void ApplyPath(cSC4Vehicle& v, IVehicleNetworkOccupant* occupant, std::uint32_t key,
++                           const std::vector<cS3DVector3>* path, bool flag) = 0;   // vslot 0x458 (SetPath)
++    virtual IVehicleLeader* FindLeader(cSC4Vehicle& v) = 0;                  // vslot 0x4d8
++    virtual void RegisterWithNetwork(cSC4Vehicle& v, IVehicleNetworkOccupant* old) = 0;   // trafficAutomataManager vslots 0xf0/0xf8
++    virtual float GetStopPointOffset(cSC4Vehicle& v) = 0;                    // helper for GetSafeDistance's unresolved tail
++};
++
++// ---- the vehicle --------------------------------------------------------------------------------------------------------
++// Data of the automaton base the vehicle code touches.
++struct AutomatonData {
++    std::uint32_t occupantType = 0;           // +0x50
++    cS3DVector3 position;                     // +0x74
++    cS3DVector3 tailPosition;                 // +0x80
++    cS3DVector3 forward;                      // +0x8c
++    float length = 0;                         // +0xb0
++    float defaultSpeed = 0;                   // +0xb4
++    std::uint32_t flags = 0;                  // +0xb8
++    std::uint32_t dispatchInfoId = 0;         // +0xbc
++    std::uint8_t priority = 0;                // +0xc4
++    float actualSpeed = 0;                    // +0xc8
++    IVehicleLeader* leader = nullptr;         // +0xf0
++    std::vector<AutomataState*> states;       // +0xf8..+0x100 (back = current state)
++    cGZPersistResourceKey modelKey;           // +0x1c8
++    TweenStruct speed;                        // +0x2b8
++    TweenStruct opacity;                      // +0x2c8
++    std::uint8_t skipTownCounter = 0;         // +0x30c
++    IVehicleNetworkOccupant* network = nullptr;   // +0x310
++    IVehiclePathInfo* pathInfo = nullptr;     // +0x318
++    std::uint32_t pathKey = 0;                // +0x320 (low byte = direction, next byte = lane)
++    const std::vector<cS3DVector3>* path = nullptr;   // +0x328
++    int pathIndex = 0;                        // +0x330
++    float pathOffset = 0;                     // +0x334
++    const void* stopTarget = nullptr;         // +0x390
++};
++
++class cSC4Vehicle {
++public:
++    cSC4Vehicle(IVehicleHost* host, IVehicleBase* base);
++    virtual ~cSC4Vehicle();
++    cSC4Vehicle(const cSC4Vehicle&) = delete;
++    cSC4Vehicle& operator=(const cSC4Vehicle&) = delete;
++
++    AutomatonData data;
++    IVehicleHost& host() { return *host_; }
++    IVehicleBase& base() { return *base_; }
++
++    // ---- vehicle members (vtable of 0x100a70b68) ----
++    virtual std::uint32_t GetGZCLSID() const { return kGZCLSID_cSC4Vehicle; }          // 0x1000e2596
++    virtual bool Init();                                                              // vslot 0x18  0x1000daeee
++    virtual std::uint32_t Shutdown();                                                 // vslot 0x20  0x1000daf80
++    virtual std::uint32_t DoAnimationTick(std::uint32_t a, float dt);                 // vslot 0x278 0x1000db152
++    virtual bool DoStateTick(float dt);                                               // vslot 0x3a0 0x1000db260
++    virtual void HandleEnterState(AutomataState* state);                              // vslot 0x3a8 0x1000e1b8c
++    virtual bool DoPathTick(float dt);                                                // vslot 0x440 0x1000db2c8
++    virtual bool StartTrip(IVehicleNetworkOccupant* occupant, std::uint32_t key, bool flag);   // vslot 0x450 0x1000dc3d2
++    virtual void SetPath(IVehicleNetworkOccupant* occupant, std::uint32_t key, const std::vector<cS3DVector3>* path, bool flag);   // 0x458 0x1000dc7a2
++    virtual void HandleNetworkOccupantRemoved();                                      // vslot 0x470 0x1000ddb08
++    virtual float GetSpeedModifier();                                                 // vslot 0x420 0x1000dd852
++    virtual float GetSafeDistance();                                                  // vslot 0x4f0 0x1000dccae
++    virtual void RecalculatePathOffset();                                             // vslot 0x528 0x1000dd7a6
++    virtual bool ShowHeadlights(bool on, bool animate);                               // vslot 0x5b8 0x1000dd3dc
++    virtual bool ShowMotionBlur(bool on);                                             // vslot 0x5c0 0x1000dd55c
++    virtual void UpdateMotionBlur(float dt);                                          // vslot 0x630 0x1000dd5aa
++    virtual void SetPrevOrient(const cS3DVector3& v) { prevOrient_ = v; }             // vslot 0x5d8 0x1000e2600
++    virtual const cS3DVector3& GetPrevOrient() const { return prevOrient_; }          // vslot 0x5d0 (base accessor)
++    virtual void SavePathHistory(std::deque<PathNode>& history, std::uint8_t maxLength);   // vslot 0x5e0 0x1000dc0e4
++    virtual bool FindBackPosition(const cS3DVector3& front, cS3DVector3& back, float distance,
++                                  const std::deque<PathNode>& history);               // vslot 0x5e8 0x1000dbd64
++    virtual const std::deque<PathNode>& GetPathHistory() const { return pathHistory_; }   // vslot 0x5f0 0x1000e2620
++    virtual void SkipTown();                                                          // vslot 0x5f8 0x1000e2400
++    virtual bool DoPlummetTick(float dt);                                             // vslot 0x600 0x1000ddc04
++    virtual bool DoPullOverTick(float dt);                                            // vslot 0x608 0x1000ddf7c
++    virtual bool DoPlayerDriveOffRoadTick(float dt, PlayerDriveState* state, float distance, const PlayerDriveParams* params,
++                                          IVehicleNetworkOccupant* network);          // vslot 0x610 0x1000e061a
++    virtual void RestrictPlayerDrivePosition(const cS3DVector3& from, cS3DVector3& to);   // vslot 0x618 0x1000e16ce
++    virtual bool GetPlayerDriveLotIntersection(const cS3DVector3& from, cS3DVector3& to, cS3DVector2* point,
++                                               cS3DVector2* normal);                  // vslot 0x620 0x1000e0de0
++    virtual int DoCollisionCheck(cS3DVector3& push, float& areaRatio);                // vslot 0x628 0x1000e1bfa
++    virtual bool DoPlayerDriveTick(float dt);                                         // vslot 0x3d0 0x1000de6c0
++    virtual bool DoBumpedTick(float) { return false; }                                // vslot 0x3d8 0x1000e23ee
++    virtual void DoCollideTick(float dt);                                             // vslot 0x3f8 0x1000e23f6
++    virtual bool TranslatePlayerDriveCommands(PlayerDriveState* state, float dt);     // vslot 0x400 0x1000e18b6
++    virtual void HandlePlayerDriveCommand(int command, bool pressed);                 // vslot 0x1e0 0x1000e18a8
++    virtual bool HandleCollision(void* collider, const cS3DVector3* at);              // vslot 0x208 0x1000e229e
++    virtual bool Write(cIGZOStream& stream);                                          // vslot 0x240 0x1000dd022
++    virtual bool Read(cIGZIStream& stream);                                           // vslot 0x248 0x1000dd1b6
++    virtual void* GetCollidingAutomaton(float distance);                              // vslot 0x410 0x1000dd7e6 (to the manager)
++    virtual void RecalculateLeaders();                                                // vslot 0x418 0x1000dd81e (to the manager)
++    // accessors that sit inside the vehicle's span but belong to the automaton bases
++    virtual std::uint32_t GetCallNumber() const { return 0; }                         // vslot 0xb8  0x1000e24f0 (cSC4Automaton)
++    virtual std::uint32_t GetDispatchInfoID() const { return data.dispatchInfoId; }   // vslot 0xd8  0x1000e2500
++    virtual void SetPriority(std::uint8_t p) { data.priority = p; }                   // vslot 0x200 0x1000e2540
++    virtual bool GetMarkedForRemove() const { return CheckAutomataFlag(kAutoFlagMarkedForRemove); }   // 0x2e0 0x1000e25b0
++    virtual float GetPathOffset() const { return data.pathOffset; }                   // vslot 0x488 0x1000e25d0 (cSC4TrafficAutomaton)
++    virtual const void* GetRouteInfo() const { return routeInfo_; }                   // vslot 0x4b8 0x1000e25e0 (this + 0x368)
++    virtual const void* GetLookaheadDeque() const { return lookahead_; }              // vslot 0x518 0x1000e25f0 (this + 0x338)
++    // automaton flags (cSC4Automaton::SetAutomataFlag / CheckAutomataFlag, vslots 0xf0 / 0xf8)
++    virtual void SetAutomataFlag(std::uint32_t flag, bool on) { data.flags = on ? (data.flags | flag) : (data.flags & ~flag); }
++    virtual bool CheckAutomataFlag(std::uint32_t flag) const { return (data.flags & flag) != 0; }
++    // forwarded inherited vslots
++    virtual float GetCurrentSpeed() const { return data.speed.Current(); }            // vslot 0x110
++    virtual float GetDefaultSpeed() const { return data.defaultSpeed; }               // vslot 0x118
++    virtual void SetSpeed(float speed, float time) { data.speed.SetDesired(speed, time); }   // vslot 0x120
++    virtual float GetActualSpeed() const { return data.actualSpeed; }                 // vslot 0x130
++    virtual float GetRadius() const { return data.length; }                           // vslot 0x88
++    virtual void SetOpacity(float opacity, float time);                               // vslot 0x108 (cSC4Automaton::SetOpacity)
++    virtual bool GetDetectCollisions() const { return CheckAutomataFlag(kAutoFlagDetectCollisions); }   // vslot 0x4e8
++    virtual int GetBehavior() const { return data.states.empty() ? 0 : data.states.back()->id; }        // vslot 0x1d8
++    virtual AutomataState* GetState() const { return data.states.empty() ? nullptr : data.states.back(); }   // vslot 0x1c0
++
++    // state exposed for derived classes and tests
++    cS3DVector3 currentPoint;                 // +0x3b4 (starts as kUninit3DVector)
++    float pathPosition = 0;                   // +0x3b0
++    float headlightTimer = 0;                 // +0x398
++    IVehicleModelInstance* headlights[2] = {nullptr, nullptr};   // +0x3a0 / +0x3a8
++    IVehicleModelInstance* blur[4] = {nullptr, nullptr, nullptr, nullptr};   // +0x400
++    std::uint8_t blurIndex = 0;               // +0x420
++    const void* routeInfo_ = nullptr;         // +0x368
++    const void* lookahead_ = nullptr;         // +0x338
++    IVehicleOccupant* self_ = nullptr;        // the occupant interface at +8 (identity for the collision scan and accidents)
++
++    std::deque<PathNode>& MutablePathHistory() { return pathHistory_; }
++    void ClearMotionBlur();                                                           // 0x1000db0ba
++    // PlayerDrive helpers (non-virtual in the original)
++    IVehicleNetworkOccupant* PlayerDriveGetNetwork(PlayerDriveState* state, bool& onNetwork, const cS3DVector3& at,
++                                                   cS3DVector3* adjusted);            // 0x1000dfbe4
++    void ResolveCollision(const cS3DVector3& push, float areaRatio, PlayerDriveState* state, const PlayerDriveParams* params);   // 0x1000dffb6
++    void PlayerDriveUpdateSpeed(PlayerDriveState* state, const PlayerDriveParams* params, bool throttleAllowed, bool onNetwork,
++                                float dt);                                            // 0x1000de4d0
++    const std::vector<cS3DVector3>* ChoosePathFromKeyArray(IVehiclePathInfo* info, const std::vector<std::uint32_t>& keys,
++                                                           cS3DVector3& point, std::uint32_t& chosenKey, int& index);   // 0x1000e0138
++    bool ChooseNewPlayerDriveDestination(const cS3DVector3& heading);                 // 0x1000e0228
++    void UpdateAfterDamage(PlayerDriveState* state, const PlayerDriveParams* params); // 0x1000e03f4
++    static char LineIntersectsSphere(const cS3DVector3& a, const cS3DVector3& b, const cS3DVector3& centre, float radius,
++                                     cS3DVector3& first, cS3DVector3& second);        // 0x1000db946
++    static bool FindPathIntersection(const cS3DVector3& a, const cS3DVector3& b, const cS3DVector3& centre, float radius,
++                                     cS3DVector3& out, float minDot);                 // 0x1000dbad6
++    static bool Check2DIntersection(float x0, float z0, float x1, float z1, const cS3DVector3& centre, float radius,
++                                    cS3DVector3& best, float& bestDistance);          // 0x1000e1592
++
++private:
++    IVehicleHost* host_;
++    IVehicleBase* base_;
++    cS3DVector3 prevOrient_;                  // +0x3c0
++    std::deque<PathNode> pathHistory_;        // +0x3d0
++};
++
++// CanDriveOnCell @ 0x1000e11df
++bool CanDriveOnCell(IVehicleHost& host, int cx, int cz, int cellsX, int cellsZ, float x, float z);
++
++inline bool IsUninitVector(const cS3DVector3& v) {   // all components within 1e-4 of kUninit3DVector
++    auto close = [](float a, float b) { float d = a - b; return (d < 0.0f ? -d : d) < 0.0001f; };
++    return close(v.x, kUninit3DVectorX) && close(v.y, kUninit3DVectorY) && close(v.z, kUninit3DVectorZ);
++}
++
++}  // namespace sc4
