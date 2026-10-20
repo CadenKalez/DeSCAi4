@@ -57,3 +57,19 @@ Paste this as your first message / system prompt:
 - Lesson: Ghidra drops message construction in GZOnKey*/forwarders; check /tmp/sc4.asm (otool -arch x86_64 -tV) for those.
 - Next: other cGZWin* controls (BMP, Knob, Text, Slider, Scrollbar, Spinner, Combo) on top of cGZWin + cIGZDrawContext; then CDirect3DVertexBuffer7/CDirect3D7 (need a GL seam); cSC4RegionalCity.
 - Pick cheap classes with the avg-size ranking (gap between symbol addresses) rather than by name.
+
+## Update (cSC4TrafficSimulator session)
+- Done: cSC4Demolition region sweep/terrain/effects + test (2d7463a); TrafficSimulator subnetwork queries (e79d01e): ClearSubnetworks,
+  GetSubnetworksForLot/InRectangle/InRegion, AreLotsConnected, GetConnectedOccupantCount/DestinationCount, GetOccupantCountForAllSubnetworks.
+  NetworkInfo +0xc is now `subnetwork[4]` (ushort ids); published vector +0xc0, working vector +0xa8 (WorkOnUpdateSubnetworkInfo copies).
+- Run single tests with `zsh scripts/runone.sh <name>` (not bash: it silently runs a stale binary).
+- Next in TrafficSimulator (nothing written yet): neighbour-connection tables. Plan: 4 border vectors of {u16 mask, u16 pool, f32 capacity}
+  (+0xf0 west[z], +0x108 north[x], +0x120 east[z], +0x138 south[x]; selected by x<0 / x>lastX / z<0 / else); pool map<u16, property holder> at
+  +0x150 with default pool +0x168; edge-flag bytes at [x+1][z+1] (+0x80) and 4 counters +0x31c. Functions: AddNeighborConnection 0x1000820ac,
+  RemoveNeighborConnection 0x100082358, RemoveUnusedPools 0x1000828a2, GetNeighborConnection 0x100089830, GetTrafficNeighborConnection 0x10008a090,
+  GetNeighborPoolPropertyHolder 0x1000884e8, CapacityStillAvailable 0x100087c06. Needs a host seam over spNeighborsSim (slots 0x58 connection
+  lookup, 0x70 -> property holder) and tables kValidNeighborConnectionTypesForTransitNetworkType = {0x200,0x170c,0x2,0x40,0x80,0x800}
+  (read at 0x100a16330 with scripts/macho_read.py); kDX/kDZ at 0x100a162c0/d0, kOppositeEdge 0x100a163f0, kDefaultTravelTypeForNetwork 0x100a16400.
+- After that: FloodSubnetwork 0x10008c4e4 / UpdateSubnetworks / UpdateSubnetworkInfo (needs per-cell connection masks at +0x98, 0x2e bytes/cell,
+  tunnel map), then the Work* trip pipeline, ferries, Init/Read/Write. Open items: ModifyTerrainHeight's extra `long long*` parameter,
+  DoDemolishGroupEffect test.
