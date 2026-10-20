@@ -51,9 +51,13 @@ A run with 20 parallel agents wasted a large share of the usage budget. Follow t
   `git merge <working-branch>` first (or create the worktrees from that branch) so they have the scripts and reference code.
 - **Commit early and often (after each function group)**, not once per class: interrupting the lead session stops all
   background agents, and uncommitted work is lost or only rescued as patches (see `wip/`).
-- **Never put the Ghidra token in a command line.** Store it as an environment secret (Authorization: Bearer header for
-  `*.trycloudflare.com`; see `scripts/ghidra_tunnel.sh` / `scripts/ghidra_proxy.py`) and pass only `GHIDRA_URL`. Inline tokens
-  are refused by the permission check.
+- **Tokens may be used in commands, but never stored in the repo.** Pass `GHIDRA_URL` / `GHIDRA_TOKEN` (and any API key)
+  through the environment or as an inline `export` in a command when needed, but never write a token, API key, password or
+  tunnel URL+token pair into any tracked file, commit message, test, script, note or patch (including `wip/` patches and
+  `notes/`); the same goes for PR text and chat summaries. Prefer the environment secret (Authorization: Bearer header for
+  `*.trycloudflare.com`, see `scripts/ghidra_tunnel.sh` / `scripts/ghidra_proxy.py`) so commands carry only `GHIDRA_URL`.
+  If the permission check refuses a command that contains a credential, do not retry or work around it: ask the user. Before
+  every commit run `git diff --cached | grep -iE "token|api[_-]?key|secret|bearer"` and fix anything that is a real value.
 - **The lead merges, agents don't touch shared files**: agents leave `scripts/tests/registry/*.txt` and
   `notes/ledger_pending/*.txt`; the lead runs `python3 scripts/apply_agent_results.py`. Never `git add -A` over agent
   worktrees (`.claude/worktrees/` is gitignored).
