@@ -13,6 +13,7 @@
 #pragma once
 #include <array>
 #include <cstdint>
+#include <map>
 #include <unordered_map>
 #include <vector>
 
@@ -39,7 +40,28 @@ struct NetworkInfo {
     std::uint8_t networkType = 0;   // +6
     std::uint8_t flag7 = 0;         // +7
     float potholePenalty = 0.0f;    // +8: set while the cell has a pothole
-    std::uint32_t reserved0c = 0, reserved10 = 0;
+    std::array<std::uint16_t, 4> subnetwork{};   // +0xc: flood-fill subnetwork id per lane group (0 = unassigned)
+};
+
+// Lot property listing the subnetwork ids the lot touches (32-bit array).
+constexpr std::uint32_t kLotSubnetworksProperty = 0x2a4f9c74;
+
+// One connected piece of road network: occupants reachable on it by occupant type, and the four destination
+// counters (0x28 bytes in the original: a std::map plus four counters at +0x18).
+struct SubnetworkInfo {
+    std::map<std::uint32_t, std::uint32_t> occupantsByType;
+    std::array<std::uint32_t, 4> destinations{};
+};
+
+struct TrafficCellRect { int x0 = 0, z0 = 0, x1 = 0, z1 = 0; };   // inclusive cells (SC4Rect<int>)
+// SC4CellRegion<int>: bounds plus a bit mask indexed [x - x0][z - z0].
+struct TrafficCellRegion {
+    TrafficCellRect bounds;
+    std::vector<std::vector<bool>> mask;
+    bool Contains(int x, int z) const {
+        unsigned dx = unsigned(x - bounds.x0), dz = unsigned(z - bounds.z0);
+        return dx < mask.size() && dz < mask[dx].size() && mask[dx][dz];
+    }
 };
 
 // Value part of an edge-density map entry; only the density word is read by the recovered code.
@@ -191,6 +213,22 @@ public:
     int LastCellX() const { return lastX_; }    // +0x40, highest valid x index
     int LastCellZ() const { return lastZ_; }    // +0x44
 
+    // ---- subnetworks (lots hold property 0x2a4f9c74 with the ids of the subnetworks they touch) ----
+    void ClearSubnetworks();                                        // 0x100082bf4: next id back to 1, every cell id to 0
+    // Output order is first-found; the original's hash-set order is unspecified.
+    void GetSubnetworksForLot(const cISCPropertyHolder* lot, std::vector<std::uint32_t>& out) const;
+    void GetSubnetworksInRectangle(const TrafficCellRect& rect, std::vector<std::uint32_t>& out) const;
+    void GetSubnetworksInRegion(const TrafficCellRegion& region, std::vector<std::uint32_t>& out) const;
+    bool AreLotsConnected(const cISCPropertyHolder* a, const cISCPropertyHolder* b) const;
+    std::uint32_t GetConnectedOccupantCount(const cISCPropertyHolder* lot, std::uint32_t occupantType) const;
+    std::uint32_t GetConnectedDestinationCount(const cISCPropertyHolder* lot, int destinationType) const;
+    void GetOccupantCountForAllSubnetworks(std::uint32_t occupantType, std::vector<std::uint32_t>& out) const;
+    std::vector<SubnetworkInfo>& WorkingSubnetworks() { return workingSubnetworks_; }       // +0xa8
+    // WorkOnUpdateSubnetworkInfo's tail: the finished working vector replaces the published one.
+    void PublishSubnetworks() { subnetworks_ = workingSubnetworks_; }
+    std::vector<SubnetworkInfo>& Subnetworks() { return subnetworks_; }                      // +0xc0
+    std::uint16_t NextSubnetworkId() const { return nextSubnetworkId_; }
+
     // ---- travel strategy percentages (4 wealth classes x 3 strategies, percent bytes) ----
     void GetTravelStrategyPercentages(unsigned wealth, std::vector<SC4Percentage>& out) const;
     const std::array<std::uint8_t, 12>& TravelStrategyBytes() const { return travelStrategies_; }
@@ -229,6 +267,8 @@ private:
     std::unordered_map<std::uint32_t, TrafficEdgeDensity> edgeDensities_;
     std::unordered_map<std::uint32_t, TransitSwitch> transitSwitches_;
     TrafficEdgeDensity emptyEdgeDensity_{};
+    std::uint16_t nextSubnetworkId_ = 1;                 // +0xa4
+    std::vector<SubnetworkInfo> workingSubnetworks_, subnetworks_;   // +0xa8, +0xc0
 
     CellSet healthyRoads_, damagedRoads_, healthyRail_, damagedRail_;
     std::uint32_t roadPotholeTotal_ = 0, railPotholeTotal_ = 0;
