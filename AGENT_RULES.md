@@ -24,7 +24,25 @@ going, and give a progress report whenever you stop.
    or real game data over assumptions about behaviour.
 4. Ledger: `python3 scripts/ledger_class.py --class X --source 'src/..|h' --evidence '...' [--partial 0xADDR]`
    (free functions: `scripts/ledger_add.py`). Run `python3 scripts/check_unique_names.py` (must show 0 duplicates).
-5. Commit. Regenerate `notes/progress.md` with `python3 scripts/progress.py` periodically.
+5. Register what is left, then verify (see "Definition of done" below), then commit.
+
+## Definition of done (every class, no exceptions)
+A class is not done when its functions compile. It is done when the registries say so, and this is checked by a script:
+1. **Honest ledger**: functions that depend on an unrecovered neighbour are `recovered-partial` (`ledger_class.py --partial 0xADDR,...`),
+   never `recovered`. Every ledger row names its test in the evidence column and the test is registered in `scripts/run_tests.sh`.
+2. **Seams**: every place the original reached an unrecovered class goes through an `I*Host` / `I*Services` / `I*Api` interface that
+   mirrors one original call (put the vtable slot or address in a comment). Never read an engine global directly. Run
+   `python3 scripts/list_seams.py`; add a row for new seams to the hook-up table in `docs/SEAMS.md` (original call, real class to hook up).
+3. **To-do rows**: for each follow-up (a neighbour to recover, a seam to hook up, something to verify against the binary, a quirk you
+   kept, a value you had to assume) run `python3 scripts/todo.py add ID Class "task" --blocked-by ID --where path`. Replace every
+   `TODO` / `FIXME` / "not recovered yet" comment in the source with a to-do row id (`// see TERRAIN-VIEW-4`). Close rows you finished with `todo.py done ID`.
+4. **Quirks**: original bugs you kept on purpose are listed in `docs/SEAMS.md` ("Known quirks kept") and asserted in the test, with the address.
+5. **Verify**: `python3 scripts/verify_class_done.py ClassA ClassB` (the classes you touched). It fails if the ledger has duplicates, a test is
+   unregistered, partial functions have no to-do row, a TODO marker has no to-do row, a seam is missing from `docs/SEAMS.md`, or the generated
+   files (`notes/todo.csv`, `docs/SEAMS.md`, `notes/progress.md`, README meter) are stale. `--fix` regenerates the generated files; the rest is manual.
+   Do not commit a finished class until it prints `ok`.
+6. **Report**: end the turn with what is left in the registry for the classes you touched (`todo.py list --class X`) and what is ready next
+   (`todo.py list --ready`).
 
 ## Environment notes
 - arm64 macOS, zsh, Command Line Tools only: no `timeout`; chained `sleep` is blocked (use until-loops).

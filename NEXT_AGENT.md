@@ -25,7 +25,10 @@ Paste this as your first message / system prompt:
    random inputs: scripts/run_bit1_oracle.sh) or real game data.
 4. `python3 scripts/ledger_class.py --class X --source 'src/..|h' --evidence '...' [--partial 0xADDR]`
    (free functions: `scripts/ledger_add.py addr:UniqueName`), then `python3 scripts/check_unique_names.py`.
-5. Commit; periodically `python3 scripts/progress.py`.
+5. Register and verify (do not skip; details in AGENT_RULES.md "Definition of done"):
+   `python3 scripts/list_seams.py` -> add `todo.py add ...` rows for every follow-up and replace TODO comments with row ids ->
+   `python3 scripts/verify_class_done.py <Class...>` must print `ok` (use `--fix` for the generated files only).
+6. Commit.
 
 ## Current state / next targets
 > **STALE WARNING:** the lists below were written before many classes were finished (cGZWinTextEdit, cGZWinListBox,
