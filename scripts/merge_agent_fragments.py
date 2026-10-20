@@ -5,6 +5,9 @@ append-only notes/ledger.csv or scripts/run_tests.sh themselves (those conflict 
   notes/ledger_fragments/<Class>.csv   rows in notes/ledger.csv format (no header): address,symbol,unique_name,source,status,evidence
   scripts/tests/registry/<name>.txt    one line `"name:$T/..."` for scripts/run_tests.sh
 
+  notes/ledger_fragments/<Class>_status_updates.csv   same 6 columns; each row UPDATES the existing ledger row with that
+                                       address (status and evidence replaced; name and source must match, else it is reported)
+
 Rows whose address or unique name already exists are skipped (and reported). Merged fragments move to
 notes/ledger_fragments/applied/. usage: scripts/merge_agent_fragments.py   (never while scripts/run_tests.sh is running)"""
 import csv, pathlib, shutil
@@ -16,6 +19,20 @@ have_addr = {r[0] for r in rows[1:]}
 have_name = {r[2] for r in rows[1:]}
 frag_dir = ROOT / "notes/ledger_fragments"
 added = skipped = 0
+index = {r[0]: i for i, r in enumerate(rows)}
+updated = 0
+for f in sorted(frag_dir.glob("*_status_updates.csv")):
+    for r in csv.reader(f.open()):
+        i = index.get(r[0]) if len(r) == 6 else None
+        if i is None or rows[i][2] != r[2]:
+            print(f"cannot update from {f.name}: {r}")
+            continue
+        rows[i][4], rows[i][5] = r[4], r[5]
+        updated += 1
+    (frag_dir / "applied").mkdir(exist_ok=True)
+    shutil.move(str(f), str(frag_dir / "applied" / f.name))
+with ledger.open("w", newline="") as out:
+    csv.writer(out, lineterminator="\n").writerows(rows)
 for f in sorted(frag_dir.glob("*.csv")):
     new = []
     for r in csv.reader(f.open()):
@@ -28,7 +45,7 @@ for f in sorted(frag_dir.glob("*.csv")):
             continue
         have_addr.add(r[0]); have_name.add(r[2]); new.append(r)
     with ledger.open("a", newline="") as out:
-        csv.writer(out).writerows(new)
+        csv.writer(out, lineterminator="\n").writerows(new)
     added += len(new)
     (frag_dir / "applied").mkdir(exist_ok=True)
     shutil.move(str(f), str(frag_dir / "applied" / f.name))
@@ -48,4 +65,4 @@ for f in sorted(reg_dir.glob("*.txt")) if reg_dir.exists() else []:
     (reg_dir / "applied").mkdir(exist_ok=True)
     shutil.move(str(f), str(reg_dir / "applied" / f.name))
 tests.write_text("\n".join(lines))
-print(f"{added} ledger rows added, {skipped} skipped")
+print(f"{added} ledger rows added, {updated} updated, {skipped} skipped")

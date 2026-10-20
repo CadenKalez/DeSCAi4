@@ -11054,7 +11054,7 @@ address,symbol,unique_name,source,status,evidence
 0x1001691da,cGZWin::GetFocus(),GetFocus,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
 0x1001691ec,cGZWin::SetFocusTo(cIGZWin*),SetFocusTo,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
 0x100169226,cGZWin::child_private_buffers(bool),child_private_buffers,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
-0x100169364,cGZWin::set_private_buffer_transparency(bool),set_private_buffer_transparency,src/gz/Win.cpp|h,partial,"rendering pipeline (private buffers, plot, fade) not recovered; src/gz/Win.cpp has stubs"
+0x100169364,cGZWin::set_private_buffer_transparency(bool),set_private_buffer_transparency,src/gz/Win.cpp|h,recovered,UPDATE of existing partial row (same unique_name): compared with Ghidra; window class manager colour lookup behind IWinGraphics seam; test gz_win_render
 0x1001693ca,"cGZWin::set_fade_state(unsigned char, int)",set_fade_state,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
 0x100169556,cGZWin::CalcAbsoluteArea(),CalcAbsoluteArea,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
 0x100169614,cGZWin::lock_child_list_read() const,lock_child_list_read,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
@@ -11112,11 +11112,11 @@ address,symbol,unique_name,source,status,evidence
 0x10016a9a0,cGZWin::ProcessCursorMessage(cGZMessage&),ProcessCursorMessage,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
 0x10016ab3c,cGZWin::SetFocus(),SetFocus,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
 0x10016ab58,"cGZWin::add_delayedplot_windows(cIGZWin*, unsigned int, void*, void*)",add_delayedplot_windows,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
-0x10016abd0,cGZWin::PlotComposite(),PlotComposite,src/gz/Win.cpp|h,partial,"rendering pipeline (private buffers, plot, fade) not recovered; src/gz/Win.cpp has stubs"
+0x10016abd0,cGZWin::PlotComposite(),PlotComposite,src/gz/Win.cpp|h,recovered,UPDATE of existing partial row (same unique_name): compared with Ghidra incl. draw-context vslot sequence and deferred desktop-child plotting; test gz_win_render
 0x10016b16e,cGZWin::fade_in_progress(),fade_in_progress,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
-0x10016b1d4,cGZWin::fade_advance(),fade_advance,src/gz/Win.cpp|h,partial,"rendering pipeline (private buffers, plot, fade) not recovered; src/gz/Win.cpp has stubs"
-0x10016b426,cGZWin::fill_private_buffer_with_transparent_color(),fill_private_buffer_with_transparent_color,src/gz/Win.cpp|h,partial,"rendering pipeline (private buffers, plot, fade) not recovered; src/gz/Win.cpp has stubs"
-0x10016b49a,cGZWin::PlotPresent(),PlotPresent,src/gz/Win.cpp|h,partial,"rendering pipeline (private buffers, plot, fade) not recovered; src/gz/Win.cpp has stubs"
+0x10016b1d4,cGZWin::fade_advance(),fade_advance,src/gz/Win.cpp|h,recovered,UPDATE of existing partial row (same unique_name): compared with Ghidra; test gz_win_render
+0x10016b426,cGZWin::fill_private_buffer_with_transparent_color(),fill_private_buffer_with_transparent_color,src/gz/Win.cpp|h,recovered,UPDATE of existing partial row (same unique_name): compared with Ghidra; test gz_win_render
+0x10016b49a,cGZWin::PlotPresent(),PlotPresent,src/gz/Win.cpp|h,recovered,UPDATE of existing partial row (same unique_name): compared with Ghidra; cached graphic-system lookup behind IWinGraphics seam; test gz_win_render
 0x10016b86c,cGZWin::Plot(),Plot,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
 0x10016b8b2,cGZWin::SetBufferToDrawTo(),SetBufferToDrawTo,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
 0x10016ba20,cGZWin::SetBufferToDrawToRecursive(),SetBufferToDrawToRecursive,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
@@ -11124,12 +11124,12 @@ address,symbol,unique_name,source,status,evidence
 0x10016bce8,cGZWin::recalc_blt_area(),recalc_blt_area,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
 0x10016bd86,cGZWin::SetAreaToDrawToRecursive(),SetAreaToDrawToRecursive,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
 0x10016bdd8,"cGZWin::IsChildKeyEquivalent(unsigned int, unsigned int)",IsChildKeyEquivalent,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
-0x10016be44,cGZWin::PrivateBuffer(bool),PrivateBuffer,src/gz/Win.cpp|h,partial,"rendering pipeline (private buffers, plot, fade) not recovered; src/gz/Win.cpp has stubs"
-0x10016c216,"cGZWin::create_private_buffer(int, int)",create_private_buffer,src/gz/Win.cpp|h,partial,"rendering pipeline (private buffers, plot, fade) not recovered; src/gz/Win.cpp has stubs"
+0x10016be44,cGZWin::PrivateBuffer(bool),PrivateBuffer,src/gz/Win.cpp|h,recovered,UPDATE of existing partial row (same unique_name): compared with Ghidra; test gz_win_render
+0x10016c216,"cGZWin::create_private_buffer(int, int)",create_private_buffer,src/gz/Win.cpp|h,recovered,UPDATE of existing partial row (same unique_name): compared with Ghidra; framework/draw-system/graphics services behind IWinGraphics seam; test gz_win_render
 0x10016c382,"cGZWin::MakeFillColor(unsigned char, unsigned char, unsigned char)",MakeFillColor,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
 0x10016c3fe,cGZWin::ConvertPackedRGBToNative(unsigned int) const,ConvertPackedRGBToNative,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
 0x10016c482,cGZWin::ConvertNativeToPackedRGB(unsigned int) const,ConvertNativeToPackedRGB,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
-0x10016c502,"cGZWin::is_point_transparent(int, int) const",is_point_transparent,src/gz/Win.cpp|h,partial,"rendering pipeline (private buffers, plot, fade) not recovered; src/gz/Win.cpp has stubs"
+0x10016c502,"cGZWin::is_point_transparent(int, int) const",is_point_transparent,src/gz/Win.cpp|h,recovered,UPDATE of existing partial row (same unique_name): compared with Ghidra; test gz_win_render
 0x10016c582,"cGZWin::EnumChildren(unsigned int, bool (*)(cIGZWin*, unsigned int, void*, void*), void*)",EnumChildren,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
 0x10016c670,"cGZWin::lessfunc_id(cIGZWin*, cIGZWin*, void*)",lessfunc_id,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
 0x10016c6a6,"cGZWin::SortChildren(bool (*)(cIGZWin*, cIGZWin*, void*), void*, bool)",SortChildren,src/gz/Win.cpp|h,recovered,"Win: window tree, geometry, flags, messages, params, filters over cIGZWinMgr; test gz_win"
@@ -19708,3 +19708,8 @@ address,symbol,unique_name,source,status,evidence
 0x1000aca32,cGarbageHeap::Write(cIGZOStream&) const,GarbageHeapWrite,src/sc4/LandfillZone.cpp|h,recovered,compared function by function with the Ghidra decompilation (and disassembly where args were dropped); behaviour checked by fake-host unit test (scripts/tests/sc4_landfillzone_test.cpp)
 0x1000acaa4,cGarbageHeap::Read(cIGZIStream&),GarbageHeapRead,src/sc4/LandfillZone.cpp|h,recovered,compared function by function with the Ghidra decompilation (and disassembly where args were dropped); behaviour checked by fake-host unit test (scripts/tests/sc4_landfillzone_test.cpp)
 0x1000acb56,cGarbageHeap::DecayGarbage(),GarbageHeapDecayGarbage,src/sc4/LandfillZone.cpp|h,recovered,compared function by function with the Ghidra decompilation (and disassembly where args were dropped); behaviour checked by fake-host unit test (scripts/tests/sc4_landfillzone_test.cpp)
+0x10016d3fc,cGZFadeTmpWin::cGZFadeTmpWin(),FadeTmpWinConstruct,src/gz/Win.cpp|h,recovered-partial,"Marks the window with param 0xe6e998fe; original takes the window manager from the global service, port takes it as an argument; test gz_win_render"
+0x10016d4c0,cGZFadeTmpWin::~cGZFadeTmpWin(),FadeTmpWinDestruct,src/gz/Win.cpp|h,recovered,Defaulted: only chains to cGZWin::~cGZWin; test gz_win_render
+0x10016d4ca,cGZFadeTmpWin::~cGZFadeTmpWin() [deleting],FadeTmpWinDeletingDestruct,src/gz/Win.cpp|h,recovered,Defaulted: only chains to cGZWin::~cGZWin; test gz_win_render
+0x10016d470,cGZFadeTmpWin::Plot(),FadeTmpWinPlot,src/gz/Win.cpp|h,recovered,"Compared with Ghidra decompilation (mgr DestroyWindow vslot 0xb8, Invalidate vslot 0x2e0); test gz_win_render"
+0x10016c104,cGZFadeTmpWin::StealBuffer(cIGZWin*),FadeTmpWinStealBuffer,src/gz/Win.cpp|h,recovered,Compared with Ghidra decompilation incl. flag mask 0xffd8ffde|0x230021 and vslots; test gz_win_render
