@@ -1,0 +1,112 @@
+id,class,task,blocked_by,status,where
+LEDGER-(free),(free),finish 186 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-RZ,RZ,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-SL,SL,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+BOOT-1,boot,"Recover the city component classes LoadCity needs (see memory 'Boot path plan'), then wire the app spine to open a city and draw it via cSTETerrainView3D",TERRAIN-VIEW-3,open,scripts/boot_probe*
+LEDGER-cFontCOMDirector,cFontCOMDirector,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGXCOMDirector,cGXCOMDirector,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZCanvasW32,cGZCanvasW32,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZCheatCodeManager,cGZCheatCodeManager,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZDBSegmentDirectoryFiles,cGZDBSegmentDirectoryFiles,finish 5 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZDrawCOMDirector,cGZDrawCOMDirector,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZDrawContext,cGZDrawContext,finish 28 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZDrawContextRenderToBufferFactory,cGZDrawContextRenderToBufferFactory,finish 10 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZFadeTmpWin,cGZFadeTmpWin,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZFileNameToResKeyConverterDefault,cGZFileNameToResKeyConverterDefault,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZFramework,cGZFramework,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZGraphicCOMDirector,cGZGraphicCOMDirector,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZGraphicSystem,cGZGraphicSystem,finish 201 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZGraphicWin32COMDirector,cGZGraphicWin32COMDirector,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZLua5,cGZLua5,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZPersistDBSerialRecord,cGZPersistDBSerialRecord,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZResManCOMDirector,cGZResManCOMDirector,finish 16 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZResourceCOMDirectorW32,cGZResourceCOMDirectorW32,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZScreenBuffer,cGZScreenBuffer,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZScriptCOMDirector,cGZScriptCOMDirector,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZSoundCOMDirector,cGZSoundCOMDirector,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZToolsCOMDirector,cGZToolsCOMDirector,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZUIScriptCOMDirector,cGZUIScriptCOMDirector,finish 5 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZWin32COMDirector,cGZWin32COMDirector,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZWinBtn,cGZWinBtn,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZWinCOMDirector,cGZWinCOMDirector,finish 20 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZWinCombo,cGZWinCombo,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZWinCtrlMgr,cGZWinCtrlMgr,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZWinGenTitleBar,cGZWinGenTitleBar,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZWinPieMenu,cGZWinPieMenu,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cHTMLDocument,cHTMLDocument,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cHitIniFile,cHitIniFile,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cHitList,cHitList,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cHitMan,cHitMan,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cHitTrackDataBlock,cHitTrackDataBlock,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cHitTrackPlayer,cHitTrackPlayer,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cRZDate,cRZDate,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cRZIniFile,cRZIniFile,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cRZRandomSuper,cRZRandomSuper,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cRZString,cRZString,finish 12 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cRZVariant,cRZVariant,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cS3DCamera,cS3DCamera,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cS3DModelInstanceAnimated,cS3DModelInstanceAnimated,finish 14 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cS3DShapeFile,cS3DShapeFile,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cS3DTransform,cS3DTransform,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cS3DTriangleIterator,cS3DTriangleIterator,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4App,cSC4App,finish 8 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4AttractorDescription,cSC4AttractorDescription,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4AudioAmbienceLayer,cSC4AudioAmbienceLayer,finish 8 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4AutomataCOMDirector,cSC4AutomataCOMDirector,finish 30 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4BuildingDevelopmentSimulator,cSC4BuildingDevelopmentSimulator,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4City,cSC4City,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4CitySituationAdvice,cSC4CitySituationAdvice,finish 29 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4CommercialSimulator,cSC4CommercialSimulator,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4Demolition,cSC4Demolition,finish 7 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4EffectMaps,cSC4EffectMaps,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4FireProtectionSimulator,cSC4FireProtectionSimulator,finish 5 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4FloraSimulator,cSC4FloraSimulator,finish 45 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4LandfillZone,cSC4LandfillZone,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4Lot,cSC4Lot,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4LotDeveloper,cSC4LotDeveloper,finish 108 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4NeighborConnection,cSC4NeighborConnection,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4NetworkOccupant,cSC4NetworkOccupant,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4OrdinanceLegalizeGambling,cSC4OrdinanceLegalizeGambling,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4PoliceSimulator,cSC4PoliceSimulator,finish 6 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4PowerPoleOccupant,cSC4PowerPoleOccupant,finish 110 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4PowerSimulator,cSC4PowerSimulator,finish 42 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4PropManager,cSC4PropManager,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4PropOccupant,cSC4PropOccupant,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4ProtectionSimulator,cSC4ProtectionSimulator,finish 9 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4ResidentialSimulator,cSC4ResidentialSimulator,finish 70 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4ResourceLibCOMDirector,cSC4ResourceLibCOMDirector,finish 19 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4ScriptedWindowCOMDirector,cSC4ScriptedWindowCOMDirector,finish 12 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4ScrubberDescription,cSC4ScrubberDescription,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4SequenceDescription,cSC4SequenceDescription,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4TrafficSimulator,cSC4TrafficSimulator,finish 87 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4ZoneManager,cSC4ZoneManager,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSCLua,cSCLua,finish 11 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSCParticleSimulatorBase,cSCParticleSimulatorBase,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSCResExemplar,cSCResExemplar,finish 8 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSCResExemplarCohort,cSCResExemplarCohort,finish 8 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSCResExemplarCohortFactory,cSCResExemplarCohortFactory,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSCResExemplarFactory,cSCResExemplarFactory,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSTETerrain,cSTETerrain,finish 162 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+TERRAIN-1,cSTETerrain,"Lifecycle: Init/Shutdown/StaticInit/QueryInterface/Release, ReadTerrainIniFile, ReadTuningParameters",,open,src/sc4/cSTETerrain.h
+TERRAIN-2,cSTETerrain,"Display: DoLighting(rect), RedisplayTerrain (2 overloads), GetView, Get/SetWaterSurfaceDisplayState, Get/SetPlumbingInfoDisplayState",TERRAIN-1,open,src/sc4/cSTETerrain.h
+TERRAIN-3,cSTETerrain,"Surface textures: ReadTextureInfos, sTexturesUsedInTerrainType, DetermineTextureFamilyMembersForGridCells, AssignSurfaceTexturesAndColors, DecideSurfaceCover (fills the 3 layers the view draws)",TERRAIN-1,open,src/sc4/cSTETerrain.h
+TERRAIN-4,cSTETerrain,"Shore/cliffs/flat areas: CreateShoreCliffs, CreateFlatAreas, DetectShoreVertices, MarkCliff, CalculateNormalsAndAssignCliffTextures",TERRAIN-1,open,src/sc4/cSTETerrain.h
+TERRAIN-5,cSTETerrain,"Brushes: ApplyBrush family, BrushFn*, brush description readers, exemplar ids, cost, UI elements",TERRAIN-1,open,src/sc4/cSTETerrain.h
+TERRAIN-6,cSTETerrain,"Erosion and floods: DoErosion, DoWindErosion, DoWaterErosion, StartFlood, DoFloodFlowStep, water level save/restore",TERRAIN-1,open,src/sc4/cSTETerrain.h
+TERRAIN-7,cSTETerrain,"Map creation: Create, CreateFromGrayScaleImage (2), DoPostCityInit, EnsureMinAllowedHeight",TERRAIN-1,open,src/sc4/cSTETerrain.h
+TERRAIN-8,cSTETerrain,"Neighbour cities and saving: ReconcileEdgesWithNeighboringCities, Save, SaveEdgeAltitudes, Save/LoadObliterated, Write/Read",TERRAIN-1,open,src/sc4/cSTETerrain.h
+TERRAIN-9,cSTETerrain,"Messages and animation: DoMessage, DoAnimationTick, UpdateWaveProducers, volcanic ash",TERRAIN-1,open,src/sc4/cSTETerrain.h
+LEDGER-cSTETerrainView3D,cSTETerrainView3D,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+TERRAIN-VIEW-1,cSTETerrainView3D,Write SC4DrawContext over cMetalGDriver implementing ITerrainDrawContext (start from the adapter in scripts/terrain_shot.mm),,open,src/sc4/cSTETerrainView3D.h
+TERRAIN-VIEW-2,cSTETerrainView3D,"Recover SC4ViewUtilities (frustum planes, GetVisibleEdges) that fill TerrainFrustumPlanes",,open,docs/SEAMS.md
+TERRAIN-VIEW-3,cSTETerrainView3D,"Write the single ITerrainViewHost adapter (lighting, textures, gimex buffers, tuning, renderer layers, messages, plumbing) and pass it to StaticInit","TERRAIN-VIEW-1,TERRAIN-VIEW-2",open,docs/SEAMS.md
+TERRAIN-VIEW-4,cSTETerrainView3D,"Recover cSTEOverlayManager (x4), cSTEWaterRipple, cSTEWaterWave and create them in Init; make GetOverlayManager recovered",,open,notes/ledger.csv 0x10074ce10
+TERRAIN-VIEW-5,cSTETerrainView3D,Recover cSTESelectedTerrainArea (ITerrainSelection) and cSTEVertBufExtn (ITerrainVertBufExtn),,open,src/sc4/cSTETerrainView3D.h
+TERRAIN-VIEW-6,cSTETerrainView3D,Verify nS3D::kColorToLuminance (assumed 0.299/0.587/0.114) against the binary,,open,src/sc4/cSTETerrainView3D.cpp LightBorderCliffs
+TERRAIN-VIEW-7,cSTETerrainView3D,"Textured render: run scripts/run_terrain_shot.sh with real terrain textures, expect textured land, then verify cliffs/water box vs the game","TERRAIN-VIEW-3,TERRAIN-3",open,scripts/terrain_shot.mm
+TERRAIN-VIEW-8,cSTETerrainView3D,"Hook plumbing overlay seams (PlumbingCellFlags, NetworkHiddenTriangles, CellHasOccupantType) to the plumbing sim, network manager and occupant manager",,open,docs/SEAMS.md
+LEDGER-nRZSimGL,nRZSimGL,finish 6 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-nS3D,nS3D,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-nSGLDX7,nSGLDX7,finish 15 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-nsTexelOp,nsTexelOp,finish 6 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+RENDER-1,render,UI path textures (RENDER_STATUS.md 'Next' item 1) so terrain textures can load through cMetalGDriver,,open,RENDER_STATUS.md
