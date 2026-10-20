@@ -38,3 +38,28 @@ cSCLua, remaining free utilities (SC4 helper functions, GZCOM factories, UTF16/T
 
 ## Architecture rules
 See .claudecode (ECS, SIMD intrinsics with scalar fallback, cross-platform, profile first).
+
+## Parallel-agent rules (learned the hard way)
+A run with 20 parallel agents wasted a large share of the usage budget. Follow these before starting or briefing agents:
+- **Check the ledger before assigning a class.** `NEXT_AGENT.md`'s "next targets" go stale. Verify with `notes/ledger.csv`
+  (count recovered rows for the class's addresses; `scripts/class_range.py`, `scripts/progress.py`) that the class is really
+  unrecovered. Five classes (cGZWinTextEdit, cGZWinListBox, cSC4FireOccupant, cSC4App, most of cSC4BudgetSimulator) were
+  already done and their agents produced nothing.
+- **Start small (3-5 agents), not 20**: one Ghidra tunnel and the weekly plan limit cannot feed more. Add agents as earlier
+  ones finish and are merged.
+- **Branch worktrees from the working branch**: harness worktrees start from `main`. Tell every agent to run
+  `git merge <working-branch>` first (or create the worktrees from that branch) so they have the scripts and reference code.
+- **Commit early and often (after each function group)**, not once per class: interrupting the lead session stops all
+  background agents, and uncommitted work is lost or only rescued as patches (see `wip/`).
+- **Tokens may be used in commands, but never stored in the repo.** Pass `GHIDRA_URL` / `GHIDRA_TOKEN` (and any API key)
+  through the environment or as an inline `export` in a command when needed, but never write a token, API key, password or
+  tunnel URL+token pair into any tracked file, commit message, test, script, note or patch (including `wip/` patches and
+  `notes/`); the same goes for PR text and chat summaries. Prefer the environment secret (Authorization: Bearer header for
+  `*.trycloudflare.com`, see `scripts/ghidra_tunnel.sh` / `scripts/ghidra_proxy.py`) so commands carry only `GHIDRA_URL`.
+  If the permission check refuses a command that contains a credential, do not retry or work around it: ask the user. Before
+  every commit run `git diff --cached | grep -iE "token|api[_-]?key|secret|bearer"` and fix anything that is a real value.
+- **The lead merges, agents don't touch shared files**: agents leave `scripts/tests/registry/*.txt` and
+  `notes/ledger_pending/*.txt`; the lead runs `python3 scripts/apply_agent_results.py`. Never `git add -A` over agent
+  worktrees (`.claude/worktrees/` is gitignored).
+- **Do not interrupt or reject the lead's tool calls casually while agents run**; it stops them.
+- Scope: port only what the macOS build needs (skip DX7/Windows-only/debug/dead code, list under `SKIPPED:`).
