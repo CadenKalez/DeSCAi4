@@ -20016,3 +20016,140 @@ address,symbol,unique_name,source,status,evidence
 0x1000ee4e6,"cSC4Demolition::DoDemolishGroupEffect(unsigned int, int, int, SC4Rect<int> const&)",DoDemolishGroupEffect,src/sc4/Demolition.cpp|h,partial,"not yet hand-written: region sweep, terrain levelling and effects need unrecovered seams"
 0x1000ee64a,cSC4Demolition::GetGZCLSID() const,GetGZCLSID,src/sc4/Demolition.cpp|h,recovered,"scripts/tests/sc4_demolition_test.cpp: tuning, save record, per-type occupant dispatch, lot union mask, network follow-up"
 0x1000ee656,non-virtual thunk to cSC4Demolition::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/Demolition.cpp|h,recovered,"scripts/tests/sc4_demolition_test.cpp: tuning, save record, per-type occupant dispatch, lot union mask, network follow-up"
+0x10074607c,cSTETerrainView3D::cSTETerrainView3D(),Construct,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x1007460bc,cSTETerrainView3D::AddRef(),AddRef,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x1007460ca,non-virtual thunk to cSTETerrainView3D::AddRef(),AddRefThunk_60ca,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x1007460d4,non-virtual thunk to cSTETerrainView3D::AddRef(),AddRefThunk_60d4,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x1007460e2,non-virtual thunk to cSTETerrainView3D::AddRef(),AddRefThunk_60e2,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x1007460f0,non-virtual thunk to cSTETerrainView3D::AddRef(),AddRefThunk_60f0,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x1007460fe,"cSTETerrainView3D::AddSpansCorrespondingToTexture(int, unsigned int, std::__1::vector<cSTETerrainView3D::tRenderTexInfo, std::__1::allocator<cSTETerrainView3D::tRenderTexInfo>>&)",AddSpansCorrespondingToTexture,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074613c,"cSTETerrainView3D::AddSpansThatNeedToBeRendered(int, cSTETerrainView3D::tTextureSpanInfo const&, std::__1::vector<cSTETerrainView3D::tRenderTexInfo, std::__1::allocator<cSTETerrainView3D::tRenderTexInfo>>&)",AddSpansThatNeedToBeRendered,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074629c,"cSTETerrainView3D::AddTextureSpan(std::__1::list<cSTETerrainView3D::tTextureSpanInfo, std::__1::allocator<cSTETerrainView3D::tTextureSpanInfo>>&, unsigned int, int, int)",AddTextureSpan,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100746402,"cSTETerrainView3D::MergeTextureSpan(cSTETerrainView3D::tTextureSpanInfo&, cSTETerrainView3D::tSpan&)",MergeTextureSpan,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x1007464b8,cSTETerrainView3D::AssignTerrainAndWaterTextureCoordinates(SC4DrawContext*),AssignTerrainAndWaterTextureCoordinates,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100746724,cSTETerrainView3D::ChangeRotation(SC4DrawContext*),ChangeRotation,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074675c,cSTETerrainView3D::SetWaterColorUpdateRect(SC4Rect<int> const*),SetWaterColorUpdateRect,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x1007467ca,cSTETerrainView3D::ChangeTerrainType(int),ChangeTerrainType,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x1007467fe,cSTETerrainView3D::ReleaseLoadedTerrainTextures(),ReleaseLoadedTerrainTextures,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074688c,cSTETerrainView3D::SetUpTexturesForCurrentTerrainTypeAndZoom(int),SetUpTexturesForCurrentTerrainTypeAndZoom,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100746970,cSTETerrainView3D::ChangeZoomLevel(SC4DrawContext*),ChangeZoomLevel,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100746a20,cSTETerrainView3D::ClearCurrentSelections(),ClearCurrentSelections,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100746a38,non-virtual thunk to cSTETerrainView3D::ClearCurrentSelections(),ClearCurrentSelectionsThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100746a50,cSTETerrainView3D::ComputeDrawFrustumOptimizationInfo(SC4DrawContext*),ComputeDrawFrustumOptimizationInfo,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100746ad4,cSTETerrainView3D::ComputeDrawRectsForDrawFrustum(SC4DrawContext*),ComputeDrawRectsForDrawFrustum,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100746e0c,cSTETerrainView3D::ComputeHeightBasedCullingInfoForDrawFrustum(SC4DrawContext*),ComputeHeightBasedCullingInfoForDrawFrustum,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x1007470fe,cSTETerrainView3D::ComputeViewFrustumOptimizationInfo(SC4DrawContext*),ComputeViewFrustumOptimizationInfo,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074713a,cSTETerrainView3D::ComputeDrawRectsForViewFrustum(SC4DrawContext*),ComputeDrawRectsForViewFrustum,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100747472,cSTETerrainView3D::ComputeHeightBasedCullingInfoForViewFrustum(SC4DrawContext*),ComputeHeightBasedCullingInfoForViewFrustum,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100747764,"cSTETerrainView3D::ComputeMinimumVisibleHtAtDrawRows(SC4DrawContext*, float*)",ComputeMinimumVisibleHtAtDrawRows,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100747846,"cSTETerrainView3D::ComputeMinimumVisibleHtAtViewRows(SC4DrawContext*, float*)",ComputeMinimumVisibleHtAtViewRows,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100747928,cSTETerrainView3D::ComputeTextureSpansForRow(int),ComputeTextureSpansForRow,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100747a80,cSTETerrainView3D::CreateTerrainSizeSpecificDataStructures(),CreateTerrainSizeSpecificDataStructures,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x1007480ec,cSTETerrainView3D::InitTerrainSurfaceItems(),InitTerrainSurfaceItems,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x1007481be,cSTETerrainView3D::InitWaterSurfaceItems(),InitWaterSurfaceItems,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100748284,cSTETerrainView3D::cSTETerrainView3D(),ConstructWrapper,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x1007483b2,cSTETerrainView3D::~cSTETerrainView3D(),Destruct,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x1007484de,cSTETerrainView3D::Shutdown(),Shutdown,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100748836,cSTETerrainView3D::~cSTETerrainView3D(),DestructAndDelete,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100748840,non-virtual thunk to cSTETerrainView3D::~cSTETerrainView3D(),DestructThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074884e,cSTETerrainView3D::~cSTETerrainView3D(),DestructBody,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074887c,non-virtual thunk to cSTETerrainView3D::~cSTETerrainView3D(),DestructAndDeleteThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074888a,cSTETerrainView3D::DeleteTerrainSizeSpecificDataStructures(),DeleteTerrainSizeSpecificDataStructures,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100748b34,cSTETerrainView3D::DoLighting(),DoLighting,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100748b64,cSTETerrainView3D::LightBorderCliffs(),LightBorderCliffs,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100748d8c,cSTETerrainView3D::DoMessage(cIGZMessage2*),DoMessage,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100748eca,cSTETerrainView3D::ObtainHeightFieldInfo(SC4Rect<int> const&),ObtainHeightFieldInfo,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074902c,cSTETerrainView3D::ObtainWaterSurfaceInfo(SC4Rect<int> const&),ObtainWaterSurfaceInfo,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100749222,non-virtual thunk to cSTETerrainView3D::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100749234,"cSTETerrainView3D::DrawGrid(SC4DrawContext*, cSTEVertBufExtn*)",DrawGrid,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100749ace,"cSTETerrainView3D::DrawTerrainMeshSubsetWithVertBufExtensionInDrawFrustum(SC4DrawContext*, cSTEVertBufExtn*, cRZRect)",DrawTerrainMeshSubsetWithVertBufExtensionInDrawFrustum,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100749f40,"cSTETerrainView3D::DrawTerrainMeshSubsetInDrawFrustum(cRZRect, SC4DrawContext*)",DrawTerrainMeshSubsetInDrawFrustum,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074a0fa,cSTETerrainView3D::DrawSideCliffs(SC4DrawContext*),DrawSideCliffs,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074a56e,"cSTETerrainView3D::DrawTerrainMeshSubsetInViewFrustum(cRZRect, SC4DrawContext*)",DrawTerrainMeshSubsetInViewFrustum,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074a72c,"cSTETerrainView3D::DrawTerrainMeshSubsetWithVertBufExtensionInViewFrustum(SC4DrawContext*, cSTEVertBufExtn*, cRZRect)",DrawTerrainMeshSubsetWithVertBufExtensionInViewFrustum,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074ab9e,"cSTETerrainView3D::DrawMixedMeshSubsetInDrawFrustum(cRZRect const&, SC4DrawContext*)",DrawMixedMeshSubsetInDrawFrustum,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074adca,"cSTETerrainView3D::DrawMixedMeshSubsetInViewFrustum(cRZRect const&, SC4DrawContext*)",DrawMixedMeshSubsetInViewFrustum,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074aff6,"cSTETerrainView3D::DrawTerrainSurface(SC4DrawContext*, cSTEVertBufExtn*)",DrawTerrainSurface,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074b218,cSTETerrainView3D::DrawTextureLessTerrainSurfaceWithVertBufExtension(cSTEVertBufExtn*),DrawTextureLessTerrainSurfaceWithVertBufExtension,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074b2a2,cSTETerrainView3D::DrawTextureLessTerrainSurface(SC4DrawContext*),DrawTextureLessTerrainSurface,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074b370,"cSTETerrainView3D::DrawTexturedTerrainSurface(SC4DrawContext*, cSTEVertBufExtn*)",DrawTexturedTerrainSurface,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074b4be,"cSTETerrainView3D::DrawTerrainSurfaceRows(SC4DrawContext*, std::__1::vector<int, std::__1::allocator<int>>&)",DrawTerrainSurfaceRows,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074b858,"cSTETerrainView3D::GetNextTextureToDraw(std::__1::vector<int, std::__1::allocator<int>>&, int&, std::__1::set<unsigned int, std::__1::less<unsigned int>, std::__1::allocator<unsigned int>>&, unsigned int&, std::__1::vector<cSTETerrainView3D::tRenderTexInfo, std::__1::allocator<cSTETerrainView3D::tRenderTexInfo>>&)",GetNextTextureToDraw,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074b9ee,"cSTETerrainView3D::DrawTerrainSurfaceRowsWithVertBufExtension(SC4DrawContext*, cSTEVertBufExtn*, std::__1::vector<int, std::__1::allocator<int>>&)",DrawTerrainSurfaceRowsWithVertBufExtension,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074bd0e,cSTETerrainView3D::DrawWaterBox(SC4DrawContext*),DrawWaterBox,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074c110,"cSTETerrainView3D::DrawWaterSurface(SC4DrawContext*, cSTEVertBufExtn*)",DrawWaterSurface,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074c300,"cSTETerrainView3D::DrawWaterSurfaceSubsetInDrawFrustum(cRZRect, SC4DrawContext*)",DrawWaterSurfaceSubsetInDrawFrustum,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074c446,"cSTETerrainView3D::DrawWaterSurfaceSubsetInViewFrustum(cRZRect, SC4DrawContext*)",DrawWaterSurfaceSubsetInViewFrustum,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074c58c,cSTETerrainView3D::DrawPlumbingInfo(SC4DrawContext*),DrawPlumbingInfo,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074cbf0,"cSTETerrainView3D::ReadPlumbingTuningData(cS3DColorARGB8*, bool&)",ReadPlumbingTuningData,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074cd9c,"cSTETerrainView3D::GetBuffer(unsigned int, cGZBufferColorType::eColorType)",GetBuffer,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074cdf8,cSTETerrainView3D::GetGZCLSID() const,GetGZCLSID,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074ce04,non-virtual thunk to cSTETerrainView3D::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074ce10,cSTETerrainView3D::GetOverlayManager(cISTETerrainView::tOverlayManagerType) const,GetOverlayManager,src/sc4/cSTETerrainView3D.cpp|h,recovered-partial,scripts/tests/sc4_terrainview3d_test.cpp (overlay managers are not recovered: GetOverlayManager/Init skip them)
+0x10074ce20,non-virtual thunk to cSTETerrainView3D::GetOverlayManager(cISTETerrainView::tOverlayManagerType) const,GetOverlayManagerThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074ce30,cSTETerrainView3D::Init(cSTETerrain*),Init,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074d478,cSTETerrainView3D::StaticInit(),StaticInit,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074d716,"cSTETerrainView3D::SetTerrainSize(unsigned int, unsigned int)",SetTerrainSize,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074d7d4,"cSTETerrainView3D::MarkTextureSpanInfoDirty(int, int)",MarkTextureSpanInfoDirty,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074d80a,cSTETerrainView3D::SetTriangleIndicesForAllRows(),SetTriangleIndicesForAllRows,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074d872,"cSTETerrainView3D::MarkSelected(std::__1::vector<SC4Point<int>, std::__1::allocator<SC4Point<int>>>&, cISTETerrain::eHilightColorType, bool)",MarkSelected_std_1_vector_SC4Point_int_std_1_allocator_SC4Point_int_cISTETerrain_eHilightColorType_bool,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074d890,"non-virtual thunk to cSTETerrainView3D::MarkSelected(std::__1::vector<SC4Point<int>, std::__1::allocator<SC4Point<int>>>&, cISTETerrain::eHilightColorType, bool)",MarkSelected_std_1_vector_SC4Point_int_std_1_allocator_SC4Point_int_cISTETerrain_eHilightColorType_boolThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074d8ae,"cSTETerrainView3D::MarkSelected(SC4Rect<int>&, cISTETerrain::eHilightColorType, bool)",MarkSelected_SC4Rect_int_cISTETerrain_eHilightColorType_bool,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074d8cc,"non-virtual thunk to cSTETerrainView3D::MarkSelected(SC4Rect<int>&, cISTETerrain::eHilightColorType, bool)",MarkSelected_SC4Rect_int_cISTETerrain_eHilightColorType_boolThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074d8ea,"cSTETerrainView3D::MarkSelected(SC4Point<int> const&, cISTETerrain::eHilightColorType, bool)",MarkSelected_SC4Point_int_const_cISTETerrain_eHilightColorType_bool,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074d908,"non-virtual thunk to cSTETerrainView3D::MarkSelected(SC4Point<int> const&, cISTETerrain::eHilightColorType, bool)",MarkSelected_SC4Point_int_const_cISTETerrain_eHilightColorType_boolThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074d926,"cSTETerrainView3D::MarkSelected(SC4Point<int> const&, cGZPersistResourceKey const&, unsigned char, bool, cISTETerrain::eHilightColorType, unsigned char, bool)",MarkSelected_SC4Point_int_const_cGZPersistResourceKey_const_uchar_bool_cISTETerrain_eHilightColorType_uchar_bool,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074d948,"non-virtual thunk to cSTETerrainView3D::MarkSelected(SC4Point<int> const&, cGZPersistResourceKey const&, unsigned char, bool, cISTETerrain::eHilightColorType, unsigned char, bool)",MarkSelected_SC4Point_int_const_cGZPersistResourceKey_const_uchar_bool_cISTETerrain_eHilightColorType_uchar_boolThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074d96a,"cSTETerrainView3D::MarkSelected(SC4Point<int> const&, cGZPersistResourceKey const&, unsigned char, bool, unsigned int, cGDCombiner::tOp, bool)",MarkSelected_SC4Point_int_const_cGZPersistResourceKey_const_uchar_bool_uint_cGDCombiner_tOp_bool,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074d98c,"non-virtual thunk to cSTETerrainView3D::MarkSelected(SC4Point<int> const&, cGZPersistResourceKey const&, unsigned char, bool, unsigned int, cGDCombiner::tOp, bool)",MarkSelected_SC4Point_int_const_cGZPersistResourceKey_const_uchar_bool_uint_cGDCombiner_tOp_boolThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074d9ae,"cSTETerrainView3D::UpdateBorderHeight(int, int, float, float)",UpdateBorderHeight,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074da7c,"cSTETerrainView3D::Pick(cS3DVector3 const&, cS3DVector3 const&, SC4DrawContext*, float*)",Pick_cS3DVector3_const_cS3DVector3_const_SC4DrawContext_float,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074da8e,"cSTETerrainView3D::Pick(cS3DVector3 const&, cS3DVector3 const&, SC4DrawContext*, float*, bool)",Pick_cS3DVector3_const_cS3DVector3_const_SC4DrawContext_float_bool,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e040,"non-virtual thunk to cSTETerrainView3D::Pick(cS3DVector3 const&, cS3DVector3 const&, SC4DrawContext*, float*, bool)",PickThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e056,"cSTETerrainView3D::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e0b6,"non-virtual thunk to cSTETerrainView3D::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_e0b6,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e0c4,"non-virtual thunk to cSTETerrainView3D::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_e0c4,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e0d2,"non-virtual thunk to cSTETerrainView3D::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_e0d2,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e0e0,"non-virtual thunk to cSTETerrainView3D::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_e0e0,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e0ee,cSTETerrainView3D::Read(cIGZIStream&),Read,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e154,non-virtual thunk to cSTETerrainView3D::Read(cIGZIStream&),ReadThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e162,"cSTETerrainView3D::GetCullingInfo(int*, int*, int**, int**)",GetCullingInfo,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e18c,cSTETerrainView3D::ReadTuningParameters(),ReadTuningParameters,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e354,cSTETerrainView3D::InitializeCityEdgeLayerHeights(),InitializeCityEdgeLayerHeights,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e460,cSTETerrainView3D::Release(),Release,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e46e,non-virtual thunk to cSTETerrainView3D::Release(),ReleaseThunk_e46e,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e478,non-virtual thunk to cSTETerrainView3D::Release(),ReleaseThunk_e478,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e486,non-virtual thunk to cSTETerrainView3D::Release(),ReleaseThunk_e486,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e494,non-virtual thunk to cSTETerrainView3D::Release(),ReleaseThunk_e494,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e4a2,cSTETerrainView3D::SetAutomaticCellCursorUpdateStatus(bool),SetAutomaticCellCursorUpdateStatus,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e4b0,non-virtual thunk to cSTETerrainView3D::SetAutomaticCellCursorUpdateStatus(bool),SetAutomaticCellCursorUpdateStatusThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e4be,"cSTETerrainView3D::DrawTerrainQuad(SC4DrawContext*, unsigned int, unsigned int)",DrawTerrainQuad,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e598,"non-virtual thunk to cSTETerrainView3D::DrawTerrainQuad(SC4DrawContext*, unsigned int, unsigned int)",DrawTerrainQuadThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e5a6,"cSTETerrainView3D::DrawTexturedTerrainQuad(SC4DrawContext*, unsigned int, unsigned int, cS3DVector2*, float, bool)",DrawTexturedTerrainQuad,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e7c0,"non-virtual thunk to cSTETerrainView3D::DrawTexturedTerrainQuad(SC4DrawContext*, unsigned int, unsigned int, cS3DVector2*, float, bool)",DrawTexturedTerrainQuadThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074e7d2,"cSTETerrainView3D::LevelCell(int, int, float)",LevelCell,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074f0a8,"cSTETerrainView3D::UpdateLevelCellsFromTerrain(int, int, int)",UpdateLevelCellsFromTerrain,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074f272,"cSTETerrainView3D::UpdateLevelCellLighting(int, int, int)",UpdateLevelCellLighting,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074f376,"cSTETerrainView3D::SetTriangleIndicesForCell(int, int)",SetTriangleIndicesForCell,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074f4d8,"non-virtual thunk to cSTETerrainView3D::LevelCell(int, int, float)",LevelCellThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074f4e6,"cSTETerrainView3D::RemoveCellLevelling(int, int)",RemoveCellLevelling,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074f6a2,"non-virtual thunk to cSTETerrainView3D::RemoveCellLevelling(int, int)",RemoveCellLevellingThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074f6b0,cSTETerrainView3D::GetDisplayGridFlag() const,GetDisplayGridFlag,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074f6bc,non-virtual thunk to cSTETerrainView3D::GetDisplayGridFlag() const,GetDisplayGridFlagThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074f6c8,cSTETerrainView3D::SetDisplayGridFlag(bool),SetDisplayGridFlag,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074f71e,non-virtual thunk to cSTETerrainView3D::SetDisplayGridFlag(bool),SetDisplayGridFlagThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074f730,cSTETerrainView3D::HandleCheatCommand(cRZCmdLine&),HandleCheatCommand,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074f9b8,non-virtual thunk to cSTETerrainView3D::HandleCheatCommand(cRZCmdLine&),HandleCheatCommandThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074f9c6,cSTETerrainView3D::SetColorOfWaterSurface(),SetColorOfWaterSurface,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074fe34,cSTETerrainView3D::SetLightingUpdateRect(SC4Rect<int> const*),SetLightingUpdateRect,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074feaa,non-virtual thunk to cSTETerrainView3D::SetLightingUpdateRect(SC4Rect<int> const*),SetLightingUpdateRectThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074feb8,cSTETerrainView3D::SetWaterGlareStatus(bool),SetWaterGlareStatus,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074fed6,non-virtual thunk to cSTETerrainView3D::SetWaterGlareStatus(bool),SetWaterGlareStatusThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10074fef8,cSTETerrainView3D::StaticShutdown(void*),StaticShutdown,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10075014c,cSTETerrainView3D::Update(SC4DrawContext*),Update,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10075029a,"cSTETerrainView3D::DrawTerrainLayers(SC4DrawContext*, cSTEVertBufExtn*)",DrawTerrainLayers,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100750372,"cSTETerrainView3D::DrawWaterLayers(SC4DrawContext*, cSTEVertBufExtn*)",DrawWaterLayers,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x1007503de,cSTETerrainView3D::Write(cIGZOStream&) const,Write,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10075042a,non-virtual thunk to cSTETerrainView3D::Write(cIGZOStream&) const,WriteThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x10075043a,cSTETerrainView3D::IsWaterGlareEnabled() const,IsWaterGlareEnabled,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
+0x100750444,non-virtual thunk to cSTETerrainView3D::IsWaterGlareEnabled() const,IsWaterGlareEnabledThunk,src/sc4/cSTETerrainView3D.cpp|h,recovered,scripts/tests/sc4_terrainview3d_test.cpp
