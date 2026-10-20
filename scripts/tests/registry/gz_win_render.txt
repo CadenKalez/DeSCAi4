@@ -1,0 +1,1 @@
+"gz_win_render:$T/gz_win_render_test.cpp $S/gz/Win.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp"

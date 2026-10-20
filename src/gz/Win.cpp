@@ -1,7 +1,10 @@
 #include "gz/Win.h"
 
 #include <algorithm>
+#include <vector>
 
+#include "gz/Buffer.h"
+#include "gz/DrawContext.h"
 #include "rz/cRZVariant.h"
 
 static IWinGraphics* g_graphics = nullptr;
@@ -871,10 +874,362 @@ void cGZWin::SetAreaToDrawTo() {
     }
 }
 
-bool cGZWin::PrivateBuffer(bool enable) {
-    // Rendering pipeline (private buffer creation / fade temp window): not recovered; only the flag is kept.
-    if (enable) flags_ |= kWinPrivateBuffer;
+namespace {
+constexpr std::uint32_t kFadeTmpKey = 0xe6e998fe;
+constexpr std::uint32_t kLockFill = 0x8001, kLockPresent = 0x8010, kLockHitTest = 0x800;
+
+bool AllAncestorsVisible(cIGZWin* window) {
+    for (cIGZWin* p = window->GetParentWin(); p; p = p->GetParentWin())
+        if (!p->IsVisible()) return false;
     return true;
+}
+}  // namespace
+
+// Turns the window's private (off-screen) buffer on or off. Enabling needs every ancestor visible; the buffer is
+// (re)created when it is missing or the wrong size. Disabling releases it - unless the window is fading out, in
+// which case a cGZFadeTmpWin adopts the buffer and finishes the fade (the "fade" flag 0x20 with the pending
+// flag 0x400000 set by PlotComposite).
+bool cGZWin::PrivateBuffer(bool enable) {
+    bool ok = true;
+    bool disable = !enable;
+    if (enable) {
+        if (!AllAncestorsVisible(this)) {
+            disable = true;      // an invisible ancestor: take the "turn off" path, but still report success
+        } else {
+            flags_ |= kWinPrivateBuffer;
+            const int w = area_.right - area_.left, h = area_.bottom - area_.top;
+            bool sized = false;
+            if (privateBuffer_) {
+                const cRZRect* b = privateBuffer_->GetBounds();
+                sized = (b->right - b->left == w) && (b->bottom - b->top == h);
+            }
+            if (!sized) {
+                if (!create_private_buffer(w, h)) {
+                    ok = false;
+                } else {
+                    if (GetFlag(kWinPrivateBufferTransparent)) set_private_buffer_transparency(true);
+                    SetArea(area_.left, area_.top, area_.right, area_.bottom);
+                }
+            }
+        }
+    }
+    if (disable && privateBuffer_) {
+        if (privateBuffer_->IsReady()) {
+            bool shutdown = true;
+            if (GetFlag(kWinFade) && GetFlag(kWinFlag400000)) {
+                cIGZVariant* v = nullptr;
+                const bool isFadeTmp = GetParam(kFadeTmpKey, &v);
+                if (isFadeTmp && v) v->Release();
+                SetFlag(kWinFlag400000, false);
+                if (AllAncestorsVisible(this) && !isFadeTmp) {
+                    auto* tmp = new cGZFadeTmpWin(mgr_);
+                    tmp->SetFlag(kWinFlag4, true);
+                    tmp->StealBuffer(this);
+                    shutdown = false;      // the temporary window owns the buffer now
+                }
+            }
+            if (shutdown) privateBuffer_->Shutdown();
+        }
+        privateBuffer_->Release();
+        privateBuffer_ = nullptr;
+    }
+    SetBufferToDrawToRecursive();
+    child_private_buffers(GetFlag(kWinVisible));
+    InvalidateSelfAndParents();
+    return ok;
+}
+
+// (Re)creates the private buffer at the given size; a non-positive size in both directions just drops it. With a
+// draw system the buffer comes from the service (an existing one is shut down and released first); without one
+// the graphics system's buffer is initialised in place.
+bool cGZWin::create_private_buffer(int w, int h) {
+    if (w < 1 && h < 1) {
+        if (privateBuffer_) {
+            privateBuffer_->Release();
+            privateBuffer_ = nullptr;
+        }
+        return false;
+    }
+    IWinGraphics* gfx = WinGraphics();
+    if (gfx && gfx->DrawSystemActive()) {
+        if (privateBuffer_) {
+            privateBuffer_->Shutdown();
+            privateBuffer_->Release();
+            privateBuffer_ = nullptr;
+        }
+        privateBuffer_ = gfx->DrawSystemCreateBuffer(w, h);
+        return privateBuffer_ != nullptr;
+    }
+    if (privateBuffer_) {
+        privateBuffer_->Shutdown();
+    } else {
+        if (gfx) privateBuffer_ = gfx->GraphicsCreateBuffer();
+        if (!privateBuffer_) return false;
+    }
+    if (!privateBuffer_->Init(w, h)) {
+        privateBuffer_->Release();
+        privateBuffer_ = nullptr;
+        return false;
+    }
+    return true;
+}
+
+bool cGZWin::is_point_transparent(int x, int y) const {
+    if (privateBuffer_ && privateBuffer_->GetTransparency() && privateBuffer_->Lock(kLockHitTest)) {
+        const bool transparent = privateBuffer_->IsPixelTransparent(x, y);
+        privateBuffer_->Unlock(kLockHitTest);
+        return transparent;
+    }
+    return false;    // the original returns whatever was left in the register; callers only test it as a bool
+}
+
+// Keys the private buffer on the window class manager's transparent colour, or removes the key.
+bool cGZWin::set_private_buffer_transparency(bool on) {
+    if (!privateBuffer_) return false;
+    if (on) {
+        std::uint32_t color = 0;
+        if (!WinGraphics() || !WinGraphics()->GetPrivateBufferKeyColor(color)) return false;
+        privateBuffer_->SetTransparency(color);
+    } else {
+        privateBuffer_->RemoveTransparency();
+    }
+    return true;
+}
+
+bool cGZWin::fill_private_buffer_with_transparent_color() {
+    if (privateBuffer_ && privateBuffer_->Lock(kLockFill)) {
+        std::uint32_t color = 0;
+        if (privateBuffer_->GetTransparentColor(color)) privateBuffer_->Fill(color, drawArea_);
+        privateBuffer_->Unlock(kLockFill);
+        return true;
+    }
+    return false;
+}
+
+// Moves the fade alpha along the clock: alpha = start alpha + elapsed * 255 / period (the period is negative
+// for a fade-out). Leaving [0,256) ends the fade (period reset to 0) and clamps. The result is pushed into the
+// private buffer's shade colour (white with that alpha).
+void cGZWin::fade_advance() {
+    if ((flags_ & 0x10020) != 0x10020) return;
+    cIGZVariant* v = nullptr;
+    if (!GetParam(kFadePeriodKey, &v)) return;
+    const int period = v->AsSint32();
+    v->Release();
+    if (period == 0) return;
+    if (!GetParam(kFadeAlphaKey, &v)) return;
+    const std::uint8_t startAlpha = v->AsUint8();
+    v->Release();
+    if (!GetParam(kFadeStartKey, &v)) return;
+    const int startTime = v->AsSint32();
+    v->Release();
+    const int now = static_cast<int>(g_clock ? g_clock() : 0);
+    const double alpha = (static_cast<double>(static_cast<std::uint32_t>(now - startTime)) * 255.0) / static_cast<double>(period)
+                         + static_cast<double>(startAlpha);
+    std::uint32_t a;
+    if (alpha < 0.0 || alpha >= 256.0) {
+        if (GetParam(kFadePeriodKey, &v)) {
+            v->SetValSint32(0);
+            v->Release();
+        }
+        a = alpha < 0.0 ? 0 : 0xff;
+    } else {
+        a = static_cast<std::uint32_t>(alpha);
+    }
+    if ((flags_ & 0x10020) == 0x10020 && privateBuffer_) privateBuffer_->SetFadeAlpha(static_cast<std::uint8_t>(a));
+}
+
+// Draws the window's own contents (PlotComposite 0x10016abd0): the paint message goes through the filters first
+// (a consuming filter suppresses the paint); then the window paints via GZPaint inside its draw context with
+// its children painted back to front. Children that would be hidden behind a "delayed plot" desktop-level child
+// are deferred to the manager's plot strategy instead so the z order survives.
+bool cGZWin::PlotComposite() {
+    if ((flags_ & kWinFade) == 0) {
+        if ((flags_ & kWinVisible) == 0) return false;
+    } else {
+        if ((flags_ & kWinVisible) == 0 && !fade_in_progress()) return false;
+        fade_advance();
+    }
+    cGZMessage paint;
+    paint.type = kGZMsgPaint;
+    paint.param1 = paint.param2 = paint.param3 = 0;
+    const bool wasDispatching = dispatching_;
+    dispatching_ = true;
+    bool consumed = false;
+    for (cIGZWinMessageFilter* filter : filters_) {
+        if (filter->DoMessage(this, paint)) { consumed = true; break; }
+    }
+    dispatching_ = wasDispatching;
+    if (!wasDispatching) {
+        // filters removed while dispatching are dropped now
+        for (cIGZWinMessageFilter* pending : pendingRemove_) {
+            pending->AddRef();
+            auto it = std::find(filters_.begin(), filters_.end(), pending);
+            if (it != filters_.end()) {
+                (*it)->Release();
+                filters_.erase(it);
+            }
+            pending->Release();
+        }
+        for (cIGZWinMessageFilter* pending : pendingRemove_) pending->Release();
+        pendingRemove_.clear();
+    }
+    if (consumed) return true;
+
+    if (!invalid_) {
+        EnumChildren(0x22ba0121, add_delayedplot_windows, mgr_);
+        return true;
+    }
+    if (privateBuffer_) {
+        if (parent_) invalid_ = false;
+        if ((flags_ & 0x60000) == 0x60000) fill_private_buffer_with_transparent_color();
+    }
+    auto* ctx = static_cast<gz::cIGZDrawContext*>(drawContext_);
+    if (ctx) {
+        ctx->AddRef();
+        ctx->PushTransform();
+        ctx->OffsetAbsolute(cRZPoint{accumulatedArea_.left, accumulatedArea_.top});
+        ctx->ClipAbsolute(accumulatedArea_);
+        ctx->ClipReset();                      // as recovered (vslot 0x20): resets the clip right after ClipAbsolute
+        (void)ctx->GetTransformStackDepth();   // vslot 0x78, result unused
+        ctx->PushState();
+        ctx->ResetToDefaultState();
+        const bool blend = GetFlag(kWinFlag4) && !GetFlag(kWinPrivateBuffer);
+        ctx->SetAlphaBlend(blend);
+        ctx->SetBltModulate(blend);
+        if (!GetFlag(kWinUseShadeColor) || GetFlag(kWinPrivateBuffer)) ctx->SetColor(0xffffffffu);
+        else ctx->SetColor(shadeColor_);
+        ctx->Resume();
+    }
+    GZPaint();
+    if (privateBuffer_) flags_ |= kWinFlag400000;
+    if (ctx) {
+        ctx->Suspend();
+        ctx->PopState();
+        ctx->PopTransform();
+        ctx->Release();
+    }
+
+    ChildList* list = LockChildListRead();
+    if (!GetFlag(kWinDesktop)) {
+        std::vector<cRZRect> deferred;      // absolute areas of children whose plot was handed to the manager
+        for (auto it = list->items.rbegin(); it != list->items.rend(); ++it) {
+            cIGZWin* child = *it;
+            if (!child->IsVisible()) continue;
+            if (child->GetFlag(kWinDesktop)) {
+                child->SetFlag(kWinPlotted, true);
+                mgr_->AppendToPlotStrategy(child);
+                deferred.push_back(child->GetAreaAbsolute());
+                continue;
+            }
+            if (!deferred.empty()) {
+                const cRZRect r = child->GetAreaAbsolute();
+                bool overlaps = false;
+                for (const cRZRect& d : deferred) {
+                    if (d.left < r.right && r.left < d.right && d.top < r.bottom && r.top < d.bottom) { overlaps = true; break; }
+                }
+                if (overlaps) {
+                    deferred.push_back(r);
+                    child->SetFlag(kWinPlotted, true);
+                    mgr_->AppendToPlotStrategy(child);
+                    continue;
+                }
+            }
+            child->Plot();
+        }
+    } else {
+        // (the original walks the list back to front here too, and appends without a visibility test)
+        for (auto it = list->items.rbegin(); it != list->items.rend(); ++it) {
+            (*it)->SetFlag(kWinPlotted, true);
+            mgr_->AppendToPlotStrategy(*it);
+        }
+    }
+    UnlockChildListRead(list);
+    return true;
+}
+
+// Copies the private buffer into the buffer the window draws to (PlotPresent 0x10016b49a). Through a draw
+// context when the target supports one: blt with the window's shade as modulation colour (the private buffer's
+// own fade shade when it has one), otherwise a plain locked blit.
+bool cGZWin::PlotPresent() {
+    if (!privateBuffer_) return true;
+    cRZRect dest = bltArea_;
+    IWinBuffer* target = nullptr;
+    if (!GetFlag(kWinPlotted)) {
+        if (parent_) target = static_cast<IWinBuffer*>(parent_->GetBufferToDrawTo());
+    } else if (parent_) {
+        target = WinGraphics() ? WinGraphics()->PrimaryBuffer() : nullptr;
+        dest = absoluteArea_;
+        SetFlag(kWinPlotted, false);
+        if (!target) return true;
+    }
+    if (!target) target = WinGraphics() ? WinGraphics()->PrimaryBuffer() : nullptr;
+    if (!target) return true;
+
+    if (cIGZBufferDrawTarget* drawTarget = target->QueryDrawTarget()) {
+        gz::cIGZDrawContext* ctx = drawTarget->LockContext();
+        ctx->ClipReset();
+        ctx->OffsetAbsolute(cRZPoint{0, 0});
+        ctx->PushState();
+        ctx->SetAlphaBlend(GetFlag(kWinFlag4));
+        ctx->SetBltModulate(GetFlag(kWinFlag4));
+        ctx->SetColor(GetFlag(kWinUseShadeColor) ? shadeColor_ : 0xffffffffu);
+        std::uint8_t r, g, b, a;
+        if (privateBuffer_->GetShadeColor(r, g, b, a)) {
+            if (GetFlag(kWinUseShadeColor))
+                ctx->SetColor((shadeColor_ & 0xffffffu) | (std::uint32_t(a) << 24));
+            else
+                ctx->SetColor(b | (std::uint32_t(g) << 8) | (std::uint32_t(r) << 16) | (std::uint32_t(a) << 24));
+        }
+        ctx->Blt(privateBuffer_->AsDrawSource(), drawArea_, dest);
+        ctx->PopState();
+        drawTarget->UnlockContext();
+    } else if (target->Lock(kLockPresent)) {
+        target->Blt(privateBuffer_, drawArea_, dest);
+        target->Unlock(kLockPresent);
+    }
+    return true;
+}
+
+// ---- cGZFadeTmpWin -----------------------------------------------------------------------------------------------
+
+cGZFadeTmpWin::cGZFadeTmpWin(cIGZWinMgr* mgr) : cGZWin(mgr) {
+    auto* v = new cRZVariant();
+    v->AddRef();
+    SetParam(kFadeTmpKey, v);       // marks this window as a fade temporary (PrivateBuffer checks for it)
+    v->Release();
+}
+
+// Takes over `source`'s private buffer: becomes a sibling of it (or a child of the main window when it has no
+// parent), at the same place, and fades the buffer out over the source's fade-out period.
+void cGZFadeTmpWin::StealBuffer(cIGZWin* source) {
+    cIGZWin* parent = source->GetParentWin();
+    if (!parent) {
+        GetMainWindow()->ChildAdd(this);
+        SetArea(source->GetAreaAbsolute());
+    } else {
+        parent->ChildAdd(this);
+        SetArea(source->GetArea());
+        MoveRelativeTo(source, false);
+    }
+    flags_ = (flags_ & 0xffd8ffdeu) | 0x230021u;
+    privateBuffer_ = static_cast<IWinBuffer*>(source->GetPrivateBuffer());
+    if (privateBuffer_) privateBuffer_->AddRef();
+    SetBufferToDrawTo();
+    int fadeIn = 0, fadeOut = 0;
+    source->GetFadeEffectPeriod(fadeIn, fadeOut);
+    set_fade_state(0xff, -fadeOut);
+}
+
+// While the fade runs it plots like a normal window and then invalidates; when it is over the window asks the
+// manager to destroy it.
+bool cGZFadeTmpWin::Plot() {
+    if (!fade_in_progress()) {
+        mgr_->DestroyWindow(this);
+        return true;
+    }
+    const bool result = cGZWin::Plot();
+    InvalidateSelfAndParents();
+    return result;
 }
 
 bool cGZWin::Plot() {

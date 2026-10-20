@@ -14,14 +14,18 @@
 // The child list is copy-on-write for readers: iteration holds a "lock" on the list that was current; a writer
 // that finds locks outstanding switches to a fresh copy and the stale list is freed by its last reader.
 //
-// Not recovered here (left partial): the rendering pipeline - PlotComposite, PlotPresent, private buffer
-// creation / transparency / fill - which talks to the draw system and its buffers.
+// The rendering pipeline (PlotComposite, PlotPresent, PrivateBuffer, the fade effect and the cGZFadeTmpWin that
+// keeps a closing fading window on screen) talks to the buffers and the draw system only through the small
+// IWinBuffer / IWinGraphics seams below.
 #pragma once
 #include <list>
 #include <map>
 
 #include "gz/WinInterfaces.h"
 #include "rz/cRZString.h"
+
+class cIGZBufferDrawTarget;
+namespace gz { class IDrawTargetBuffer; }
 
 // A drawing buffer as far as the windows use it (cIGZBuffer).
 class IWinBuffer : public cIGZUnknown {
@@ -31,6 +35,22 @@ public:
     virtual void NativeToRGB(std::uint32_t native, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b) = 0;   // vslot 0x108
     virtual void* GetDrawContext() = 0;                              // QueryInterface(0xab300b2b) vslot 0x20
     virtual bool SetFadeAlpha(std::uint8_t alpha) = 0;               // QueryInterface(0x86d72b57) vslot 0x18; false when unsupported
+    // --- rendering pipeline (defaults describe a buffer that does nothing) ---
+    virtual bool Init(int width, int height) { (void)width; (void)height; return true; }   // vslot 0x28 (colour type 1 = display)
+    virtual void Shutdown() {}                                       // vslot 0x30
+    virtual bool Lock(std::uint32_t flags) { (void)flags; return true; }     // vslot 0x40
+    virtual void Unlock(std::uint32_t flags) { (void)flags; }                // vslot 0x48
+    virtual bool IsReady() { return true; }                          // vslot 0x148
+    virtual bool Fill(std::uint32_t color, const cRZRect& rect) { (void)color; (void)rect; return true; }   // vslot 0xa0 (no clip)
+    virtual void SetTransparency(std::uint32_t color) { (void)color; }       // vslot 0xc8
+    virtual bool GetTransparency() { return false; }                 // vslot 0xd0
+    virtual bool IsPixelTransparent(int x, int y) { (void)x; (void)y; return false; }   // vslot 0xd8
+    virtual bool GetTransparentColor(std::uint32_t& color) { (void)color; return false; }   // vslot 0xe0
+    virtual void RemoveTransparency() {}                             // vslot 0xe8
+    virtual bool Blt(IWinBuffer* source, const cRZRect& sourceRect, const cRZRect& destRect) { (void)source; (void)sourceRect; (void)destRect; return true; }   // vslot 0xf8 (no clip)
+    virtual bool GetShadeColor(std::uint8_t& r, std::uint8_t& g, std::uint8_t& b, std::uint8_t& a) { (void)r; (void)g; (void)b; (void)a; return false; }   // QueryInterface(0x86d72b57) vslot 0x20
+    virtual cIGZBufferDrawTarget* QueryDrawTarget() { return nullptr; }      // QueryInterface(0xab300b2b)
+    virtual gz::IDrawTargetBuffer* AsDrawSource() { return nullptr; }        // the buffer as a draw-context blit source
 };
 
 // Services of the graphics system the windows need.
@@ -41,6 +61,14 @@ public:
     virtual void NativeToRGB(std::uint32_t native, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b) = 0;   // vslot 0x120
     virtual IWinBuffer* PrimaryBuffer() = 0;          // the screen buffer (cIGZGraphicSystem vslot 0x40)
     virtual bool DrawSystemActive() = 0;              // cIGZDrawSystem service present
+    // Creates a display-format buffer of the given size through the draw system (service 0xeb2ea3cb vslot 0x28);
+    // returns null when it fails. Only used while DrawSystemActive().
+    virtual IWinBuffer* DrawSystemCreateBuffer(int width, int height) { (void)width; (void)height; return nullptr; }
+    // A fresh uninitialised buffer from the graphics system (RZ::GS() vslot 0x20), used without a draw system.
+    virtual IWinBuffer* GraphicsCreateBuffer() { return nullptr; }
+    // The colour windows with a transparent private buffer key out (RZ::WCM() vslot 0xf8 for id 0x08963f6c);
+    // false when the window class manager is missing.
+    virtual bool GetPrivateBufferKeyColor(std::uint32_t& nativeColor) { (void)nativeColor; return false; }
 };
 IWinGraphics* WinGraphics();
 void SetWinGraphics(IWinGraphics* graphics);
@@ -178,8 +206,8 @@ public:
     void CenterWindowInRect(const cRZRect& rect) override;
     bool IsPointInWindowWindowCoordinates(int x, int y) const override;
     bool IsPointInWindowParentCoordinates(int x, int y) const override;
-    bool PlotComposite() override { return true; }     // rendering pipeline: not recovered
-    bool PlotPresent() override { return true; }       // rendering pipeline: not recovered
+    bool PlotComposite() override;
+    bool PlotPresent() override;
     void SetFillColorRGB(std::uint32_t rgb) override { fillColor_ = rgb; }
     std::uint32_t GetFillColorRGB() const override { return fillColor_; }
     std::uint32_t ConvertPackedRGBToNative(std::uint32_t rgb) const override;
@@ -204,8 +232,8 @@ public:
     void SendMsg(cIGZWin* target, std::uint32_t type, std::uint64_t p1, std::uint64_t p2, std::uint64_t p3) override;
     bool PostMsg(cIGZWin* target, cGZMessage& message) override;
     void PostMsg(cIGZWin* target, std::uint32_t type, std::uint64_t p1, std::uint64_t p2, std::uint64_t p3) override;
-    bool is_point_transparent(int, int) const override { return false; }   // needs the private buffer
-    bool create_private_buffer(int, int) override { return false; }
+    bool is_point_transparent(int x, int y) const override;
+    bool create_private_buffer(int w, int h) override;
 
     // non-virtual helpers
     bool GZAmCapturing() { return mgr_->GZGetCapture() == this; }
@@ -235,6 +263,9 @@ protected:
     bool child_private_buffers(bool on);
     void set_fade_state(std::uint8_t alpha, int periodMs);
     bool fade_in_progress();
+    void fade_advance();
+    bool set_private_buffer_transparency(bool on);
+    bool fill_private_buffer_with_transparent_color();
     void recalc_blt_area();
 
     cIGZWinMgr* mgr_;                  // +8
@@ -268,4 +299,15 @@ protected:
     std::uint32_t instanceId_ = 0;     // +0x144
     std::uint32_t shadeColor_ = 0xffffffff;   // +0x148
     std::uint32_t fillColor_ = 0;      // +0x14c
+};
+
+// The temporary window that takes over a closing window's private buffer so the fade-out can finish after the
+// window itself is gone (0x10016d3fc..0x10016d4f8). Only Plot differs from cGZWin. The original constructor takes
+// the window manager from the global service; here the stolen-from window's manager is passed in.
+class cGZFadeTmpWin : public cGZWin {
+public:
+    explicit cGZFadeTmpWin(cIGZWinMgr* mgr);                      // 0x10016d3fc
+    ~cGZFadeTmpWin() override = default;                          // 0x10016d4c0 / 0x10016d4ca
+    bool Plot() override;                                         // 0x10016d470
+    void StealBuffer(cIGZWin* source);                            // 0x10016c104
 };
