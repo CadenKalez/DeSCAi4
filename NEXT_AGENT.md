@@ -84,4 +84,5 @@ Paste this as your first message / system prompt:
 Finishing a class is not the end: add its follow-ups (neighbours to recover, seams to hook up, verifications) with
 `python3 scripts/todo.py add ID Class "task" --blocked-by ID,ID --where path` in the same commit. Pick work with
 `python3 scripts/todo.py list --ready`; close items with `todo.py done ID`; `todo.py sync-ledger` refreshes the auto rows for
-recovered-partial / pending functions. Terrain view items are TERRAIN-VIEW-*, terrain model items TERRAIN-*.
+recovered-partial / pending functions and `todo.py sync-classes` the CLASS-<name> rows (one per unfinished class, blocked by its
+unfinished base classes from `notes/class_bases.json`; rows close themselves at 0 remaining). Run both after each class. Terrain view items are TERRAIN-VIEW-*, terrain model items TERRAIN-*.

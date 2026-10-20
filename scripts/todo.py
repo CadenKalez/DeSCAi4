@@ -5,6 +5,8 @@
   todo.py add ID "Class" "task" [--blocked-by ID,ID] [--where path]   (ID like TERRAIN-VIEW-3)
   todo.py done ID [ID...]
   todo.py sync-ledger        one auto row per class that still has recovered-partial / pending functions (LEDGER-<class>)
+  todo.py sync-classes       one row per class with unrecovered functions (CLASS-<class>), blocked by its unfinished base classes
+                             (bases from notes/class_bases.json = RTTI); rows close themselves when the class reaches 0 remaining
   todo.py report             counts per class
 
 Rule for agents: finishing a class means adding its follow-ups here in the same commit; finishing a blocker means `todo.py done`."""
@@ -61,8 +63,40 @@ def main(a):
         for r in rows:
             if r["id"].startswith("LEDGER-") and r["id"] not in live: r["status"] = "done"
         save(rows); print(len(cnt), "classes with partial/pending functions")
+    elif cmd == "sync-classes":
+        import json
+        ns = {"__file__": str(ROOT/"scripts/progress.py")}
+        exec((ROOT/"scripts/progress.py").read_text().split("def main():")[0], ns)
+        classify, owner_of = ns["classify"], ns["owner_of"]
+        done = {int(r["address"], 16): r["status"] for r in csv.DictReader((ROOT/"notes/ledger.csv").open())}
+        left = collections.Counter(); notstarted = collections.Counter()
+        for line in (ROOT/"notes/symbols-functions-demangled.txt").read_text(errors="replace").splitlines():
+            addr, _, name = line.partition(" "); ad = int(addr, 16)
+            kind, _cat = classify(name, ad)
+            if kind != "game" or done.get(ad, "").startswith("recovered"): continue
+            owner = (owner_of(name)[0] or "(free)").split("::")[0]
+            left[owner] += 1
+            if ad not in done: notstarted[owner] += 1
+        bases = json.loads((ROOT/"notes/class_bases.json").read_text())
+        live = set(left)
+        for c, n in left.items():
+            i = f"CLASS-{c}"
+            blockers = sorted(f"CLASS-{b}" for b in bases.get(c, []) if b in live and b != c)
+            t = f"recover {n} remaining function(s) ({notstarted[c]} not started, {n - notstarted[c]} partial/pending)"
+            if blockers: t += "; bases still unfinished: " + ", ".join(b[6:] for b in blockers)
+            if i in by:
+                by[i].update(task=t, blocked_by=",".join(blockers), status="open")
+            else:
+                rows.append({"id": i, "class": c, "task": t, "blocked_by": ",".join(blockers), "status": "open",
+                             "where": "scripts/export_class.py + notes/remaining_functions.csv"})
+        for r in rows:
+            if r["id"].startswith("CLASS-") and r["class"] not in live: r["status"] = "done"
+        save(rows); print(len(left), "unfinished classes registered")
     elif cmd == "report":
         c = collections.Counter((r["class"], r["status"]) for r in rows)
+        if "--summary" in a:
+            ok = sum(1 for r in rows if ready(r, by))
+            print(f"{sum(r['status']=='open' for r in rows)} open, {sum(r['status']=='done' for r in rows)} done, {ok} ready now"); return
         for k in sorted({k[0] for k in c}): print(f"{k:28} open {c[(k,'open')]:3}  done {c[(k,'done')]:3}")
     else:
         print(__doc__)

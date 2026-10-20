@@ -1,0 +1,5337 @@
+{
+"(anonymous namespace)::ReadIntersectionEntries(cRZString const&, cRZString const&, void*)::CheckTypeParser": [
+"(anonymous namespace)::cParser"
+],
+"(anonymous namespace)::cAtLeastCommand": [
+"nSCRes::cSimpleCommandT<cSC4RuleParser>"
+],
+"(anonymous namespace)::cAtMostCommand": [
+"nSCRes::cSimpleCommandT<cSC4RuleParser>"
+],
+"(anonymous namespace)::cBridgeSpecializationParser": [
+"(anonymous namespace)::cParser"
+],
+"(anonymous namespace)::cBrushIDCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cCameraParamsCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cCardCommand": [
+"nSCRes::cSimpleCommandT<cSC4RuleParser>"
+],
+"(anonymous namespace)::cDecalAlphaCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cDecalAspectCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cDecalColorCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cDecalEffectCommand": [
+"nSCRes::cBlockCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cDecalLifeCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cDecalRotateCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cDecalSizeCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cDecalTextureCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cDestroyBuildingFilter": [
+"cISC4OccupantFilter",
+"cRZUnknown"
+],
+"(anonymous namespace)::cDynamicParticleEffectBaseCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cDynamicParticleEffectCommand": [
+"nSCRes::cBlockCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cDynamicParticleFrictionCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cDynamicParticleMassCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cDynamicParticleModelCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cEffectGroupIDCommand": [
+"nSCRes::cBlockCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cEffectGroupIDInstanceCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cEffectIDCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cEffectRemapCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cEffectsResourceCommand": [
+"nSCRes::cBlockCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupAttractorCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupBrushCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupCameraCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupChainCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupDecalCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupDynamicParticleCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupEffectCommand": [
+"nSCRes::cBlockCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupFlashCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupGroupCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupParticlesCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupScrubberCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupSelectCommand": [
+"nSCRes::cBlockCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupSequenceCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupShakeCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupSoundCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupSystemSequenceCommand": [
+"nSCRes::cBlockCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cGroupTintCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cHasCommand": [
+"nSCRes::cSimpleCommandT<cSC4RuleParser>"
+],
+"(anonymous namespace)::cHasNoCommand": [
+"nSCRes::cSimpleCommandT<cSC4RuleParser>"
+],
+"(anonymous namespace)::cLightColorCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cLightEffectCommand": [
+"nSCRes::cBlockCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cLightLengthCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cLightStrengthCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cLoadResourceCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cMessageTriggerCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cModelIDCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cOptionCommand": [
+"nSCRes::cSimpleCommandT<cSC4RuleParser>"
+],
+"(anonymous namespace)::cOptionGroupCommand": [
+"nSCRes::cBlockCommandT<cSC4RuleParser>"
+],
+"(anonymous namespace)::cOptionGroupOptionCommand": [
+"nSCRes::cSimpleCommandT<cSC4RuleParser>"
+],
+"(anonymous namespace)::cOptionGroupPropertyCommand": [
+"nSCRes::cSimpleCommandT<cSC4RuleParser>"
+],
+"(anonymous namespace)::cParticleAlignmentCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleAlphaCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleAspectCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleCollisionCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleColorCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleEffectBaseCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleEffectCommand": [
+"nSCRes::cBlockCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleEmitCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleForceCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleInjectCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleLifeCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleMaintainCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleModelCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleRandomWalkCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleRateCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleRotateCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleSizeCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleSourceCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleStretchCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleTerrainRepelCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleTextureCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleTimedEffectCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleWarpCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cParticleZoomCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cPropertyCommand": [
+"nSCRes::cSimpleCommandT<cSC4RuleParser>"
+],
+"(anonymous namespace)::cRenderPropCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cRuleCommand": [
+"nSCRes::cBlockCommandT<cSC4RuleParser>"
+],
+"(anonymous namespace)::cScrubberFilter": [
+"cISC4OccupantFilter",
+"cRZUnknown"
+],
+"(anonymous namespace)::cSequenceEffectCommand": [
+"nSCRes::cBlockCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cSequencePlayCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cSequenceWaitCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cShakeAmplitudeCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cShakeAspectCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cShakeBaseTableCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cShakeEffectCommand": [
+"nSCRes::cBlockCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cShakeFrequencyCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cShakeLengthCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cSoundIDCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cStringMatchCommand": [
+"nSCRes::cSimpleCommandT<cSC4RuleParser>"
+],
+"(anonymous namespace)::cStringNotMatchCommand": [
+"nSCRes::cSimpleCommandT<cSC4RuleParser>"
+],
+"(anonymous namespace)::cTestEffectCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cTextureIDCommand": [
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>"
+],
+"(anonymous namespace)::cVendorCommand": [
+"nSCRes::cBlockCommandT<cSC4RuleParser>"
+],
+"AnyBoolean": [
+"cGZAny<AnyBoolean>"
+],
+"AnyFloat32": [
+"cGZAny<AnyFloat32>"
+],
+"AnySint32": [
+"cGZAny<AnySint32>"
+],
+"AnyString": [
+"cGZAny<AnyString>"
+],
+"AnyUint32": [
+"cGZAny<AnyUint32>"
+],
+"CColorArray": [
+"CClientArray"
+],
+"CDirect3D7": [
+"IDirect3D7"
+],
+"CDirect3DDevice7": [
+"IDirect3DDevice7"
+],
+"CDirect3DVertexBuffer7": [
+"IDirect3DVertexBuffer7"
+],
+"CDirectDraw7": [
+"IDirectDraw7"
+],
+"CDirectDrawSurface7": [
+"IDirectDrawSurface7"
+],
+"CTextureCoordArray": [
+"CClientArray"
+],
+"CVertexArray": [
+"CClientArray"
+],
+"GZSndSysMacCOMDirector": [
+"cRZCOMDllDirector"
+],
+"IDirect3D7": [
+"IUnknown"
+],
+"IDirect3DDevice7": [
+"IUnknown"
+],
+"IDirect3DVertexBuffer7": [
+"IUnknown"
+],
+"IDirectDraw7": [
+"IUnknown"
+],
+"IDirectDrawSurface7": [
+"IUnknown"
+],
+"IDirectSound": [
+"IUnknown"
+],
+"IDirectSound3DBuffer": [
+"IUnknown"
+],
+"IDirectSound3DBuffer_Mac": [
+"IDirectSound3DBuffer"
+],
+"IDirectSound3DListener": [
+"IUnknown"
+],
+"IDirectSound3DListener_Mac": [
+"IDirectSound3DListener"
+],
+"IDirectSoundBuffer": [
+"IUnknown"
+],
+"IDirectSoundBuffer8": [
+"IDirectSoundBuffer"
+],
+"IDirectSoundBuffer_Mac": [
+"IDirectSoundBuffer8",
+"IUnknown_Mac"
+],
+"IDirectSound_Mac": [
+"IDirectSound",
+"IUnknown_Mac"
+],
+"IUnknown_Mac": [
+"IUnknown"
+],
+"MiscGraphArrow": [
+"DynamicGraphObject"
+],
+"MiscGraphLine": [
+"DynamicGraphObject"
+],
+"MiscGraphPicture": [
+"DynamicGraphObject"
+],
+"MiscGraphRect": [
+"DynamicGraphObject"
+],
+"MiscGraphTextInfo": [
+"DynamicGraphObject"
+],
+"SC43DGridElement": [
+"SC4GridElement"
+],
+"SC4MarkedCellView": [
+"cSC4ViewObject3D"
+],
+"SC4PathInfoView": [
+"cSC4ViewObject3D"
+],
+"SC4TrainJunctionView": [
+"cSC4ViewObject3D"
+],
+"cADVString": [
+"cSLString"
+],
+"cAmbienceCellFilterIsAbandoned": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsAgriculture": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsAirport": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsBuilding": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsCommercial": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsContruction": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsDistressed": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsEmpty": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsHighCrime": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsHighDesirability": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsHighGrowthStage": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsHighWealth": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsHighway": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsIndustrial": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsIndustrialClean": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsIndustrialDirty": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsLandfill": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsLowCrime": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsLowDesirability": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsLowGrowthStage": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsLowWealth": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsMediumCrime": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsMediumDesirability": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsMediumGrowthStage": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsMediumWealth": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsPipe": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsRail": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsResidential": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsRoad": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsSeaport": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsSpaceport": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsStreet": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsSubway": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsUnzoned": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsWater": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceCellFilterIsZoo": [
+"cISC4AmbienceCellFilter"
+],
+"cAmbienceFilterIsAlways": [
+"cISC4AmbienceHandleFilter"
+],
+"cAmbienceFilterIsDay": [
+"cISC4AmbienceHandleFilter"
+],
+"cAmbienceFilterIsDrivingMode": [
+"cISC4AmbienceHandleFilter"
+],
+"cAmbienceFilterIsNight": [
+"cISC4AmbienceHandleFilter"
+],
+"cAmbienceFilterIsPipeView": [
+"cISC4AmbienceHandleFilter"
+],
+"cAmbienceFilterIsSimSpeedFast": [
+"cISC4AmbienceHandleFilter"
+],
+"cAmbienceFilterIsSimSpeedMedium": [
+"cISC4AmbienceHandleFilter"
+],
+"cAmbienceFilterIsSimSpeedPaused": [
+"cISC4AmbienceHandleFilter"
+],
+"cAmbienceFilterIsSimSpeedSlow": [
+"cISC4AmbienceHandleFilter"
+],
+"cAmbienceFilterIsSubwayView": [
+"cISC4AmbienceHandleFilter"
+],
+"cAmbienceFilterIsSurfaceView": [
+"cISC4AmbienceHandleFilter"
+],
+"cAmbienceFilterIsZoom1": [
+"cISC4AmbienceHandleFilter"
+],
+"cAmbienceFilterIsZoom2": [
+"cISC4AmbienceHandleFilter"
+],
+"cAmbienceFilterIsZoom3": [
+"cISC4AmbienceHandleFilter"
+],
+"cAmbienceFilterIsZoom4": [
+"cISC4AmbienceHandleFilter"
+],
+"cAmbienceFilterIsZoom5": [
+"cISC4AmbienceHandleFilter"
+],
+"cAmbienceOccupantFilterIsAbandoned": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsAgriculture": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsBuilding": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsBus": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsCheapVehicle": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsCivillianVehicle": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsCommercial": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsConstructionVehicle": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsDistressed": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsEmergencyVehicle": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsFarmVehicle": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsGarbageTruck": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsHighWealth": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsIndustrialClean": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsIndustrialDirty": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsLandfill": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsLowWealth": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsMediumWealth": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsMovingVan": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsMySim": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsNature": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsOnFire": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsPowered": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsResidential": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsRichVehicle": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsSoccerMom": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsTaxi": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsTraffic": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsTrain": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsTvReporter": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAmbienceOccupantFilterIsVehicle": [
+"cISC4AmbienceOccupantFilter"
+],
+"cAutomataOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cCompletionObj": [
+"cIGZSndCompletionFunctionObject"
+],
+"cFontCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cFreshCell": [
+"cIFreshCell"
+],
+"cFreshCellPlayer": [
+"cIFreshCellPlayer",
+"cGZFileNameToResKeyConverterDefault"
+],
+"cFreshDimensionPlayer": [
+"cIFreshDimensionPlayer",
+"cIFreshPlayer",
+"cIGZSndUpdateTarget"
+],
+"cFreshPlayer": [
+"cIFreshPlayer",
+"cIGZSndUpdateTarget"
+],
+"cFreshScore": [
+"cIFreshScore"
+],
+"cFreshnessCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cGXCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cGZAllocatorService": [
+"cIGZAllocatorService",
+"cRZSystemService"
+],
+"cGZAlphaBlt": [
+"cRZSystemService",
+"cIGZAlphaBlt"
+],
+"cGZAny<AnyBoolean>": [
+"cIGZAny"
+],
+"cGZAny<AnyFloat32>": [
+"cIGZAny"
+],
+"cGZAny<AnySint32>": [
+"cIGZAny"
+],
+"cGZAny<AnyString>": [
+"cIGZAny"
+],
+"cGZAny<AnyUint32>": [
+"cIGZAny"
+],
+"cGZApp": [
+"cRZSystemService",
+"cIGZApp"
+],
+"cGZBarGraph": [
+"cGZGraph",
+"cIGZBarGraph"
+],
+"cGZBuffer": [
+"cIGZBuffer",
+"cIGZBufferShader"
+],
+"cGZBufferFontRenderer": [
+"cIGZFontRenderer"
+],
+"cGZBufferResource": [
+"cGZPersistResource",
+"cIGZBufferResource"
+],
+"cGZBufferResourceFactory": [
+"cGZPersistResourceFactory",
+"cIGZBufferResourceFactory"
+],
+"cGZBufferSimGLCache": [
+"cIGZBufferHardwareCache",
+"cIGZBufferSimGLCache",
+"cRZRefCount"
+],
+"cGZCOM": [
+"cIGZCOM",
+"cRZThreadSafeObject",
+"cRZSystemService"
+],
+"cGZCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cGZCOMLibrary": [
+"cIGZCOMLibrary"
+],
+"cGZCanvasMessage": [
+"cIGZCanvasMessage"
+],
+"cGZCanvasW32": [
+"cIGZCanvas",
+"cIGZCanvasW32",
+"cIGZCanvasMessaging",
+"cIGZMessageTarget",
+"cIGZMessageTarget2",
+"cRZSystemService"
+],
+"cGZCheatCodeManager": [
+"cIGZCheatCodeManager",
+"cRZSystemService"
+],
+"cGZClipboardManager": [
+"cIGZClipboardManager",
+"cRZSystemService"
+],
+"cGZClipboardManagerClipboard": [
+"cIGZClipboard"
+],
+"cGZClipboardManagerClipboardData": [
+"cIGZClipboardData"
+],
+"cGZCommandParameterSet": [
+"cIGZCommandParameterSet"
+],
+"cGZCommandServer": [
+"cIGZCommandServer",
+"cRZSystemService"
+],
+"cGZCommandSystemSupport": [
+"cIGZMessageTarget2"
+],
+"cGZDBReadRecordPackedFile": [
+"cGZDBRecordPackedFile"
+],
+"cGZDBReadRecordRAM": [
+"cGZDBRecordPackedFile"
+],
+"cGZDBRecordBitmapRes": [
+"cGZPersistDBSerialRecord"
+],
+"cGZDBRecordPackedFile": [
+"cGZPersistDBSerialRecord"
+],
+"cGZDBSDFRecord": [
+"cIGZPersistDBSDFRecord",
+"cGZPersistDBSerialRecord"
+],
+"cGZDBSegmentDirectoryFiles": [
+"cIGZPersistDBSegmentDirectoryFiles",
+"cGZPersistDBSegment"
+],
+"cGZDBSegmentPackedFile": [
+"cIGZDBSegmentPackedFile",
+"cGZPersistDBSegment"
+],
+"cGZDBSerialRecordAsIGZFile": [
+"cIGZDBSerialRecordAsIGZFile",
+"cIGZFile"
+],
+"cGZDBWriteRecordPackedFile": [
+"cGZDBRecordPackedFile"
+],
+"cGZDate": [
+"cRZDate",
+"cIGZDate"
+],
+"cGZDefaultAllocator": [
+"cIGZAllocator"
+],
+"cGZDrawCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cGZDrawContext": [
+"cIGZDrawContext"
+],
+"cGZDrawContextAsBuffer": [
+"cIGZBuffer",
+"cRZRefCount",
+"cIGZDrawContextAsBuffer"
+],
+"cGZDrawContextRenderToBuffer": [
+"cIGZDrawContextEngine"
+],
+"cGZDrawContextRenderToBufferFactory": [
+"cIGZDrawContextEngineFactory",
+"cRZRefCount"
+],
+"cGZDrawContextRenderToHardware": [
+"cIGZDrawContextEngine"
+],
+"cGZDrawContextRenderToSimGL": [
+"cGZDrawContextRenderToHardware"
+],
+"cGZDrawContextRenderToSimGLFactory": [
+"cIGZDrawContextEngineFactory",
+"cRZRefCount"
+],
+"cGZDrawFontRenderer": [
+"cIGZFontRenderer"
+],
+"cGZDrawSystem": [
+"cIGZDrawSystem",
+"cRZSystemService"
+],
+"cGZDummyWinProc": [
+"cIGZWinProc"
+],
+"cGZFadeTmpWin": [
+"cGZWin"
+],
+"cGZFileNameToResKeyConverterDefault": [
+"cIGZFileNameToResKeyConverter"
+],
+"cGZFileSystem": [
+"cRZSystemService",
+"cIGZFileSystem"
+],
+"cGZFont": [
+"cIGZFont"
+],
+"cGZFontSys": [
+"cIGZFontSys",
+"cIGZSystemService"
+],
+"cGZFramework": [
+"cIGZFrameWork",
+"cIGZFrameWorkW32"
+],
+"cGZGimexFactory": [
+"cIGZGimexFactory",
+"cGZPersistResourceFactory"
+],
+"cGZGimexReader": [
+"cIGZGimexReader"
+],
+"cGZGimexWriter": [
+"cIGZGimexWriter"
+],
+"cGZGraph": [
+"cGZWin",
+"cIGZGraph"
+],
+"cGZGraphicCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cGZGraphicSystem": [
+"cRZSystemService",
+"cIGZGraphicSystem",
+"cIGZGraphicSystem2",
+"cIGZFrameWorkHooks",
+"cIGZMessageTarget",
+"cIGZMessageTarget2"
+],
+"cGZGraphicSystem::cCanvasMessageTarget": [
+"cIGZMessageTarget2"
+],
+"cGZGraphicSystemW32": [
+"cGZGraphicSystem",
+"cIGZGraphicSystemW32",
+"cIGZGraphicSystemModeSwitch"
+],
+"cGZGraphicWin32COMDirector": [
+"cRZCOMDllDirector"
+],
+"cGZKeyMessage": [
+"cIGZKeyMessage"
+],
+"cGZLegacyControl": [
+"cIGZScriptableControl",
+"cIGZRenderControl",
+"cIGZLegacyControl"
+],
+"cGZLineGraph": [
+"cGZGraph",
+"cIGZLineGraph"
+],
+"cGZLua5": [
+"cGZLua5Thread",
+"cIGZLua5"
+],
+"cGZLua5CommandGenerator": [
+"cRZUnknown",
+"cIGZCommandGenerator",
+"cIGZLua5CommandGenerator"
+],
+"cGZLua5Thread": [
+"cRZUnknown",
+"cIGZLua5Thread"
+],
+"cGZLuaScriptServer": [
+"cIGZLuaScriptServer",
+"cRZSystemService"
+],
+"cGZMessage2CommandDispatcher": [
+"cIGZCommandDispatcher"
+],
+"cGZMessage2CommandDispatcherMessage": [
+"cIGZCommandDispatcherObject",
+"cRZMessage2Standard"
+],
+"cGZMessageQueue": [
+"cIGZMessageQueue"
+],
+"cGZMessageQueue2": [
+"cIGZMessageQueue2"
+],
+"cGZMessageQueueManager2": [
+"cIGZMessageQueueManager2",
+"cRZSystemService",
+"cRZThreadSafeObject"
+],
+"cGZMessageServer": [
+"cRZSystemService",
+"cIGZMessageServer"
+],
+"cGZMessageServer2": [
+"cIGZMessageServer2",
+"cRZSystemService"
+],
+"cGZMiscCommandSystemSupport": [
+"cGZCommandSystemSupport"
+],
+"cGZMouseMessage": [
+"cIGZMouseMessage"
+],
+"cGZPersistASCIIWriter": [
+"cIGZPersistWriter"
+],
+"cGZPersistBinaryReader": [
+"cIGZPersistReader"
+],
+"cGZPersistBinaryResource": [
+"cGZPersistResource",
+"cIGZPersistBinaryResource"
+],
+"cGZPersistBinaryResourceFactory": [
+"cGZPersistResourceFactory"
+],
+"cGZPersistBinaryWriter": [
+"cIGZPersistWriter"
+],
+"cGZPersistBufferResource": [
+"cGZPersistResource",
+"cIGZPersistBufferResource"
+],
+"cGZPersistBufferResourceFactory": [
+"cGZPersistResourceFactory",
+"cIGZPersistBufferResourceFactory"
+],
+"cGZPersistCacheStrategyBasic": [
+"cIGZPersistCacheStrategy"
+],
+"cGZPersistDBRecord": [
+"cIGZPersistDBRecord"
+],
+"cGZPersistDBSegment": [
+"cIGZPersistDBSegment"
+],
+"cGZPersistDBSegmentMultiPackedFiles": [
+"cGZPersistDBSegment",
+"cIGZDBSegmentMultiPackedFiles"
+],
+"cGZPersistDBSerialRecord": [
+"cIGZPersistDBSerialRecord",
+"cGZPersistDBRecord",
+"cRZOStream",
+"cRZIStream"
+],
+"cGZPersistResource": [
+"cIGZPersistResource"
+],
+"cGZPersistResourceFactory": [
+"cIGZPersistResourceFactory"
+],
+"cGZPersistResourceKeyFilter": [
+"cIGZPersistResourceKeyFilter"
+],
+"cGZPersistResourceKeyFilterByGroup": [
+"cGZPersistResourceKeyFilter"
+],
+"cGZPersistResourceKeyFilterByType": [
+"cGZPersistResourceKeyFilter"
+],
+"cGZPersistResourceKeyFilterByTypeAndGroup": [
+"cGZPersistResourceKeyFilter"
+],
+"cGZPersistResourceKeyList": [
+"cIGZPersistResourceKeyList"
+],
+"cGZPersistResourceManager": [
+"cIGZPersistResourceManager",
+"cRZSystemService"
+],
+"cGZPersistSurveyorWriter": [
+"cIGZPersistSurveyorWriter"
+],
+"cGZPieGraph": [
+"cGZGraph",
+"cIGZPieGraph"
+],
+"cGZPropertySetSerializerBinaryT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>": [
+"cIGZPropertySetSerializerT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>"
+],
+"cGZPropertySetSerializerT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>": [
+"cIGZPropertySetSerializerT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>"
+],
+"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>": [
+"cIGZPropertySetSerializerT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>",
+"cIGZExpatContentHandler"
+],
+"cGZPropertySetT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>": [
+"cIGZPropertySetT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>"
+],
+"cGZRESIDtoExtensionMap": [
+"cIGZPersistRESIDtoExtensionMap"
+],
+"cGZRTDValueEntry": [
+"cGZRTDEntry"
+],
+"cGZRealtimeDebugDisplay": [
+"cRZSystemService",
+"cIGZRealtimeDebugDisplay"
+],
+"cGZRegistry": [
+"cIGZRegistry",
+"cRZSystemService"
+],
+"cGZResManCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cGZResourceCOMDirectorW32": [
+"cRZCOMDllDirector"
+],
+"cGZScatterGraph": [
+"cGZGraph",
+"cIGZScatterGraph"
+],
+"cGZScreenBuffer": [
+"cGZBuffer",
+"cIGZScreenBuffer"
+],
+"cGZScriptCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cGZScriptTerp": [
+"cIGZScriptTerp"
+],
+"cGZScriptVocab": [
+"cIGZScriptVocab"
+],
+"cGZScriptableControlSet": [
+"cIGZScriptableControlSet",
+"cIGZRenderControlSet",
+"cGZArray<cIGZScriptableControl*>"
+],
+"cGZSnd": [
+"cIGZSnd",
+"cIGZSndDataSourceHolder",
+"cIGZSndCompletionNotification"
+],
+"cGZSnd3D": [
+"cGZSnd",
+"cIGZSnd3D"
+],
+"cGZSnd3DListener": [
+"cIGZSnd3DListener",
+"cIGZSnd3DListenerEx"
+],
+"cGZSndDefaultEventHandler": [
+"cIGZSndEventHandler"
+],
+"cGZSndEventStd": [
+"cRZMessage2Standard",
+"cIGZSndEventStd"
+],
+"cGZSndInstanceCache": [
+"cIGZSndInstanceCache"
+],
+"cGZSndMgr": [
+"cRZSystemService",
+"cIGZSndMgr",
+"cIGZSndUpdateTarget"
+],
+"cGZSndPropertyCache": [
+"cIGZSndPropertyCache"
+],
+"cGZSndSegmentDataSourceCreator": [
+"cIGZSndDataSourceCreator"
+],
+"cGZSndSegmentDataSourceUTalk": [
+"cIGZSndDataSource"
+],
+"cGZSndSegmentDataSourceXA": [
+"cIGZSndDataSource"
+],
+"cGZSndSegmentWavDataSource": [
+"cIGZSndDataSource"
+],
+"cGZSndSys": [
+"cIGZSndSys",
+"cIGZSystemService",
+"cIGZMessageTarget2",
+"cIGZSnd3DListener",
+"cIGZSnd3DListenerEx",
+"cIGZSndEaRendererEffects"
+],
+"cGZSndSysMac": [
+"cIGZSystemService",
+"cIGZSndRenderer"
+],
+"cGZSoundCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cGZStringCommandGenerator": [
+"cIGZCommandGenerator"
+],
+"cGZToolCommandSystemSupport": [
+"cGZCommandSystemSupport"
+],
+"cGZToolsCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cGZUIScriptCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cGZUIScriptService": [
+"cIGZUIScriptService",
+"cIGZUILegacyScriptService",
+"cIGZScriptTarget",
+"cIGZScriptInterpretingTarget",
+"cIGZScriptCompilingTarget",
+"cRZSystemService"
+],
+"cGZWWWCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cGZWWWSystem": [
+"cIGZMessageTarget2",
+"cIGZWWWSystem",
+"cRZSystemService"
+],
+"cGZWWWWin32COMDirector": [
+"cRZCOMDllDirector"
+],
+"cGZWin": [
+"cIGZWin"
+],
+"cGZWin32COMDirector": [
+"cRZCOMDllDirector"
+],
+"cGZWinBMP": [
+"cGZWin",
+"cIGZWinBMP"
+],
+"cGZWinBtn": [
+"cIGZWinBtn",
+"cGZWin"
+],
+"cGZWinCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cGZWinColorPicker2": [
+"cGZWin"
+],
+"cGZWinCombo": [
+"cGZWin",
+"cIGZWinCombo"
+],
+"cGZWinCommandSystemSupport": [
+"cGZCommandSystemSupport"
+],
+"cGZWinCtrlMgr": [
+"cRZSystemService",
+"cIGZWinCtrlMgr"
+],
+"cGZWinCustom": [
+"cGZWin",
+"cIGZWinCustom"
+],
+"cGZWinDebugDisplay": [
+"cGZWin"
+],
+"cGZWinDlg": [
+"cGZWin",
+"cIGZWinDlg"
+],
+"cGZWinDragAndDropManager": [
+"cIGZWinDragAndDropManager",
+"cIGZWinMessageFilter",
+"cRZSystemService",
+"cGZWin"
+],
+"cGZWinFileBrowser": [
+"cIGZWinFileBrowser",
+"cGZWin"
+],
+"cGZWinFlatRect": [
+"cGZWin",
+"cIGZWinFlatRect"
+],
+"cGZWinFolderRow": [
+"cIGZWinFolderRow",
+"cGZWin"
+],
+"cGZWinFolders": [
+"cIGZWinFolders",
+"cGZWin"
+],
+"cGZWinGen": [
+"cGZWin",
+"cIGZWinGen"
+],
+"cGZWinGenDlg": [
+"cGZWin",
+"cIGZWinGenDlg"
+],
+"cGZWinGenTitleBar": [
+"cGZWinFlatRect",
+"cIGZWinGenTitleBar"
+],
+"cGZWinGrid": [
+"cIGZWinGrid",
+"cGZWin"
+],
+"cGZWinHTML": [
+"cGZWin",
+"cIGZWinHTML",
+"cIGZMessageTarget2"
+],
+"cGZWinIMECandidateList": [
+"cIGZWinIMECandidateList",
+"cGZWinGen"
+],
+"cGZWinIMEComposition": [
+"cIGZWinIMEComposition",
+"cGZWinTextEdit"
+],
+"cGZWinIMEProxy": [
+"cIGZWinIMEProxy",
+"cIGZMessageTarget",
+"cRZSystemService"
+],
+"cGZWinIMEServer": [
+"cIGZWinIMEServer",
+"cRZSystemService"
+],
+"cGZWinKeyAcceleratorResFactory": [
+"cGZPersistResourceFactory"
+],
+"cGZWinKnob": [
+"cIGZWinKnob",
+"cGZWin"
+],
+"cGZWinLineInput": [
+"cGZWin",
+"cIGZWinLineInput"
+],
+"cGZWinListBox": [
+"cGZWin",
+"cIGZWinListBox"
+],
+"cGZWinLuaScriptBrowser": [
+"cGZWinFileBrowser"
+],
+"cGZWinLuaScriptConsole": [
+"cGZWinGen",
+"cIGZMessageTarget2"
+],
+"cGZWinLuaScriptView": [
+"cGZWinGen",
+"cIGZMessageTarget2"
+],
+"cGZWinLuaScriptViewBreakpoints": [
+"cGZWinLuaScriptViewGeneral"
+],
+"cGZWinLuaScriptViewCallStack": [
+"cGZWinLuaScriptViewGeneral"
+],
+"cGZWinLuaScriptViewGeneral": [
+"cGZWinGen"
+],
+"cGZWinLuaScriptViewVariables": [
+"cGZWinLuaScriptViewGeneral"
+],
+"cGZWinMgrBase": [
+"cIGZWinMgr",
+"cRZSystemService"
+],
+"cGZWinMgrW32": [
+"cGZWinMgrBase"
+],
+"cGZWinMgrW32::cCanvasMessageTarget": [
+"cIGZMessageTarget2"
+],
+"cGZWinMgrW32::cKeyMessageTarget": [
+"cIGZMessageTarget2"
+],
+"cGZWinMgrW32::cMouseMessageTarget": [
+"cIGZMessageTarget2"
+],
+"cGZWinMsgBox": [
+"cGZWinDlg",
+"cIGZWinMsgBox"
+],
+"cGZWinOptGrp": [
+"cGZWin",
+"cIGZWinOptGrp"
+],
+"cGZWinOutline": [
+"cIGZWinOutline",
+"cGZWin"
+],
+"cGZWinPieMenu": [
+"cGZWin",
+"cIGZWinPieMenu"
+],
+"cGZWinProcShowProperties": [
+"cIGZWinProc",
+"cRZRefCount"
+],
+"cGZWinProcSpy": [
+"cIGZWinProc",
+"cRZRefCount",
+"cIGZWinProcSpy"
+],
+"cGZWinProcSpyMessages": [
+"cIGZWinProc",
+"cRZRefCount",
+"cIGZWinSpyTarget"
+],
+"cGZWinRTDEntry": [
+"cGZWin"
+],
+"cGZWinRTDGraphEntry": [
+"cGZWinRTDEntry"
+],
+"cGZWinScrollbar": [
+"cGZWinSlider",
+"cIGZWinScrollbar"
+],
+"cGZWinScrollbar2": [
+"cGZWin",
+"cIGZWinScrollbar2"
+],
+"cGZWinSlider": [
+"cGZWin",
+"cIGZWinSlider"
+],
+"cGZWinSpinner": [
+"cGZWin",
+"cIGZWinSpinner"
+],
+"cGZWinSpyFinder": [
+"cGZWin"
+],
+"cGZWinSpyHotKeyFilter": [
+"cIGZWinMessageFilter",
+"cRZRefCount"
+],
+"cGZWinSpyMessageFilter": [
+"cRZRefCount",
+"cIGZWinMessageFilter"
+],
+"cGZWinSpyMessageFilterBreak": [
+"cRZRefCount",
+"cIGZWinMessageFilter"
+],
+"cGZWinTestService": [
+"cGZWin"
+],
+"cGZWinText": [
+"cGZWin",
+"cIGZWinText"
+],
+"cGZWinTextEdit": [
+"cGZWin",
+"cIGZWinTextEdit"
+],
+"cGZWinTextTicker": [
+"cIGZWinTextTicker",
+"cGZWin"
+],
+"cGZWinToolTip": [
+"cGZWin",
+"cIGZWinToolTip"
+],
+"cGZWinToolTipMgr": [
+"cIGZWinToolTipMgr"
+],
+"cGZWinTreeView": [
+"cIGZWinTreeView",
+"cGZWin"
+],
+"cGZWinTreeViewDrag": [
+"cGZWin"
+],
+"cGroupLayer": [
+"cIGZUnknown"
+],
+"cHTMLAREA": [
+"cHTMLContainerElement"
+],
+"cHTMLAnchor": [
+"cHTMLContainerElement"
+],
+"cHTMLBLINK": [
+"cHTMLContainerElement"
+],
+"cHTMLBODY": [
+"cHTMLContainerElement",
+"cHTMLImageRequester"
+],
+"cHTMLBR": [
+"cHTMLElement"
+],
+"cHTMLBlockQuote": [
+"cHTMLContainerElement"
+],
+"cHTMLContainerElement": [
+"cHTMLElement"
+],
+"cHTMLDD": [
+"cHTMLContainerElement"
+],
+"cHTMLDIV": [
+"cHTMLContainerElement"
+],
+"cHTMLDT": [
+"cHTMLContainerElement"
+],
+"cHTMLDocument": [
+"cIHTMLDocument",
+"cIGZMessageTarget2"
+],
+"cHTMLFORM": [
+"cHTMLContainerElement"
+],
+"cHTMLHR": [
+"cHTMLElement"
+],
+"cHTMLHeading": [
+"cHTMLContainerElement"
+],
+"cHTMLIMG": [
+"cHTMLElement",
+"cHTMLInlineElement",
+"cHTMLImageRequester"
+],
+"cHTMLINPUT": [
+"cHTMLElement"
+],
+"cHTMLLink": [
+"cHTMLElement"
+],
+"cHTMLList": [
+"cHTMLContainerElement"
+],
+"cHTMLListItem": [
+"cHTMLContainerElement"
+],
+"cHTMLListItemHangingIndent": [
+"cHTMLContainerElement"
+],
+"cHTMLMAP": [
+"cHTMLContainerElement"
+],
+"cHTMLMETA": [
+"cHTMLElement"
+],
+"cHTMLOPTION": [
+"cHTMLContainerElement"
+],
+"cHTMLP": [
+"cHTMLContainerElement"
+],
+"cHTMLSELECT": [
+"cHTMLContainerElement"
+],
+"cHTMLSPAN": [
+"cHTMLContainerElement"
+],
+"cHTMLTABLE": [
+"cHTMLContainerElement"
+],
+"cHTMLTD": [
+"cHTMLContainerElement"
+],
+"cHTMLTH": [
+"cHTMLContainerElement"
+],
+"cHTMLTR": [
+"cHTMLContainerElement"
+],
+"cHTMLTextSegment": [
+"cHTMLElement",
+"cHTMLInlineElement"
+],
+"cHitChannel": [
+"cIGZSnd",
+"cIGZSnd3D",
+"cIGZSndUpdateTarget",
+"cIGZSndRegisterSet",
+"cIGZSndViewUpdateTarget",
+"cIGZSndDataSourceHolder"
+],
+"cHitControlGroup": [
+"cIHitControlGroup",
+"cIGZSnd"
+],
+"cHitDebugInfo": [
+"cIHitDebugInfo",
+"cRZSystemService"
+],
+"cHitIniFile": [
+"cRZIniFile",
+"cIHitIniFile"
+],
+"cHitList": [
+"cIHitList"
+],
+"cHitMan": [
+"cRZSystemService",
+"cIHitMan"
+],
+"cHitManCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cHitPropertySetResource": [
+"cGZPropertySetT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>",
+"cIHitResource"
+],
+"cHitPropertySetTrackResource": [
+"cGZPropertySetT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>",
+"cIHitResource"
+],
+"cHitResource<cHitList>": [
+"cHitList",
+"cIHitResource"
+],
+"cHitResource<cHitTrackPlayer>": [
+"cHitTrackPlayer",
+"cIHitResource"
+],
+"cHitResourceFactory": [
+"cIGZPersistResourceFactory"
+],
+"cHitSegmentDataSourceChannelCreator": [
+"cIGZSoundCreator",
+"cIGZSoundCreatorSoundDefRegistrar",
+"cIGZSndDefParserRegistrar"
+],
+"cHitSegmentTrackCreator": [
+"cIGZSoundCreator",
+"cIGZSoundCreatorSoundDefRegistrar",
+"cIGZSndDefParserRegistrar"
+],
+"cHitSem": [
+"cIHitSem"
+],
+"cHitSem2dDefault": [
+"cHitSem"
+],
+"cHitSem3dDefault": [
+"cHitSem"
+],
+"cHitTrackDataBlock": [
+"cIHitTrackDataBlock"
+],
+"cIFreshCell": [
+"cIGZUnknown"
+],
+"cIFreshCellPlayer": [
+"cIGZUnknown"
+],
+"cIFreshDimensionPlayer": [
+"cIGZUnknown"
+],
+"cIFreshPlayer": [
+"cIGZUnknown"
+],
+"cIFreshScore": [
+"cIGZUnknown"
+],
+"cIGZAllocator": [
+"cIGZUnknown"
+],
+"cIGZAllocatorService": [
+"cIGZUnknown"
+],
+"cIGZAlphaBlt": [
+"cIGZUnknown"
+],
+"cIGZApp": [
+"cIGZUnknown"
+],
+"cIGZBarGraph": [
+"cIGZUnknown"
+],
+"cIGZBuffer": [
+"cIGZUnknown"
+],
+"cIGZBufferHardwareCache": [
+"cIGZUnknown"
+],
+"cIGZBufferResource": [
+"cIGZUnknown"
+],
+"cIGZBufferResourceFactory": [
+"cIGZUnknown"
+],
+"cIGZBufferShader": [
+"cIGZUnknown"
+],
+"cIGZBufferSimGLCache": [
+"cIGZUnknown"
+],
+"cIGZCOM": [
+"cIGZUnknown"
+],
+"cIGZCOMDirector": [
+"cIGZUnknown"
+],
+"cIGZCOMLibrary": [
+"cIGZUnknown"
+],
+"cIGZCanvas": [
+"cIGZUnknown"
+],
+"cIGZCanvasMessage": [
+"cIGZMessage2"
+],
+"cIGZCanvasMessaging": [
+"cIGZUnknown"
+],
+"cIGZCanvasW32": [
+"cIGZUnknown"
+],
+"cIGZCheatCodeManager": [
+"cIGZUnknown"
+],
+"cIGZClipboard": [
+"cIGZUnknown"
+],
+"cIGZClipboardData": [
+"cIGZUnknown"
+],
+"cIGZClipboardManager": [
+"cIGZUnknown"
+],
+"cIGZCmdLine": [
+"cIGZUnknown"
+],
+"cIGZCommandDispatcher": [
+"cIGZUnknown"
+],
+"cIGZCommandDispatcherObject": [
+"cIGZUnknown"
+],
+"cIGZCommandGenerator": [
+"cIGZUnknown"
+],
+"cIGZCommandParameterSet": [
+"cIGZUnknown"
+],
+"cIGZCommandServer": [
+"cIGZUnknown"
+],
+"cIGZCompressor": [
+"cIGZUnknown"
+],
+"cIGZCursor": [
+"cIGZUnknown"
+],
+"cIGZCursorManager": [
+"cIGZUnknown"
+],
+"cIGZCursorResource": [
+"cIGZUnknown"
+],
+"cIGZCursorResourceFactory": [
+"cIGZUnknown"
+],
+"cIGZDBSegmentMultiPackedFiles": [
+"cIGZUnknown"
+],
+"cIGZDBSegmentPackedFile": [
+"cIGZUnknown"
+],
+"cIGZDBSerialRecordAsIGZFile": [
+"cIGZUnknown"
+],
+"cIGZDate": [
+"cIGZUnknown"
+],
+"cIGZDrawContext": [
+"cIGZUnknown"
+],
+"cIGZDrawContextAsBuffer": [
+"cIGZUnknown"
+],
+"cIGZDrawContextEngine": [
+"cIGZUnknown"
+],
+"cIGZDrawContextEngineFactory": [
+"cIGZUnknown"
+],
+"cIGZDrawSystem": [
+"cIGZUnknown"
+],
+"cIGZExceptionNotification": [
+"cIGZUnknown"
+],
+"cIGZExpatContentHandler": [
+"cIGZUnknown"
+],
+"cIGZFile": [
+"cIGZUnknown"
+],
+"cIGZFileNameToResKeyConverter": [
+"cIGZUnknown"
+],
+"cIGZFileSystem": [
+"cIGZUnknown"
+],
+"cIGZFont": [
+"cIGZUnknown"
+],
+"cIGZFontRenderer": [
+"cIGZUnknown"
+],
+"cIGZFontSys": [
+"cIGZUnknown"
+],
+"cIGZFrameWork": [
+"cIGZUnknown"
+],
+"cIGZFrameWorkHooks": [
+"cIGZUnknown"
+],
+"cIGZFrameWorkW32": [
+"cIGZUnknown"
+],
+"cIGZGBufferRegionExtension": [
+"cIGZUnknown"
+],
+"cIGZGDriver": [
+"cIGZUnknown"
+],
+"cIGZGDriverLightingExtension": [
+"cIGZUnknown"
+],
+"cIGZGDriverVertexBufferExtension": [
+"cIGZUnknown"
+],
+"cIGZGSnapshotExtension": [
+"cIGZUnknown"
+],
+"cIGZGimexFactory": [
+"cIGZUnknown"
+],
+"cIGZGimexReader": [
+"cIGZUnknown"
+],
+"cIGZGimexWriter": [
+"cIGZUnknown"
+],
+"cIGZGraph": [
+"cIGZUnknown"
+],
+"cIGZGraphicSystem": [
+"cIGZUnknown"
+],
+"cIGZGraphicSystem2": [
+"cIGZUnknown"
+],
+"cIGZGraphicSystemModeSwitch": [
+"cIGZUnknown"
+],
+"cIGZGraphicSystemW32": [
+"cIGZUnknown"
+],
+"cIGZIStream": [
+"cIGZUnknown"
+],
+"cIGZInitShutdown": [
+"cIGZUnknown"
+],
+"cIGZKeyMessage": [
+"cIGZMessage2"
+],
+"cIGZLanguageManager": [
+"cIGZUnknown"
+],
+"cIGZLanguageUtility": [
+"cIGZUnknown"
+],
+"cIGZLegacyControl": [
+"cIGZUnknown"
+],
+"cIGZLineGraph": [
+"cIGZUnknown"
+],
+"cIGZLua5": [
+"cIGZUnknown"
+],
+"cIGZLua5CommandGenerator": [
+"cIGZUnknown"
+],
+"cIGZLua5Thread": [
+"cIGZUnknown"
+],
+"cIGZLuaScriptServer": [
+"cIGZUnknown"
+],
+"cIGZMessage2": [
+"cIGZUnknown"
+],
+"cIGZMessage2Standard": [
+"cIGZMessage2"
+],
+"cIGZMessageQueue": [
+"cIGZUnknown"
+],
+"cIGZMessageQueue2": [
+"cIGZUnknown"
+],
+"cIGZMessageQueueManager2": [
+"cIGZUnknown"
+],
+"cIGZMessageServer": [
+"cIGZUnknown"
+],
+"cIGZMessageServer2": [
+"cIGZUnknown"
+],
+"cIGZMessageTarget": [
+"cIGZUnknown"
+],
+"cIGZMessageTarget2": [
+"cIGZUnknown"
+],
+"cIGZMouseMessage": [
+"cIGZMessage2"
+],
+"cIGZNetCommandGenerator": [
+"cIGZUnknown"
+],
+"cIGZOStream": [
+"cIGZUnknown"
+],
+"cIGZPersistBinaryResource": [
+"cIGZUnknown"
+],
+"cIGZPersistBufferResource": [
+"cIGZUnknown"
+],
+"cIGZPersistBufferResourceFactory": [
+"cIGZUnknown"
+],
+"cIGZPersistCacheStrategy": [
+"cIGZUnknown"
+],
+"cIGZPersistDBRecord": [
+"cIGZUnknown"
+],
+"cIGZPersistDBSDFRecord": [
+"cIGZUnknown"
+],
+"cIGZPersistDBSegment": [
+"cIGZUnknown"
+],
+"cIGZPersistDBSegmentDirectoryFiles": [
+"cIGZUnknown"
+],
+"cIGZPersistDBSerialRecord": [
+"cIGZUnknown"
+],
+"cIGZPersistRESIDtoExtensionMap": [
+"cIGZUnknown"
+],
+"cIGZPersistReader": [
+"cIGZUnknown"
+],
+"cIGZPersistResource": [
+"cIGZUnknown"
+],
+"cIGZPersistResourceFactory": [
+"cIGZUnknown"
+],
+"cIGZPersistResourceKeyFilter": [
+"cIGZUnknown"
+],
+"cIGZPersistResourceKeyList": [
+"cIGZUnknown"
+],
+"cIGZPersistResourceManager": [
+"cIGZUnknown"
+],
+"cIGZPersistSurveyorWriter": [
+"cIGZPersistWriter"
+],
+"cIGZPersistTokenRecord": [
+"cIGZUnknown"
+],
+"cIGZPersistWriter": [
+"cIGZUnknown"
+],
+"cIGZPieGraph": [
+"cIGZUnknown"
+],
+"cIGZPropertySetSerializerT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>": [
+"cIGZUnknown"
+],
+"cIGZPropertySetT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>": [
+"cIGZUnknown"
+],
+"cIGZPropertySetUint32XmlReader": [
+"cIGZUnknown"
+],
+"cIGZRadio": [
+"cIGZUnknown"
+],
+"cIGZRadioStation": [
+"cIGZUnknown"
+],
+"cIGZRealtimeDebugDisplay": [
+"cIGZUnknown"
+],
+"cIGZRegistry": [
+"cIGZUnknown"
+],
+"cIGZRenderControl": [
+"cIGZUnknown"
+],
+"cIGZRenderControlSet": [
+"cIGZUnknown"
+],
+"cIGZScatterGraph": [
+"cIGZUnknown"
+],
+"cIGZScreenBuffer": [
+"cIGZUnknown"
+],
+"cIGZScriptCompilingTarget": [
+"cIGZUnknown"
+],
+"cIGZScriptInterpretingTarget": [
+"cIGZUnknown"
+],
+"cIGZScriptTarget": [
+"cIGZUnknown"
+],
+"cIGZScriptTerp": [
+"cIGZUnknown"
+],
+"cIGZScriptVocab": [
+"cIGZUnknown"
+],
+"cIGZScriptableControl": [
+"cIGZUnknown"
+],
+"cIGZScriptableControlSet": [
+"cIGZUnknown"
+],
+"cIGZSerializable": [
+"cIGZUnknown"
+],
+"cIGZSnd": [
+"cIGZUnknown"
+],
+"cIGZSnd3D": [
+"cIGZUnknown"
+],
+"cIGZSnd3DListener": [
+"cIGZUnknown"
+],
+"cIGZSnd3DListenerEx": [
+"cIGZUnknown"
+],
+"cIGZSndCompletionFunctionObject": [
+"cIGZUnknown"
+],
+"cIGZSndCompletionNotification": [
+"cIGZUnknown"
+],
+"cIGZSndDataSource": [
+"cIGZUnknown"
+],
+"cIGZSndDataSourceCreator": [
+"cIGZUnknown"
+],
+"cIGZSndDataSourceHolder": [
+"cIGZUnknown"
+],
+"cIGZSndDefParserRegistrar": [
+"cIGZUnknown"
+],
+"cIGZSndEaRendererEffects": [
+"cIGZUnknown"
+],
+"cIGZSndEventHandler": [
+"cIGZUnknown"
+],
+"cIGZSndEventStd": [
+"cIGZUnknown"
+],
+"cIGZSndInstanceCache": [
+"cIGZUnknown"
+],
+"cIGZSndMgr": [
+"cIGZUnknown"
+],
+"cIGZSndMultipleSources": [
+"cIGZUnknown"
+],
+"cIGZSndPropertyCache": [
+"cIGZUnknown"
+],
+"cIGZSndRegisterSet": [
+"cIGZUnknown"
+],
+"cIGZSndRenderer": [
+"cIGZUnknown"
+],
+"cIGZSndSys": [
+"cIGZUnknown"
+],
+"cIGZSndUpdateTarget": [
+"cIGZUnknown"
+],
+"cIGZSndViewUpdateTarget": [
+"cIGZUnknown"
+],
+"cIGZSoundCreator": [
+"cIGZUnknown"
+],
+"cIGZSoundCreatorSoundDefRegistrar": [
+"cIGZUnknown"
+],
+"cIGZString": [
+"cIGZUnknown"
+],
+"cIGZSystemService": [
+"cIGZUnknown"
+],
+"cIGZUILegacyScriptService": [
+"cIGZUnknown"
+],
+"cIGZUIScriptService": [
+"cIGZUnknown"
+],
+"cIGZUIScriptServiceResourceFactory": [
+"cIGZUnknown"
+],
+"cIGZUnknownList": [
+"cIGZUnknown"
+],
+"cIGZVariant": [
+"cIGZUnknown"
+],
+"cIGZWWWSystem": [
+"cIGZUnknown"
+],
+"cIGZWWWSystemURLHandler": [
+"cIGZUnknown"
+],
+"cIGZWin": [
+"cIGZMessageTarget"
+],
+"cIGZWinBMP": [
+"cIGZUnknown"
+],
+"cIGZWinBtn": [
+"cIGZUnknown"
+],
+"cIGZWinCombo": [
+"cIGZUnknown"
+],
+"cIGZWinCtrlMgr": [
+"cIGZUnknown"
+],
+"cIGZWinCustom": [
+"cIGZUnknown"
+],
+"cIGZWinDlg": [
+"cIGZUnknown"
+],
+"cIGZWinDragAndDropManager": [
+"cIGZUnknown"
+],
+"cIGZWinFileBrowser": [
+"cIGZUnknown"
+],
+"cIGZWinFlatRect": [
+"cIGZUnknown"
+],
+"cIGZWinFolderRow": [
+"cIGZUnknown"
+],
+"cIGZWinFolders": [
+"cIGZUnknown"
+],
+"cIGZWinGen": [
+"cIGZUnknown"
+],
+"cIGZWinGenDlg": [
+"cIGZUnknown"
+],
+"cIGZWinGenTitleBar": [
+"cIGZUnknown"
+],
+"cIGZWinGrid": [
+"cIGZUnknown"
+],
+"cIGZWinHTML": [
+"cIGZUnknown"
+],
+"cIGZWinIMECandidateList": [
+"cIGZUnknown"
+],
+"cIGZWinIMEComposition": [
+"cIGZUnknown"
+],
+"cIGZWinIMEProxy": [
+"cIGZUnknown"
+],
+"cIGZWinIMEServer": [
+"cIGZUnknown"
+],
+"cIGZWinKeyAccelerator": [
+"cIGZUnknown"
+],
+"cIGZWinKeyAcceleratorRes": [
+"cIGZUnknown"
+],
+"cIGZWinKnob": [
+"cIGZUnknown"
+],
+"cIGZWinLineInput": [
+"cIGZUnknown"
+],
+"cIGZWinListBox": [
+"cIGZUnknown"
+],
+"cIGZWinMessageFilter": [
+"cIGZUnknown"
+],
+"cIGZWinMgr": [
+"cIGZUnknown"
+],
+"cIGZWinMsgBox": [
+"cIGZUnknown"
+],
+"cIGZWinOptGrp": [
+"cIGZUnknown"
+],
+"cIGZWinOutline": [
+"cIGZUnknown"
+],
+"cIGZWinPieMenu": [
+"cIGZUnknown"
+],
+"cIGZWinProc": [
+"cIGZUnknown"
+],
+"cIGZWinProcSpy": [
+"cIGZUnknown"
+],
+"cIGZWinScrollbar": [
+"cIGZUnknown"
+],
+"cIGZWinScrollbar2": [
+"cIGZUnknown"
+],
+"cIGZWinSlider": [
+"cIGZUnknown"
+],
+"cIGZWinSpinner": [
+"cIGZUnknown"
+],
+"cIGZWinText": [
+"cIGZUnknown"
+],
+"cIGZWinTextEdit": [
+"cIGZUnknown"
+],
+"cIGZWinTextTicker": [
+"cIGZUnknown"
+],
+"cIGZWinToolTip": [
+"cIGZUnknown"
+],
+"cIGZWinToolTipMgr": [
+"cIGZMessageTarget"
+],
+"cIGZWinTreeView": [
+"cIGZUnknown"
+],
+"cIHTMLDocument": [
+"cIGZUnknown"
+],
+"cIHitControlGroup": [
+"cIGZUnknown"
+],
+"cIHitDebugInfo": [
+"cIGZUnknown"
+],
+"cIHitIniFile": [
+"cIGZUnknown"
+],
+"cIHitList": [
+"cIGZUnknown"
+],
+"cIHitMan": [
+"cIGZUnknown"
+],
+"cIHitResource": [
+"cIGZPersistResource"
+],
+"cIHitSem": [
+"cIGZUnknown"
+],
+"cIHitTrackDataBlock": [
+"cIGZUnknown"
+],
+"cIHitTrackPlayer": [
+"cIGZUnknown"
+],
+"cIS3DMaterialManager": [
+"cIGZUnknown"
+],
+"cIS3DMeshAndMaterial": [
+"cIGZUnknown"
+],
+"cIS3DModelInstance": [
+"cIGZUnknown"
+],
+"cIS3DModelInstanceAnimated": [
+"cIS3DModelInstance"
+],
+"cIS3DResModel": [
+"cIGZUnknown"
+],
+"cIS3DResSpriteAnim": [
+"cIGZUnknown"
+],
+"cIS3DResSpriteAnimTable": [
+"cIGZUnknown"
+],
+"cIS3DResTexture": [
+"cIGZUnknown"
+],
+"cIS3DTextureBindingFactory": [
+"cIGZUnknown"
+],
+"cIS3DTextureFactoryDebugDisplay": [
+"cIGZUnknown"
+],
+"cISC424HourClock": [
+"cIGZUnknown"
+],
+"cISC43DPlaceableObject": [
+"cIGZUnknown"
+],
+"cISC43DRender": [
+"cIGZUnknown"
+],
+"cISC4AEMSEvents": [
+"cIGZUnknown"
+],
+"cISC4Advice": [
+"cIGZUnknown"
+],
+"cISC4AdviceSubject": [
+"cIGZUnknown"
+],
+"cISC4Advisor": [
+"cIGZUnknown"
+],
+"cISC4AdvisorSystem": [
+"cIGZUnknown"
+],
+"cISC4AirportDeveloper": [
+"cISC4PortDeveloper"
+],
+"cISC4AmbienceCellFilter": [
+"cISC4AmbienceFilter"
+],
+"cISC4AmbienceFilter": [
+"cIGZUnknown"
+],
+"cISC4AmbienceHandleFilter": [
+"cISC4AmbienceFilter"
+],
+"cISC4AmbienceOccupantFilter": [
+"cISC4AmbienceFilter"
+],
+"cISC4AnimationTickManager": [
+"cIGZUnknown"
+],
+"cISC4App": [
+"cIGZUnknown"
+],
+"cISC4AudioAmbienceManager": [
+"cIGZUnknown"
+],
+"cISC4AudioScapeManager": [
+"cIGZUnknown"
+],
+"cISC4AuraSimulator": [
+"cIGZUnknown"
+],
+"cISC4AutomataController": [
+"cIGZUnknown"
+],
+"cISC4AutomataControllerManager": [
+"cIGZUnknown"
+],
+"cISC4AutomataManager": [
+"cIGZUnknown"
+],
+"cISC4AutomataScriptSystem": [
+"cIGZUnknown"
+],
+"cISC4Automaton": [
+"cIGZUnknown"
+],
+"cISC4BudgetSimulator": [
+"cIGZUnknown"
+],
+"cISC4BuildingDevelopmentSimulator": [
+"cIGZUnknown"
+],
+"cISC4BuildingOccupant": [
+"cIGZUnknown"
+],
+"cISC4BusinessUnit": [
+"cIGZUnknown"
+],
+"cISC4COMSerializer": [
+"cIGZUnknown"
+],
+"cISC4CachedStringTexture": [
+"cIGZUnknown"
+],
+"cISC4CatalogItem": [
+"cIGZUnknown"
+],
+"cISC4CellTextureModel": [
+"cIGZUnknown"
+],
+"cISC4City": [
+"cIGZUnknown"
+],
+"cISC4CityDetailManager": [
+"cIGZUnknown"
+],
+"cISC4CitySituationAdvice": [
+"cIGZUnknown"
+],
+"cISC4CitySituationManager": [
+"cIGZUnknown"
+],
+"cISC4CivicBuildingSimulator": [
+"cIGZUnknown"
+],
+"cISC4CommercialSimulator": [
+"cIGZUnknown"
+],
+"cISC4ConfigRuleManager": [
+"cIGZUnknown"
+],
+"cISC4ConstructionOccupant": [
+"cIGZUnknown"
+],
+"cISC4CrimeSimulator": [
+"cIGZUnknown"
+],
+"cISC4CustomView": [
+"cIGZUnknown"
+],
+"cISC4DBSegment": [
+"cIGZUnknown"
+],
+"cISC4DBSegmentIStream": [
+"cIGZIStream"
+],
+"cISC4DBSegmentOStream": [
+"cIGZOStream"
+],
+"cISC4Demand": [
+"cIGZUnknown"
+],
+"cISC4DemandSimulator": [
+"cIGZUnknown"
+],
+"cISC4Demolition": [
+"cIGZUnknown"
+],
+"cISC4DepartmentBudget": [
+"cIGZUnknown"
+],
+"cISC4DisasterInstance": [
+"cIGZUnknown"
+],
+"cISC4DisasterInstanceEffect": [
+"cISC4DisasterInstance"
+],
+"cISC4DisasterInstanceFire": [
+"cIGZUnknown"
+],
+"cISC4DisasterInstanceVolcano": [
+"cIGZUnknown"
+],
+"cISC4DisasterLayer": [
+"cIGZUnknown"
+],
+"cISC4DisasterManager": [
+"cIGZUnknown"
+],
+"cISC4DisasterManagerEffect": [
+"cIGZUnknown"
+],
+"cISC4DisasterManagerFire": [
+"cIGZUnknown"
+],
+"cISC4DisasterManagerToxic": [
+"cIGZUnknown"
+],
+"cISC4DisasterManagerVolcano": [
+"cIGZUnknown"
+],
+"cISC4DispatchManager": [
+"cIGZUnknown"
+],
+"cISC4DispatchSource": [
+"cIGZUnknown"
+],
+"cISC4EffectMaps": [
+"cIGZUnknown"
+],
+"cISC4EffectsCollection": [
+"cIGZUnknown"
+],
+"cISC4EffectsManager": [
+"cIGZUnknown"
+],
+"cISC4EffectsParser": [
+"nSCRes::cICommandParser"
+],
+"cISC4EffectsResource": [
+"cIGZUnknown"
+],
+"cISC4FeatureManager": [
+"cIGZUnknown"
+],
+"cISC4FireOccupant": [
+"cIGZUnknown"
+],
+"cISC4FireProtectionSimulator": [
+"cIGZUnknown"
+],
+"cISC4FlammabilitySimulator": [
+"cIGZUnknown"
+],
+"cISC4FloraOccupant": [
+"cIGZUnknown"
+],
+"cISC4FloraSimulator": [
+"cIGZUnknown"
+],
+"cISC4FoundationOccupant": [
+"cIGZUnknown"
+],
+"cISC4GameDataRegistry": [
+"cIGZUnknown"
+],
+"cISC4GameDataRegistryNotificationTarget": [
+"cIGZUnknown"
+],
+"cISC4GlyphTextureInfo": [
+"cIGZUnknown"
+],
+"cISC4GlyphTextureManager": [
+"cIGZUnknown"
+],
+"cISC4GrowthDeveloper": [
+"cIGZUnknown"
+],
+"cISC4HistoryWarehouse": [
+"cIGZUnknown"
+],
+"cISC4IndustrialSimulator": [
+"cIGZUnknown"
+],
+"cISC4LandValueSimulator": [
+"cIGZUnknown"
+],
+"cISC4LandfillDeveloper": [
+"cIGZUnknown"
+],
+"cISC4LandfillOccupant": [
+"cIGZUnknown"
+],
+"cISC4LightingManager": [
+"cIGZUnknown"
+],
+"cISC4LineItem": [
+"cIGZUnknown"
+],
+"cISC4Lot": [
+"cIGZUnknown"
+],
+"cISC4LotBaseTextureOccupant": [
+"cIGZUnknown"
+],
+"cISC4LotConfiguration": [
+"cIGZUnknown"
+],
+"cISC4LotConfigurationFilter": [
+"cIGZUnknown"
+],
+"cISC4LotConfigurationManager": [
+"cIGZUnknown"
+],
+"cISC4LotDeveloper": [
+"cIGZUnknown"
+],
+"cISC4LotManager": [
+"cIGZUnknown"
+],
+"cISC4LotRetainingWallModel": [
+"cIGZUnknown"
+],
+"cISC4LotRetainingWallOccupant": [
+"cIGZUnknown"
+],
+"cISC4MySim": [
+"cIGZUnknown"
+],
+"cISC4MySimAgentSimulator": [
+"cIGZUnknown"
+],
+"cISC4MySimBalloonAdvice": [
+"cIGZUnknown"
+],
+"cISC4MySimPool": [
+"cRZUnknown"
+],
+"cISC4MyStreetSim": [
+"cIGZUnknown"
+],
+"cISC4Nation": [
+"cIGZUnknown"
+],
+"cISC4NeighborConnection": [
+"cIGZUnknown"
+],
+"cISC4NeighborDeal": [
+"cIGZUnknown"
+],
+"cISC4NeighborsSimulator": [
+"cIGZUnknown"
+],
+"cISC4NetworkLot": [
+"cIGZUnknown"
+],
+"cISC4NetworkLotConfiguration": [
+"cIGZUnknown"
+],
+"cISC4NetworkLotManager": [
+"cIGZUnknown"
+],
+"cISC4NetworkManager": [
+"cIGZUnknown"
+],
+"cISC4NetworkOccupant": [
+"cIGZUnknown"
+],
+"cISC4NetworkTool": [
+"cIGZUnknown"
+],
+"cISC4NetworkToolUI": [
+"cIGZUnknown"
+],
+"cISC4Occupant": [
+"cIGZUnknown"
+],
+"cISC4OccupantFilter": [
+"cIGZUnknown"
+],
+"cISC4OccupantManager": [
+"cIGZUnknown"
+],
+"cISC4Ordinance": [
+"cIGZUnknown"
+],
+"cISC4OrdinanceSimulator": [
+"cIGZUnknown"
+],
+"cISC4ParkManager": [
+"cIGZUnknown"
+],
+"cISC4PathFinder": [
+"cIGZUnknown"
+],
+"cISC4PathInfo": [
+"cIGZUnknown"
+],
+"cISC4PlumbingSimulator": [
+"cIGZUnknown"
+],
+"cISC4PoliceSimulator": [
+"cIGZUnknown"
+],
+"cISC4PollutionSimulator": [
+"cIGZUnknown"
+],
+"cISC4PortDeveloper": [
+"cIGZUnknown"
+],
+"cISC4PowerLineOccupant": [
+"cIGZUnknown"
+],
+"cISC4PowerPoleOccupant": [
+"cIGZUnknown"
+],
+"cISC4PowerSimulator": [
+"cIGZUnknown"
+],
+"cISC4PropDeveloper": [
+"cIGZUnknown"
+],
+"cISC4PropManager": [
+"cIGZUnknown"
+],
+"cISC4PropOccupant": [
+"cIGZUnknown"
+],
+"cISC4PropOccupantAutomataController": [
+"cIGZUnknown"
+],
+"cISC4PropOccupantTerrainDecal": [
+"cIGZUnknown"
+],
+"cISC4PropOccupantVisualEffect": [
+"cIGZUnknown"
+],
+"cISC4PropRequester": [
+"cIGZUnknown"
+],
+"cISC4PylonOccupant": [
+"cIGZUnknown"
+],
+"cISC4Region": [
+"cIGZUnknown"
+],
+"cISC4RegionalCity": [
+"cIGZUnknown"
+],
+"cISC4RenderProperties": [
+"cIGZUnknown"
+],
+"cISC4ResidentialSimulator": [
+"cIGZUnknown"
+],
+"cISC4SeaportDeveloper": [
+"cISC4PortDeveloper"
+],
+"cISC4SignpostOccupant": [
+"cIGZUnknown"
+],
+"cISC4SimGrid<double>": [
+"cIGZUnknown"
+],
+"cISC4SimGrid<float>": [
+"cIGZUnknown"
+],
+"cISC4SimGrid<int>": [
+"cIGZUnknown"
+],
+"cISC4SimGrid<long long>": [
+"cIGZUnknown"
+],
+"cISC4SimGrid<short>": [
+"cIGZUnknown"
+],
+"cISC4SimGrid<signed char>": [
+"cIGZUnknown"
+],
+"cISC4SimGrid<unsigned char>": [
+"cIGZUnknown"
+],
+"cISC4SimGrid<unsigned int>": [
+"cIGZUnknown"
+],
+"cISC4SimGrid<unsigned long long>": [
+"cIGZUnknown"
+],
+"cISC4SimGrid<unsigned short>": [
+"cIGZUnknown"
+],
+"cISC4Simulator": [
+"cIGZUnknown"
+],
+"cISC4TextDecalOccupant": [
+"cIGZUnknown"
+],
+"cISC4TiledScrollingCanvasSource": [
+"cIGZUnknown"
+],
+"cISC4ToxicOccupant": [
+"cIGZUnknown"
+],
+"cISC4TractDeveloper": [
+"cIGZUnknown"
+],
+"cISC4TrafficNetworkMap": [
+"cIGZUnknown"
+],
+"cISC4TrafficSimulator": [
+"cIGZUnknown"
+],
+"cISC4TrafficSource": [
+"cIGZUnknown"
+],
+"cISC4TutorialSystem": [
+"cIGZUnknown"
+],
+"cISC4TutorialTask": [
+"cIGZUnknown"
+],
+"cISC4View3DWin": [
+"cIGZUnknown"
+],
+"cISC4ViewInputControl": [
+"cIGZUnknown"
+],
+"cISC4ViewManager": [
+"cIGZUnknown"
+],
+"cISC4ViewObject3D": [
+"cIGZUnknown"
+],
+"cISC4VisualEffect": [
+"cIGZUnknown"
+],
+"cISC4WeatherSimulator": [
+"cIGZUnknown"
+],
+"cISC4WinAdviceList": [
+"cIGZUnknown"
+],
+"cISC4WinAlertBorder": [
+"cIGZUnknown"
+],
+"cISC4WinAuraBar": [
+"cIGZUnknown"
+],
+"cISC4WinCalloutBox": [
+"cIGZUnknown"
+],
+"cISC4WinCatalogView": [
+"cIGZUnknown"
+],
+"cISC4WinMiniMap": [
+"cIGZUnknown"
+],
+"cISC4WinRCI": [
+"cIGZUnknown"
+],
+"cISC4WinTertiaryMenuFrame": [
+"cIGZUnknown"
+],
+"cISC4WinTrendBar": [
+"cIGZUnknown"
+],
+"cISC4ZoneDeveloper": [
+"cIGZUnknown"
+],
+"cISC4ZoneManager": [
+"cIGZUnknown"
+],
+"cISCExemplarCache": [
+"cIGZUnknown"
+],
+"cISCExemplarPropertyHolder": [
+"cIGZUnknown"
+],
+"cISCLua": [
+"cIGZUnknown"
+],
+"cISCProperty": [
+"cIGZUnknown"
+],
+"cISCPropertyHolder": [
+"cIGZUnknown"
+],
+"cISCResExemplar": [
+"cIGZSerializable"
+],
+"cISCResExemplarCohort": [
+"cIGZSerializable"
+],
+"cISCResKeyEnumerator": [
+"cIGZUnknown"
+],
+"cISCResKeyTable": [
+"cIGZSerializable"
+],
+"cISCResProperty": [
+"cIGZUnknown"
+],
+"cISCResourceCatalogView": [
+"cIGZUnknown"
+],
+"cISCResourceView": [
+"cIGZUnknown"
+],
+"cISCStringDetokenizer": [
+"cIGZUnknown"
+],
+"cISCValueChecker": [
+"cIGZUnknown"
+],
+"cISCValueEditResKeyTableView": [
+"cIGZUnknown"
+],
+"cISCValueEditView": [
+"cIGZUnknown"
+],
+"cISCValueFormatter": [
+"cIGZUnknown"
+],
+"cISGLDX7D3DX": [
+"cIGZUnknown"
+],
+"cISLWinLocationSaver": [
+"cIGZUnknown"
+],
+"cISTEOverlayManager": [
+"cIGZUnknown"
+],
+"cISTESurfaceWater": [
+"cIGZUnknown"
+],
+"cISTETerrain": [
+"cISTETerrainMap"
+],
+"cISTETerrainMap": [
+"cIGZUnknown"
+],
+"cISTETerrainView": [
+"cIGZUnknown"
+],
+"cLCEBlockingLotOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cLotConfigurationEditorWinFileBrowser": [
+"cGZWinFileBrowser"
+],
+"cLotSizesFilter": [
+"cISC4LotConfigurationFilter"
+],
+"cMySimBuildingFilter": [
+"cSC4OccupantFilter"
+],
+"cMySimPylonFilter": [
+"cSC4OccupantFilter"
+],
+"cPropertySetUint32XmlReader": [
+"cIGZExpatContentHandler",
+"cIGZPropertySetUint32XmlReader"
+],
+"cPylonFilter": [
+"cSC4OccupantFilter"
+],
+"cRZCOMDllDirector": [
+"cIGZCOMDirector",
+"cIGZFrameWorkHooks"
+],
+"cRZCmdLine": [
+"cIGZCmdLine"
+],
+"cRZCriticalSection": [
+"cIGZCriticalSection"
+],
+"cRZCursor": [
+"cIGZCursor"
+],
+"cRZCursorManager": [
+"cIGZCursorManager"
+],
+"cRZCursorResource": [
+"cGZPersistResource",
+"cIGZCursorResource"
+],
+"cRZCursorResourceFactory": [
+"cGZPersistResourceFactory",
+"cIGZCursorResourceFactory"
+],
+"cRZDiskRadioStation": [
+"cIGZRadioStation"
+],
+"cRZExceptionNotification": [
+"cIGZExceptionNotification"
+],
+"cRZFastCompression3": [
+"cIGZCompressor"
+],
+"cRZFastFixedAllocator2<64ul>": [
+"cIGZFastFixedAllocator2"
+],
+"cRZFile": [
+"cIGZFile"
+],
+"cRZIStream": [
+"cIGZIStream"
+],
+"cRZKeyboard": [
+"cIGZKeyboard"
+],
+"cRZLanguageManager": [
+"cIGZLanguageManager",
+"cRZSystemService"
+],
+"cRZLanguageUtility": [
+"cIGZLanguageUtility"
+],
+"cRZMessage2ChangeInputControl": [
+"cRZMessage2Standard"
+],
+"cRZMessage2Standard": [
+"cIGZMessage2Standard"
+],
+"cRZMessage2ZoneChange": [
+"cRZMessage2Standard"
+],
+"cRZMutex": [
+"cIGZMutex"
+],
+"cRZNetCommandGenerator": [
+"cIGZNetCommandGenerator",
+"cIGZMessageTarget2"
+],
+"cRZNetStreamSocket": [
+"cRZNetSocket"
+],
+"cRZNullIStream": [
+"cRZIStream"
+],
+"cRZNullOStream": [
+"cRZOStream"
+],
+"cRZOFStream": [
+"cRZTextOStream"
+],
+"cRZOStream": [
+"cIGZOStream"
+],
+"cRZRadio": [
+"cRZSystemService",
+"cIGZRadio",
+"cIGZSndEventHandler"
+],
+"cRZSlabAllocatorLarge": [
+"cRZSlabAllocator<14, 16>"
+],
+"cRZSlabAllocatorSmall": [
+"cRZSlabAllocator<9, 14>"
+],
+"cRZString": [
+"std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>",
+"cIGZString"
+],
+"cRZStringResource": [
+"cRZString",
+"cGZPersistResource"
+],
+"cRZStringResourceFactory": [
+"cGZPersistResourceFactory"
+],
+"cRZSystemCursorW95": [
+"cRZCursor"
+],
+"cRZSystemService": [
+"cIGZSystemService",
+"cRZUnknown"
+],
+"cRZTextFile": [
+"cRZFile"
+],
+"cRZTextOStream": [
+"cRZOStream"
+],
+"cRZThreadSignal": [
+"cIGZThreadSignal"
+],
+"cRZUnknown": [
+"cIGZUnknown"
+],
+"cRZUnknownAutoObject<ivector<cISC4Occupant*>>": [
+"cIGZUnknown"
+],
+"cRZUnknownAutoObject<std::__1::vector<cRZString, std::__1::allocator<cRZString>>>": [
+"cIGZUnknown"
+],
+"cRZUnknownAutoPtr<cRZSparseMatrix<WinGridCellData>>": [
+"cIGZUnknown"
+],
+"cRZUnknownAutoPtr<cRZSparseMatrix<WinGridColData>>": [
+"cIGZUnknown"
+],
+"cRZUnknownAutoPtr<cRZSparseMatrix<WinGridRowData>>": [
+"cIGZUnknown"
+],
+"cRZUnknownList": [
+"cIGZUnknownList"
+],
+"cRZVariant": [
+"cIGZVariant",
+"tagRZVariant"
+],
+"cRZWinKeyAccelerator": [
+"cIGZWinKeyAccelerator"
+],
+"cRZWinKeyAcceleratorRes": [
+"cIGZWinKeyAcceleratorRes",
+"cGZPersistResource"
+],
+"cS3DCamera": [
+"cIGZUnknown"
+],
+"cS3DFSHTexture": [
+"cIS3DResTexture",
+"cGZPersistResource"
+],
+"cS3DFSHTextureFactory": [
+"cGZPersistResourceFactory"
+],
+"cS3DMaterialManager": [
+"cIS3DMaterialManager",
+"cRZSystemService"
+],
+"cS3DMeshAndMaterial": [
+"cIS3DMeshAndMaterial"
+],
+"cS3DModelInstance": [
+"cIS3DModelInstance",
+"cS3DMeshAndMaterial"
+],
+"cS3DModelInstanceAnimated": [
+"cIS3DModelInstanceAnimated",
+"cS3DModelInstance"
+],
+"cS3DModelInstanceAnimatedSprite": [
+"cIS3DModelInstanceAnimated",
+"cS3DModelInstanceBasic"
+],
+"cS3DModelInstanceBasic": [
+"cIS3DModelInstance"
+],
+"cS3DResModel": [
+"cIS3DResModel",
+"cGZPersistResource"
+],
+"cS3DResModelFactory": [
+"cGZPersistResourceFactory"
+],
+"cS3DResSpriteAnim": [
+"cIS3DResSpriteAnim",
+"cGZPersistResource"
+],
+"cS3DResSpriteAnimFactory": [
+"cGZPersistResourceFactory"
+],
+"cS3DResSpriteAnimTable": [
+"cIS3DResSpriteAnimTable",
+"cGZPersistResource"
+],
+"cS3DTextureBindingFactory": [
+"cIS3DTextureBindingFactory",
+"cIS3DTextureFactoryDebugDisplay",
+"cRZSystemService",
+"cIGZMessageTarget2"
+],
+"cSC16ColumnGridEntryView": [
+"cSCStandardTypeEntryView"
+],
+"cSC24BitRGBColorCustomizer": [
+"cRZRefCount",
+"cISCValueFormatter",
+"cISCValueChecker"
+],
+"cSC424HourClock": [
+"cISC424HourClock",
+"cIGZMessageTarget2",
+"cIGZSerializable",
+"cRZSystemService"
+],
+"cSC43DPlaceableObject": [
+"cISC43DPlaceableObject"
+],
+"cSC43DRender": [
+"cISC43DRender",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4ActiveFireOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4ActiveToxicOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4Advice": [
+"cISC4Advice",
+"cRZUnknown",
+"cIGZSerializable"
+],
+"cSC4AdviceNeghborDeal": [
+"cSC4Advice"
+],
+"cSC4AdviceSubject": [
+"cRZUnknown",
+"cIGZSerializable",
+"cISC4AdviceSubject"
+],
+"cSC4Advisor": [
+"cRZUnknown",
+"cISC4Advisor",
+"cIGZSerializable",
+"cIGZMessageTarget2"
+],
+"cSC4AdvisorBase": [
+"cSC4Advisor"
+],
+"cSC4AdvisorCityPlanning": [
+"cSC4AdvisorBase"
+],
+"cSC4AdvisorCitySituations": [
+"cSC4AdvisorBase"
+],
+"cSC4AdvisorFinance": [
+"cSC4AdvisorBase"
+],
+"cSC4AdvisorHQ": [
+"cSC4AdvisorBase"
+],
+"cSC4AdvisorPopupTracker": [
+"cIGZMessageTarget2",
+"cIGZWinProc"
+],
+"cSC4AdvisorSafety": [
+"cSC4AdvisorBase"
+],
+"cSC4AdvisorSystem": [
+"cISC4AdvisorSystem",
+"cIGZMessageTarget2",
+"cIGZMessageTarget",
+"cIGZSerializable",
+"cRZUnknown"
+],
+"cSC4AdvisorTraffic": [
+"cSC4AdvisorBase"
+],
+"cSC4AdvisorUIAdvisorWinProc": [
+"cIGZWinProc",
+"cIGZMessageTarget2"
+],
+"cSC4AdvisorUIImageWinProc": [
+"cIGZWinProc",
+"cIGZMessageTarget2"
+],
+"cSC4AdvisorUtility": [
+"cSC4AdvisorBase"
+],
+"cSC4Aircraft": [
+"cSC4Automaton"
+],
+"cSC4AircraftManager": [
+"cSC4AutomataManager"
+],
+"cSC4Airplane": [
+"cSC4Aircraft"
+],
+"cSC4AirportDeveloper": [
+"cISC4AirportDeveloper",
+"cSC4PortDeveloper"
+],
+"cSC4Ambulance": [
+"cSC4EmergencyVehicle"
+],
+"cSC4AnimatableOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4AnimationCoordinator": [
+"cIGZMessageTarget2"
+],
+"cSC4AnimationTickManager": [
+"cISC4AnimationTickManager",
+"cIGZMessageTarget2",
+"cIGZSerializable",
+"cRZSystemService"
+],
+"cSC4App": [
+"cIGZMessageTarget",
+"cIGZMessageTarget2",
+"cIGZWinMessageFilter",
+"cISC4App",
+"cGZApp"
+],
+"cSC4AttractorDescription": [
+"cISC4ComponentDescription",
+"cRZRefCount"
+],
+"cSC4AttractorEffect": [
+"cISC4ComponentEffect",
+"cRZRefCount"
+],
+"cSC4AudioAEMSEventSystem": [
+"cIGZSndEventHandler",
+"cISC4AEMSEvents",
+"cIGZMessageTarget2",
+"cRZSystemService"
+],
+"cSC4AudioAEMSSoundBank": [
+"cIGZUnknown"
+],
+"cSC4AudioAmbienceLayer": [
+"cIGZMessageTarget2"
+],
+"cSC4AudioAmbienceManager": [
+"cIGZSystemService",
+"cIGZMessageTarget2",
+"cISC4AudioAmbienceManager",
+"cIGZSndEventHandler"
+],
+"cSC4AudioAmbienceManagerOccupantFilter": [
+"cISC4OccupantFilter"
+],
+"cSC4AudioCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cSC4AudioEmanationModel2D": [
+"cIHitSem",
+"cIGZInitShutdown"
+],
+"cSC4AudioEmanationModel3D": [
+"cIHitSem",
+"cIGZInitShutdown"
+],
+"cSC4AudioEmanationModel3DEffects": [
+"cIHitSem",
+"cIGZInitShutdown"
+],
+"cSC4AudioEventHandler": [
+"cIGZSndEventHandler",
+"cIGZMessageTarget",
+"cIGZMessageTarget2",
+"cIGZInitShutdown"
+],
+"cSC4AudioEventHandlerDisasterFire": [
+"cIGZMessageTarget2",
+"cIGZInitShutdown",
+"cSC4OccupantFilter",
+"cIGZSndEventHandler"
+],
+"cSC4AudioListener": [
+"cIGZMessageTarget2"
+],
+"cSC4AudioPreferencesWinProc": [
+"cIGZWinProc"
+],
+"cSC4AudioScapeManager": [
+"cISC4AudioScapeManager",
+"cIGZSystemService",
+"cIGZMessageTarget2"
+],
+"cSC4AudioSemManager": [
+"cIGZUnknown"
+],
+"cSC4AudioSoundManager": [
+"cIGZSndEventHandler",
+"cIGZSndUpdateTarget",
+"cIGZSndCompletionFunctionObject",
+"cIGZMessageTarget2"
+],
+"cSC4AuraSimulator": [
+"cISC4AuraSimulator",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4AutomataAttractor": [
+"cSC4AutomataController"
+],
+"cSC4AutomataAttractor::tTemplate": [
+"tControllerTemplate"
+],
+"cSC4AutomataCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cSC4AutomataController": [
+"cISC4AutomataController",
+"cIGZSerializable"
+],
+"cSC4AutomataControllerManager": [
+"cISC4AutomataControllerManager",
+"cIGZMessageTarget",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4AutomataGenerator": [
+"cSC4AutomataController"
+],
+"cSC4AutomataGenerator::tTemplate": [
+"tControllerTemplate"
+],
+"cSC4AutomataManager": [
+"cISC4AutomataManager",
+"cIGZMessageTarget",
+"cIGZSerializable",
+"cIGZMessageTarget2"
+],
+"cSC4AutomataScriptSystem": [
+"cISC4AutomataScriptSystem",
+"cIGZMessageTarget2",
+"cIGZMessageTarget",
+"cIGZSerializable"
+],
+"cSC4Automaton": [
+"cISC4Automaton",
+"cSC4Occupant",
+"cIGZMessageTarget2"
+],
+"cSC4AutomatonOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4Blimp": [
+"cSC4Aircraft"
+],
+"cSC4BlockingLotOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4BrushDescription": [
+"cISC4ComponentDescription",
+"cRZRefCount"
+],
+"cSC4BrushEffect": [
+"cISC4ComponentEffect",
+"cRZRefCount"
+],
+"cSC4BudgetSimulator": [
+"cISC4BudgetSimulator",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4BudgetUIExpenseWinProc": [
+"cRZUnknown",
+"cIGZWinProc",
+"cIGZMessageTarget2"
+],
+"cSC4BudgetUIIncomeWinProc": [
+"cRZUnknown",
+"cIGZWinProc",
+"cIGZMessageTarget2"
+],
+"cSC4BudgetUIWinProc": [
+"cRZUnknown",
+"cIGZWinProc",
+"cIGZMessageTarget2"
+],
+"cSC4BuildingDevelopmentSimulator": [
+"cISC4BuildingDevelopmentSimulator",
+"cIGZMessageTarget",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4BuildingOccupant": [
+"cISC4BuildingOccupant",
+"cSC4Occupant"
+],
+"cSC4BuildingPropFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4BuildingSelectWinProc": [
+"cIGZWinProc"
+],
+"cSC4Bus": [
+"cSC4Vehicle"
+],
+"cSC4BusinessUnit": [
+"cISC4BusinessUnit",
+"cIGZSerializable",
+"cSCPropertyHolder"
+],
+"cSC4COMDirector": [
+"cRZCOMDllDirector"
+],
+"cSC4COMSerializer": [
+"cRZUnknown",
+"cISC4COMSerializer"
+],
+"cSC4CachedStringTexture": [
+"cISC4CachedStringTexture"
+],
+"cSC4CameraControl": [
+"cIGZSerializable"
+],
+"cSC4CameraDescription": [
+"cISC4ComponentDescription",
+"cRZRefCount"
+],
+"cSC4CameraEffect": [
+"cISC4ComponentEffect",
+"cIGZMessageTarget2",
+"cRZRefCount"
+],
+"cSC4CarjackedVehicle": [
+"cSC4Vehicle"
+],
+"cSC4CatalogItem": [
+"cISC4CatalogItem"
+],
+"cSC4CellTextureModel": [
+"cISC4CellTextureModel",
+"cS3DModelInstanceBasic"
+],
+"cSC4CheatCodeEntryDialog": [
+"cGZWinGenDlg",
+"cIGZWinMessageFilter"
+],
+"cSC4City": [
+"cISC4City",
+"cIGZMessageTarget2",
+"cIGZSerializable",
+"cSCPropertyHolder"
+],
+"cSC4CityDetailManager": [
+"cISC4CityDetailManager",
+"cIGZSerializable"
+],
+"cSC4CitySituationAdvice": [
+"cISC4CitySituationAdvice",
+"cSC4Advice"
+],
+"cSC4CitySituationManager": [
+"cISC4CitySituationManager",
+"cIGZMessageTarget2",
+"cIGZMessageTarget",
+"cIGZSerializable",
+"cIGZWinProc"
+],
+"cSC4CivicBuildingSimulator": [
+"cISC4CivicBuildingSimulator",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4CommercialSimulator": [
+"cISC4CommercialSimulator",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4CompassWinProc": [
+"cIGZWinProc",
+"cRZRefCount",
+"cIGZMessageTarget2"
+],
+"cSC4ComplexViewOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4ConfigRuleManager": [
+"cISC4ConfigRuleManager",
+"cRZUnknown"
+],
+"cSC4ConstructionOccupant": [
+"cISC4ConstructionOccupant",
+"cIGZMessageTarget2",
+"cSC4Occupant",
+"cS3DModelInstanceBasic"
+],
+"cSC4CreditsWinProc": [
+"cIGZWinProc"
+],
+"cSC4CrimeSimulator": [
+"cISC4CrimeSimulator",
+"cIGZMessageTarget2",
+"cISC4PropRequester",
+"cIGZSerializable"
+],
+"cSC4CtabFilter": [
+"cIGZWinMessageFilter"
+],
+"cSC4DBSegment": [
+"cISC4DBSegment",
+"cGZDBSegmentPackedFile"
+],
+"cSC4DBSegmentIStream": [
+"cRZUnknown",
+"cISC4DBSegmentIStream"
+],
+"cSC4DBSegmentOStream": [
+"cRZUnknown",
+"cISC4DBSegmentOStream"
+],
+"cSC4DecalEffect": [
+"cISC4ComponentEffect"
+],
+"cSC4DecalFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4DefaultOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4DeleteCityDialog": [
+"cSC4DialogWinProcBase"
+],
+"cSC4DeleteRegionDialog": [
+"cSC4DialogWinProcBase"
+],
+"cSC4Demand": [
+"cISC4Demand",
+"cIGZSerializable"
+],
+"cSC4DemandSimulator": [
+"cISC4DemandSimulator",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4DemolishByNetworksOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4DemolishableOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4Demolition": [
+"cISC4Demolition",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4DemolitionOccupantFilter": [
+"cSC4RealisticOccupantFilter"
+],
+"cSC4DepartmentBudget": [
+"cISC4DepartmentBudget",
+"cIGZSerializable"
+],
+"cSC4DialogWinProcBase": [
+"cIGZWinProc",
+"cRZRefCount"
+],
+"cSC4DisasterInstanceEarthquake": [
+"cRZUnknown",
+"cISC4DisasterInstance",
+"cIGZMessageTarget2"
+],
+"cSC4DisasterInstanceEffect": [
+"cRZUnknown",
+"cISC4DisasterInstanceEffect",
+"cIGZMessageTarget2"
+],
+"cSC4DisasterInstanceFire": [
+"cRZUnknown",
+"cISC4DisasterInstanceFire",
+"cISC4DisasterInstance",
+"cIGZMessageTarget2"
+],
+"cSC4DisasterInstancePipeBurst": [
+"cRZUnknown",
+"cISC4DisasterInstance",
+"cIGZMessageTarget2"
+],
+"cSC4DisasterInstanceRiot": [
+"cRZUnknown",
+"cISC4DisasterInstance",
+"cIGZSerializable",
+"cIGZMessageTarget2"
+],
+"cSC4DisasterInstanceToxic": [
+"cRZUnknown",
+"cISC4DisasterInstance",
+"cIGZMessageTarget2"
+],
+"cSC4DisasterInstanceVolcano": [
+"cISC4DisasterInstance",
+"cISC4DisasterInstanceVolcano",
+"cIGZMessageTarget2"
+],
+"cSC4DisasterLayer": [
+"cRZUnknown",
+"cISC4DisasterLayer",
+"cIGZMessageTarget2"
+],
+"cSC4DisasterManager": [
+"cRZUnknown",
+"cISC4DisasterManager",
+"cIGZMessageTarget2"
+],
+"cSC4DisasterManagerEarthquake": [
+"cSC4DisasterManager"
+],
+"cSC4DisasterManagerEffect": [
+"cSC4DisasterManager",
+"cISC4DisasterManagerEffect"
+],
+"cSC4DisasterManagerFire": [
+"cSC4DisasterManager",
+"cISC4DisasterManagerFire",
+"cSC4SingletonT<cSC4DisasterManagerFire>"
+],
+"cSC4DisasterManagerPipeBurst": [
+"cSC4DisasterManager"
+],
+"cSC4DisasterManagerRiot": [
+"cSC4DisasterManager"
+],
+"cSC4DisasterManagerToxic": [
+"cSC4DisasterManager",
+"cISC4DisasterManagerToxic"
+],
+"cSC4DisasterManagerVolcano": [
+"cSC4DisasterManager",
+"cISC4DisasterManagerVolcano"
+],
+"cSC4DispatchManager": [
+"cISC4DispatchManager",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4DispatchVehicleView": [
+"cSC4ViewObject3D",
+"cIGZMessageTarget2"
+],
+"cSC4DummyAutoOccupant": [
+"cSC4Occupant"
+],
+"cSC4DummyOccupant": [
+"cSC4Occupant"
+],
+"cSC4DynamicParticleDescription": [
+"cRZRefCount"
+],
+"cSC4DynamicParticleEffect": [
+"cISC4ComponentEffect",
+"cRZRefCount"
+],
+"cSC4DynamicParticleSystem": [
+"cSC4ViewObject3D",
+"cIGZMessageTarget2"
+],
+"cSC4EffectMaps": [
+"cISC4EffectMaps",
+"cRZUnknown"
+],
+"cSC4EffectsCollection": [
+"cISC4EffectsCollection"
+],
+"cSC4EffectsManager": [
+"cISC4EffectsManager",
+"cISC4ViewObject3D",
+"cIGZMessageTarget2",
+"cSC4EffectMaps",
+"cSC4EffectsCollection"
+],
+"cSC4EffectsParser": [
+"cISC4EffectsParser",
+"nSCRes::cCommandParser"
+],
+"cSC4EffectsResource": [
+"cISC4EffectsResource",
+"cSC4EffectsCollection",
+"cGZPersistResource"
+],
+"cSC4EffectsResourceFactory": [
+"cGZPersistResourceFactory"
+],
+"cSC4EmergencyVehicle": [
+"cSC4Vehicle"
+],
+"cSC4EstablishCityWinProc": [
+"cIGZWinProc"
+],
+"cSC4FeatureManager": [
+"cISC4FeatureManager"
+],
+"cSC4FireOccupant": [
+"cISC4FireOccupant",
+"cSC4Occupant"
+],
+"cSC4FirePlaneDispatchSource": [
+"cISC4DispatchSource",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4FireProtectionSimulator": [
+"cISC4FireProtectionSimulator",
+"cSC4ProtectionSimulator"
+],
+"cSC4FireTruck": [
+"cSC4EmergencyVehicle"
+],
+"cSC4FlammabilitySimulator": [
+"cISC4FlammabilitySimulator",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4FloraBlockingOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4FloraOccupant": [
+"cISC4FloraOccupant",
+"cSC4Occupant"
+],
+"cSC4FloraSimulator": [
+"cISC4FloraSimulator",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4FoundationModel": [
+"cS3DModelInstanceBasic"
+],
+"cSC4FoundationOccupant": [
+"cISC4FoundationOccupant",
+"cSC4Occupant"
+],
+"cSC4GDriversCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cSC4GameDataRegistry": [
+"cISC4GameDataRegistry",
+"cRZSystemService"
+],
+"cSC4GamePreferencesWinProc": [
+"cIGZWinProc"
+],
+"cSC4GenericDialogWinProc": [
+"cIGZWinProc"
+],
+"cSC4GeometrySourcedParticlesEffect": [
+"cSC4ParticlesEffect"
+],
+"cSC4GetawayVan": [
+"cSC4Vehicle"
+],
+"cSC4GlyphTextureInfo": [
+"cISC4GlyphTextureInfo"
+],
+"cSC4GlyphTextureManager": [
+"cISC4GlyphTextureManager",
+"cRZSystemService",
+"cIGZMessageTarget2"
+],
+"cSC4GraphsViewWinProc": [
+"cIGZMessageTarget2",
+"cIGZWinProc"
+],
+"cSC4GrowthDeveloper": [
+"cISC4GrowthDeveloper",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4Helicopter": [
+"cSC4Aircraft"
+],
+"cSC4HistoryWarehouse": [
+"cISC4HistoryWarehouse",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4HoverQueriableOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4ImportCityDialog": [
+"cSC4DialogWinProcBase"
+],
+"cSC4IndustrialSimulator": [
+"cISC4IndustrialSimulator",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4InsideLotOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4LandValueSimulator": [
+"cISC4LandValueSimulator",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4LandfillDeveloper": [
+"cISC4LandfillDeveloper",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4LandfillOccupant": [
+"cISC4LandfillOccupant",
+"cSC4Occupant"
+],
+"cSC4LandfillZone": [
+"cIGZMessageTarget2"
+],
+"cSC4LegendDialogWinProc": [
+"cIGZWinProc"
+],
+"cSC4LightingManager": [
+"cISC4LightingManager",
+"cIGZMessageTarget2"
+],
+"cSC4LineGraph": [
+"cGZLineGraph"
+],
+"cSC4LineItem": [
+"cISC4LineItem",
+"cIGZSerializable"
+],
+"cSC4LoadRegionDialog": [
+"cSC4DialogWinProcBase"
+],
+"cSC4Lot": [
+"cISC4Lot",
+"cIGZSerializable",
+"cSCPropertyHolder",
+"cISC4TrafficSource"
+],
+"cSC4LotBaseTextureOccupant": [
+"cISC4LotBaseTextureOccupant",
+"cSC4Occupant"
+],
+"cSC4LotConfiguration": [
+"cISC4LotConfiguration"
+],
+"cSC4LotConfigurationFilter": [
+"cISC4LotConfigurationFilter"
+],
+"cSC4LotConfigurationFilterByBuildingType": [
+"cSC4LotConfigurationFilter"
+],
+"cSC4LotConfigurationFilterMonopoly": [
+"cSC4LotConfigurationFilter"
+],
+"cSC4LotConfigurationManager": [
+"cISC4LotConfigurationManager",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4LotDeveloper": [
+"cISC4LotDeveloper",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4LotPropFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4LotRetainingWallModel": [
+"cISC4LotRetainingWallModel",
+"cS3DModelInstanceBasic"
+],
+"cSC4LotRetainingWallOccupant": [
+"cISC4LotRetainingWallOccupant",
+"cSC4Occupant"
+],
+"cSC4MassTransitTrain": [
+"cSC4Train"
+],
+"cSC4MayorLimo": [
+"cSC4Vehicle"
+],
+"cSC4MissingPluginDataReporter": [
+"cRZUnknown",
+"cIGZMessageTarget2"
+],
+"cSC4MissingPluginPackOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4MissingPluginPacksDialog": [
+"cIGZWinMessageFilter"
+],
+"cSC4ModelBackgroundLoader": [
+"cIGZUnknown"
+],
+"cSC4ModelBasedParticlesEffect": [
+"cSC4ParticlesEffect"
+],
+"cSC4ModelMaker": [
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4MySim": [
+"cSC4Advisor",
+"cISC4MySim"
+],
+"cSC4MySimAdvice": [
+"cSC4Advice"
+],
+"cSC4MySimAgentSimulator": [
+"cISC4MySimAgentSimulator",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4MySimBalloonAdvice": [
+"cSC4Advice",
+"cISC4MySimBalloonAdvice"
+],
+"cSC4MySimBalloonWinProc": [
+"cIGZWinProc",
+"cIGZMessageTarget2",
+"cRZUnknown"
+],
+"cSC4MySimDispatch": [
+"cRZUnknown",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4MySimInputControlChangeHouse": [
+"cSC4ViewInputControl"
+],
+"cSC4MySimInputControlChangeJob": [
+"cSC4ViewInputControl"
+],
+"cSC4MySimInputControlDispatch": [
+"cSC4ViewInputControl",
+"cIGZMessageTarget2"
+],
+"cSC4MySimInputControlMoveIn": [
+"cSC4ViewInputControl"
+],
+"cSC4MySimPool": [
+"cISC4MySimPool"
+],
+"cSC4MySimWinProc": [
+"cIGZWinProc",
+"cIGZMessageTarget2",
+"cRZUnknown"
+],
+"cSC4MyStreetSim": [
+"cSC4MySim",
+"cISC4MyStreetSim"
+],
+"cSC4MyStreetSimInputControl": [
+"cSC4ViewInputControl"
+],
+"cSC4Nation": [
+"cISC4Nation",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4NeighborConnection": [
+"cISC4NeighborConnection",
+"cIGZSerializable",
+"cSCPropertyHolder",
+"cISC4TrafficSource"
+],
+"cSC4NeighborDeal": [
+"cISC4NeighborDeal",
+"cIGZSerializable",
+"cSCPropertyHolder"
+],
+"cSC4NeighborsSimulator": [
+"cISC4NeighborsSimulator",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4NetworkBridgeOccupant": [
+"cSC4NetworkOccupantWithPreBuiltModel"
+],
+"cSC4NetworkConstructionCrew": [
+"cIGZMessageTarget2"
+],
+"cSC4NetworkLayoutCustomView": [
+"cISC4CustomView",
+"cRZRefCount"
+],
+"cSC4NetworkLayoutView": [
+"cSC4ViewObject3D"
+],
+"cSC4NetworkLot": [
+"cISC4NetworkLot"
+],
+"cSC4NetworkLotConfiguration": [
+"cISC4NetworkLotConfiguration"
+],
+"cSC4NetworkLotManager": [
+"cISC4NetworkLotManager",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4NetworkManager": [
+"cISC4NetworkManager",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4NetworkORFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4NetworkOccupant": [
+"cISC4NetworkOccupant",
+"cSC4Occupant",
+"cS3DModelInstanceBasic"
+],
+"cSC4NetworkOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4NetworkOccupantModelInstance": [
+"cS3DModelInstance"
+],
+"cSC4NetworkOccupantWithPreBuiltModel": [
+"cSC4NetworkOccupant"
+],
+"cSC4NetworkPreview": [
+"cSC4ViewObject3D"
+],
+"cSC4NetworkTileNeighborhood": [
+"cSC4TileNeighborhood"
+],
+"cSC4NetworkTool": [
+"cISC4NetworkTool",
+"cIGZMessageTarget2"
+],
+"cSC4NetworkToolUI": [
+"cISC4NetworkToolUI",
+"cIGZWinProc",
+"cIGZMessageTarget2",
+"cRZRefCount"
+],
+"cSC4NetworkTunnelOccupant": [
+"cSC4NetworkOccupantWithPreBuiltModel"
+],
+"cSC4NewRegionDialog": [
+"cSC4DialogWinProcBase"
+],
+"cSC4NewsTickerWinProc": [
+"cIGZMessageTarget2",
+"cIGZWinProc"
+],
+"cSC4ObliterateCity": [
+"cSC4ViewInputControl",
+"cIGZMessageTarget2"
+],
+"cSC4ObliterateOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4Occupant": [
+"cISC4Occupant",
+"cIGZSerializable",
+"cSCExemplarPropertyHolder"
+],
+"cSC4OccupantFilter": [
+"cISC4OccupantFilter",
+"cIGZSerializable"
+],
+"cSC4OccupantFilterByGroupAndDistance": [
+"cSC4OccupantGroupOccupantFilter"
+],
+"cSC4OccupantFilterByNetworkFlags": [
+"cSC4OccupantFilter"
+],
+"cSC4OccupantGroupOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4OccupantGroupTemplate": [
+"cSC4OccupantFilter"
+],
+"cSC4OccupantImmovabilityFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4OccupantManager": [
+"cISC4OccupantManager",
+"cIGZSerializable",
+"cIGZMessageTarget2"
+],
+"cSC4OccupantTypeFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4OccupantTypesFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4OccupantTypesFilterHashed": [
+"cSC4OccupantFilter"
+],
+"cSC4OrdinanceCarpoolIncentive": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceCleanAir": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceCommunityCPRTraining": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceFreeClinics": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceJuniorSportsLeague": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceLandfillGasRecovery": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceLegalizeGambling": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceMandatorySmokeDetectors": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceNeighborhoodWatch": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceNuclearFreeZone": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinancePaperReductionAct": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinancePowerConservation": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceProReadingCampaign": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceShuttleService": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceSimple": [
+"cISC4Ordinance",
+"cIGZSerializable",
+"cSCExemplarPropertyHolder"
+],
+"cSC4OrdinanceSimulator": [
+"cISC4OrdinanceSimulator",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4OrdinanceTireRecycling": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceTouristPromotion": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceTrashPresort": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceVehicleEmissionStandard": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceWaterConservation": [
+"cSC4OrdinanceSimple"
+],
+"cSC4OrdinanceYouthCurfew": [
+"cSC4OrdinanceSimple"
+],
+"cSC4PanelUIWinProc": [
+"cIGZWinProc"
+],
+"cSC4ParkManager": [
+"cISC4ParkManager",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4ParticlesEffect": [
+"cISC4ComponentEffect",
+"cSCParticleSimulatorBase"
+],
+"cSC4PathFinder": [
+"cISC4PathFinder"
+],
+"cSC4PathInfo": [
+"cISC4PathInfo",
+"cGZPersistResource"
+],
+"cSC4PathInfoFactory": [
+"cGZPersistResourceFactory"
+],
+"cSC4PathView": [
+"cSC4ViewObject3D"
+],
+"cSC4PatrolCar": [
+"cSC4EmergencyVehicle"
+],
+"cSC4Pedestrian": [
+"cSC4TrafficAutomaton"
+],
+"cSC4PedestrianManager": [
+"cSC4TrafficAutomataManager"
+],
+"cSC4PedestrianOneShot": [
+"cSC4Pedestrian"
+],
+"cSC4PickSimWinProc": [
+"cRZUnknown",
+"cIGZWinProc",
+"cIGZMessageTarget2"
+],
+"cSC4PipeConnectionOccupant": [
+"cSC4UndergroundConnectionOccupant"
+],
+"cSC4PipeCustomView": [
+"cSC4UndergroundCustomView"
+],
+"cSC4PipeOccupant": [
+"cSC4UndergroundOccupant"
+],
+"cSC4PipeTool": [
+"cSC4UndergroundNetworkTool"
+],
+"cSC4PlaceLotOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4PlacedNetworkOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4PlumbingSimulator": [
+"cISC4PlumbingSimulator",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4PoliceHelicopterDispatchSource": [
+"cISC4DispatchSource",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4PoliceSimulator": [
+"cISC4PoliceSimulator",
+"cSC4ProtectionSimulator"
+],
+"cSC4PollutionSimulator": [
+"cISC4PollutionSimulator",
+"cIGZMessageTarget2",
+"cISC4PropRequester",
+"cIGZSerializable"
+],
+"cSC4PortDeveloper": [
+"cISC4PortDeveloper",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4PowerLineOccupant": [
+"cISC4PowerLineOccupant",
+"cSC4Occupant"
+],
+"cSC4PowerLineTool": [
+"cSC4NetworkTool"
+],
+"cSC4PowerPoleOccupant": [
+"cISC4PowerPoleOccupant",
+"cIGZMessageTarget2",
+"cSC4Occupant",
+"cS3DModelInstanceBasic"
+],
+"cSC4PowerSimulator": [
+"cISC4PowerSimulator",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4ProgressScreen": [
+"cIGZMessageTarget2",
+"cRZRefCount"
+],
+"cSC4PropDeveloper": [
+"cISC4PropDeveloper",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4PropManager": [
+"cISC4PropManager",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4PropOccupant": [
+"cISC4PropOccupant",
+"cIGZMessageTarget2",
+"cSC4Occupant"
+],
+"cSC4PropOccupantAutomataController": [
+"cISC4PropOccupantAutomataController",
+"cSC4PropOccupant"
+],
+"cSC4PropOccupantBurntBuilding": [
+"cSC4PropOccupant",
+"cS3DModelInstanceBasic"
+],
+"cSC4PropOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4PropOccupantTerrainDecal": [
+"cISC4PropOccupantTerrainDecal",
+"cSC4PropOccupant"
+],
+"cSC4PropOccupantVisualEffect": [
+"cISC4PropOccupantVisualEffect",
+"cSC4PropOccupant"
+],
+"cSC4PropPlacementProperties": [
+"cGZPersistResource"
+],
+"cSC4PropPlacementPropertiesFactory": [
+"cGZPersistResourceFactory"
+],
+"cSC4ProtectionSimulator": [
+"cIGZMessageTarget2",
+"cISC4DispatchSource",
+"cIGZSerializable"
+],
+"cSC4PylonOccupant": [
+"cISC4PylonOccupant",
+"cIGZMessageTarget2",
+"cSC4Occupant",
+"cS3DModelInstanceBasic"
+],
+"cSC4QueriableOccupantFilter": [
+"cSC4HoverQueriableOccupantFilter"
+],
+"cSC4QueryDialogWinProc": [
+"cRZUnknown",
+"cIGZWinProc",
+"cIGZMessageTarget2"
+],
+"cSC4QueryMessageFilter": [
+"cIGZWinMessageFilter"
+],
+"cSC4RealisticOccupantFilter": [
+"cSC4DefaultOccupantFilter"
+],
+"cSC4Region": [
+"cISC4Region"
+],
+"cSC4RegionSignpostAnimatorWinProc": [
+"cIGZWinProc",
+"cRZRefCount"
+],
+"cSC4RegionalCity": [
+"cISC4RegionalCity",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4RegionalTerrainMap": [
+"cISTETerrainMap",
+"cRZRefCount"
+],
+"cSC4RegionalTerrainView": [
+"cSC4ViewObject3D"
+],
+"cSC4RenderProperties": [
+"cISC4RenderProperties",
+"cRZUnknown"
+],
+"cSC4ResidentialSimulator": [
+"cISC4ResidentialSimulator",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4ResourceLibCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cSC4RewardAdvice": [
+"cSC4Advice"
+],
+"cSC4RiotPolice": [
+"cSC4Pedestrian"
+],
+"cSC4RuleParser": [
+"nSCRes::cCommandParser"
+],
+"cSC4ScriptServiceResourceFactory": [
+"cIGZUIScriptServiceResourceFactory"
+],
+"cSC4ScriptedWindowCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cSC4ScrubberDescription": [
+"cISC4ComponentDescription",
+"cRZRefCount"
+],
+"cSC4ScrubberEffect": [
+"cISC4ComponentEffect",
+"cRZRefCount"
+],
+"cSC4SeaportDeveloper": [
+"cISC4SeaportDeveloper",
+"cSC4PortDeveloper"
+],
+"cSC4SequenceDescription": [
+"cISC4ComponentDescription",
+"cRZRefCount"
+],
+"cSC4SequenceEffect": [
+"cISC4ComponentEffect",
+"cRZRefCount"
+],
+"cSC4SignOrLabelFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4SignpostFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4SignpostOccupant": [
+"cISC4SignpostOccupant",
+"cSC4PropOccupant",
+"cS3DModelInstanceBasic"
+],
+"cSC4SimFireCrew": [
+"cSC4Pedestrian"
+],
+"cSC4SimGrid<double>": [
+"cISC4SimGrid<double>",
+"cIGZSerializable"
+],
+"cSC4SimGrid<float>": [
+"cISC4SimGrid<float>",
+"cIGZSerializable"
+],
+"cSC4SimGrid<int>": [
+"cISC4SimGrid<int>",
+"cIGZSerializable"
+],
+"cSC4SimGrid<long long>": [
+"cISC4SimGrid<long long>",
+"cIGZSerializable"
+],
+"cSC4SimGrid<short>": [
+"cISC4SimGrid<short>",
+"cIGZSerializable"
+],
+"cSC4SimGrid<signed char>": [
+"cISC4SimGrid<signed char>",
+"cIGZSerializable"
+],
+"cSC4SimGrid<unsigned char>": [
+"cISC4SimGrid<unsigned char>",
+"cIGZSerializable"
+],
+"cSC4SimGrid<unsigned int>": [
+"cISC4SimGrid<unsigned int>",
+"cIGZSerializable"
+],
+"cSC4SimGrid<unsigned long long>": [
+"cISC4SimGrid<unsigned long long>",
+"cIGZSerializable"
+],
+"cSC4SimGrid<unsigned short>": [
+"cISC4SimGrid<unsigned short>",
+"cIGZSerializable"
+],
+"cSC4Simulator": [
+"cISC4Simulator",
+"cIGZSerializable",
+"cRZSystemService",
+"cIGZMessageTarget2"
+],
+"cSC4SituationUIImageWinProc": [
+"cSC4AdvisorUIImageWinProc"
+],
+"cSC4SoundDescription": [
+"cISC4ComponentDescription",
+"cRZRefCount"
+],
+"cSC4SoundEffect": [
+"cISC4ComponentEffect",
+"cRZRefCount"
+],
+"cSC4StoplightPropOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4StringSpecificationOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4SubBudgetWindow": [
+"cIGZWinProc"
+],
+"cSC4SubwayConnectionOccupant": [
+"cSC4UndergroundConnectionOccupant"
+],
+"cSC4SubwayCustomView": [
+"cSC4UndergroundCustomView"
+],
+"cSC4SubwayOccupant": [
+"cSC4UndergroundOccupant"
+],
+"cSC4SubwayOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4SubwayTool": [
+"cSC4UndergroundNetworkTool"
+],
+"cSC4SurfaceNetworkOccupantFilter": [
+"cISC4OccupantFilter",
+"cRZRefCount"
+],
+"cSC4Tank": [
+"cSC4Vehicle"
+],
+"cSC4TextDecalOccupant": [
+"cISC4TextDecalOccupant",
+"cSC4PropOccupant"
+],
+"cSC4TiledScrollingCanvas": [
+"cSC4ViewObject3D"
+],
+"cSC4TimeDisplayMiniWindowWinProc": [
+"cIGZWinProc"
+],
+"cSC4TipOfTheDayWinProc": [
+"cIGZWinProc"
+],
+"cSC4ToolTipManager": [
+"cIGZWinToolTipMgr"
+],
+"cSC4ToxicOccupant": [
+"cISC4ToxicOccupant",
+"cSC4Occupant"
+],
+"cSC4TractDeveloper": [
+"cISC4TractDeveloper",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4TrafficAutomataManager": [
+"cSC4AutomataManager"
+],
+"cSC4TrafficAutomaton": [
+"cSC4Automaton"
+],
+"cSC4TrafficNetworkMap": [
+"cISC4TrafficNetworkMap",
+"cIGZMessageTarget",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4TrafficQueryOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4TrafficSimulator": [
+"cISC4TrafficSimulator",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4TrailerVehicle": [
+"cSC4Vehicle"
+],
+"cSC4Train": [
+"cSC4TrainCar"
+],
+"cSC4TrainCar": [
+"cSC4Vehicle"
+],
+"cSC4TutorialSystem": [
+"cISC4TutorialSystem",
+"cIGZMessageTarget2",
+"cIGZMessageTarget",
+"cIGZSerializable",
+"cRZUnknown"
+],
+"cSC4TutorialTask": [
+"cISC4TutorialTask",
+"cRZUnknown"
+],
+"cSC4TutorialUIWinProc": [
+"cRZUnknown",
+"cIGZWinProc",
+"cIGZMessageTarget2"
+],
+"cSC4UIHTMLHook": [
+"cRZRefCount",
+"cIGZWWWSystemURLHandler"
+],
+"cSC4UndergroundConnectionOccupant": [
+"cSC4Occupant",
+"cIGZMessageTarget2",
+"cS3DModelInstanceBasic"
+],
+"cSC4UndergroundCustomView": [
+"cRZRefCount",
+"cISC4CustomView",
+"cIGZMessageTarget2"
+],
+"cSC4UndergroundNetworkTool": [
+"cSC4NetworkTool"
+],
+"cSC4UndergroundOccupant": [
+"cSC4NetworkOccupant"
+],
+"cSC4Vehicle": [
+"cSC4TrafficAutomaton"
+],
+"cSC4VehicleManager": [
+"cSC4TrafficAutomataManager"
+],
+"cSC4VideoPreferencesWinProc": [
+"cIGZWinProc"
+],
+"cSC4View3DWin": [
+"cISC4View3DWin",
+"cIGZMessageTarget2",
+"cIGZWinMessageFilter",
+"cGZWin"
+],
+"cSC4ViewInputControl": [
+"cISC4ViewInputControl"
+],
+"cSC4ViewInputControlCityScroll": [
+"cSC4ViewInputControl"
+],
+"cSC4ViewInputControlCitySituations": [
+"cSC4ViewInputControl",
+"cIGZMessageTarget2"
+],
+"cSC4ViewInputControlDemolish": [
+"cSC4ViewInputControl"
+],
+"cSC4ViewInputControlDispatch": [
+"cSC4ViewInputControl",
+"cIGZMessageTarget2"
+],
+"cSC4ViewInputControlEffect": [
+"cSC4ViewInputControl"
+],
+"cSC4ViewInputControlEffectDisaster": [
+"cSC4ViewInputControlEffect"
+],
+"cSC4ViewInputControlFlora": [
+"cSC4ViewInputControl"
+],
+"cSC4ViewInputControlGameOfLife": [
+"cSC4ViewInputControl",
+"cIGZMessageTarget2"
+],
+"cSC4ViewInputControlLabelTool": [
+"cSC4ViewInputControl",
+"cIGZWinMessageFilter"
+],
+"cSC4ViewInputControlLevelTerrain": [
+"cSC4ViewInputControl"
+],
+"cSC4ViewInputControlNetworkIntxTool": [
+"cSC4ViewInputControl"
+],
+"cSC4ViewInputControlNetworkTool": [
+"cSC4ViewInputControl",
+"cIGZMessageTarget2"
+],
+"cSC4ViewInputControlPlaceLot": [
+"cSC4ViewInputControl",
+"cIGZMessageTarget2"
+],
+"cSC4ViewInputControlPlayerDrive": [
+"cSC4ViewInputControl",
+"cIGZMessageTarget2",
+"cIGZWinProc"
+],
+"cSC4ViewInputControlQuery": [
+"cSC4ViewInputControl",
+"cIGZMessageTarget2"
+],
+"cSC4ViewInputControlSignLabelDemolish": [
+"cSC4ViewInputControl"
+],
+"cSC4ViewInputControlSignTool": [
+"cSC4ViewInputControl",
+"cIGZMessageTarget"
+],
+"cSC4ViewInputControlTerrainScrubber": [
+"cSC4ViewInputControl",
+"cIGZMessageTarget2"
+],
+"cSC4ViewInputControlTollBooth": [
+"cSC4ViewInputControl"
+],
+"cSC4ViewInputControlTorch": [
+"cSC4ViewInputControl",
+"cIGZMessageTarget2"
+],
+"cSC4ViewInputControlZone": [
+"cSC4ViewInputControl",
+"cIGZMessageTarget2"
+],
+"cSC4ViewLevelOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4ViewObject3D": [
+"cISC4ViewObject3D",
+"cRZUnknown"
+],
+"cSC4VisibleAnimatableOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4VisualEffect": [
+"cISC4VisualEffect",
+"cISC4ComponentEffect"
+],
+"cSC4WaterOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4WaterPathFinder": [
+"cIGZMessageTarget2"
+],
+"cSC4Watercraft": [
+"cSC4Automaton"
+],
+"cSC4WatercraftManager": [
+"cSC4AutomataManager"
+],
+"cSC4WateredPipeFilter": [
+"cSC4OccupantFilter"
+],
+"cSC4WealthRequester": [
+"cISC4PropRequester",
+"cIGZSerializable"
+],
+"cSC4WeatherSimulator": [
+"cISC4WeatherSimulator",
+"cIGZMessageTarget",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4WinAdviceList": [
+"cGZWin",
+"cISC4WinAdviceList"
+],
+"cSC4WinAlertBorder": [
+"cGZWin",
+"cRZRefCount",
+"cISC4WinAlertBorder"
+],
+"cSC4WinAnimationRecorder": [
+"cGZWin"
+],
+"cSC4WinAuraBar": [
+"cGZWin",
+"cRZRefCount",
+"cISC4WinAuraBar"
+],
+"cSC4WinCalloutBox": [
+"cISC4WinCalloutBox",
+"cGZWin"
+],
+"cSC4WinCatalogView": [
+"cISC4WinCatalogView",
+"cGZWin"
+],
+"cSC4WinGameDelay": [
+"cGZWin"
+],
+"cSC4WinGenTransparent": [
+"cGZWinGen"
+],
+"cSC4WinGridPopupStringListMenu": [
+"cGZWinGrid"
+],
+"cSC4WinIMECandidateList": [
+"cGZWinIMECandidateList"
+],
+"cSC4WinIntroVideoScreen": [
+"cGZWin"
+],
+"cSC4WinLoadHeightField": [
+"cGZWin"
+],
+"cSC4WinLotConfigurationChooser": [
+"cGZWinGen"
+],
+"cSC4WinLotConfigurationEditor": [
+"cGZWinGen",
+"cIGZWinMessageFilter"
+],
+"cSC4WinMapView": [
+"cISC4ViewManager",
+"cIGZMessageTarget2",
+"cGZWinGen"
+],
+"cSC4WinMiniMap": [
+"cGZWin",
+"cISC4WinMiniMap",
+"cIGZMessageTarget2"
+],
+"cSC4WinNetworkLotChooser": [
+"cGZWinGen"
+],
+"cSC4WinNetworkLotEditor": [
+"cSC4WinLotConfigurationEditor"
+],
+"cSC4WinRCI": [
+"cISC4WinRCI",
+"cGZWin",
+"cIGZMessageTarget2"
+],
+"cSC4WinRegion3DView": [
+"cGZWin"
+],
+"cSC4WinRegionClouds": [
+"cGZWin"
+],
+"cSC4WinRegionScreen": [
+"cGZWin",
+"cIGZWinMessageFilter",
+"cIGZMessageTarget2"
+],
+"cSC4WinRegionScroll": [
+"cGZWin"
+],
+"cSC4WinRegionView": [
+"cGZWin",
+"cISC4TiledScrollingCanvasSource"
+],
+"cSC4WinResizableOutline": [
+"cGZWin"
+],
+"cSC4WinSnapshotAlbum": [
+"cIGZWinProc"
+],
+"cSC4WinSnapshotTaker": [
+"cGZWin"
+],
+"cSC4WinSplashScreen": [
+"cGZWin",
+"cIGZMessageTarget2"
+],
+"cSC4WinTertiaryMenuFrame": [
+"cISC4WinTertiaryMenuFrame",
+"cGZWin"
+],
+"cSC4WinText": [
+"cGZWinText"
+],
+"cSC4WinTrendBar": [
+"cISC4WinTrendBar",
+"cGZWin",
+"cIGZMessageTarget2"
+],
+"cSC4ZoneDeveloper": [
+"cISC4ZoneDeveloper",
+"cISC4LotManager",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4ZoneManager": [
+"cISC4ZoneManager",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSC4ZoomRotationModelChangeOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"cSCBoolTextEntryView": [
+"cSCStandardTypeEntryView"
+],
+"cSCColorSequenceEntryView": [
+"cSCStandardTypeEntryView"
+],
+"cSCEditValueDlg": [
+"cGZWin"
+],
+"cSCExemplarCache": [
+"cRZSystemService",
+"cISCExemplarCache",
+"cRZRefCount",
+"cIGZMessageTarget2"
+],
+"cSCExemplarPropertyHolder": [
+"cSCPropertyHolder",
+"cISCExemplarPropertyHolder"
+],
+"cSCExemplarResourceView": [
+"cSCResCatBaseView",
+"cISCResourceView"
+],
+"cSCFloat32TextEntryView": [
+"cSCStandardTypeEntryView"
+],
+"cSCGeneralResponseCurveEntryView": [
+"cSCStandardTypeEntryView",
+"cISCValueFormatter"
+],
+"cSCHappinessCurveEntryView": [
+"cSCStandardTypeEntryView",
+"cISCValueFormatter"
+],
+"cSCLua": [
+"cGZLua5",
+"cISCLua",
+"cISC4GameDataRegistryNotificationTarget"
+],
+"cSCLuaCOMDirector": [
+"cRZCOMDllDirector"
+],
+"cSCParticleSimulatorBase": [
+"cIGZUnknown"
+],
+"cSCProperty": [
+"cISCProperty",
+"cRZVariant"
+],
+"cSCPropertyHolder": [
+"cISCPropertyHolder"
+],
+"cSCPropertyView": [
+"cGZWin"
+],
+"cSCResCatBaseView": [
+"cGZWin"
+],
+"cSCResCatalogPickerView": [
+"cISCValueEditView",
+"cSCResourceCatalogView"
+],
+"cSCResExemplar": [
+"cISCResExemplar",
+"cGZPersistResource",
+"cSCPropertyHolder"
+],
+"cSCResExemplarCohort": [
+"cISCResExemplarCohort",
+"cGZPersistResource",
+"cSCPropertyHolder"
+],
+"cSCResExemplarCohortFactory": [
+"cGZPersistResourceFactory"
+],
+"cSCResExemplarFactory": [
+"cGZPersistResourceFactory"
+],
+"cSCResFilterFixedGroupAndTypeId": [
+"cRZUnknown",
+"cIGZPersistResourceKeyFilter"
+],
+"cSCResKeyEnumerator": [
+"cISCResKeyEnumerator",
+"cRZRefCount"
+],
+"cSCResKeyInputView": [
+"cGZWin"
+],
+"cSCResKeyTable": [
+"cISCResKeyTable",
+"cRZRefCount"
+],
+"cSCResKeyTableEntryView": [
+"cISCValueEditView",
+"cISCValueEditResKeyTableView",
+"cSCResCatBaseView"
+],
+"cSCResProperty": [
+"cISCResProperty",
+"cSCProperty",
+"cGZPersistResource"
+],
+"cSCResourceCatalogView": [
+"cISCResourceCatalogView",
+"cGZWin"
+],
+"cSCSint32TextEntryView": [
+"cSCStandardTypeEntryView"
+],
+"cSCSint64TextEntryView": [
+"cSCStandardTypeEntryView"
+],
+"cSCSint8TextEntryView": [
+"cSCStandardTypeEntryView"
+],
+"cSCStandardTypeEntryView": [
+"cGZWin",
+"cISCValueEditView"
+],
+"cSCStringDetokenizer": [
+"cISCStringDetokenizer"
+],
+"cSCStringDetokenizerDefault": [
+"cSCStringDetokenizer"
+],
+"cSCStringEntryView": [
+"cSCStandardTypeEntryView"
+],
+"cSCUint32ComboBoxEntryView": [
+"cSCStandardTypeEntryView"
+],
+"cSCUint32SpinnerEntryView": [
+"cSCStandardTypeEntryView"
+],
+"cSCUint32TextEntryView": [
+"cSCStandardTypeEntryView"
+],
+"cSCUint8ComboBoxEntryView": [
+"cSCStandardTypeEntryView"
+],
+"cSCUint8TextEntryView": [
+"cSCStandardTypeEntryView"
+],
+"cSGLDX7D3DX": [
+"cISGLDX7D3DX",
+"cRZRefCount"
+],
+"cSGLDX7Direct3DDevice7Stub": [
+"IDirect3DDevice7"
+],
+"cSLString": [
+"cRZString"
+],
+"cSLTokenField<cGZPersistResourceKey>": [
+"cSLTokenFieldBase"
+],
+"cSLTokenField<cRZString>": [
+"cSLTokenFieldBase"
+],
+"cSLTokenField<double>": [
+"cSLTokenFieldBase"
+],
+"cSLTokenField<float>": [
+"cSLTokenFieldBase"
+],
+"cSLTokenField<int>": [
+"cSLTokenFieldBase"
+],
+"cSLTokenField<long long>": [
+"cSLTokenFieldBase"
+],
+"cSLTokenField<short>": [
+"cSLTokenFieldBase"
+],
+"cSLTokenField<signed char>": [
+"cSLTokenFieldBase"
+],
+"cSLTokenField<unsigned char>": [
+"cSLTokenFieldBase"
+],
+"cSLTokenField<unsigned int>": [
+"cSLTokenFieldBase"
+],
+"cSLTokenField<unsigned long long>": [
+"cSLTokenFieldBase"
+],
+"cSLTokenField<unsigned short>": [
+"cSLTokenFieldBase"
+],
+"cSLTokenFieldBase": [
+"cGZPersistTokenDef"
+],
+"cSLTokenRecord": [
+"cIGZPersistTokenRecord"
+],
+"cSLTokenResourceFactory": [
+"cGZPersistResourceFactory"
+],
+"cSLTokenSerialRecordIO_Text": [
+"cSLTokenSerialRecordIO"
+],
+"cSLWinLocationSaver": [
+"cISLWinLocationSaver"
+],
+"cSTEChangeTerrainUI": [
+"cIGZWinMessageFilter"
+],
+"cSTEEdgeReconcileInformDamage": [
+"cIGZWinMessageFilter"
+],
+"cSTEEdgeReconcileInformMismatch": [
+"cIGZWinMessageFilter"
+],
+"cSTEEdgeReconcileInformNoMismatch": [
+"cIGZWinMessageFilter"
+],
+"cSTEOverlayManager": [
+"cISTEOverlayManager",
+"cSC4ViewObject3D",
+"cIGZMessageTarget2"
+],
+"cSTESelectedTerrainArea": [
+"cSC4ViewObject3D"
+],
+"cSTESurfaceWater": [
+"cISTESurfaceWater",
+"cIGZSerializable",
+"cIGZMessageTarget2"
+],
+"cSTETerrain": [
+"cISTETerrain",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSTETerrainView3D": [
+"cSC4ViewObject3D",
+"cISTETerrainView",
+"cIGZMessageTarget2",
+"cIGZSerializable"
+],
+"cSTEVolcanoLava": [
+"cSC4ViewObject3D",
+"cIGZMessageTarget2"
+],
+"cSTEWaterRipple": [
+"cSC4ViewObject3D",
+"cIGZMessageTarget2"
+],
+"cStoplightPropFilter": [
+"cSC4OccupantFilter"
+],
+"cTrafficNetworkFilter_NetworkMap": [
+"cSC4OccupantFilter"
+],
+"cTrafficNetworkFilter_PlayerDrive": [
+"cSC4OccupantFilter"
+],
+"cTutorialString": [
+"cSLString"
+],
+"cWinBMPView": [
+"cGZWinBMP",
+"cIWinBMPView"
+],
+"cWinBMPViewGVExtra": [
+"cWinBMPView"
+],
+"cWinSC4App": [
+"cGZWin",
+"cIGZMessageTarget2"
+],
+"cZoneDeveloperLotFilter": [
+"cSC4LotConfigurationFilter"
+],
+"nGZDrawSoftRender::cSpanRender1555": [
+"nGZDrawSoftRender::cISpanRender"
+],
+"nGZDrawSoftRender::cSpanRender4444": [
+"nGZDrawSoftRender::cISpanRender"
+],
+"nGZDrawSoftRender::cSpanRender565": [
+"nGZDrawSoftRender::cISpanRender"
+],
+"nGZDrawSoftRender::cSpanRender8": [
+"nGZDrawSoftRender::cISpanRender"
+],
+"nGZDrawSoftRender::cSpanRender8888": [
+"nGZDrawSoftRender::cISpanRender"
+],
+"nGZLog::cDefaultOutputBackEnd": [
+"nGZLog::cOutputBackEnd"
+],
+"nGZLog::cIOutputBackEnd": [
+"cIGZUnknown"
+],
+"nGZLog::cIService": [
+"cIGZUnknown"
+],
+"nGZLog::cOutputBackEnd": [
+"nGZLog::cIOutputBackEnd"
+],
+"nGZLog::cService": [
+"cRZSystemService",
+"nGZLog::cIService"
+],
+"nSCRes::cArrayCreateCommand": [
+"nSCRes::cSimpleCommandT<nSCRes::cCommandParser>"
+],
+"nSCRes::cBlockCommand": [
+"nSCRes::cSimpleCommand"
+],
+"nSCRes::cBlockCommandT<cSC4EffectsParser>": [
+"nSCRes::cBlockCommand"
+],
+"nSCRes::cBlockCommandT<cSC4RuleParser>": [
+"nSCRes::cBlockCommand"
+],
+"nSCRes::cBlockCommandT<nSCRes::cCommandParser>": [
+"nSCRes::cBlockCommand"
+],
+"nSCRes::cCommandParser": [
+"nSCRes::cICommandParser"
+],
+"nSCRes::cCreateCommand": [
+"nSCRes::cSimpleCommandT<nSCRes::cCommandParser>"
+],
+"nSCRes::cDefineCommand": [
+"nSCRes::cSimpleCommandT<nSCRes::cCommandParser>"
+],
+"nSCRes::cEndBlockCommand": [
+"nSCRes::cSimpleCommandT<nSCRes::cCommandParser>"
+],
+"nSCRes::cEndDefCommand": [
+"nSCRes::cSimpleCommandT<nSCRes::cCommandParser>"
+],
+"nSCRes::cEvalCommand": [
+"nSCRes::cSimpleCommandT<nSCRes::cCommandParser>"
+],
+"nSCRes::cFileParser": [
+"nSCRes::cIFileParser",
+"cIGZMessageTarget2",
+"cRZUnknown"
+],
+"nSCRes::cICommandParser": [
+"cIGZUnknown"
+],
+"nSCRes::cIFileParser": [
+"cIGZUnknown"
+],
+"nSCRes::cListCommandsCommand": [
+"nSCRes::cSimpleCommandT<nSCRes::cCommandParser>"
+],
+"nSCRes::cNamespaceCommand": [
+"nSCRes::cBlockCommandT<nSCRes::cCommandParser>"
+],
+"nSCRes::cParseError": [
+"cIGZExceptionBase"
+],
+"nSCRes::cSetCommand": [
+"nSCRes::cSimpleCommandT<nSCRes::cCommandParser>"
+],
+"nSCRes::cSimpleCommandT<cSC4EffectsParser>": [
+"nSCRes::cSimpleCommand"
+],
+"nSCRes::cSimpleCommandT<cSC4RuleParser>": [
+"nSCRes::cSimpleCommand"
+],
+"nSCRes::cSimpleCommandT<nSCRes::cCommandParser>": [
+"nSCRes::cSimpleCommand"
+],
+"nSCRes::cTraceCommand": [
+"nSCRes::cSimpleCommandT<nSCRes::cCommandParser>"
+],
+"nSCRes::cVersionCommand": [
+"nSCRes::cSimpleCommandT<nSCRes::cCommandParser>"
+],
+"nSGLDX7::cGDriver": [
+"cIGZGBufferRegionExtension",
+"cIGZGSnapshotExtension",
+"cIGZGDriverLightingExtension",
+"cIGZGDriver",
+"cRZRefCount"
+],
+"nSGLDX7::cPrimitiveManager": [
+"cIGZGDriverVertexBufferExtension",
+"cRZRefCount"
+],
+"nSGLDX7::cTextureManager": [
+"cRZRefCount"
+],
+"std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>": [
+"std::__1::__basic_string_common<true>"
+],
+"tAutomataStateAttachAnim": [
+"tAutomataState"
+],
+"tAutomataStateBumped": [
+"tAutomataState"
+],
+"tAutomataStateChase": [
+"tAutomataState"
+],
+"tAutomataStateCollide": [
+"tAutomataState"
+],
+"tAutomataStatePlayerDrive": [
+"tAutomataState"
+],
+"tAutomataStatePlopJump": [
+"tAutomataState"
+],
+"tAutomataStatePlummet": [
+"tAutomataState"
+],
+"tAutomataStatePullOver": [
+"tAutomataState"
+],
+"tAutomataStateRandomWalk": [
+"tAutomataState"
+],
+"tAutomataStateRiotLeader": [
+"tAutomataState"
+],
+"tCrimePropOccupantFilter": [
+"cSC4OccupantFilter"
+],
+"tCrimeSimOccupantFilter": [
+"cSC4OccupantFilter"
+]
+}
