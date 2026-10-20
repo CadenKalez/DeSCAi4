@@ -28,6 +28,9 @@ Paste this as your first message / system prompt:
 5. Commit; periodically `python3 scripts/progress.py`.
 
 ## Current state / next targets
+> **STALE WARNING:** the lists below were written before many classes were finished (cGZWinTextEdit, cGZWinListBox,
+> cSC4FireOccupant, cSC4App, cSC4BudgetSimulator, ... are done). Always check `notes/ledger.csv` before picking a class; see the
+> "Parallel-agent rules" in AGENT_RULES.md.
 - Status at handoff: 10,146 / 28,371 game functions recovered (35.76%); 89/89 tests pass
   (run via a repo-local snapshot copy of scripts/run_tests.sh, delete it afterwards; full run takes ~5 min).
 - Shortcuts: `/tmp/show.py` and `/tmp/first.py` were session-temporary helpers (print decompile blocks by
