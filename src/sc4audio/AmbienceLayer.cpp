@@ -28,6 +28,12 @@ int Trunc32(float f) {
     if (!(f > -2147483904.0f && f < 2147483648.0f)) return INT_MIN;
     return static_cast<int>(f);
 }
+// x86 cvttss2si (64 bit) whose low 32 bits are used (the position event passes (long)f as a 32 bit argument):
+// out-of-range and NaN give 0x8000000000000000, so the low half is 0.
+std::uint32_t Trunc64Low32(float f) {
+    if (!(f > -9223373136366403584.0f && f < 9223372036854775808.0f)) return 0;
+    return static_cast<std::uint32_t>(static_cast<std::int64_t>(f));
+}
 // (long)f then used as an unsigned 64 bit value, as the original does for the score events.
 std::uint64_t FloatToU64(float f) {
     if (9.223372e+18f <= f) {
@@ -824,7 +830,7 @@ void cSC4AudioAmbienceLayer::UpdateFreshnessParameters() {   // @ 0x10040e49a
         parameter = 0;
     } else {
         float v = volumeCurve_.GetOutputValue(amount_);
-        scoreVolume_ = static_cast<std::int32_t>(static_cast<std::uint32_t>(Trunc32(v) * static_cast<std::int32_t>(scoreMasterVolume_)) >> 10);
+        scoreVolume_ = static_cast<std::int32_t>((static_cast<std::uint32_t>(Trunc32(v)) * scoreMasterVolume_) >> 10);
         float p = parameterCurve_.GetOutputValue(amount_);
         parameter = Trunc32(p);
         scoreParameter_ = parameter;
@@ -962,9 +968,9 @@ void cSC4AudioAmbienceLayer::UpdateAmbienceLoops(std::uint32_t elapsedMs) {   //
             AmbienceSndEvent e;
             e.eventId = kEventSetSoundPosition;
             e.ctor[0] = loop.instanceId;
-            e.ctor[1] = static_cast<std::uint32_t>(Trunc32(average_[0]));
-            e.ctor[2] = static_cast<std::uint32_t>(Trunc32(average_[1]));
-            e.ctor[3] = static_cast<std::uint32_t>(Trunc32(average_[2]));
+            e.ctor[1] = Trunc64Low32(average_[0]);   // (long) conversion, low 32 bits
+            e.ctor[2] = Trunc64Low32(average_[1]);
+            e.ctor[3] = Trunc64Low32(average_[2]);
             PostEvent(e);
             loop.x = average_[0];
             loop.y = average_[1];

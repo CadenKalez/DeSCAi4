@@ -9,7 +9,10 @@
 #include <functional>
 #include <map>
 
+#include "audio/interfaces/cIFreshPlayer.h"
+#include "rz/cRZMessage2Standard.h"
 #include "sc4/SCPropertyHelp.h"
+#include "sc4audio/SoundManager.h"
 #include "sc4audio/AmbienceLayer.h"
 
 using namespace SC4Audio;
@@ -403,7 +406,8 @@ static void TestInitShutdown() {
     for (auto* f : g_stateFilters) { CHECK(f->d.refs == 0); CHECK(f->d.shutdownCalls == 1); }
     CHECK(layer->Scores().empty() && layer->Loops().empty());
     CHECK(host.sink.Count(kEventScoreRemove) >= 1 && static_cast<int>(host.sink.events.size()) > events);
-    CHECK(!layer->OccupantLayer() && !layer->CellLayer());
+    // _RemoveLayers (0x10040bddc) leaves the cell pointer alone when it equals the occupant layer (mode 1)
+    CHECK(!layer->OccupantLayer() && (layer->Mode() == 1 ? layer->CellLayer() != nullptr : layer->CellLayer() == nullptr));
     layer->Release();
 }
 
@@ -683,24 +687,37 @@ static void TestUpdateScoresAndLoops() {
     layer->Update(40, {eye[0], eye[1], eye[2]}, {target[0], target[1], target[2]});
     CHECK(host.sink.events.size() == before);
 
-    // pause: scores stop (stop event), loops stop (stop sound)
+    // pause: scores stop (stop event); the loops are NOT stopped (_UpdateAmbienceLoops 0x10040d958 never reads the pause flag,
+    // it only stops a loop when the loop volume is 0)
     layer->Pause(true);
     CHECK(layer->IsPaused());
     CHECK(host.sink.Count(kEventScoreStop) == 1 && !layer->Scores().back().active);
-    CHECK(host.sink.Count(kEventStopSound) == 1 && layer->Loops().front().instanceId == 0);
-    // unpause: restart (loop id 101)
+    CHECK(host.sink.Count(kEventStopSound) == 0 && layer->Loops().front().instanceId == 100);
+    // unpause: the score restarts, the loop keeps its instance id
     layer->Pause(false);
     CHECK(layer->Scores().back().active && host.sink.Count(kEventScoreStart) == 2);
-    CHECK(layer->Loops().front().instanceId == 101);
+    CHECK(layer->Loops().front().instanceId == 100);
 
+    // Groups of the previous cycles stay in the layer (count 0, peak kept) until EndUpdate removes the empty ones, so the
+    // amount follows the handled things one cycle late (cGroupLayer::Clear keeps groups, ClearEmptyGroups @ 0x10040fe2e).
+    layer->BeginUpdate({0, 0, 300, 300});
+    layer->HandleOccupant(&a);
+    layer->Update(10, {eye[0], eye[1], eye[2]}, {target[0], target[1], target[2]});
+    CHECK(layer->PositionCount() == 3 && layer->Amount() == 3.0f);
+    layer->EndUpdate();
     // fewer handled things -> amount 1: volume 100, parameter unchanged
     layer->BeginUpdate({0, 0, 300, 300});
     layer->HandleOccupant(&a);
     layer->Update(10, {eye[0], eye[1], eye[2]}, {target[0], target[1], target[2]});
     CHECK(layer->PositionCount() == 1 && layer->Amount() == 1.0f && layer->ScoreVolume() == 100);
     CHECK(host.sink.Last(kEventScoreVolume)->data[0] == 100);
-    CHECK(player->enabled[{0, 0}] && !player->enabled[{1, 0}] && !player->enabled[{2, 2}]);
-    // negative data1 is sign extended (checked through a parameter change to a negative value is not reachable); amount 0:
+    CHECK((player->enabled[{0, 0}] && !player->enabled[{1, 0}] && !player->enabled[{2, 2}]));
+    // negative data1 is sign extended (checked through a parameter change to a negative value is not reachable); amount 0
+    // (two cycles without occupants: the empty group is only removed by the EndUpdate of the first one):
+    layer->EndUpdate();
+    layer->BeginUpdate({0, 0, 300, 300});
+    layer->Update(10, {eye[0], eye[1], eye[2]}, {target[0], target[1], target[2]});
+    layer->EndUpdate();
     layer->BeginUpdate({0, 0, 300, 300});
     layer->Update(10, {eye[0], eye[1], eye[2]}, {target[0], target[1], target[2]});
     CHECK(layer->Amount() == 0.0f && layer->ScoreVolume() == 0);
@@ -786,7 +803,7 @@ static void TestIntersectModes() {
         CHECK(layer->IntersectLayer()->groupRadius == (mode == 2 ? 5.0f : 2.0f));
         layer->BeginUpdate({0, 0, 400, 400});
         FakeOccupant a, b;
-        a.pos[0] = 16; a.pos[1] = 1; a.pos[2] = 16;      // cell (1,1) is at world (16, 33, 16): same place
+        a.pos[0] = 16; a.pos[1] = 33; a.pos[2] = 16;     // cell (1,1) is at world (16, 33, 16): same place (the distance includes y)
         b.pos[0] = 300; b.pos[1] = 1; b.pos[2] = 300;    // no cell nearby
         layer->HandleOccupant(&a); layer->HandleOccupant(&b);
         layer->HandleCell(1, 1);
