@@ -1,0 +1,728 @@
+diff --git a/src/sc4/MySim.h b/src/sc4/MySim.h
+new file mode 100644
+index 0000000..5e3f985
+--- /dev/null
++++ b/src/sc4/MySim.h
+@@ -0,0 +1,722 @@
++// cSC4MySim — one simulated citizen ("MySim") of the Sim City 4 Deluxe Edition 1.2.1 (Aspyr macOS) build.
++// Recovered from code 0x10079e9c6..0x1007aae08 (class id 0x4a1dbbbf, advice class cSC4MySimAdvice id 0x6a9335de, object
++// size 0x430). The citizen is an advisor (cSC4Advisor subobject at +0) that also implements the cISC4MySim interface at
++// +0x148 (thunks at 0x...f822.. subtract 0x10/0x18/0x20/0x148 from `this`; they are not separate functions).
++//
++// Layout (offsets in the original object, cISC4MySim interface = +0x148):
++//   +0x150 slot (u8)            +0x154 state (0 inactive, 1 arriving/moving in, 2 at home, 3 at work/away,
++//                                4 commuting to work, 5 commuting home, 6 pylon-dispatched)
++//   +0x158 home building        +0x160/+0x164 home cell x/z   +0x168 home position (3 floats)  +0x178 home lot
++//   +0x180 job building         +0x188 neighbour-city job     +0x190/+0x194 neighbour cell, +0x198/+0x19c job cell
++//   +0x1a0 (never written by recovered code)   +0x1a8 unemployed days   +0x1ac vehicle key   +0x1b8 wealth (0..3)
++//   +0x1bc generation (u16)     +0x1be zodiac sign   +0x1bf male   +0x1c0 bio   +0x1e8 age   +0x1e9 birth month
++//   +0x1ec bitmap id            +0x1f0 bitmap file   +0x218 residence callout   +0x220 callout shown
++//   +0x230 fallback track handle  +0x234 last commute time  +0x238 retired  +0x23c last local disaster
++//   +0x240 commute check pending  +0x244 Lua table reference  +0x248.. job/home name strings (+0x248 home building
++//   name, +0x250 job building name, +0x258 job title, +0x260 job city, +0x268 personal name)
++//   +0x270/+0x274 EQ / HQ  +0x278/+0x280 (released only)  +0x288 ghost effect  +0x290 random (seed 0xffffffff)
++//   +0x2a8/+0x2c0 six-month EQ / HQ histories, +0x2d8/+0x2d9 ring indices, +0x2dc/+0x2e0 monthly deltas
++//   +0x2e4 registered with message server  +0x2e8 closest-building-group map  +0x2f0 home sound prop  +0x2f8 Lua state
++//   +0x300/+0x308/+0x310 shared strings ("" / "unemployed" / "retired")  +0x318 balloon time limit  +0x31c/+0x320
++//   pedestrian / car model flags  +0x328 dispatch  +0x330 tracking a location  +0x338 balloons  +0x350 balloon index map
++//   +0x368 advice queue +0x380 event queue +0x398 balloon cursor +0x3a0 balloon window proc +0x3a8 default car
++//   +0x3ac local area size  +0x3b0 dispatch tool active  +0x3b1 pylon locked  +0x3b8 pylon  +0x3c0/+0x3cc car / pedestrian
++//   keys  +0x3d8 last trip update day  +0x3e0/+0x3f8/+0x418 timers  +0x410 last player trip day  +0x414 last sound time.
++// The advisor base (cSC4Advisor, not yet recovered) is behind IMySimAdvisorBase; every SL::sp* service behind
++// IMySimHost; the Lua state, dispatch object, pylon, lots, balloons, callout and input tools behind small interfaces.
++//
++// Quirks kept: simulate_day_events runs the same event record `count` times; the closest-building map treats a stored
++// distance of 0 as "unset"; the trip variables stop early (leaving the Lua stack unrestored) when a service is missing;
++// MoveIn leaks a tool that fails to initialise; the status text of a missing GetBitmapBuffer path stays null.
++#pragma once
++#include <cstdint>
++#include <deque>
++#include <map>
++#include <string>
++#include <utility>
++#include <vector>
++
++#include "gz/cGZPersistResourceKey.h"
++#include "gz/cIGZIStream.h"
++#include "gz/cIGZOStream.h"
++#include "gz/cIGZMessage2.h"
++#include "gz/cIGZUnknown.h"
++#include "rz/cRZRandom.h"
++#include "rz/cRZString.h"
++#include "rz/cRZTimer.h"
++#include "sc4/AdviceSubject.h"
++#include "sc4/SCPropertyHelp.h"
++#include "sc4/SLString.h"
++
++namespace sc4 {
++
++// ---- ids -------------------------------------------------------------------------------------------------------
++constexpr std::uint32_t kGZCLSID_cSC4MySim = 0x4a1dbbbf;        // GZCOM_cSC4MySimCLSID / GetGZCLSID
++constexpr std::uint32_t kGZCLSID_cSC4MySimAdvice = 0x6a9335de;  // GZCOM_cSC4MySimAdviceCLSID
++constexpr std::uint32_t kGZIID_cSC4MySimObject = 0x8bc01ffe;    // QueryInterface returns `this`
++constexpr std::uint32_t kGZIID_cISC4MySim = 0x0a1da42f;         // QueryInterface returns this + 0x148
++constexpr std::uint32_t kGZIID_BuildingOccupant = 0x87dda3a9;
++constexpr std::uint32_t kGZIID_BalloonAdvice = 0x6b70e6d9;
++constexpr std::uint32_t kGZIID_Dispatch = 0xeb8b6f9a;
++constexpr std::uint32_t kGZIID_Pylon = 0xc9b6d7d6;
++constexpr std::uint32_t kGZIID_ZoneDeveloperLots = 0x681905bd;
++constexpr std::uint16_t kMySimStreamVersion = 0x11;
++constexpr std::uint32_t kMySimStringGroup = 0xea231e96;
++
++enum MySimState : int {
++    kMySimInactive = 0, kMySimMovingIn = 1, kMySimAtHome = 2, kMySimAway = 3,
++    kMySimToWork = 4, kMySimToHome = 5, kMySimPylon = 6,
++};
++
++// messages handled by DoMessage
++constexpr std::uint32_t kMySimMsgTick = 0x86ad10ee, kMySimMsgViewEndA = 0xab6f3e2d, kMySimMsgViewEndB = 0x4b6f3ebf,
++                        kMySimMsgIgnored = 0x0b6f3e27, kMySimMsgDispatchTool = 0x0bb04126,
++                        kMySimMsgRefresh = 0x4bc42c48, kMySimMsgHide = 0x26d31ec1, kMySimMsgTrip = 0x2ba06b99;
++// sub-commands of kMySimMsgTrip (Data1)
++constexpr std::uint32_t kMySimTripArrived = 0x4bb71a7e, kMySimTripEnterTransit = 0x4bb2d020, kMySimTripLeaveTransit = 0x4bb2cfc0,
++                        kMySimTripPylonTouched = 0x2bac398f, kMySimTripCommuteChanged = 0xeba06bf4,
++                        kMySimTripMovedBeforeTrip = 0xeba06c12, kMySimTripIdleOffset = 0xeba06bd0, kMySimTripAtLocation = 0xeba06bd4;
++// advisor events pushed with PushEvent (vslot 0xb0)
++constexpr std::uint32_t kMySimEvJobFound = 0xaa3edbb1, kMySimEvTripLeftTransit = 0xec107df9, kMySimEvCommuteFailed = 0xca4553b7,
++                        kMySimEvNoResidence = 0x6a57dd94, kMySimEvBuildingAdded = 0xca4e8986, kMySimEvFire = 0xea5e4e89,
++                        kMySimEvPipeBurst = 0x6a5e598c, kMySimEvTornado = 0x0a5e8243, kMySimEvDisasterRiot = 0x8ac11a9b,
++                        kMySimEvDisasterOther = 0x2ac14492, kMySimEvJobBuildingGone = 0xca48f879,
++                        kMySimEvJobBuildingDestroyed = 0xaa4d2d65, kMySimEvHomeGone = 0xaa48f5c1, kMySimEvHomeDestroyed = 0xaa4d2d64;
++// script commands (DoScriptCommand)
++constexpr std::uint32_t kMySimCmdRetire = 0xaa4934b4, kMySimCmdDie = 0xeb4d269c, kMySimCmdLeaveCity = 0x0a57de1f,
++                        kMySimCmdFindResidence = 0x6a47e79b, kMySimCmdSpawn = 0x6a495f7f, kMySimCmdIncreaseWealth = 0x6a4a5e9e,
++                        kMySimCmdQuitJob = 0x6a5e6860;
++constexpr std::uint32_t kMySimDisasterRiot = 0xca380b06, kMySimDisasterFireLike = 0xc4c90997;
++constexpr std::uint32_t kMySimDisasterNearbyRiot = 0xca380b06, kMySimDisasterNearbyFire = 0x621cda33;
++
++// ---- reference counting ------------------------------------------------------------------------------------------
++class IMySimRef {
++public:
++    virtual ~IMySimRef() = default;
++    virtual void AddRef() = 0;
++    virtual void Release() = 0;
++};
++
++// cRZAutoRefCount look-alike: AddRef on copy/assign, Release on reset. A null pointer is allowed everywhere.
++template <class T>
++class MySimRef {
++public:
++    MySimRef() = default;
++    MySimRef(T* p) : p_(p) { if (p_) p_->AddRef(); }                           // takes a new reference
++    MySimRef(const MySimRef& o) : p_(o.p_) { if (p_) p_->AddRef(); }
++    MySimRef(MySimRef&& o) noexcept : p_(o.p_) { o.p_ = nullptr; }
++    MySimRef& operator=(const MySimRef& o) { if (p_ != o.p_) { T* old = p_; p_ = o.p_; if (p_) p_->AddRef(); if (old) old->Release(); } return *this; }
++    MySimRef& operator=(MySimRef&& o) noexcept { if (this != &o) { reset(); p_ = o.p_; o.p_ = nullptr; } return *this; }
++    ~MySimRef() { reset(); }
++    static MySimRef Adopt(T* p) { MySimRef r; r.p_ = p; return r; }               // takes over an owned reference
++    void reset() { T* old = p_; p_ = nullptr; if (old) old->Release(); }
++    T* get() const { return p_; }
++    T* operator->() const { return p_; }
++    explicit operator bool() const { return p_ != nullptr; }
++private:
++    T* p_ = nullptr;
++};
++
++// ---- small interfaces over the neighbouring game objects ---------------------------------------------------------------
++class IMySimOccupant : public IMySimRef {            // cISC4Occupant
++public:
++    virtual void GetPosition(float xyz[3]) = 0;                           // vslot 0x40
++    virtual void SetPosition(const float xyz[3]) = 0;                     // vslot 0x48
++    virtual void GetBounds(float minXyz[3], float maxXyz[3]) = 0;         // vslot 0x50
++    virtual void GetCellRect(int rect[4]) = 0;                            // vslot 0x58 {x0, z0, x1, z1}
++    virtual std::uint32_t OccupantId() = 0;                               // vslot 0x30
++    virtual bool HasFlag(std::uint32_t flag) = 0;                         // vslot 0xb0
++    virtual std::uint32_t OccupantType() = 0;                             // vslot 0x38
++    virtual void SetVisible(bool visible, bool flag) = 0;                 // vslot 0x90
++    virtual bool IsOnMap(int flag) = 0;                                   // vslot 0x100
++};
++class IMySimBuilding : public IMySimRef {            // cISC4BuildingOccupant
++public:
++    virtual IMySimOccupant* Occupant() = 0;                               // vslot 0x18
++    virtual std::uint32_t BuildingExemplarId() = 0;                       // vslot 0x20
++    virtual const float* CompletionFraction() = 0;                        // vslot 0x48 (>= 1.0 means fully built)
++    virtual const int* ClassAndSubclass() = 0;                            // vslot 0x58, [0] subclass
++    virtual const cIGZString* Name() = 0;                                 // vslot 0x60
++    virtual void FillName(cIGZString& out) = 0;                           // vslot 0x98
++    virtual void FillCityName(cIGZString& out) = 0;                       // vslot 0x108 (neighbour jobs only)
++};
++class IMySimLot : public IMySimRef {                 // cISC4Lot
++public:
++    virtual void GetBounds(int rect[4]) = 0;                              // vslot 0x70 {x0, z0, x1, z1}
++    virtual void GetCell(int& x, int& z) = 0;                             // vslot 0xa8
++    virtual std::uint8_t Condition() = 0;                                 // vslot 0x118
++    virtual bool HasRoad() = 0;                                           // vslot 0xe0
++    virtual int OccupantWealth() = 0;                                     // vslot 0x148
++    virtual IMySimBuilding* Building() = 0;                               // vslot 0x180 (borrowed)
++};
++class IMySimNeighborJob : public IMySimRef {         // region city exchange record (spSC4 vslot 0x118 -> 0x58)
++public:
++    virtual void FillCityName(cIGZString& out) = 0;                       // vslot 0x108
++};
++class IMySimProp : public IMySimRef {                // prop occupant used for the home sound
++public:
++    virtual IMySimOccupant* Occupant() = 0;
++};
++class IMySimPylon : public IMySimRef {               // cSC4PylonOccupant (dispatch tool marker)
++public:
++    virtual IMySimOccupant* Occupant() = 0;                               // vslot 0x18
++    virtual void Init() = 0;                                              // vslot 0x20
++    virtual void RemoveFromCity() = 0;                                    // vslot 0x28
++    virtual void SetEnabled(int v) = 0;                                   // vslot 0x30
++    virtual void SetPortrait(int bitmapId, const cIGZString& file) = 0;   // vslot 0x40
++    virtual void SetType(int v) = 0;                                      // vslot 0x48
++    virtual void SetMode(int mode) = 0;                                   // vslot 0x58 (0, 1, 4 seen)
++    virtual bool IsBusy() = 0;                                            // vslot 0x80
++    virtual void SetLockedTarget(IMySimOccupant* occ) = 0;                // vslot 0x88
++    virtual IMySimOccupant* LockedTarget() = 0;                           // vslot 0x90
++    virtual void SetOwner(cIGZUnknown* owner) = 0;                        // vslot 0x98
++};
++class IMySimCallout : public IMySimRef {             // cSC4WinCalloutBox above the home
++public:
++    virtual void SetText(const cIGZString& text) = 0;                     // vslot 0x40
++    virtual void SetPosition(const float xy[2]) = 0;                      // vslot 0x78
++    virtual void Show() = 0;                                              // window vslot 0x228
++    virtual void Hide() = 0;                                              // window vslot 0x230
++    virtual void Invalidate() = 0;                                        // window vslot 0xc0
++};
++class IMySimBalloonWinProc : public IMySimRef {      // cSC4MySimBalloonWinProc
++public:
++    virtual void Init() = 0;
++    virtual void Shutdown() = 0;
++    virtual void SetHiddenDuration(int v) = 0;                            // vslot 0x40
++    virtual void SetShownDuration(int v) = 0;                             // vslot 0x48
++    virtual void SetFadeDuration(int v) = 0;                              // vslot 0x50
++};
++class IMySimInputTool : public IMySimRef {           // cSC4MySimInputControl{MoveIn,Dispatch,ChangeHouse,ChangeJob}
++public:
++    virtual bool Init(class cSC4MySim* mysim) = 0;
++};
++
++// What cSC4MySimDispatch::cLocation holds as far as the MySim reads it (0x30 bytes).
++struct MySimLocation {
++    MySimRef<IMySimOccupant> occupant;   // +0
++    float x = 0, z = 0;                  // +8, +0xc
++    int cellX = -1, cellZ = -1;          // +0x10, +0x14
++    int field18 = 0, field1c = 0;        // +0x18, +0x1c
++    bool flag20 = false;                 // +0x20
++    bool flag21 = false;                 // +0x21 (the "failed" flag of a destination)
++    int minutes24 = 0;                   // +0x24
++    int field28 = 0;                     // +0x28
++};
++
++class IMySimDispatch : public IMySimRef {            // cSC4MySimDispatch
++public:
++    virtual void Init() = 0;
++    virtual void Shutdown() = 0;
++    virtual bool WriteTo(cIGZOStream& s) = 0;                             // SC4WriteGZSerializable target
++    virtual bool ReadFrom(cIGZIStream& s) = 0;                            // vslot 0x40 (version 12 streams)
++    virtual const MySimLocation& CurrentLocation() = 0;
++    virtual const MySimLocation& CurrentDestination() = 0;
++    virtual const MySimLocation& CurrentDefaultDestination() = 0;
++    virtual const MySimLocation& CurrentCommuteDestination() = 0;
++    virtual void SetDefaultDestination(const MySimLocation& loc) = 0;
++    virtual bool SetCurrentCommuteDestination(const MySimLocation& loc, bool force) = 0;
++    virtual bool GoTo(const MySimLocation& loc) = 0;
++    virtual void AddDestinationLocation(const MySimLocation& loc, int kind) = 0;
++    virtual void TeleportToCommuteLocation() = 0;
++    virtual bool CheckFlags(std::uint32_t mask) = 0;
++    virtual int GetState() = 0;
++    virtual int GetTravelType() = 0;
++    virtual int GetTransitSwitchWaitTimeMinutes() = 0;
++    virtual void SetModelOffset(int slot, std::uint32_t offset, int arg) = 0;
++    virtual void SetModelBaseResKey(int slot, const cGZPersistResourceKey& key, int arg) = 0;
++    virtual void StartTracking(std::uint32_t bitmapId, const cIGZString& portraitFile) = 0;
++    virtual void StopTracking() = 0;
++    virtual bool CanUDriveIt() = 0;                                       // vslot 0x58
++    virtual bool EnterUDriveIt() = 0;                                     // vslot 0x60
++    virtual bool ExitUDriveIt() = 0;                                      // vslot 0x68
++    virtual void SetTuning(int approachDistance, int destinationProximityMin, int minTimeIdle, int minTimeAtLocation,
++                           int minTimeAtTransitSwitch) = 0;               // +0x24, +0x28, +0x2c, +0x30, +0x34
++    virtual void SetFollowCamera(bool follow) = 0;                        // +0x20
++    virtual int TrackHandle() = 0;                                        // +0x4c
++    // cLocation helpers
++    virtual void LocationSetByOccupant(MySimLocation& loc, IMySimOccupant* occ) = 0;
++    virtual void LocationSetByCommute(MySimLocation& loc) = 0;
++    virtual void LocationSetCellPosition(MySimLocation& loc, int x, int z) = 0;
++    virtual bool LocationIsValid(const MySimLocation& loc) = 0;
++    virtual bool LocationsEqual(const MySimLocation& a, const MySimLocation& b) = 0;
++};
++
++// Lua state (cISCLua) as the MySim uses it; names follow the Lua C API entry each vslot behaves like.
++class IMySimLua : public IMySimRef {
++public:
++    virtual int GetTop() = 0;                                             // 0x30
++    virtual void SetTop(int n) = 0;                                       // 0x38
++    virtual void Pop(int n) = 0;                                          // 0x58
++    virtual int Type(int index) = 0;                                      // 0x60 (5 table, 6 function)
++    virtual double ToNumber(int index) = 0;                               // 0xb8
++    virtual bool IsNull(int index) = 0;                                   // 0xd8 (true when the value has no object)
++    virtual cIGZUnknown* ToObject(int index) = 0;                         // 0xe0
++    virtual void PushNumber(double v) = 0;                                // 0xf8
++    virtual void PushString(const char* s) = 0;                           // 0x108
++    virtual void PushObject(cIGZUnknown* obj, int typeKind) = 0;          // 0x118 / 0x228 (0 building/subject, 1 string)
++    virtual void GetGlobal(const char* name) = 0;                         // 0x128
++    virtual void GetTable(int index) = 0;                                 // 0x138
++    virtual void PushRef(int ref) = 0;                                    // 0x158
++    virtual void CreateTable() = 0;                                       // 0x160
++    virtual void SetGlobal(const char* name) = 0;                         // 0x168
++    virtual void SetTable(int index) = 0;                                 // 0x170 / 0x178
++    virtual int MakeRef(int n) = 0;                                       // 0x190
++    virtual int PCall(int args, int results) = 0;                         // 0x198
++    virtual void Unref(int ref) = 0;                                      // 0x1f0
++    virtual bool HasField(const char* table, const char* field) = 0;      // cTablePropertyReader::HasField on "tuning_constants"
++    virtual int GetNumberField(const char* table, const char* field) = 0; // cTablePropertyReader::GetNumber
++};
++
++// A balloon advice (the advisor's advice object queried with iid 0x6b70e6d9) and the advice record behind it.
++class IMySimAdviceData {
++public:
++    virtual ~IMySimAdviceData() = default;
++    virtual bool HasFlag(std::uint32_t mask) = 0;                         // vslot 0x78
++    virtual int Cooldown() = 0;                                           // vslot 0x80
++    virtual void SetEventArg(std::uint64_t arg) = 0;                      // vslot 0xc0
++    virtual void SetFlag(std::uint32_t mask, bool on) = 0;                // vslot 0x70
++};
++class IMySimBalloonAdvice : public IMySimRef {
++public:
++    virtual IMySimAdviceData* Advice() = 0;                               // vslot 0x18
++    virtual bool IsTriggerable() = 0;                                     // vslot 0x60
++    virtual void SetStateFlags(std::uint32_t mask, std::uint32_t value) = 0;   // vslot 0x68
++    virtual bool TestStateFlags(std::uint32_t mask) = 0;                  // vslot 0x70
++};
++
++// The not yet recovered cSC4Advisor base (vslots 0x38.. of the MySim vtable that the MySim only forwards to).
++class IMySimAdvisorBase {
++public:
++    virtual ~IMySimAdvisorBase() = default;
++    virtual bool Init(int id) = 0;
++    virtual void Shutdown() = 0;
++    virtual void Write(cIGZOStream& s) const = 0;
++    virtual void Read(cIGZIStream& s) = 0;
++    virtual bool DoMessage(cIGZMessage2Standard& msg) = 0;
++    virtual void SimulateDay() = 0;
++    virtual void SimulateDayEvents() = 0;
++    virtual void SimulateMonth() = 0;
++    virtual bool CommandWouldTrigger(std::uint32_t command) = 0;
++    virtual void PushEvent(std::uint32_t id, cISC4AdviceSubject* subject) = 0;      // vslot 0xb0
++    virtual int AdvisorId() const = 0;                                    // +0x28
++    virtual int MonthCounter() const = 0;                                 // +0x90
++    virtual int DayCounter() const = 0;                                   // +0x94
++    virtual int ViewId() const = 0;                                       // +0x98
++    virtual int AdviceCount() const = 0;                                  // (+0xe0 - +0xd8) / 0x18
++    virtual MySimRef<IMySimBalloonAdvice> BalloonAdviceAt(int index) = 0; // record -> QueryInterface(0x6b70e6d9), null if none
++    virtual std::vector<std::pair<int, int>> AdviceIdIndexMap() = 0;      // map at +0xa8: advice id -> record index
++    virtual void EraseAdviceId(int id) = 0;
++    virtual int DayEventCount() const = 0;                                // +0x138
++    virtual bool CurrentDayEvent(int& key, std::uint64_t& arg) const = 0; // record at +0x130: +0x10 key, +0x18 arg
++};
++
++// Probe of the traffic simulator for GetCongestion @ 0x1007a60fc.
++class IMySimTrafficProbe {
++public:
++    virtual ~IMySimTrafficProbe() = default;
++    virtual float TrafficLoad(int channel, int x, int z) = 0;             // vslot 0xb8
++    virtual std::uint8_t CongestionGridValue(int x, int z) = 0;           // vslot 0x50 -> grid vslot 0x38
++};
++
++// Everything the MySim reaches through the SL::sp* globals.
++class IMySimHost {
++public:
++    virtual ~IMySimHost() = default;
++    // --- city / framework
++    virtual int CityCellsX() = 0;                                         // spCity vslot 0x2e8
++    virtual MySimRef<IMySimLua> AdvisorLua() = 0;                         // spCity vslot 0x288 -> 0x50
++    virtual MySimRef<cISC4AdviceSubject> NewAdviceSubject() = 0;          // GZCOM 0x6a26d049
++    virtual bool LoadString(cIGZString& out, std::uint32_t group, std::uint32_t instance) = 0;   // SC4LoadString
++    virtual bool IsWindowManagerBusy() = 0;                               // cIGZWinMgr vslot 0x150
++    virtual bool SimulatorTicking() = 0;                                  // spSimulator vslots 0x78 || 0x80 || 0x88
++    virtual int HourOfDay() = 0;                                          // sp24HourClock vslot 0x50
++    virtual void PostMessage(std::uint32_t type, cIGZUnknown* data) = 0;  // SC4PostMessage2(type,0,0,0,0,data)
++    virtual void PostMySimsChanged() = 0;                                 // SendMySimsChangedMessage @ 0x1007a787b (0xaa25827c)
++    virtual void PostMoveInAnnouncement(IMySimOccupant* home, bool male, int wealth) = 0;   // message 0xea3ada33
++    virtual void AddMessageNotifications(cIGZMessageTarget2* target, const std::uint32_t* ids, int count) = 0;
++    virtual void RemoveMessageNotifications(cIGZMessageTarget2* target, const std::uint32_t* ids, int count) = 0;
++    virtual void AddTickNotification(cIGZMessageTarget2* target, std::uint32_t id) = 0;      // SL::ATM
++    virtual void RemoveTickNotification(cIGZMessageTarget2* target, std::uint32_t id) = 0;
++    virtual void RegisterGameData(class cSC4MySim* mysim) = 0;            // game data registry nodes "mysims"/age/name
++    virtual void UnregisterGameData(class cSC4MySim* mysim) = 0;
++    // --- factories
++    virtual MySimRef<IMySimDispatch> NewDispatch(class cSC4MySim* mysim) = 0;
++    virtual MySimRef<IMySimBalloonWinProc> NewBalloonWinProc(class cSC4MySim* mysim) = 0;
++    virtual MySimRef<IMySimPylon> NewPylon() = 0;
++    virtual MySimRef<IMySimCallout> NewResidenceCallout() = 0;
++    virtual MySimRef<IMySimInputTool> NewInputTool(int kind) = 0;         // 0 move-in, 1 dispatch, 2 change house, 3 change job
++    virtual MySimRef<IMySimProp> CreateProp(const cGZPersistResourceKey& key) = 0;      // propManager vslot 0x80
++    // --- stream helpers (SC4Write/ReadGZSerializable)
++    virtual bool WriteBuilding(cIGZOStream& s, IMySimBuilding* b) = 0;
++    virtual MySimRef<IMySimBuilding> ReadBuilding(cIGZIStream& s) = 0;
++    virtual bool WritePylon(cIGZOStream& s, IMySimPylon* p) = 0;
++    virtual MySimRef<IMySimPylon> ReadPylon(cIGZIStream& s) = 0;
++    virtual MySimRef<IMySimDispatch> ReadDispatch(cIGZIStream& s) = 0;
++    // --- lots, regions, city objects
++    virtual MySimRef<IMySimLot> LotForOccupant(IMySimOccupant* occ) = 0;  // lotManager vslot 0x70
++    virtual MySimRef<IMySimLot> LotAt(int x, int z) = 0;                  // lotManager vslot 0x28 (x, z, 0)
++    virtual MySimRef<IMySimNeighborJob> NeighborJobAt(int x, int z) = 0;  // spSC4 vslot 0x118 -> 0x58
++    virtual std::vector<MySimRef<IMySimLot>> LotsInRect(int x0, int z0, int x1, int z1) = 0;   // zone developer vslot 0x38
++    virtual bool BuildingFilterAccepts(IMySimOccupant* occ, bool residentialOnly) = 0;   // cMySimBuildingFilter on one occupant
++    virtual std::vector<MySimRef<IMySimBuilding>> BuildingsInRect(const int minCell[2], const int maxCell[2]) = 0;   // occupant manager vslot 0x148
++    virtual std::vector<MySimRef<IMySimBuilding>> ResidentialCandidates() = 0;   // occupant manager vslot 0x138 with the residential filter
++    virtual std::vector<std::uint32_t> OccupantGroups(IMySimBuilding* b) = 0;    // buildingDevSim vslot 0x68 + GetOccupantGroups
++    virtual std::vector<MySimRef<IMySimBuilding>> SpecialBuildings() = 0;        // spCity vslot 0x1a8 -> 0x160
++    virtual bool BuildingHasResident(IMySimBuilding* b) = 0;              // agent simulator vslot 0x48 (non-null result)
++    // --- resident / school / hospital queries
++    virtual float LocalEQ(int x, int z, int wealth) = 0;                  // residential vslot 0x128
++    virtual float LocalHQ(int x, int z, int wealth) = 0;                  // residential vslot 0x130
++    virtual bool LocalLE(int x, int z) = 0;                               // residential vslot 0xe8
++    virtual std::uint8_t AgeGridAt(int x, int z) = 0;                     // residential vslot 0x148 -> grid 0x38
++    virtual int RandomAge(int wealth) = 0;                                // residential vslot 0x150
++    virtual std::vector<MySimRef<IMySimOccupant>> SchoolOccupants() = 0; // residential vslot 0x178
++    virtual std::vector<MySimRef<IMySimOccupant>> HospitalOccupants() = 0;   // residential vslot 0x188
++    virtual float SchoolGradeOf(IMySimOccupant* school) = 0;              // residential vslot 0xd0
++    virtual float HospitalGradeOf(IMySimOccupant* hospital) = 0;          // residential vslot 0xd8
++    // --- local conditions for the Lua variables
++    virtual bool HasPower(std::uint32_t occupantId) = 0;                  // power sim vslot 0xf8
++    virtual bool HasWater(std::uint32_t occupantId) = 0;                  // plumbing sim vslot 0x48
++    virtual int CrimeAtCell(int x, int z) = 0;                            // crime grid byte
++    virtual int PoliceCoverage(int x, int z, int w, int h) = 0;           // police coverage grid rectangle average
++    virtual int FireCoverage(int x, int z, int w, int h) = 0;
++    virtual int PollutionAtCell(int kind, int x, int z) = 0;              // pollution sim grid (kind 0 air,1 water,2 garbage,3 radiation) short
++    virtual bool DesirabilityAtCell(int wealth, int x, int z, int& value) = 0;   // buildingDevSim vslot 0x108(0x1010/0x1020/0x1030)
++    virtual std::vector<MySimRef<IMySimOccupant>> PoliceStations() = 0;   // police sim vslot 0xa8
++    virtual bool PoliceFunding(IMySimOccupant* station, float& percent) = 0;   // police sim vslot 0x38
++    virtual std::vector<MySimRef<IMySimOccupant>> FireStations() = 0;     // fire protection vslot 0xb0
++    virtual bool FireFunding(IMySimOccupant* station, float& percent) = 0;// fire protection vslot 0x40
++    virtual IMySimTrafficProbe* TrafficProbe() = 0;
++    // --- trip sampling (grids addressed by world position)
++    virtual bool TripServicesAvailable() = 0;
++    virtual int TripTrafficCongestion(float x, float z) = 0;
++    virtual float TripTimeRatio(int cellX, int cellZ, int travelType) = 0;           // traffic vslot 0xc0
++    virtual int TripPollution(int kind, float x, float z) = 0;            // signed 16-bit
++    virtual int TripCrime(float x, float z) = 0;
++    virtual int TripMayorRating(float x, float z) = 0;                    // signed 8-bit
++    virtual float TripEQ(float x, float z) = 0;
++    virtual float TripHQ(float x, float z) = 0;
++    virtual float LandmarkFunding(IMySimOccupant* landmark) = 0;          // budget sim vslot 0x198 with id 0xaa59670c
++    virtual std::vector<std::pair<std::uint32_t, std::pair<int, int>>> Disasters() = 0;   // disaster layer: (type, (x, z))
++    virtual bool ComputeCommute(const int homeRect[4], const int jobRect[4], float& timeOut) = 0;   // route query (traffic vslot 0x30)
++    // --- sound / effects / camera / UI
++    virtual void RemovePropFromCity(IMySimOccupant* prop) = 0;            // propManager vslot 0xe8
++    virtual void AddOccupantToCity(IMySimOccupant* occ) = 0;              // occupant manager vslot 0xa0
++    virtual void StartGhostEffect(const float position[3]) = 0;           // effects manager "MySimGhost"
++    virtual void ShowNotificationDialog(const cIGZString& title, const cIGZString& body) = 0;
++    virtual bool CameraAvailable() = 0;
++    virtual void CameraFocus(const float position[3]) = 0;                // zoom to 4.0 when allowed, then SetViewTargetPosition
++    virtual void ProjectToViewport(float xyz[3]) = 0;
++    virtual bool LastScreenIconRect(int handle, int rect[4]) = 0;         // dispatch manager vslot 0xb0 -> GetLastScreenIconRect
++    virtual void AppendPortraitDirectory(cRZString& out) = 0;             // spSC4 vslot 0x1d8, text then followed by the bitmap file
++    virtual bool LoadBitmapFromFile(const cIGZString& file, void** bufferOut) = 0;
++    virtual bool LoadBitmapFromResource(const cGZPersistResourceKey& key, void** bufferOut) = 0;
++    virtual void FitJobBuildingName(cRZString& name) = 0;                 // text service 0x68963c4c vslot 0x190, width 200
++    virtual cISCPropertyHolder* LoadExemplar(const cGZPersistResourceKey& key) = 0;   // null when missing; caller ReleaseExemplar
++    virtual void ReleaseExemplar(cISCPropertyHolder* exemplar) = 0;
++    virtual cGZPersistResourceKey RandomWalkModelKey() = 0;               // creates the 0x4149 occupant at (0,-100,0) and reads its key
++    virtual void LogDeath(const float position[3]) = 0;                   // city vslot 0x178 -> 0x48 "my_sim_died" at the home
++    // --- view input control / terrain
++    virtual void* View3DInputControl() = 0;                               // spView3D vslot 0xc0
++    virtual void View3DSetInputControl(IMySimInputTool* tool, int mode) = 0;   // vslot 0xc8
++    virtual void View3DClearInputControl() = 0;                           // vslot 0xd0 (0)
++    virtual bool View3DHasInputControl(const IMySimInputTool* tool) = 0;  // vslot 0xc0 == tool
++    virtual bool View3DAvailable() = 0;
++    virtual bool TerrainAvailable() = 0;
++    virtual float TerrainHeightAt(float x, float z) = 0;                  // terrain vslot 0x60
++    virtual float TerrainWaterLevelAt(float x, float z) = 0;              // terrain vslot 0xe8
++};
++
++// cMySimBuildingFilter::IsOccupantIncluded @ 0x1007aaf18 over the lot manager / building queries.
++class IMySimFilterProbe {
++public:
++    virtual ~IMySimFilterProbe() = default;
++    virtual std::uint32_t OccupantType() = 0;                             // vslot 0x38
++    virtual IMySimBuilding* AsBuilding() = 0;                             // QueryInterface(0x87dda3a9), null if not a building
++    virtual MySimRef<IMySimLot> LotOf(IMySimBuilding* b) = 0;
++};
++constexpr std::uint32_t kMySimBuildingOccupantType = 0x278128a0;
++bool IsMySimBuildingIncluded(IMySimFilterProbe& probe, bool residentialOnly);
++
++// GetCongestion @ 0x1007a60fc: 0 when the traffic load at (x, z) is exactly 0, else the congestion grid byte.
++int MySimCongestionAt(IMySimTrafficProbe& traffic, int x, int z);
++// (uint)(long)sqrt(dz*dz + dx*dx) the way the compiled single-precision code truncates distances.
++std::uint32_t MySimTruncatedDistance(float dx, float dz);
++// stream helpers for the games-data registry exchange function @ 0x1007ab4c4
++int MySimTruncateFloat(float v);   // cvttss2si
++
++// ---- the citizen -----------------------------------------------------------------------------------------------------
++class cSC4MySim : public cIGZMessageTarget2 {
++public:
++    struct BalloonInfo {          // cSC4MySim::cBalloonInfo, 0x10 bytes
++        MySimRef<IMySimBalloonAdvice> balloon;
++        int nextShowDay = 0;      // +8
++        int field0c = 0;          // +0xc
++    };
++
++    cSC4MySim(IMySimHost* host, IMySimAdvisorBase* base);   // @ 0x10079ebcc
++    ~cSC4MySim();                                           // @ 0x10079f23c
++
++    // cIGZUnknown (the real object counts references in the advisor base; here a plain counter)
++    bool QueryInterface(std::uint32_t iid, void** out) override;   // @ 0x10079f7e8
++    std::uint32_t AddRef() override { return ++refCount_; }        // @ 0x10079f85e (advisor AddRef)
++    std::uint32_t Release() override;                              // @ 0x10079f8a4
++    std::uint32_t GetGZCLSID() const { return kGZCLSID_cSC4MySim; }   // @ 0x1007aade4
++
++    // lifecycle
++    bool Init(int id);                                      // @ 0x10079f8ea
++    void Shutdown();                                        // @ 0x1007a1fe8
++    void RemoveHomeSound();                                 // @ 0x1007a2502
++    static void CancelViewInput(IMySimHost& host);          // @ 0x1007a25ae
++    bool InitFromTuning();                                  // @ 0x1007a191c
++    void InitBalloons();                                    // init_balloons @ 0x1007a10f0
++    void ResetAdvisorState();                               // @ 0x1007a77b8
++
++    // streams
++    void Write(cIGZOStream& s) const;                       // @ 0x1007a27ce
++    void Read(cIGZIStream& s);                              // @ 0x1007a2b1c
++
++    // messages
++    bool DoMessage(cIGZMessage2* message) override;         // @ 0x1007a3364
++    bool DoMessage2(cIGZMessage2Standard& message);
++    void SimulateDay();                                     // simulate_day @ 0x1007a6344
++    void SimulateDayEvents();                               // @ 0x1007a6676
++    void SimulateMonth();                                   // @ 0x1007a6e26
++    void SimulateBalloons(bool all);                        // @ 0x1007a3bd6
++    void EmptyAllBalloonQueues();                           // @ 0x1007a2fc2
++    bool PopBalloonQueue(int queue, std::uint32_t stateMask);   // @ 0x1007a3038 (queue 1 events, 2 advice)
++    void PushBalloonQueue(int queue, int balloonIndex);     // @ 0x1007a3118
++    IMySimBalloonAdvice* GetNextBalloon(int queue);         // @ 0x1007a31b6
++    IMySimBalloonAdvice* GetNextBalloonAdvice() { return GetNextBalloon(2); }        // @ 0x1007a3260
++    IMySimBalloonAdvice* GetNextBalloonEventAdvice() { return GetNextBalloon(1); }   // @ 0x1007a3286
++    IMySimBalloonAdvice* GetCurrentBalloonAdvice() const;        // @ 0x1007a32ac
++    IMySimBalloonAdvice* GetCurrentBalloonEventAdvice() const;   // @ 0x1007a3308
++    std::uint32_t PickIdleOffset();                         // @ 0x1007a3d3a
++
++    // Lua
++    bool ActivateLuaContext();                              // @ 0x10079e9c6
++    void CreateLuaTable();                                  // @ 0x10079ea2a
++    void UpdateVariables();                                 // @ 0x10079fcb2
++    void UpdateQuickVariables();                            // @ 0x1007a5800
++    void UpdateTripVariables(int newState, int oldState, int newTransit, int oldTransit, bool force);   // @ 0x1007a3e66
++    void UpdateLocalBuildings();                            // @ 0x1007a5d5e
++    void UpdateJobTitle();                                  // @ 0x1007a6160
++    void SetTableBuilding(const char* name, IMySimBuilding* b);              // @ 0x1007a5be9
++    void SetTableString(const char* name, cRZString* str);                   // @ 0x1007a5ce4
++    void SetTableOccupantSubject(IMySimOccupant* occupant);                  // @ 0x1007a61d0
++    void SetLuaNumber(const char* name, double value);       // the push name / push number / settable(-3) triple
++
++    // residence / job / movement
++    void MoveIn(std::uint8_t slot, const cIGZString& name, bool male, std::uint8_t sign, const std::string& bio,
++                std::uint32_t bitmapId, const std::string& bitmapFile);       // @ 0x1007a6fa6
++    void MoveOut();                                         // @ 0x1007a7112
++    bool FindNewResidence();                                // @ 0x1007a718c
++    bool TestForResidence(IMySimBuilding* b, bool useFilter, bool matchWealth);   // @ 0x1007a73f4
++    bool ChangeResidence(IMySimBuilding* b);                // @ 0x1007a7556
++    bool ChangeJob(IMySimBuilding* b);                      // @ 0x1007a768a
++    bool FindNewJob();                                      // @ 0x1007a5786
++    void FailCommute();                                     // @ 0x1007a56ee
++    bool CheckCommute();                                    // @ 0x1007a64f2
++    void DeleteFromGame();                                  // @ 0x1007a7722
++    void SetResidence(IMySimBuilding* b);                   // @ 0x1007a7918
++    bool DispatchCommute();                                 // @ 0x1007a7bec
++    void QuitJob();                                         // @ 0x1007a8ebe
++    void LeaveForWork();                                    // @ 0x1007a9182
++    void ReturnHome();                                      // @ 0x1007a9202
++    void AnnounceMoveIn();                                  // @ 0x1007a928e
++    void DoScriptCommand(std::uint32_t command);            // @ 0x1007a93a0
++    void Spawn();                                           // @ 0x1007a9480
++    void IncreaseWealth();                                  // @ 0x1007a94fe
++    void Die();                                             // @ 0x1007a953e
++    void LeaveCity();                                       // @ 0x1007a9600
++    void StartGhostEffect();                                // @ 0x1007a9934
++    bool IsPylonLocation(const MySimLocation& loc) const;   // is_pylon_location @ 0x1007a5690
++    bool CommandWouldTrigger(std::uint32_t command);        // @ 0x1007a8f4e
++
++    // world events
++    void DoBuildingAdded(IMySimBuilding* b);                // @ 0x1007a96b2
++    void DoBuildingChanged(IMySimBuilding* b);              // @ 0x1007a9804
++    void DoBuildingRemoved(IMySimBuilding* b, std::uint32_t cause);   // @ 0x1007a9858
++    void DoFireAdded(float x, float z);                     // @ 0x1007a9a34
++    void DoPipeBurst(float x, float z);                     // @ 0x1007a9b1a
++    void DoTornado(float x, float z);                       // @ 0x1007a9c00
++    void DoDisaster(std::uint32_t type, int cellX, int cellZ);   // @ 0x1007a9ce6
++    void DoNeighborConnectionRemoved(int a, int b);         // @ 0x1007a9e64
++
++    // queries
++    std::uint8_t GetSlot() const { return slot_; }                  // @ 0x1007a7f64
++    IMySimBuilding* GetResidence() const { return home_.get(); }    // @ 0x1007a7e06
++    IMySimBuilding* GetJob() const { return job_.get(); }           // @ 0x1007a7e1e
++    void GetJobTitle(IMySimBuilding* job, cIGZString& out) const;   // @ 0x1007a7e36
++    cGZPersistResourceKey GetVehicleKey() const { return vehicleKey_; }   // @ 0x1007a7ef2
++    std::uint8_t GetSign() const { return sign_; }                  // @ 0x1007a7f30
++    std::uint8_t GetAge() const { return age_; }                    // @ 0x1007a7f48
++    int GetWealth() const { return wealth_; }                       // @ 0x1007a7f7c
++    std::uint32_t GetBitmapID() const { return bitmapId_; }         // @ 0x1007a7f92
++    const std::string& GetBitmapFile() const { return bitmapFile_; }   // @ 0x1007a7faa
++    bool GetBitmapBuffer(void** bufferOut) const;                   // @ 0x1007a7fc6
++    const cRZString* GetHomeName() const;                           // @ 0x1007a81f8
++    const cRZString* GetJobName() const;                            // @ 0x1007a8240
++    const cRZString* GetJobTitle() const;                           // @ 0x1007a82ea
++    void GetEQAsText(cIGZString& out) const;                        // @ 0x1007a8394
++    bool GetHQAsText(cIGZString& out);                              // @ 0x1007a83e4
++    bool IsMale() const { return male_; }                           // @ 0x1007a845c
++    bool IsActive() const { return state_ != 0; }                   // @ 0x1007a8472
++    const std::string& GetBio() const { return bio_; }              // @ 0x1007a8490
++    const cRZString* GetPersonalName();                             // @ 0x1007a261a
++    std::uint32_t DistanceToClosest(std::uint32_t group) const;     // @ 0x1007a6830
++    std::uint32_t DistanceToClosestSpecial(std::uint32_t group);    // @ 0x1007a6896
++    float LocalSchoolGrade(std::uint32_t flag);                     // @ 0x1007a69ee
++    float LocalHospitalGrade(std::uint32_t flag);                   // @ 0x1007a6c06
++    bool GetLocation(float xyz[3]) const;                           // @ 0x1007aa520
++    bool GetCurrentScreenLocationXY(int* x, int* y);                // @ 0x1007a8e36
++    int GetTrackHandle() const;                                     // get_track_handle @ 0x1007aab7c
++    cIGZUnknown* AsAdvisor() { return nullptr; }                    // @ 0x1007aadf0 (this + 0x10 in the original)
++
++    // UI
++    void Find();                                            // @ 0x1007a84a8
++    void ShowResidence();                                   // @ 0x1007a8876
++    void HideResidence();                                   // @ 0x1007a8af8
++    void UpdateResidence();                                 // @ 0x1007a8b64
++    void ShowLocation();                                    // @ 0x1007a8c6c
++    void HideLocation();                                    // @ 0x1007a8d5c
++    void SetPylonVisibility(bool visible);                  // @ 0x1007a8dba
++    bool RequestToPlaySound();                              // @ 0x1007a8fc2
++    void PlayHomeSound(std::uint32_t soundId);              // @ 0x1007a9042
++    void PlayNightSound();                                  // @ 0x1007a912a
++    bool CanUDriveIt();                                     // @ 0x1007aac66
++    bool EnterUDriveIt();                                   // @ 0x1007aaca2
++    bool ExitUDriveIt();                                    // @ 0x1007aad14
++
++    // dispatch tool
++    IMySimPylon* DispatchToolBegin();                       // @ 0x1007a9e9e
++    void DispatchToolEnd();                                 // @ 0x1007aa0fa
++    void DispatchToolLockPylon(bool lock);                  // @ 0x1007aa262
++    bool DispatchToolIsPylonLocked() const { return pylonLocked_; }    // @ 0x1007aa4ae
++    IMySimPylon* DispatchToolGetPylon() const { return pylon_.get(); }   // @ 0x1007aa4ba
++    void DispatchToolSetFollowCamera(bool follow);          // @ 0x1007aa4c8
++    bool DispatchToolCanDispatch(float x, float z);         // @ 0x1007aa4da
++    bool CreateDispatchTool();                              // @ 0x1007aa9da
++    bool CreateChangeHouseTool();                           // @ 0x1007aaab4
++    bool CreateChangeJobTool();                             // @ 0x1007aab9e
++    void SetCar(cISCPropertyHolder* exemplar, bool haveExemplar);          // @ 0x1007aa5f0
++    void SetPedestrian(cISCPropertyHolder* exemplar, bool haveExemplar);   // @ 0x1007aa740
++    cGZPersistResourceKey GetRandomWalkModelKey();          // @ 0x1007aa8d0
++
++    // --- state exposed for the port's callers and tests
++    IMySimHost* Host() { return host_; }
++    IMySimAdvisorBase* Base() { return base_; }
++    cSLString& NameString() { return name_; }              // +0x60 (the advisor base's name)
++    int State() const { return state_; }
++    void SetState(int s) { state_ = s; }
++    IMySimDispatch* Dispatch() const { return dispatch_.get(); }
++    IMySimLua* Lua() const { return lua_.get(); }
++    int LuaRef() const { return luaRef_; }
++    int Generation() const { return generation_; }
++    float EQ() const { return eq_; }
++    float HQ() const { return hq_; }
++    int UnemployedDays() const { return unemployedDays_; }
++    int LastCommuteTime() const { return lastCommuteTime_; }
++    bool Retired() const { return retired_; }
++    bool CommuteCheckPending() const { return commuteCheckPending_; }
++    int BalloonCursor() const { return balloonCursor_; }
++    int LocalAreaSize() const { return localAreaSize_; }
++    int DefaultCarModel() const { return defaultCarModel_; }
++    bool TrackingLocation() const { return trackingLocation_; }
++    bool IsRegistered() const { return registered_; }
++    int BirthMonth() const { return birthMonth_; }
++    const std::vector<BalloonInfo>& Balloons() const { return balloons_; }
++    const std::map<int, int>& BalloonIndexById() const { return balloonIndexById_; }
++    const std::deque<int>& AdviceQueue() const { return adviceQueue_; }
++    const std::deque<int>& EventQueue() const { return eventQueue_; }
++    const std::map<std::uint32_t, std::uint32_t>& ClosestGroups() const { return closestGroups_; }
++    const float* EqHistory() const { return eqHistory_; }
++    const float* HqHistory() const { return hqHistory_; }
++    float DeltaEQ() const { return deltaEq_; }
++    float DeltaHQ() const { return deltaHq_; }
++    cRZTimer& BalloonTimer() { return balloonTimer_; }
++    cRZTimer& PylonTimer() { return pylonTimer_; }
++    cRZTimer& SoundTimer() { return soundTimer_; }
++    void SetLuaStateForTest(MySimRef<IMySimLua> lua) { lua_ = std::move(lua); }
++    void SetHomeForTest(MySimRef<IMySimBuilding> b) { home_ = std::move(b); }
++    void SetJobForTest(MySimRef<IMySimBuilding> b) { job_ = std::move(b); }
++    // the static view-input-control reference (cSC4MySim::mspViewInputControl)
++    static MySimRef<IMySimInputTool>& ViewInputControl();
++
++private:
++    friend class MySimTestAccess;
++    IMySimHost* host_;
++    IMySimAdvisorBase* base_;
++    std::uint32_t refCount_ = 0;
++    cSLString name_;                                        // +0x60 advisor name
++    std::uint8_t slot_ = 0;                                 // +0x150
++    int state_ = 0;                                         // +0x154
++    MySimRef<IMySimBuilding> home_;                         // +0x158
++    int homeCellX_ = 0, homeCellZ_ = 0;                     // +0x160, +0x164
++    float homePos_[3] = {0, 0, 0};                          // +0x168
++    MySimRef<IMySimLot> homeLot_;                           // +0x178
++    MySimRef<IMySimBuilding> job_;                          // +0x180
++    MySimRef<IMySimNeighborJob> neighborJob_;               // +0x188
++    int neighborX_ = 0, neighborZ_ = 0;                     // +0x190, +0x194
++    int jobX_ = 0, jobZ_ = 0;                               // +0x198, +0x19c
++    MySimRef<IMySimRef> unknown1a0_;                        // +0x1a0
++    int unemployedDays_ = 0;                                // +0x1a8
++    cGZPersistResourceKey vehicleKey_;                      // +0x1ac
++    int wealth_ = 0;                                        // +0x1b8
++    std::uint16_t generation_ = 1;                          // +0x1bc
++    std::uint8_t sign_ = 0;                                 // +0x1be
++    bool male_ = true;                                      // +0x1bf
++    std::string bio_;                                       // +0x1c0
++    std::uint8_t age_ = 0, birthMonth_ = 0;                 // +0x1e8, +0x1e9
++    std::uint32_t bitmapId_ = 0;                            // +0x1ec
++    std::string bitmapFile_;                                // +0x1f0
++    MySimRef<IMySimCallout> callout_;                       // +0x218
++    bool calloutShown_ = false;                             // +0x220
++    int trackHandle_ = 0;                                   // +0x230
++    int lastCommuteTime_ = 0;                               // +0x234
++    bool retired_ = false;                                  // +0x238
++    std::uint32_t lastLocalDisaster_ = 0;                   // +0x23c
++    bool commuteCheckPending_ = false;                      // +0x240
++    int luaRef_ = 0;                                        // +0x244
++    MySimRef<cRZString> homeBuildingName_, jobBuildingName_, jobTitle_, jobCity_, personalName_;   // +0x248..+0x268
++    float eq_ = 0, hq_ = 0;                                 // +0x270, +0x274
++    cRZRandom random_{0xffffffff};                          // +0x290
++    float eqHistory_[6] = {}, hqHistory_[6] = {};           // +0x2a8, +0x2c0
++    std::uint8_t eqIndex_ = 0, hqIndex_ = 0;                // +0x2d8, +0x2d9
++    float deltaEq_ = 0, deltaHq_ = 0;                       // +0x2dc, +0x2e0
++    bool registered_ = false;                               // +0x2e4
++    std::map<std::uint32_t, std::uint32_t>* closestGroups_ptr_ = nullptr;   // +0x2e8 (allocated lazily)
++    std::map<std::uint32_t, std::uint32_t> closestGroups_;
++    bool haveClosestGroups_ = false;
++    MySimRef<IMySimProp> homeSound_;                        // +0x2f0
++    MySimRef<IMySimLua> lua_;                               // +0x2f8
++    MySimRef<cRZString> emptyString_, unemployedString_, retiredString_;   // +0x300, +0x308, +0x310
++    int balloonTimeLimit_ = 0;                              // +0x318
++    int pedestrianFlag_ = 0, carFlag_ = 0;                  // +0x31c, +0x320
++    MySimRef<IMySimDispatch> dispatch_;                     // +0x328
++    bool trackingLocation_ = false;                         // +0x330
++    std::vector<BalloonInfo> balloons_;                     // +0x338
++    std::map<int, int> balloonIndexById_;                   // +0x350
++    std::deque<int> adviceQueue_, eventQueue_;              // +0x368, +0x380
++    int balloonCursor_ = 0;                                 // +0x398
++    MySimRef<IMySimBalloonWinProc> balloonWinProc_;         // +0x3a0
++    int defaultCarModel_ = 0;                               // +0x3a8
++    int localAreaSize_ = 7;                                 // +0x3ac
++    bool dispatchToolActive_ = false, pylonLocked_ = false; // +0x3b0, +0x3b1
++    MySimRef<IMySimPylon> pylon_;                           // +0x3b8
++    cGZPersistResourceKey carKey_, pedestrianKey_;          // +0x3c0, +0x3cc
++    int lastTripUpdateDay_ = -1;                            // +0x3d8
++    cRZTimer pylonTimer_{cRZTimer::kSeconds};               // +0x3e0
++    cRZTimer balloonTimer_{cRZTimer::kSeconds};             // +0x3f8
++    int lastPlayerTripDay_ = 0;                             // +0x410
++    int lastSoundTime_ = 0;                                 // +0x414
++    cRZTimer soundTimer_{cRZTimer::kSeconds};               // +0x418
++
++    void ReleaseLuaTableRef();
++    void NewTableString(MySimRef<cRZString>& slot);
++    bool InstallTool(MySimRef<IMySimInputTool> tool, bool setStatic);
++    void ReleasePylon();
++    void SetNeighborJobFromCell(int x, int z);
++};
++
++}  // namespace sc4

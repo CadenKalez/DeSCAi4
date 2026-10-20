@@ -1,0 +1,461 @@
+diff --git a/src/sc4/PlumbingSimulator.h b/src/sc4/PlumbingSimulator.h
+new file mode 100644
+index 0000000..d4fb0a7
+--- /dev/null
++++ b/src/sc4/PlumbingSimulator.h
+@@ -0,0 +1,455 @@
++// cSC4PlumbingSimulator — the water network. Recovered from Sim City 4 Deluxe Editionsub 1.2.1 (constructor 0x10009bc9e,
++// class id 0x0990c075, interface 0x47782ccc, object size 0x290; code 0x10009bc9e..0x1000a1290).
++//
++// What it does: every pipe occupant and every building that consumes (property 0xc8ed2d84) or produces (property
++// 0x88ed3303) water is entered in a per-cell flag map (+0xc8). A multi-step state machine (+0x128, one step per idle
++// message, see DoIdle) then re-computes everything after a change (+0x12c) or at the monthly tick (message 0x66956816):
++//   0 month start: ordinance factor, clear neighbour deals, zero the monthly counters
++//   1 UpdateWaterProduction: per producer production = capacity * funding * (power/pollution/source conditions)
++//   2 copy the pipe cells into the watered grid (value 8), reset the producer flags
++//   3 choose the next producer (or a neighbour import connection) and flood the pipe network from its cell (queue +0x68)
++//   4 spread the producer's output over the reached pipes and ring cells by breadth first search (queue +0x98): every
++//     reached cell is marked watered (bit 1), consuming cells (flag 0x40) draw BuildingConsumption * ordinance; export
++//     and import deals with neighbour cities are settled; then back to 3 for the next producer
++//   5 hand the watered state to the pipes and neighbour connections
++//   6 (time sliced) write the watered grid values (1 watered, 2 consumer, 4 producer-only) under every building and swap
++//     the two grids (+0x58 / +0x60; +0x60 is the published one)
++//   7 (time sliced) find the changed cell rectangle and invalidate the terrain view
++//   8 statistics: upkeep costs, ageing, history warehouse, status message, neighbour deals
++//   9 wait until something changed (+0x12c)
++//
++// Layout (original offsets in comments): +0x28 city, +0x30 message server, +0x38 occupant manager, +0x40 pollution simulator,
++// +0x48 neighbour simulator, +0x50 random, +0x58/+0x60 watered grids (uint8, tract size 1, instances 0x49d5bb8c / 0x49d5bba1),
++// +0xc8 cell flag map (width +0xd0, height +0xd4), +0xd8 visited bits (side +0xe0), +0xe4 month counter, +0xe8 average
++// pollution at the sources, +0xf0 budget department, +0xf8.. tunables, +0x110 producer list, +0x128 step, +0x1a8 current
++// producer, +0x1b0 cell scan iterator, +0x1c0/+0x1e0/+0x248/+0x268 response curves, +0x200 pipe list, +0x218.. pipe counts.
++//
++// Cell flags (+0xc8): 0x01 connects to x-1, 0x02 to z-1, 0x04 to x+1, 0x08 to z+1, 0x10 pipe, 0x20 producer lot, 0x40
++// consumer building. Watered grid values: 1 watered, 2 consumer, 4 (with 2 clear) producer cell, 8 pipe.
++//
++// Quirks kept: the flood fill queue stores one byte per coordinate (cities are at most 256 cells wide); the first lot of
++// a producer is looked up only at its reference cell; FillGridAtOccupant loops exclusive of the last cell when the cell has
++// no lot; DoBuildingChanged returns without releasing the building reference when the lot is missing (a leak the host
++// sees as an unbalanced AddRef); the producer flags +0x18/+0x19 are left uninitialised by the original constructors
++// (zeroed here); GetWaterProducerInfo keeps scanning after a match; random_shuffle of the pipes uses libc++'s forward
++// algorithm (host supplies the random index); the time slice check runs every iteration because the "history" step added
++// to its counter is 0x400.
++//
++// Services (city geometry, terrain, occupant/lot managers, pollution, budget, neighbours, history, messages, timer, resource
++// manager) are injected through IPlumbingHost; the original reaches them through the SL::sp* globals.
++#pragma once
++#include <cstdint>
++#include <deque>
++#include <list>
++#include <vector>
++
++#include "gz/cIGZIStream.h"
++#include "gz/cIGZOStream.h"
++#include "gz/cGZPersistResourceKey.h"
++#include "rz/cRZRandom.h"
++#include "sc4/SCPropertyHelp.h"
++#include "sc4/SimStreamOps.h"
++#include "sc4/cSC4ResponseCurve.h"
++#include "sc4/cSC4SimGrid.h"
++
++namespace sc4 {
++
++constexpr std::uint32_t kGZCLSID_cSC4PlumbingSimulator = 0x0990c075;
++constexpr std::uint32_t kGZIID_cISC4PlumbingSimulator = 0x47782ccc;
++constexpr std::uint32_t kGZIID_cIGZMessageTarget2Plumbing = 0x452294aa;   // the +8 view
++constexpr std::uint32_t kGZIID_cIGZSerializablePlumbing = 0xe4fda3d4;     // the +0x10 view
++constexpr std::uint32_t kPlumbingStreamVersion = 4;
++
++// messages routed by DoMessage
++constexpr std::uint32_t kPlumbingMsgOccupantAdded = 0x99ef1142, kPlumbingMsgOccupantRemoved = 0x99ef1143,
++                        kPlumbingMsgReloadTunables = 0xca1b151c, kPlumbingMsgCellCleared = 0xea1f0dcd,
++                        kPlumbingMsgDealsChanged = 0xea418d8f, kPlumbingMsgEnable = 0x6ac284f3,
++                        kPlumbingMsgIdle = 0x66956814, kPlumbingMsgMonth = 0x66956816, kPlumbingMsgIdleBudget = 0x6695681a,
++                        kPlumbingMsgStatus = 0x6946dc34;   // posted after the statistics step
++constexpr std::uint32_t kPlumbingIgnoredOccupantProperty = 0x029244db;   // occupants carrying it are not handled
++constexpr std::uint32_t kPlumbingBuildingOccupantType = 0x278128a0, kPlumbingNetworkOccupantType = 0xc772bf98;
++constexpr std::uint32_t kPlumbingPipeIid = 0x49c05b9f, kPlumbingBudgetItemIid = 0x87dda3a9, kPlumbingDealIid = 0x0773fef1;
++constexpr std::uint32_t kPlumbingDealImport = 0x4773ffe2, kPlumbingDealExport = 0x4773ffe3;   // see DoIdle step 3/4
++// exemplar properties
++constexpr std::uint32_t kPlumbingConsumption = 0xc8ed2d84, kPlumbingProduction = 0x88ed3303, kPlumbingCurrentProduced = 0x08d9763d,
++                        kPlumbingWear = 0xc910b4cf, kPlumbingSourceType = 0x48f23a7e, kPlumbingConditionCurve = 0x8a1e07ee,
++                        kPlumbingWearRate = 0xea1cf220, kPlumbingWearWarn = 0xea1cf221, kPlumbingWearCritical = 0xea1cf222,
++                        kPlumbingBudgetProperty = 0xca58c9d5, kPlumbingStoredCost = 0x2a58d350, kPlumbingUnitCost = 0xea1e3c53,
++                        kPlumbingCostCurve = 0x0911e2e7;
++// pipe flags (cSC4PipeOccupant vslot 0x60)
++constexpr std::uint32_t kPipeFlagDistressed = 0x10000, kPipeFlagBurst = 0x20000, kPipeFlagGhost = 0x80000000;
++// cell flags
++constexpr std::uint8_t kCellLinkWest = 0x01, kCellLinkNorth = 0x02, kCellLinkEast = 0x04, kCellLinkSouth = 0x08, kCellPipe = 0x10,
++                       kCellProducer = 0x20, kCellConsumer = 0x40;
++// WaterSourceType (property 0x48f23a7e): how the producer is checked against nearby water
++enum WaterSourceType : int { kWaterSourceNearby = 0, kWaterSourceRequired = 1, kWaterSourceNone = 2 };
++
++struct PlumbRect { int minX = 0, minZ = 0, maxX = 0, maxZ = 0; };   // inclusive
++
++// tCellPoint of the flood queues (cSC4PlumbingSimulator::QueuePoint, 2 bytes)
++struct QueuePoint {
++    std::uint8_t x = 0, z = 0;
++};
++
++class IPlumbingBudgetInterface {   // the building's interface 0x87dda3a9
++public:
++    virtual ~IPlumbingBudgetInterface() = default;
++    virtual std::uint32_t BudgetItemId() = 0;   // vslot 0x20
++    virtual void Release() = 0;                 // vslot 0x10
++};
++
++class IPlumbingPipe {   // cSC4PipeOccupant (iid 0x49c05b9f); the occupant view lives at +8
++public:
++    virtual ~IPlumbingPipe() = default;
++    virtual void AddRef() = 0;
++    virtual void Release() = 0;
++    virtual bool TestFlag(std::uint32_t mask) = 0;                   // vslot 0x40
++    virtual void SetFlags(std::uint32_t mask) = 0;                   // vslot 0x50
++    virtual void ClearFlags(std::uint32_t mask) = 0;                 // vslot 0x58
++    virtual std::uint32_t GetFlags() = 0;                            // vslot 0x60
++    virtual bool HasConnection(int direction, int networkType) = 0;  // vslot 0x178 (direction 0 west, 1 north, 2 east, 3 south)
++    virtual void GetCell(int& x, int& z) = 0;                        // vslot 0x1d8
++    virtual void CellBounds(PlumbRect& out) = 0;                     // occupant view vslot 0x58
++    virtual void SetWateredState(bool watered) = 0;                  // 0x1001a1404 (non virtual)
++};
++
++class IPlumbingOccupant {   // cISC4Occupant
++public:
++    virtual ~IPlumbingOccupant() = default;
++    virtual void AddRef() = 0;                                   // vslot 8
++    virtual void Release() = 0;                                  // vslot 0x10
++    virtual cISCPropertyHolder* PropertyHolder() = 0;            // vslot 0x30
++    virtual std::uint32_t OccupantType() = 0;                    // vslot 0x38
++    virtual void Position(float xyz[3]) = 0;                     // vslot 0x40
++    virtual void WorldBounds(float minXyz[4], float maxXyz[4]) = 0;   // vslot 0x50
++    virtual IPlumbingPipe* QueryPipe() = 0;                      // QueryInterface(0x49c05b9f); null when absent, reference held
++    virtual IPlumbingBudgetInterface* QueryBudgetInterface() = 0;   // QueryInterface(0x87dda3a9); null when absent
++};
++
++class IPlumbingLot {   // cISC4Lot
++public:
++    virtual ~IPlumbingLot() = default;
++    virtual void GetBounds(PlumbRect& out) = 0;       // vslot 0x70
++    virtual void SetCondition(int condition) = 0;     // vslot 0x120 (2 worn, 4 failing)
++    virtual bool GetNeedsPower() = 0;                 // vslot 0x208
++    virtual bool GetHasPower() = 0;                   // vslot 0x210
++};
++
++class IPlumbingTerrain {
++public:
++    virtual ~IPlumbingTerrain() = default;
++    virtual int CellsX() = 0;                          // vslot 0x38
++    virtual int CellsZ() = 0;                          // vslot 0x40
++    virtual bool IsWaterCell(int x, int z) = 0;        // vslot 0x110
++    virtual void InvalidateRect(int minX, int minZ, int maxX, int maxZ) = 0;   // vslot 0x220
++};
++
++class IPlumbingLineItem {   // budget department line item
++public:
++    virtual ~IPlumbingLineItem() = default;
++    virtual void SetName(std::uint32_t group, std::uint32_t instance) = 0;   // vslot 0x38
++    virtual std::int64_t GetCount() = 0;                                     // vslot 0x40
++    virtual void SetCount(std::int64_t v) = 0;                               // vslot 0x48
++    virtual void SetValue(std::int64_t v) = 0;                               // vslot 0x60
++    virtual void AddValue(std::int64_t v) = 0;                               // vslot 0x68
++    virtual void SetOption(int option, int on) = 0;                          // vslot 0x90
++};
++
++class IPlumbingDepartment {   // the pipe department (ids 0xaa4014b4 / 0x4a357eaf) and the departments of the buildings
++public:
++    virtual ~IPlumbingDepartment() = default;
++    virtual void AddRef() = 0;
++    virtual void Release() = 0;                                               // vslot 0x10
++    virtual void SetNameKey(std::uint32_t group, std::uint32_t instance) = 0; // vslot 0x28
++    virtual const SC4Percentage& FundingPercentage() = 0;                     // vslot 0x50
++    virtual void SetDefaultFunding(const SC4Percentage& value) = 0;           // vslot 0x68
++    virtual IPlumbingLineItem* AcquireLineItem(int id, int flags) = 0;        // vslot 0x88
++    virtual IPlumbingLineItem* CreateLineItem(int id, int flags) = 0;         // vslot 0x90
++    virtual void SetEnabled(bool on) = 0;                                     // vslot 0x98
++    virtual IPlumbingLineItem* FindLineItem(int id) = 0;                      // vslot 0xa0
++    virtual bool IsTracked(cISCPropertyHolder* props, std::uint32_t id) = 0;  // vslot 0xe0
++};
++
++struct PlumbingBudgetRecord {
++    std::uint32_t departmentId = 0;   // +0
++    std::uint32_t itemId = 0;         // +4
++    std::uint64_t unknown8 = 0;       // +8
++    std::int64_t cost = 0;            // +0x10
++    std::uint32_t field18 = 0;        // +0x18
++    float funding = 0.0f;             // +0x1c
++};
++
++class IPlumbingDeal {   // cISC4NeighborDeal (iid 0x773fef1)
++public:
++    virtual ~IPlumbingDeal() = default;
++    virtual void* OtherCity() = 0;                               // vslot 0x38
++    virtual int Maximum() = 0;                                   // vslot 0x50
++    virtual int Current() = 0;                                   // vslot 0xa0
++    virtual void SetCurrent(int amount) = 0;                     // vslot 0xa8
++    virtual void SetStateFlag(std::uint32_t flag, bool on) = 0;  // vslot 0x128
++    virtual std::uint32_t Type() = 0;                            // vslot 0x40
++};
++
++class IPlumbingConnection {   // cISC4NeighborConnection
++public:
++    virtual ~IPlumbingConnection() = default;
++    virtual void GetCell(int& x, int& z) = 0;       // vslot 0x30
++    virtual void SetFlagged(bool on) = 0;           // vslot 0x60
++    virtual void SetWatered(bool on) = 0;           // vslot 0x70
++};
++
++class IPlumbingNeighbors {   // neighbour simulator (city vslot 0x1f0)
++public:
++    virtual ~IPlumbingNeighbors() = default;
++    virtual void GetDeals(std::uint32_t type, std::vector<IPlumbingDeal*>& out) = 0;                     // vslot 0xe8
++    virtual IPlumbingConnection* FindConnection(int kind, void* city) = 0;                               // vslot 0x78
++    virtual bool ConnectionLinked(IPlumbingConnection* connection) = 0;                                  // vslot 0x70 -> region +0x68
++    virtual void GetConnections(int kind, std::vector<IPlumbingConnection*>& out) = 0;                   // vslot 0x88
++    virtual void GetConnectionsOfCity(int kind, void* city, std::vector<IPlumbingConnection*>& out) = 0; // vslot 0x90
++    virtual void DealsChanged() = 0;                                                                     // vslot 0xf8
++};
++
++class IPlumbingHost {
++public:
++    virtual ~IPlumbingHost() = default;
++    // city
++    virtual int CityCellsX() = 0;     // vslot 0x2e8
++    virtual int CityCellsZ() = 0;     // vslot 0x2f0
++    virtual void PositionToCell(float x, float z, int& cellX, int& cellZ) = 0;   // vslot 0x2f8
++    virtual IPlumbingTerrain* Terrain() = 0;                                     // vslot 0x2a0
++    virtual IPlumbingNeighbors* Neighbors() = 0;                                 // vslot 0x1f0
++    // occupant manager (vslot 0x140): occupants of `type` inside the cell rectangle; references are held by the caller
++    virtual void OccupantsInCells(int minX, int minZ, int maxX, int maxZ, std::uint32_t type, std::vector<IPlumbingOccupant*>& out) = 0;
++    virtual IPlumbingLot* LotAt(int x, int z) = 0;                // lot manager vslot 0x28
++    virtual IPlumbingLot* LotOfOccupant(IPlumbingOccupant* occupant) = 0;   // lot manager vslot 0x70
++    virtual std::uint32_t PollutionAtCell(int x, int z) = 0;      // pollution simulator vslot 0x40
++    // budget simulator
++    virtual IPlumbingDepartment* AcquireDepartment(std::uint32_t group, std::uint32_t instance) = 0;   // vslot 0xc8; reference held
++    virtual IPlumbingDepartment* DepartmentById(std::uint32_t id) = 0;                                  // vslot 0xd8
++    virtual IPlumbingDepartment* DepartmentOfRecord(const PlumbingBudgetRecord& record) = 0;            // vslot 0x1c8
++    virtual bool GetBudgetRecord(cISCPropertyHolder* props, std::uint32_t id, PlumbingBudgetRecord& record) = 0;   // vslot 0x198
++    virtual void SetBudgetItem(cISCPropertyHolder* props, std::uint32_t field18, std::uint32_t itemId) = 0;        // vslot 0x1a0
++    virtual void SetBudgetCost(cISCPropertyHolder* props, std::int64_t cost, std::uint32_t field18) = 0;          // vslot 0x1a8
++    virtual float OrdinanceFactor(std::uint32_t id) = 0;          // ordinance simulator vslot 0xc8
++    virtual void StartPipeBurst(int x, int z) = 0;                // disaster layer system 0x4a1332e8 vslot 0x90 (no-op when absent)
++    // history warehouse (vslot 0x60)
++    virtual void SetHistory64(std::uint32_t key, std::int64_t value) = 0;
++    virtual void SetHistory32(std::uint32_t key, std::uint32_t value) = 0;
++    // messages
++    virtual void RegisterSimulatorAgent(int interval, const char* name, std::uint32_t flags) = 0;   // simulator vslot 0x98 (3 calls)
++    virtual void UnregisterSimulatorAgent() = 0;                  // city->simulator vslot 0xa8
++    virtual void AddMessageListener(std::uint32_t message) = 0;   // message server vslot 0x28
++    virtual void RemoveMessageListener(std::uint32_t message) = 0;   // vslot 0x30
++    virtual void PostStatusMessage() = 0;                         // message 0x6946dc34 via the message server (vslot 0x20)
++    virtual void PostMessage2(std::uint32_t message, std::uint32_t a, std::uint32_t b, std::uint32_t c, std::uint32_t d) = 0;   // SC4PostMessage2
++    // resources
++    virtual cISCPropertyHolder* LoadTunables() = 0;               // exemplar {0x6534284a, 0xe7e2c2db, 0xc911e35b}; null when missing
++    virtual void ReleaseTunables(cISCPropertyHolder* exemplar) = 0;
++    // serializable objects (SC4Write/ReadGZSerializable)
++    virtual void WriteOccupant(cIGZOStream& stream, IPlumbingOccupant* occupant) = 0;
++    virtual IPlumbingOccupant* ReadOccupant(cIGZIStream& stream) = 0;   // class 0x26bb767e; reference held
++    virtual void WritePipe(cIGZOStream& stream, IPlumbingPipe* pipe) = 0;
++    virtual IPlumbingPipe* ReadPipe(cIGZIStream& stream) = 0;           // iid 0x49c05b9f; reference held
++    virtual void WriteDepartment(cIGZOStream& stream, IPlumbingDepartment* department) = 0;
++    virtual IPlumbingDepartment* ReadDepartment(cIGZIStream& stream) = 0;   // iid 0x223e2b67; reference held
++    // time slicing (cSC4DynamicLimitTimer)
++    virtual void BeginTimeSlice(std::uint32_t budget) = 0;
++    virtual bool TimeSliceExpired() = 0;
++    // std::random_shuffle: uniform index in [0, maxInclusive]
++    virtual std::uint32_t ShuffleIndex(std::uint32_t maxInclusive) = 0;
++};
++
++class IPlumbingMessage {   // cIGZMessage2
++public:
++    virtual ~IPlumbingMessage() = default;
++    virtual std::int32_t MessageType() = 0;                         // vslot 0x20
++    virtual std::uint64_t Data1() = 0;                              // vslot 0x48
++    virtual std::uint32_t Data2() = 0;                              // vslot 0x70
++    virtual IPlumbingOccupant* Occupant() = 0;                      // vslot 0x50 (no reference taken)
++    virtual std::uint32_t IdleBudget() = 0;                         // vslot 0x98
++    virtual bool NeighborDealType(std::uint32_t& type) = 0;         // vslot 0x100 -> QueryInterface(0x773fef1) -> vslot 0x40
++};
++
++// One water producer (WaterProducer, 0x38 bytes; list node 0x48: prev/next + record).
++struct WaterProducer {
++    int x = 0, z = 0;                       // +0, +4 reference cell
++    int minX = 0, minZ = 0, maxX = 0, maxZ = 0;   // +8..+0x14 lot rectangle (inclusive)
++    bool visited = false;                   // +0x18 reached by the flood fill this round
++    bool outputStored = false;              // +0x19 current produced amount written back
++    std::uint32_t capacity = 0;             // +0x1c maximum output (property 0x88ed3303)
++    std::int32_t production = 0;            // +0x20 output after the source, funding and pollution factors
++    float productionFraction = 0.0f;        // +0x24
++    bool polluted = false;                  // +0x28
++    IPlumbingOccupant* occupant = nullptr;  // +0x30
++};
++
++// SpiralIterator-style walk of the cell scan iterator (+0x1b0): shared by steps 2, 6 and 7.
++bool ScanIteratorNext(ScanningIterator& it, int& x, int& z);
++void ScanIteratorReset(ScanningIterator& it);
++
++class cSC4PlumbingSimulator {
++public:
++    enum Step : std::uint32_t { kMonthStart = 0, kProduction = 1, kPipeCells = 2, kSelectSource = 3, kDistribute = 4,
++                                kHandOver = 5, kFillGrid = 6, kRefresh = 7, kStatistics = 8, kWait = 9 };
++
++    explicit cSC4PlumbingSimulator(IPlumbingHost* host);
++    ~cSC4PlumbingSimulator();   // 0x10009bf2c
++    cSC4PlumbingSimulator(const cSC4PlumbingSimulator&) = delete;
++    cSC4PlumbingSimulator& operator=(const cSC4PlumbingSimulator&) = delete;
++
++    // ---- COM glue ----
++    std::uint32_t GetGZCLSID() const { return kGZCLSID_cSC4PlumbingSimulator; }   // 0x1000a1284 / 0x1000a1290 (thunk)
++    // 0 not supported; 1 primary view, 2 message target view (+8), 3 serializable view (+0x10)
++    int QueryInterfaceView(std::uint32_t iid);
++    std::uint32_t AddRef() { return ++refCount_; }
++    std::uint32_t Release();   // at the last reference: Shutdown() and delete this
++
++    // ---- lifecycle ----
++    bool Init();
++    bool Shutdown();
++    void ReadSimulatorTunableValues();
++
++    // ---- messages ----
++    bool DoMessage(IPlumbingMessage& message);
++    bool DoIdle(std::uint32_t budget);
++    void DoOccupantInserted(IPlumbingOccupant* occupant);
++    void DoOccupantRemoved(IPlumbingOccupant* occupant);
++    void DoPipeChanged(IPlumbingPipe* pipe, bool added);
++    void DoBuildingChanged(IPlumbingOccupant* occupant, bool added);
++
++    // ---- monthly steps ----
++    void ApplyPipeFunding(const SC4Percentage& funding);
++    void UpdateWaterProduction();
++    void AgeWaterProducer(WaterProducer& producer);
++    int BuildingConsumption(int x, int z);
++    void FillGridAtOccupant(cSC4SimGrid<std::uint8_t>* grid, IPlumbingOccupant* occupant, std::uint8_t value);
++    void GetConnectionCell(IPlumbingConnection* connection, int& x, int& z);
++    bool IsNeighborConnectedToCurrentNetwork(void* city, bool markConnections);
++    // Distance ring of the nearest water cell within `radius` (spiral search), -1 when none, 0 for kWaterSourceNone.
++    int NearestWater(int x, int z, int sourceType, int radius);
++
++    // ---- queries ----
++    bool GetOccupantMonthlyUpkeepCost(IPlumbingOccupant* occupant, std::int64_t& cost);
++    // Least funded budgeted producer (funding < 2.0) and the producer with the highest wear ratio; outputs optional.
++    void FindWaterBuildings(IPlumbingOccupant** leastFunded, SC4Percentage* funding, IPlumbingOccupant** mostWorn, int* wearPercent);
++    void GetWaterProducers(std::vector<IPlumbingOccupant*>& out);   // adds a reference to each
++    std::uint8_t GetSupplyValue(int x, int z) const;                // 0x1000a076a: tail call into the watered grid
++    void GetSupplyValueMapPtr(cSC4SimGrid<std::uint8_t>*& out) const { out = wateredGrid_; }
++    bool AreWateredBuildingsInCell(int x, int z) const;
++    bool IsBuildingWatered(IPlumbingOccupant* occupant);
++    std::uint32_t GetWaterProduction(IPlumbingOccupant* occupant) const;
++    bool IsCellWatered(int x, int z) const;
++    bool GetWaterProducerInfo(IPlumbingOccupant* occupant, std::uint32_t* production, std::uint32_t* capacity,
++                              SC4Percentage* fraction, bool* polluted, std::uint32_t* currentProduced) const;
++    bool GetWaterProducerConditionPercent(IPlumbingOccupant* occupant, SC4Percentage& out);
++    std::uint32_t GetWaterDemand() const { return static_cast<std::uint32_t>(waterDemand_); }
++    cSC4SimGrid<std::uint8_t>* GetWateredGrid() const { return wateredGrid_; }
++    std::uint32_t GetNumWaterSources() const { return static_cast<std::uint32_t>(producers_.size()); }   // +0x120 (kept in step)
++    std::uint32_t GetNumPollutedWaterSources() const { return pollutedSources_; }
++    std::uint32_t GetWaterProductionCapacity() const { return static_cast<std::uint32_t>(publishedCapacity_); }
++    std::uint32_t GetWaterConsumed() const { return static_cast<std::uint32_t>(publishedConsumed_); }
++    std::uint32_t GetWaterImported() const { return static_cast<std::uint32_t>(publishedImported_); }
++    std::uint32_t GetWaterExported() const { return static_cast<std::uint32_t>(publishedExported_); }
++    std::uint32_t GetNumPipes() const { return numPipes_; }
++    std::uint32_t GetNumDistressedPipes() const { return numDistressedPipes_; }
++    std::uint32_t GetNumBurstPipes() const { return numBurstPipes_; }
++    std::uint32_t GetNumWateredBuildings() const { return wateredBuildings_; }
++    std::int32_t GetNumUnwateredBuildings() const { return static_cast<std::int32_t>(totalBuildings_ - wateredBuildings_); }
++
++    // ---- streams (version 4) ----
++    bool Write(cIGZOStream& stream) const;
++    bool Read(cIGZIStream& stream);
++    void WriteWaterProducer(cIGZOStream& stream, const WaterProducer& producer) const;
++    void ReadWaterProducer(cIGZIStream& stream, WaterProducer& producer);
++
++    // ---- state access for the host / tests ----
++    Step CurrentStep() const { return static_cast<Step>(step_); }
++    void ForceStep(Step s) { step_ = s; }
++    bool Enabled() const { return enabled_; }
++    bool Dirty() const { return dirty_; }
++    bool AgeProducersPending() const { return ageProducers_; }
++    std::vector<std::uint8_t>& CellFlags() { return cells_; }
++    int CellsX() const { return sizeX_; }
++    int CellsZ() const { return sizeZ_; }
++    std::list<WaterProducer>& Producers() { return producers_; }
++    std::list<IPlumbingPipe*>& Pipes() { return pipes_; }
++    WaterProducer* CurrentProducer() const { return currentProducer_; }
++    std::int64_t Supply() const { return supply_; }
++    std::int64_t Consumed() const { return consumed_; }
++    std::int64_t ImportCapacity() const { return importCapacity_; }
++    float OrdinanceFactor() const { return ordinance_; }
++    std::uint32_t MonthCounter() const { return month_; }
++    std::uint32_t AveragePollution() const { return averagePollution_; }
++    std::int64_t MonthlyCosts() const { return monthlyRevenue_; }
++    IPlumbingDepartment* Department() const { return department_; }
++    cRZRandom* Random() const { return random_; }
++    // tunables (+0xf8..+0x108, +0x228, +0x240, +0x288)
++    std::uint32_t maxRings = 7, nearbyRadius = 2, requiredRadius = 1, farWaterPercent = 20, pollutionLimit = 100;
++    float burstSpread = 0.3f;                 // +0x228
++    SC4Percentage defaultFunding{1.2f};       // +0x240
++    float pipeCostPerPipe = 0.0f;             // +0x288
++    cSC4ResponseCurve fundingWearCurve, wearUsageCurve, productionFundingCurve, burstFundingCurve;   // +0x1c0, +0x1e0, +0x248, +0x268
++
++private:
++    friend struct PlumbingTestAccess;
++    void ResetScanIterator();
++    void BeginSlice(std::uint32_t budget) { host_->BeginTimeSlice(budget); }
++    void ExpandRingFrom(const QueuePoint& p);
++
++    IPlumbingHost* host_;
++    std::uint32_t refCount_ = 0;           // +0x1c
++    bool initialized_ = false;             // +0x18
++    bool gridsInitialized_ = false;        // +0x19
++    bool enabled_ = false;                 // +0x20
++    cRZRandom* random_ = nullptr;          // +0x50
++    bool hasCity_ = false;                 // +0x28 (reference to the city), +0x30, +0x38, +0x40, +0x48 are host services here
++    cSC4SimGrid<std::uint8_t>* wateredGrid_ = nullptr;   // +0x58
++    cSC4SimGrid<std::uint8_t>* previousGrid_ = nullptr;  // +0x60 (published)
++    std::deque<QueuePoint> floodQueue_;    // +0x68
++    std::deque<QueuePoint> ringQueue_;     // +0x98
++    std::vector<std::uint8_t> cells_;      // +0xc8
++    int sizeX_ = 0, sizeZ_ = 0;            // +0xd0, +0xd4
++    std::vector<std::uint32_t> visited_;   // +0xd8
++    int visitedSide_ = 0;                  // +0xe0
++    std::uint32_t month_ = 0;              // +0xe4
++    std::uint32_t averagePollution_ = 0;   // +0xe8
++    IPlumbingDepartment* department_ = nullptr;   // +0xf0
++    std::list<WaterProducer> producers_;   // +0x110, count +0x120
++    std::uint32_t step_ = kWait;           // +0x128
++    bool dirty_ = false;                   // +0x12c
++    bool ageProducers_ = false;            // +0x12d
++    std::int64_t supply_ = 0;              // +0x130 water available from the current source
++    std::int64_t consumed_ = 0;            // +0x138 water drawn from it so far
++    std::int64_t importCapacity_ = 0;      // +0x140 what the current import connection can still supply
++    int ringCountdown_ = 0;                // +0x148
++    std::uint32_t ringIteration_ = 0;      // +0x14c
++    float ordinance_ = 1.0f;               // +0x150
++    std::int64_t monthCapacity_ = 0;       // +0x158
++    std::int64_t monthConsumed_ = 0;       // +0x160
++    std::int64_t monthImported_ = 0;       // +0x168
++    std::int64_t monthExported_ = 0;       // +0x170
++    std::int64_t publishedCapacity_ = 0;   // +0x178
++    std::int64_t publishedConsumed_ = 0;   // +0x180
++    std::int64_t publishedImported_ = 0;   // +0x188
++    std::int64_t publishedExported_ = 0;   // +0x190
++    std::int64_t waterDemand_ = 0;         // +0x198
++    std::uint32_t pipeCountStat_ = 0;      // +0x1a0
++    std::uint32_t field1A4_ = 0;           // +0x1a4 (history 0xca14ec19; never written by recovered code)
++    WaterProducer* currentProducer_ = nullptr;   // +0x1a8
++    ScanningIterator scan_;                // +0x1b0
++    bool scanAllocated_ = false;
++    std::int64_t monthlyRevenue_ = 0;      // +0x1b8
++    std::list<IPlumbingPipe*> pipes_;      // +0x200, count +0x210
++    std::uint32_t numPipes_ = 0;           // +0x218
++    std::uint32_t numDistressedPipes_ = 0; // +0x21c
++    std::uint32_t numBurstPipes_ = 0;      // +0x220
++    float burstAccumulator_ = 0.0f;        // +0x224
++    std::uint32_t totalBuildings_ = 0;     // +0x22c
++    std::uint32_t wateredBuildings_ = 0;   // +0x230
++    std::uint32_t countConsumers_ = 0;     // +0x234
++    std::uint32_t countWateredConsumers_ = 0;   // +0x238
++    std::uint32_t pollutedSources_ = 0;    // +0x23c
++    static bool staticInitialized_;
++};
++
++}  // namespace sc4
