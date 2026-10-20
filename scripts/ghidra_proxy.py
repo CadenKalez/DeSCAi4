@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Token-checking reverse proxy in front of the local GhidraMCP backend (used by ghidra_tunnel.sh).
+"""Token-checking reverse proxy (token in `X-Ghidra-Token` or `Authorization: Bearer <token>`) in front of the local GhidraMCP backend (used by ghidra_tunnel.sh).
 usage: ghidra_proxy.py <token> [listen-port=8090] [backend=http://127.0.0.1:8089]"""
 import http.server, sys, urllib.request, urllib.error
 TOKEN = sys.argv[1]
@@ -8,7 +8,9 @@ BACKEND = sys.argv[3] if len(sys.argv) > 3 else "http://127.0.0.1:8089"
 
 class Handler(http.server.BaseHTTPRequestHandler):
     def _forward(self):
-        if self.headers.get("X-Ghidra-Token") != TOKEN:
+        auth = self.headers.get("Authorization", "")
+        supplied = self.headers.get("X-Ghidra-Token") or (auth[7:] if auth.startswith("Bearer ") else None)
+        if supplied != TOKEN:
             self.send_response(403); self.end_headers(); return
         n = int(self.headers.get("Content-Length") or 0)
         body = self.rfile.read(n) if n else None
