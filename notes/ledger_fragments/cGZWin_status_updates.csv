@@ -1,0 +1,8 @@
+0x100169364,cGZWin::set_private_buffer_transparency(bool),set_private_buffer_transparency,src/gz/Win.cpp|h,recovered,"UPDATE of existing partial row (same unique_name): compared with Ghidra; window class manager colour lookup behind IWinGraphics seam; test gz_win_render"
+0x10016abd0,cGZWin::PlotComposite(),PlotComposite,src/gz/Win.cpp|h,recovered,"UPDATE of existing partial row (same unique_name): compared with Ghidra incl. draw-context vslot sequence and deferred desktop-child plotting; test gz_win_render"
+0x10016b1d4,cGZWin::fade_advance(),fade_advance,src/gz/Win.cpp|h,recovered,"UPDATE of existing partial row (same unique_name): compared with Ghidra; test gz_win_render"
+0x10016b426,cGZWin::fill_private_buffer_with_transparent_color(),fill_private_buffer_with_transparent_color,src/gz/Win.cpp|h,recovered,"UPDATE of existing partial row (same unique_name): compared with Ghidra; test gz_win_render"
+0x10016b49a,cGZWin::PlotPresent(),PlotPresent,src/gz/Win.cpp|h,recovered,"UPDATE of existing partial row (same unique_name): compared with Ghidra; cached graphic-system lookup behind IWinGraphics seam; test gz_win_render"
+0x10016be44,cGZWin::PrivateBuffer(bool),PrivateBuffer,src/gz/Win.cpp|h,recovered,"UPDATE of existing partial row (same unique_name): compared with Ghidra; test gz_win_render"
+0x10016c216,"cGZWin::create_private_buffer(int, int)",create_private_buffer,src/gz/Win.cpp|h,recovered,"UPDATE of existing partial row (same unique_name): compared with Ghidra; framework/draw-system/graphics services behind IWinGraphics seam; test gz_win_render"
+0x10016c502,"cGZWin::is_point_transparent(int, int) const",is_point_transparent,src/gz/Win.cpp|h,recovered,"UPDATE of existing partial row (same unique_name): compared with Ghidra; test gz_win_render"
