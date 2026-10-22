@@ -20228,3 +20228,24 @@ address,symbol,unique_name,source,status,evidence
 0x1004d341c,"cGZPlayList::_GrabSegment(cRZString&, cRZString&, int)",_GrabSegment,src/gz/PlayList.cpp|h,recovered,playlist loader; test scripts/tests/gz_playlist_test.cpp
 0x1004d34e2,cGZPlayList::_StripEndSegment(cRZString&),_StripEndSegment,src/gz/PlayList.cpp|h,recovered,playlist loader; test scripts/tests/gz_playlist_test.cpp
 0x1004d357a,"cGZPlayListEntry::cGZPlayListEntry(unsigned int, cIGZString const&, cIGZString const&)",Construct_uint_String_String,src/gz/PlayList.cpp|h,recovered,playlist entry; test scripts/tests/gz_playlist_test.cpp
+0x100212e68,"SC4Rect<int>::UnionRect(SC4Rect<int> const&, SC4Rect<int> const&)",UnionRect,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x100314ce8,"SC4Rect<int>::IntersectRect(SC4Rect<int> const&, SC4Rect<int> const&)",IntersectRect,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x1007584e4,"SC4Rect<float>::IntersectRect(SC4Rect<float> const&, SC4Rect<float> const&)",IntersectRect,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x100634b20,"HTTPMessage::GetMessageHeaderEntryCopy(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>*, unsigned int) const",GetMessageHeaderEntryCopy_std_1_basic_string_char_std_1_char_traits_char_std_1_allocator_char_const_std_1_basic_string_char_std_1_char_traits_char_std_1_allocator_char_uint,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x100634c18,"HTTPMessage::GetMessageHeaderEntryCopy(int, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>*, unsigned int) const",GetMessageHeaderEntryCopy_int_std_1_basic_string_char_std_1_char_traits_char_std_1_allocator_char_uint,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x100634d20,HTTPMessage::MessageHeaderFieldToFieldString(int),MessageHeaderFieldToFieldString,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x100634d40,"HTTPMessage::GetSeparatedStringList(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>*, unsigned int, bool, char, bool)",GetSeparatedStringList,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x1003685dc,SharedMemoryPointer::Release(),Release,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x100630d34,CacheData::Release(),Release,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x100630334,CookieData::~CookieData(),Destruct,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x100630814,CookieData::CookieData(CookieData const&),Construct_CookieData_const,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x10054a436,TVNode::TVNode(TVNode const&),Construct_TVNode_const,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x10054a662,WinGridCellData::WinGridCellData(),Construct,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x1006f1fe6,HELI_TYPE_DATA::HELI_TYPE_DATA(HELI_TYPE_DATA const&),Construct_HELI_TYPE_DATA_const,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x10022aa14,CompareCitiesForExport::CompareCitiesForExport(CompareCitiesForExport const&),Construct_CompareCitiesForExport_const,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x10054b3a0,MatrixRow<WinGridCellData>::MatrixRow(MatrixRow<WinGridCellData> const&),Construct_MatrixRow_WinGridCellData_const,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x10054b896,MatrixRow<WinGridColData>::MatrixRow(MatrixRow<WinGridColData> const&),Construct_MatrixRow_WinGridColData_const,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x10054bd7a,MatrixRow<WinGridRowData>::MatrixRow(MatrixRow<WinGridRowData> const&),Construct_MatrixRow_WinGridRowData_const,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x10025def0,MatrixRow<cIGZWinGrid::CellData*>::MatrixRow(MatrixRow<cIGZWinGrid::CellData*> const&),Construct_MatrixRow_cIGZWinGrid_CellData_const,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x10025d912,MatrixRow<cIGZWinGrid::CellFormatExtra>::MatrixRow(MatrixRow<cIGZWinGrid::CellFormatExtra> const&),Construct_MatrixRow_cIGZWinGrid_CellFormatExtra_const,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x1001a6240,cAnimatedSpriteTableData::Init(cIS3DResSpriteAnimTable*),Init,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
