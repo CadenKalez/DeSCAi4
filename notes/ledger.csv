@@ -20148,3 +20148,7 @@ address,symbol,unique_name,source,status,evidence
 0x1001e7864,"SCLuaTableRef::SCLuaTableRef(cISCLua*, char const*)",Construct_cISCLua_char_constWrapper,src/lua/SCLuaTableRef.cpp|h,recovered,table cursor; test scripts/tests/lua_scluahelp_test.cpp
 0x1001e786e,SCLuaTableRef::begin(),begin,src/lua/SCLuaTableRef.cpp|h,recovered,table cursor; test scripts/tests/lua_scluahelp_test.cpp
 0x1001e78b2,SCLuaTableRef::next(),next,src/lua/SCLuaTableRef.cpp|h,recovered,table cursor; test scripts/tests/lua_scluahelp_test.cpp
+0x100513de0,"TickerMessage::TickerMessage(unsigned int, cIGZString*, cIGZFont*, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, cGZMessage const*, void (*)(unsigned int, void*), void*)",Construct_uint_cIGZString_cIGZFont_uint_uint_uint_uint_uint_cGZMessage_const_void_uint_void_void,src/sc4/TickerMessage.cpp|h,recovered,test scripts/tests/sc4_tickermessage_test.cpp
+0x100513ee0,TickerMessage::~TickerMessage(),Destruct,src/sc4/TickerMessage.cpp|h,recovered,test scripts/tests/sc4_tickermessage_test.cpp
+0x100513f28,TickerMessage::~TickerMessage(),DestructAndDelete,src/sc4/TickerMessage.cpp|h,recovered,test scripts/tests/sc4_tickermessage_test.cpp
+0x100513f32,TickerMessage::~TickerMessage(),DestructBody,src/sc4/TickerMessage.cpp|h,recovered,test scripts/tests/sc4_tickermessage_test.cpp

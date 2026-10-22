@@ -43,7 +43,8 @@ CLASS-SNDIPATCHHEADER,SNDIPATCHHEADER,"recover 2 remaining function(s) (2 not st
 CLASS-SharedMemoryPointer,SharedMemoryPointer,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-SignalPlatformData,SignalPlatformData,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-TVNode,TVNode,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-TickerMessage,TickerMessage,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-TickerMessage,TickerMessage,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+TICKER-1,TickerMessage,Name the +0xc/+0x20/+0x28/+0x30..0x3c fields once cSC4NewsTickerWinProc is recovered,,open,src/sc4/TickerMessage.h
 CLASS-TriangleRec,TriangleRec,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-WinGridCellData,WinGridCellData,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 BOOT-1,boot,"Recover the city component classes LoadCity needs (see memory 'Boot path plan'), then wire the app spine to open a city and draw it via cSTETerrainView3D",TERRAIN-VIEW-3,open,scripts/boot_probe*
