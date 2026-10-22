@@ -30,8 +30,12 @@ CLASS-SC4Rect<float>,SC4Rect<float>,"recover 1 remaining function(s) (1 not star
 CLASS-SC4Rect<int>,SC4Rect<int>,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-SC4TrainJunctionView,SC4TrainJunctionView,"recover 5 remaining function(s) (5 not started, 0 partial/pending); bases still unfinished: cSC4ViewObject3D",CLASS-cSC4ViewObject3D,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-SC4ViewUtilities,SC4ViewUtilities,"recover 47 remaining function(s) (47 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-SCLuaHelp,SCLuaHelp,"recover 15 remaining function(s) (15 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-SCLuaTableRef,SCLuaTableRef,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-SCLuaHelp,SCLuaHelp,"recover 15 remaining function(s) (15 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-SCLuaHelp,SCLuaHelp,finish 6 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+SCLUAHELP-1,SCLuaHelp,"Recover LoadResourceScript x2, dofile_from_resource, UpdateResourcesFromDirectory, LoadPackageScripts, print: need cGZPersistResourceManager seam (slot 0x18 GetResource) + cRZPath + cISCLua-from-lua_State lookup",,open,src/lua/SCLuaHelp.h
+SCLUAHELP-3,SCLuaHelp,"Verify ReadTableAsArray<int>/ReadTableField round-to-nearest vs the 1.5*2^23 magic-number trick for |v|>=2^22; ReadTableRange on an empty table crashes in the original, we leave the range untouched",,open,src/lua/SCLuaHelp.cpp
+CLASS-SCLuaTableRef,SCLuaTableRef,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+SCLUAHELP-2,SCLuaTableRef,Verify against the binary: name constructor with empty name leaves index/flag uninitialised in the original (we default to finished),,open,src/lua/SCLuaTableRef.h
 CLASS-SFX,SFX,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-SL,SL,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-SND,SND,"recover 11 remaining function(s) (11 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv

@@ -119,6 +119,7 @@ declare -a TESTS=(
  "s3d_animatedinstance:$T/s3d_animatedinstance_test.cpp $S/s3d/AnimatedInstance.cpp"
  "lua_lua5thread:$T/lua_lua5thread_test.cpp $S/lua/Lua5Thread.cpp"
  "lua_luasystem:$T/lua_luasystem_test.cpp $S/lua/Lua5Thread.cpp $S/lua/ThreadRegistry.cpp $S/lua/LuaLibs.cpp $S/lua/Lua5.cpp $S/lua/SCLua.cpp -I$T"
+ "lua_scluahelp:$T/lua_scluahelp_test.cpp $S/lua/SCLuaHelp.cpp $S/lua/SCLuaTableRef.cpp $S/rz/cRZString.cpp $S/rz/CharLength.cpp $S/rz/TextEncoding.cpp $S/rz/RZConvert.cpp"
  "gz_alphablt:$T/gz_alphablt_test.cpp $S/gz/AlphaBlt.cpp"
  "sc4_regionalterrainmap:$T/sc4_regionalterrainmap_test.cpp $S/sc4/RegionalTerrainMap.cpp"
  "gz_app:$T/gz_app_test.cpp $S/gz/GZApp.cpp"
