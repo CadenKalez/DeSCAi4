@@ -20304,3 +20304,22 @@ address,symbol,unique_name,source,status,evidence
 0x10052b7fc,non-virtual thunk to cSCStandardTypeEntryView::SetPropertyID(unsigned int),SetPropertyIDThunk,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
 0x10052e708,cSCStandardTypeEntryView::AddRef(),AddRef,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
 0x10052e754,non-virtual thunk to cSCStandardTypeEntryView::Release(),ReleaseThunk,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x1001f1c7c,cSC4UIHTMLHook::cSC4UIHTMLHook(),Construct,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f1cae,cSC4UIHTMLHook::~cSC4UIHTMLHook(),Destruct,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f1d04,cSC4UIHTMLHook::~cSC4UIHTMLHook(),DestructAndDelete,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f1d0e,cSC4UIHTMLHook::~cSC4UIHTMLHook(),DestructBody,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f1d3c,cSC4UIHTMLHook::AddRef(),AddRef,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f1d46,non-virtual thunk to cSC4UIHTMLHook::AddRef(),AddRefThunk,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f1d54,cSC4UIHTMLHook::Release(),Release,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f1d5e,non-virtual thunk to cSC4UIHTMLHook::Release(),ReleaseThunk,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f1d6c,"cSC4UIHTMLHook::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f1d92,"non-virtual thunk to cSC4UIHTMLHook::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f1dbc,cSC4UIHTMLHook::Init(),Init,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f1e58,non-virtual thunk to cSC4UIHTMLHook::Init(),InitThunk,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f1e6a,cSC4UIHTMLHook::Shutdown(),Shutdown,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f1e8c,non-virtual thunk to cSC4UIHTMLHook::Shutdown(),ShutdownThunk,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f1eae,cSC4UIHTMLHook::TestURL(cRZURL&),TestURL,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f1f32,non-virtual thunk to cSC4UIHTMLHook::TestURL(cRZURL&),TestURLThunk,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f1f3c,"cSC4UIHTMLHook::LoadDocument(cRZURL&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>&)",LoadDocument_cRZURL_std_1_basic_string_char_std_1_char_traits_char_std_1_allocator_char,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f21fe,"cSC4UIHTMLHook::LoadDocument(cGZPersistResourceKey const&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>&)",LoadDocument_cGZPersistResourceKey_const_std_1_basic_string_char_std_1_char_traits_char_std_1_allocator_char,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp
+0x1001f22a8,"non-virtual thunk to cSC4UIHTMLHook::LoadDocument(cRZURL&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>&)",LoadDocumentThunk,src/sc4/UIHTMLHook.cpp|h,recovered,test scripts/tests/sc4_uihtmlhook_test.cpp

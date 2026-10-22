@@ -1,9 +1,9 @@
 # SC4-Decomp
 
 <!-- progress:start -->
-![decompiled](https://img.shields.io/badge/decompiled-57.8%25-yellow)
+![decompiled](https://img.shields.io/badge/decompiled-57.9%25-yellow)
 
-`████████████░░░░░░░░` **57.8%** — 15,549 of 26,880 game functions recovered, 11,331 remaining (details: [notes/progress.md](notes/progress.md))
+`████████████░░░░░░░░` **57.9%** — 15,559 of 26,880 game functions recovered, 11,321 remaining (details: [notes/progress.md](notes/progress.md))
 <!-- progress:end -->
 
 Reverse-engineering / decompilation workspace for **SimCity 4 Deluxe Edition (Aspyr macOS port, Steam, v1.2.1 build 185949)**.
