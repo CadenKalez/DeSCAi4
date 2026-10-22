@@ -20152,3 +20152,66 @@ address,symbol,unique_name,source,status,evidence
 0x100513ee0,TickerMessage::~TickerMessage(),Destruct,src/sc4/TickerMessage.cpp|h,recovered,test scripts/tests/sc4_tickermessage_test.cpp
 0x100513f28,TickerMessage::~TickerMessage(),DestructAndDelete,src/sc4/TickerMessage.cpp|h,recovered,test scripts/tests/sc4_tickermessage_test.cpp
 0x100513f32,TickerMessage::~TickerMessage(),DestructBody,src/sc4/TickerMessage.cpp|h,recovered,test scripts/tests/sc4_tickermessage_test.cpp
+0x10009bc9e,cSC4PlumbingSimulator::cSC4PlumbingSimulator(),Construct,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009bf2c,cSC4PlumbingSimulator::~cSC4PlumbingSimulator(),Destruct,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009c038,cSC4PlumbingSimulator::~cSC4PlumbingSimulator(),DestructAndDelete,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009c042,cSC4PlumbingSimulator::~cSC4PlumbingSimulator(),DestructBody,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009c070,"cSC4PlumbingSimulator::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009c0ba,"non-virtual thunk to cSC4PlumbingSimulator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_c0ba,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009c0c8,"non-virtual thunk to cSC4PlumbingSimulator::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_c0c8,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009c0d6,cSC4PlumbingSimulator::AddRef(),AddRef,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009c0e4,non-virtual thunk to cSC4PlumbingSimulator::AddRef(),AddRefThunk_c0e4,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009c0f2,non-virtual thunk to cSC4PlumbingSimulator::AddRef(),AddRefThunk_c0f2,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009c100,cSC4PlumbingSimulator::Release(),Release,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009c144,non-virtual thunk to cSC4PlumbingSimulator::Release(),ReleaseThunk_c144,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009c17e,non-virtual thunk to cSC4PlumbingSimulator::Release(),ReleaseThunk_c17e,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009c1b8,cSC4PlumbingSimulator::Init(),Init,-,pending,"Init: needs service wiring (messaging registrations, budget department lookup) - PLUMBING-2"
+0x10009c782,cSC4PlumbingSimulator::ReadSimulatorTunableValues(),ReadSimulatorTunableValues,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009cb48,cSC4PlumbingSimulator::Shutdown(),Shutdown,src/sc4/PlumbingSimulator.cpp|h,recovered-partial,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009cdd8,cSC4PlumbingSimulator::Write(cIGZOStream&) const,Write,-,pending,Write: stream format - PLUMBING-3
+0x10009d00c,"cSC4PlumbingSimulator::WriteWaterProducer(cIGZOStream&, cSC4PlumbingSimulator::WaterProducer const&) const",WriteWaterProducer,-,pending,WriteWaterProducer - PLUMBING-3
+0x10009d094,non-virtual thunk to cSC4PlumbingSimulator::Write(cIGZOStream&) const,WriteThunk,-,pending,Write thunk - PLUMBING-3
+0x10009d0a6,cSC4PlumbingSimulator::Read(cIGZIStream&),Read,-,pending,Read: stream format needs SC4ReadGZSerializable + ScanningIterator - PLUMBING-3
+0x10009d488,"cSC4PlumbingSimulator::ReadWaterProducer(cIGZIStream&, cSC4PlumbingSimulator::WaterProducer&)",ReadWaterProducer,-,pending,ReadWaterProducer - PLUMBING-3
+0x10009d53e,non-virtual thunk to cSC4PlumbingSimulator::Read(cIGZIStream&),ReadThunk,-,pending,Read thunk - PLUMBING-3
+0x10009d558,cSC4PlumbingSimulator::DoMessage(cIGZMessage2*),DoMessage,src/sc4/PlumbingSimulator.cpp|h,recovered-partial,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009d7a6,cSC4PlumbingSimulator::DoIdle(unsigned int),DoIdle,-,pending,"DoIdle: flood fill + neighbour trading, not recovered - PLUMBING-1"
+0x10009f510,cSC4PlumbingSimulator::DoOccupantInserted(cISC4Occupant*),DoOccupantInserted,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009f5ca,cSC4PlumbingSimulator::DoOccupantRemoved(cISC4Occupant*),DoOccupantRemoved,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009f67e,non-virtual thunk to cSC4PlumbingSimulator::DoMessage(cIGZMessage2*),DoMessageThunk,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009f68c,cSC4PlumbingSimulator::ApplyPipeFunding(SC4Percentage const&),ApplyPipeFunding,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009fa6c,cSC4PlumbingSimulator::UpdateWaterProduction(),UpdateWaterProduction,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009fd6e,"cSC4PlumbingSimulator::get_connection_cell(cISC4NeighborConnection const*, int&, int&)",get_connection_cell,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009fed2,"cSC4PlumbingSimulator::IsNeighborConnectedToCurrentNetwork(cISC4RegionalCity*, bool)",IsNeighborConnectedToCurrentNetwork,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x10009ffca,"cSC4PlumbingSimulator::BuildingConsumption(int, int)",BuildingConsumption,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a00ca,"cSC4PlumbingSimulator::FillGridAtOccupant(cISC4SimGrid<unsigned char>*, cISC4Occupant*, unsigned char)",FillGridAtOccupant,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a0204,cSC4PlumbingSimulator::AgeWaterProducer(cSC4PlumbingSimulator::WaterProducer&),AgeWaterProducer,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a040e,"cSC4PlumbingSimulator::GetOccupantMonthlyUpkeepCost(cISC4Occupant*, long long&)",GetOccupantMonthlyUpkeepCost,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a0466,"cSC4PlumbingSimulator::FindWaterBuildings(cISC4Occupant**, SC4Percentage&, cISC4Occupant**, int&)",FindWaterBuildings,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a06fc,cSC4PlumbingSimulator::GetWaterProducers(ilist<cISC4Occupant*>&),GetWaterProducers,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a076a,"cSC4PlumbingSimulator::GetSupplyValue(int, int)",GetSupplyValue,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a0780,cSC4PlumbingSimulator::GetSupplyValueMapPtr(cISC4SimGrid<unsigned char>*&),GetSupplyValueMapPtr,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a078e,"cSC4PlumbingSimulator::AreWateredBuildingsInCell(int, int)",AreWateredBuildingsInCell,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a07ca,cSC4PlumbingSimulator::IsBuildingWatered(cISC4Occupant*),IsBuildingWatered,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a0836,cSC4PlumbingSimulator::GetWaterProduction(cISC4Occupant*),GetWaterProduction,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a0862,"cSC4PlumbingSimulator::IsCellWatered(int, int)",IsCellWatered,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a0874,"cSC4PlumbingSimulator::DoPipeChanged(cSC4PipeOccupant*, bool)",DoPipeChanged,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a0af4,"cSC4PlumbingSimulator::DoBuildingChanged(cISC4Occupant*, bool)",DoBuildingChanged,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a0f2c,"cSC4PlumbingSimulator::GetWaterProducerInfo(cISC4Occupant*, unsigned int*, unsigned int*, SC4Percentage*, bool*, unsigned int*)",GetWaterProducerInfo,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a0fae,"cSC4PlumbingSimulator::GetWaterProducerConditionPercent(cISC4Occupant*, SC4Percentage&)",GetWaterProducerConditionPercent,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a106a,"cSC4PlumbingSimulator::NearestWater(int, int, cSC4PlumbingSimulator::WaterSourceType, int)",NearestWater,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a11e4,cSC4PlumbingSimulator::GetWaterDemand(),GetWaterDemand,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a11f0,cSC4PlumbingSimulator::GetWateredGrid() const,GetWateredGrid,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a11fa,cSC4PlumbingSimulator::GetNumWaterSources(),GetNumWaterSources,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a1206,cSC4PlumbingSimulator::GetNumPollutedWaterSources(),GetNumPollutedWaterSources,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a1212,cSC4PlumbingSimulator::GetWaterProductionCapacity(),GetWaterProductionCapacity,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a121e,cSC4PlumbingSimulator::GetWaterConsumed(),GetWaterConsumed,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a122a,cSC4PlumbingSimulator::GetWaterImported(),GetWaterImported,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a1236,cSC4PlumbingSimulator::GetWaterExported(),GetWaterExported,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a1242,cSC4PlumbingSimulator::GetNumPipes(),GetNumPipes,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a124e,cSC4PlumbingSimulator::GetNumDistressedPipes(),GetNumDistressedPipes,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a125a,cSC4PlumbingSimulator::GetNumBurstPipes(),GetNumBurstPipes,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a1266,cSC4PlumbingSimulator::GetNumWateredBuildings(),GetNumWateredBuildings,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a1272,cSC4PlumbingSimulator::GetNumUnwateredBuildings(),GetNumUnwateredBuildings,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a1284,cSC4PlumbingSimulator::GetGZCLSID() const,GetGZCLSID,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1000a1290,non-virtual thunk to cSC4PlumbingSimulator::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
