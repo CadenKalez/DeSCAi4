@@ -20283,3 +20283,24 @@ address,symbol,unique_name,source,status,evidence
 0x100466790,non-virtual thunk to cS3DFSHTexture::AddRef(),AddRefThunk,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
 0x10046679a,non-virtual thunk to cS3DFSHTexture::Release(),ReleaseThunk,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
 0x1000d979e,cS3DMaterial::cS3DMaterial(),Construct,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100523b10,cSCStandardTypeEntryView::cSCStandardTypeEntryView(),Construct,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x100523bec,"cSCStandardTypeEntryView::QueryInterface(unsigned int, void**)",QueryInterface,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x100523c2a,"non-virtual thunk to cSCStandardTypeEntryView::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x100523c70,cSCStandardTypeEntryView::SetValue(cIGZVariant const&),SetValue,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x100523c82,non-virtual thunk to cSCStandardTypeEntryView::SetValue(cIGZVariant const&),SetValueThunk,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x100523c90,cSCStandardTypeEntryView::SetAdditionalViewParameters(cIGZString const&),SetAdditionalViewParameters,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x100523c96,non-virtual thunk to cSCStandardTypeEntryView::SetAdditionalViewParameters(cIGZString const&),SetAdditionalViewParametersThunk,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x100523c9c,cSCStandardTypeEntryView::AddBackgroundFillControl(),AddBackgroundFillControl,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x10052793c,cSCStandardTypeEntryView::Release(),Release,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x100527950,cSCStandardTypeEntryView::~cSCStandardTypeEntryView(),Destruct,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x100527956,cSCStandardTypeEntryView::~cSCStandardTypeEntryView(),DestructAndDelete,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x10052795c,cSCStandardTypeEntryView::AsIGZWin(),AsIGZWin,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x100527970,non-virtual thunk to cSCStandardTypeEntryView::AddRef(),AddRefThunk,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x100527984,non-virtual thunk to cSCStandardTypeEntryView::AsIGZWin(),AsIGZWinThunk,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x10052799c,non-virtual thunk to cSCStandardTypeEntryView::GetPropertyID(unsigned int&),GetPropertyIDThunk,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x100527c48,cSCStandardTypeEntryView::~cSCStandardTypeEntryView(),DestructBody,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x10052b7b0,cSCStandardTypeEntryView::SetPropertyID(unsigned int),SetPropertyID,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x10052b7bc,cSCStandardTypeEntryView::GetPropertyID(unsigned int&),GetPropertyID,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x10052b7fc,non-virtual thunk to cSCStandardTypeEntryView::SetPropertyID(unsigned int),SetPropertyIDThunk,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x10052e708,cSCStandardTypeEntryView::AddRef(),AddRef,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp
+0x10052e754,non-virtual thunk to cSCStandardTypeEntryView::Release(),ReleaseThunk,src/sc4/SCEntryView.cpp|h,recovered,test scripts/tests/sc4_scentryview_test.cpp

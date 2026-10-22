@@ -125,6 +125,7 @@ declare -a TESTS=(
  "gz_playlist:$T/gz_playlist_test.cpp $S/gz/PlayList.cpp $S/rz/StringConversion.cpp $S/rz/TextEncoding.cpp $S/rz/RZStringUtils.cpp $S/rz/RZConvert.cpp $S/rz/CharLength.cpp $S/platform/MacTools.cpp $S/rz/cRZString.cpp $S/rz/cRZFile.cpp $S/rz/PathUtils.cpp"
  "sc4_misctypes:$T/sc4_misctypes_test.cpp $S/sc4/MiscTypes.cpp $S/rz/cRZString.cpp $S/rz/CharLength.cpp $S/rz/TextEncoding.cpp $S/rz/RZConvert.cpp"
  "s3d_materialmanager:$T/s3d_materialmanager_test.cpp $S/s3d/MaterialManager.cpp $S/s3d/FSH.cpp $S/gz/cGZPersistResourceManager.cpp $S/gz/cGZDBSegmentPackedFile.cpp $S/gz/cGZDBRecords.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/gz/cGZPersistDBSegment.cpp $S/gz/cGZPersistResourceKeyList.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp $S/rz/cRZFastCompression3.cpp $S/rz/cRZVariant.cpp $S/rz/nRZHash.cpp"
+ "sc4_scentryview:$T/sc4_scentryview_test.cpp $S/sc4/SCEntryView.cpp $S/gz/WinFlatRect.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
  "gz_alphablt:$T/gz_alphablt_test.cpp $S/gz/AlphaBlt.cpp"
  "sc4_regionalterrainmap:$T/sc4_regionalterrainmap_test.cpp $S/sc4/RegionalTerrainMap.cpp"
  "gz_app:$T/gz_app_test.cpp $S/gz/GZApp.cpp"
