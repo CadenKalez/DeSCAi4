@@ -20249,3 +20249,37 @@ address,symbol,unique_name,source,status,evidence
 0x10025def0,MatrixRow<cIGZWinGrid::CellData*>::MatrixRow(MatrixRow<cIGZWinGrid::CellData*> const&),Construct_MatrixRow_cIGZWinGrid_CellData_const,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
 0x10025d912,MatrixRow<cIGZWinGrid::CellFormatExtra>::MatrixRow(MatrixRow<cIGZWinGrid::CellFormatExtra> const&),Construct_MatrixRow_cIGZWinGrid_CellFormatExtra_const,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
 0x1001a6240,cAnimatedSpriteTableData::Init(cIS3DResSpriteAnimTable*),Init,src/sc4/MiscTypes.cpp|h,recovered,test scripts/tests/sc4_misctypes_test.cpp
+0x100569e74,cS3DMaterialManager::~cS3DMaterialManager(),Destruct,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100569e82,non-virtual thunk to cS3DMaterialManager::~cS3DMaterialManager(),DestructThunk,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100569e8c,non-virtual thunk to cS3DMaterialManager::~cS3DMaterialManager(),DestructAndDeleteThunk,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100569e9a,cS3DMaterialManager::~cS3DMaterialManager(),DestructAndDelete,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100569ecc,non-virtual thunk to cS3DMaterialManager::~cS3DMaterialManager(),DestructBodyThunk_9ecc,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100569eda,non-virtual thunk to cS3DMaterialManager::~cS3DMaterialManager(),DestructBodyThunk_9eda,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100569ee8,"cS3DMaterialManager::QueryInterface(unsigned int, void**)",QueryInterface,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100569f0a,"non-virtual thunk to cS3DMaterialManager::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_9f0a,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100569f30,"non-virtual thunk to cS3DMaterialManager::QueryInterface(unsigned int, void**)",QueryInterfaceThunk_9f30,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100569f56,cS3DMaterialManager::AddRef(),AddRef,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100569f64,non-virtual thunk to cS3DMaterialManager::AddRef(),AddRefThunk_9f64,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100569f6e,non-virtual thunk to cS3DMaterialManager::AddRef(),AddRefThunk_9f6e,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100569f7c,cS3DMaterialManager::Release(),Release,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100569f8a,non-virtual thunk to cS3DMaterialManager::Release(),ReleaseThunk_9f8a,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100569f94,non-virtual thunk to cS3DMaterialManager::Release(),ReleaseThunk_9f94,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100569fa2,"cS3DMaterialManager::CreateMaterial(cS3DResMaterial const&, cS3DMaterial**)",CreateMaterial,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x10056a08c,"cS3DMaterialManager::CreateMaterialVariant(cS3DMaterial*, unsigned int, cS3DMaterial**)",CreateMaterialVariant,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x10056a094,"cS3DMaterialManager::CreateMaterialInstance(unsigned int, cS3DMaterialInstance**)",CreateMaterialInstance_uint_cS3DMaterialInstance,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x10056a09c,"cS3DMaterialManager::CreateMaterialInstance(char const*, cS3DMaterialInstance**)",CreateMaterialInstance_char_const_cS3DMaterialInstance,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x10056a0a4,cS3DMaterialManager::GetStatsString(cIGZString&),GetStatsString,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x10046611c,cS3DFSHTexture::cS3DFSHTexture(),Construct,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x1004661a6,cS3DFSHTexture::~cS3DFSHTexture(),Destruct,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x10046621e,cS3DFSHTexture::~cS3DFSHTexture(),DestructAndDelete,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100466228,non-virtual thunk to cS3DFSHTexture::~cS3DFSHTexture(),DestructThunk,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100466236,cS3DFSHTexture::~cS3DFSHTexture(),DestructBody,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100466264,non-virtual thunk to cS3DFSHTexture::~cS3DFSHTexture(),DestructAndDeleteThunk,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100466272,"cS3DFSHTexture::QueryInterface(unsigned int, void**)",QueryInterface,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x1004662b6,"non-virtual thunk to cS3DFSHTexture::QueryInterface(unsigned int, void**)",QueryInterfaceThunk,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x1004662f4,cS3DFSHTexture::GetBufInfo() const,GetBufInfo,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100466774,cS3DFSHTexture::AddRef(),AddRef,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100466782,cS3DFSHTexture::Release(),Release,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x100466790,non-virtual thunk to cS3DFSHTexture::AddRef(),AddRefThunk,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x10046679a,non-virtual thunk to cS3DFSHTexture::Release(),ReleaseThunk,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp
+0x1000d979e,cS3DMaterial::cS3DMaterial(),Construct,src/s3d/MaterialManager.cpp|h,recovered,test scripts/tests/s3d_materialmanager_test.cpp

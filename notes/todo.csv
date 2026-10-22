@@ -268,11 +268,12 @@ CLASS-cRZWinKeyAcceleratorRes,cRZWinKeyAcceleratorRes,"recover 11 remaining func
 CLASS-cRemoveSubTreeVisitor,cRemoveSubTreeVisitor,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cS3DCamera,cS3DCamera,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cS3DColorARGB8,cS3DColorARGB8,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cS3DFSHTexture,cS3DFSHTexture,"recover 8 remaining function(s) (8 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cS3DFSHTexture,cS3DFSHTexture,"recover 8 remaining function(s) (8 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DFSHTextureFactory,cS3DFSHTextureFactory,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DIndexArray,cS3DIndexArray,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cS3DMaterial,cS3DMaterial,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cS3DMaterialManager,cS3DMaterialManager,"recover 10 remaining function(s) (10 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cS3DMaterial,cS3DMaterial,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cS3DMaterialManager,cS3DMaterialManager,"recover 10 remaining function(s) (10 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+S3DMAT-1,cS3DMaterialManager,Hook the manager up to the COM director (service id / priority) and recover cS3DMaterialInstance + variants (stubs in the shipped build); name the cS3DResMaterial 'other' bytes (wrap/filter) and the cS3DMaterial layer fields,,open,src/s3d/MaterialManager.h
 CLASS-cS3DMatrix4,cS3DMatrix4,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DMesh,cS3DMesh,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DMeshBuilder,cS3DMeshBuilder,"recover 10 remaining function(s) (10 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
