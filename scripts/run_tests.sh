@@ -122,6 +122,7 @@ declare -a TESTS=(
  "lua_scluahelp:$T/lua_scluahelp_test.cpp $S/lua/SCLuaHelp.cpp $S/lua/SCLuaTableRef.cpp $S/rz/cRZString.cpp $S/rz/CharLength.cpp $S/rz/TextEncoding.cpp $S/rz/RZConvert.cpp"
  "sc4_tickermessage:$T/sc4_tickermessage_test.cpp $S/sc4/TickerMessage.cpp $S/rz/cRZString.cpp $S/rz/CharLength.cpp $S/rz/TextEncoding.cpp $S/rz/RZConvert.cpp"
  "sc4_plumbingsimulator:$T/sc4_plumbingsimulator_test.cpp $S/sc4/PlumbingSimulator.cpp $S/sc4/SpiralIterator.cpp $S/sc4/SCProperty.cpp $S/sc4/SCPropertyHelp.cpp $S/sc4/cSC4ResponseCurve.cpp $S/sc4/cSC4SimGrid.cpp $S/rz/cRZRandom.cpp $S/rz/cRZVariant.cpp $S/rz/cRZString.cpp $S/rz/cRZUnknownList.cpp $S/rz/nRZHash.cpp $S/gz/Bit1.cpp $S/gz/cGZPersistResourceKeyList.cpp"
+ "gz_playlist:$T/gz_playlist_test.cpp $S/gz/PlayList.cpp $S/rz/StringConversion.cpp $S/rz/TextEncoding.cpp $S/rz/RZStringUtils.cpp $S/rz/RZConvert.cpp $S/rz/CharLength.cpp $S/platform/MacTools.cpp $S/rz/cRZString.cpp $S/rz/cRZFile.cpp $S/rz/PathUtils.cpp"
  "gz_alphablt:$T/gz_alphablt_test.cpp $S/gz/AlphaBlt.cpp"
  "sc4_regionalterrainmap:$T/sc4_regionalterrainmap_test.cpp $S/sc4/RegionalTerrainMap.cpp"
  "gz_app:$T/gz_app_test.cpp $S/gz/GZApp.cpp"

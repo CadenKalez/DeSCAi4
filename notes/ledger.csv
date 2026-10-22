@@ -20215,3 +20215,16 @@ address,symbol,unique_name,source,status,evidence
 0x1000a1272,cSC4PlumbingSimulator::GetNumUnwateredBuildings(),GetNumUnwateredBuildings,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
 0x1000a1284,cSC4PlumbingSimulator::GetGZCLSID() const,GetGZCLSID,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
 0x1000a1290,non-virtual thunk to cSC4PlumbingSimulator::GetGZCLSID() const,GetGZCLSIDThunk,src/sc4/PlumbingSimulator.cpp|h,recovered,water network; test scripts/tests/sc4_plumbingsimulator_test.cpp
+0x1004d1c80,cGZPlayList::Open(cIGZString&),Open,src/gz/PlayList.cpp|h,recovered,playlist loader; test scripts/tests/gz_playlist_test.cpp
+0x1004d1fd8,"cGZPlayList::_GetLine(cRZString&, cRZString&)",_GetLine,src/gz/PlayList.cpp|h,recovered,playlist loader; test scripts/tests/gz_playlist_test.cpp
+0x1004d211c,cGZPlayList::_ParseExtM3UFormat(),_ParseExtM3UFormat,src/gz/PlayList.cpp|h,recovered,playlist loader; test scripts/tests/gz_playlist_test.cpp
+0x1004d2594,cGZPlayList::_ParsePLSFormat(),_ParsePLSFormat,src/gz/PlayList.cpp|h,recovered,playlist loader; test scripts/tests/gz_playlist_test.cpp
+0x1004d2bc6,cGZPlayList::_ParseM3UFormat(),_ParseM3UFormat,src/gz/PlayList.cpp|h,recovered,playlist loader; test scripts/tests/gz_playlist_test.cpp
+0x1004d303c,"cGZPlayList::_MakeAbsolutePath(cRZString&, cRZString&, cRZString&)",_MakeAbsolutePath,src/gz/PlayList.cpp|h,recovered,playlist loader; test scripts/tests/gz_playlist_test.cpp
+0x1004d3176,"cGZPlayList::_FindNotOneOf(cRZString const&, cRZString const&, unsigned int&)",_FindNotOneOf,src/gz/PlayList.cpp|h,recovered,playlist loader; test scripts/tests/gz_playlist_test.cpp
+0x1004d322c,"cGZPlayList::_FindOneOf(cRZString const&, cRZString const&, unsigned int&)",_FindOneOf,src/gz/PlayList.cpp|h,recovered,playlist loader; test scripts/tests/gz_playlist_test.cpp
+0x1004d32ca,"cGZPlayList::_IsSpec(cRZString&, cRZString&)",_IsSpec,src/gz/PlayList.cpp|h,recovered,playlist loader; test scripts/tests/gz_playlist_test.cpp
+0x1004d332c,"cGZPlayList::_AddNextPathSegment(cRZString&, cRZString&)",_AddNextPathSegment,src/gz/PlayList.cpp|h,recovered,playlist loader; test scripts/tests/gz_playlist_test.cpp
+0x1004d341c,"cGZPlayList::_GrabSegment(cRZString&, cRZString&, int)",_GrabSegment,src/gz/PlayList.cpp|h,recovered,playlist loader; test scripts/tests/gz_playlist_test.cpp
+0x1004d34e2,cGZPlayList::_StripEndSegment(cRZString&),_StripEndSegment,src/gz/PlayList.cpp|h,recovered,playlist loader; test scripts/tests/gz_playlist_test.cpp
+0x1004d357a,"cGZPlayListEntry::cGZPlayListEntry(unsigned int, cIGZString const&, cIGZString const&)",Construct_uint_String_String,src/gz/PlayList.cpp|h,recovered,playlist entry; test scripts/tests/gz_playlist_test.cpp

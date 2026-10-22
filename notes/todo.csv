@@ -95,8 +95,10 @@ CLASS-cGZMiscCommandSystemSupport,cGZMiscCommandSystemSupport,"recover 9 remaini
 CLASS-cGZPersistBufferResource,cGZPersistBufferResource,"recover 28 remaining function(s) (28 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZPersistBufferResourceFactory,cGZPersistBufferResourceFactory,"recover 16 remaining function(s) (16 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZPersistDBSerialRecord,cGZPersistDBSerialRecord,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
-CLASS-cGZPlayList,cGZPlayList,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cGZPlayListEntry,cGZPlayListEntry,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cGZPlayList,cGZPlayList,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+PLAYLIST-1,cGZPlayList,Quirks kept: PLS drops the last entry unless a line follows; m3u path-prefix test uses a found-index as bool; ExtM3U stops at the first non-#EXTINF line; Open returns the parser result for ext m3u/pls. Check against real playlists the game ships,,open,src/gz/PlayList.h
+PLAYLIST-2,cGZPlayList,Deviations to verify: GetLine consumes the text when no line end follows (original returns the same line forever); Open NUL-terminates the file buffer before Strncpy (original reads unterminated memory),,open,src/gz/PlayList.cpp
+CLASS-cGZPlayListEntry,cGZPlayListEntry,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZRTDEntry,cGZRTDEntry,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZRTDValueEntry,cGZRTDValueEntry,"recover 7 remaining function(s) (7 not started, 0 partial/pending); bases still unfinished: cGZRTDEntry",CLASS-cGZRTDEntry,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZRealtimeDebugDisplay,cGZRealtimeDebugDisplay,"recover 19 remaining function(s) (19 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
