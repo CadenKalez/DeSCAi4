@@ -15,7 +15,10 @@
 #include "gz/cIGZVariant.h"
 #include "render/gd/VideoModes.h"
 #include "s3d/ModelInstance.h"
+#include "rz/cRZRandom.h"
+
 #include "sc4/CameraControl.h"
+#include "sc4/GeometryUtilities.h"
 #include "sc4/DBSegment.h"
 #include "sc4/QuadGrid.h"
 #include "sc4/RenderProperties.h"
@@ -23,6 +26,8 @@
 namespace sc4 {
 
 namespace {
+// Defined with the draw pass further down; declared here so the small services above can read the same seam.
+IRender3DSettings& RendererSettings();
 
 // The binary's file-scope tables (0x100a2a170 / 0x100a2a180), indexed by camera rotation.
 constexpr float kFVToCXBase[4] = {3000.0f, 1400.0f, 5200.0f, 6800.0f};
@@ -71,6 +76,14 @@ public:
     int StaticViewMaxZoomB() const override { return 3; }                // +0x2c0
     int StaticViewMaxZoomC() const override { return 3; }                // +0x350
     bool StaticViewRedrawOnViewportChange() const override { return true; }   // +0xb8
+    bool DrawDynamicViewEnabled() const override { return true; }        // +0x78
+    bool ViewCleanupEnabled() const override { return true; }            // +0x938
+    bool ClearViewportPreservesLighting() const override { return false; }   // +0x738
+    bool TranslatedUpdateRebuildsDrawFrustum() const override { return true; }   // +0x438
+    bool ScreenShakeEnabled() const override { return true; }            // +0x5b8
+    int ScreenShakeOffsetX() const override { return 0; }                // +0x30 block, +0x80
+    int ScreenShakeOffsetY() const override { return 0; }                // +0x30 block, +0x38
+    int DirtyRectangleMaxAgeFrames() const override { return 10000; }    // +0x30 block, +0x548
 };
 
 struct StreamReader {
@@ -113,7 +126,7 @@ cSC43DRender::cSC43DRender() {
     shakeTimer_.SetUnits(cRZTimer::kSeconds);        // cRZTimer::ConstructWithUnits(this + 0x380, 5)
     lightLevels_[3] = 10000.0f;
     lightLevels_[4] = 15000.0f;
-    lightLevelExtra_ = 15000.0f;
+    fogEnd_ = 15000.0f;
     unknown358_ = 10000;
     spInstance = this;
 }
@@ -308,8 +321,8 @@ bool cSC43DRender::Init() {
     if (cameraControl_) viewUtilities_->UpdateCameraPosition(cameraControl_);
     viewUtilities_->BuildDrawFrustumDataFromViewportRect(drawFrustumRect_, drawFrustumRect_ + 2);
 
-    captureEnabled_ = false;
-    unknown214_ = false;
+    viewContainerRectValid_ = false;
+    drawContainerRectValid_ = false;
     drawContext_->SetRenderPass(0);
     drawContext_->SetDriver(mpGDriver);
     drawContext_->SetRenderProperties(renderProperties_);
@@ -704,8 +717,8 @@ void cSC43DRender::DoFullViewUpdate(ViewUpdateReason reason) {
     captureDirtyRectangles_ = true;
     backingStoreValid_ = false;
     if (viewUtilities_) viewUtilities_->BuildDrawFrustumDataFromViewportRect(drawFrustumRect_, drawFrustumRect_ + 2);
-    captureEnabled_ = false;
-    unknown214_ = false;
+    viewContainerRectValid_ = false;
+    drawContainerRectValid_ = false;
     ClearDirtyRectangleQueue();
 }
 
@@ -816,37 +829,58 @@ void cSC43DRender::AddDirtyRectangleInternal(int kind, const cRZRect& rect, s3d:
 }
 
 bool cSC43DRender::AttemptTranslatedViewUpdate(int dx, int dy) {
-    // 0x1007658be (PARTIAL: the blit and the redraw of the two uncovered strips live in DoTranslatedViewUpdate, which
-    // is not ported; what is kept is the decision and the fallback path).
+    // 0x1007658be: a translation is cheap enough to blit when both offsets stay below 14/16 of the viewport and the
+    // backing store can be written partially; the queued dirty rectangles move with the view, then the store is
+    // restored shifted and only the two uncovered strips are redrawn. Otherwise the whole view is redrawn.
     const int limitX = (viewportWidth_ * 14) / 16;
     const int limitY = (viewportHeight_ * 14) / 16;
     const int distanceX = dx < 0 ? -dx : dx;
     const int distanceY = dy < 0 ? -dy : dy;
+    // The original tests sMacBackingStoreFBO (the GL frame buffer object) here; the port's equivalent is the store.
     if (distanceX < limitX && distanceY < limitY && partialWritesAllowed_ && mbBackingStoreEnabled &&
         backingStoreValid_ && mpBackingStoreExtension) {
-        // The original scales the queued rectangles by the translation here, then blits the store.
+        for (DirtyRectangleQueueItem& item : dirtyRectangles_) {
+            // The original blends the shifted and the unshifted rectangle (pblendw 0x33): x moves by -dx, y by +dy.
+            item.rect.left -= dx;
+            item.rect.right -= dx;
+            item.rect.top += dy;
+            item.rect.bottom += dy;
+        }
+        DoTranslatedViewUpdate(dx, dy);
         return true;
     }
-    if (drawContext_) drawContext_->SetRenderPass(3);
+    drawContext_->SetViewUpdateReason(kViewUpdateTranslated);
     captureDirtyRectangles_ = true;
     backingStoreValid_ = false;
-    if (viewUtilities_) viewUtilities_->BuildDrawFrustumDataFromViewportRect(drawFrustumRect_, drawFrustumRect_ + 2);
-    captureEnabled_ = false;
-    unknown214_ = false;
+    viewUtilities_->BuildDrawFrustumDataFromViewportRect(drawFrustumRect_, drawFrustumRect_ + 2);
+    viewContainerRectValid_ = false;
+    drawContainerRectValid_ = false;
     ClearDirtyRectangleQueue();
     return false;
 }
 
 void cSC43DRender::UpdateViewportRect(const cRZRect& rect) {
-    // 0x100764096 (PARTIAL: the static-view redraw at the end needs DrawStaticView)
+    // 0x100764096: rebuild the draw frustum for a sub-rectangle, clip to it, clear it and redraw the static view
+    // plus the two view-object lists around it.
+    IRender3DSettings& settings = RendererSettings();
     if (rect.left >= rect.right || rect.top >= rect.bottom) return;
-    if (viewUtilities_)
-        viewUtilities_->BuildDrawFrustumDataFromViewportRect(&rect.left, &rect.right);
-    captureEnabled_ = false;
-    unknown214_ = false;
+    viewUtilities_->BuildDrawFrustumDataFromViewportRect(&rect.left, &rect.right);
+    viewContainerRectValid_ = false;
+    drawContainerRectValid_ = false;
     SetClipRect(rect);
-    ForceFullRedraw();
-    Set2DCameraView();
+    ClearViewport(false);
+    Set3DCameraView();
+    if (settings.StaticViewRedrawOnViewportChange()) {
+        drawContext_->SetViewPass(0);
+        for (const ViewObjectInfo& info : viewObjectLists_[3]) {
+            if (info.object) info.object->DrawViewObject(*drawContext_);
+        }
+        DrawStaticView();
+        drawContext_->SetViewPass(2);
+        for (const ViewObjectInfo& info : viewObjectLists_[2]) {
+            if (info.object) info.object->DrawViewObject(*drawContext_);
+        }
+    }
 }
 
 void cSC43DRender::TurnOnLighting(bool enable) {
@@ -1156,15 +1190,1110 @@ bool cSC43DRender::ChangeModel(s3d::cIS3DModelInstance*, int) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Draw path / picking / snapshots (not ported; see the pending ledger file)
+// The per-frame draw pass (RENDER3D-1)
+//
+// The decompiler drops the driver arguments of every draw call here (they go through cIGZGDriver's vtable), so the
+// slot of each one was read from the disassembly: `call qword ptr [rax + 0x58]` is Clear (slot 11 = 0x58 / 8), +0x60
+// is ClearColor (12), +0x68 ClearDepth (13), +0x28 InterleavedArrays (5), and the renderer's own vtable calls are
+// +0xc0 Set3DCameraView (24), +0xc8 Set2DCameraView (25), +0xd0 SetUICameraView (26), +0x178 ClearViewport (47) and
+// +0x188 DrawViewportRectangle (49). Model draws are cIS3DModelInstance::Draw (vslot 0x60) and its sort value
+// (vslot 0x88).
 // ---------------------------------------------------------------------------------------------
-void cSC43DRender::Draw() {}
+namespace {
+
+constexpr float kMagicFloat = 12582912.0f;     // 1.5 * 2^23, the float -> int conversion constant
+constexpr std::int32_t kMagicBits = 0x4b400000;
+constexpr float kColourMagic = 49152.0f;       // 1.5 * 2^15: one ulp is 1/256, so the bit delta is value * 256
+constexpr std::int32_t kColourMagicBits = 0x47400000;
+constexpr std::uint32_t kColourBlack = 0xff000000u;   // nS3D::kColorARGB8Black
+// (0x100a2a190) the block / background texture size per zoom level. The original indexes it with the draw context's
+// zoom unchecked; the port clamps the index (zoom 7+ would read unrelated data in the original).
+constexpr int kTextureSizeTable[7] = {1024, 512, 256, 128, 64, 32, 16};
+// ClearViewport draws at a fixed depth in front of the whole scene.
+constexpr float kViewportClearZ = -32500.0f;
+// The driver's vertex formats the viewport rectangles use (eGDVertexFormat).
+constexpr std::uint32_t kVertexFormatV3fC4ub = 1;   // 16 bytes: x, y, z, packed r/g/b/a
+constexpr std::uint32_t kVertexFormatV3fT2f = 2;    // 20 bytes: x, y, z, u, v
+
+// The original's unit-float -> byte conversion (see gd::QuantizeUnitFloat): the bits of (value + 49152.0f) minus the
+// bits of 49152.0f give round(value * 256), and folding the high byte into the low one turns 256 into 255.
+std::uint8_t PackViewportColourByte(float value) {
+    const float added = value + kColourMagic;
+    std::int32_t bits = 0;
+    std::memcpy(&bits, &added, sizeof(bits));
+    const std::int32_t v = bits - kColourMagicBits;
+    return static_cast<std::uint8_t>((v & 0xff) - ((v >> 8) & 0xff));
+}
+
+// The four bytes of one V3F_C4UB vertex colour, in memory order r, g, b, a (0x1007677da).
+std::uint32_t PackViewportColour(const float* colour) {
+    return static_cast<std::uint32_t>(PackViewportColourByte(colour[0])) |
+           (static_cast<std::uint32_t>(PackViewportColourByte(colour[1])) << 8) |
+           (static_cast<std::uint32_t>(PackViewportColourByte(colour[2])) << 16) |
+           (static_cast<std::uint32_t>(PackViewportColourByte(colour[3])) << 24);
+}
+
+// SC4ViewUtilities::viewportRect_ (+0x234) and the other int rectangles as a cRZRect.
+cRZRect AsRect(const std::int32_t* rect) { return cRZRect{rect[0], rect[1], rect[2], rect[3]}; }
+
+// (int)v for 0 <= v < 2^22 the way the original computes it: add 1.5 * 2^23, reinterpret the float's bits and
+// subtract the magic's bits.
+inline std::int32_t RoundToInt(float value) {
+    const float added = value + kMagicFloat;
+    std::int32_t bits = 0;
+    std::memcpy(&bits, &added, sizeof(bits));
+    return bits - kMagicBits;
+}
+
+// (anonymous namespace)::SC4ComputeViewportZProjection @ 0x10076529e: the gradient of the viewport Z with respect to
+// world x / y / z (out[0..2]) and the Z of the world origin plus one (out[3]). The passes use it to turn an element's
+// world bounds into a depth key.
+void ComputeViewportZProjection(float* out, const SC4ViewUtilities& utilities) {
+    const float origin[3] = {0.0f, 0.0f, 0.0f};
+    const float alongX[3] = {1.0f, 0.0f, 0.0f};
+    const float alongY[3] = {0.0f, 1.0f, 0.0f};
+    const float alongZ[3] = {0.0f, 0.0f, 1.0f};
+    const float z0 = utilities.ProjectPointToViewportZ(origin);
+    const float zx = utilities.ProjectPointToViewportZ(alongX);
+    const float zy = utilities.ProjectPointToViewportZ(alongY);
+    const float zz = utilities.ProjectPointToViewportZ(alongZ);
+    out[0] = zx - z0;
+    out[1] = zy - z0;
+    out[2] = zz - z0;
+    out[3] = z0 + 1.0f;
+}
+
+// cModelSort<cSortModelsFrontToBack>::sort @ 0x100765366 and cModelSort<cSortModelsBackToFront>::sort @ 0x10076547c.
+// The original's own loop: move the middle element to the front, bubble it into place against its successor, put it at
+// the position it reached, recurse on the left part and continue with the rest. The two copies differ only in the key
+// comparison. Hand-written from the disassembly so the permutation (including the order of equal keys) is the same.
+void SortModelList(cSC4ModelSortElement* list, int count, bool ascending) {
+    while (count > 1) {
+        std::swap(list[0], list[(count - 1) / 2]);
+        const std::uint32_t key = list[0].key;
+        int position = 0;
+        for (int left = count - 1; left != 0; --left) {
+            const bool movesForward = ascending ? key < list[position + 1].key : list[position + 1].key < key;
+            if (movesForward) {
+                std::swap(list[position], list[position + 1]);
+                ++position;
+            }
+        }
+        std::swap(list[0], list[position]);
+        SortModelList(list, position, ascending);
+        list += position + 1;
+        count = (count - 1) - position;
+    }
+}
+
+// The depth key the two view draws build for one element (0x100764240 / 0x100764c54): the element's projected half
+// extent plus its projected centre, rounded to 1/65535, mixed with the model's own sort value (vslot 0x88):
+// key = round(value * 65535) + (sortValue & 0xffff0000) + sortValue * 0x10000.
+std::uint32_t ModelSortKey(const SC43DGridElement& element, const float* projection) {
+    const float extentX = std::fabs(element.boundsMaxX - element.boundsMinX) * projection[0];
+    const float extentY = std::fabs(element.boundsMaxY - element.boundsMinY) * projection[1];
+    const float extentZ = std::fabs(element.boundsMaxZ - element.boundsMinZ) * projection[2];
+    const float centreX = (element.boundsMinX + element.boundsMaxX) * 0.5f * projection[0];
+    const float centreY = (element.boundsMinY + element.boundsMaxY) * 0.5f * projection[1];
+    const float centreZ = (element.boundsMinZ + element.boundsMaxZ) * 0.5f * projection[2];
+    const float value = (extentX + extentY + extentZ) * 0.5f + (centreX + centreY) + centreZ + projection[3];
+    std::int32_t key = RoundToInt(value * 65535.0f);
+    std::uint32_t sortValue = 0;
+    if (element.model) element.model->GetSortValue(sortValue);
+    key += static_cast<std::int32_t>((sortValue & 0xffff0000u) + (sortValue << 16));
+    return static_cast<std::uint32_t>(key);
+}
+
+// The two shake tables the original keeps at 0x100b73820 / 0x100b73840 (built once, seed 0x58) and its generator.
+std::vector<cS3DVector2> sShakeTableRandom;
+std::vector<cS3DVector2> sShakeTableSine;
+std::unique_ptr<cRZRandom> sShakeRandom;
+
+IRender3DSettings& RendererSettings() {
+    static DefaultSettings defaults;
+    IRender3DHost* host = cSC43DRender::Host();
+    IRender3DSettings* settings = host ? host->Settings() : nullptr;
+    return settings ? *settings : defaults;
+}
+
+}  // namespace
+
+// ---------------------------------------------------------------------------------------------
+// Backing store copy (the original's raw glBlitFramebufferEXT pairs, now the driver's IBackingStore service)
+// ---------------------------------------------------------------------------------------------
+bool cSC43DRender::SaveBackingStore() {
+    // 0x1007641b4: when the Mac build has just zoomed, the shake offsets are dropped and the store is refilled once
+    // before the normal save.
+    if (mbMacJustZoomed) {
+        const int shakeX = shakeX_;
+        const int shakeY = shakeY_;
+        if (shakeX != 0 || shakeY != 0) {
+            shakeX_ = 0;
+            shakeY_ = 0;
+            SaveBackingStore(0, 0, viewportWidth_, viewportHeight_);
+            shakeX_ = shakeX;
+            shakeY_ = shakeY;
+            mbMacJustZoomed = false;
+        }
+    }
+    return SaveBackingStore(0, 0, viewportWidth_, viewportHeight_);
+}
+
+bool cSC43DRender::SaveBackingStore(int x, int y, int width, int height) {
+    // 0x100764aec: frame -> store. The shake offsets shift the copied block and the block is clipped to the viewport.
+    int sourceX = x;
+    int sourceY = y;
+    int destinationX = x;
+    int destinationY = y;
+    int copyWidth = width;
+    int copyHeight = height;
+    const int shakeX = shakeX_;
+    const int shakeY = shakeY_;
+    if (shakeX != 0 || shakeY != 0) {
+        const int shiftedX = x - shakeX;
+        if (shiftedX < 0) {
+            if (width - shakeX == 0 || width < shakeX) return true;
+            sourceX = x + shakeX;
+            copyWidth = width - shakeX;
+            destinationX = 0;
+        } else {
+            if (viewportWidth_ < shiftedX + width) {
+                copyWidth = viewportWidth_ - shiftedX;
+                if (copyWidth == 0 || viewportWidth_ < shiftedX) return true;
+            }
+            destinationX = shiftedX;
+        }
+        const int shiftedY = y - shakeY;
+        if (shiftedY < 0) {
+            if (height - shakeY == 0 || height < shakeY) return true;
+            sourceY = shakeY + y;
+            copyHeight = height - shakeY;
+            destinationY = 0;
+        } else {
+            if (viewportHeight_ < shiftedY + height) {
+                copyHeight = viewportHeight_ - shiftedY;
+                if (copyHeight == 0 || viewportHeight_ < shiftedY) return true;
+            }
+            destinationY = shiftedY;
+        }
+    }
+    if (copyHeight < 1) return false;
+    if (copyWidth < 1) return false;
+    // A full-frame save always works; a partial one needs the buffer-region extension's partial writes.
+    if (!partialWritesAllowed_ && (copyWidth != viewportWidth_ || copyHeight != viewportHeight_)) return false;
+    if (!mpBackingStoreExtension) return false;
+    mpBackingStoreExtension->SaveFromFrame(sourceX, sourceY, copyWidth, copyHeight, destinationX, destinationY);
+    return true;
+}
+
+bool cSC43DRender::RestoreBackingStore() {
+    // 0x10076605c: store -> frame. The shaken image is restored from the store with the block shortened by the shake
+    // distance and pushed (source 0 / destination |shake|) to the side the shake moved away from.
+    const int shakeX = shakeX_;
+    const int shakeY = shakeY_;
+    int width = viewportWidth_;
+    int height = viewportHeight_;
+    int destinationX = 0;
+    int destinationY = 0;
+    int sourceX = 0;
+    int sourceY = 0;
+    if (shakeX != 0 || shakeY != 0) {
+        const int distanceX = shakeX < 0 ? -shakeX : shakeX;
+        const int distanceY = shakeY < 0 ? -shakeY : shakeY;
+        destinationX = shakeX < 0 ? distanceX : 0;
+        sourceX = shakeX < 0 ? 0 : shakeX;
+        destinationY = shakeY < 0 ? distanceY : 0;
+        sourceY = shakeY < 0 ? 0 : shakeY;
+        width = viewportWidth_ - distanceX;
+        height = viewportHeight_ - distanceY;
+    }
+    RestoreBackingStore(destinationX, destinationY, width, height, sourceX, sourceY);
+    return true;
+}
+
+bool cSC43DRender::RestoreBackingStore(int dstX, int dstY, int width, int height, int srcX, int srcY) {
+    // 0x100769b1c: the original's glBlitFramebufferEXT from the backing-store FBO into the frame.
+    if (!mpBackingStoreExtension) return false;
+    mpBackingStoreExtension->RestoreToFrame(srcX, srcY, width, height, dstX, dstY);
+    return true;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Container rectangles
+// ---------------------------------------------------------------------------------------------
+void cSC43DRender::GetVisibleContainerRect(SC4RectFloat& out, FrustumType frustum) {
+    // 0x100765194: the cached container-space rectangle of the requested frustum. frustum < 2 uses the draw frustum
+    // (+0x214 / +0x218), anything else the view frustum (+0x200 / +0x204). The clamping runs on the cached copy, so
+    // it only happens once per invalidation.
+    float* cached = nullptr;
+    SC4RectFloat computed;
+    if (frustum < kFrustumView) {
+        if (!drawContainerRectValid_) {
+            GetDrawFrustumContainerRect(computed);
+            drawContainerRect_[0] = computed.x0;
+            drawContainerRect_[1] = computed.z0;
+            drawContainerRect_[2] = computed.x1;
+            drawContainerRect_[3] = computed.z1;
+            drawContainerRectValid_ = true;
+        }
+        cached = drawContainerRect_;
+    } else {
+        if (!viewContainerRectValid_) {
+            GetViewFrustumContainerRect(computed);
+            viewContainerRect_[0] = computed.x0;
+            viewContainerRect_[1] = computed.z0;
+            viewContainerRect_[2] = computed.x1;
+            viewContainerRect_[3] = computed.z1;
+            viewContainerRectValid_ = true;
+        }
+        cached = viewContainerRect_;
+    }
+    if (cached[0] <= 0.0f && cached[0] != 0.0f) cached[0] = 0.0f;
+    if (cached[1] <= 0.0f && cached[1] != 0.0f) cached[1] = 0.0f;
+    const float limit = unknown190_ - 1.0f;
+    if (limit < cached[2]) cached[2] = limit;
+    if (limit < cached[3]) cached[3] = limit;
+    out.x0 = cached[0];
+    out.z0 = cached[1];
+    out.x1 = cached[2];
+    out.z1 = cached[3];
+}
+
+void cSC43DRender::GetViewFrustumContainerRect(SC4RectFloat& out) {
+    // 0x100766b22: the frustum's viewport rectangle (0, 0) - (viewport width, height) unprojected into fixed-view
+    // coordinates and shifted by the rotation's fixed-view -> container offset.
+    const std::int32_t rotation = viewUtilities_->Rotation();
+    float origin[3] = {0.0f, 0.0f, 0.0f};
+    viewUtilities_->ProjectPointFromViewportCoordinatesToFixedViewCoordinates(origin);
+    origin[1] = fixedViewToContainerY_[rotation] - origin[1];
+    origin[0] = fixedViewToContainerX_[rotation] + origin[0];
+    float farCorner[3] = {static_cast<float>(viewportWidth_), static_cast<float>(viewportHeight_), 0.0f};
+    viewUtilities_->ProjectPointFromViewportCoordinatesToFixedViewCoordinates(farCorner);
+    farCorner[0] = fixedViewToContainerX_[viewUtilities_->Rotation()] + farCorner[0];
+    const float offsetY = fixedViewToContainerY_[viewUtilities_->Rotation()];
+    out.x0 = origin[0];
+    out.z0 = origin[1];
+    out.x1 = farCorner[0];
+    out.z1 = offsetY - farCorner[1];
+}
+
+void cSC43DRender::GetDrawFrustumContainerRect(SC4RectFloat& out) {
+    // 0x100766c30: the same for the draw frustum, starting from its viewport rectangle (+0x234 of the view
+    // utilities) and ending at the rectangle's bottom-right corner.
+    const std::int32_t* rect = viewUtilities_->DrawFrustumViewportRect();
+    float origin[3] = {static_cast<float>(rect[0]), static_cast<float>(rect[1]), 0.0f};
+    float farCorner[3] = {static_cast<float>(rect[2]), static_cast<float>(rect[3]), 0.0f};
+    viewUtilities_->ProjectPointFromViewportCoordinatesToFixedViewCoordinates(origin);
+    viewUtilities_->ProjectPointFromViewportCoordinatesToFixedViewCoordinates(farCorner);
+    const std::int32_t rotation = viewUtilities_->Rotation();
+    out.x0 = fixedViewToContainerX_[rotation] + origin[0];
+    out.z0 = fixedViewToContainerY_[rotation] - origin[1];
+    out.x1 = fixedViewToContainerX_[viewUtilities_->Rotation()] + farCorner[0];
+    out.z1 = fixedViewToContainerY_[viewUtilities_->Rotation()] - farCorner[1];
+}
+
+// ---------------------------------------------------------------------------------------------
+// Viewport rectangles
+// ---------------------------------------------------------------------------------------------
+void cSC43DRender::DrawViewportRectangle(const cRZRect& rect, const float* color, bool depthMask, bool colorMask) {
+    // 0x1007677da: a screen-space quad at z = -32500 with a solid vertex colour (V3F_C4UB). The colour is only used
+    // when colorMask is set; otherwise the vertices are black.
+    std::uint32_t packed = kColourBlack;
+    std::uint8_t red = 0xff, green = 0x00, blue = 0x00, alpha = 0x00;   // kColorARGB8Black
+    if (colorMask) {
+        packed = PackViewportColour(color);
+        red = static_cast<std::uint8_t>(packed & 0xff);
+        green = static_cast<std::uint8_t>((packed >> 8) & 0xff);
+        blue = static_cast<std::uint8_t>((packed >> 16) & 0xff);
+        alpha = static_cast<std::uint8_t>((packed >> 24) & 0xff);
+    }
+    struct Vertex {
+        float x, y, z;
+        std::uint8_t r, g, b, a;
+    };
+    const Vertex vertices[4] = {
+        {static_cast<float>(rect.left), static_cast<float>(rect.top), kViewportClearZ, red, green, blue, alpha},
+        {static_cast<float>(rect.left), static_cast<float>(rect.bottom), kViewportClearZ, red, green, blue, alpha},
+        {static_cast<float>(rect.right), static_cast<float>(rect.top), kViewportClearZ, red, green, blue, alpha},
+        {static_cast<float>(rect.right), static_cast<float>(rect.bottom), kViewportClearZ, red, green, blue, alpha},
+    };
+    static_assert(sizeof(Vertex) == 16, "V3F_C4UB");
+    drawContext_->EnableTextureStateFlag(false, 0);
+    drawContext_->EnableDepthTestFlag(true);
+    drawContext_->SetDepthFunc(7);
+    drawContext_->EnableDepthMaskFlag(depthMask);
+    drawContext_->EnableColorMaskFlag(colorMask);
+    Set2DCameraView();
+    drawContext_->DrawPrims(1, static_cast<int>(kVertexFormatV3fC4ub), 4, vertices);
+}
+
+void cSC43DRender::DrawTexturedViewportRectangle(const cRZRect& rect, std::uint32_t texture, float alpha, bool depthMask,
+                                                 bool colorMask) {
+    // 0x1007695a2: the same quad with texture coordinates (V3F_T2F); the depth is -alpha, so a smaller alpha draws
+    // the rectangle nearer (the original quirk).
+    struct Vertex {
+        float x, y, z;
+        float u, v;
+    };
+    const Vertex vertices[4] = {
+        {static_cast<float>(rect.left), static_cast<float>(rect.top), -alpha, 0.0f, 0.0f},
+        {static_cast<float>(rect.left), static_cast<float>(rect.bottom), -alpha, 0.0f, 1.0f},
+        {static_cast<float>(rect.right), static_cast<float>(rect.top), -alpha, 1.0f, 0.0f},
+        {static_cast<float>(rect.right), static_cast<float>(rect.bottom), -alpha, 1.0f, 1.0f},
+    };
+    static_assert(sizeof(Vertex) == 20, "V3F_T2F");
+    drawContext_->EnableTextureStateFlag(colorMask, 0);
+    drawContext_->EnableColorMaskFlag(colorMask);
+    drawContext_->EnableDepthTestFlag(true);
+    drawContext_->SetDepthFunc(3);
+    drawContext_->EnableDepthMaskFlag(depthMask);
+    drawContext_->SetTexture(static_cast<int>(texture), 0);
+    Set2DCameraView();
+    drawContext_->DrawPrims(1, static_cast<int>(kVertexFormatV3fT2f), 4, vertices);
+}
+
+void cSC43DRender::ClearViewportWithSolidColor(const float* color, bool a, bool b) {
+    // 0x100767716: clear the frame with a one-off colour, then restore the viewport clear colour. `a` is unused by
+    // the recovered body (the original only reaches it through the stale register the decompiler saw); `b` selects
+    // colour + depth instead of colour only. The trailing ClearColor re-reads the viewport clear colour, which the
+    // disassembly shows as a reload of +0x2a0.
+    mpGDriver->ClearColor(color[0], color[1], color[2], color[3]);
+    drawContext_->EnableColorMaskFlag(true);
+    std::uint32_t mask = 0x4000;
+    if (b) {
+        drawContext_->EnableDepthMaskFlag(true);
+        mpGDriver->ClearDepth(static_cast<double>(unknown2b0_));
+        mask = 0x5000;
+    }
+    mpGDriver->Clear(mask);
+    mpGDriver->ClearColor(viewportClearColor_[0], viewportClearColor_[1], viewportClearColor_[2],
+                          viewportClearColor_[3]);
+    (void)a;
+}
+
+void cSC43DRender::ClearViewport(bool clearDepth) {
+    // 0x100766d5e: the viewport clear the frame starts with. With no usable background picture it is a plain
+    // driver clear (colour + depth only when the visible ground area is inside the city, depth otherwise); with one
+    // it tiles the picture over the screen, or — when the picture is "visible" — lays it on the ground plane in
+    // block-sized decals and fills the two screen strips the ground plane does not cover.
+    IRender3DSettings& settings = RendererSettings();
+    float ground[8] = {};
+    float boxMin[2] = {};
+    float boxMax[2] = {};
+    if (!backgroundPictureEnabled_ || backgroundTexture_ == 0 || !viewUtilities_->IsReady()) {
+        viewUtilities_->GetDrawFrustumGroundPlanePositions(ground, ground + 2, ground + 4, ground + 6);
+        SC4GeometryUtilities::GetBoundingBoxOfVertices2D(reinterpret_cast<const float(*)[2]>(ground), 4, boxMin,
+                                                        boxMax);
+        const bool covers = boxMin[0] < 0.0f || clearDepth || citySizeX_ < boxMax[0] || boxMin[1] < 0.0f ||
+                            citySizeZ_ < boxMax[1];
+        if (!viewUtilities_->DrawFrustumReduced()) {
+            if (!covers || transparentBackground_) {
+                drawContext_->EnableDepthMaskFlag(true);
+                mpGDriver->Clear(0x1000);   // depth
+            } else {
+                drawContext_->EnableColorMaskFlag(true);
+                drawContext_->EnableDepthMaskFlag(true);
+                mpGDriver->Clear(0x5000);   // colour + depth
+            }
+        } else {
+            DrawViewportRectangle(AsRect(viewUtilities_->DrawFrustumViewportRect()), viewportClearColor_, true,
+                                  covers);
+        }
+        return;
+    }
+
+    const bool lightingWasOn = drawContext_->GetLighting();
+    if (settings.ClearViewportPreservesLighting()) drawContext_->SetLighting(false);
+    drawContext_->SetDepthOffset(0);
+    if (!backgroundPictureVisible_) {
+        if (!viewUtilities_->DrawFrustumReduced()) {
+            // The whole screen, tiled with the background texture: countX x countY repeats.
+            const int textureWidth = backgroundTextureWidth_;
+            const int textureHeight = backgroundTextureHeight_;
+            int countX = viewportWidth_ / textureWidth;
+            if (textureWidth * countX < viewportWidth_) ++countX;
+            int countY = viewportHeight_ / textureHeight;
+            if (textureHeight * countY < viewportHeight_) ++countY;
+            const float width = static_cast<float>(textureWidth * countX);
+            const float height = static_cast<float>(textureHeight * countY);
+            struct Vertex {
+                float x, y, z;
+                float u, v;
+            };
+            const Vertex vertices[4] = {
+                {0.0f, 0.0f, kViewportClearZ, 0.0f, 0.0f},
+                {0.0f, height, kViewportClearZ, 0.0f, static_cast<float>(countY)},
+                {width, 0.0f, kViewportClearZ, static_cast<float>(countX), 0.0f},
+                {width, height, kViewportClearZ, static_cast<float>(countX), static_cast<float>(countY)},
+            };
+            drawContext_->EnableColorMaskFlag(true);
+            drawContext_->EnableDepthMaskFlag(true);
+            drawContext_->EnableDepthTestFlag(true);
+            drawContext_->SetDepthFunc(7);
+            drawContext_->EnableTextureStateFlag(true, 0);
+            drawContext_->EnableBlendStateFlag(false);
+            drawContext_->EnableAlphaTestFlag(false);
+            drawContext_->SetTexEnvMode(1, 0);
+            drawContext_->SetTexture(static_cast<int>(backgroundTexture_), 0);
+            drawContext_->SetTexFiltering(1, 1, 0);
+            drawContext_->SetTexWrapModes(3, 3, 0);
+            Set2DCameraView();
+            mpGDriver->InterleavedArrays(kVertexFormatV3fT2f, 0x14, vertices);
+            drawContext_->DrawPrims(1, 0, 4);
+        }
+        if (settings.ClearViewportPreservesLighting()) drawContext_->SetLighting(lightingWasOn);
+        return;
+    }
+
+    // The picture is visible: draw it on the ground plane.
+    const int zoom = drawContext_->Zoom();
+    const int block = kTextureSizeTable[zoom < 0 ? 0 : (zoom > 6 ? 6 : zoom)];
+    drawContext_->EnableAlphaTestFlag(false);
+    if (!viewUtilities_->DrawFrustumReduced()) {
+        drawContext_->EnableDepthMaskFlag(true);
+        mpGDriver->Clear(0x1000);
+        drawContext_->EnableColorMaskFlag(true);
+        drawContext_->EnableDepthTestFlag(false);
+    } else {
+        DrawViewportRectangle(AsRect(viewUtilities_->DrawFrustumViewportRect()), viewportClearColor_, true, false);
+        drawContext_->EnableColorMaskFlag(true);
+        drawContext_->EnableDepthTestFlag(true);
+        drawContext_->SetDepthFunc(3);
+    }
+    Set2DCameraView();
+    viewUtilities_->GetDrawFrustumGroundPlanePositions(ground, ground + 2, ground + 4, ground + 6);
+    SC4GeometryUtilities::GetBoundingBoxOfVertices2D(reinterpret_cast<const float(*)[2]>(ground), 4, boxMin, boxMax);
+    if (!(boxMin[0] < 0.0f || clearDepth || citySizeX_ < boxMax[0]) &&
+        !(boxMin[1] < 0.0f || citySizeZ_ < boxMax[1])) {
+        if (settings.ClearViewportPreservesLighting()) drawContext_->SetLighting(lightingWasOn);
+        return;
+    }
+    drawContext_->EnableDepthMaskFlag(false);
+    drawContext_->EnableTextureStateFlag(true, 0);
+    drawContext_->EnableBlendStateFlag(false);
+    drawContext_->SetTexEnvMode(1, 0);
+    drawContext_->SetTexture(static_cast<int>(backgroundTexture_), 0);
+    drawContext_->SetTexFiltering(1, 1, 0);
+    drawContext_->SetTexWrapModes(3, 3, 0);
+    struct Vertex {
+        float x, y, z;
+        float u, v;
+    };
+    Vertex vertices[4] = {
+        {0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f, 0.0f, 1.0f},
+        {0.0f, 0.0f, 0.0f, 1.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f, 1.0f, 1.0f},
+    };
+    mpGDriver->InterleavedArrays(kVertexFormatV3fT2f, 0x14, vertices);
+    float blockMin[2] = {};
+    float blockMax[2] = {};
+    viewUtilities_->GetGroundPlaneVisibleAreaRectangle(nullptr, nullptr, blockMin, blockMax);
+    blockMin[0] = SC4ViewUtilities::RoundDownToNearestBlockBoundary(blockMin[0], block);
+    blockMin[1] = SC4ViewUtilities::RoundDownToNearestBlockBoundary(blockMin[1], block);
+    blockMax[0] = SC4ViewUtilities::RoundUpToNearestBlockBoundary(blockMax[0], block);
+    blockMax[1] = SC4ViewUtilities::RoundUpToNearestBlockBoundary(blockMax[1], block);
+    const int beginX = static_cast<int>(blockMin[0]);
+    const int endX = static_cast<int>(blockMax[0]);
+    const int beginZ = static_cast<int>(blockMin[1]);
+    const int endZ = static_cast<int>(blockMax[1]);
+    for (int x = beginX; x < endX; x += block) {
+        for (int z = beginZ; z < endZ; z += block) {
+            // Only the border blocks are repainted unless the caller forced a depth clear; the interior is already
+            // in the backing store (0x1007674d4: the toggled clearDepth flag of the original).
+            const bool interior = x > -5 && z >= -4 && static_cast<float>(x) < citySizeX_ - 4.0f &&
+                                  static_cast<float>(z) < citySizeZ_ - 4.0f;
+            if (!clearDepth && interior) continue;
+            vertices[0] = {static_cast<float>(x), 0.0f, static_cast<float>(z), 0.0f, 0.0f};
+            vertices[1] = {static_cast<float>(x), 0.0f, static_cast<float>(z + block), 0.0f, 1.0f};
+            vertices[2] = {static_cast<float>(x + block), 0.0f, static_cast<float>(z), 1.0f, 0.0f};
+            vertices[3] = {static_cast<float>(x + block), 0.0f, static_cast<float>(z + block), 1.0f, 1.0f};
+            drawContext_->DrawPrims(1, 0, 4);
+        }
+    }
+    // The two screen strips above / below the ground plane: the original casts the near edge's ray twice, the second
+    // time from corner 7 with the first ray's direction (0x100767592).
+    const FrustumBounds& frustum = viewUtilities_->ViewFrustum();
+    float direction[3] = {frustum.corner[2][0] - frustum.corner[3][0], frustum.corner[2][1] - frustum.corner[3][1],
+                          frustum.corner[2][2] - frustum.corner[3][2]};
+    float point[3] = {};
+    SC4ViewUtilities::GetRayIntersectionWithGroundPlane(frustum.corner[3], direction, point);
+    viewUtilities_->ProjectPointToViewportCoordinates2D(point);
+    if (point[1] < static_cast<float>(viewportHeight_)) {
+        DrawViewportRectangle(cRZRect{0, static_cast<int>(point[1]), viewportWidth_, viewportHeight_},
+                              viewportClearColor_, false, true);
+    }
+    SC4ViewUtilities::GetRayIntersectionWithGroundPlane(frustum.corner[7], direction, point);
+    viewUtilities_->ProjectPointToViewportCoordinates2D(point);
+    if (point[1] > 0.0f) {
+        DrawViewportRectangle(cRZRect{0, 0, viewportWidth_, static_cast<int>(point[1])}, viewportClearColor_, false,
+                              true);
+    }
+    if (settings.ClearViewportPreservesLighting()) drawContext_->SetLighting(lightingWasOn);
+}
+
+// ---------------------------------------------------------------------------------------------
+// The two quad-grid view passes
+// ---------------------------------------------------------------------------------------------
+void cSC43DRender::DrawStaticView() {
+    // 0x100764c54: collect every element in the visible container rectangle whose 0x8 flag is set, sorted
+    // front-to-back, then draw them. Models that return 2 ask for another pass; the pass counter (+0x4 of the draw
+    // context) drives the model's trench / piece choice, and the survivors bounce between the two lists.
+    drawContext_->SetViewPass(1);
+    SC4RectFloat visible;
+    GetVisibleContainerRect(visible, static_cast<FrustumType>(1) /* the original passes 1: < 2 selects the draw frustum */);
+    float projection[4] = {};
+    ComputeViewportZProjection(projection, *viewUtilities_);
+    modelSortFront_.clear();
+    modelSortBack_.clear();
+    if (quadGrid_) {
+        int x0 = 0, z0 = 0, x1 = 0, z1 = 0;
+        quadGrid_->GetQuadrantsOfScreenRect(visible, x0, z0, x1, z1);
+        for (int x = x0; x <= x1; ++x) {
+            for (int z = z0; z <= z1; ++z) {
+                SC4QuadGridQuadrant& quadrant = quadGrid_->Quadrant(x, z);
+                for (SC4GridElement* base : quadrant.elements) {
+                    auto* element = static_cast<SC43DGridElement*>(base);
+                    if ((element->flags & 0x8) == 0) continue;
+                    // The cell-overlap test the original runs against the element's minimum cell and the query's
+                    // minimum cell (0x100764dd5): an element is drawn at its own leading edge or at the query's.
+                    const bool overlaps =
+                        ((x - 1 - element->x0) | (x - x0 - 1)) < 0 && ((z - 1 - element->z0) | (z - z0 - 1)) < 0;
+                    if (!overlaps) continue;
+                    modelSortFront_.push_back(cSC4ModelSortElement{element->model, ModelSortKey(*element, projection)});
+                }
+            }
+        }
+        if (!modelSortFront_.empty())
+            SortModelList(modelSortFront_.data(), static_cast<int>(modelSortFront_.size()), true);
+    }
+    drawContext_->SetRenderPass(0);
+    int source = 0;
+    std::vector<cSC4ModelSortElement>* lists[2] = {&modelSortFront_, &modelSortBack_};
+    while (true) {
+        std::vector<cSC4ModelSortElement>& current = *lists[source];
+        std::vector<cSC4ModelSortElement>& next = *lists[1 - source];
+        for (const cSC4ModelSortElement& entry : current) {
+            if (!entry.model) continue;
+            if (entry.model->Draw(drawContext_, false) == 2) next.push_back(entry);
+        }
+        const std::size_t remaining = next.size();
+        current.clear();
+        source = 1 - source;
+        drawContext_->SetRenderPass(drawContext_->RenderPass() + 1);
+        if (remaining == 0 || drawContext_->RenderPass() >= 12) break;
+    }
+}
+
+void cSC43DRender::DrawDynamicView() {
+    // 0x100764240: three sorted lists (front-to-back for the plain dynamic models, back-to-front for the models that
+    // go behind them) plus the highlight list. The third list (+0x1e0) is collected but never drawn — quirk kept.
+    drawContext_->SetViewPass(4);
+    modelSortFront_.clear();
+    modelSortBack_.clear();
+    modelSortUnused_.clear();
+    highlightElements_.clear();
+    SC4RectFloat visible;
+    GetVisibleContainerRect(visible, kFrustumView);
+    float projection[4] = {};
+    ComputeViewportZProjection(projection, *viewUtilities_);
+    if (quadGrid_) {
+        int x0 = 0, z0 = 0, x1 = 0, z1 = 0;
+        quadGrid_->GetQuadrantsOfScreenRect(visible, x0, z0, x1, z1);
+        for (int x = x0; x <= x1; ++x) {
+            for (int z = z0; z <= z1; ++z) {
+                SC4QuadGridQuadrant& quadrant = quadGrid_->Quadrant(x, z);
+                if ((quadrant.flags & 1) == 0) continue;   // the "not yet walked" bit of the quadrant
+                for (SC4GridElement* base : quadrant.elements) {
+                    auto* element = static_cast<SC43DGridElement*>(base);
+                    const std::uint16_t flags = element->flags;
+                    if ((flags & 0x8) != 0 && static_cast<std::int8_t>(flags & 0xff) >= 0) continue;
+                    const bool overlaps =
+                        ((x - 1 - element->x0) | (x - x0 - 1)) < 0 && ((z - 1 - element->z0) | (z - z0 - 1)) < 0;
+                    if (!overlaps) continue;
+                    if ((flags & 0x8) == 0) {
+                        cSC4ModelSortElement entry{element->model, ModelSortKey(*element, projection)};
+                        if ((flags & 0x1) == 0) {
+                            if ((flags & 0x100) == 0)
+                                modelSortFront_.push_back(entry);
+                            else
+                                modelSortBack_.push_back(entry);
+                        } else {
+                            modelSortUnused_.push_back(entry);
+                        }
+                    }
+                    if ((flags & 0x80) != 0) highlightElements_.push_back(element);
+                }
+            }
+        }
+        if (!modelSortUnused_.empty())
+            SortModelList(modelSortUnused_.data(), static_cast<int>(modelSortUnused_.size()), false);
+        if (!modelSortBack_.empty())
+            SortModelList(modelSortBack_.data(), static_cast<int>(modelSortBack_.size()), false);
+        if (!modelSortFront_.empty())
+            SortModelList(modelSortFront_.data(), static_cast<int>(modelSortFront_.size()), true);
+    }
+    drawContext_->SetRenderPass(0);
+    std::vector<cSC4ModelSortElement>* lists[2] = {&modelSortFront_, &modelSortBack_};
+    bool passLimitReached = false;
+    for (int list = 0; list < 2 && !passLimitReached; ++list) {
+        std::vector<cSC4ModelSortElement>& entries = *lists[list];
+        if (entries.empty()) continue;
+        // The survivors are compacted to the front of the same list and drawn again until none want another pass.
+        std::size_t end = entries.size();
+        while (end > 0) {
+            std::size_t kept = 0;
+            for (std::size_t i = 0; i < end; ++i) {
+                if (!entries[i].model) continue;
+                if (entries[i].model->Draw(drawContext_, false) == 2) {
+                    entries[kept] = entries[i];
+                    ++kept;
+                }
+            }
+            end = kept;
+            drawContext_->SetRenderPass(drawContext_->RenderPass() + 1);
+            if (drawContext_->RenderPass() > 11) {
+                passLimitReached = true;
+                break;
+            }
+        }
+        if (!passLimitReached) entries.clear();
+    }
+    if (!highlightElements_.empty()) {
+        drawContext_->SetRenderPass(0);
+        drawContext_->SetDepthOffset(4);
+        for (SC43DGridElement* element : highlightElements_) {
+            if (element->model) element->model->Draw(drawContext_, true);
+        }
+        drawContext_->SetDepthOffset(0);
+    }
+}
+
+void cSC43DRender::DoSingleModelStaticDrawAddition(s3d::cIS3DModelInstance* model, const cRZRect& rect) {
+    // 0x1007650d0: re-render one model into a dirty rectangle of the static view (reason 8), then refresh that part
+    // of the backing store.
+    if (rect.left >= rect.right || rect.top >= rect.bottom) return;
+    drawContext_->SetViewUpdateReason(kViewUpdateDirtyRectModel);
+    Set3DCameraView();
+    drawContext_->SetRenderPass(0);
+    int result = 2;
+    do {
+        if (drawContext_->RenderPass() > 11) break;
+        result = model->Draw(drawContext_, false);
+        drawContext_->SetRenderPass(drawContext_->RenderPass() + 1);
+    } while (result == 2);
+    if (backingStoreValid_) {
+        backingStoreValid_ = SaveBackingStore(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
+    }
+    drawContext_->SetViewUpdateReason(kViewUpdateNone);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Partial / translated updates and the dirty-rectangle queue
+// ---------------------------------------------------------------------------------------------
+void cSC43DRender::DoPartialViewUpdate(const cRZRect& rect, ViewUpdateReason reason) {
+    // 0x100764a6c: redraw one viewport rectangle and fold it back into the backing store.
+    if (!mbBackingStoreEnabled || rect.left >= rect.right || rect.top >= rect.bottom) return;
+    drawContext_->SetViewUpdateReason(reason);
+    UpdateViewportRect(rect);
+    UnsetClipRect();
+    if (backingStoreValid_) {
+        backingStoreValid_ = SaveBackingStore(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
+    }
+    drawContext_->SetViewUpdateReason(kViewUpdateNone);
+}
+
+void cSC43DRender::DoTranslatedViewUpdate(int dx, int dy) {
+    // 0x100763ac6: restore the stored frame shifted by (dx, dy), redraw the two strips the shift uncovers, then save
+    // the shifted region again. The eight cases are the sign combination of the two offsets.
+    if (inDraw_) return;
+    inDraw_ = true;
+    // The blit: source rectangle in the store, destination in the frame, plus the two uncovered strips and the
+    // region the store now describes.
+    int sourceX = 0, sourceY = 0, destinationX = 0, destinationY = 0, width = 0, height = 0;
+    cRZRect first{0, 0, 0, 0};
+    cRZRect second{0, 0, 0, 0};
+    int savedLeft = 0, savedTop = 0, savedRight = viewportWidth_, savedBottom = viewportHeight_;
+    const bool right = dx > 0;
+    const bool left = dx < 0;
+    const bool down = dy > 0;
+    const bool up = dy < 0;
+    drawContext_->SetViewUpdateReason(kViewUpdateTranslated);
+    shakeX_ = 0;
+    shakeY_ = 0;
+    if (cameraControl_) cameraControl_->SetCameraPositionTweakAdd(subpixelImageBiasX_, subpixelImageBiasY_);
+    drawContext_->SetDefaultRenderStateUnilaterally();
+    Set3DCameraView();
+    if (fogEnabled_) drawContext_->SetFog(true, lightLevels_, fogStart_, fogEnd_);
+    TurnOnLighting(true);
+    if (left) {
+        sourceX = 0;
+        width = viewportWidth_ + dx;
+        destinationX = -dx;
+        if (down) {
+            sourceY = 0;
+            height = viewportHeight_ - dy;
+            destinationY = dy;
+            first = cRZRect{0, 0, -dx, viewportHeight_};
+            second = cRZRect{-dx, 0, viewportWidth_, dy};
+            savedLeft = -dx;
+            savedTop = dy;
+            savedRight = viewportWidth_;
+            savedBottom = viewportHeight_;
+        } else if (up) {
+            sourceY = -dy;
+            height = viewportHeight_ + dy;
+            destinationY = 0;
+            first = cRZRect{0, 0, -dx, viewportHeight_};
+            second = cRZRect{-dx, viewportHeight_ + dy, viewportWidth_, viewportHeight_};
+            savedLeft = -dx;
+            savedTop = 0;
+            savedRight = viewportWidth_;
+            savedBottom = viewportHeight_ + dy;
+        } else {
+            sourceY = 0;
+            height = viewportHeight_;
+            destinationY = 0;
+            first = cRZRect{0, 0, -dx, viewportHeight_};
+            second = cRZRect{0, 0, 0, 0};
+            savedLeft = -dx;
+            savedTop = 0;
+            savedRight = viewportWidth_;
+            savedBottom = viewportHeight_;
+        }
+    } else if (right) {
+        sourceX = dx;
+        width = viewportWidth_ - dx;
+        destinationX = 0;
+        if (down) {
+            sourceY = 0;
+            height = viewportHeight_ - dy;
+            destinationY = dy;
+            first = cRZRect{viewportWidth_ - dx, 0, viewportWidth_, viewportHeight_};
+            second = cRZRect{0, 0, viewportWidth_ - dx, dy};
+            savedLeft = 0;
+            savedTop = dy;
+            savedRight = viewportWidth_ - dx;
+            savedBottom = viewportHeight_;
+        } else if (up) {
+            sourceY = -dy;
+            height = viewportHeight_ + dy;
+            destinationY = 0;
+            first = cRZRect{viewportWidth_ - dx, 0, viewportWidth_, viewportHeight_};
+            second = cRZRect{0, viewportHeight_ + dy, viewportWidth_ - dx, viewportHeight_};
+            savedLeft = 0;
+            savedTop = 0;
+            savedRight = viewportWidth_ - dx;
+            savedBottom = viewportHeight_ + dy;
+        } else {
+            sourceY = 0;
+            height = viewportHeight_;
+            destinationY = 0;
+            first = cRZRect{viewportWidth_ - dx, 0, viewportWidth_, viewportHeight_};
+            second = cRZRect{0, 0, 0, 0};
+            savedLeft = 0;
+            savedTop = 0;
+            savedRight = viewportWidth_ - dx;
+            savedBottom = viewportHeight_;
+        }
+    } else {
+        sourceX = 0;
+        width = viewportWidth_;
+        destinationX = 0;
+        if (down) {
+            sourceY = 0;
+            height = viewportHeight_ - dy;
+            destinationY = dy;
+            first = cRZRect{0, 0, viewportWidth_, dy};
+            second = cRZRect{0, 0, 0, 0};
+            savedLeft = 0;
+            savedTop = dy;
+            savedRight = viewportWidth_;
+            savedBottom = viewportHeight_;
+        } else if (up) {
+            sourceY = -dy;
+            height = viewportHeight_ + dy;
+            destinationY = 0;
+            first = cRZRect{0, viewportHeight_ + dy, viewportWidth_, viewportHeight_};
+            second = cRZRect{0, 0, 0, 0};
+            savedLeft = 0;
+            savedTop = 0;
+            savedRight = viewportWidth_;
+            savedBottom = viewportHeight_ + dy;
+        } else {
+            sourceY = 0;
+            height = viewportHeight_;
+            destinationY = 0;
+            first = cRZRect{0, 0, 0, 0};
+            second = cRZRect{0, 0, 0, 0};
+        }
+    }
+    if (width > 0 && height > 0) RestoreBackingStore(destinationX, destinationY, width, height, sourceX, sourceY);
+    UpdateViewportRect(first);
+    UpdateViewportRect(second);
+    UnsetClipRect();
+    viewCleanupPending_ = true;
+    cleanupRect_[0] = savedLeft;
+    cleanupRect_[1] = savedTop;
+    cleanupRect_[2] = savedRight;
+    cleanupRect_[3] = savedBottom;
+    frameTimer_.Reset();
+    backingStoreValid_ = SaveBackingStore();
+    if (!RendererSettings().TranslatedUpdateRebuildsDrawFrustum()) {
+        viewUtilities_->BuildDrawFrustumDataFromViewportRect(drawFrustumRect_, drawFrustumRect_ + 2);
+        viewContainerRectValid_ = false;
+        drawContainerRectValid_ = false;
+    }
+    Set3DCameraView();
+    IRender3DSettings& settings = RendererSettings();
+    if (settings.DrawDynamicViewEnabled()) {
+        drawContext_->SetViewPass(3);
+        for (const ViewObjectInfo& info : viewObjectLists_[0]) {
+            if (info.object) info.object->DrawViewObject(*drawContext_);
+        }
+        DrawDynamicView();
+        drawContext_->SetViewPass(5);
+        for (const ViewObjectInfo& info : viewObjectLists_[1]) {
+            if (info.object) info.object->DrawViewObject(*drawContext_);
+        }
+    }
+    drawContext_->SetLighting(false);
+    drawContext_->SetFog(false, nullptr, 3.4028235e38f, 3.4028235e38f);
+    SetUICameraView();
+    drawContext_->SetViewUpdateReason(kViewUpdateNone);
+    inDraw_ = false;
+}
+
+void cSC43DRender::DoViewCleanup() {
+    // 0x1007660ee: a translated update leaves a band of the store stale; every +0x358 ms one cleanupStep_-wide slice
+    // of it is redrawn (reason 9) until the saved rectangle is used up.
+    if (!viewCleanupPending_ || !unknown328_) return;
+    if (!frameTimer_.IsTimerRunning()) {
+        frameTimer_.Restart();
+        return;
+    }
+    if (frameTimer_.GetElapsedTimeU32() <= static_cast<std::uint32_t>(unknown358_)) return;
+    const std::int32_t right = cleanupRect_[2];
+    std::int32_t left = cleanupStep_ + cleanupRect_[0];
+    if (left > right) left = right;
+    const cRZRect band{cleanupRect_[0], cleanupRect_[1], left, cleanupRect_[3]};
+    DoPartialViewUpdate(band, kViewUpdateViewCleanup);
+    cleanupRect_[0] = left;
+    if (right <= left) {
+        viewCleanupPending_ = false;
+        frameTimer_.Reset();
+    }
+}
+
+void cSC43DRender::ProcessDirtyRectangleQueue() {
+    // 0x1007661ba: drain the dirty-rectangle queue. Kind 0 re-renders one model into its rectangle, every other kind
+    // redraws the rectangle (kind 1 with reason 8, the rest with 7), then the store is refreshed if it went stale.
+    processingDirtyRectangles_ = true;
+    if (!dirtyRectangles_.empty()) {
+        for (DirtyRectangleQueueItem& item : dirtyRectangles_) {
+            cRZRect rect = item.rect;
+            const bool visible = rect.right > 0 && rect.left < viewportWidth_ && rect.bottom > 0 &&
+                                 rect.top < viewportHeight_;
+            if (visible) {
+                if (rect.left < 0) rect.left = 0;
+                if (rect.right > viewportWidth_) rect.right = viewportWidth_;
+                if (rect.top < 0) rect.top = 0;
+                if (rect.bottom > viewportHeight_) rect.bottom = viewportHeight_;
+                if (item.kind == 0) {
+                    if (item.model) DoSingleModelStaticDrawAddition(item.model, rect);
+                } else {
+                    DoPartialViewUpdate(rect, item.kind == 1 ? kViewUpdateDirtyRectModel
+                                                             : kViewUpdateDirtyRectPartial);
+                }
+            }
+            if (item.model) item.model->Release();
+        }
+        dirtyRectangles_.clear();
+        dirtyScratch_.clear();
+        dirtyCount_ = 0;
+        dirtyAccumulatedArea_ = 0;
+    }
+    if (!backingStoreValid_) backingStoreValid_ = SaveBackingStore();
+    processingDirtyRectangles_ = false;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Draw
+// ---------------------------------------------------------------------------------------------
+void cSC43DRender::Draw() {
+    // 0x1007659f6: one frame. A pending translated update is tried first; the static view is restored from (or saved
+    // into) the backing store, the dynamic view and the two view-object lists follow, then the UI camera is restored.
+    IRender3DSettings& settings = RendererSettings();
+    if (viewOffsetX_ != 0 || viewOffsetY_ != 0) {
+        const bool translated = AttemptTranslatedViewUpdate(viewOffsetX_, viewOffsetY_);
+        viewOffsetX_ = 0;
+        viewOffsetY_ = 0;
+        if (translated) return;
+    }
+    if (inDraw_) return;
+    inDraw_ = true;
+    if (cameraControl_) {
+        cameraControl_->SetCameraPositionTweakAdd(static_cast<float>(-shakeX_) + subpixelImageBiasX_,
+                                                  static_cast<float>(shakeY_) + subpixelImageBiasY_);
+    }
+    ++changeCounter_;
+    // The original drains the model-change queue here (ProcessModelChangeQueue, 0x100761896). Nothing can fill that
+    // queue in this port yet: InsertModel / RemoveModel / MoveModel / ChangeModel are still PARTIAL, so the drain is
+    // deferred with them (RENDER3D-2, see the pending ledger).
+    drawContext_->SetDefaultRenderStateUnilaterally();
+    drawContext_->SetLighting(false);
+    bool restored = false;
+    bool savedByRestore = false;
+    if (!mbBackingStoreEnabled || !backingStoreValid_) {
+        viewUtilities_->BuildDrawFrustumDataFromViewportRect(drawFrustumRect_, drawFrustumRect_ + 2);
+        viewContainerRectValid_ = false;
+        drawContainerRectValid_ = false;
+        if (!viewportClearColorValid_) {
+            viewportClearColorValid_ = true;
+            mpGDriver->ClearColor(viewportClearColor_[0], viewportClearColor_[1], viewportClearColor_[2],
+                                  viewportClearColor_[3]);
+            mpGDriver->ClearDepth(static_cast<double>(unknown2b0_));
+        }
+        if (!backgroundPictureVisible_) {
+            const bool clearDepth = mbBackingStoreEnabled && !backingStoreValid_;
+            ClearViewport(clearDepth);
+        }
+    } else {
+        RestoreBackingStore();
+        restored = true;
+        savedByRestore = true;
+    }
+    Set3DCameraView();
+    if (fogEnabled_) drawContext_->SetFog(true, lightLevels_, fogStart_, fogEnd_);
+    TurnOnLighting(true);
+    if (!restored && backgroundPictureVisible_) {
+        if (unusedAd_) {
+            mpGDriver->ClearColor(0.6f, 0.6f, 0.7f, 1.0f);
+            mpGDriver->Clear(0x4000);
+        }
+        // The original leaves ClearViewport's argument in a stale register here; the port passes false.
+        ClearViewport(false);
+        Set3DCameraView();
+    }
+    bool staticViewDrawn = false;
+    if (!mbBackingStoreEnabled || backingStoreValid_) {
+        if (!savedByRestore) {
+            if (!dirtyRectangles_.empty()) ClearDirtyRectangleQueue();
+            captureDirtyRectangles_ = false;
+            Set3DCameraView();
+            if (settings.StaticViewRedrawOnViewportChange()) {
+                drawContext_->SetViewPass(0);
+                for (const ViewObjectInfo& info : viewObjectLists_[3]) {
+                    if (info.object) info.object->DrawViewObject(*drawContext_);
+                }
+                DrawStaticView();
+                drawContext_->SetViewPass(2);
+                for (const ViewObjectInfo& info : viewObjectLists_[2]) {
+                    if (info.object) info.object->DrawViewObject(*drawContext_);
+                }
+            }
+            staticViewDrawn = true;
+        }
+    } else {
+        if (settings.StaticViewRedrawOnViewportChange()) {
+            drawContext_->SetViewPass(0);
+            for (const ViewObjectInfo& info : viewObjectLists_[3]) {
+                if (info.object) info.object->DrawViewObject(*drawContext_);
+            }
+            DrawStaticView();
+            drawContext_->SetViewPass(2);
+            for (const ViewObjectInfo& info : viewObjectLists_[2]) {
+                if (info.object) info.object->DrawViewObject(*drawContext_);
+            }
+        }
+        backingStoreValid_ = SaveBackingStore();
+    }
+    if (!staticViewDrawn) {
+        if (viewCleanupPending_ && settings.ViewCleanupEnabled()) DoViewCleanup();
+        if (!dirtyRectangles_.empty()) {
+            if (changeCounter_ < unknown324_ || unknown324_ + settings.DirtyRectangleMaxAgeFrames() < changeCounter_) {
+                ProcessDirtyRectangleQueue();
+            }
+        }
+        captureDirtyRectangles_ = false;
+        Set3DCameraView();
+    }
+    if (settings.DrawDynamicViewEnabled()) {
+        drawContext_->SetViewPass(3);
+        for (const ViewObjectInfo& info : viewObjectLists_[0]) {
+            if (info.object) info.object->DrawViewObject(*drawContext_);
+        }
+        DrawDynamicView();
+        drawContext_->SetViewPass(5);
+        for (const ViewObjectInfo& info : viewObjectLists_[1]) {
+            if (info.object) info.object->DrawViewObject(*drawContext_);
+        }
+    }
+    drawContext_->SetLighting(false);
+    drawContext_->SetFog(false, nullptr, 3.4028235e38f, 3.4028235e38f);
+    SetUICameraView();
+    int offsetY = 0;
+    float offsetX = 0.0f;
+    if (!settings.ScreenShakeEnabled()) {
+        shakeX_ = 0;   // the X and Y offsets are dropped together
+    } else {
+        SetShakeOffsets();
+        shakeX_ += settings.ScreenShakeOffsetX();
+        offsetY = shakeY_ + settings.ScreenShakeOffsetY();
+        offsetX = static_cast<float>(-shakeX_);
+    }
+    shakeY_ = offsetY;
+    if (cameraControl_) {
+        cameraControl_->SetCameraPositionTweakAdd(offsetX + subpixelImageBiasX_,
+                                                  static_cast<float>(shakeY_) + subpixelImageBiasY_);
+    }
+    drawContext_->SetViewUpdateReason(kViewUpdateNone);
+    inDraw_ = false;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Screen-shake offsets
+// ---------------------------------------------------------------------------------------------
+void cSC43DRender::SetShakeOffsets() {
+    // 0x1007663a8. PARTIAL: the per-shake curve / table sampling at the end of the original is not ported (see the
+    // pending ledger). What is ported: the one-time random / sine tables, the reset of both offsets and dropping the
+    // shakes whose fade window has elapsed. With no live shake — the common case, and the one the draw pass needs —
+    // the result is identical to the original: both offsets are 0.
+    if (sShakeTableRandom.empty()) {
+        sShakeRandom = std::make_unique<cRZRandom>(0x58);   // cRZRandom::Seed(0x58)
+        for (int index = 0; index < 0x40; ++index) {
+            const float x = static_cast<float>(sShakeRandom->RandomDoubleRangeUniform(-10.0, 10.0));
+            const float y = static_cast<float>(sShakeRandom->RandomDoubleRangeUniform(-10.0, 10.0));
+            sShakeTableRandom.push_back(cS3DVector2{x, y});
+        }
+        // 64 entries around the circle: sin(index * 0.09817477) * 10 (2 * pi / 64 = 0.09817477).
+        for (int index = 0; index < 0x40; ++index) {
+            const float value = std::sin(static_cast<float>(index) * 0.09817477f) * 10.0f;
+            sShakeTableSine.push_back(cS3DVector2{0.0f, value});
+        }
+    }
+    shakeX_ = 0;
+    shakeY_ = 0;
+    if (shakes_.empty()) return;
+    float now = 0.0f;
+    shakeTimer_.GetElapsedTimeFloat(now);
+    unknown3a0_ = now;
+    for (auto it = shakes_.begin(); it != shakes_.end();) {
+        // A shake's +0x10 field is the timestamp its fade ends; it lives on for `amplitude` seconds after that.
+        const float elapsed = now - it->duration;
+        if (elapsed > it->amplitude) {
+            it = shakes_.erase(it);
+            continue;
+        }
+        ++it;
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Snapshots / picking (not ported; see the pending ledger file)
+// ---------------------------------------------------------------------------------------------
 bool cSC43DRender::TakeSnapshot(cIGZBuffer**, bool) { return false; }
 bool cSC43DRender::TakeSnapshot(cIGZString&, bool) { return false; }
-void cSC43DRender::ClearViewport(bool) {}
-void cSC43DRender::ClearViewportWithSolidColor(const float*, bool, bool) {}
-void cSC43DRender::DrawViewportRectangle(const cRZRect&, const float*, bool, bool) {}
-void cSC43DRender::DrawTexturedViewportRectangle(const cRZRect&, std::uint32_t, float, bool, bool) {}
 bool cSC43DRender::PickTerrain(const float*, const float*, float*, bool, bool) { return false; }
 bool cSC43DRender::PickTerrain(int, int, float*, bool, bool) { return false; }
 bool cSC43DRender::PickTerrainAlways(const float*, const float*, float*, bool) { return false; }

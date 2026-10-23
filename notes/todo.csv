@@ -1,5 +1,5 @@
 id,class,task,blocked_by,status,where
-CLASS-(anonymous namespace),(anonymous namespace),"recover 287 remaining function(s) (287 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-(anonymous namespace),(anonymous namespace),"recover 286 remaining function(s) (286 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 AUDIT-1,(audit),1378 ledger rows (314 classes) still name no verification. Repair = point each at a registered test or oracle (scripts/ledger_audit.py lists them by class); do not edit evidence to claim a test that does not cover them,,done,notes/ledger_audit.md
 ODR-1,(build),"OccupantManager.h and NetworkTool.h both define kGZIID_cIGZMessageTarget2, so the two headers cannot be included in one TU; move the constant to a single shared header",,open,src/sc4/OccupantManager.h
 CLASS-(free),(free),"recover 384 remaining function(s) (275 not started, 109 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -373,10 +373,12 @@ CLASS-cS3DTextureBindingFactory,cS3DTextureBindingFactory,"recover 33 remaining 
 LEDGER-cS3DTransform,cS3DTransform,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,done,notes/ledger.csv
 LEDGER-cS3DTriangleIterator,cS3DTriangleIterator,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC16ColumnGridEntryView,cSC16ColumnGridEntryView,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC43DRender,cSC43DRender,"recover 40 remaining function(s) (0 not started, 40 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+BACKINGSTORE-1,cSC43DRender,The translated blit now exists twice: cSC43DRender::Save/RestoreBackingStore members and cSC43DBackingStore in src/sc4/BackingStore.cpp; make one delegate to the other (needs BackingStore.cpp on the sc4_3drender test line),,open,src/sc4/Render3D.cpp
+CLASS-cSC43DRender,cSC43DRender,"recover 24 remaining function(s) (0 not started, 24 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC43DRender,cSC43DRender,finish 10 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 RENDER3D-1,cSC43DRender,"Port the 13-function per-frame draw pass (Draw, DrawDynamic/StaticView, dirty-rect processing, viewport rectangles) - needs the driver draw path and backing-store blit",,open,src/sc4/Render3D.cpp
 RENDER3D-2,cSC43DRender,"Port the 13-function model/quad-grid change queue (ProcessModelChangeQueue, Insert/Remove/Move/ChangeModel, RebuildQuadGrid) - needs SC43DGridElement lifetime and model bounds",,open,src/sc4/Render3D.cpp
+RENDER3D-3,cSC43DRender,Recover the picking cluster (Pick*/PickTerrain*/GetViewportRayContainerRect) and the model/quad-grid queue RENDER3D-2 (InsertModel/RemoveModel/ProcessModelChangeQueue/RebuildQuadGrid) so the static view has content,,open,src/sc4/Render3D.cpp
 ADVICE-1,cSC4Advice,"Hook IAdviceHost (AdviceHost()/SetAdviceHost) to cSC4AdvisorSystem::spInstance (vslots 0x50 Lua, 0x90/0x98 script begin/end), spSC4 vslot 0xa8, GZCOM CreateInstance (vslot 0x18), spView3D vslots 0x178/0x180",CLASS-cSC4AdvisorSystem,open,src/sc4/Advice.h
 ADVICE-2,cSC4Advice,"Real cISCLua adapter for IScriptLua (ScriptLua.h) - vslot meanings marked [inferred] (Type 0x60, IsBoolean 0x90, ToBoolean 0xe8, DoString 0x1b0, DoBuffer 0x1b8, ObjLen 0x200) must be verified against the cISCLua recovery",,open,src/sc4/ScriptLua.h
 ADVICE-3,cSC4Advice,Re-base cSC4CitySituationAdvice (src/sc4/CitySituationAdvice.h) on cSC4Advice: replace its ISituationAdviceBase seam by this class (Init/Shutdown/GetTrigger/SetFlags/GetMood/AdvisorID),,open,src/sc4/CitySituationAdvice.h

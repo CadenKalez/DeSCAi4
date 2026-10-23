@@ -133,8 +133,23 @@ public:
     virtual int StaticViewMaxZoomA() const = 0;
     virtual int StaticViewMaxZoomB() const = 0;
     virtual int StaticViewMaxZoomC() const = 0;
-    // +0xb8: redraw the static view inside UpdateViewportRect (0x100764096).
+    // +0xb8: redraw the static view inside UpdateViewportRect / Draw (0x100764096, 0x1007659f6).
     virtual bool StaticViewRedrawOnViewportChange() const = 0;
+    // +0x78: Draw runs the dynamic view pass and the two view-object lists around it (0x100765ec5, 0x100763ac6).
+    virtual bool DrawDynamicViewEnabled() const = 0;
+    // +0x938: Draw calls DoViewCleanup while a translated update is still pending (0x1007659f6, 0x1007660ee).
+    virtual bool ViewCleanupEnabled() const = 0;
+    // +0x738: ClearViewport disables lighting for the background pass and restores it afterwards (0x100766d5e).
+    virtual bool ClearViewportPreservesLighting() const = 0;
+    // +0x438: DoTranslatedViewUpdate rebuilds the draw frustum from the viewport rectangle (0x100763ac6).
+    virtual bool TranslatedUpdateRebuildsDrawFrustum() const = 0;
+    // +0x5b8: Draw applies the screen-shake offsets (0x1007659f6).
+    virtual bool ScreenShakeEnabled() const = 0;
+    // The shake drift per frame, read from the inner +0x30 property block at +0x80 / +0x38 (0x1007659f6).
+    virtual int ScreenShakeOffsetX() const = 0;
+    virtual int ScreenShakeOffsetY() const = 0;
+    // +0x548 of the inner +0x30 block: how many frames a queued dirty rectangle keeps the queue alive (0x1007659f6).
+    virtual int DirtyRectangleMaxAgeFrames() const = 0;
 };
 // Everything cSC43DRender reaches outside itself. One host for the whole renderer (the game keeps these as engine
 // globals; a fresh port which has not recovered the city / terrain / property system yet supplies them).
@@ -189,13 +204,24 @@ class SC43DGridElement : public SC4GridElement {
 public:
     ~SC43DGridElement() override = default;
     s3d::cIS3DModelInstance* model = nullptr;   // +0x20
-    float scaleX = 1.0f;                        // +0x28
-    float scaleY = 1.0f;                        // +0x2c
-    float scaleZ = 1.0f;                        // +0x30
-    float unknown34 = 0.0f;                     // +0x34
-    float unknown38 = 0.0f;                     // +0x38
-    float unknown3c = 0.0f;                     // +0x3c
+    // The element's bounds in the container space the sort keys project (the constructor writes 1, 1, 1, 0, 0, 0, i.e.
+    // an empty box until InsertModel fills it). The three pairs are (min, max) of x, y and z.
+    float boundsMinX = 1.0f;                    // +0x28
+    float boundsMinY = 1.0f;                    // +0x2c
+    float boundsMinZ = 1.0f;                    // +0x30
+    float boundsMaxX = 0.0f;                    // +0x34
+    float boundsMaxY = 0.0f;                    // +0x38
+    float boundsMaxZ = 0.0f;                    // +0x3c
 };
+
+// cSC4ModelSortElement: the 16-byte record the static / dynamic passes sort (0x10076a60c is its vector's slow path).
+// The key is a 32-bit fixed-point depth built by the viewport Z projection plus the model's own sort value; the passes
+// sort it with their own heapsort (front-to-back for the first list, back-to-front for the other two).
+struct cSC4ModelSortElement {
+    s3d::cIS3DModelInstance* model = nullptr;   // +0
+    std::uint32_t key = 0;                      // +8
+};
+static_assert(sizeof(cSC4ModelSortElement) == 16, "the original record is 16 bytes");
 
 // ---------------------------------------------------------------------------------------------
 // cISC43DRender: the base interface, vtable slots 3..74 of the binary (slots 0..2 are cIGZUnknown).
@@ -205,8 +231,13 @@ public:
     // Which update the renderer is asked to do. Only the values this port uses are named; the rest are plain ints in
     // the binary (the enumeration was not exported).
     enum ViewUpdateReason : std::uint32_t {
+        kViewUpdateNone = 0,                // Draw clears the reason before it returns
+        kViewUpdateTranslated = 3,          // AttemptTranslatedViewUpdate's fallback (0x1007658be)
         kViewUpdateDirtyRectOverflow = 4,   // AddDirtyRectangleInternal falls back to a full update
         kViewUpdateDirtyRectMerged = 6,     // a dirty rectangle absorbed another one
+        kViewUpdateDirtyRectPartial = 7,    // ProcessDirtyRectangleQueue, kind >= 2
+        kViewUpdateDirtyRectModel = 8,      // ProcessDirtyRectangleQueue kind 1 / DoSingleModelStaticDrawAddition
+        kViewUpdateViewCleanup = 9,         // DoViewCleanup's trickle band
         kViewUpdateForceFullRedraw = 10,    // ForceFullRedraw (0x1007658ae)
     };
     // The frustum IsModelVisible tests against: 2 = the view frustum, anything else = the draw frustum.
@@ -444,6 +475,10 @@ public:
     // ---- non-virtual services -------------------------------------------------------------------
     static bool HasBackingStore();                                  // @ 0x1007699d8
     static bool CreateBackingStore();                               // @ 0x1007699ee
+    // The original's file-scope _g_MacJustZoomed: the zoom path sets it, Draw's first SaveBackingStore consumes it
+    // (0x1007641b4). Nothing in the recovered code writes it yet.
+    static void SetMacJustZoomed(bool zoomed) { mbMacJustZoomed = zoomed; }
+    static bool MacJustZoomed() { return mbMacJustZoomed; }
     void ClearViewObjectList(std::list<ViewObjectInfo>& list);      // @ 0x10075f4ce
     void InsertIntoViewObjectList(std::list<ViewObjectInfo>& list, cISC4ViewObject3D* object,
                                   std::uint32_t priority);          // @ 0x10075f3e6
@@ -453,13 +488,30 @@ public:
     void DoFullViewUpdate(ViewUpdateReason reason);                 // @ 0x1007625c0
     void ReadProperties();                                          // @ 0x100760546
     SC4QuadGrid* CreateQuadGrid();                                  // @ 0x1007604c2
-    void UpdateViewportRect(const cRZRect& rect);                   // @ 0x100764096 (PARTIAL)
+    void UpdateViewportRect(const cRZRect& rect);                   // @ 0x100764096
     void TurnOnLighting(bool enable);                               // @ 0x100764062
     void AddDirtyRectangle(int kind, const cRZRect& rect, s3d::cIS3DModelInstance* model, int extra);   // @ 0x100769c44
     void AddDirtyRectangleInternal(int kind, const cRZRect& rect, s3d::cIS3DModelInstance* model, int extra);   // @ 0x100769cca (PARTIAL)
-    bool AttemptTranslatedViewUpdate(int dx, int dy);               // @ 0x1007658be (PARTIAL)
+    bool AttemptTranslatedViewUpdate(int dx, int dy);               // @ 0x1007658be
     void SetClipRect(const cRZRect& rect);                          // @ 0x10076160e
     void UnsetClipRect();                                           // @ 0x1007616de
+
+    // ---- the per-frame draw pass (the 13 functions of RENDER3D-1) --------------------------------
+    void DrawStaticView();                                          // @ 0x100764c54
+    void DrawDynamicView();                                         // @ 0x100764240
+    void DoSingleModelStaticDrawAddition(s3d::cIS3DModelInstance* model, const cRZRect& rect);   // @ 0x1007650d0
+    void DoTranslatedViewUpdate(int dx, int dy);                    // @ 0x100763ac6
+    void DoPartialViewUpdate(const cRZRect& rect, ViewUpdateReason reason);   // @ 0x100764a6c
+    void DoViewCleanup();                                           // @ 0x1007660ee
+    void ProcessDirtyRectangleQueue();                              // @ 0x1007661ba
+    void GetVisibleContainerRect(SC4RectFloat& out, FrustumType frustum);        // @ 0x100765194
+    void GetViewFrustumContainerRect(SC4RectFloat& out);            // @ 0x100766b22
+    void GetDrawFrustumContainerRect(SC4RectFloat& out);            // @ 0x100766c30
+    bool SaveBackingStore();                                        // @ 0x1007641b4
+    bool SaveBackingStore(int x, int y, int width, int height);     // @ 0x100764aec
+    bool RestoreBackingStore();                                     // @ 0x10076605c
+    bool RestoreBackingStore(int dstX, int dstY, int width, int height, int srcX, int srcY);   // @ 0x100769b1c
+    void SetShakeOffsets();                                         // @ 0x1007663a8
 
     // ---- inspection for the tests / the host ----------------------------------------------------
     bool IsInitialized() const { return initialized_; }
@@ -483,6 +535,15 @@ public:
     int DirtyRectangleAccumulatedArea() const { return dirtyAccumulatedArea_; }
     int DirtyRectangleMaxArea() const { return dirtyMaxArea_; }
     std::size_t ShakeCount() const { return shakes_.size(); }
+    SC4QuadGrid* QuadGrid() const { return quadGrid_; }
+    std::size_t ModelSortCount(int list) const {
+        const std::vector<cSC4ModelSortElement>& v =
+            list == 0 ? modelSortFront_ : (list == 1 ? modelSortBack_ : modelSortUnused_);
+        return v.size();
+    }
+    const std::vector<SC43DGridElement*>& HighlightElements() const { return highlightElements_; }
+    bool ViewCleanupPending() const { return viewCleanupPending_; }
+    const std::int32_t* CleanupRect() const { return cleanupRect_; }
     ViewObjectInfo* FindViewObjectInfo(cISC4ViewObject3D* object);
     static IRender3DHost* Host() { return host_; }
     static void SetHost(IRender3DHost* host) { host_ = host; }
@@ -541,9 +602,12 @@ private:
     [[maybe_unused]] int viewOffsetY_ = 0;                        // +0x140
     bool lightingEnabled_ = true;                // +0x144
     bool fogEnabled_ = false;                    // +0x145
-    float lightLevels_[5] = {1.0f, 1.0f, 1.0f, 10000.0f, 15000.0f};   // +0x148
-    float lightLevelExtra_ = 15000.0f;           // +0x160
-    [[maybe_unused]] bool unused164_ = false;                     // +0x164
+    // +0x148..+0x15b: the five floats the constructor writes (1, 1, 1, 1, 1); the first three are the fog colour
+    // Draw passes to SetFog. +0x15c / +0x160 are the fog start / end distances.
+    float lightLevels_[5] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f};   // +0x148
+    float fogStart_ = 10000.0f;                  // +0x15c (0x461c4000 in the constructor)
+    float fogEnd_ = 15000.0f;                    // +0x160 (0x466a6000)
+    bool inDraw_ = false;                        // +0x164 (Draw is re-entrant only through the host)
     bool captureDirtyRectangles_ = false;        // +0x165 (suppresses AddDirtyRectangle when set)
     [[maybe_unused]] float citySizeX_ = 4096.0f;                  // +0x168
     [[maybe_unused]] float citySizeZ_ = 4096.0f;                  // +0x16c
@@ -554,10 +618,16 @@ private:
     SC4DrawContext* drawContext_ = nullptr;       // +0x180
     SC4QuadGrid* quadGrid_ = nullptr;             // +0x188
     float unknown190_ = 0.0f;                     // +0x190 (the quad-grid size cached by CreateQuadGrid)
-    int unknown1f8_ = 0;                          // +0x1f8
+    std::vector<SC43DGridElement*> highlightElements_;    // +0x198 (the 0x80-flagged models, drawn last with an offset)
+    std::vector<cSC4ModelSortElement> modelSortFront_;    // +0x1b0 (sorted front-to-back, drawn first)
+    std::vector<cSC4ModelSortElement> modelSortBack_;     // +0x1c8 (sorted back-to-front, drawn second)
+    std::vector<cSC4ModelSortElement> modelSortUnused_;   // +0x1e0 (filled by DrawDynamicView, never drawn — quirk)
+    int unknown1f8_ = 0;                          // +0x1f8 (the per-Draw serial the dirty-rect ages compare against)
     int changeCounter_ = 0;                       // +0x1fc
-    bool captureEnabled_ = false;                 // +0x200
-    bool unknown214_ = false;                     // +0x214
+    bool viewContainerRectValid_ = false;         // +0x200 (the cached view-frustum container rect is valid)
+    float viewContainerRect_[4] = {};             // +0x204..+0x213
+    bool drawContainerRectValid_ = false;         // +0x214 (the cached draw-frustum container rect is valid)
+    float drawContainerRect_[4] = {};             // +0x218..+0x227
     std::list<ViewObjectInfo> viewObjectLists_[4];   // +0x228, +0x240, +0x258, +0x270
     cISC4ViewObject3D* backgroundViewObject_ = nullptr;   // +0x288
     cIGZUnknown* terrainView_ = nullptr;          // +0x290
@@ -575,21 +645,22 @@ private:
     int dirtyAccumulatedArea_ = 0;                // +0x300
     int dirtyMaxArea_ = 0x7fffffff;               // +0x304
     std::vector<std::uint8_t> dirtyScratch_;      // +0x308
-    [[maybe_unused]] bool unknown328_ = true;                      // +0x328
-    [[maybe_unused]] bool unknown329_ = false;                     // +0x329
+    bool processingDirtyRectangles_ = false;      // +0x2fc (set while ProcessDirtyRectangleQueue walks the list)
+    bool unknown328_ = true;                      // +0x328 (the cleanup trickle is enabled)
+    bool viewCleanupPending_ = false;             // +0x329 (a translated update left a band to re-render)
     [[maybe_unused]] std::uint8_t pad32a_[2] = {};
     int unknown320_ = 0;                          // +0x320 (40,000 after Init)
     int unknown324_ = 0;                          // +0x324 (dirty-rectangle stamp base)
-    [[maybe_unused]] int unknown32c_[5] = {};                      // +0x32c..+0x33c
-    [[maybe_unused]] int unknown33c_ = 0x40;                       // +0x33c
+    std::int32_t cleanupRect_[4] = {};            // +0x32c left, +0x330 top, +0x334 right, +0x338 bottom
+    std::int32_t cleanupStep_ = 0x40;             // +0x33c (the band width DoViewCleanup re-renders per call)
     cRZTimer frameTimer_{cRZTimer::kMilliseconds};   // +0x340 (units 4)
-    int unknown358_ = 10000;                      // +0x358
+    int unknown358_ = 10000;                      // +0x358 (the cleanup trickle interval, ms)
     std::list<cSC4Shake> shakes_;                 // +0x360
     int shakeSerial_ = 0;                         // +0x378
     cRZTimer shakeTimer_{cRZTimer::kSeconds};        // +0x380 (units 5)
     int shakeX_ = 0;                              // +0x398
     int shakeY_ = 0;                              // +0x39c
-    float unknown3a0_ = 0;                        // +0x3a0
+    float unknown3a0_ = 0;                        // +0x3a0 (the shake clock reading of the previous frame)
     int mapScaleFactor_ = 1;                      // +0x3a4
     std::unique_ptr<IS4ViewUtilities> viewUtilitiesSeam_;   // the draw context's +0x28 view utilities seam
     ViewUtilitiesCameraHost viewUtilitiesCameraHost_;      // the +8 host the view utilities project through
@@ -611,6 +682,7 @@ private:
     static inline void* mpDriverSnapshotExtension = nullptr;
     static inline bool mbStaticInitialized = false;
     static inline bool mbBackingStoreEnabled = true;
+    static inline bool mbMacJustZoomed = false;   // the original's _g_MacJustZoomed
     static inline IRender3DHost* host_ = nullptr;
     static inline cSC43DRender* spInstance = nullptr;   // the original's single render object (its FBO is static)
 };

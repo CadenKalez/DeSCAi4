@@ -19,21 +19,56 @@ struct FakeGDriver final : gd::cIGZGDriver {
     int resetViewportCalls = 0;
     int addRefs = 0;
     int releases = 0;
+    // The draw-pass call sequence (cSC43DRender::Draw / the viewport rectangles / ClearViewport).
+    int clearCalls = 0;
+    std::uint32_t lastClearMask = 0;
+    int clearColourCalls = 0;
+    float lastClearColour[4] = {0, 0, 0, 0};
+    int clearDepthCalls = 0;
+    double lastClearDepth = 0;
+    int interleavedCalls = 0;
+    int lastInterleavedFormat = -1;
+    int lastInterleavedStride = 0;
+    int drawArrayCalls = 0;
+    int lastPrimitive = -1;
+    int lastDrawCount = 0;
+    int textureCalls = 0;
+    std::uint32_t lastTexture = 0;
 
     bool QueryInterface(std::uint32_t, void**) override { return false; }
     void AddRef() override { ++addRefs; }
     std::int32_t Release() override { return ++releases; }
-    void DrawArrays(gd::eGDPrimType, int, int) override {}
+    void DrawArrays(gd::eGDPrimType primitive, int, int count) override {
+        ++drawArrayCalls;
+        lastPrimitive = static_cast<int>(primitive);
+        lastDrawCount = count;
+    }
     void DrawElements(gd::eGDPrimType, int, gd::eGDType, const void*) override {}
-    void InterleavedArrays(gd::eGDVertexFormat, int, const void*) override {}
+    void InterleavedArrays(gd::eGDVertexFormat format, int stride, const void*) override {
+        ++interleavedCalls;
+        lastInterleavedFormat = static_cast<int>(format);
+        lastInterleavedStride = stride;
+    }
     gd::eGDVertexFormat MakeVertexFormat(std::uint32_t, gd::eGDElementType*) override { return 0; }
     gd::eGDVertexFormat MakeVertexFormat(gd::eGDVertexFormat format) override { return format; }
     int VertexFormatStride(gd::eGDVertexFormat) const override { return 0; }
     int VertexFormatElementOffset(gd::eGDVertexFormat, gd::eGDElementType, std::uint32_t) const override { return 0; }
     int VertexFormatNumElements(gd::eGDVertexFormat, gd::eGDElementType) const override { return 0; }
-    void Clear(std::uint32_t) override {}
-    void ClearColor(float, float, float, float) override {}
-    void ClearDepth(double) override {}
+    void Clear(std::uint32_t mask) override {
+        ++clearCalls;
+        lastClearMask = mask;
+    }
+    void ClearColor(float r, float g, float b, float a) override {
+        ++clearColourCalls;
+        lastClearColour[0] = r;
+        lastClearColour[1] = g;
+        lastClearColour[2] = b;
+        lastClearColour[3] = a;
+    }
+    void ClearDepth(double depth) override {
+        ++clearDepthCalls;
+        lastClearDepth = depth;
+    }
     void ClearStencil(int) override {}
     void ColorMask(bool) override {}
     void DepthFunc(gd::eGDTestFunc) override {}
@@ -79,7 +114,10 @@ struct FakeGDriver final : gd::cIGZGDriver {
     void TexStageCombine(gd::eGDTextureStageCombineSourceParamType, gd::eGDTextureStageCombineSourceParam) override {}
     void TexStageCombine(gd::eGDTextureStageCombineOperandParamType, gd::eGDBlend) override {}
     void TexStageCombine(gd::eGDTextureStageCombineScaleParamType, gd::eGDTextureStageCombineScaleParam) override {}
-    void SetTexture(std::uint32_t, std::uint32_t) override {}
+    void SetTexture(std::uint32_t texture, std::uint32_t) override {
+        ++textureCalls;
+        lastTexture = texture;
+    }
     std::uint32_t GetTexture(std::uint32_t) const override { return 0; }
     std::uint32_t CreateTexture(gd::eGDInternalTextureFormat, std::uint32_t, std::uint32_t, std::uint32_t,
                                 gd::eGDTextureHintFlags) override {

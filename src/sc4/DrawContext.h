@@ -256,6 +256,13 @@ public:
     // 1 = the piece model); the original sets it from cSC43DRender before each pass.
     std::int32_t RenderPass() const { return renderPass_; }
     void SetRenderPass(std::int32_t pass) { renderPass_ = pass; }
+    // +0x20: the cISC43DRender::ViewUpdateReason the renderer is running (written by DoPartialViewUpdate,
+    // DoTranslatedViewUpdate, DoSingleModelStaticDrawAddition and Draw; nothing in the recovered draw code reads it).
+    std::int32_t ViewUpdateReason() const { return reserved20_; }
+    void SetViewUpdateReason(std::int32_t reason) { reserved20_ = reason; }
+    // +0x80: the view pass Draw / the two view draws are in (cISC43DRender sets 0..5 around the view-object lists).
+    std::int32_t ViewPass() const { return pass_; }
+    void SetViewPass(std::int32_t pass) { pass_ = pass; }
     void SetZoomAndRotation(std::int32_t zoom, std::int32_t rotation);                   // +0x10 / +0x14 / +0x18
     std::int32_t Zoom() const { return zoom_; }                                          // +0x14
     bool IsInitialized() const { return initialized_; }

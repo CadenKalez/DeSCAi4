@@ -24,6 +24,10 @@ struct FakeStore final : gd::IBackingStore {
     bool exists = false;
     std::uint32_t width = 0, height = 0;
     int creates = 0, destroys = 0;
+    int saves = 0, restores = 0;
+    int lastSaveSrcX = 0, lastSaveSrcY = 0, lastSaveWidth = 0, lastSaveHeight = 0, lastSaveDstX = 0, lastSaveDstY = 0;
+    int lastRestoreSrcX = 0, lastRestoreSrcY = 0, lastRestoreWidth = 0, lastRestoreHeight = 0;
+    int lastRestoreDstX = 0, lastRestoreDstY = 0;
     bool Create(std::uint32_t w, std::uint32_t h) override {
         width = w;
         height = h;
@@ -36,8 +40,24 @@ struct FakeStore final : gd::IBackingStore {
         ++destroys;
     }
     bool Exists() const override { return exists; }
-    void SaveFromFrame(int, int, int, int, int, int) override {}
-    void RestoreToFrame(int, int, int, int, int, int) override {}
+    void SaveFromFrame(int srcX, int srcY, int w, int h, int dstX, int dstY) override {
+        ++saves;
+        lastSaveSrcX = srcX;
+        lastSaveSrcY = srcY;
+        lastSaveWidth = w;
+        lastSaveHeight = h;
+        lastSaveDstX = dstX;
+        lastSaveDstY = dstY;
+    }
+    void RestoreToFrame(int srcX, int srcY, int w, int h, int dstX, int dstY) override {
+        ++restores;
+        lastRestoreSrcX = srcX;
+        lastRestoreSrcY = srcY;
+        lastRestoreWidth = w;
+        lastRestoreHeight = h;
+        lastRestoreDstX = dstX;
+        lastRestoreDstY = dstY;
+    }
 };
 
 struct FakeViewObject final : cISC4ViewObject3D {
@@ -61,6 +81,9 @@ struct FakeModel final : s3d::cIS3DModelInstance {
     std::uint32_t refs = 1;
     std::int32_t properties = 0;
     cS3DBoundingBox worldBox;
+    int draws = 0;
+    int highlightDraws = 0;
+    int drawResult = 1;
     bool QueryInterface(std::uint32_t, void**) override { return false; }
     std::uint32_t AddRef() override { return ++refs; }
     std::uint32_t Release() override { return refs > 1 ? --refs : 0; }
@@ -73,7 +96,11 @@ struct FakeModel final : s3d::cIS3DModelInstance {
     void GetTransform(cS3DTransform&) override {}
     void SetTransform(const cS3DTransform&) override {}
     bool Pick(cSC4PickContext*) override { return false; }
-    int Draw(SC4DrawContext*, bool) override { return 1; }
+    int Draw(SC4DrawContext*, bool highlight) override {
+        ++draws;
+        if (highlight) ++highlightDraws;
+        return drawResult;
+    }
     std::int32_t GetProperties() override { return properties; }
     void SetProperties(std::int32_t value) override { properties = value; }
     s3d::SC4DrawAttributes GetDrawAttributes() const override { return {}; }
@@ -102,6 +129,14 @@ struct FakeSettings final : IRender3DSettings {
     bool disablePartialWrites = false;
     bool clipSupported = true;
     bool staticRedraw = true;
+    bool dynamicView = true;
+    bool viewCleanup = true;
+    bool clearPreservesLighting = false;
+    bool translatedRebuildsFrustum = true;
+    bool shakeEnabled = true;
+    int shakeOffsetX = 0;
+    int shakeOffsetY = 0;
+    int dirtyMaxAge = 10000;
     bool DisablePartialRegionWrites() const override { return disablePartialWrites; }
     bool ClipRectSupported() const override { return clipSupported; }
     int BackingStoreMaxZoom() const override { return 3; }
@@ -109,6 +144,14 @@ struct FakeSettings final : IRender3DSettings {
     int StaticViewMaxZoomB() const override { return 3; }
     int StaticViewMaxZoomC() const override { return 3; }
     bool StaticViewRedrawOnViewportChange() const override { return staticRedraw; }
+    bool DrawDynamicViewEnabled() const override { return dynamicView; }
+    bool ViewCleanupEnabled() const override { return viewCleanup; }
+    bool ClearViewportPreservesLighting() const override { return clearPreservesLighting; }
+    bool TranslatedUpdateRebuildsDrawFrustum() const override { return translatedRebuildsFrustum; }
+    bool ScreenShakeEnabled() const override { return shakeEnabled; }
+    int ScreenShakeOffsetX() const override { return shakeOffsetX; }
+    int ScreenShakeOffsetY() const override { return shakeOffsetY; }
+    int DirtyRectangleMaxAgeFrames() const override { return dirtyMaxAge; }
 };
 
 struct FakeHost final : IRender3DHost {
@@ -612,6 +655,215 @@ int main() {
         FakeIStream bad;
         bad.version = 1;
         CHECK(!render->Read(bad));
+        CHECK(render->Release() == 0);
+    }
+
+    // ---- the draw pass: frame start, viewport rectangles, clear ------------------------------------------------
+    {
+        FakeHost host;
+        SetRender3DHost(&host);
+        auto* render = new cSC43DRender();
+        render->AddRef();
+        render->SetViewportSize(640, 480);
+        CHECK(render->Init());
+        render->SetBackingStoreEnabled(true);
+        // A fresh renderer has no valid backing store and no clear colour yet: Draw clears the driver colour/depth
+        // once, then ClearViewport issues the depth-only clear (the background picture is disabled by its 0 texture).
+        const int clearColourBefore = driver.clearColourCalls;
+        const int clearDepthBefore = driver.clearDepthCalls;
+        const int clearBefore = driver.clearCalls;
+        render->Draw();
+        CHECK(driver.clearColourCalls == clearColourBefore + 1);
+        CHECK(driver.lastClearColour[0] == 0.0f && driver.lastClearColour[3] == 0.0f);
+        CHECK(driver.clearDepthCalls == clearDepthBefore + 1);
+        CHECK(driver.lastClearDepth == 1.0);        // +0x2b0
+        CHECK(driver.clearCalls == clearBefore + 1);
+        CHECK(driver.lastClearMask == 0x1000);      // depth only: the ground area is not fully inside the city
+        CHECK(render->ViewportClearColorValid());
+        // The second frame does not repeat the colour / depth clear.
+        render->Draw();
+        CHECK(driver.clearColourCalls == clearColourBefore + 1);
+        CHECK(driver.clearDepthCalls == clearDepthBefore + 1);
+        CHECK(render->GetDrawContext()->ViewUpdateReason() == 0);   // Draw clears the reason
+        CHECK(render->GetDrawContext()->ViewPass() == 5);           // the last list of the dynamic view
+
+        // ClearViewportWithSolidColor: the colour clear restores the viewport clear colour afterwards.
+        const float solid[4] = {0.25f, 0.5f, 0.75f, 1.0f};
+        const int clearBefore2 = driver.clearCalls;
+        render->ClearViewportWithSolidColor(solid, true, true);
+        CHECK(driver.clearColourCalls == clearColourBefore + 3);   // the solid colour, then the restore
+        CHECK(driver.lastClearColour[0] == 0.0f);
+        CHECK(driver.clearDepthCalls == clearDepthBefore + 2);
+        CHECK(driver.clearCalls == clearBefore2 + 1);
+        CHECK(driver.lastClearMask == 0x5000);
+        render->ClearViewportWithSolidColor(solid, false, false);
+        CHECK(driver.lastClearMask == 0x4000);                     // colour only
+
+        // DrawViewportRectangle: one V3F_C4UB quad (format 1, 4 vertices, triangle strip).
+        const int interleavedBefore = driver.interleavedCalls;
+        const int drawBefore = driver.drawArrayCalls;
+        render->DrawViewportRectangle(cRZRect{10, 20, 110, 70}, solid, true, true);
+        CHECK(driver.interleavedCalls == interleavedBefore + 1);
+        CHECK(driver.lastInterleavedFormat == 1);
+        CHECK(driver.drawArrayCalls == drawBefore + 1);
+        CHECK(driver.lastPrimitive == 1);
+        CHECK(driver.lastDrawCount == 4);
+        CHECK(render->CameraView() == 1);                          // Set2DCameraView
+
+        // DrawTexturedViewportRectangle: one V3F_T2F quad (format 2) with the texture bound.
+        const int textureBefore = driver.textureCalls;
+        render->DrawTexturedViewportRectangle(cRZRect{0, 0, 32, 32}, 0xabc, 0.5f, false, true);
+        CHECK(driver.interleavedCalls == interleavedBefore + 2);
+        CHECK(driver.lastInterleavedFormat == 2);
+        CHECK(driver.drawArrayCalls == drawBefore + 2);
+        CHECK(driver.textureCalls > textureBefore);
+        CHECK(driver.lastTexture == 0xabc);
+        CHECK(render->Shutdown());
+        CHECK(render->Release() == 0);
+    }
+
+    // ---- the draw pass: dirty queue, partial / translated updates, view cleanup ---------------------------------
+    {
+        FakeHost host;
+        SetRender3DHost(&host);
+        auto* render = new cSC43DRender();
+        render->AddRef();
+        render->SetViewportSize(400, 300);
+        CHECK(render->Init());
+        render->SetBackingStoreEnabled(true);
+        render->SetViewportClearColor(nullptr);
+        const int savesBeforeFrame = store.saves;
+        render->Draw();                                   // establishes the clear colour
+        // Draw's fallback branch redraws the static view and then saves the frame into the store.
+        CHECK(render->BackingStoreValid());
+        CHECK(store.saves == savesBeforeFrame + 1);
+
+        // One dirty rectangle with a model: ProcessDirtyRectangleQueue draws that model once and saves its rectangle.
+        FakeModel model;
+        model.drawResult = 1;
+        render->AddDirtyRectangle(0, cRZRect{10, 10, 60, 40}, &model, 0);
+        CHECK(render->DirtyRectangleCount() == 1);
+        const int savesBefore = store.saves;
+        render->ProcessDirtyRectangleQueue();
+        CHECK(model.draws == 1);
+        CHECK(render->DirtyRectangleCount() == 0);
+        CHECK(store.saves == savesBefore + 1);
+        CHECK(store.lastSaveWidth == 50 && store.lastSaveHeight == 30);
+        CHECK(store.lastSaveSrcX == 10 && store.lastSaveSrcY == 10);
+
+        // A kind 2 rectangle takes the partial-update path instead: clip + clear + static redraw + save.
+        render->AddDirtyRectangle(2, cRZRect{0, 0, 20, 20}, nullptr, 0);
+        const int viewportBefore = driver.setViewportCalls;
+        const int savesBefore2 = store.saves;
+        render->ProcessDirtyRectangleQueue();
+        CHECK(driver.setViewportCalls == viewportBefore + 1);   // SetClipRect
+        CHECK(store.saves == savesBefore2 + 1);
+        CHECK(store.lastSaveWidth == 20 && store.lastSaveHeight == 20);
+
+        // DoPartialViewUpdate on its own.
+        const int savesBefore3 = store.saves;
+        render->DoPartialViewUpdate(cRZRect{5, 5, 25, 35}, cSC43DRender::kViewUpdateDirtyRectPartial);
+        CHECK(store.saves == savesBefore3 + 1);
+        CHECK(store.lastSaveWidth == 20 && store.lastSaveHeight == 30);
+
+        // DoTranslatedViewUpdate: the store is restored shifted, the two uncovered strips redrawn and the shifted
+        // region saved again; the cleanup band is queued for the following frames.
+        render->ClearViewport(true);                       // make the store valid
+        render->ForceFullRedraw();
+        render->Draw();
+        CHECK(render->BackingStoreValid());
+        const int restoresBefore = store.restores;
+        const int viewportBefore2 = driver.setViewportCalls;
+        render->DoTranslatedViewUpdate(8, -4);
+        CHECK(store.restores == restoresBefore + 1);
+        CHECK(store.lastRestoreSrcX == 8 && store.lastRestoreSrcY == 4);
+        CHECK(store.lastRestoreDstX == 0 && store.lastRestoreDstY == 0);
+        CHECK(store.lastRestoreWidth == 392 && store.lastRestoreHeight == 296);
+        CHECK(driver.setViewportCalls == viewportBefore2 + 2);   // the two strip clip rectangles
+        CHECK(render->ViewCleanupPending());
+        CHECK(render->CleanupRect()[0] == 0 && render->CleanupRect()[1] == 0);
+        CHECK(render->CleanupRect()[2] == 392 && render->CleanupRect()[3] == 296);
+        // The first DoViewCleanup only starts the trickle clock, so nothing is redrawn yet.
+        const int savesBefore4 = store.saves;
+        render->DoViewCleanup();
+        CHECK(store.saves == savesBefore4);
+        CHECK(render->ViewCleanupPending());
+
+        // AttemptTranslatedViewUpdate: below 14/16 of the viewport it translates, and moves the queued rectangles.
+        render->AddDirtyRectangle(2, cRZRect{100, 100, 140, 140}, nullptr, 0);
+        const int restoresBefore2 = store.restores;
+        CHECK(render->AttemptTranslatedViewUpdate(4, 6));
+        CHECK(store.restores == restoresBefore2 + 1);
+        CHECK(render->DirtyRectangleCount() == 1);
+        CHECK(render->DirtyRectangles().front().rect.left == 96);
+        CHECK(render->DirtyRectangles().front().rect.top == 106);
+        // A translation of more than 14/16 of the viewport gives up and forces a full redraw.
+        CHECK(!render->AttemptTranslatedViewUpdate(400, 0));
+        CHECK(render->DirtyRectangleCount() == 0);
+        CHECK(!render->BackingStoreValid());
+        CHECK(render->Shutdown());
+        CHECK(render->Release() == 0);
+    }
+
+    // ---- the draw pass: the two quad-grid views ---------------------------------------------------------------
+    {
+        FakeHost host;
+        SetRender3DHost(&host);
+        auto* render = new cSC43DRender();
+        render->AddRef();
+        render->SetViewportSize(640, 480);
+        CHECK(render->Init());
+        render->SetBackingStoreEnabled(true);
+        CHECK(render->QuadGrid() != nullptr);
+        // The visible container rectangle the passes scan (the zeroed view utilities project the viewport corners
+        // onto the fixed-view origin, so it is the rotation-0 fixed-view offset). The elements go into the one
+        // quadrant it covers.
+        SC4RectFloat visible{};
+        render->GetVisibleContainerRect(visible, cISC43DRender::kFrustumDraw);
+        CHECK(visible.x0 == 3000.0f && visible.z0 == 4500.0f);
+        CHECK(visible.x1 == visible.x0 && visible.z1 == visible.z0);
+
+        // A static element (flag 8).
+        FakeModel staticModel;
+        staticModel.drawResult = 1;
+        auto* staticElement = new SC43DGridElement();
+        staticElement->model = &staticModel;
+        staticElement->flags = 8;
+        staticElement->boundsMinX = 0.0f;
+        staticElement->boundsMinY = 0.0f;
+        staticElement->boundsMinZ = 0.0f;
+        staticElement->boundsMaxX = 10.0f;
+        staticElement->boundsMaxY = 10.0f;
+        staticElement->boundsMaxZ = 10.0f;
+        render->QuadGrid()->SetGridRectForElement(visible, staticElement);
+        CHECK(render->QuadGrid()->AddElement(staticElement, 1));
+        render->DrawStaticView();
+        CHECK(staticModel.draws == 1);
+        CHECK(render->ModelSortCount(0) == 0);   // the lists are cleared after the pass
+        CHECK(render->GetDrawContext()->ViewPass() == 1);
+        CHECK(render->CameraView() == 0);        // the pass itself does not switch the camera
+
+        // A dynamic element (no static flag) takes the dynamic pass; flag 0x80 also collects it for the highlight
+        // pass, which is the only place a model is drawn with highlight = true.
+        FakeModel dynamicModel;
+        dynamicModel.drawResult = 1;
+        auto* dynamicElement = new SC43DGridElement();
+        dynamicElement->model = &dynamicModel;
+        dynamicElement->flags = 0x80;
+        render->QuadGrid()->SetGridRectForElement(visible, dynamicElement);
+        CHECK(render->QuadGrid()->AddElement(dynamicElement, 1));
+        render->DrawDynamicView();
+        CHECK(dynamicModel.draws == 2);          // once in the sorted list, once in the highlight pass
+        CHECK(dynamicModel.highlightDraws == 1);
+        CHECK(render->ModelSortCount(0) == 0);
+        CHECK(render->ModelSortCount(1) == 0);
+        CHECK(render->ModelSortCount(2) == 0);
+        // The highlight list keeps the last pass's elements until the next DrawDynamicView clears it (quirk of
+        // +0x198: only the pass that fills it empties it).
+        CHECK(render->HighlightElements().size() == 1);
+        CHECK(render->HighlightElements().front() == dynamicElement);
+        CHECK(render->GetDrawContext()->ViewPass() == 4);   // the dynamic view's own pass
+        CHECK(render->Shutdown());
         CHECK(render->Release() == 0);
     }
 

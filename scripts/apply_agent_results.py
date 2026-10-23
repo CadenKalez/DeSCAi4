@@ -63,8 +63,17 @@ for f in sorted(pending.glob("*.txt")) if pending.exists() else []:
             if section == "ok" and r[4] != "recovered":
                 r[3], r[4] = source or r[3], "recovered"
                 if evidence: r[5] = evidence
+                # a row upgraded out of "skipped" still carries the Skipped_xxxxxxxx placeholder as its
+                # unique_name; take the agent's real name so the ledger reads properly.
+                name_ok = unique(rest.split()[0]) if rest else ""
+                if name_ok and r[2].startswith("Skipped_"):
+                    r[2] = name_ok
+                    rename(addr, name_ok)
                 upgraded += 1
             elif section == "partial" and r[4] != "recovered-partial":
+                if rest and r[2].startswith("Skipped_"):
+                    r[2] = unique(rest.split()[0])
+                    rename(addr, r[2])
                 r[3], r[4] = source or r[3], "recovered-partial"
                 if evidence: r[5] = evidence + " [partial: " + rest[:120] + "]"
                 upgraded += 1

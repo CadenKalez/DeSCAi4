@@ -223,6 +223,15 @@ public:
     void GetFrustumAABBCityClipped(bool useView, cS3DVector3& outMin, cS3DVector3& outMax);   // 0x1001751f4
     static void RayIntersectsGroundPlane(const float* origin, const float* direction, float* out);   // 0x10017542a
     void BuildDrawFrustumDataFromViewportRect(const int* rectMin, const int* rectMax);  // 0x100175444
+    // The pieces the renderer's draw pass reads directly (the original reaches them by offset):
+    //  * view_ / draw_ are the two frustum copies at +0x80 / +0x244; GetDrawFrustumGroundPlanePositions and
+    //    GetFrustumAABBCityClipped wrap the parts the renderer used, so the raw struct is only needed for the
+    //    corner reads GetDrawFrustumContainerRect does (+0x234 viewport rect, +0x244 corners).
+    const FrustumBounds& ViewFrustum() const { return view_; }              // +0x80
+    const FrustumBounds& DrawFrustum() const { return draw_; }              // +0x244
+    const std::int32_t* DrawFrustumViewportRect() const { return viewportRect_; }   // +0x234
+    // +0x3e4: the fixed-view camera position the screen-shake falloff measures against (0x1007663a8).
+    const float* FixedViewCameraPosition() const { return unk3e4_; }
     void GetViewportLimitsGroundPlanePositions(float* bottomLeft, float* bottomRight, float* topLeft,
                                                float* topRight);                        // 0x10017611c
     void CalculateViewportGroundPlanePositions(float* p0, float* p1, float* p2, float* p3, const int* rectMin,
