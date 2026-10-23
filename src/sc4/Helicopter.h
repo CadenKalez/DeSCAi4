@@ -68,9 +68,9 @@
 //    TrafficAccidentLocation.
 //  * RespondToCrimeScene: cSC4CrimeSimulator's crime query and the dispatched crime's 0x108/0x1a0 calls are unrecovered;
 //    the port only performs the query through the seam.
-//  * AI_ControlMoveXZ / AI_ControlMaintainPositionXZ: the original's force-distribution cascade (rotor tilt 1/scale,
-//    half-yaw rotation, per-field +/-delta*100 limits and three alignment branches) is not transcribed; the stand-ins
-//    keep the limits and the direction of the response (documented in the .cpp).
+//  * AI_ControlMoveXZ: the original's force-distribution cascade (rotor tilt 1/scale, half-yaw rotation, per-field
+//    +/-delta*100 limits and the three alignment branches) is not transcribed; the stand-in keeps the limits and the
+//    direction of the response (documented in the .cpp).
 //  * UpdateSpotlight / TranslatePlayerDriveCommands: the renderer spotlight cone (SL::spRenderer slots 0x1e0/0x1e8) and
 //    the player-drive state's tracked-effect fields are behind IHelicopterHost; the effect start/stop and the aim
 //    update are reproduced.

@@ -1,0 +1,88 @@
+SOURCE src/sc4/MySimDispatch.cpp|h
+EVIDENCE test scripts/tests/sc4_mysimdispatch_test.cpp - interfaces and the shared refcount, Init/Shutdown message + input-control registration and the clock/path-finder references, the cLocation serialization roundtrip (occupant reference release), destination queue ordering, default-destination validation, model base keys/offsets, dispatch-view tracking (StartTracking/StopTracking and the occupant to track), the idle -> travelling -> path-found -> new-leg dispatch state machine with host seams for the path finder/automata manager/network map/dispatch view, the follow-camera, five-minute tick, simulator and deferred-Init messages, the Write/Read record (scalars, four locations, route, model map, destination queue, label, tracked/automaton occupants, owner/clock) and U-Drive-It enter/exit
+0x1006acb3c MySimDispatch_ConstructAlias
+0x1006acb52 MySimDispatch_Construct
+0x1006ace62 MySimDispatch_Destruct
+0x1006ad0e2 MySimDispatch_DestructBase
+0x1006ad0ec MySimDispatch_DestructDeleting
+0x1006ad11a MySimDispatch_Init
+0x1006ad3c8 MySimDispatch_SetState
+0x1006ad41c MySimDispatch_ResetPath
+0x1006ad48a MySimDispatch_Shutdown
+0x1006ad584 MySimDispatch_Reset
+0x1006ad7f0 MySimDispatch_QueryInterface
+0x1006ad85e MySimDispatch_AddRef
+0x1006ad884 MySimDispatch_Release
+0x1006ad8aa MySimDispatch_Write
+0x1006adcee MySimDispatch_Read
+0x1006ae2d6 MySimDispatch_DoMessage
+0x1006aea60 MySimDispatch_NotifyMySim
+0x1006afa4a MySimDispatch_CheckFlags
+0x1006afa56 MySimDispatch_SetFlags
+0x1006afa98 MySimDispatch_SetNextPathLeg
+0x1006afb8c MySimDispatch_GoTo
+0x1006afdd8 MySimDispatch_AddDestinationLocation
+0x1006aff0e MySimDispatch_SetModelBaseResKey
+0x1006b000a MySimDispatch_SetModelOffset
+0x1006b00de MySimDispatch_SetDefaultDestination
+0x1006b01d2 MySimDispatch_StopTracking
+0x1006b0244 MySimDispatch_GetState
+0x1006b024e MySimDispatch_GetTravelType
+0x1006b0266 MySimDispatch_StartTracking
+0x1006b03ec MySimDispatch_GetOccupantToTrack
+0x1006b0486 MySimDispatch_UpdateTrackingOccupant
+0x1006b052c MySimDispatch_IsBuilding
+0x1006b059c MySimDispatch_PickAutomataManager
+0x1006b05e8 MySimDispatch_SetAutomataOccupant
+0x1006b074c MySimDispatch_ValidateCommuteLocation
+0x1006b0aac MySimDispatch_GetLocationCellRect
+0x1006b1d76 MySimDispatch_SnapToNearestRoadTile
+0x1006b2442 MySimDispatch_DistanceBetweenLocations
+0x1006b256a MySimDispatch_BasicDispatchOnNewPathLeg
+0x1006b25f4 MySimDispatch_JumpToNextSwitch
+0x1006b2668 MySimDispatch_SetStuck
+0x1006b26ca MySimDispatch_GetCurrentLocation
+0x1006b26d4 MySimDispatch_GetCurrentDestination
+0x1006b26e2 MySimDispatch_GetCurrentDefaultDestination
+0x1006b26f0 MySimDispatch_GetCurrentCommuteDestination
+0x1006b26fe MySimDispatch_SetCurrentCommuteDestination
+0x1006b2860 MySimDispatch_TeleportToCommuteLocation
+0x1006b29a6 MySimDispatch_GetNextSwitchPathSegment
+0x1006b2a4a MySimDispatch_SnapCurrentPathSegmentToNearestNetworkTile
+0x1006b2aea MySimDispatch_GetAutoGroupAndModelType
+0x1006b2dae MySimDispatch_GetTransitSwitchWaitTimeMunutes
+0x1006b2dd6 MySimDispatch_CanUDriveIt
+0x1006b2e9c MySimDispatch_EnterUDriveIt
+0x1006b30a6 MySimDispatch_ExitUDriveIt
+0x1006b3280 MySimDispatch_GetGZCLSID
+0x1006ac7da MySimDispatch_LocationIsValid
+0x1006ac84e MySimDispatch_LocationAnyTravelConnectionExists
+0x1006ac930 MySimDispatch_LocationWrite
+0x1006ac9e2 MySimDispatch_LocationRead
+PARTIAL:
+0x1006aeb5a MySimDispatch_UpdateState
+0x1006b0b16 MySimDispatch_SwitchTravel
+0x1006b1fa2 MySimDispatch_BasicDispatch
+0x1006b2c08 MySimDispatch_CreateAutomaton
+0x1006b06ec MySimDispatch_UpdateNeighborLocation
+SKIPPED:
+0x1006ad842 MySimDispatch_ThunkQueryInterfaceMessage
+0x1006ad850 MySimDispatch_ThunkQueryInterfaceSerializable
+0x1006ad868 MySimDispatch_ThunkAddRefMessage
+0x1006ad876 MySimDispatch_ThunkAddRefSerializable
+0x1006ad88e MySimDispatch_ThunkReleaseMessage
+0x1006ad89c MySimDispatch_ThunkReleaseSerializable
+0x1006adce0 MySimDispatch_ThunkWrite
+0x1006ae2c8 MySimDispatch_ThunkRead
+0x1006afdc4 MySimDispatch_ThunkDoMessage
+0x1006b328c MySimDispatch_ThunkGetGZCLSID
+REASONS:
+- UpdateState (0x1006aeb5a): all three state branches (idle 3, travelling 2, no-trip -1) are transcribed, but cISC4PathFinder::FindPath (vslot 0xb8) is unrecovered and goes through IMySimDispatchHost::FindPath; the U-Drive-It route hand-off of the path-found branch is approximated with IMySimDispatchRoute::SetRouteInfo (0x4c0) instead of the original 0x4b8 GetRouteInfo -> 0x4c0 sequence.
+- SwitchTravel (0x1006b0b16): the flag dispatch and the walk / new-leg / stuck branches are transcribed, but the 4.5 KB body also interleaves the transit-stop occupant-manager search (spOccupantManager 0x148/0x180 with the +0x38 group from tables 0x100a28730/0x100a28750), the automaton hand-off for a resumed trip and the U-Drive-It branch; those sub-branches are not written and the function falls back to the walk leg for them.
+- BasicDispatch (0x1006b1fa2): automaton create/reuse, flag setup, model offset and SetRouteInfo are implemented, but cISC4AutomataManager::CreateAutomaton (vslot 0x78) has eight arguments whose float/register positions the decompiler dropped (the call shows a literal 0 for the group and the position); the seam documents the assumed order.
+- CreateAutomaton (0x1006b2c08): the model-key fallback (map key -1), manager selection, the two-AddRef/one-Release reference dance and the 0x1bc42c49 property are implemented, but the same lost 0x78 argument mapping applies, so the key/position handed to the manager are inferred.
+- UpdateNeighborLocation (0x1006b06ec): the recovered body is a Ghidra stub that always returns 0; only the neighbour lookup (spSC4 0x118 -> occupant manager 0x58 -> spNeighborsSim 0x60) is visible and the connection -> cell mapping dropped at 0x1006b0740 is missing, so the function calls the host seam and still returns false.
+- Thunks: compiler-generated non-virtual thunks; the real methods (QueryInterface/AddRef/Release/Write/Read/DoMessage/GetGZCLSID) are recovered above.
+NOTE:
+- cLocation::SetCellPosition 0x1006ac5c6, cLocation ctor 0x1006ac5fc, SetByOccupant 0x1006ac638, SetByCommute 0x1006ac7c4 and operator== 0x1006acaac are recovered in the MySim unit (src/sc4/MySim.cpp, sc4::MySimLocation, which this class uses as its cLocation type) but are not yet ledgered there; they are not re-listed here to avoid duplicate rows for the same code.
+- GZCOM_CreatecSC4MySimDispatch 0x1006acaff is already ledgered as partial in src/gz/GZCOM.cpp; wiring it needs the cSC4MySim -> IMySimDispatchOwner adapter described in the header's owner seam and belongs to the MySim hook-up.

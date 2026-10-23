@@ -1466,24 +1466,29 @@ void cSC4Helicopter::AI_ControlLiftOverBuildings(float delta) {
     AI_ControlHover(target, delta);
 }
 
-// @ 0x1006f1582.
+// @ 0x1006f1582. Cancels the horizontal velocity through the rotor tilt and the collective/lift/rudder controls.
 void cSC4Helicopter::AI_ControlMaintainPositionXZ(float delta) {
     if (!engine_ || !physics_) return;
     const HELI_TYPE_DATA& type = *physics_->type;
-    const float (&rotor)[3][3] = physics_->rotors[1]->body.rotation;
-    const float vx = physics_->velX * kModelScale;
-    const float vz = physics_->velZ * kModelScale;
-    const float invTilt = 1.0f / rotor[2][1];
+    const float (&rotor)[3][3] = physics_->rotors[kRotorMain]->body.rotation;
+    const float velX = physics_->velX * kModelScale;
+    const float velZ = physics_->velZ * kModelScale;
+    const float invScale = 1.0f / rotor[2][1];
     const float step = delta * 100.0f;
-    const float forceX = (rotor[0][2] * vz + rotor[0][0] * vx) * invTilt * 10.0f - engine_->collective;
-    const float forceZ = (rotor[2][2] * vz + rotor[2][0] * vx) * invTilt * 10.0f - engine_->liftControl;
-    engine_->collective = ClampSymmetric(forceX, step) + engine_->collective;
-    engine_->liftControl = -(ClampSymmetric(forceZ, step)) + engine_->liftControl;
-    engine_->rudder = ClampSymmetric(-engine_->rudder, step) + engine_->rudder;
-    const float roll = ClampSymmetric(TypeField(type, 0x1c) * 0.025f * physics_->flightRatio * engine_->rudder,
+    const float collectiveDelta =
+        (rotor[2][0] * velZ + rotor[1][0] * 0.0f + rotor[0][0] * velX) * invScale * 10.0f - engine_->collective;
+    engine_->collective += ClampSymmetric(collectiveDelta, step);
+    const float fieldDelta = engine_->field04 -
+                             invScale * (velZ * rotor[2][2] + rotor[1][2] * 0.0f + velX * rotor[0][2]) * 10.0f;
+    const float fieldStep = ClampSymmetric(fieldDelta, step) - engine_->field04;
+    engine_->field04 = -fieldStep;
+    const float rudderDelta = -engine_->rudder;
+    engine_->rudder += ClampSymmetric(rudderDelta, step);
+    const float roll = ClampSymmetric(TypeField(type, 0x1c) * 0.025f * physics_->flightRatio * fieldStep,
                                       TypeField(type, 0x14));
     physics_->rollDeg = roll;
-    const float pitch = ClampSymmetric(TypeField(type, 0x24) * 0.025f * engine_->collective, TypeField(type, 0x0c));
+    const float pitch = ClampSymmetric(TypeField(type, 0x24) * 0.025f * engine_->collective,
+                                       TypeField(type, 0x0c));
     physics_->pitchDeg = pitch;
 }
 
@@ -1611,9 +1616,6 @@ void cSC4Helicopter::AI_PursueGoal(float delta) {
     if (distance3D < 24.0f) arrived_ = true;
 }
 
-// ---------------------------------------------------------------------------------------------------------------------
-// Effects and spotting
-// ---------------------------------------------------------------------------------------------------------------------
 // @ 0x1006f1756.
 void cSC4Helicopter::UpdateEffects() {
     IHelicopterHost* heliHost = HeliHostFor(*this);

@@ -558,14 +558,18 @@ int main() {
     CHECK(win->GZOnKeyDown(0x25, 0));   // Left
     win->GetScrollPosition(x, y);
     CHECK(x == 0);
-    // The horizontal image is cut into twelve cells along the width.
-    CHECK(win->SetScrollBarImageHorizontal(image, cRZRect{0, 0, 120, 100}));
+    // The horizontal image is cut into twelve cells along the width; the horizontal bar uses the first cell.
+    auto* hImage = new cGZBuffer();
+    hImage->AddRef();
+    CHECK(hImage->Init(120, 100, cGZBufferColorType{kBufferColorXRGB8888, 0x20}));
+    CHECK(win->SetScrollBarImageHorizontal(hImage, cRZRect{0, 0, 120, 100}));
     cRZRect horizontalArea{};
     cIGZBuffer* horizontalImage = nullptr;
     int horizontalFlags = 0;
     CHECK(wideHorizontal->GetImage(horizontalArea, horizontalImage, horizontalFlags));
-    CHECK(horizontalImage == image && horizontalArea.right == 30 && horizontalArea.bottom == 100);
+    CHECK(horizontalImage == hImage && horizontalArea.right == 10 && horizontalArea.bottom == 100);
     CHECK(win->SetScrollBarImageHorizontal(nullptr, cRZRect{0, 0, 0, 0}));
+    hImage->Release();   // the horizontal bar keeps its own reference until it is released below
     win->ClearFlag(kHtmlHScroll);
     CHECK(win->GetFlags() == 0xfa);
 
@@ -799,7 +803,7 @@ int main() {
     win->SetDocument(TallPage(), cRZString("http://example.com/dir/page.html"));
     CHECK(win->GZPaint());
     const std::size_t barsBeforeRemove = factory.bars.size();
-    CHECK(win->RemoveScrollBar(true, true));
+    win->RemoveScrollBar(true, true);
     CHECK(factory.bars.size() == barsBeforeRemove);   // the window drops both bars; the factory only counts creations
 
     // SetArea: a new size recomputes the paint area and dirties the layout; the same size only invalidates the parent

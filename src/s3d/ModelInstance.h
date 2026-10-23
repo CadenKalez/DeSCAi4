@@ -29,11 +29,14 @@ struct SC4DrawAttributes {   // 0x14 bytes
     float shade[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 };
 
-// The model resource as the instance uses it: slot 7 computes its bounding box.
+class cIS3DModelInstance;
+
+// The model resource as the instance uses it: slot 4 creates a model instance from it, slot 7 computes its bounding
+// box. (cSC4ModelMaker::AddModel 0x100314328 calls slot 7 then slot 4 with a zero flag word.)
 class cIS3DResModel : public cIGZUnknown {
 public:
     virtual void Slot3() {}
-    virtual void Slot4() {}
+    virtual bool CreateModelInstance(std::uint32_t flags, cIS3DModelInstance** out) = 0;   // [4] +0x20
     virtual void Slot5() {}
     virtual void Slot6() {}
     virtual void ComputeBounds(cS3DBoundingBox& out) = 0;   // [7]

@@ -13,7 +13,9 @@
 // +0x18); one refcount is shared by the three views.
 //
 // Original layout (0x210 bytes):
-//   +0x00 cISC4MySimDispatch vptr   +0x08 refcount (cRZUnknown)      +0x18 initialized flag
+//   +0x00 cISC4MySimDispatch vptr   +0x10 cIGZMessageTarget2 vptr   +0x18 cIGZSerializable vptr
+//   (the refcount lives in the cRZUnknown base; the port keeps one count and returns the two interface views by
+//   static_cast, like cSC4DispatchManager does)
 //   +0x20 bool "follow the sim with the camera" (SetFollowCamera @ 0x1006b27xx, cleared by the view messages)
 //   +0x24 destination approach distance (m)      +0x28 destination proximity minimum (cells)
 //   +0x2c min time idling                        +0x30 min time at a location      +0x34 min time at a transit switch
@@ -60,19 +62,28 @@
 //  * notifyMySim calls the owner's DoMessage directly (owner primary vtable 0xc8) instead of posting through
 //    SL::spMS2; MySim's DoMessage is what consumes message 0x2ba06b99.
 //  * The destructor clears +0x170 before releasing it and later tests +0x170 again, so the second test always sees null
-//    (the release order is owner, route/model data, path finder, clock, owner-again, automaton, string, occupant and the
+//    (release order: owner, route/model data, path finder, clock, owner-again, automaton, label, tracked occupant and the
 //    four locations).
-//  * Init only registers the message notifications when no path finder was stored yet; the clock is re-acquired on every
-//    Init while the rest of the state is only reset when the object was not restored from a save.
-//  * Read adds to the route/map/destination deques instead of clearing them first, does not restore the state machine
-//    fields +0x50/+0x54 through setState, and only arms the deferred Init when the stream ended without error.
-//  * resetPath clears the route and tells the path finder to write into it, but SetModelOffset compares the result of
-//    PlayAnim to the lower byte of the return flag (the original returns whether the model entry exists).
-//  * setStuck sets the stuck flags and posts the "pylon reached" notification instead of a dedicated stuck message.
-//  * GoTo clamps the destination's wait time to the approach distance only when the destination has an occupant, and it
-//    keeps the destination queue untouched when the sim is already travelling.
-//  * BasicDispatch re-creates the automaton when its occupant group differs, but leaks the old automaton reference on
-//    that path (the original releases it before re-creating; the recovered code keeps the same count).
+//  * Init only registers the message notifications when no path finder was stored yet, while it re-acquires the clock and
+//    resets the destinations on every call when no Read is pending; the state is reset with setState(3) even when it
+//    already was 3 (no notification is posted for an unchanged state).
+//  * Read adds to the route/map/destination deques instead of clearing them first, does not restore +0x50/+0x54 through
+//    setState, and only arms the deferred Init (0x26d31ec1) when the stream ended without error.
+//  * resetPath clears the route and hands it back to the path finder; SetModelOffset is a silent no-op for a model type
+//    that has no base resource key and discards the PlayAnim result (the MySim seam declares it void).
+//  * setStuck sets the stuck flags and posts the "pylon reached" notification instead of a dedicated stuck message; it
+//    only sets 0x2401 when the sim is player-driving or already has a real travel type.
+//  * GoTo raises a destination's dwell time (+0x24) to minTimeAtLocation only when the destination has an occupant, and
+//    it keeps the destination queue untouched when the sim is already travelling.
+//  * BasicDispatch re-creates the automaton when its occupant group differs or when it is marked for removal (releasing
+//    the old reference once); a route hand-off failure removes the fresh automaton again.
+//  * updateTrackingOccupant's early-out compares changeCounter_ (+0x44) with trackedChangeCounter_ (+0x48), which
+//    nothing ever writes except Read, so it only short-circuits while no change has happened at all.
+//  * DoMessage's automaton-event case 9 calls ExitUDriveIt (which drops +0x168) and then reads the automaton position;
+//    the port keeps the position update guarded on the occupant still being there.
+//  * The walking automata group is picked from the owner's IsMale() (0x4149 male / 0x414a female) unless a walking model
+//    key is set, which selects the transit group 0x4107 instead.
+//  * The five-minute tick message adds 5 to the sim time (+0x5c) whenever a path finder exists, even while the sim idles.
 //
 // Neighbour seams (the original global / vtable slot is in each comment; docs/SEAMS.md has the hook-up table):
 //   IMySimDispatchOwner            cSC4MySim primary vtable: DoMessage 0xc8, GetWealth 0x170
@@ -392,8 +403,7 @@ private:
     int cellFromPosition(float value) const;   // the float add-0.5 / truncate trick in the original
 
     // --- data (original byte offset in the comment) ---------------------------------------------------------
-    std::uint32_t refCount_ = 0;                              // +0x08 (cRZUnknown)
-    bool initialized_ = false;                                // +0x18
+    std::uint32_t refCount_ = 0;                              // cRZUnknown base
     bool follow_ = false;                                     // +0x20
     int destinationApproachDistance_ = 10;                    // +0x24
     int destinationProximityMin_ = 10;                        // +0x28

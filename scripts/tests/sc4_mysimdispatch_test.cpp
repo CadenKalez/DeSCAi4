@@ -313,6 +313,7 @@ struct FakeAutomataManager final : IMySimDispatchAutomataManager {
         FakeAutomaton* automaton = automata.back().get();
         automaton->refs = 1;   // one reference handed to the dispatch
         automaton->occupant = automatonOccupant;
+        if (automatonOccupant) automatonOccupant->automaton = automaton;
         created.push_back(automaton);
         return automaton;
     }
@@ -691,8 +692,7 @@ int main() {
         // second update: the host's FindPath fills the route; the dispatch appends the walking leg
         fixture.host.findPathRoute = {RouteData{10, 10, 1}, RouteData{11, 10, 1}, RouteData{12, 12, 1}};
         dispatch.updateState();
-        std::printf("dbg route=%zu flags=%x find=%d start=(%d,%d) end=(%d,%d) validcur=%d\n", dispatch.RouteSize(), dispatch.Flags(), fixture.host.findPathResult, fixture.host.pathFinder.startRect.x0, fixture.host.pathFinder.startRect.z0, fixture.host.pathFinder.endRect.x0, fixture.host.pathFinder.endRect.z0, (int)MySimLocationIsValid(dispatch.GetCurrentLocation()));
-        CHECK(dispatch.RouteSize() == 4);   // three path elements plus the walking leg
+        CHECK(dispatch.RouteSize() == 5);   // three path elements, the start corner and the walking leg
         CHECK(dispatch.CheckFlags(0x1000));
         CHECK(dispatch.CheckFlags(0x400));
         CHECK(!dispatch.CheckFlags(0x820));
@@ -716,7 +716,7 @@ int main() {
         CHECK(automaton != nullptr);
         if (automaton) {
             CHECK(automaton->priority == 0xff);
-            CHECK(automaton->route.size() == 3);   // the three-element car leg
+            CHECK(automaton->route.size() == 4);   // the car leg (the walking leg is the next segment)
             CHECK(automaton->anims.size() == 1 && automaton->anims[0] == 4);
             CHECK(automaton->flags & 0x1000000);
             CHECK(automaton->occupant == &automatonOccupant);

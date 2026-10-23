@@ -1,0 +1,71 @@
+SOURCE src/sc4/Helicopter.cpp|h
+EVIDENCE test scripts/tests/sc4_helicopter_test.cpp - ASan/UBSan unit test of the constructor/layout constants, Init with the drive/player-drive blocks, the helipad registration point and the four effects, the HELI_DATA/HELI_ENGINE setup (rotor links, axis ids, type fields), SetHelicopterState and the two rotor effect collections, the stream round trip (spawn position + position-loaded flag), PlaceSelf/GetNewDirection, the heading->yaw derivation, the engine-power ramp, the hover controller, the weathervane/drag/lift/ApplyForce helpers, UpdatePhysics, DetectCollisions, TranslatePlayerDriveCommands, the AI idle/spawn/arrive/crime/traffic-accident behaviours, UpdateEffects/UpdateSpotlight and the dispatch identity
+0x1006e848a Construct
+0x1006e86cc Construct_2
+0x1006e86d6 Init
+0x1006e9054 InitInstance
+0x1006e9978 PhysicsInit
+0x1006ea32e InitThunk
+0x1006ea340 Shutdown
+0x1006ea72e PhysicsShutdown
+0x1006ea8a4 ShutdownThunk
+0x1006ea8b2 Write
+0x1006ea902 WriteThunk1
+0x1006ea910 WriteThunk2
+0x1006ea91e WriteThunk3
+0x1006ea92c Read
+0x1006ea998 ReadThunk1
+0x1006ea9a6 ReadThunk2
+0x1006ea9b4 ReadThunk3
+0x1006ea9c2 PlaceSelf
+0x1006eab34 GetNewDirection
+0x1006eacaa LoadModels
+0x1006eacb4 GetModelResourceInstance
+0x1006eacc0 DoAnimationTick
+0x1006ebe98 UpdatePhysics
+0x1006ecb6a LoadPlayerDriveParameters
+0x1006ecc6a LoadDriveParameters
+0x1006ece66 SetHelicopterState
+0x1006ed0ac NextFrame
+0x1006ed36a CalculateEnginePower
+0x1006ed524 YawPitchRollSlideReal
+0x1006ee136 MoveXZReal
+0x1006ee796 MoveYReal
+0x1006ee9ee WeathervaneTransverseForce
+0x1006eeb90 Get3dDrag
+0x1006eed5a LiftCoeff
+0x1006eee70 ApplyForce
+0x1006eef38 AI_ControlReset
+0x1006f0174 AI_ControlHover
+0x1006f0222 DoPlayerDriveTick
+0x1006f0354 AI_StartEngine
+0x1006f03a4 AI_AimSpotlight
+0x1006f130c AI_ControlLiftOverBuildings
+0x1006f1582 AI_ControlMaintainPositionXZ
+0x1006f1756 UpdateEffects
+0x1006f19cc OnPlayerTakeOver
+0x1006f1a44 HandleEnterState
+0x1006f1ac6 HandleExitState
+0x1006f1b44 SetOrientation
+0x1006f1d70 SetDispatchState
+0x1006f1eb2 GetCallNumber
+0x1006f1ec0 SetCallNumber
+0x1006f1ece GetDispatchState
+0x1006f1ef8 Destructor1
+0x1006f1f02 Destructor2
+0x1006f1f30 GetGZCLSID
+0x1006f1f3e DestructorThunk1
+0x1006f1f4c DestructorThunk2
+0x1006f1f82 GetGZCLSIDThunk1
+0x1006f1f8e GetGZCLSIDThunk2
+0x1006f1f9a DestructorThunk3
+0x1006f1fa8 DestructorThunk4
+0x1006f20ac Destructor
+PARTIAL:
+0x1006eadf8 AI_PursueGoal - the pursuit branch (behaviour 0x34) needs the pursuit state record's target automaton interface (the port only has tAutomataStateChase, whose +0x38 object is not exposed as an automaton) and the traffic branch (0x37) needs cSC4TrafficSimulator's random cell iterator (slots 0x50/0x70/0x78/0xa8/0xb0); the crime (0x36) and accident (0x38) branches are implemented through IHelicopterHost::CrimeAt / TrafficAccidentLocation
+0x1006ec416 UpdateSpotlight - the renderer spotlight cone test (SL::spRenderer slot 0x1e0) and the player-drive tracked-position path are behind IHelicopterHost; the effect start/stop and the aim/transform update are reproduced
+0x1006ef0b8 DetectCollisions - the occupant-manager rectangle query and the obstacle bounding box are seam-mediated (slots 0x120/0x128/0x180); the city fire-filter object (city slot 0x168) and the queue-state (+0x3c) special case are not reproduced
+0x1006ef960 TranslatePlayerDriveCommands - the renderer spotlight cone (SL::spRenderer slot 0x1e8) is seam-mediated and the player-drive tracked-effect fields (+0x240..+0x250) are only written through it; the control translation and the AEMS group-0x4308 event are reproduced
+0x1006f0af4 AI_ControlMoveXZ - the original's 2 KB force-distribution cascade (rotor tilt 1/scale, half-yaw rotation, per-field +/-delta*100 limits and the three alignment branches) is not transcribed; the stand-in keeps the +/-100 control limits and steers towards the requested direction
+0x1006f149c RespondToCrimeScene - needs cSC4CrimeSimulator (SL::spCrimeSim slots 0x48/0x50 and the dispatched crime's 0x108/0x1a0 calls), which is unrecovered; the port performs only the query through IHelicopterHost::CrimeAt
+SKIPPED:

@@ -619,14 +619,13 @@ void cSC4MySimDispatch::setNextPathLeg() {
         pathSegmentStart_ = index;
         if (index < 0 || index >= size) return;
         const std::uint8_t travelType = route_[std::size_t(index)].travelType;
-        int probe = index;
-        while (index < size) {
+        int probe = index;   // the original's lVar5: compared before it advances
+        do {
             ++index;
-            if (index >= size) break;
             if (travelType != route_[std::size_t(probe)].travelType) break;
             ++probe;
             pathSegmentEnd_ = index;
-        }
+        } while (probe < size);
         if (snapCurrentPathSegmentToNearestNetworkTile()) return;
         if (travelType == 0xfe) return;
         if (pathSegmentStart_ != pathSegmentEnd_) return;
@@ -654,7 +653,7 @@ bool cSC4MySimDispatch::snapCurrentPathSegmentToNearestNetworkTile() {
     int index = pathSegmentStart_;
     while (index < pathSegmentEnd_) {
         const RouteData& data = route_[std::size_t(index)];
-        if (host->TileHasNetwork(data.x, data.z, 0x849)) return true;
+        if (host->TileHasNetwork(data.x, data.z, 0x1fcf)) return true;
         ++index;
         pathSegmentStart_ = index;
     }
@@ -1290,7 +1289,7 @@ bool cSC4MySimDispatch::DoMessage(cIGZMessage2* message) {
             if (host) {
                 if (cIGZMessageServer2* server = host->MessageServer()) server->RemoveNotification(this, type);
             }
-            notifyMySim(kDispatchNotifyTripEnd, 0, state_, 0);
+            notifyMySim(kDispatchNotifyTripEnd, 0, static_cast<int>(flags_), 0);
             notifyMySim(kDispatchNotifyTripLeg, -2, state_, 0);
         }
         return true;
@@ -1365,8 +1364,8 @@ bool cSC4MySimDispatch::DoMessage(cIGZMessage2* message) {
             const int cellZ = cellFromPosition(position[2]);
             if ((cellX != currentLocation_.cellX || cellZ != currentLocation_.cellZ) &&
                 (flags_ & kMySimDispatchFlagPlayerDrive) == 0) {
-                const int dx = cellX - commuteDestination_.cellX;
-                const int dz = cellZ - commuteDestination_.cellZ;
+                const int dx = cellX - currentDestination_.cellX;
+                const int dz = cellZ - currentDestination_.cellZ;
                 const int limit = destinationApproachDistance_ * destinationApproachDistance_;
                 setFlags(kMySimDispatchFlagNearDestination,
                          static_cast<std::uint32_t>(dx * dx + dz * dz) < static_cast<std::uint32_t>(limit));
@@ -1412,6 +1411,7 @@ bool cSC4MySimDispatch::Write(cIGZOStream& stream) const {
     stream.SetUint32(trackingBitmapId_);
     stream.SetGZStr(trackingText_);
     if (host) host->WriteSerializable(stream, automataOccupant_.get());
+    // the original writes the owner's +0x148 serializable view (iid 0x8bc01ffe); the game adapter maps the owner seam
     if (host) host->WriteSerializable(stream, owner_);
     if (host) host->WriteSerializable(stream, clock_);
 
