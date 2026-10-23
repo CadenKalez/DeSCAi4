@@ -1,6 +1,6 @@
 id,class,task,blocked_by,status,where
 CLASS-(anonymous namespace),(anonymous namespace),"recover 287 remaining function(s) (287 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-(free),(free),"recover 387 remaining function(s) (279 not started, 108 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-(free),(free),"recover 386 remaining function(s) (278 not started, 108 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-(free),(free),finish 188 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-AspyrDXTTools,AspyrDXTTools,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-CQTPlayer,CQTPlayer,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -21,7 +21,7 @@ CLASS-MatrixRow<WinGridRowData>,MatrixRow<WinGridRowData>,"recover 1 remaining f
 CLASS-MatrixRow<cIGZWinGrid,MatrixRow<cIGZWinGrid,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-NetworkFileCache,NetworkFileCache,"recover 41 remaining function(s) (41 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-RZ,RZ,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
-CLASS-RZFileTimeSort,RZFileTimeSort,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-RZFileTimeSort,RZFileTimeSort,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-SC43DGridElement,SC43DGridElement,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-SC4CellRegion<int>,SC4CellRegion<int>,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-SC4DrawContext,SC4DrawContext,"recover 59 remaining function(s) (59 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
@@ -274,7 +274,7 @@ CLASS-cRZCellMap<bool>,cRZCellMap<bool>,"recover 4 remaining function(s) (4 not 
 CLASS-cRZCookieManager,cRZCookieManager,"recover 23 remaining function(s) (23 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cRZDate,cRZDate,"recover 2 remaining function(s) (0 not started, 2 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cRZDate,cRZDate,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
-CLASS-cRZDiskRadioStation,cRZDiskRadioStation,"recover 29 remaining function(s) (29 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cRZDiskRadioStation,cRZDiskRadioStation,"recover 29 remaining function(s) (29 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cRZFastAllocator<cGZSndEventStd>,cRZFastAllocator<cGZSndEventStd>,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cRZFastAllocatorGeneral,cRZFastAllocatorGeneral,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cRZFastFixedAllocator,cRZFastFixedAllocator,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -291,7 +291,7 @@ CLASS-cRZNetCommandGenerator,cRZNetCommandGenerator,"recover 19 remaining functi
 CLASS-cRZRGBColorConverter,cRZRGBColorConverter,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 RGBCONV-1,cRZRGBColorConverter,"Convert handles only 2/3/4 byte formats (8 bit sources do nothing, as in the original); the converter lives in gz/ here though the class name suggests rz/",,open,src/gz/RGBColorConverter.cpp
 CLASS-cRZRadio,cRZRadio,"recover 53 remaining function(s) (53 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-cRZRadio,cRZRadio,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cRZRadio,cRZRadio,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,done,notes/ledger.csv
 LEDGER-cRZRandomSuper,cRZRandomSuper,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 "CLASS-cRZSlabAllocator<14, 16>","cRZSlabAllocator<14, 16>","recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 "CLASS-cRZSlabAllocator<9, 14>","cRZSlabAllocator<9, 14>","recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv

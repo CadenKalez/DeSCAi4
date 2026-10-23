@@ -72,9 +72,11 @@ constexpr const char* kRZRadioCallIdFilter = "*.id";              // a station d
 constexpr const char* kRZRadioSoundFileFilter = "*.mp3,*.wav,*.xa,*.m3u,*.pls";
 
 // cIGZRadioStation — the station interface cRZRadio drives. Its slots are the vtable of cRZDiskRadioStation
-// (0x100ab6e80, slots 3..27); that class is unrecovered, so only the slots cRZRadio uses are typed here and the
-// enum types it names are not recovered (the values seen are 0/1). cRZRadio also writes the concrete station's
-// directory strings: see IRadioStationHost.
+// (0x100ab6e80, slots 0..27): the class is recovered in rz/DiskRadioStation.{h,cpp}. The original declares the two
+// destructor slots in the middle of this interface (at +0x78/+0x80, between SetModifierList and LoadAllPlaylists),
+// which is why the destructor is declared here and LoadAllPlaylists starts at +0x88. The enum types the binary names
+// (ePlayListMode, eShuffleStrategy) are passed as int32: the recovered values are 0/1. cRZRadio also writes the
+// concrete station's directory strings: see IRadioStationHost.
 class cIGZRadioStation : public cIGZUnknown {
 public:
     virtual bool Init() = 0;                                                              // [3]  +0x18
@@ -89,7 +91,9 @@ public:
     virtual void SetPlaylistMode(std::int32_t mode) = 0;                                  // [12] +0x60 ePlayListMode
     virtual void SetShuffleStrategy(std::int32_t strategy) = 0;                           // [13] +0x68 eShuffleStrategy
     virtual void SetModifierList(std::list<cRZString>* modifiers) = 0;                    // [14] +0x70
-    // [15] [16] the concrete class's destructors (not part of this interface).
+    // [15] [16] the destructors. The original declares them inside the interface, so the concrete class's own
+    // destructor overrides these two slots instead of appending new ones (which is why [17] is LoadAllPlaylists).
+    virtual ~cIGZRadioStation() = default;
     virtual bool LoadAllPlaylists() = 0;                                                  // [17] +0x88
     virtual bool ShufflePlaylist(std::int32_t strategy) = 0;                              // [18] +0x90
     virtual bool ShufflePlayList(const cRZString& name, std::list<cRZString>& out,
@@ -169,8 +173,9 @@ public:
     virtual void WriteSettings(RadioSettings* settings) = 0;                              // [36] +0x120
 };
 
-// What cRZRadio needs from the concrete disk station (cRZDiskRadioStation, 82 functions, unrecovered): it allocates
-// one per station directory and writes its directory strings and its "cycle started" byte directly.
+// What cRZRadio needs from the concrete disk station (cRZDiskRadioStation, recovered in rz/DiskRadioStation.{h,cpp}):
+// it allocates one per station directory and writes its directory strings and its "cycle started" byte directly. The
+// built-in implementation (DiskRadioStationHost) hands out the real class; a test can install its own.
 class IRadioStationHost {
 public:
     virtual ~IRadioStationHost() = default;

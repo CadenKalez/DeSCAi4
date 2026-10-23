@@ -356,6 +356,7 @@ declare -a TESTS=(
  "sc4_vertexhtconstraintsatisfier:$T/sc4_vertexhtconstraintsatisfier_test.cpp $S/sc4/VertexHtConstraintSatisfier.cpp $S/rz/cRZString.cpp"
  "sc4_wincalloutbox:$T/sc4_wincalloutbox_test.cpp $S/sc4/WinCalloutBox.cpp $S/gz/Win.cpp $S/gz/RZDraw.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp $S/gz/WinText.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
  "sc4_effectscollection:$T/sc4_effectscollection_test.cpp $S/sc4/EffectsCollection.cpp -I$T"
+ "rz_diskradiostation:$T/rz_diskradiostation_test.cpp $S/rz/DiskRadioStation.cpp $S/rz/cRZString.cpp $S/rz/cRZDirectory.cpp $S/gz/FileFind.cpp $S/rz/cRZFile.cpp $S/rz/cRZTimer.cpp $S/gz/PlayList.cpp $S/rz/RZStringUtils.cpp $S/rz/StringConversion.cpp $S/rz/TextEncoding.cpp $S/rz/CharLength.cpp $S/rz/RZConvert.cpp $S/platform/MacTools.cpp -I$T"
 )
 fail=0
 for entry in "${TESTS[@]}"; do

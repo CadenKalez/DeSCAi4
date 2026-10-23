@@ -9,6 +9,7 @@
 #include "audio/interfaces/cIGZSndSys.h"
 #include "gz/GZCOMDirector.h"
 #include "gz/cIGZFileSystem.h"
+#include "rz/DiskRadioStation.h"
 #include "rz/LanguageManager.h"
 #include "rz/cRZDirectory.h"
 #include "rz/cRZFile.h"
@@ -62,7 +63,11 @@ bool CallSignMatches(const cRZString& key, const char* callSign) {
 
 }  // namespace
 
-IRadioStationHost* RadioStationHost() { return g_stationHost; }
+// weak fallback: src/rz/DiskRadioStation.cpp provides the real host when the class is linked in (the same pattern as
+// the GZCOM creator fallbacks). Without it the station seam stays unhooked and SetupDiskStations answers false.
+__attribute__((weak)) IRadioStationHost* DiskRadioStationHost() { return nullptr; }
+
+IRadioStationHost* RadioStationHost() { return g_stationHost ? g_stationHost : DiskRadioStationHost(); }
 void SetRadioStationHost(IRadioStationHost* host) { g_stationHost = host; }
 IRadioHost* RadioHost() { return g_host ? g_host : &g_defaultHost; }
 void SetRadioHost(IRadioHost* host) { g_host = host; }

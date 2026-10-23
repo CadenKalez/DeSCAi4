@@ -1,0 +1,50 @@
+SOURCE src/rz/DiskRadioStation.cpp|h
+EVIDENCE test scripts/tests/rz_diskradiostation_test.cpp - the cIGZRadioStation vtable offsets (+0x18..+0xd8) and the 0x218-byte object layout, the construction defaults and the shuffled cycle order, QueryInterface/AddRef/Release (the deleting destructor runs without a decrement at a count of 1), the built-in IRadioStationHost (CreateDiskStation, the five directory strings, ClearStartedFlag), a real-directory read of the "*.id" call sign and "*.txt" description (a missing file leaves the old value; the answer is "there is a call sign", not "a file was found"), LoadAllPlaylists over the five sound-file filter tokens with .m3u/.pls expansion (empty .pls, upper-case extension, an unreadable name is still erased), DoesFileExist (as given, else below the music directory), both ShufflePlaylist strategies (40 seeds for the "do not repeat the last track" first/last swap, and the file-time sort through RZFileTimeSort with real mtimes), the four playlist cursors with their wrap-around (MoveToNextPlaylistItem, StartPlayingNextSelectionOfGivenType for all four cycle types, out-of-range answers false), PlayNextSelectionNotOnExclusionList in both playlist modes, PlayWelcome/SetStation and the welcome flag, OnIdle's state machine (volume 0, playing, the 4000 ms gate, the 75% music repeat, the DJ/commercial draws) driven with the stub clock, and ShuffleCycle against a rand oracle; scripts/tests/registry/rz_diskradiostation.txt; the cRZRadio seam is hooked up - src/rz/Radio.cpp adds DiskRadioStationHost() as a weak fallback and cRZDiskRadioStationHost implements IRadioStationHost (checked end to end: cRZRadio::SetupDiskStations creates real stations and the call sign comes off disk)
+0x1004c3360 cRZDiskRadioStation_Construct
+0x1004c388c cRZDiskRadioStation_ConstructComplete
+0x1004c3896 cRZDiskRadioStation_Destruct
+0x1004c39b4 cRZDiskRadioStation_Destruct2
+0x1004c39be cRZDiskRadioStation_DeletingDestruct
+0x1004c39ec cRZDiskRadioStation_QueryInterface
+0x1004c3a0e cRZDiskRadioStation_AddRef
+0x1004c3a1c cRZDiskRadioStation_Release
+0x1004c3a3c cRZDiskRadioStation_Init
+0x1004c3a44 cRZDiskRadioStation_Shutdown
+0x1004c3a4c cRZDiskRadioStation_SetStation
+0x1004c3a9c cRZDiskRadioStation_UnsetStation
+0x1004c3aa2 cRZDiskRadioStation_PlayWelcome
+0x1004c3b50 cRZDiskRadioStation_OnIdle
+0x1004c3da4 cRZDiskRadioStation_DoesFileExist
+0x1004c3eca cRZDiskRadioStation_PlayNextSelectionNotOnExclusionList
+0x1004c428c cRZDiskRadioStation_StartPlayingNextSelectionOfGivenType
+0x1004c4590 cRZDiskRadioStation_LoadAllPlaylists
+0x1004c4c36 cRZDiskRadioStation_ExpandPlayLists
+0x1004c5286 cRZDiskRadioStation_ShufflePlaylist
+0x1004c578a cRZDiskRadioStation_ShufflePlayList
+0x1004c5ab2 cRZDiskRadioStation_ShuffleCycle
+0x1004c5af2 cRZDiskRadioStation_GetStationCallSign
+0x1004c5b4e cRZDiskRadioStation_GetStationDescription
+0x1004c5b9c cRZDiskRadioStation_IsOnTheAir
+0x1004c5ba6 cRZDiskRadioStation_SetPlaylistMode
+0x1004c5bb2 cRZDiskRadioStation_SetShuffleStrategy
+0x1004c5bbe cRZDiskRadioStation_IsCycleTypePresent
+0x1004c5c64 cRZDiskRadioStation_MoveToNextPlaylistItem
+0x1004c5d54 cRZDiskRadioStation_ReadCallSignFromDisk
+0x1004c6070 cRZDiskRadioStation_SetModifierList
+0x1004c86c6 cRZDiskRadioStation_SetRadio
+0x1004c9230 RZFileTimeSort_Operator
+0x1003def08 CreatecRZDiskRadioStation
+PARTIAL:
+# none: all 34 hand-written functions are complete. Two crash-only paths are guarded instead of reproduced (see the
+# header quirks): StartPlayingNextSelectionOfGivenType/PlayNextSelectionNotOnExclusionList answer false / return when a
+# playlist is empty (the original follows a null or dangling node pointer), and GetStationCallSign pads a call sign
+# shorter than four characters with '?' instead of reading past the string (the original copies four raw bytes).
+# ExpandPlayLists keeps a copy of the entry it erases (the original re-reads the freed node for the remaining filter
+# tokens); one name can only match one extension, so the observable behaviour is the same.
+SKIPPED:
+0x1004c37b7 libc++ random_shuffle<int*> instantiation (the constructor's and ShuffleCycle's shuffle): the port's RandomShuffle helper in DiskRadioStation.cpp is libc++'s Fisher-Yates with C rand(), which C++17 removed from the library
+0x1004c5956 libc++ random_shuffle<cRZString*> instantiation (ShufflePlayList strategy != 1): same helper, as above
+0x1004c4bd0 libc++ std::list<cRZString>::erase instantiation used to implement clear(): std::list::clear/erase in the port
+# the std::sort/RZFileTimeSort instantiations (0x1004c8bf8 __sort, 0x1004c9230 is the comparator listed above,
+# 0x1004c936b/0x1004c9612/0x1004c97ec/0x1004c9a4f/0x1004c9b77) are library code: the port calls std::sort with the
+# recovered RZFileTimeSort comparator, which the test checks directly.
