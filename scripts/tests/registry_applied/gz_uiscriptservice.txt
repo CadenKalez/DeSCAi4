@@ -1,0 +1,1 @@
+"gz_uiscriptservice:$T/gz_uiscriptservice_test.cpp $S/gz/UIScriptService.cpp $S/gz/ScriptTerp.cpp $S/gz/GZCOMDirector.cpp $S/gz/Win.cpp $S/rz/cRZCOMDllDirector.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/RZConvert.cpp $S/rz/RZStringUtils.cpp $S/rz/cRZFile.cpp $S/rz/cRZSysServPtr.cpp -I$T"

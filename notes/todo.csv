@@ -157,7 +157,7 @@ CLASS-cGZToolsCOMDirector,cGZToolsCOMDirector,"recover 1 remaining function(s) (
 LEDGER-cGZToolsCOMDirector,cGZToolsCOMDirector,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZUIScriptCOMDirector,cGZUIScriptCOMDirector,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZUIScriptCOMDirector,cGZUIScriptCOMDirector,finish 5 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
-CLASS-cGZUIScriptService,cGZUIScriptService,"recover 29 remaining function(s) (29 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cGZUIScriptService,cGZUIScriptService,"recover 29 remaining function(s) (29 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWWWSystem,cGZWWWSystem,"recover 51 remaining function(s) (51 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZWin32COMDirector,cGZWin32COMDirector,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cGZWinBtn,cGZWinBtn,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
