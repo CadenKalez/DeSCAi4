@@ -755,7 +755,7 @@ CLASS-cSCHappinessCurveEntryView,cSCHappinessCurveEntryView,"recover 15 remainin
 LEDGER-cSCLua,cSCLua,finish 11 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSCParticle,cSCParticle,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSCParticleSimulatorBase,cSCParticleSimulatorBase,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
-CLASS-cSCPropertyView,cSCPropertyView,"recover 43 remaining function(s) (43 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSCPropertyView,cSCPropertyView,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSCResCatBaseView,cSCResCatBaseView,"recover 14 remaining function(s) (14 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSCResCatalogPickerView,cSCResCatalogPickerView,"recover 14 remaining function(s) (14 not started, 0 partial/pending); bases still unfinished: cSCResourceCatalogView",CLASS-cSCResourceCatalogView,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSCResExemplar,cSCResExemplar,finish 8 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv

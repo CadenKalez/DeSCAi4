@@ -322,6 +322,7 @@ declare -a TESTS=(
  sc4_viewutilities:$T/sc4_viewutilities_test.cpp $S/sc4/ViewUtilities.cpp $S/sc4/CameraControl.cpp $S/s3d/Camera.cpp $S/s3d/S3DMath.cpp $S/s3d/TriangleIterator.cpp $S/sc4/GeometryUtilities.cpp $S/rz/cRZRandom.cpp $S/gz/StreamOps.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp
  "gz_wintreeview:$T/gz_wintreeview_test.cpp $S/gz/WinTreeView.cpp $S/gz/Win.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp $S/gz/Graph.cpp $S/gz/WinCtrlFactory.cpp $S/gz/WinScrollbar.cpp $S/gz/WinSlider.cpp $S/gz/RZDraw.cpp $S/gz/WinText.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/cRZTimer.cpp $S/rz/cRZKeyboard.cpp $S/platform/MacTools.cpp $S/rz/cRZCallbackTimer.cpp -I$T"
  "sc4_drawcontext:$T/sc4_drawcontext_test.cpp $S/sc4/DrawContext.cpp $S/sc4/PackedRenderState.cpp $S/render/gd/GDriverBase.cpp $S/s3d/Camera.cpp $S/s3d/S3DMath.cpp $S/sc4/RenderProperties.cpp $S/rz/cRZRandom.cpp"
+ "sc4_propertyview:$T/sc4_propertyview_test.cpp $S/sc4/PropertyView.cpp $S/gz/Win.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/sc4/SCProperty.cpp $S/sc4/SCPropertyHelp.cpp $S/rz/cRZIniFile.cpp $S/rz/cRZFile.cpp $S/rz/RZConvert.cpp $S/rz/RZStringUtils.cpp $S/rz/cRZUnknownList.cpp"
 )
 fail=0
 for entry in "${TESTS[@]}"; do
