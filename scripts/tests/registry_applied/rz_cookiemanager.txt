@@ -1,0 +1,1 @@
+"rz_cookiemanager:$T/rz_cookiemanager_test.cpp $S/rz/CookieManager.cpp $S/rz/URL.cpp $S/rz/cRZString.cpp $S/rz/cRZFile.cpp $S/rz/cRZIniFile.cpp $S/rz/RZStringUtils.cpp $S/rz/RZConvert.cpp $S/rz/CharLength.cpp $S/rz/TextEncoding.cpp $S/rz/cRZCriticalSection.cpp $S/gz/MiscFunctions.cpp $S/sc4/MiscTypes.cpp -I$T"

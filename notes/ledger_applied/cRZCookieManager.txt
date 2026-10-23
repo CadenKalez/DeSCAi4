@@ -1,0 +1,35 @@
+SOURCE src/rz/CookieManager.cpp|h
+EVIDENCE test scripts/tests/rz_cookiemanager_test.cpp: cookie text parsing (attributes, derived Domain/Path appended to the text, Port list off-by-one, Discard/Max-Age/Expires with the ICookieHTTPHost seam), URL domain/path/port matching, header text ($-prefixed attributes, Version moved to the front, skipped attributes), index-based lookups, EnumCookies, equivalent-cookie replacement, expiry sweep, INI round trip plain and encrypted ([Admin] Binary=1), session cookies not persisted, AddRef/Release. PARTIAL: 0x10062ca7c needs cRZHTTPClient::TimeStringToSeconds 0x100635cb6 through ICookieHTTPHost (falls back to now+1day without a host); 0x10062bd46 RemoveOldestCookies: the build has no erase code, it rescans the oldest expiry forever, so only the expired-cookie sweep is observable
+0x10062ae90 CookieManagerConstruct
+0x10062afc6 CookieManagerDestruct
+0x10062b044 CookieManagerDestructComplete
+0x10062b04e CookieManagerDestructAndDelete
+0x10062b07c CookieManagerInit
+0x10062b0ae CookieManagerShutdown
+0x10062b10e CookieManagerAddRef
+0x10062b14c CookieManagerRelease
+0x10062b19e CookieManagerSetShouldEncryptCookieDataFile
+0x10062b1a8 CookieManagerGetCookieDataFilePath
+0x10062b206 CookieManagerSetCookieDataFilePath
+0x10062b300 CookieManagerAddCookieText
+0x10062b3d6 CookieManagerAddCookieData
+0x10062bb00 CookieManagerGetEquivalentCookieDataIndex
+0x10062bd46 CookieManagerRemoveOldestCookies
+0x10062bf5a CookieManagerRemoveAllCookies
+0x10062bfb8 CookieManagerGetCookieTextForURLString
+0x10062c02a CookieManagerGetCookieTextForURL
+0x10062c476 CookieManagerFindCookieDataForURL
+0x10062c93a CookieManagerEnumCookies
+0x10062ca7c CookieManagerParseCookieText
+0x10062d592 CookieManagerGetCookieDataForURLString
+0x10062d610 CookieManagerGetCookieDataForURL
+0x10062d70a CookieManagerRemoveExpiredCookies
+0x10062d896 CookieManagerEncryptString
+0x10062d8f0 CookieManagerDecryptString
+0x10062d94a CookieManagerClearCookieDataFile
+0x10062d9b6 CookieManagerReadCookieDataFile
+0x10062ddac CookieManagerWriteCookieDataFile
+PARTIAL:
+0x10062ca7c CookieManagerParseCookieText
+0x10062bd46 CookieManagerRemoveOldestCookies
+SKIPPED:

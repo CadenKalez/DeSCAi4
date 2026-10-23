@@ -1,0 +1,31 @@
+SOURCE src/gz/WinIMECandidateList.cpp|h
+EVIDENCE test scripts/tests/gz_winimecandidatelist_test.cpp - the cIGZWinIMECandidateList vtable order (slots +0x18..+0xa0 before the destructor, then DoMessage / SetCandidateListData / SetCandidateListSelectionPosition / SetupWindow) and the 0x208-byte object layout (static check of the size, +0x1d0 flags / +0x1d4 colours / +0x1f0 focus / +0x1f8 grid / +0x200 font), construction defaults (null font, zero flags/colours), QueryInterface for 0x2ac44a93 / 0x5386d516 / 1 (primary, cIGZWinGen and cGZWin views), reference counting, SetFont's addref/release and its dead get_init_flag read, Init through ChildAdd (the focus window captured and focus handed to the new window, the position (0, focus height + 2) converted into the parent's coordinates and (0x20, 0x20) without a focus, kWinPrivateBuffer, id 0xac57ed7, fill colour 0xff808080, the 13 Gen flags, the six black/white list colours, the grid child with flags 0x3ba0, the font-source default font, gutters 0, the six grid colours and disabled state, the two message-server notifications and their target, a second Init being a no-op, the style-manager fallback font), SetupWindow's two-column layout on a fake 16-pixel / 8-pixels-per-character font (the 1-based number column, UTF-16 -> UTF-8 candidate column, 0xc floor + 2 + 4 widths, 2-pixel cell gutters, the grid's six-pixel inset, the window 0xe wider / 0xc taller, grid selection and MakeCellVisible, the used-row DeleteRows(0, usedRows, 3) wipe, the empty block's missing +4 margin, the nine-row height cap with ten candidates), the fit-to-parent algorithm (both clamps, vertical-only, and the no-clamp case where SetArea is skipped) and its ~overflow shifts, DoMessage (character forwarded to the focus window and its answer returned, 0x2ac44ed8 -> SetCandidateListData, 0x2ac44ef0 -> SetCandidateListSelectionPosition, unknown types answered by cGZWin::DoMessage, the cGZWinGen override skipped), the flag quirks (set/clear only push the merged word when the bit changed, SetCandidateListFlags only reads the init flag), the colour bound quirk (only index > 5 is refused, -1 reads and writes the flag word), the no-parent and uninitialised guards, the deleting destructor and Shutdown (capture released, focus restored and released, notifications removed in order); scripts/tests/registry/gz_winimecandidatelist.txt
+0x1001f8abc WinIMECandidateList_Construct
+0x1001fa2b6 WinIMECandidateList_ConstructBase
+0x1001fa33e WinIMECandidateList_Destruct
+0x1001fa40e WinIMECandidateList_DestructComplete
+0x1001fa426 WinIMECandidateList_DeletingDestruct
+0x1001fa462 WinIMECandidateList_QueryInterface
+0x1001fa4d4 WinIMECandidateList_AddRef
+0x1001fa4fe WinIMECandidateList_Release
+0x1001fabbe WinIMECandidateList_Shutdown
+0x1001facc4 WinIMECandidateList_DoMessage
+0x1001fad46 WinIMECandidateList_SetCandidateListData
+0x1001fad58 WinIMECandidateList_SetCandidateListSelectionPosition
+0x1001fad6a WinIMECandidateList_SetupWindow
+0x1001fb2f0 WinIMECandidateList_GetFont
+0x1001fb2fe WinIMECandidateList_SetFont
+0x1001fb354 WinIMECandidateList_GetCandidateListFontColor
+0x1001fb372 WinIMECandidateList_SetCandidateListFontColor
+0x1001fb38e WinIMECandidateList_SetCandidateListFlag
+0x1001fb3ac WinIMECandidateList_SetCandidateListFlags
+0x1001fb3ca WinIMECandidateList_ClearCandidateListFlag
+0x1001fb3ea WinIMECandidateList_IsCandidateListFlagSet
+0x1001fb3fa WinIMECandidateList_GetCandidateListFlags
+0x1001fb58c WinIMECandidateList_AsIGZWin
+PARTIAL:
+0x1001fa528 WinIMECandidateList_Init complete except for one substitution: the original hands the cIGZFont* at +0x200 straight to the grid's SetDefaultFont (vslot 0x78), but the recovered cGZWinGrid takes an IWinFont* and a cIGZFont is not one, so the grid's font comes from IWinFontSource (style 0x68963c4c) - the same deviation cGZWinCombo documents. With both seams resolving to the same font the grid is set up identically; Init's own measurements still use the cIGZFont* at +0x200.
+SKIPPED:
+# none: all 24 non-thunk symbols are hand-written. The 13 remaining symbols in the 0x1001f8abc..0x1001fb5a0 range are the
+# compiler-generated non-virtual thunks to the QueryInterface / AddRef / Release / destructor / Init / Shutdown / DoMessage /
+# AsIGZWin entries listed above (their bodies are the base-class calls the listed functions make).

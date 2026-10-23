@@ -1,0 +1,48 @@
+SOURCE src/gz/WinIMEProxy.cpp|h
+EVIDENCE decompile of cGZWinIMEProxy (27 functions / 44 symbols, 0x1001f7822..0x1001f8c5e; primary vtable 0x100a84af8, secondary 0x100a84ba0, cIGZSystemService 0x100a84bd0, cRZUnknown 0x100a84c60) plus the disassembly of every function for what Ghidra drops (the ctor's packed 8-byte refcount+service-id store at +0x34, Init's four GetSystemService ids and the AddNotification targets, SetupDefaultFonts' SystemFont/GetName/FontAcquire arguments, StartComposition/StartCandidateList's GZCOM CreateObject results and inline object construction, OnTick's lost `this`, its 0xbe10a20 probe message and the composition-enabled slots 0x40/0x48); the layout was checked with -fdump-record-layouts (refcount +0x34, service-id copy +0x38, initialised +0x3c, tick +0x40, message server +0x48, position +0x50/+0x54, suppressed +0x58, IME server +0x60, window manager +0x68, previous focus +0x70, composition enabled +0x78/window +0x80/font +0x88, candidate list enabled +0x90/window +0x98/font +0xa0, sizeof 0xa8) and the vtable order with -fdump-vtable-layouts (19 + 4 + 16 + 7 slots, matching 0x100a84af8 group by group); neighbours are the recovered cGZWinIMEComposition, cGZWinTextEdit, cRZSystemService, cIGZWinMgr/cIGZWin, cIGZMessageServer and cIGZFontSys/cIGZWinCtrlMgr seams; the candidate list class is not in the tree, so its construction goes through IIMEProxyHost (cGZWinIMECandidateList ctor 0x1001f8abc, 0x208 bytes, cGZWinGen at +8) and its interface cIGZWinIMECandidateList is declared from vtable 0x100a85850; test scripts/tests/gz_winimeproxy_test.cpp runs the real composition window and a fake window manager / message server / IME server / font system / control manager / GZCOM / framework: the constructor defaults, the four-interface QueryInterface (0x2ac44ae9, 1, 0xe98b2f57, 0x287fb697), the below-two Release destruction quirk, Init/Shutdown service wiring and tick registration, SetupDefaultFonts' two FontAcquire calls (Arial, type 0, size 0x12, style 0, reuse), the GZCOM and fallback composition-window paths (child of the main window, font, 0x800 cleared), the candidate-list seam and GZCOM paths, the DoMessage dispatch of the four IME messages, OnTick's four/eight-tick cadence, its focus probe over the three IME interface ids, the position override (0x50/0x54 -> GZWinMoveTo) and the composition-disable path, the font setters' reference handling, the Shutdown release split (windows left alive) and the destructor releases; registry scripts/tests/registry/gz_winimeproxy.txt; built and run with ASan/UBSan. Documented deviations: the window manager in StartComposition/StartCandidateList/EndComposition/EndCandidateList and the cached message server in OnTick are null-checked (the binary dereferences them), and the manual cGZWinIMEComposition fallback gets the window manager fetched just above (the binary's ctor 0x1001f8a04 takes none, the recovered cGZWinTextEdit needs one)
+0x1001f7822 IMEProxyConstruct
+0x1001f7908 IMEProxyConstructBase
+0x1001f7912 IMEProxyDestruct
+0x1001f7a88 IMEProxyDestructComplete
+0x1001f7a92 IMEProxyDestructCompleteThunk16
+0x1001f7aa0 IMEProxyDestructCompleteThunk24
+0x1001f7aae IMEProxyDestructAndDelete
+0x1001f7adc IMEProxyDestructAndDeleteThunk16
+0x1001f7aea IMEProxyDestructAndDeleteThunk24
+0x1001f7af8 IMEProxyQueryInterface
+0x1001f7b32 IMEProxyQueryInterfaceThunk8
+0x1001f7b40 IMEProxyQueryInterfaceThunk16
+0x1001f7b4e IMEProxyQueryInterfaceThunk24
+0x1001f7b5c IMEProxyAddRef
+0x1001f7b6a IMEProxyAddRefThunk8
+0x1001f7b78 IMEProxyAddRefThunk16
+0x1001f7b86 IMEProxyAddRefThunk24
+0x1001f7b94 IMEProxyRelease
+0x1001f7bd8 IMEProxyReleaseThunk8
+0x1001f7c12 IMEProxyReleaseThunk16
+0x1001f7c4c IMEProxyReleaseThunk24
+0x1001f7c86 IMEProxyInit
+0x1001f7ee6 IMEProxyInitThunk16
+0x1001f7ef8 IMEProxyShutdown
+0x1001f80b4 IMEProxyShutdownThunk16
+0x1001f80c6 IMEProxySetupDefaultFonts
+0x1001f825e IMEProxyDoMessage
+0x1001f82a6 IMEProxyStartComposition
+0x1001f84e4 IMEProxyEndComposition
+0x1001f877c IMEProxyEndCandidateList
+0x1001f8820 IMEProxyDoMessageThunk8
+0x1001f8832 IMEProxyOnTick
+0x1001f89ee IMEProxyOnTickThunk16
+0x1001f8b44 IMEProxyGetCompositionWinEnabled
+0x1001f8b4e IMEProxySetCompositionWinEnabled
+0x1001f8b64 IMEProxyGetCompositionWin
+0x1001f8b72 IMEProxyGetCompositionFont
+0x1001f8b80 IMEProxySetCompositionFont
+0x1001f8bd4 IMEProxyGetCandidateListWinEnabled
+0x1001f8be0 IMEProxySetCandidateListWinEnabled
+0x1001f8bfc IMEProxyGetCandidateListWin
+0x1001f8c0a IMEProxyGetCandidateListFont
+0x1001f8c18 IMEProxySetCandidateListFont
+PARTIAL:
+0x1001f8588 IMEProxyStartCandidateList the candidate-list window class cGZWinIMECandidateList (ctor 0x1001f8abc, 0x208 bytes, cGZWinGen at +8) is not in the tree, so the fallback construction the binary inlines at 0x1001f8634..0x1001f86d9 goes through IIMEProxyHost::CreateCandidateListWindow; everything else in the function (the GZCOM attempt, the font, the parenting, PullToFront, SetFlag(0x800, false)) is written and tested
+SKIPPED:
