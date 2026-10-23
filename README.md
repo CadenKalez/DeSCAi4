@@ -3,8 +3,8 @@
 <!-- progress:start -->
 ![decompiled](https://img.shields.io/badge/decompiled-77.8%25-green)
 
-`████████████████░░░░` **77.8%** — 20,907 of 26,880 game functions recovered, 5,973 remaining (details: [notes/progress.md](notes/progress.md))
-![macOS port](https://img.shields.io/badge/macOS_port-78.6%25-blue) **78.6%** of the 26,597 functions the macOS port needs (20,897 recovered; 80% = 21,278)
+`████████████████░░░░` **77.8%** — 20,904 of 26,880 game functions recovered, 5,976 remaining (details: [notes/progress.md](notes/progress.md))
+![macOS port](https://img.shields.io/badge/macOS_port-78.6%25-blue) **78.6%** of the 26,597 functions the macOS port needs (20,894 recovered; 80% = 21,278)
 <!-- progress:end -->
 
 Reverse-engineering / decompilation workspace for **SimCity 4 Deluxe Edition (Aspyr macOS port, Steam, v1.2.1 build 185949)**.
