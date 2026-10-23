@@ -165,6 +165,8 @@ CLASS-cGZWinFolderRow,cGZWinFolderRow,"recover 21 remaining function(s) (21 not 
 CLASS-cGZWinFolders,cGZWinFolders,"recover 23 remaining function(s) (23 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZWinGenTitleBar,cGZWinGenTitleBar,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZWinGrid,cGZWinGrid,"recover 189 remaining function(s) (189 not started, 0 partial/pending); bases still unfinished: cIGZWinGrid",CLASS-cIGZWinGrid,open,scripts/export_class.py + notes/remaining_functions.csv
+GRID-1,cGZWinGrid,"Recover cGZWinGrid (189 functions, 0x10025086a..0x10025ef00) now that cRZSparseMatrix exists; the 9.4k-line export is in work/gz/cGZWinGrid.txt",,open,src/gz/WinGrid.h
+GRID-2,cGZWinGrid,"Wire the grid's three cRZSparseMatrix members (cell data +0x298, formats +0x238/+0x268) once the class body is written",GRID-1,open,src/gz/WinGrid.cpp
 CLASS-cGZWinHTML,cGZWinHTML,"recover 55 remaining function(s) (55 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinIMECandidateList,cGZWinIMECandidateList,"recover 24 remaining function(s) (24 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinIMEComposition,cGZWinIMEComposition,"recover 40 remaining function(s) (40 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -279,15 +281,15 @@ CLASS-cRZSlabAllocatorSmall,cRZSlabAllocatorSmall,"recover 4 remaining function(
 CLASS-cRZSpanList,cRZSpanList,"recover 2 remaining function(s) (0 not started, 2 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 SPANLIST-1,cRZSpanList,Recover SetEllipse 0x1002b3f86 and Draw 0x1002b4122,,open,src/rz/SpanList.cpp
 SPANLIST-2,cRZSpanList,"Quirk kept (0x1002b44aa): the left walker follows the vertices forwards from the topmost one, so a polygon wound clockwise on screen yields x0 > x1; the rasterizer returns when an edge runs out of vertices (bounded here instead of reading past the array)",,open,src/rz/SpanList.cpp
-CLASS-cRZSparseMatrix<WinGridCellData>,cRZSparseMatrix<WinGridCellData>,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cRZSparseMatrix<WinGridColData>,cRZSparseMatrix<WinGridColData>,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cRZSparseMatrix<WinGridRowData>,cRZSparseMatrix<WinGridRowData>,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cRZSparseMatrix<cIGZWinGrid,cRZSparseMatrix<cIGZWinGrid,"recover 21 remaining function(s) (21 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cRZSparseMatrixColIterator<cIGZWinGrid,cRZSparseMatrixColIterator<cIGZWinGrid,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cRZSparseMatrixIterator<WinGridCellData>,cRZSparseMatrixIterator<WinGridCellData>,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cRZSparseMatrixIterator<WinGridColData>,cRZSparseMatrixIterator<WinGridColData>,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cRZSparseMatrixIterator<WinGridRowData>,cRZSparseMatrixIterator<WinGridRowData>,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cRZSparseMatrixIterator<cIGZWinGrid,cRZSparseMatrixIterator<cIGZWinGrid,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cRZSparseMatrix<WinGridCellData>,cRZSparseMatrix<WinGridCellData>,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cRZSparseMatrix<WinGridColData>,cRZSparseMatrix<WinGridColData>,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cRZSparseMatrix<WinGridRowData>,cRZSparseMatrix<WinGridRowData>,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cRZSparseMatrix<cIGZWinGrid,cRZSparseMatrix<cIGZWinGrid,"recover 21 remaining function(s) (21 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cRZSparseMatrixColIterator<cIGZWinGrid,cRZSparseMatrixColIterator<cIGZWinGrid,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cRZSparseMatrixIterator<WinGridCellData>,cRZSparseMatrixIterator<WinGridCellData>,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cRZSparseMatrixIterator<WinGridColData>,cRZSparseMatrixIterator<WinGridColData>,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cRZSparseMatrixIterator<WinGridRowData>,cRZSparseMatrixIterator<WinGridRowData>,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cRZSparseMatrixIterator<cIGZWinGrid,cRZSparseMatrixIterator<cIGZWinGrid,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 "CLASS-cRZStackAllocator<cIS3DModelInstance*, 10, 1>","cRZStackAllocator<cIS3DModelInstance*, 10, 1>","recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 "CLASS-cRZStackAllocator<cIS3DModelInstance*, 32, 1>","cRZStackAllocator<cIS3DModelInstance*, 32, 1>","recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 "CLASS-cRZStackAllocator<cIS3DModelInstance*, 8, 1>","cRZStackAllocator<cIS3DModelInstance*, 8, 1>","recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -322,6 +324,7 @@ CLASS-cS3DMesh,cS3DMesh,"recover 1 remaining function(s) (1 not started, 0 parti
 CLASS-cS3DMeshBuilder,cS3DMeshBuilder,"recover 10 remaining function(s) (10 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cS3DModelInstanceAnimated,cS3DModelInstanceAnimated,finish 14 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cS3DModelInstanceAnimatedSprite,cS3DModelInstanceAnimatedSprite,"recover 42 remaining function(s) (42 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+SPRITE-1,cS3DModelInstanceAnimatedSprite,"src/s3d/ModelInstanceAnimatedSprite.{h,cpp} and its test exist (untracked) but the test fails: division by zero at ModelInstanceAnimatedSprite.cpp:316/320, texture record index mismatch, DoAutoFrameUpdate accumulator, camera release count. Fix before ledgering the class.",,open,src/s3d/ModelInstanceAnimatedSprite.cpp
 CLASS-cS3DModelProcessor,cS3DModelProcessor,"recover 11 remaining function(s) (11 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DResModel,cS3DResModel,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DResModelFactory,cS3DResModelFactory,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
