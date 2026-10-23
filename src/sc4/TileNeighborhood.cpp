@@ -137,6 +137,11 @@ const std::vector<cSC4LotConfigurationObject>& cSC4NetworkLot::GetLotConfigurati
     return config_ ? config_->GetObjectArray() : empty;
 }
 
+std::vector<cSC4LotConfigurationObject>& cSC4NetworkLot::GetLotConfigurationObjectArray() {
+    static std::vector<cSC4LotConfigurationObject> empty;
+    return config_ ? config_->GetObjectArray() : empty;
+}
+
 void cSC4NetworkLot::SetNetworkOccupant(cIGZUnknown* occupant) {
     if (occupant) occupant->AddRef();
     if (occupant_) occupant_->Release();
