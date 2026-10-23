@@ -316,6 +316,7 @@ declare -a TESTS=(
  "sc4_winregionscroll:$T/sc4_winregionscroll_test.cpp $S/sc4/WinRegionScroll.cpp $S/gz/Win.cpp $S/gz/RZDraw.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/cRZTimer.cpp  $S/platform/MacTools.cpp -I$T"
  "sc4_winresizableoutline:$T/sc4_winresizableoutline_test.cpp $S/sc4/WinResizableOutline.cpp $S/gz/Win.cpp $S/gz/RZDraw.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp -I$T"
  "sc4_winsmallviews:$T/sc4_winsmallviews_test.cpp $S/sc4/WinSmallViews.cpp $S/gz/WinGen.cpp $S/gz/WinFlatRect.cpp $S/gz/WinBtn.cpp $S/gz/WinKnob.cpp $S/gz/WinListBox.cpp $S/gz/WinText.cpp $S/gz/WinSpinner.cpp $S/gz/WinScrollbar.cpp $S/gz/WinSlider.cpp $S/gz/WinScrollbar2.cpp $S/rz/TextEncoding.cpp $S/rz/UTF16Text.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp $S/rz/CharLength.cpp $S/gz/RZDraw.cpp $S/gz/WinCtrlFactory.cpp $S/rz/cRZCallbackTimer.cpp $S/gz/Buffer.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
+ sc4_dispatchmanager:$T/sc4_dispatchmanager_test.cpp $S/sc4/DispatchManager.cpp $S/rz/cRZMessage2Standard.cpp
 )
 fail=0
 for entry in "${TESTS[@]}"; do
