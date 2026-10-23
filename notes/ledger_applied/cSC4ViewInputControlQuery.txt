@@ -1,0 +1,83 @@
+SOURCE src/sc4/ViewInputControlQuery.cpp|h
+EVIDENCE test scripts/tests/sc4_viewinputcontrolquery_test.cpp - sc4_viewinputcontrolquery ok: lifecycle/QI, Init/Shutdown, 6 messages, tip, hover+highlight, clicks, 10 dialog control helpers, 6 SetOrGet rows, picking, ratings
+0x1002c1dca UpdatePaths
+0x1002c1dfe SetLegendMinimized
+0x1002c1ec2 cSC4ViewInputControlQuery
+0x1002c1fd6 AddRef
+0x1002c1fe4 AddRefFromMessageTarget
+0x1002c1ff2 Release
+0x1002c2012 ReleaseFromMessageTarget
+0x1002c2036 QueryInterface
+0x1002c206a QueryInterfaceFromMessageTarget
+0x1002c2078 Init
+0x1002c2596 MouseTipCallback
+0x1002c2642 Shutdown
+0x1002c28f6 SetHighlightState
+0x1002c2a0e DoMessage
+0x1002c5b68 SetTip
+0x1002c5c8e DoMessageFromMessageTarget
+0x1002c5ca0 OnKeyDown
+0x1002cf312 IsDebugQueryEnabled
+0x1002d2616 GetOccupantName
+0x1002cdd7e PickQueriableOccupant
+0x1002cde0c PlayOccupantQuerySound
+0x1002d4342 OnMouseDownL
+0x1002d45fc PickAutomaton
+0x1002d470a PickStoplightProp
+0x1002d4818 OnMouseUpL
+0x1002d4862 OnMouseMove
+0x1002d4e2a OnMouseExit
+0x1002d4ea8 ShouldStack
+0x1002d4eb0 CoverageRingCallback
+0x1002d4f40 SetEditControlText
+0x1002d4fb2 GetEditControlText
+0x1002d5094 SetStaticControlText
+0x1002d50dc SetStaticControlNumeric
+0x1002d5168 SetStaticControlNumericPercent
+0x1002d51f4 SetStaticControlSimoleons
+0x1002d527a SetStaticControlSimoleonsFloat
+0x1002d54a0 SetSliderControlValue
+0x1002d5758 GetSliderControlValue
+0x1002d5926 SetPerformanceMeterValue
+0x1002d5a0a SetOrGetName
+0x1002d5bc0 SetOrGetWhyOccupantAbandoned
+0x1002dacd2 SetOrGetOccupantIsPowered
+0x1002dadd6 SetOrGetOccupantIsWatered
+0x1002da692 SetOrGetResidentialBuildingMayorApproval
+0x1002da4f0 GetMayorRatingPercent
+0x1002da640 GetRatingIn3DegreesFromPercent
+0x1002dc524 ~cSC4ViewInputControlQuery
+
+PARTIAL:
+0x1002daf96 stub: the control-id to row-handler table was not recovered; no row handlers ported
+0x1002db37e stub: needs cGZWin vslot 0x3a0 (a method past the cIGZWin interface)
+0x1002db3bc stub: needs cGZWin vslots 0x388/0x390/0x3a8
+0x1002db566 stub: needs the control-id to row-handler table
+0x1002db5d8 stub: needs the control-id to row-handler table and the child's cRZUnknownList RTTI
+0x1002db69e stub: needs the control-id to row-handler table
+0x1002db70e stub: needs the control-id to row-handler table
+0x1002db748 stub: needs the control-id to row-handler table
+0x1002daed6 stub: needs nsGZWinUtils::Get/SetButtonToggleState (0x1006a21eb / 0x1006a215d)
+0x1002ccd38 stub: needs cISC4ZoneManager, cSC4GrowthDeveloper and cISC4BuildingDevelopmentSimulator
+0x1002d42b0 stub: needs cSC4PathView and cISC4Lot
+0x1002d3a04 stub: needs cSC4PathView, cSC4TripData and cSC4IntersectionNode
+0x1002c5ca8 stub: needs the growth developer / zone manager and the debug output stream
+0x1002c309a stub: needs cISC4Lot, cPedestrian paths and cSC4GrowthDeveloper
+0x1002c3748 stub: needs cSC4TripData and the traffic simulator
+0x1002c3f66 stub: needs cISC4Lot, cISC4BuildingDevelopmentSimulator and the simulators
+0x1002c515c stub: needs cSC4TripData and the traffic simulator
+0x1002c5558 stub: needs the prop occupant's exemplar properties
+0x1002c55ae stub: needs the flora occupant's exemplar properties
+0x1002c5604 stub: needs cISC4ZoneManager and the terrain/network cells
+0x1002c1fcc Ghidra symbol alias of the constructor at 0x1002c1ec2 (same code)
+0x1002dbdbe Ghidra symbol alias of the destructor at 0x1002dc524 (same code)
+0x1002dbdc8 deleting destructor; the port lets cIGZUnknown::FinalRelease delete the object
+0x1002d57a0 not ported (no stub): needs the draw buffer path (cIGZWinBMP vslot 0x28 GetBMP, cIGZBuffer vslots 0x40/0x48 and RZDrawBltTiled)
+
+PARTIAL: not ported (declared nowhere): the remaining per-tool SetOrGet* rows, the GetSubjective* helpers,
+the headline/trip-volume/route-path builders and the query dialogs. They need unrecovered neighbours:
+cISC4ZoneManager, cSC4GrowthDeveloper, cSC4TractDeveloper, cISC4BuildingDevelopmentSimulator, cISC4Lot,
+cISC4NeighborsSimulator, cSC4PathView, cSC4OccupantFilter and the airport/seaport/transit/police/fire/
+school/hospital/power/water/pollution/garbage/landfill/recycling/landmark simulators.
+
+SKIPPED: none (every symbol is needed by the macOS build)

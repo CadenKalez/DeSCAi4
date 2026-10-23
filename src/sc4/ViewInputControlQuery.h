@@ -1,0 +1,352 @@
+// cSC4ViewInputControlQuery — the query / lot-inspection input tool of the 3D view (222 symbols,
+// 0x1002c1dca..0x1002dc5a2, class id 0xc6bb8345 on the primary interface and 0x452294aa message target on the
+// sub-object). The user hovers a cell or an occupant, the tool keeps the hovered occupant highlighted, gathers the
+// text the tip shows and, on a left click, opens the query dialog (a script window) or the neighbour-connection
+// dialog. Two flavours share the class (EQueryType): kQueryBuilding (0) inspects buildings, kQueryNetwork (1)
+// inspects network pieces and draws their routes into a cSC4PathView.
+//
+// Object layout of the original (the offsets this port documents in its fields):
+//   +0x00 cSC4ViewInputControl vptr            +0x40 message-target (cIGZMessageTarget2) vptr
+//   +0x48 hovered occupant (cISC4Occupant*, referenced)   +0x50 SC4Rect<int> city-cell rect of the pick
+//   +0x60 previous highlight value                        +0x68 callout box (cISC4WinCalloutBox*)
+//   +0x70 / +0x78 minimised / expanded legend windows (network mode)
+//   +0x80 cRZCallbackTimer (0x38 bytes; the "mouse tip" timer)
+//   +0xb8 tip enabled   +0xbc/+0xc0/+0xc4 last pick position (x, y, z)   +0xc8 hover valid   +0xc9 mouse down
+//   +0xcc EQueryType   +0xd0 tip timer period   +0xd4 show coordinates   +0xd8 = 3 (written, never read)
+//   +0xe0 cSC4PathView* (network mode)
+// Class statics: the query dialog window / its enum callback, and the three tip strings gsQueryString(1..3).
+//
+// Everything the class needs from an unrecovered neighbour goes through the seams below. Slot numbers are the
+// original vtable offsets; where the original reached a global (SL::spPowerSim, ...) the comment names it.
+//
+// PARTIAL (see notes/ledger_pending/cSC4ViewInputControlQuery.txt): the tip/describe text builders
+// (Get*SummaryInfo, GetBuildingOccupantTipInfo, GetBuildingOccupantTrafficInfo, GetNetworkOccupantTrafficInfo,
+// DescribePick/DescribeCell/DescribeBuilding/DescribeDemand/DescribePopulation, WriteDetailedDebugInfo and the
+// headline/trip-volume/path helpers) and the whole per-tool SetOrGet* control family (about 100 functions) are
+// declared here but not implemented yet: they need unrecovered classes (cISC4ZoneManager, cSC4GrowthDeveloper,
+// cSC4TractDeveloper, cISC4BuildingDevelopmentSimulator, cISC4Lot, cSC4PathView, cSC4OccupantFilter and the
+// airport/seaport/neighbour/transit simulators). They are listed in the ledger PARTIAL section.
+#pragma once
+#include <cstdint>
+#include <vector>
+
+#include "gz/WinInterfaces.h"
+#include "gz/cIGZMessage2.h"
+#include "rz/cRZCallbackTimer.h"
+#include "rz/cRZString.h"
+#include "sc4/ISC4WinCalloutBox.h"
+#include "sc4/Occupant.h"
+#include "sc4/ViewInputControl.h"
+
+namespace sc4 {
+
+constexpr std::uint32_t kGZIID_cSC4ViewInputControlQuery = 0x452294aa;   // cIGZMessageTarget2 sub-object
+
+// --- the query tool's seams ---------------------------------------------------------------------------------
+
+// cISC4View3DWin as the query tool uses it. The two slots the base tool already uses (EndInput 0xd0, TopControl
+// 0xc0) come from IViewInputView.
+class IQueryView : public IViewInputView {
+public:
+    virtual cIGZWin* ViewWindow() = 0;                                                    // vslot 0x18
+    virtual bool PickTerrain(int x, int y, float out[3], bool flag) = 0;                  // 0x120
+    virtual bool ShowCoordinates() = 0;                                                   // 0x138
+    // 0x140: SetTip(id, 0, title, text, 0)
+    virtual void SetTip(std::uint32_t id, int unused, const cIGZString* title, const cIGZString* text, int flags) = 0;
+    virtual void ClearTip(std::uint32_t id) = 0;                                          // 0x148
+    // 0x188: the coverage-radius effect helper, then cSC4CoverageRadiusEffectHelper::RecalcCoverage.
+    virtual void RecalcCoverage() = 0;
+};
+
+// cSC4OccupantFilter: the picking filter. The original builds one per query (a cSC4OccupantFilter subclass with the
+// right virtual IsValid), hands it to the renderer and releases it afterwards.
+class IOccupantFilter : public cIGZUnknown {
+public:
+    virtual bool IsValid(const cISC4Occupant* occupant) = 0;
+};
+
+// The renderer's pick result: the original keeps the returned object alive, asks it for the picked object
+// (vslot 0x18) and queries that for the interface it wants.
+class IPickResult : public cIGZUnknown {
+public:
+    virtual cIGZUnknown* GetObject() = 0;                                                 // vslot 0x18
+};
+
+// SL::spRenderer
+class IQueryRenderer {
+public:
+    virtual ~IQueryRenderer() = default;
+    virtual IOccupantFilter* CreateFilter(int kind) = 0;      // cSC4OccupantFilter subclass (vtables 0x100b05448..)
+    virtual IPickResult* Pick(int x, int y, IOccupantFilter* filter) = 0;                 // vslot 0x200
+    virtual void AddLayer(cIGZUnknown* layer) = 0;                                        // vslot 0x100
+    virtual void RemoveLayer(cIGZUnknown* layer) = 0;                                     // vslot 0x108
+};
+
+// cSC4PathView (0x10077c6fc Shutdown, 0x10077cf3c ClearPaths).
+class IQueryPathView : public cIGZUnknown {
+public:
+    virtual void ClearPaths() = 0;
+    virtual bool ShutdownView() = 0;
+};
+
+// SL::spCity
+class IQueryCity {
+public:
+    virtual ~IQueryCity() = default;
+    // 0x2f8: terrain position -> city cell (the original: (float x, float z, this, int* cellX, int* cellZ)).
+    virtual void PositionToCell(float x, float z, int& cellX, int& cellZ) = 0;
+    virtual void FollowAutomaton(cIGZUnknown* automaton) = 0;   // 0x158 -> automaton manager vslot 0x110
+    virtual void SelectStoplightProp(cIGZUnknown* prop) = 0;    // 0x140 -> prop manager vslot 0x128
+};
+
+// cISC4Lot as the query reads it.
+class IQueryLot : public cIGZUnknown {
+public:
+    virtual void GetOccupants(std::vector<cISC4Occupant*>& out) = 0;                  // vslot 0x188
+    virtual void GetCellRect(SC4CellRect& rect) = 0;                                  // 0x70
+    virtual int GetState() = 0;                                                       // 0x108 (4 = abandoned)
+    virtual bool IsHistorical() = 0;                                                  // 0x158
+    virtual void SetHistorical(bool on) = 0;                                          // 0x160
+    virtual int GetAbandonReason() = 0;                                               // 0x168 (1..6)
+};
+
+// cISC4BuildingOccupant as SetOrGetName uses it (interface 0x87dda3a9): vslot 0x90 SetName.
+class IQueryBuildingOccupant : public cIGZUnknown {
+public:
+    virtual void SetName(cIGZString& name) = 0;   // vslot 0x90
+    virtual bool GetName(cRZString& name) = 0;    // 0x98
+};
+
+// SL::spAuraSim: the per-cell aura value (a signed byte) the mayor rating averages over a lot.
+class IQueryAuraSim {
+public:
+    virtual ~IQueryAuraSim() = default;
+    virtual std::int8_t GetAura(int cellX, int cellZ) = 0;   // vslot 0x28
+};
+
+// SL::spLotManager
+class IQueryLotManager {
+public:
+    virtual ~IQueryLotManager() = default;
+    virtual IQueryLot* GetLotForOccupant(cISC4Occupant* occupant) = 0;   // vslot 0x70
+    virtual IQueryLot* GetLotAtCell(int cellX, int cellZ, int unused) = 0;   // vslot 0x28
+};
+
+// SL::spPowerSim / SL::spPlumbingSim booleans used by the "is powered" / "is watered" rows.
+class IQueryPowerSim {
+public:
+    virtual ~IQueryPowerSim() = default;
+    virtual bool IsPowered(cISC4Occupant* occupant) = 0;   // vslot 0xf8
+};
+class IQueryPlumbingSim {
+public:
+    virtual ~IQueryPlumbingSim() = default;
+    virtual bool IsWatered(cISC4Occupant* occupant) = 0;   // vslot 0x48
+};
+
+// SL::spSimulator (the frame counter that gates the periodic dialog refresh) and SL::spResidentialSim.
+class IQuerySimulator {
+public:
+    virtual ~IQuerySimulator() = default;
+    virtual std::uint32_t FrameCount() = 0;                                     // 0x30 -> simulator vslot 0xd0
+};
+class IQueryResidentialSim {
+public:
+    virtual ~IQueryResidentialSim() = default;
+    virtual void SetQueryCell(int cellX4, int cellZ4) = 0;                      // vslot 0x1d8
+};
+
+// Everything else: one adapter implements this for the game, a fake for the test.
+class IQueryHost {
+public:
+    virtual ~IQueryHost() = default;
+    virtual cIGZMessageServer2* MessageServer() = 0;          // SL::spMS2
+    virtual IQueryView* QueryView() = 0;                      // SL::spView3D (same object as IViewInputHost::View3D)
+    virtual IQueryRenderer* Renderer() = 0;                   // SL::spRenderer
+    virtual IQueryCity* City() = 0;                           // SL::spCity
+    virtual IQueryLotManager* LotManager() = 0;               // SL::spLotManager
+    virtual IQueryPowerSim* PowerSim() = 0;                   // SL::spPowerSim
+    virtual IQueryPlumbingSim* PlumbingSim() = 0;             // SL::spPlumbingSim
+    virtual IQueryAuraSim* AuraSim() = 0;                     // SL::spAuraSim
+    virtual IQuerySimulator* Simulator() = 0;                 // SL::spSimulator
+    virtual IQueryResidentialSim* ResidentialSim() = 0;       // SL::spResidentialSim
+    virtual IQueryPathView* CreatePathView() = 0;             // new cSC4PathView + Init
+    virtual cISC4WinCalloutBox* CreateCalloutBox() = 0;       // new cSC4WinCalloutBox (0x1003c5f5c)
+    // SC4CreateWindowFromScript(instance, parent, id, iid, out) (@ 0x100039bf7)
+    virtual cIGZWin* CreateWindowFromScript(std::uint32_t instance, cIGZWin* parent, std::uint32_t id) = 0;
+    // new cSC4QueryDialogWinProc(this) + cIGZWinGen::SetWinProc (vslot 0x38) on the legend windows.
+    virtual void AttachLegendWinProc(cIGZWin* window) = 0;
+    virtual void DetachWinProc(cIGZWin* window) = 0;          // SetWinProc(nullptr)
+    virtual bool IsKeyDown(std::uint32_t virtualKey) = 0;     // cIGZKeyboard vslot 0x18
+    virtual bool IsDebugMode() = 0;                           // SL::spSC4 vslot 0xa8
+    virtual void FormatMoneyFloat(double value, cRZString& out) = 0;   // RZ::LM()->0x128()->0x98
+    // SC4LoadString(group, instance, out) @ 0x100120e10; the tool's strings all live in group 0xea5524eb.
+    virtual void LoadString(std::uint32_t group, std::uint32_t instance, cIGZString& out) = 0;
+};
+IQueryHost* QueryHost();
+void SetQueryHost(IQueryHost* host);
+
+class cSC4ViewInputControlQuery : public cSC4ViewInputControl, public cIGZMessageTarget2 {
+public:
+    enum EQueryType : std::int32_t { kQueryBuilding = 0, kQueryNetwork = 1 };
+
+    // The extra data the neighbour-connection / airport / seaport / landfill rows need: the cell or connection, the
+    // control-id offset added to the base id, and the connection type (cISC4NeighborsSimulator::ConnectionType).
+    struct tCellInfo {
+        std::int32_t x = 0;                // [0]
+        std::int32_t z = 0;                // [1]
+        std::int32_t idOffset = 0;         // [2]
+        std::int32_t connectionType = 0;   // [3]
+    };
+    using tSetOrGetFn = bool (*)(cIGZWin*, std::uint32_t, bool, cISC4Occupant*);
+
+    cSC4ViewInputControlQuery(EQueryType type, std::uint32_t tipPeriod);   // @ 0x1002c1ec2
+    ~cSC4ViewInputControlQuery() override;                                 // @ 0x1002dc524
+
+    // cIGZUnknown / cIGZMessageTarget2
+    bool QueryInterface(std::uint32_t iid, void** out) override;   // @ 0x1002c2036
+    std::uint32_t AddRef() override;                               // @ 0x1002c1fd6
+    std::uint32_t Release() override;                              // @ 0x1002c1ff2
+    bool DoMessage(cIGZMessage2* message) override;                // @ 0x1002c2a0e
+
+    // non-virtual thunks into the message-target sub-object (0x1002c1fe4 / 0x1002c2012 / 0x1002c206a / 0x1002c5c8e)
+    std::uint32_t AddRefFromMessageTarget();
+    std::uint32_t ReleaseFromMessageTarget();
+    bool QueryInterfaceFromMessageTarget(std::uint32_t iid, void** out);
+    bool DoMessageFromMessageTarget(cIGZMessage2* message);
+
+    bool Init() override;                                          // @ 0x1002c2078
+    bool Shutdown() override;                                      // @ 0x1002c2642
+    void Activate() override {}                                    // the original has no override
+    bool ShouldStack() override;                                   // @ 0x1002d4ea8 (false)
+    bool OnKeyDown(std::uint32_t key, std::uint32_t mods) override;   // @ 0x1002c5ca0 (false)
+    bool OnMouseDownL(int x, int y, std::uint32_t mods) override;     // @ 0x1002d4342
+    bool OnMouseUpL(int x, int y, std::uint32_t mods) override;       // @ 0x1002d4818
+    bool OnMouseMove(int x, int y, std::uint32_t mods) override;      // @ 0x1002d4862
+    bool OnMouseExit() override;                                      // @ 0x1002d4e2a
+
+    // state machine
+    void UpdatePaths();                                            // @ 0x1002c1dca
+    void SetLegendMinimized(bool minimized);                       // @ 0x1002c1dfe
+    void SetHighlightState(int state);                             // @ 0x1002c28f6
+    void SetTip(const cIGZString* title, const cIGZString* text);  // @ 0x1002c5b68
+    bool IsDebugQueryEnabled();                                    // @ 0x1002cf312
+    void PlayOccupantQuerySound(cISC4Occupant* occupant);           // @ 0x1002cde0c
+
+    // picking
+    bool PickQueriableOccupant(int x, int y, cISC4Occupant** out, IOccupantFilter* filter);   // @ 0x1002cdd7e
+    bool PickAutomaton(int x, int y, cIGZUnknown** out);                                      // @ 0x1002d45fc
+    bool PickStoplightProp(int x, int y, cIGZUnknown** out);                                   // @ 0x1002d470a
+
+    // controls of the query dialogs
+    bool SetEditControlText(cIGZWin* win, std::uint32_t id, cIGZString& text);                       // @ 0x1002d4f40
+    bool GetEditControlText(cIGZWin* win, std::uint32_t id, cIGZString& text, std::uint32_t& length);   // @ 0x1002d4fb2
+    bool SetStaticControlText(cIGZWin* win, std::uint32_t id, const cIGZString& text);               // @ 0x1002d5094
+    bool SetStaticControlNumeric(cIGZWin* win, std::uint32_t id, std::uint32_t value);               // @ 0x1002d50dc
+    bool SetStaticControlNumericPercent(cIGZWin* win, std::uint32_t id, std::uint32_t value);        // @ 0x1002d5168
+    bool SetStaticControlSimoleons(cIGZWin* win, std::uint32_t id, std::int64_t value);              // @ 0x1002d51f4
+    bool SetStaticControlSimoleonsFloat(cIGZWin* win, std::uint32_t id, double value);               // @ 0x1002d527a
+    bool SetSliderControlValue(cIGZWin* win, std::uint32_t id, int minimum, int maximum, int value,
+                               std::int64_t money, cISC4Occupant* occupant, tSetOrGetFn callback,
+                               std::uint32_t* array, std::uint32_t arraySize);                       // @ 0x1002d54a0
+    bool GetSliderControlValue(cIGZWin* win, std::uint32_t id, int& value);                           // @ 0x1002d5758
+    bool SetPerformanceMeterValue(cIGZWin* win, std::uint32_t id, float value);                       // @ 0x1002d5926
+
+    // rows of the query dialogs (only the ones that work without an unrecovered neighbour are implemented)
+    bool SetOrGetControlValue(cIGZWin* win, std::uint32_t id, bool set, tCellInfo* info);   // @ 0x1002daf96
+    bool SetOrGetName(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d5a0a
+    bool SetOrGetWhyOccupantAbandoned(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d5bc0
+    bool SetOrGetOccupantIsPowered(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);      // @ 0x1002dacd2
+    bool SetOrGetOccupantIsWatered(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);      // @ 0x1002dadd6
+    bool SetOrGetOccupantIsHistorical(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002daed6
+    bool SetOrGetResidentialBuildingMayorApproval(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002da692
+
+    void GetOccupantName(cISC4Occupant* occupant, cRZString& out);                  // @ 0x1002d2616
+    float GetMayorRatingPercent(cISC4Occupant* occupant);                          // @ 0x1002da4f0
+    void GetRatingIn3DegreesFromPercent(cRZString& out, float percent);            // @ 0x1002da640
+
+    // static enum callbacks used by the dialog windows
+    static bool EnumFuncSetFilter(cIGZWin* win, std::uint32_t id, void* child, void* context);       // @ 0x1002db37e
+    static bool EnumFuncClearFilter(cIGZWin* win, std::uint32_t id, void* child, void* context);     // @ 0x1002db3bc
+    static bool EnumFuncSetValue(cIGZWin* win, std::uint32_t id, void* child, void* context);        // @ 0x1002db566
+    static bool EnumFuncUpdateValue(cIGZWin* win, std::uint32_t id, void* child, void* context);     // @ 0x1002db5d8
+    static bool EnumFuncGetValue(cIGZWin* win, std::uint32_t id, void* child, void* context);        // @ 0x1002db69e
+    bool EnumFuncNeighborDialogSetValue(cIGZWin* win, std::uint32_t id, void* cellInfo, void* occupant);   // @ 0x1002db70e
+    bool EnumFuncNeighborDialogGetValue(cIGZWin* win, std::uint32_t id, void* cellInfo, void* occupant);   // @ 0x1002db748
+
+    // --- PARTIAL: declared, not implemented (see the header comment and the ledger) ---
+    void GetBuildingOccupantTrafficInfo(cRZString& text, cRZString& title, std::uint32_t& icon);
+    void GetNetworkOccupantTrafficInfo(cRZString& text, cRZString& title);
+    void GetBuildingOccupantTipInfo(cRZString& text, cRZString& title, std::uint32_t& icon, std::uint32_t& meter,
+                                    float& meterValue);
+    void GetNetworkOccupantSummaryInfo(cRZString& text, cRZString& title);
+    void GetPropOccupantSummaryInfo(cRZString& text);
+    void GetFloraOccupantSummaryInfo(cRZString& text);
+    void GetTerrainSummaryInfo(cRZString& text, cRZString& title);
+    void DescribePick(int x, int y, cRZString& line1, cRZString& line2, cRZString& line3, bool detailed);
+    void GetOccupantPaths();
+    void ShowAllRoutesThatIntersectCityRect(const SC4CellRect& rect);
+    void WriteDetailedDebugInfo(int cellX, int cellZ);
+
+    // The static state the original keeps at file scope.
+    static cIGZWin* QueryDialogWindow();
+    static void SetQueryDialogWindow(cIGZWin* window);
+    static cIGZWin::EnumChildFn EnumSetFunction();
+    static void SetEnumSetFunction(cIGZWin::EnumChildFn fn, void* context1, void* context2);
+
+    // inspection for tests
+    EQueryType QueryType() const { return queryType_; }
+    bool TipEnabled() const { return tipEnabled_; }
+    bool HoverValid() const { return hoverValid_; }
+    bool MouseDown() const { return mouseDown_; }
+    cISC4Occupant* HoveredOccupant() const { return occupant_; }
+    std::uint32_t TipPeriod() const { return tipPeriod_; }
+    cRZCallbackTimer& TipTimer() { return tipTimer_; }
+    cISC4WinCalloutBox* CalloutBox() const { return callout_; }
+    void SetCityCellRect(const SC4CellRect& rect) { cityCellRect_ = rect; }
+
+protected:
+    // The two windows of the network-mode legend come from this script instance (original: resource group 0x96a006b0,
+    // instance 0xabb0120f, created with window id 0x6bb92bcb).
+    static constexpr std::uint32_t kLegendInstance = 0xabb0120f;
+    static constexpr std::uint32_t kLegendWindowId = 0x6bb92bcb;
+
+    void CreateLegendWindows();
+    cIGZWin* ViewWindow();
+
+public:
+    // the child ids of the legend script window (public so the adapter / test can build it)
+    static constexpr std::uint32_t kLegendMinimizedChild = 0x0bb0f5e7;
+    static constexpr std::uint32_t kLegendExpandedChild = 0x6bb92bca;
+
+protected:
+
+    cISC4Occupant* occupant_ = nullptr;       // +0x48 hovered occupant (referenced)
+    SC4CellRect cityCellRect_{};              // +0x50
+    std::uint32_t occupantHighlight_ = 0;     // +0x60
+    cISC4WinCalloutBox* callout_ = nullptr;   // +0x68
+    cIGZWin* legendMinimized_ = nullptr;      // +0x70
+    cIGZWin* legendExpanded_ = nullptr;       // +0x78
+    cRZCallbackTimer tipTimer_;               // +0x80
+    bool tipEnabled_ = true;                  // +0xb8
+    float pickX_ = 0.0f;                      // +0xbc
+    float pickY_ = 0.0f;                      // +0xc0
+    float pickZ_ = 0.0f;                      // +0xc4
+    bool hoverValid_ = false;                 // +0xc8
+    bool mouseDown_ = false;                  // +0xc9
+    EQueryType queryType_ = kQueryBuilding;   // +0xcc
+    std::uint32_t tipPeriod_ = 3;             // +0xd0
+    bool showCoordinates_ = false;            // +0xd4
+    std::uint32_t unknownD8_ = 3;             // +0xd8 (written by the ctor, never read)
+    IQueryPathView* pathView_ = nullptr;      // +0xe0
+
+private:
+    static void MouseTipCallback(void* self);      // @ 0x1002c2596
+    static void CoverageRingCallback(void* self);  // @ 0x1002d4eb0
+    static cIGZWin* sQueryDialog_;
+    static cIGZWin::EnumChildFn sEnumSetFunction_;
+    static void* sEnumContext1_;
+    static void* sEnumContext2_;
+};
+
+}  // namespace sc4
