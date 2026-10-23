@@ -1,0 +1,81 @@
+SOURCE src/sc4/cSTETerrain.cpp|h
+EVIDENCE test scripts/tests/sc4_steterrain_test.cpp - COM identity and the three thunks, message posts against a fake server, display and accumulation state, vertex raise/lower clamps and locks, mark/rect/span helpers, temporary water-level copies, sediment lookup, lowest-water neighbour, brush tuning queries, the lighting row walk against a fake host, the four edge-altitude subfiles and the stream Write/Read round trip through a real DB segment
+# part 2 of cSTETerrain: 67 functions recovered and 4 left partial, from work/sc4/cSTETerrain.txt
+# (byte offsets, statics and quirks are in the source comments).
+0x1007313ee AddRef
+0x1007313fc AddRefThunk_13fc
+0x10073140a AddRefThunk_140a
+0x10073255c ComputeRectAroundPt
+0x100732656 ComputeSpansForRectangle
+0x100733596 PadRectangle
+0x100733b16 AreSeaVertices
+0x100733d98 UpdateMoistureValues
+0x100733dd4 ClearSurfaceTextures
+0x100734b7a BeginLongTerrainOperation
+0x100734b92 PostMessageA
+0x100734c7c LowerVertex
+0x100734cde RaiseVertex
+0x100734d6e BrushRadius
+0x100735288 ClearVertexPropertyFlags_SC4Rect_int_const_unsigned_short
+0x1007352f0 ClearVertexCliffFlipTriangulationFlags
+0x100735810 ClearVertexPropertyFlags_unsigned_short
+0x100735846 ComputeBooleanFnForRect
+0x1007359a2 ComputeBoundsOfMarkedRegion
+0x100736930 IsVertexWithMark1
+0x10073694c IsLandAndNotMark1
+0x100736cf8 CreateVertRectAroundVertex
+0x100736fd4 IsVertexWithMark3
+0x100736ff2 IsLandAndNotMark3
+0x100737684 PostMessageToTarget
+0x100737ada RestoreWaterLevelsFromTempArray
+0x100737b50 GetNeighborWithLowestWaterLevel
+0x1007386ec EndLongTerrainOperation
+0x100738b4a GetAltitudeCheckSum
+0x100738cee GetBrushExemplarID
+0x100738d76 GetCostPerBrushApplication
+0x100738ffa GetGZCLSID
+0x100739006 GetGZCLSIDThunk
+0x1007394b6 GetWaterSurfaceDisplayState
+0x1007394c2 GetPlumbingInfoDisplayState
+0x1007394dc GetSedimentValue
+0x100739976 GetUIElementsForBrush
+0x100739a1e GetView
+0x10073a3aa InitBrushParameters
+0x10073aa02 NumberOfWaterVertices_SC4Rect_int_const
+0x10073aa92 QueryInterface
+0x10073aae2 QueryInterfaceThunk_aae2
+0x10073aaf0 QueryInterfaceThunk_aaf0
+0x10073b548 ReleaseBrushDescriptions
+0x10073e0ba Release
+0x10073e0da ReleaseThunk_e0da
+0x10073e0fe ReleaseThunk_e0fe
+0x10073e122 SaveWaterLevelsInTempArray
+0x10073e2b2 SetAltitudeAtVertex
+0x10073e36c SetWaterSurfaceDisplayState
+0x10073e418 SetPlumbingInfoDisplayState
+0x10073e90e StartAccumulatingTextureUpdates
+0x10073ea34 StopAccumulatingTextureUpdates
+0x10073efda Write
+0x10073f094 WriteThunk
+0x10073f0a2 Read
+0x10073f16c ReadThunk
+0x10073f17a Save
+0x10073f3fc SaveEdgeAltitudes
+0x10073f85e LoadEdgeAltitudes
+0x100740de0 SaveObliterated
+0x100740e12 LoadObliterated
+0x100740ec0 MinAllowedHeight
+0x100740ece MaxAllowedHeight
+0x100740f0a GetDefaultTerrainRaiseLowerAmount
+0x100740f18 NumberOfWaterVertices_void
+0x100740f24 IsAccumulatingTextureUpdates
+PARTIAL:
+# these four rows are still pending in the ledger; the applier leaves an existing row alone when it is
+# listed under PARTIAL, so the lead has to set them to recovered-partial (ledger_promote/ledger_set).
+0x100737cba DoLighting: body complete, but the lighting manager it walks (spLightingManager vslot 0xe0) is unrecovered; it goes through ITerrainHost::ApplyTerrainLightingRow
+0x10073ea34 StopAccumulatingTextureUpdates: the accumulation rectangle is tracked and reset, but the re-texture + redisplay it triggers is the pending surface-texture pipeline (TERRAIN-3)
+0x100733d98 UpdateMoistureValues: the original forwards to the city's land/moisture simulator (+0x140 vslot 0x80, spCity slot 0x230), which is unrecovered, so the call is a no-op
+0x10073f0a2 Read: the version gate and the DB-segment Load are in place; the terrain view subobject (CLSID 0xc9b84e10) is not re-created because there is no adapter to ITerrainView yet (TERRAIN-VIEW-3)
+SKIPPED:
+# nothing skipped: the other 90 cSTETerrain functions stay pending (brushes, textures/ini reading,
+# erosion/flood, cliffs and shore tracking, life cycle and the neighbour-city edge reconcile).

@@ -111,6 +111,7 @@ public:
     virtual int AdvisorId() = 0;                       // vslot 0x58
     virtual void SetFlags(int flags, bool on) = 0;     // vslot 0x70
     virtual int Mood() = 0;                            // vslot 0x30 (GetMood)
+    virtual int Priority() { return 0; }               // vslot 0x38 (GetPriority; the situation track sort key)
     virtual std::uint32_t Trigger() = 0;               // cSC4Advice::GetTrigger
     virtual bool QueryBaseInterface(std::uint32_t iid, void** out) = 0;
 };
@@ -185,6 +186,8 @@ public:
     virtual bool IsAutomatonRelevant(ISituationAutomaton* automaton) const = 0;                 // 0x1a8
     virtual bool IsGroupRelevant(const std::vector<std::uint32_t>& groups) const = 0;           // 0x1b0
     virtual void UpdateSituationFields() = 0;                                  // 0x1b8
+    // The base advice's priority (cISC4Advice vslot 0x38); the situation track list sorts on it.
+    virtual int Priority() const { return 0; }
     // GetAdvisorId / GetMood of the base advice, and the advice id used as the situation key (cSC4Advice +0xe0).
     virtual int GetAdviceId() const = 0;
 };
@@ -257,6 +260,7 @@ public:
     bool IsGroupRelevant(const std::vector<std::uint32_t>& groups) const override;   // @ 0x1006a9c08
     void UpdateSituationFields() override;                              // @ 0x1006a88c6
     int GetAdviceId() const override { return base_ ? base_->AdviceId() : 0; }
+    int Priority() const override { return base_ ? base_->Priority() : 0; }
     const cRZString& GetTextTitle() const;                              // @ 0x1006a9026 (thunk 0x1006a9236)
     const cRZString& GetTextMessage() const;                            // @ 0x1006a92e0 (thunk 0x1006a96ea)
 

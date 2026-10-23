@@ -5,8 +5,10 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
+#include "gz/cIGZString.h"
 #include "gz/cIGZUnknown.h"
 #include "rz/cRZString.h"
 
@@ -36,12 +38,18 @@ public:
     virtual void Position(float xyz[3]) = 0;                  // 0x40
     virtual void SetPosition(const float xyz[3]) = 0;         // 0x48 [inferred] (coverage target occupant)
     virtual bool IsInGroup(std::uint32_t group) = 0;          // 0xb0
+    // 0xb8: adds the occupant to an occupant group (TreatAutomatonAsGroup). Defaulted: the group filters of the
+    // existing tests model the read side only.
+    virtual void SetGroup(std::uint32_t group) { (void)group; }
     // QueryInterface(0xa9b40f05) without keeping the reference; null when the occupant is not an automaton.
     virtual ISituationAutomaton* AsAutomaton() = 0;
     // QueryInterface(0xa821ef94) = cISC4NetworkOccupant
     virtual bool IsNetworkOccupant() = 0;
     virtual bool NetworkFlagsMatch(std::uint32_t networkFlags) = 0;   // network occupant vslot 0x48
     virtual void NetworkCell(int& x, int& z) = 0;                      // network occupant vslot 0x1d8
+    // QueryInterface(0x87dda3a9) then vslot 0x60: the occupant's localized name (GetCurrentTargetName). Defaulted:
+    // only the target-name path needs it. Borrowed, may be null.
+    virtual cIGZString* DisplayName() { return nullptr; }
 };
 
 // cISC4Automaton
@@ -70,9 +78,10 @@ public:
     virtual bool HandlesGroup(std::uint32_t group) = 0;            // 0xf0
     // Alert nearby automata of `group` to chase `target` within `radius` (0xb0).
     virtual void AlertGroup(float radius, std::uint32_t group, ISituationAutomaton* target, bool flag) = 0;
-    // 0x100: appends the automata of the group to `out`
-    virtual void GetInstancesOfGroup(std::uint32_t group, std::vector<ISituationAutomaton*>& out) = 0;
-    virtual void ReleaseInstances(std::vector<ISituationAutomaton*>& list) = 0;   // 0x108
+    // 0x100: adds the automata of `group` to `out` (the original appends to a shared unordered_set, so an automaton
+    // that belongs to two managers is only kept once). `out` counts as owned by the managers until 0x108 releases it.
+    virtual void AppendInstancesOfGroup(std::uint32_t group, std::unordered_set<ISituationAutomaton*>& out) = 0;
+    virtual void ReleaseInstances(std::unordered_set<ISituationAutomaton*>& list) = 0;   // 0x108
     // 0x80: finds a free spawn position for a new automaton of `group` near `from`; fills `spawnPosition`.
     virtual bool FindSpawnPosition(float minDistance, float maxDistance, std::uint32_t group, const float from[3], float spawnPosition[3],
                                    std::uint32_t flags) = 0;

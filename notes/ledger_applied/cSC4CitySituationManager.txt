@@ -1,0 +1,143 @@
+SOURCE src/sc4/CitySituationManager.cpp|h
+EVIDENCE test scripts/tests/sc4_citysituation_test.cpp - lifetime and QueryInterface, the situation value store, the version-gated serialization round trip, ResetTutorials over the preferences, the track list trigger/untrigger, automaton tracking through the dispatch view, occupant routing, the script bridge and the Init/Shutdown subscriptions, all checked against the decompiled behaviour
+
+0x1006d6d06 CitySituationManager_Construct
+0x1006d6f7c CitySituationManager_ConstructThunk
+0x1006d6f86 CitySituationManager_Destruct
+0x1006d732e CitySituationManager_DestructThunk
+0x1006d7338 CitySituationManager_DestructDeleting
+0x1006d8946 CitySituationManager_FreeCoverageCells
+0x1006d899a CitySituationManager_ClearTrackedAutomata
+0x1006d89d8 CitySituationManager_ClearSituationTrackList
+0x1006d8a60 CitySituationManager_GetMissionSuccessCount
+0x1006d8a94 CitySituationManager_GetCurrentTargetName
+0x1006d8b54 CitySituationManager_GetSituationAura
+0x1006d8b8a CitySituationManager_GetSituationMoney
+0x1006d8bc0 CitySituationManager_DoMessageGZ
+0x1006d8bc8 CitySituationManager_DoMessageGZThunk
+0x1006da36c CitySituationManager_ResetTutorials
+0x1006dab92 CitySituationManager_PostMessageToSelf
+0x1006dae70 CitySituationManager_HandleStatusChanged
+0x1006db0de CitySituationManager_SetMaxCSI
+0x1006db10e CitySituationManager_GetMaxCSI
+0x1006db122 CitySituationManager_SetCSIVisible
+0x1006db14a CitySituationManager_HandleTuningParametersChanged
+0x1006db16a CitySituationManager_FindAutomatonForSituation
+0x1006db27c CitySituationManager_GetInstancesOfGroup
+0x1006db35c CitySituationManager_CanPlayerDrive
+0x1006db496 CitySituationManager_SituationTrackLess
+0x1006db4ec CitySituationManager_TrackAutomaton
+0x1006db912 CitySituationManager_TreatAutomatonAsGroup
+0x1006db962 CitySituationManager_HandleInsertAutomaton
+0x1006dbade CitySituationManager_HandleRemoveAutomaton
+0x1006d9c1c CitySituationManager_HandleInsertOccupant
+0x1006d9318 CitySituationManager_HandleSituationTriggered
+0x1006d96c4 CitySituationManager_HandleSituationUntriggered
+0x1006dcf04 CitySituationManager_SendSituationMessage
+0x1006dd074 CitySituationManager_RetireSituation
+0x1006dcfa2 CitySituationManager_CallScriptFunction
+0x1006e5774 CitySituationManager_InitScriptFuncRef
+0x1006e57be CitySituationManager_QueryInterface
+0x1006e5810 CitySituationManager_QueryInterfaceThunk8
+0x1006e581e CitySituationManager_QueryInterfaceThunk16
+0x1006e582c CitySituationManager_QueryInterfaceThunk24
+0x1006e583a CitySituationManager_QueryInterfaceThunk32
+0x1006e5848 CitySituationManager_AddRef
+0x1006e5856 CitySituationManager_AddRefThunk8
+0x1006e5864 CitySituationManager_AddRefThunk16
+0x1006e5872 CitySituationManager_AddRefThunk24
+0x1006e5880 CitySituationManager_AddRefThunk32
+0x1006e588e CitySituationManager_Release
+0x1006e58d2 CitySituationManager_ReleaseThunk8
+0x1006e590c CitySituationManager_ReleaseThunk16
+0x1006e5946 CitySituationManager_ReleaseThunk24
+0x1006e5980 CitySituationManager_ReleaseThunk32
+0x1006e59ba CitySituationManager_Write
+0x1006e5a3e CitySituationManager_WriteThunk
+0x1006e5a4c CitySituationManager_Read
+0x1006e5d62 CitySituationManager_ReadThunk
+0x1006e5d70 CitySituationManager_GetActiveSituation
+0x1006e5d7e CitySituationManager_GetCurrentStatus
+0x1006e5d8a CitySituationManager_GetActiveAuto
+0x1006e5d98 CitySituationManager_GetCurrentTarget
+0x1006e5da6 CitySituationManager_GetCurrentTargetIndex
+0x1006e5db2 CitySituationManager_GetNumTargets
+0x1006e5dbe CitySituationManager_GetNumTargetsRemaining
+0x1006e5de6 CitySituationManager_GetCurrentTimeLimitSeconds
+0x1006e5df4 CitySituationManager_GetCurrentSituationTime
+0x1006e5e02 CitySituationManager_GetCurrentTimeRemainingSeconds
+0x1006e5e20 CitySituationManager_GetTrackedAutomataCount
+0x1006e5e2c CitySituationManager_GetCSIVisible
+0x1006e5e38 CitySituationManager_CountdownIsInProgress
+0x1006e5e50 CitySituationManager_GetGZCLSID
+0x1006e5e5c CitySituationManager_GetGZCLSIDThunk
+0x1006e60e0 CitySituationManager_SituationTrackCtor
+
+PARTIAL:
+0x1006d7366 Init: the object graph, the message/automaton/cheat subscriptions, the automata managers, the two raw game-data values and the completed-mission seeding are recovered and tested; the six script command entries of the game-data registry need cSC4AutomataScriptSystem::GetHexFromVariant, which is not recovered, so they are not registered
+0x1006d85c6 Shutdown: every subscription, clear and release is recovered and tested; the original also calls vslot 0x160 (DeactivateSituation), which is not recovered
+0x1006d8bd0 DoMessage(cIGZMessage2*): the advice trigger/untrigger, occupant insert, mission actor, advice-enabled, automaton-status-2 and cheat routes are recovered and tested; the routes whose handlers are unrecovered (target selection 0xbb324bd/automaton statuses 11/12, situation start 0xac1045ef/0x6bb350e4, popup 0x8a09fa66/0x2c16bde7/0xebb67ef7, per-tick 0x86ad10ee) answer false
+0x1006da35e non-virtual thunk of DoMessage(cIGZMessage2*): pointer adjustment only, same partial route set
+0x1006d7f98 sGetSuccessCount: the game-data-registry command handler; needs cSC4AutomataScriptSystem::GetHexFromVariant (not recovered) to read its advice id
+0x1006d805e sActivateSituation: registry command that posts a 0xac1045ef activation message; its InitiateSituationByGuid target is not recovered
+0x1006d81b8 sGetCurrentTarget: registry command; needs the registry command-set bridge (GetHexFromVariant) like the other sGet* handlers
+0x1006d8248 sGetActiveAuto: registry command; needs the registry command-set bridge (GetHexFromVariant)
+0x1006d82d8 sGetTargetName: registry command; needs the registry command-set bridge (GetHexFromVariant)
+0x1006d83ec sShowCSI: registry command; needs the registry command-set bridge (GetHexFromVariant)
+0x1006d84c8 sGetNumTargetsRemaining: registry command; needs the registry command-set bridge (GetHexFromVariant)
+0x1006d9cb0 HandleRemoveOccupant: needs HandleTargetRemoved and the target-selection core (FindTarget/SetTarget), not recovered
+0x1006d9dac HandleAutomatonMoved: its only work is CheckForSuccess, not recovered
+0x1006d9dfc HandleAutomatonDisabled: needs ChooseNextTarget and the target-selection core
+0x1006d9ece EndDialog: the dialog teardown needs the window-param objects (0xea9f13c0 / 0x8bb696c1) and RZ::WM(), which are host seams in this port; the seam calls are not exercised by a test
+0x1006da008 ShowSituationPopup: needs SC4CreateWindowFromScript, SetupDialog, the AEMS sound and cSC4AutoGamePause, none of them recovered
+0x1006da3ca HandleSituationFailure: recovers the failure effect/aura/money and the script call, but the effects/aura/budget seams and the script references it needs are not exercised by a test
+0x1006da64e HandleSituationSuccess: same as HandleSituationFailure plus the preferences mission-id append (the array at preferences +0x1334) and RetireSituation
+0x1006d988c DoAnimationTick: needs CheckForSuccess, HandleSituationSuccess/Failure, UpdatePursuit and the countdown effect, none of them recovered
+0x1006dac36 CheckForSuccess: dispatches on the situation's success condition to the four Check*Success functions, none of them recovered
+0x1006daeec UpdatePursuit: the alert-group path needs the pursuit interval, the city cell size and AlertGroup, not exercised by a test
+0x1006dbcc6 FindTarget: the occupant/target query core (FindOccupantByGroup, the target groups, the distance filter, SetTarget) is not recovered
+0x1006dc3f8 SetTarget: the target setup (coverage target occupant, distance/aura, the target index) is not recovered
+0x1006dbb72 HandleTargetRemoved: needs FindTarget/SetTarget/ChooseNextTarget
+0x1006dbc26 ChooseNextTarget: needs FindTarget and the target sequence
+0x1006dd0e4 IsSituationAvailable(cISC4Occupant*): needs the occupant property/groups queries of the target core
+0x1006dd270 IsSituationAvailable(unsigned int): needs the automata manager group queries of the target core
+0x1006dd3ce InitiateSituationByGuid: needs the advice lookup, FindTarget and InitiateSituation*
+0x1006dd6be CreateAutomatonForPlayerDrive: needs FindSpawnPosition/CreateAutomaton and the drive parameters
+0x1006dd910 FindOccupantByGroup: needs the occupant manager's frustum query
+0x1006ddbf0 InitiateSituationForOccupant: needs SetTarget and InitiateSituation
+0x1006ddce4 InitiateSituationByAutomataGroup: needs FindOccupantByGroup and StartJoyride
+0x1006ddf0e StartJoyride: needs cSC4AutomataManager::EnterPlayerDriveView and the transport view
+0x1006ddf50 InitiateSituation: needs InitScriptRefs, CreateTarget and ActivateSituation
+0x1006de1a0 SetActiveAutomaton: needs the automaton listener/indicator setup of the target core
+0x1006de266 InitScriptRefs: needs the situation's script table and the seven registry references
+0x1006de570 InitCoverageCells: the coverage grid builder (zone/lot/network/rect cell lists) is not recovered
+0x1006df0f0 CreateTarget: needs the coverage/occupant target creation
+0x1006df3da ActivateSituation: needs GetTimeLimitSecondsFromScript, InitiatePlayerDriveMode and the pursuit generator
+0x1006df5da GetTimeLimitSecondsFromScript: needs the distance-to-target core and the script reads
+0x1006df78a DeactivateSituation: needs SetActiveAutomaton/SetTarget/InitScriptRefs
+0x1006df850 GetCurrentTargetGroups: needs the target core's group list
+0x1006df900 ChooseRandomOccupant: needs the occupant manager list and the shared random
+0x1006df942 CallTargetScriptFunction: needs the target script references
+0x1006dfb24 InitLotCoverageCells: coverage builder, not recovered
+0x1006dfee2 InitNetworkCoverageCells: coverage builder, not recovered
+0x1006e0526 InitZoneCoverageCells: coverage builder, not recovered
+0x1006e0e76 UpdateCoverageTarget: coverage builder, not recovered
+0x1006e0fd8 FindClosestTargetCell: coverage builder, not recovered
+0x1006e1060 WalkCoverageNetwork: coverage builder, not recovered
+0x1006e1460 AddCellsToCoverage: coverage builder, not recovered
+0x1006e2020 FloodFillWaterZone: coverage flood fill, not recovered
+0x1006e2d9a FloodFillIsGoodCell: coverage flood fill, not recovered
+0x1006e2e08 GetTargetAsAutomaton: recovered (QueryInterface without keeping the reference) but the target it reads is only set by the unrecovered SetTarget, so no test exercises it
+0x1006e2f60 CheckEvadeListSuccess: needs GetInstancesOfGroup results and the pursuit target chain
+0x1006e313c CheckReachTargetSuccess: needs GetDistanceToTarget and ChooseNextTarget
+0x1006e326a CheckEscapeCitySuccess: needs the city cell conversion, the neighbour sim and FlashIndicator
+0x1006e350a CheckCellCoverageSuccess: needs the coverage cell set
+0x1006e3884 GetDistanceToTarget: needs the target position/distance core
+0x1006e3c40 GetActivePosition: recovered but the active situation it reads is only set by the unrecovered InitiateSituation, so no test exercises it
+0x1006e3d46 EndSituation: needs TrackAutomaton() over the track list and DeactivateSituation
+0x1006e3ea8 InitiatePlayerDriveMode: needs EnterPlayerDriveView and the view's cSC4ViewInputControl query
+0x1006e3f1a SetupDialog: the situation dialog builder (cIGZWin children, callout boxes, the script window) is not recovered
+0x1006e5536 DoWinProcMessage: the dialog button/link routing needs DoURL and EndSituation
+0x1006e5758 non-virtual thunk of DoWinProcMessage: pointer adjustment only; same DoWinProcMessage state
+0x1006e5628 HandleJoyride: needs the joyride window param object, HandleSituationCancelled and StartJoyride
+0x1006e56dc HandleSituationCancelled: needs GetTargetAsAutomaton, RetireSituation and EndSituation
