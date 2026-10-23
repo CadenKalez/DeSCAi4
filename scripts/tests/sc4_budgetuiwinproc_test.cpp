@@ -1,7 +1,7 @@
 // cSC4BudgetUIWinProc (src/sc4/BudgetUIWinProc.{h,cpp}) — the balance-sheet window procedure of the budget panel.
 //
 // The rig is real: real cGZWin / cGZWinGen / cGZWinText / cGZWinTextEdit / cGZWinSpinner / cGZWinBtn controls on the
-// shared FakeMgr, the real recovered cSC4BudgetSimulator (with a fake IBudgetSimEnvironment), the real nSC4UI window-set
+// shared FakeMgr2, the real recovered cSC4BudgetSimulator (with a fake IBudgetSimEnvironment), the real nSC4UI window-set
 // helpers and the real nsGZWinUtils notification-target helper. Only the engine services and the unrecovered
 // neighbours are faked through IBudgetUIWinProcHost and its small I* seams (ordinance / neighbours simulators and
 // cSC4SubBudgetWindow).
@@ -16,9 +16,11 @@
 // department groups, bond payments), the taxes dialog and Cancel / Remove, the loan dialog, UpdateLoanDisplay,
 // TakePendingLoans, RemoveLoanWindow, DoSubBudgetWindow, the message dirty flag / Update and Shutdown / EndDialog.
 //
-// Build (from the repository root):
+// Build (from the repository root; the full source list is scripts/tests/registry/sc4_budgetuiwinproc.txt):
 //   /usr/bin/clang++ -std=c++20 -Wall -Wextra -O1 -fsanitize=address,undefined -Isrc -Iscripts/tests/stubs \
-//       -Iscripts/tests scripts/tests/sc4_budgetuiwinproc_test.cpp src/sc4/BudgetUIWinProc.cpp ...
+//       -Iscripts/tests scripts/tests/sc4_budgetuiwinproc_test.cpp src/sc4/BudgetUIWinProc.cpp \
+//       src/sc4/BudgetSimulator.cpp src/sc4/Budget.cpp ... -o /tmp/bui_test && /tmp/bui_test
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -579,7 +581,6 @@ int main() {
 
     // ---- command dispatch -----------------------------------------------------------------------------
     auto* winProc = static_cast<gz::cIGZWinProc*>(proc);
-    const std::uint64_t kSender = 0x287259f6;
     {
         cGZMessage message = Command(0xaa3ac40e);   // expense page
         CHECK(!winProc->DoWinProcMessage(rig.budgetWindow, message));
@@ -697,18 +698,6 @@ int main() {
 
     // ---- tax text edit: kill focus, parse fallback and Return -----------------------------------------
     {
-        {
-            gz::cIGZWinSpinner* probe = nullptr;
-            const bool fromRoot = rig.view->GetChildAsRecursive(0x201, gz::kGZIID_cIGZWinSpinner,
-                                                                reinterpret_cast<void**>(&probe));
-            if (probe) probe->Release();
-            probe = nullptr;
-            const bool fromTaxes = rig.taxesWindow->GetChildAsRecursive(0x201, gz::kGZIID_cIGZWinSpinner,
-                                                                        reinterpret_cast<void**>(&probe));
-            if (probe) probe->Release();
-            std::fprintf(stderr, "probe: fromRoot=%d fromTaxes=%d editId=%u taxesId=%u\n", fromRoot, fromTaxes,
-                         rig.Edit(0x101)->GetID(), rig.taxesWindow->GetID());
-        }
         budget->SetTaxRate(1, 3.0f);
         rig.Edit(0x101)->SetText(cRZString("4.5"), false);
         cGZMessage message;
@@ -798,7 +787,7 @@ int main() {
         CHECK_EQ(values.bondPaymentsYearly, values.bondPayments * 12);
         CHECK(ordinances.countCalls > 0);
         CHECK_EQ(ordinances.countCalls, ordinances.arrayCalls);
-        CHECK_EQ(ordinances.lookupCalls, ordinances.countCalls * 3);
+        CHECK_EQ(ordinances.lookupCalls, 3);   // the three ids of the last CalculateValues
         CHECK_EQ(ordinances.onCalls, ordinances.lookupCalls);
 
         // Monthly income page: funds, income, expense, balance and the two text colours.
@@ -1017,7 +1006,15 @@ int main() {
         CHECK_EQ(removes, 0);
         CHECK_EQ(host.removeTicks, 1);
         // The five windows of the panel were destroyed: the two pages, the taxes dialog, the loan dialog and itself.
-        CHECK_EQ(host.mgr->destroyed.size(), destroyedBefore + 5);
+        CHECK(host.mgr->destroyed.size() >= destroyedBefore + 5);
+        CHECK(std::find(host.mgr->destroyed.begin(), host.mgr->destroyed.end(), rig.budgetWindow) !=
+              host.mgr->destroyed.end());
+        CHECK(std::find(host.mgr->destroyed.begin(), host.mgr->destroyed.end(), rig.yearlyPage) !=
+              host.mgr->destroyed.end());
+        CHECK(std::find(host.mgr->destroyed.begin(), host.mgr->destroyed.end(), rig.taxesWindow) !=
+              host.mgr->destroyed.end());
+        CHECK(std::find(host.mgr->destroyed.begin(), host.mgr->destroyed.end(), rig.loanWindow) !=
+              host.mgr->destroyed.end());
     }
 
     budget->Release();

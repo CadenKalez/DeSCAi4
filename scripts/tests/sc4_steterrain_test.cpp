@@ -348,6 +348,15 @@ public:
         const double unit = static_cast<double>(randomState >> 8) / 16777216.0;
         return lo + (hi - lo) * unit;
     }
+    double RandomDoubleRangeGaussian(double mean, double sigma) override {
+        // Box-Muller over the same generator, so a fixed seed gives a fixed cliff height
+        randomState = randomState * 1664525u + 1013904223u;
+        const double first = (static_cast<double>(randomState >> 8) + 0.5) / 16777216.0;
+        randomState = randomState * 1664525u + 1013904223u;
+        const double second = static_cast<double>(randomState >> 8) / 16777216.0;
+        const double normal = std::sqrt(-2.0 * std::log(first)) * std::cos(6.283185307179586 * second);
+        return mean + sigma * normal;
+    }
     void ApplyTerrainLightingRow(std::int32_t z, std::int32_t x, std::int32_t endX, float* normals,
                                  std::int32_t normalStride, void* colours, std::int32_t colourStride) override {
         rows.push_back({z, x, endX, normalStride, colourStride, normals, colours});
@@ -1259,39 +1268,352 @@ int main() {
         CHECK(city.Shutdown());
     }
     {
-        // ---- the shore helpers: IsShoreVertex skips the south neighbour (sic), GetNeighboringSeaVertex
-        //      divides the row by the vertex count in Z (sic)
+        // ---- the shore helpers: IsShoreVertex tests the four axis neighbours (west, north, east, south);
+        //      GetNeighboringSeaVertex divides the row by the vertex count in Z (sic)
         cSTETerrain city;
         TerrainTuning tuning2;
         tuning2.seaLevel = 20.0f;
         city.Init(2, 2, tuning2);
         for (cSTETerrain::Vertex& vertex : city.Vertices()) vertex.altitude = 100.0f;
-        // (1,0) is land; its only sea neighbour is to the south (direction 6): not seen
+        // (1,0) is land; a sea neighbour to the south is seen (direction 6 is tested)
         city.Vertices()[static_cast<std::size_t>(city.GetVertIndex(1, 0))].altitude = 30.0f;
         city.Vertices()[static_cast<std::size_t>(city.GetVertIndex(1, 1))].altitude = 10.0f;
-        CHECK(!city.IsShoreVertex(city.GetVertIndex(1, 0)));
-        // the same sea neighbour to the east (direction 4) is seen
+        CHECK(city.IsShoreVertex(city.GetVertIndex(1, 0)));
+        // the same sea neighbour to the east (direction 4) is seen too
         city.Vertices()[static_cast<std::size_t>(city.GetVertIndex(1, 1))].altitude = 100.0f;
         city.Vertices()[static_cast<std::size_t>(city.GetVertIndex(2, 0))].altitude = 10.0f;
         CHECK(city.IsShoreVertex(city.GetVertIndex(1, 0)));
-        // the vertex itself must be land
+        // the vertex itself must be dry land (strictly above the sea)
         city.Vertices()[static_cast<std::size_t>(city.GetVertIndex(1, 0))].altitude = 20.0f;
         CHECK(!city.IsShoreVertex(city.GetVertIndex(1, 0)));
 
-        // GetNeighboringSeaVertex on a 2 x 4 cell grid (9 x 5 vertices): index 7 is (1, 1)
+        // GetNeighboringSeaVertex on a 2 x 4 cell grid (3 x 5 vertices): index 7 really is (1, 2) but the
+        // original derives the row as index / vertsZ = 7 / 5 = 1 (sic), so it scans the ring around (1, 1):
+        // west = index 3, north = 1, east = 5 and south = 7 (the vertex itself).
         cSTETerrain tall;
         tall.Init(2, 4, tuning2);
         for (cSTETerrain::Vertex& vertex : tall.Vertices()) vertex.altitude = 100.0f;
-        tall.Vertices()[static_cast<std::size_t>(tall.GetVertIndex(0, 0))].altitude = 5.0f;   // north-west
-        CHECK(tall.GetNeighboringSeaVertex(7) == tall.GetVertIndex(0, 0));
-        tall.Vertices()[static_cast<std::size_t>(tall.GetVertIndex(0, 0))].altitude = 100.0f;
-        tall.Vertices()[static_cast<std::size_t>(tall.GetVertIndex(2, 0))].altitude = 5.0f;   // north-east
-        CHECK(tall.GetNeighboringSeaVertex(7) == tall.GetVertIndex(2, 0));
-        tall.Vertices()[static_cast<std::size_t>(tall.GetVertIndex(2, 0))].altitude = 100.0f;
         CHECK(tall.GetNeighboringSeaVertex(7) == -1);
-        // the quirk: the row is (index / vertsZ) = 7 / 5 = 1, not 7 / 3 = 2 (which is out of the grid)
         tall.Vertices()[static_cast<std::size_t>(tall.GetVertIndex(0, 1))].altitude = 5.0f;   // west
         CHECK(tall.GetNeighboringSeaVertex(7) == tall.GetVertIndex(0, 1));
+        tall.Vertices()[static_cast<std::size_t>(tall.GetVertIndex(0, 1))].altitude = 100.0f;
+        tall.Vertices()[static_cast<std::size_t>(tall.GetVertIndex(1, 0))].altitude = 5.0f;   // north
+        CHECK(tall.GetNeighboringSeaVertex(7) == tall.GetVertIndex(1, 0));
+        tall.Vertices()[static_cast<std::size_t>(tall.GetVertIndex(1, 0))].altitude = 100.0f;
+        tall.Vertices()[static_cast<std::size_t>(tall.GetVertIndex(2, 1))].altitude = 5.0f;   // east
+        CHECK(tall.GetNeighboringSeaVertex(7) == tall.GetVertIndex(2, 1));
+        tall.Vertices()[static_cast<std::size_t>(tall.GetVertIndex(2, 1))].altitude = 100.0f;
+        // the quirk: the south neighbour is (1, 7 / 5 + 1) = (1, 2) = index 7 itself
+        tall.Vertices()[7].altitude = 5.0f;
+        CHECK(tall.GetNeighboringSeaVertex(7) == 7);
+        // and the north-west corner (0, 0) -- the port's old pick -- is *not* consulted any more
+        tall.Vertices()[7].altitude = 100.0f;
+        tall.Vertices()[static_cast<std::size_t>(tall.GetVertIndex(0, 0))].altitude = 5.0f;
+        CHECK(tall.GetNeighboringSeaVertex(7) == -1);
+    }
+    {
+        // ---- DetectShoreVertices / GetShoreStartingAtVert / TrackShore*: a straight shoreline along z = 6
+        //      of a 12 x 12 cell grid (13 x 13 vertices); z >= 7 is sea
+        cSTETerrain shore;
+        TerrainTuning seaTuning;
+        seaTuning.seaLevel = 20.0f;
+        shore.Init(12, 12, seaTuning);
+        const auto vertexAt = [&shore](std::uint32_t x, std::uint32_t z) {
+            return static_cast<std::size_t>(shore.GetVertIndex(static_cast<std::int32_t>(x),
+                                                               static_cast<std::int32_t>(z)));
+        };
+        for (cSTETerrain::Vertex& vertex : shore.Vertices()) vertex.altitude = 100.0f;
+        for (std::uint32_t z = 7; z <= 12; ++z)
+            for (std::uint32_t x = 0; x <= 12; ++x) shore.Vertices()[vertexAt(x, z)].altitude = 10.0f;
+        // dirty every shore bit first: DetectShoreVertices clears the mask over the whole grid rect
+        for (cSTETerrain::Vertex& vertex : shore.Vertices()) vertex.flags |= kVertexShore;
+        shore.DetectShoreVertices();
+        for (std::uint32_t x = 0; x <= 12; ++x) {
+            CHECK((shore.Vertices()[vertexAt(x, 6)].flags & kVertexShore) != 0);   // the shoreline row
+            CHECK((shore.Vertices()[vertexAt(x, 5)].flags & kVertexShore) == 0);   // inland
+            CHECK((shore.Vertices()[vertexAt(x, 7)].flags & kVertexShore) == 0);   // the sea itself
+        }
+        // the west and east ends of the row are shore vertices too (a sea neighbour in one direction)
+        CHECK((shore.Vertices()[vertexAt(0, 6)].flags & kVertexShore) != 0);
+
+        std::deque<std::int32_t> run;
+        run.push_back(-1);                                     // GetShoreStartingAtVert clears the deque
+        shore.GetShoreStartingAtVert(shore.GetVertIndex(0, 6), run, kVertexMark1);
+        CHECK(run.size() == 13);
+        CHECK(run.back() == shore.GetVertIndex(0, 6));         // the start vertex stays last
+        CHECK(run.front() == shore.GetVertIndex(12, 6));       // TrackShoreWithLandToTheLeft walks east
+        for (std::uint32_t x = 0; x <= 12; ++x) {
+            const cSTETerrain::Vertex& vertex = shore.Vertices()[vertexAt(x, 6)];
+            CHECK((vertex.flags & kVertexMark1) != 0);         // every visited vertex is marked
+            CHECK((shore.Vertices()[vertexAt(x, 5)].flags & kVertexMark1) == 0);
+        }
+        // the order is strictly west to east: (12,6), (11,6), ... (0,6)
+        for (std::uint32_t i = 0; i <= 12; ++i)
+            CHECK(run[static_cast<std::size_t>(i)] == shore.GetVertIndex(12 - static_cast<std::int32_t>(i), 6));
+
+        // ---- AnalyzeShoreAndCreateCliffs / CreateShoreCliff: five inland candidates per vertex, a random
+        //      cliff height above the sea, mark-3 on both ends and the 5 candidate heights
+        TerrainStatics& tuningStatics = cSTETerrain::Statics();
+        tuningStatics.minShoreCliffSize = 3;
+        tuningStatics.maxShoreCliffSize = 20;                  // the whole 13-vertex run becomes one cliff
+        tuningStatics.minShoreCliffCandidateHeightSum = 100.0f;   // 6 x 80 m of land is well above it
+        tuningStatics.minShoreCliffHeight = 30.0f;
+        tuningStatics.maxShoreCliffHeight = 40.0f;
+        tuningStatics.windErosionFactor = 0.0f;
+        CHECK(shore.AnalyzeShoreAndCreateCliffs(run));
+        for (std::uint32_t x = 0; x <= 12; ++x) {
+            const float ridge = shore.Vertices()[vertexAt(x, 6)].altitude;
+            CHECK(ridge > 20.0f && ridge < 80.0f);             // sea + 30..40, jittered
+            CHECK((shore.Vertices()[vertexAt(x, 6)].flags & kVertexMark3) != 0);
+            CHECK((shore.Vertices()[vertexAt(x, 7)].flags & kVertexMark3) != 0);
+            for (std::uint32_t z = 1; z <= 5; ++z)
+                CHECK(shore.Vertices()[vertexAt(x, z)].altitude < 80.0f);   // the five candidates moved
+            CHECK(Near(shore.Vertices()[vertexAt(x, 0)].altitude, 100.0f));  // the sixth step inland did not
+        }
+
+        // A run of exactly kMinShoreCliffSize is dropped (the original flushes only when count > minimum).
+        cSTETerrain shortRun;
+        shortRun.Init(12, 12, seaTuning);
+        for (cSTETerrain::Vertex& vertex : shortRun.Vertices()) vertex.altitude = 100.0f;
+        for (std::uint32_t z = 7; z <= 12; ++z)
+            for (std::uint32_t x = 0; x <= 12; ++x)
+                shortRun.Vertices()[static_cast<std::size_t>(shortRun.GetVertIndex(static_cast<std::int32_t>(x),
+                                                                                   static_cast<std::int32_t>(z)))]
+                    .altitude = 10.0f;
+        std::deque<std::int32_t> exact;
+        for (std::uint32_t x = 0; x <= 12; ++x)
+            exact.push_back(shortRun.GetVertIndex(static_cast<std::int32_t>(x), 6));
+        tuningStatics.minShoreCliffSize = 13;                  // == the run's length
+        CHECK(!shortRun.AnalyzeShoreAndCreateCliffs(exact));
+        CHECK(Near(shortRun.Vertices()[static_cast<std::size_t>(shortRun.GetVertIndex(6, 6))].altitude, 100.0f));
+        tuningStatics.minShoreCliffSize = 12;                  // one shorter: a cliff is created
+        CHECK(shortRun.AnalyzeShoreAndCreateCliffs(exact));
+        CHECK(!Near(shortRun.Vertices()[static_cast<std::size_t>(shortRun.GetVertIndex(6, 6))].altitude, 100.0f));
+
+        // ---- CreateShoreCliffs end to end: returns true, keeps the ridge and clears the scratch marks
+        cSTETerrain cliffs;
+        cliffs.Init(12, 12, seaTuning);
+        for (cSTETerrain::Vertex& vertex : cliffs.Vertices()) vertex.altitude = 100.0f;
+        for (std::uint32_t z = 7; z <= 12; ++z)
+            for (std::uint32_t x = 0; x <= 12; ++x)
+                cliffs.Vertices()[static_cast<std::size_t>(cliffs.GetVertIndex(static_cast<std::int32_t>(x),
+                                                                              static_cast<std::int32_t>(z)))]
+                    .altitude = 10.0f;
+        tuningStatics.minShoreCliffSize = 3;
+        tuningStatics.maxShoreCliffSize = 20;
+        CHECK(cliffs.CreateShoreCliffs(false));
+        int raised = 0;
+        for (std::uint32_t x = 0; x <= 12; ++x) {
+            const std::size_t index = static_cast<std::size_t>(cliffs.GetVertIndex(static_cast<std::int32_t>(x), 6));
+            if (cliffs.Vertices()[index].altitude < 80.0f) ++raised;
+            // the three scratch marks (1, 2 and 4) are cleared over the whole grid at the end
+            for (std::uint32_t z = 0; z <= 12; ++z) {
+                const std::size_t any = static_cast<std::size_t>(cliffs.GetVertIndex(static_cast<std::int32_t>(x),
+                                                                                    static_cast<std::int32_t>(z)));
+                CHECK((cliffs.Vertices()[any].flags & (kVertexMark1 | kVertexMark2 | kVertexMark3)) == 0);
+            }
+        }
+        CHECK(raised == 13);
+        // no shore bit survives? DetectShoreVertices ran and the shore bit is not one of the cleared marks
+        CHECK((cliffs.Vertices()[static_cast<std::size_t>(cliffs.GetVertIndex(4, 6))].flags & kVertexShore) != 0);
+
+        // ---- MarkRegion: an 8-cell-free halo of mark-2 vertices around the mark-3 vertices, land only
+        cSTETerrain marked;
+        marked.Init(8, 8, seaTuning);
+        for (cSTETerrain::Vertex& vertex : marked.Vertices()) vertex.altitude = 100.0f;
+        marked.Vertices()[static_cast<std::size_t>(marked.GetVertIndex(2, 2))].altitude = 10.0f;   // sea
+        marked.Vertices()[static_cast<std::size_t>(marked.GetVertIndex(4, 4))].flags |= kVertexMark3;
+        marked.MarkRegion(2, &cSTETerrain::IsVertexWithMark3, &cSTETerrain::IsLandAndNotMark3, kVertexMark2);
+        for (std::int32_t z = 0; z <= 8; ++z) {
+            for (std::int32_t x = 0; x <= 8; ++x) {
+                const bool inside = x >= 2 && x <= 6 && z >= 2 && z <= 6;
+                const bool isCliff = x == 4 && z == 4;
+                const bool isSea = x == 2 && z == 2;
+                const bool markedOn = (marked.Vertices()[static_cast<std::size_t>(marked.GetVertIndex(x, z))].flags &
+                                       kVertexMark2) != 0;
+                CHECK(markedOn == (inside && !isCliff && !isSea));
+            }
+        }
+
+        // ---- SmoothenMarkedRegion: the talus thresholds, cross and diagonal
+        tuningStatics.crossHeightDifferenceThreshold = 5.0f;
+        tuningStatics.diagonalHeightDifferenceThreshold = 5.0f;
+        tuningStatics.windErosionFactor = 0.5f;
+        cSTETerrain smooth;
+        smooth.Init(4, 4, seaTuning);
+        for (cSTETerrain::Vertex& vertex : smooth.Vertices()) vertex.altitude = 95.0f;   // the pair's average
+        smooth.Vertices()[static_cast<std::size_t>(smooth.GetVertIndex(0, 0))].altitude = 100.0f;
+        smooth.Vertices()[static_cast<std::size_t>(smooth.GetVertIndex(1, 0))].altitude = 90.0f;
+        smooth.Vertices()[static_cast<std::size_t>(smooth.GetVertIndex(0, 0))].flags |= kVertexMark2;
+        smooth.Vertices()[static_cast<std::size_t>(smooth.GetVertIndex(1, 0))].flags |= kVertexMark2;
+        smooth.SmoothenMarkedRegion(TerrainRect{0, 0, 4, 4}, 1, kVertexMark2);
+        // 10 m apart against a 5 m threshold: both move by (10 - 5) * 0.5, and nothing else moves
+        CHECK(Near(smooth.Vertices()[static_cast<std::size_t>(smooth.GetVertIndex(0, 0))].altitude, 97.5f));
+        CHECK(Near(smooth.Vertices()[static_cast<std::size_t>(smooth.GetVertIndex(1, 0))].altitude, 92.5f));
+        CHECK(Near(smooth.Vertices()[static_cast<std::size_t>(smooth.GetVertIndex(2, 0))].altitude, 95.0f));
+        CHECK(Near(smooth.Vertices()[static_cast<std::size_t>(smooth.GetVertIndex(1, 1))].altitude, 95.0f));
+        // windErosionFactor 0: the pass cannot move anything
+        tuningStatics.windErosionFactor = 0.0f;
+        smooth.SmoothenMarkedRegion(TerrainRect{0, 0, 4, 4}, 3, kVertexMark2);
+        CHECK(Near(smooth.Vertices()[static_cast<std::size_t>(smooth.GetVertIndex(0, 0))].altitude, 97.5f));
+        CHECK(Near(smooth.Vertices()[static_cast<std::size_t>(smooth.GetVertIndex(1, 0))].altitude, 92.5f));
+        // a diagonal pair uses kDiagonalHtDiffThreshold, not the cross one
+        tuningStatics.windErosionFactor = 0.5f;
+        tuningStatics.crossHeightDifferenceThreshold = 5.0f;
+        tuningStatics.diagonalHeightDifferenceThreshold = 2.0f;
+        cSTETerrain diagonal;
+        diagonal.Init(4, 4, seaTuning);
+        for (cSTETerrain::Vertex& vertex : diagonal.Vertices()) vertex.altitude = 97.5f;
+        diagonal.Vertices()[static_cast<std::size_t>(diagonal.GetVertIndex(0, 0))].altitude = 100.0f;
+        diagonal.Vertices()[static_cast<std::size_t>(diagonal.GetVertIndex(1, 1))].altitude = 95.0f;
+        diagonal.Vertices()[static_cast<std::size_t>(diagonal.GetVertIndex(0, 0))].flags |= kVertexMark2;
+        diagonal.Vertices()[static_cast<std::size_t>(diagonal.GetVertIndex(1, 1))].flags |= kVertexMark2;
+        diagonal.SmoothenMarkedRegion(TerrainRect{0, 0, 4, 4}, 1, kVertexMark2);
+        // 5 m apart against the 2 m diagonal threshold: (5 - 2) * 0.5 = 1.5 m each
+        CHECK(Near(diagonal.Vertices()[static_cast<std::size_t>(diagonal.GetVertIndex(0, 0))].altitude, 98.5f));
+        CHECK(Near(diagonal.Vertices()[static_cast<std::size_t>(diagonal.GetVertIndex(1, 1))].altitude, 96.5f));
+        CHECK(Near(diagonal.Vertices()[static_cast<std::size_t>(diagonal.GetVertIndex(2, 2))].altitude, 97.5f));
+        // leave the shared statics as the later blocks expect them
+        tuningStatics.crossHeightDifferenceThreshold = 16.0f;
+        tuningStatics.diagonalHeightDifferenceThreshold = 22.624f;
+        tuningStatics.windErosionFactor = 0.0f;
+        tuningStatics.minShoreCliffSize = 0;
+        tuningStatics.maxShoreCliffSize = 0;
+        tuningStatics.minShoreCliffCandidateHeightSum = 0.0f;
+        tuningStatics.minShoreCliffHeight = 0.0f;
+        tuningStatics.maxShoreCliffHeight = 0.0f;
+    }
+    {
+        // ---- DoWindErosion / DoWaterErosion / DoErosion: the erosion kernels
+        TerrainStatics& statics = cSTETerrain::Statics();
+        TerrainTuning erosionTuning;
+        erosionTuning.seaLevel = 20.0f;
+        statics.maxTerrainHeight = 1000.0f;
+        statics.minTerrainHeight = 0.0f;
+        statics.crossHeightDifferenceThreshold = 16.0f;
+        statics.diagonalHeightDifferenceThreshold = 22.624f;
+        statics.windErosionFactor = 1.0f;
+        // talus: a 20 m spike against the 16 m cross threshold drops by 4 m and only its west neighbour
+        // (the first direction that exceeds the threshold) rises, because the spike is then level with the
+        // other three
+        cSTETerrain wind;
+        wind.Init(4, 4, erosionTuning);
+        for (cSTETerrain::Vertex& vertex : wind.Vertices()) vertex.altitude = 100.0f;
+        wind.Vertices()[static_cast<std::size_t>(wind.GetVertIndex(2, 2))].altitude = 120.0f;
+        wind.DoWindErosion(1);
+        CHECK(Near(wind.Vertices()[static_cast<std::size_t>(wind.GetVertIndex(2, 2))].altitude, 116.0f));
+        CHECK(Near(wind.Vertices()[static_cast<std::size_t>(wind.GetVertIndex(1, 2))].altitude, 104.0f));
+        CHECK(Near(wind.Vertices()[static_cast<std::size_t>(wind.GetVertIndex(2, 1))].altitude, 100.0f));
+        CHECK(Near(wind.Vertices()[static_cast<std::size_t>(wind.GetVertIndex(3, 2))].altitude, 100.0f));
+        CHECK(Near(wind.Vertices()[static_cast<std::size_t>(wind.GetVertIndex(2, 3))].altitude, 100.0f));
+        statics.windErosionFactor = 0.0f;                  // factor 0: the pass cannot move anything
+        wind.DoWindErosion(3);
+        CHECK(Near(wind.Vertices()[static_cast<std::size_t>(wind.GetVertIndex(2, 2))].altitude, 116.0f));
+        CHECK(Near(wind.Vertices()[static_cast<std::size_t>(wind.GetVertIndex(1, 2))].altitude, 104.0f));
+
+        // water: a slope down towards +x. With no flow step only the initial fill and the final sea-level
+        // reset run; one flow step erodes the border vertices (they lose all their water) and the interior.
+        statics.windErosionFactor = 1.0f;
+        statics.maxSedimentPerUnitWater = 5.0f;
+        statics.rainFallFactor = 0.01f;
+        statics.minHydraulicErosionRate = 0.02f;
+        statics.maxHydraulicErosionRate = 0.06f;
+        statics.hydraulicErosionRateRampBegin = 5.128f;
+        statics.hydraulicErosionRateRampEnd = 38.14f;
+        statics.hydraulicDepositRate = 0.2f;
+        cSTETerrain still;
+        still.Init(4, 4, erosionTuning);
+        const auto slopeAt = [](std::uint32_t x) { return 40.0f - 5.0f * static_cast<float>(x); };
+        for (std::uint32_t z = 0; z <= 4; ++z)
+            for (std::uint32_t x = 0; x <= 4; ++x)
+                still.Vertices()[static_cast<std::size_t>(still.GetVertIndex(static_cast<std::int32_t>(x),
+                                                                            static_cast<std::int32_t>(z)))]
+                    .altitude = slopeAt(x);
+        for (std::size_t i = 0; i < still.VertexCount(); ++i) {
+            still.Vertices()[i].normal[0] = 1.0f;
+            still.Sediment()[i] = 3.0f;
+        }
+        still.DoWaterErosion(TerrainRect{0, 0, 4, 4}, 0);
+        for (std::uint32_t z = 0; z <= 4; ++z)
+            for (std::uint32_t x = 0; x <= 4; ++x) {
+                const std::size_t i = static_cast<std::size_t>(still.GetVertIndex(static_cast<std::int32_t>(x),
+                                                                                 static_cast<std::int32_t>(z)));
+                CHECK(Near(still.WaterDepth()[i], 20.0f - slopeAt(x)));   // reset to sea - altitude
+                CHECK(still.Sediment()[i] == 0.0f);
+                CHECK(Near(still.Vertices()[i].normal[0], 0.0f) && Near(still.Vertices()[i].normal[1], 0.0f) &&
+                      Near(still.Vertices()[i].normal[2], 0.0f));
+                CHECK(Near(still.Vertices()[i].altitude, slopeAt(x)));    // no flow, no erosion
+            }
+
+        cSTETerrain flow;
+        flow.Init(4, 4, erosionTuning);
+        for (std::uint32_t z = 0; z <= 4; ++z)
+            for (std::uint32_t x = 0; x <= 4; ++x)
+                flow.Vertices()[static_cast<std::size_t>(flow.GetVertIndex(static_cast<std::int32_t>(x),
+                                                                           static_cast<std::int32_t>(z)))]
+                    .altitude = slopeAt(x);
+        flow.DoWaterErosion(TerrainRect{0, 0, 4, 4}, 1);
+        // (0,0) is the first vertex: rain gives it 0.4 m of water, it is a border vertex so all of it runs
+        // off with no slope, and (2 * 5 * 0.4) * 0.02 m erodes
+        CHECK(Near(flow.Vertices()[static_cast<std::size_t>(flow.GetVertIndex(0, 0))].altitude, 39.96f, 1e-3f));
+        // (1,0) is on the top border as well: rain 0.35 m, erosion (2 * 5 * 0.35) * 0.02
+        CHECK(Near(flow.Vertices()[static_cast<std::size_t>(flow.GetVertIndex(1, 0))].altitude, 34.965f, 1e-3f));
+        // (1,1) is interior and flows east (5 m of drop, the 5.128 m ramp start is not reached -> 0.02)
+        CHECK(Near(flow.Vertices()[static_cast<std::size_t>(flow.GetVertIndex(1, 1))].altitude, 34.965f, 1e-3f));
+        // (2,1) already received (1,1)'s water: rain 0.30 + 0.35 m, so (2 * 5 * 0.65) * 0.02
+        CHECK(Near(flow.Vertices()[static_cast<std::size_t>(flow.GetVertIndex(2, 1))].altitude, 29.935f, 1e-3f));
+        // every vertex ends up with the sea-level water surface again
+        for (std::size_t i = 0; i < flow.VertexCount(); ++i)
+            CHECK(Near(flow.WaterDepth()[i], 20.0f - flow.Vertices()[i].altitude));
+        // a locked vertex keeps its altitude (but still passes its water on)
+        cSTETerrain locked;
+        locked.Init(4, 4, erosionTuning);
+        for (std::uint32_t z = 0; z <= 4; ++z)
+            for (std::uint32_t x = 0; x <= 4; ++x)
+                locked.Vertices()[static_cast<std::size_t>(locked.GetVertIndex(static_cast<std::int32_t>(x),
+                                                                               static_cast<std::int32_t>(z)))]
+                    .altitude = slopeAt(x);
+        locked.Vertices()[static_cast<std::size_t>(locked.GetVertIndex(1, 1))].flags |= kVertexLocked;
+        locked.DoWaterErosion(TerrainRect{0, 0, 4, 4}, 1);
+        CHECK(Near(locked.Vertices()[static_cast<std::size_t>(locked.GetVertIndex(1, 1))].altitude, 35.0f));
+
+        // DoErosion: style 1 is the wind pass with the per-click count, style 0 runs the water kernel and
+        // then feeds the *smoothing* count to the wind pass (sic), other styles do nothing.
+        statics.numWindErosionIterationsPerUserClick = 0;
+        statics.numWaterErosionIterationsPerPlayerClick = 0;
+        statics.numFlowStepsForGlobalWaterErosion = 0;
+        statics.numSmoothingIterationsAfterWaterErosion = 1;
+        statics.imageImportWaterErosionIterations = 0;
+        statics.imageImportFlowSteps = 0;
+        statics.imageImportSmoothingIterations = 0;
+        cSTETerrain dispatch;
+        dispatch.Init(4, 4, erosionTuning);
+        for (cSTETerrain::Vertex& vertex : dispatch.Vertices()) vertex.altitude = 100.0f;
+        dispatch.Vertices()[static_cast<std::size_t>(dispatch.GetVertIndex(2, 2))].altitude = 120.0f;
+        dispatch.DoErosion(2, false);                      // unknown style: nothing happens
+        CHECK(Near(dispatch.Vertices()[static_cast<std::size_t>(dispatch.GetVertIndex(2, 2))].altitude, 120.0f));
+        dispatch.DoErosion(1, false);                      // wind only, but the click count is 0
+        CHECK(Near(dispatch.Vertices()[static_cast<std::size_t>(dispatch.GetVertIndex(2, 2))].altitude, 120.0f));
+        dispatch.DoErosion(0, false);                      // no water passes, one smoothing pass of wind
+        CHECK(Near(dispatch.Vertices()[static_cast<std::size_t>(dispatch.GetVertIndex(2, 2))].altitude, 116.0f));
+        // the "from image" counts come from cSC4WinRegionScreen: one water pass with no flow step resets the
+        // water surface even though the normal water count is 0
+        cSTETerrain image;
+        image.Init(4, 4, erosionTuning);
+        for (cSTETerrain::Vertex& vertex : image.Vertices()) vertex.altitude = 40.0f;
+        statics.imageImportWaterErosionIterations = 1;
+        statics.imageImportSmoothingIterations = 0;
+        image.WaterDepth().assign(image.VertexCount(), 0.0f);
+        image.DoErosion(0, true);
+        CHECK(Near(image.WaterDepth()[0], 20.0f - 40.0f));   // the sea-level reset of the import path
+        statics.imageImportWaterErosionIterations = 0;
+        // leave the shared statics in their binary defaults for the later blocks
+        statics.maxTerrainHeight = 200.0f;
+        statics.minTerrainHeight = 5.0f;
+        statics.crossHeightDifferenceThreshold = 16.0f;
+        statics.diagonalHeightDifferenceThreshold = 22.624f;
+        statics.windErosionFactor = 0.0f;
+        statics.numSmoothingIterationsAfterWaterErosion = 1;
     }
     {
         // ---- GetEffectIDProperty: the two-dword property, anything else fails
@@ -1373,8 +1695,8 @@ int main() {
             bag.Uint(0x48cd7b54, 5);
             bag.Float(0x69ac5640, 12.0f);
             bag.Float(0x69ac5641, 40.0f);
-            bag.Float(0x48cd7b60, 3.0f);
-            bag.Float(0x48cd7b64, 9.0f);
+            bag.Uint(0x48cd7b60, 3);                        // minShoreCliffSize: read as an unsigned int
+            bag.Uint(0x48cd7b64, 9);                        // maxShoreCliffSize
             bag.Float(0x48cd7b65, 0.25f);
             bag.Float(0x48cd7b61, 4.0f);                    // x6 after the read -> 24
             bag.Float(0x48cd7b62, 2.0f);
@@ -1414,7 +1736,7 @@ int main() {
         CHECK(statics.minCellsInUsefulFlatArea == 25 && statics.autoFlatAreaEdgeSmootheningRadius == 5);
         CHECK(statics.minWaterDepthForDeepSeaBedTexture == 12.0f &&
               statics.maxWaterDepthForDeepSeaBedTexture == 40.0f);
-        CHECK(statics.minShoreCliffSize == 3.0f && statics.maxShoreCliffSize == 9.0f);
+        CHECK(statics.minShoreCliffSize == 3u && statics.maxShoreCliffSize == 9u);
         CHECK(statics.minShoreCliffCandidateHeightSum == 24.0f);   // read as 4, multiplied by 6
         CHECK(statics.maxNormalYForCliff == 0.25f);
         CHECK(statics.minSeaLevel == -9.0f && statics.maxSeaLevel == 180.0f);

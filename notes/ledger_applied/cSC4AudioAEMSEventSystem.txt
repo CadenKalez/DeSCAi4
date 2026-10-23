@@ -1,0 +1,50 @@
+SOURCE src/sc4audio/AudioAEMSEventSystem.cpp|h
+EVIDENCE test scripts/tests/sc4_audioaemseventsystem_test.cpp - object layout (+0/+8/+0x10/+0x18/+0x20 views) and the four QueryInterface ids (0xbb523bb2/0x8c1faeb7/0x452294aa/0x287fb697 + iid 1 on the cRZUnknown subobject), the constructor defaults (21 event slots, tuning 1.0/1.0/0x25, volume scales 1.0, empty vectors/list), Init (player volume/1024, the tuning exemplar properties 0xcbfb03fa/0xcbfb03ff/0xebfb0404/0x4bfdd955/0x8c376d4f with the kAEMSZoomLevelVolumes defaults, the 200000-byte engine block, SNDSYS getopts/setopts/init(0x72b00), SndFxInitBus(0,+0x174,+0x178), SndMasterVol curve(volume*zoom*tuning)*127, the cIGZSndEventHandler registration, the {0,0x8a5971c5,0x6b955c37} system blob and the 0xa6b79602 subscription), the Init failure path through Shutdown, Shutdown (stop/clear/remove banks, removesystem, restore, unregister both), the process-wide Init/Shutdown flag quirk, StartSound/EndSound (handle+1 slots, refused begins, busy slots), StopAllSounds' fixed order and its 0x0f/0x10 gap, the three SetParam min-with-1/127/negative clamps and the NaN -> INT32_MIN quirk, DoEvent's always-false return and master-volume scale, DoMessage's zoom volume and missing-viewport/out-of-range guards, LoadSoundBank/UnloadSoundBank with the 0xebf44df7 fallback, AddBank/RemoveBank/RemoveAllBanks (the module-bank handle always 0, front-to-back removal), LoadFromResource (Close result, release) and LoadFromFile (resize/truncate, failed read, no engine), and the destructor; recording AEMS-engine/resource-host fakes plus the shared sound-system, message-server, game and exemplar fakes
+0x1007b56a0 AudioAEMSEventSystem_Construct
+0x1007b58ec AudioAEMSEventSystem_ConstructAlias
+0x1007b58f6 AudioAEMSEventSystem_Destruct
+0x1007b59d4 AudioAEMSEventSystem_DestructAlias
+0x1007b59fa AudioAEMSEventSystem_DestructAndDelete
+0x1007b5a44 AudioAEMSEventSystem_Init
+0x1007b5c5c AudioAEMSEventSystem_ReadTuningValues
+0x1007b5f2a AudioAEMSEventSystem_UpdateVolume
+0x1007b5f64 AudioAEMSEventSystem_LoadFromResource
+0x1007b5ff6 AudioAEMSEventSystem_Shutdown
+0x1007b6106 AudioAEMSEventSystem_StopAllSounds
+0x1007b621c AudioAEMSEventSystem_RemoveAllBanks
+0x1007b62e8 AudioAEMSEventSystem_LoadBankFromResource
+0x1007b6378 AudioAEMSEventSystem_AddBank
+0x1007b6414 AudioAEMSEventSystem_RemoveBank
+0x1007b6516 AudioAEMSEventSystem_LoadFromFile
+0x1007b65ca AudioAEMSEventSystem_DoEvent
+0x1007b663a AudioAEMSEventSystem_DoMessage
+0x1007b6694 AudioAEMSEventSystem_QueryInterface
+0x1007b670e AudioAEMSEventSystem_LoadSoundBank
+0x1007b6798 AudioAEMSEventSystem_UnloadSoundBank
+0x1007b680a AudioAEMSEventSystem_StartSound
+0x1007b687e AudioAEMSEventSystem_EndSound
+0x1007b68ee AudioAEMSEventSystem_SetParamVelocity
+0x1007b694a AudioAEMSEventSystem_SetParamThrottle
+0x1007b69aa AudioAEMSEventSystem_SetParamWobble
+0x1007b6a22 AudioAEMSEventSystem_AddRef
+0x1007b6a30 AudioAEMSEventSystem_Release
+PARTIAL:
+# none: every listed function is hand-written. Two deviations from the binary, documented in
+# src/sc4audio/AudioAEMSEventSystem.h and asserted in the test: (1) the unrecovered
+# cSC4ResponseCurve::SetResponseCurveData(cGZPersistResourceKey const&, unsigned) @ 0x1000ac47e is
+# inlined here as a GetFloatArrayProperty(0x4bfdd955) + the recovered float-array overload; (2) the
+# port guards the null viewport / out-of-range zoom in DoMessage and the two event-slot bounds in
+# StartSound/EndSound (the original indexes unchecked), and it requires an installed
+# IAemsEngineHost where the original calls the SNDSYS/AEMS C API directly.
+SKIPPED:
+# 26 non-virtual thunks, all emitted by the port's own multiple inheritance and forwarding to the
+# listed methods: the destructor at -0x18/-0x20 (0x1007b59de/0x1007b59ec) and its deleting form
+# (0x1007b5a28/0x1007b5a36), Init (0x1007b5fe8) and Shutdown (0x1007b62d6) at -0x18, DoMessage
+# (0x1007b6686) at -0x10, QueryInterface at -8/-0x10/-0x18/-0x20 (0x1007b66d6..0x1007b6700),
+# LoadSoundBank (0x1007b678a), UnloadSoundBank (0x1007b67fc), StartSound (0x1007b6870), EndSound
+# (0x1007b68e0), SetParamVelocity/Throttle/Wobble (0x1007b6940/0x1007b69a0/0x1007b6a00) and
+# AddRef/Release (0x1007b6a3e/0x1007b6a4c, 0x1007b6a5a/0x1007b6a68, 0x1007b6a76/0x1007b6a80,
+# 0x1007b6a92/0x1007b6aa0), all at -8.
+# Also not this class: std::__1::__list_imp<cSC4AudioAEMSSoundBank*>::clear() @ 0x1007b6aae and
+# std::__1::vector<int>::assign<int*>(int*, int*) @ 0x1007b6b00 are libc++ instantiations emitted
+# from this TU (supplied by the host runtime here), and _STREAM_kill @ 0x1007b6a10 is CRT data.

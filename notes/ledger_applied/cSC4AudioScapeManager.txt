@@ -1,0 +1,63 @@
+SOURCE src/sc4audio/AudioScapeManager.cpp|h
+EVIDENCE test scripts/tests/sc4_audioscapemanager_test.cpp - object layout and the three COM views (0/+8/+0x10) with the QueryInterface ids 1 / 0x29e39db4 / 0x287fb697, AddRef/Release, the service accessors (INT32_MIN priority, always-false OnIdle), Init/Shutdown with a fake framework and the gpSndSys mirror, CreateLayer/DestroyLayer/ClearLayer/ClearAllLayers and the layer flags 0x1/0x4/0x10, RegisterLayerSound with the min/max instance window, InsertInstance (implicit "nameless" layer, duplicate rejection, group merging), RemoveInstance, UpdateInstance (ignored layer id, detach/re-add and the stale centre), GetGroupPositions and both distributed-position calls (binning, clipping, two-layer intersection), the OnTick two-channel fade to 1024, the nested tGroup/tLayer methods and every quirk/deletion guard listed in the header; fakes from scripts/tests/sc4audio_fakes.h plus a recording sound system and framework
+0x1003ded76 AudioScapeManager_Create
+0x1003f0196 AudioScapeManager_Init
+0x1003f034a AudioScapeManager_Shutdown
+0x1003f0450 AudioScapeManager_CreateLayer
+0x1003f05d8 AudioScapeManager_DestroyLayer
+0x1003f072a AudioScapeManager_ClearLayer
+0x1003f085e AudioScapeManager_ClearAllLayers
+0x1003f09ac AudioScapeManager_DeleteGroup
+0x1003f0a2a AudioScapeManager_GetDistributedGroupPositionsAvgIntersected
+0x1003f0da6 AudioScapeManager_GetDistributedGroupPositionsAvgInternal
+0x1003f10fa AudioScapeManager_GetDistributedGroupPositionsAvg
+0x1003f1212 AudioScapeManager_GetGroupPositions
+0x1003f12d6 AudioScapeManager_InsertInstanceSimple
+0x1003f12ee AudioScapeManager_InsertInstance
+0x1003f1522 AudioScapeManager_AddInstanceToCorrectGroup
+0x1003f16cc AudioScapeManager_RemoveInstance
+0x1003f1866 AudioScapeManager_UpdateLayerGroup
+0x1003f18c8 AudioScapeManager_UpdateInstance
+0x1003f1bc8 AudioScapeManager_RegisterLayerSound
+0x1003f1cfa AudioScapeManager_UnregisterLayerSound
+0x1003f1dd4 AudioScapeManager_OnTick
+0x1003f20c8 AudioScapeManager_DoMessage
+0x1003f20e0 AudioScapeManager_QueryInterface
+0x1003f2130 AudioScapeManager_AddRef
+0x1003f215a AudioScapeManager_Release
+0x1003f242c AudioScapeManager_Construct
+0x1003f25c0 AudioScapeManager_ConstructAlias
+0x1003f25ca AudioScapeManager_Destruct
+0x1003f26e6 AudioScapeManager_DestructAlias
+0x1003f26f0 AudioScapeManager_DestructAndDelete
+0x1003f27cc AudioScapeManager_GetServiceID
+0x1003f27d8 AudioScapeManager_SetServiceID
+0x1003f27e4 AudioScapeManager_GetServicePriority
+0x1003f27f0 AudioScapeManager_IsServiceRunning
+0x1003f27fc AudioScapeManager_SetServiceRunning
+0x1003f280a AudioScapeManager_OnIdle
+0x1003f0942 AudioScapeGroup_RemoveAllInstances
+0x1003f17ee AudioScapeGroup_RemoveInstance
+0x1003f1ac4 AudioScapeGroup_CenterRemovePosition
+0x1003f1b30 AudioScapeGroup_CenterAddPosition
+0x1003f1fca AudioScapeGroup_StopAllSounds
+0x1003f205e AudioScapeGroup_SetVolume
+0x1003f21c8 AudioScapeGroup_HandleSound
+0x1003f21ec AudioScapeGroup_UpdatePositions
+0x1003f2248 AudioScapeGroup_Start
+0x1003f2316 AudioScapeGroup_Stop
+0x1003f2720 AudioScapeGroup_Construct
+0x1003f06c2 AudioScapeLayer_UnregisterAllSounds
+0x1003f07a6 AudioScapeLayer_Clear
+0x1003f2794 AudioScapeLayer_Destruct
+0x1003f23d1 AudioScapePostStart
+PARTIAL:
+# none: every listed function is hand-written. The two deviations from the binary (bin-index and float-cast guards
+# in _GetDistributedGroupPositionsAvg, the ClearAllLayers advance past a group _DeleteGroup refused) are safety
+# changes documented in src/sc4audio/AudioScapeManager.h and asserted in the test.
+SKIPPED:
+# none needed on macOS: the 16 non-virtual thunks (Init/Shutdown/OnTick/DoMessage at -8, QueryInterface/AddRef/Release
+# at -8 and -0x10, GetServiceID/SetServiceID/GetServicePriority/IsServiceRunning/SetServiceRunning/OnIdle) are emitted
+# by the port's own multiple inheritance and forward to the listed methods; the 0x1003f2860..0x1003f2bfe symbols are
+# libc++ std::__list_imp::clear / vector<tSortingBin> instantiations and __GLOBAL__sub_I_SC4AudioScapeManager.cpp is the
+# original module initialiser (sGroupAllocator = 0x78, nS3D float constants), all supplied by the host runtime here.

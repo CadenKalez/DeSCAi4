@@ -1,0 +1,1 @@
+"sc4_audioscapemanager:$T/sc4_audioscapemanager_test.cpp $S/sc4audio/AudioScapeManager.cpp $S/rz/cRZSysServPtr.cpp $S/rz/cRZString.cpp $S/rz/cRZTimer.cpp $S/rz/cRZCriticalSection.cpp $S/gz/GZCOMDirector.cpp $S/rz/cRZCOMDllDirector.cpp $S/platform/MacTools.cpp -I$T"

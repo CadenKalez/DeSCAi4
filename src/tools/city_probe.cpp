@@ -22,6 +22,7 @@
 #include "sc4/ISC4City.h"
 #include "sc4/cSC4City.h"
 #include "sc4/DBSegment.h"
+#include "sc4/ISC4City.h"
 #include "sc4/SaveGame.h"
 
 namespace {
@@ -62,17 +63,6 @@ struct Options final : sc4::IVideoOptionStore {
     int GetOption(int option) override { return option == 0xd ? 1 : 0; }
 };
 
-void Step(const char* name, bool ok) { std::printf("[%s] %s\n", ok ? "OK" : "FAIL", name); std::fflush(stdout); }
-
-// The application record of a city file: stream {0x49dd6f4c, 0x49dd6f4e, 1}, read with the recovered auto-load stream.
-bool ReadAppRecord(cIGZPersistDBSegment* segment, std::uint32_t /*version*/, std::function<bool(cIGZIStream&)> reader) {
-    sc4::cSC4AutoLoadStream record(segment, 0x49dd6f4c, 0x49dd6f4e, 1);
-    sc4::cISC4DBSegmentIStream* stream = record.GetStream();
-    if (!stream) return false;
-    return reader(*stream);
-}
-
-
 // The city's host services. The game implements this with the framework, the message server and GZCOM; the probe only
 // needs the serial number and the language, and everything optional stays a no-op so the load path itself runs.
 struct CityHost final : sc4::ICityHost {
@@ -82,6 +72,31 @@ struct CityHost final : sc4::ICityHost {
     void PostMessage(cIGZMessage2*) override {}
     void SendMessage(cIGZMessage2*) override {}
 };
+
+// The city record inside a save file is a serialized object: the segment asks this factory for the class by id.
+struct Factory final : sc4::ISerializableFactory {
+    cIGZSerializable* CreateSerializable(std::uint32_t classId) override {
+        if (classId != 0x8990c372) return nullptr;          // cSC4City's class id
+        auto* city = new sc4::cSC4City(&host);
+        city->AddRef();
+        return city;
+    }
+    CityHost host;
+};
+
+void Step(const char* name, bool ok) { std::printf("[%s] %s\n", ok ? "OK" : "FAIL", name); std::fflush(stdout); }
+
+// The application record of a city file: stream {0x49dd6f4c, 0x49dd6f4e, 1}, read with the recovered auto-load stream.
+bool ReadAppRecord(cIGZPersistDBSegment* segment, std::uint32_t version, std::function<bool(cIGZIStream&)> reader) {
+    sc4::cSC4AutoLoadStream record(segment, 0x49dd6f4c, 0x49dd6f4e, 1);
+    sc4::cISC4DBSegmentIStream* stream = record.GetStream();
+    if (!stream) { std::printf("  app record: stream did not open (version %u)\n", version); return false; }
+    const bool ok = reader(*stream);
+    std::printf("  app record: read %s (version %u)\n", ok ? "OK" : "FAILED", version);
+    return ok;
+}
+
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -127,13 +142,20 @@ int main(int argc, char** argv) {
     // The city hooks LoadCity goes through: recovered classes and helpers all the way down.
     auto& hooks = app->CityHooks();
     static CityHost cityHost;
+    static Factory factory;
+    sc4::SetSerializableFactory(&factory);
     hooks.createCity = []() -> cISC4City* { auto* city = new sc4::cSC4City(&cityHost); city->AddRef(); return city; };
     hooks.createCitySegment = []() -> cIGZPersistDBSegment* {
         auto* segment = new sc4::cSC4DBSegment();
         segment->AddRef();
+        std::printf("  city segment: created\n");
         return segment->AsIGZPersistDBSegment();
     };
-    hooks.readLoadSaveVersion = [](cIGZPersistDBSegment* segment) { return sc4::SC4ReadAppLoadSaveVersion(segment); };
+    hooks.readLoadSaveVersion = [](cIGZPersistDBSegment* segment) {
+        const std::uint32_t v = sc4::SC4ReadAppLoadSaveVersion(segment);
+        std::printf("  save version: %u (loadable range %u..%u)\n", v, sc4::kLoadSaveVersionOldest, sc4::kLoadSaveVersionDefault);
+        return v;
+    };
     hooks.setSaveVersion = [](cIGZPersistDBSegment*, std::uint32_t) { return true; };
     hooks.readAppRecord = ReadAppRecord;
     hooks.notify = [](const std::string& title, const std::string& text) { std::printf("  notify: %s - %s\n", title.c_str(), text.c_str()); };
