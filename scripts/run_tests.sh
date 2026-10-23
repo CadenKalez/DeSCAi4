@@ -329,6 +329,7 @@ declare -a TESTS=(
  "sc4_particleseffect:$T/sc4_particleseffect_test.cpp $S/sc4/ParticlesEffect.cpp $S/sc4/ParticleSimulatorBase.cpp $S/render/PrimitivePool.cpp $S/render/SimGL.cpp $S/sc4/PackedRenderState.cpp $S/rz/cRZRandom.cpp $S/s3d/S3DMath.cpp"
  "gz_winimecomposition:$T/gz_winimecomposition_test.cpp $S/gz/WinIMEComposition.cpp $S/gz/WinTextEdit.cpp $S/gz/WinKnob.cpp $S/gz/WinCtrlFactory.cpp $S/gz/RZDraw.cpp $S/gz/WinBtn.cpp $S/gz/Buffer.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZCallbackTimer.cpp $S/rz/TextEncoding.cpp $S/rz/UTF16Text.cpp $S/rz/CharLength.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp $S/rz/StringConversion.cpp $S/rz/cRZSysServPtr.cpp -I$T"
  "sc4_networktool:$T/sc4_networktool_test.cpp $S/sc4/NetworkTool.cpp $S/sc4/TileNeighborhood.cpp $S/rz/cRZString.cpp"
+ "sc4_tutorialtask:$T/sc4_tutorialtask_test.cpp $S/sc4/TutorialTask.cpp $S/sc4/SLString.cpp $S/sc4/StringDetokenizer.cpp $S/rz/cRZString.cpp $S/rz/CharLength.cpp $S/rz/RZConvert.cpp $S/rz/RZStringUtils.cpp $S/rz/cRZSysServPtr.cpp $S/rz/StringConversion.cpp $S/rz/TextEncoding.cpp $S/lua/SCLuaHelp.cpp $S/sc4/SpiralIterator.cpp $S/gz/Win.cpp $S/rz/cRZVariant.cpp -I$T"
 )
 fail=0
 for entry in "${TESTS[@]}"; do

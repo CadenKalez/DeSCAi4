@@ -1,0 +1,62 @@
+SOURCE src/sc4/TutorialTask.cpp|h
+EVIDENCE test scripts/tests/sc4_tutorialtask_test.cpp - fake cISCLua stack (tutorialtasks rows), fake ITutorialTaskHost / ITutorialCSIVisibility, fake effects manager + decal, fake disaster layer / fire manager / building and real cGZWin windows with FakeMgr; asserts the tutorial row protocol incl. the missing-text prefix, the grid of functions 2 / 0x11 and checkGridDataJobFinished, the camera-centre and both-cameras jump rules, the 0x2010e function mask and the 5 / 9 branches, the decal parameters and stop/start transitions, the fire chain (IgniteOccupant + SetCause(6)), the CSI save/restore, the target-window walk incl. the alt-window substitution and its visibility quirk, the QueryInterface views / refcounts and the "Init twice appends" / "EndTask with function 0" quirks; registry scripts/tests/registry/sc4_tutorialtask.txt
+0x10011d466 TutorialTaskConstruct
+0x10011d622 TutorialTaskConstructForward
+0x10011d62c TutorialTaskDestruct
+0x10011d762 TutorialTaskDestructBase
+0x10011d76c TutorialTaskDestructBaseThunk
+0x10011d77a TutorialTaskDestructAndDelete
+0x10011d7a8 TutorialTaskDestructAndDeleteThunk
+0x10011d7b6 TutorialTaskInit
+0x10011df28 TutorialTaskGetString
+0x10011e05a TutorialTaskGetNumber
+0x10011e10e TutorialTaskGetStringDefault
+0x10011e200 TutorialTaskGetTaskInformation
+0x10011e35c TutorialTaskGetEnableButtonList
+0x10011e526 TutorialTaskDoLink
+0x10011e52e TutorialTaskQueryInterface
+0x10011e550 TutorialTaskQueryInterfaceThunk
+0x10011e576 TutorialTaskAddRef
+0x10011e584 TutorialTaskAddRefThunk
+0x10011e58e TutorialTaskRelease
+0x10011e59c TutorialTaskReleaseThunk
+0x10011e5a6 TutorialTaskCheckGridDataJobFinished
+0x10011e680 TutorialTaskGetTargetObjectGuid
+0x10011e702 TutorialTaskShutdown
+0x10011e70a TutorialTaskGetTargetGUID
+0x10011e716 TutorialTaskGetGUID
+0x10011e722 TutorialTaskGetZoomLevel
+0x10011e72e TutorialTaskHasButtonGUID
+0x10011e760 TutorialTaskGetExtraData
+0x10011e76c TutorialTaskGetWhichFunction
+0x10011e778 TutorialTaskGetCatalogButtonItemID
+0x10011e794 TutorialTaskGetCongratulationMsg
+0x10011e79e TutorialTaskGetInstructionMsg
+0x10011e7a8 TutorialTaskGetTryAgainMsg
+0x10011e7b2 TutorialTaskGetRegion
+0x10011e7c0 TutorialTaskGetTargetWindow
+0x10011eb7e TutorialTaskExecuteTask
+0x10011ecf2 TutorialTaskJumpToLocation
+0x10011edfe TutorialTaskEndTask
+0x10011eeba TutorialTaskHandleButtons
+0x10011eedc TutorialTaskFindNearestBuilding
+0x10011f04c TutorialTaskTriggerFire
+0x10011f1a4 TutorialTaskShowHintsForUsers
+0x10011f1e2 TutorialTaskDrawDecals
+0x10011f472 TutorialTaskGetWindowOffsetX
+0x10011f47e TutorialTaskGetWindowOffsetY
+0x10011f48a TutorialTaskIsEdgeScrollingAllowed
+0x10011d60c TutorialStringDestruct
+0x10011e012 TutorialStringFromScriptText
+0x10011f384 TutorialStringInit
+0x10011f438 TutorialStringFromScriptTextN
+0x10011f442 TutorialStringDestructAndDelete
+0x10011f468 TutorialStringAssign
+PARTIAL:
+0x10011e7c0 TutorialTaskGetTargetWindow - the view3D root window and the child lookups go through ITutorialTaskHost::View3DMainWindow + the recovered cGZWin (borrowed references); the original walks off a null parent / substitute (0x10011e83e) and the port stops the walk there instead of crashing
+0x10011eb7e TutorialTaskExecuteTask - HiddenPause and the CSI visibility go through ITutorialTaskHost (cSC4Simulator and cSC4CitySituationManager are not recovered as classes; the original slots are documented in the header)
+0x10011ecf2 TutorialTaskJumpToLocation - city bounds, terrain cell width / altitude and the camera target go through ITutorialTaskHost (SL::spCity / spTerrain / spRenderer vslots 0x318, 0x30, 0x60, 0x80, 0x88)
+0x10011edfe TutorialTaskEndTask - the CSI restore and HiddenResume go through ITutorialTaskHost (cSC4CitySituationManager / cSC4Simulator unrecovered)
+0x10011eedc TutorialTaskFindNearestBuilding - the lot manager lookup (SL::spLotManager vslot 0x28 then cISC4Lot vslot 0x180) is behind ITutorialTaskHost::BuildingAtCell; the spiral itself is fully recovered
+0x10011f04c TutorialTaskTriggerFire - the disaster layer (city vslot 0x240) goes through the host; the original dereferences the fire manager without a null check (0x10011f0c7) and the port skips the QI/ignite call in that case
+0x10011f1e2 TutorialTaskDrawDecals - the effects manager (city vslot 0x2a8) is behind ITutorialTaskHost::EffectsManager; the decal object is the recovered IToolVisualEffect
