@@ -43,7 +43,9 @@
 // Quirks kept (addresses in the .cpp):
 //  * HandleEnterState calls the base HandleEnterState twice for state 0x10 (once inside the branch, once at the end).
 //  * GetSafeDistance subtracts the radius from the path-end distance and the radius + 3 from the leader distance, then
-//    returns the smaller of the two (16 when neither applies).
+//    returns the smaller of the two (16 when neither applies). Only the path term with the 0x10 flag set is computed by
+//    the original; without a path / flag / leader it reads an uninitialized stack slot into the min, so the port keeps
+//    the 16 default for both terms (the intended answer).
 //  * FindLeaderInTile starts the automata scan at the automaton itself when the tile belongs to its own occupant, so
 //    only automata stored after it in the tile list are candidates; the distance ignores y (it compares x/z only).
 //  * SetPath uses points[0] as the start and points[1] as the destination even for a one-point path (out of bounds in

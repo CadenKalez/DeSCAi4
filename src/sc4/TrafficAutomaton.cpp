@@ -516,10 +516,8 @@ void cSC4TrafficAutomaton::UpdateCollision() {
     }
     if (GetBehavior() == kTrafficStateStopSign) return;
     float time = 0.0f;
-    bool waiting = false;
     if (!IsTrain() && pathInfo_ && pathInfo_->IsIntersection((pathKey_ >> 24) & 0xf)) {
         time = 1.7f;
-        waiting = true;
     } else if (map) {
         const int result = map->CheckIntersection(networkOccupant_, this, GetPathKey(), time);
         if (result != 0) {
@@ -531,7 +529,6 @@ void cSC4TrafficAutomaton::UpdateCollision() {
             return;
         }
     }
-    (void)waiting;
     if (!CheckAutomataFlag(kAutomataFlagWaitBit) || 0.7f <= time) {
         SetAutomataFlag(kAutomataFlagWaitBit, false);
         ReturnToDefaultSpeed();
@@ -579,16 +576,18 @@ bool cSC4TrafficAutomaton::CheckIntersectionDensity() {
     const std::uint32_t entry = (key >> 8) & 0xff;
     const std::uint32_t exit = key & 0xff;
     const float merged = static_cast<float>(density * static_cast<double>(weights[entry * 4 + exit])) * 10.0f;
-    // The original rounds with (int)(merged - 0.5f + 12582912.0f) and compares the two neighbouring integers; keep the
-    // same sequence so halves round the same way.
+    // 0x10011766f..0x1001176a7: the original adds -0.5f and 12582912.0f (1.5 * 2^23), then treats the float's bit
+    // pattern as the integer k = floor(merged), adds 0xb4c00001 (wrapping to k + 1) and keeps k + 1 when its float
+    // value equals merged (an integral merged), else k. NaN keeps k. The count compares as an unsigned >=.
     const float biased = merged + -0.5f + 12582912.0f;
-    const int low = static_cast<int>(biased) + static_cast<int>(0xb4c00000u);
-    const int high = static_cast<int>(biased) + static_cast<int>(0xb4c00001u);
-    const float roundTrip = static_cast<float>(static_cast<int>(high));
-    int rounded = low;
-    if (merged == roundTrip) rounded = high;
-    if (std::isnan(merged) || std::isnan(roundTrip)) rounded = low;
-    result = count <= static_cast<std::uint32_t>(rounded);
+    std::uint32_t bits = 0;
+    std::memcpy(&bits, &biased, sizeof(bits));
+    const std::int32_t low = static_cast<std::int32_t>(bits - 0x4b400000u);
+    const std::int32_t high = static_cast<std::int32_t>(bits + 0xb4c00001u);
+    const float roundTrip = static_cast<float>(high);
+    std::int32_t rounded = low;
+    if (!std::isnan(merged) && merged == roundTrip) rounded = high;
+    result = static_cast<std::uint32_t>(rounded) >= count;   // `cmp %r12d(count), %eax(rounded)` + setae
     return result;
 }
 
@@ -1566,7 +1565,8 @@ const char* cSC4TrafficAutomaton::GetDebugExtraText() const {
 // answers the network occupant of the best cell. Without cISC4NeighborConnection, FindPath and the connection
 // rectangles the result cannot be produced; the seam is left in the host (NeighborConnectionCells).
 ITrafficAutomatonOccupant* cSC4TrafficAutomaton::FindBestNeighborConnection() {
-    // TODO(TA-FINDNEIGHBOR): needs cISC4NeighborConnection and cISC4PathFinder::FindPath (0xb8).
+    // PARTIAL (see the traffic automaton to-do row): the connection list and the path finder's FindPath are not
+    // recovered, so this stays a null answer behind the host seam.
     return nullptr;
 }
 
