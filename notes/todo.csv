@@ -646,6 +646,7 @@ CLASS-cSC4PropOccupantBurntBuilding,cSC4PropOccupantBurntBuilding,"recover 20 re
 CLASS-cSC4PropOccupantFilter,cSC4PropOccupantFilter,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4PropOccupantTerrainDecal,cSC4PropOccupantTerrainDecal,"recover 20 remaining function(s) (20 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4PropOccupantVisualEffect,cSC4PropOccupantVisualEffect,"recover 24 remaining function(s) (24 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4PropOccupantVisualEffect,cSC4PropOccupantVisualEffect,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4PropPlacementProperties,cSC4PropPlacementProperties,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4PropPlacementPropertiesFactory,cSC4PropPlacementPropertiesFactory,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4PropertySet,cSC4PropertySet,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv

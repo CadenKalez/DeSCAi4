@@ -38,7 +38,7 @@
 // Stream record (version 3): the prop record (cSC4PropOccupant version 6), u8 running flag, u8 default-transition
 // flag, the effect name (or an empty name when variant properties exist), u32 effect type id.
 //
-// Quirks kept (asserted in scripts/tests/sc4_propoccupantvisualeffect_test.cpp):
+// Quirks kept and exercised by scripts/tests/sc4_propoccupantvisualeffect_test.cpp:
 //  * a variant effect named "off" disables the effect: RestartEffect gives up but sets the running flag;
 //  * the record only carries the name when no variant property exists (the variants write an empty string) and
 //    Read does not restore the variant counts - Init re-derives them from the exemplar;
@@ -47,8 +47,8 @@
 //  * StartEffect/StopEffect and SetAllFlags only call the effect when the occupant's flag byte has bit 2 set; with
 //    a fresh occupant (flags 4) they only flip the running flag, so the effect stays unstarted until the 3D view
 //    flags the occupant (set-visible path = SetAllFlags(flags | 2));
-//  * RestartEffect stops the old effect with transition 1 without a stop transition reaching it (the stop call is
-//    gated by flag 2 as well) and then releases it;
+//  * RestartEffect calls StopEffect(true), which stops the old effect with transition 0 (a fade: it keeps
+//    "started" and sets "stopping") - and only when flag bit 2 is set; the effect is then released;
 //  * Shutdown stops with transition 0, which cSC4VisualEffect treats as a fade: it sets "stopping" but keeps
 //    "started" set, and then releases the effect;
 //  * UpdateVisualEffectTransform builds the effect transform with change counter 2 and flags 5 (translation |
