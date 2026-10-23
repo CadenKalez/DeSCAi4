@@ -1,0 +1,37 @@
+SOURCE src/gz/DrawContextRenderToHardware.cpp|h
+EVIDENCE test scripts/tests/gz_drawcontextrendertohardware_test.cpp - a recording IHardwareRenderHost stands in for the unrecovered Metal backend (cGZDrawContextRenderToSimGL): COM lifetime/QueryInterface, Init per target and failing host, canvas area, clip intersection with the inverted-in-range quirk, ARGB->ABGR colour swizzle, alpha/blt-modulate/antialias/suspend state flags, gradient 24.8 ramps and the 0x800000 bias, ComputeGradientColor packing, blt source geometry (magic-number tie rounding toward -infinity, truncated origin, failure clears the backend image), solid quad/triangle batching with the D3D ortho matrix and the degenerate empty-clip matrix, gradient vertex colours, and the textured single/tiled/sub-tiled/absent-fragment paths with uv normalisation and clip restore; scripts/tests/registry/gz_drawcontextrendertohardware.txt
+0x100654eb0 cGZDrawContextRenderToHardware_Construct
+0x100654f2c cGZDrawContextRenderToHardware_Destruct
+0x100654fde cGZDrawContextRenderToHardware_AddRef
+0x100654fec cGZDrawContextRenderToHardware_Release
+0x100655016 cGZDrawContextRenderToHardware_QueryInterface
+0x100655038 cGZDrawContextRenderToHardware_Init
+0x1006550ce cGZDrawContextRenderToHardware_Shutdown
+0x1006550dc cGZDrawContextRenderToHardware_GetCanvasArea
+0x1006550ee cGZDrawContextRenderToHardware_SetClipRect
+0x1006551a4 cGZDrawContextRenderToHardware_SetColorTable
+0x1006551ce cGZDrawContextRenderToHardware_SetBltSource
+0x100655472 cGZDrawContextRenderToHardware_ClearBltTiling
+0x10065547c cGZDrawContextRenderToHardware_SetBltTiling
+0x100655496 cGZDrawContextRenderToHardware_SetGradientTransform
+0x100655574 cGZDrawContextRenderToHardware_SetAlphaBlend
+0x10065558c cGZDrawContextRenderToHardware_SetBltModulate
+0x10065559a cGZDrawContextRenderToHardware_SetAntialiasing
+0x1006555a4 cGZDrawContextRenderToHardware_SetLineThickness
+0x1006555aa cGZDrawContextRenderToHardware_Suspend
+0x1006555b6 cGZDrawContextRenderToHardware_Draw
+0x10065564c cGZDrawContextRenderToHardware_UpdateTransform
+0x100655782 cGZDrawContextRenderToHardware_DrawTriangles
+0x100655bb6 cGZDrawContextRenderToHardware_DrawRects
+0x100656a7c cGZDrawContextRenderToHardware_DrawPreclippedSpanList
+0x100656afe cGZDrawContextRenderToHardware_ComputeGradientColor
+0x100656bbc cGZDrawContextRenderToHardware_DrawTriangleBlt
+0x100656e7c cGZDrawContextRenderToHardware_Resume
+0x100656e82 cGZDrawContextRenderToHardware_LockTarget
+0x100656e8a cGZDrawContextRenderToHardware_UnlockTarget
+0x1007b4f4c cGZDrawContextRenderToHardware_Flush
+PARTIAL:
+# none: every one of the 30 hand-written functions is complete; the ten hardware calls go through IHardwareRenderHost, whose test fake records them and whose real implementation is the unrecovered cGZDrawContextRenderToSimGL (0x1007b38ec..0x1007b4e58, hook-up = derive a Metal backend from IHardwareRenderHost)
+SKIPPED:
+0x100654fd2 compiler-emitted __cxa_deleted_virtual stub (ud2) in the abstract base's vtable; the port's engine is concrete (the backend is a seam), so its vtable carries the compiler's real deleting destructor instead - there is no source body to write
+0x100654fd8 second compiler-emitted __cxa_deleted_virtual stub (ud2) of the abstract base's vtable; same reason as 0x100654fd2

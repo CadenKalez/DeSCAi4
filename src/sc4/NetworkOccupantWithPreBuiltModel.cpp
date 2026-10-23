@@ -21,32 +21,34 @@ namespace sc4 {
 namespace {
 IPreBuiltModelOccupantHost* g_host = nullptr;
 
-// The original rotates / flips the model with this transform (GetModelInstances 0x1001bb2b0..0x1001bb3e0): a
-// Y rotation built from sincosf, x negated when the piece is flipped, the model offset added as translation.
+// The original rotates / flips the model with this transform (GetModelInstances 0x1001bb191..0x1001bb3e0): the
+// instance's own transform is copied (scale included - it is *not* forced to 1), a Y rotation built from sincosf
+// overwrites the rotation, x is negated when the piece is flipped, and the model offset is added as translation.
 cS3DTransform BuildModelTransform(INetworkOccupantModelInstance& instance, const cS3DVector3& position,
                                   const cS3DVector3& offset, float angle, bool flip) {
-    cS3DTransform transform;
+    cS3DTransform transform;   // the original writes the identity first, then GetTransform overwrites it
     transform.changeCounter = 0;
     transform.flags = 0;
     instance.ModelInstance()->GetTransform(transform);   // copies the transform and bumps its counter
-    transform.scale = 1.0f;
     const float sine = std::sin(angle);
     const float cosine = std::cos(angle);
-    const float signedZero = sine * 0.0f + 0.0f;        // -0.0f for a negative sine, else +0.0f
+    const float signedCosZero = -(cosine * 0.0f);        // quirk: the off-diagonal zeros keep the sign of the term
+    const float signedSinZero = sine * 0.0f + 0.0f;
     transform.rotation[0][0] = cosine;
-    transform.rotation[0][1] = -0.0f;
+    transform.rotation[0][1] = signedCosZero;
     transform.rotation[0][2] = sine;
-    transform.rotation[1][0] = signedZero;
+    transform.rotation[1][0] = signedSinZero;
     transform.rotation[1][1] = 1.0f;
-    transform.rotation[1][2] = -0.0f;
+    transform.rotation[1][2] = signedCosZero;
     transform.rotation[2][0] = -sine;
-    transform.rotation[2][1] = signedZero;
+    transform.rotation[2][1] = signedSinZero;
     transform.rotation[2][2] = cosine;
     transform.flags |= 4;                                // rotation
     ++transform.changeCounter;
     if (flip) {
+        // the original negates the whole first row (both zero entries included).
         transform.rotation[0][0] = -cosine;
-        transform.rotation[0][1] = 0.0f;
+        transform.rotation[0][1] = cosine * 0.0f;
         transform.rotation[0][2] = -sine;
         transform.flags |= 4;
         ++transform.changeCounter;
@@ -117,7 +119,7 @@ void SetPreBuiltModelOccupantHost(IPreBuiltModelOccupantHost* host) { g_host = h
 cSC4NetworkOccupantWithPreBuiltModel::cSC4NetworkOccupantWithPreBuiltModel() {
     // 0x1001b9fd6 (C1) / 0x1001baf32 (C2). The vtable stores are the compiler's.
     networkFlags_ |= kNetworkFlagPreBuiltConstructed;   // this[0x18a] |= 0x40
-    modelOffset_ = {};                      // quirk: the original does not initialise +0x1d0..+0x1d8
+    modelOffset_ = {};                      // quirk: the original does not initialise +0x1d0..+0x1d8 or +0x1f8
     fillA_ = {};
     fillB_ = {};
     supportModelId_ = 0;
@@ -506,8 +508,12 @@ void cSC4NetworkOccupantWithPreBuiltModel::ComputeBoundingBox(float* minXyz, flo
     s3d::cIS3DModelInstance* instances[10] = {};
     int count = 0;
     GetModelInstances(zoom, rotation, instances, 10, count);
-    // The corner fallback (LAB_1001bad17) also gives the defined starting values when the instance list is empty;
-    // the original reads uninitialised stack values in that case (quirk).
+    // Quirk (0x1001baa63): a zero instance count returns *without touching the output box at all*; the caller keeps
+    // whatever bounds it had. (Only a negative count, never produced by GetModelInstances, reaches the corner
+    // fallback.) In practice Init has already filled the bounds from the corners before AddModel runs.
+    if (count == 0) return;
+    // The corner fallback (LAB_1001bad17) is only reached for a negative count (0 returned above, >= 1 loops); it
+    // gives the defined starting values.
     float minX = std::min(Corner(0).x, Corner(2).x);
     float minY = std::min(Corner(0).y, Corner(2).y);
     float minZ = std::min(Corner(0).z, Corner(2).z);
@@ -517,7 +523,7 @@ void cSC4NetworkOccupantWithPreBuiltModel::ComputeBoundingBox(float* minXyz, flo
     float runMinX = 1.0f, runMaxX = 0.0f;   // the running box starts in the "empty" sentinel state (1, 0)
     float runMinY = 1.0f, runMaxY = 0.0f;
     float runMinZ = 1.0f, runMaxZ = 0.0f;
-    if (count != 0 && count >= 1) {
+    if (count >= 1) {
         for (int i = 0; i < count; ++i) {
             s3d::cIS3DModelInstance* instance = instances[i];
             if (instance && instance != modelInstance_) {
@@ -550,7 +556,8 @@ void cSC4NetworkOccupantWithPreBuiltModel::ComputeBoundingBox(float* minXyz, flo
                 }
             }
             if (instance) {
-                instance->SetOwner(nullptr);
+                // the occupant's own +0x68 model instance (excluded above) is released without clearing its owner
+                if (instance != modelInstance_) instance->SetOwner(nullptr);
                 instance->Release();
             }
             instances[i] = nullptr;

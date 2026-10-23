@@ -1,0 +1,69 @@
+SOURCE src/sc4/LotRetainingWallOccupant.cpp|h
+EVIDENCE test scripts/tests/sc4_lotretainingwalloccupant_test.cpp (registry scripts/tests/registry/sc4_lotretainingwalloccupant.txt): object layout and vtable slots from the ctor 0x10015caf6 and the 0x100a76590 vtable; COM identity and the two-base QueryInterface (0x295d1162 -> primary, delegation to cSC4Occupant); accessors / bounding box / version 2 Write+Read round trip (wrong outer version, the quirk that a bad nested occupant version still reports success, and the nested-lot release); the per-edge flag and hash scan checked against the 0x10015d8ca disassembly (cell mask starts at bit 31, x outer / z inner, rotating every 32 cells, demolisable lot state 6, round(height)*(x*z)+1 through the 2^23 bias bit trick - asserted with a 1.5 height - highest-vertex altitude); retaining-wall type pick from the lot configuration; occupant create/remove (locked-lot gate, edge-flag bitfield, centre/size from the lot rect, lot flag 0x4, create always reports false, LoadRetainingWallProperties refusal, no flagged edge, the 0x4 flag cleared even when no occupant was removed); rebuild on hash change; surrounding-lot sweep; model create/remove with own texture properties or the base texture exemplar, Init refusal clearing the edge bit, renderer add/remove (the remove path consults the renderer without an availability check), the FindRetainingWallModel out-pointer quirk (written even without a match) and the no-placeable early outs. The fake ILotRetainingWallHost mirrors the lot manager (slots 0x28/0x58/0x60/0x40), terrain 0x70, occupant manager 0x100/0xa0/0xa8, building development simulator 0xe8, renderer 0xd8/0xe0/0xe8 and resource manager 0x18; the fake ILotRetainingWallModel stands for the unrecovered cSC4LotRetainingWallModel (0xc8). 29 non-virtual thunks (rows below) are compiler-emitted from the cISC4LotRetainingWallOccupant (primary, +0) + cSC4Occupant (+8) layout, like the ctor/dtor wrappers.
+0x10015caf6 LotRetainingWallOccupantConstruct
+0x10015cb9e LotRetainingWallOccupantDestruct
+0x10015cc2e LotRetainingWallOccupantDestructBase
+0x10015cc54 LotRetainingWallOccupantDeletingDestructor
+0x10015cc38 LotRetainingWallOccupantDestructThunk_15cc38
+0x10015cc46 LotRetainingWallOccupantDestructThunk_15cc46
+0x10015cc92 LotRetainingWallOccupantDeletingDestructorThunk_15cc92
+0x10015cca0 LotRetainingWallOccupantDeletingDestructorThunk_15cca0
+0x10015ccae LotRetainingWallOccupantInit
+0x10015ccbc LotRetainingWallOccupantInitThunk_15ccbc
+0x10015ccc6 LotRetainingWallOccupantShutdown
+0x10015cd08 LotRetainingWallOccupantShutdownThunk_15cd08
+0x10015cdbe LotRetainingWallOccupantWriteThunk_15cdbe
+0x10015cdcc LotRetainingWallOccupantWriteThunk_15cdcc
+0x10015cdda LotRetainingWallOccupantWriteThunk_15cdda
+0x10015cefc LotRetainingWallOccupantReadThunk_15cefc
+0x10015cf0a LotRetainingWallOccupantReadThunk_15cf0a
+0x10015cf18 LotRetainingWallOccupantReadThunk_15cf18
+0x10015cf26 LotRetainingWallOccupantQueryInterface
+0x10015cf48 LotRetainingWallOccupantQueryInterfaceThunk_15cf48
+0x10015cf6a LotRetainingWallOccupantQueryInterfaceThunk_15cf6a
+0x10015cf90 LotRetainingWallOccupantQueryInterfaceThunk_15cf90
+0x10015cfb6 LotRetainingWallOccupantQueryInterfaceThunk_15cfb6
+0x10015cfdc LotRetainingWallOccupantAddRef
+0x10015cfea LotRetainingWallOccupantAddRefThunk_15cfea
+0x10015cff8 LotRetainingWallOccupantAddRefThunk_15cff8
+0x10015d006 LotRetainingWallOccupantAddRefThunk_15d006
+0x10015d014 LotRetainingWallOccupantAddRefThunk_15d014
+0x10015d022 LotRetainingWallOccupantRelease
+0x10015d066 LotRetainingWallOccupantReleaseThunk_15d066
+0x10015d0a0 LotRetainingWallOccupantReleaseThunk_15d0a0
+0x10015d0da LotRetainingWallOccupantReleaseThunk_15d0da
+0x10015d114 LotRetainingWallOccupantReleaseThunk_15d114
+0x10015d14e LotRetainingWallOccupantGetPosition
+0x10015d16e LotRetainingWallOccupantGetPositionThunk_15d16e
+0x10015d18e LotRetainingWallOccupantSetPosition
+0x10015d1ae LotRetainingWallOccupantSetPositionThunk_15d1ae
+0x10015d1ce LotRetainingWallOccupantGetBoundingBox
+0x10015d260 LotRetainingWallOccupantGetBoundingBoxThunk_15d260
+0x10015d26e LotRetainingWallOccupantSetSize
+0x10015d290 LotRetainingWallOccupantSetLot
+0x10015d2de LotRetainingWallOccupantGetEdgeHashArray
+0x10015d2f6 LotRetainingWallOccupantSetEdgeHashArray
+0x10015e084 LotRetainingWallOccupantAsOccupant
+0x10015e08e LotRetainingWallOccupantGetLot
+0x10015e098 LotRetainingWallOccupantGetEdgeFlags
+0x10015e0a2 LotRetainingWallOccupantSetEdgeFlags
+0x10015e0ac LotRetainingWallOccupantGetRetainingWallType
+0x10015e0b6 LotRetainingWallOccupantSetRetainingWallType
+0x10015e0c0 LotRetainingWallOccupantGetGZCLSID
+0x10015e0da LotRetainingWallOccupantGetGZCLSIDThunk_15e0da
+0x10015e0e6 LotRetainingWallOccupantGetGZCLSIDThunk_15e0e6
+
+PARTIAL:
+0x10015cd1a LotRetainingWallOccupantWrite - the nested cISC4Lot reference goes through ILotRetainingWallHost::WriteLotReference (SC4WriteGZSerializable 0x1000435e3 over the unrecovered cISC4Lot COM layer; cSC4Lot is a plain class in this port)
+0x10015cde8 LotRetainingWallOccupantRead - same seam for SC4ReadGZSerializable 0x100043267 (0xe818fced); the rest of the version 2 record is exact
+0x10015d30e LotRetainingWallOccupantFindRetainingWallModel - cSC4LotRetainingWallModel (0xc8, 0x1001671ac..) is not recovered; the model is behind ILotRetainingWallModel (GetWallModel 0x18, +0x84 edge, AddRef/Release)
+0x10015d466 LotRetainingWallOccupantAddRetainingWallModel - model creation (operator new 0xc8 0x1001673c4 + ctor) and Init/SetTextureData are behind that seam; renderer 0xd8/0xe0/e8 and spRM 0x18 load are host methods
+0x10015d802 LotRetainingWallOccupantAddRetainingWallModels - drives AddRetainingWallModel, so it inherits its partial status
+0x10015d8ca LotRetainingWallOccupantGetLotWallEdgeFlags - cSC4LotManager slots 0x28/0x58/0x60 (cells, terrain rect) and cSTETerrain 0x70 (vertex altitude) are unrecovered and sit behind the host
+0x10015db0c LotRetainingWallOccupantGetRetainingWallTypeStatic - cISC4Lot::GetLotConfiguration 0x48 -> cISC4LotConfiguration::GetRetainingWallIDArray 0xe0 is only reachable through the trimmed cISC4LotConfigurationRef interface, and sRandom is a host method
+0x10015db62 LotRetainingWallOccupantAddRetainingWallOccupant - occupant manager 0x100/0xa0/0xa8, building development simulator 0xe8 and the model seam
+0x10015de56 LotRetainingWallOccupantUpdateRetainingWalls - occupant manager 0x100 + the AddRetainingWallModel / GetLotWallEdgeFlags partials
+0x10015e004 LotRetainingWallOccupantUpdateSurroundingRetainingWalls - cSC4LotManager vslot 0x40 (LotsAround, edge mask 0xf) behind the host
+
+SKIPPED:
+nothing in cSC4LotRetainingWallOccupant is Windows/DX7-only or debug code; the 29 non-virtual thunks are compiler-emitted and listed as recovered above.

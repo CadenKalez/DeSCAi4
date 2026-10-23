@@ -1,0 +1,46 @@
+SOURCE src/sc4/NetworkOccupantWithPreBuiltModel.cpp|h
+EVIDENCE test scripts/tests/sc4_networkoccupantwithprebuiltmodel_test.cpp - constructor state and query interface, Init/Shutdown, the shear fill rows and their altitude/normal/node transform, AddModel and the computed bounds (own +0x68 instance skipped, zero-count early-out), the pre-built and support model instances and their sincosf transform (scale kept from GetTransform), the land/water shadow overlays including the -2 pending state, the flat-terrain skip and the node-transform position, translucency, Draw, the version-4 record round trip (version 2 rejected) and the path info resolution / clone / offset+scissor / connection bitmap; every unrecovered neighbour is reached through IPreBuiltModelOccupantHost (fakes in the test) and a known-quirk comment marks each binary deviation (see the header)
+0x1001a2964 PreBuiltOccupantIsManagedGlobally
+0x1001a2a60 PreBuiltOccupantDestructComplete
+0x1001a2a80 PreBuiltOccupantGetGZCLSID
+0x1001a2a8c PreBuiltOccupantUpdateBaseModel
+0x1001b9fd6 PreBuiltOccupantConstruct
+0x1001ba0e6 PreBuiltOccupantInit
+0x1001ba162 PreBuiltOccupantRecomputeShearTransform
+0x1001ba29e PreBuiltOccupantShutdown
+0x1001ba316 PreBuiltOccupantDraw
+0x1001ba37a PreBuiltOccupantUpdateShadow
+0x1001ba886 PreBuiltOccupantAddModel
+0x1001ba9d0 PreBuiltOccupantComputeBoundingBox
+0x1001baf32 PreBuiltOccupantConstructComplete
+0x1001bb004 PreBuiltOccupantAddSupportModel
+0x1001bb032 PreBuiltOccupantGetModelInstances
+0x1001bbbca PreBuiltOccupantGetPathInfo
+0x1001bbdfc PreBuiltOccupantSetTranslucency
+0x1001bbf56 PreBuiltOccupantHasViewDependentModel
+0x1001bbf5e PreBuiltOccupantTransformNode
+0x1001bc0a4 PreBuiltOccupantGetAltitude
+0x1001bc178 PreBuiltOccupantGetNormal
+0x1001bc25e PreBuiltOccupantSetVisibility
+0x1001bc2ae PreBuiltOccupantSetAllFlags
+0x1001bc2f0 PreBuiltOccupantUpdateLighting
+0x1001bc312 PreBuiltOccupantSetLit
+0x1001bc338 PreBuiltOccupantIsSupportPylonPresent
+0x1001bc350 PreBuiltOccupantQueryInterface
+0x1001bc41c PreBuiltOccupantAddRef
+0x1001bc46e PreBuiltOccupantRelease
+0x1001bc4c0 PreBuiltOccupantWrite
+0x1001bc5e4 PreBuiltOccupantRead
+0x1001bc78c PreBuiltOccupantDestructAndDelete
+0x1001d26d0 PreBuiltOccupantDestructBody
+PARTIAL:
+# none: all 33 hand-written bodies are complete. The rendering / lighting / terrain / network-manager / resource /
+# model-instance neighbours they call are unrecovered, so each call goes through IPreBuiltModelOccupantHost and the
+# test drives it with a fake host (the same convention as cSC4UndergroundOccupant); the port-only devices
+# (SetModelInstance for the embedded +0x68 instance, the cached path-info pointer, the PreBuiltPathOccupant adapter)
+# are documented in the header.
+SKIPPED:
+# none: nothing in cSC4NetworkOccupantWithPreBuiltModel is Windows/DX7-only, debug-only or dead code.
+# The 34 non-virtual thunks are compiler-generated from the virtual bodies above, so they have no hand-written body
+# of their own and need no separate ledger row; the C1/C2 constructors and D0/D1/D2 destructors listed above are the
+# compiler's variants of the one hand-written constructor / destructor.

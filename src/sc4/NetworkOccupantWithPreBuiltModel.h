@@ -30,8 +30,9 @@
 //   +0x228 cIS3DModelInstance* mSupportModel     (counted)
 //
 // Quirks kept (addresses are the original functions):
-//  * the constructor never initialises mModelOffset (0x1d0..0x1d8); AddModel is expected to set it. The port
-//    zeroes it (an uninitialised float is undefined behaviour) — see PREBUILT-1.
+//  * the constructor never initialises mModelOffset (0x1d0..0x1d8) or mSupportRotation (0x1f8); AddModel /
+//    AddSupportModel are expected to set them. The port zeroes them (an uninitialised float is undefined
+//    behaviour) — see PREBUILT-1.
 //  * UpdateShadow sets both shadow handles to -2 *after* asking the network manager for the shadow texture and
 //    leaves them at -2 when the manager returns 0 or when the piece sits on flat terrain; the next call then
 //    resolves them to -1 without ever removing an overlay (0x1001ba37a).
@@ -44,6 +45,8 @@
 //    (0x1001ba8f4).
 //  * ComputeBoundingBox skips the occupant's own cS3DModelInstanceBasic (+0x68) in the instance union, then
 //    clamps the union to corner 0 (min) and corner 2 (max) in x / z, which can invert the box (0x1001baf00).
+//  * the skipped own instance is still released, but its owner is *not* cleared; and a count of zero returns
+//    without writing the output box at all (0x1001baa63).
 //  * the model's world bounds are only unioned when box.min.x <= box.max.x; a rejected box is skipped but its
 //    instance is still released (0x1001bacc0).
 //  * Read accepts only versions 3 and 4; version 3 skips six words before and one word after the new fields

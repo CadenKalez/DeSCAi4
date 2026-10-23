@@ -320,6 +320,7 @@ struct FakeHost final : IPreBuiltModelOccupantHost {
         if (!createInstance) return nullptr;
         auto* instance = new FakeOccupantModel();
         instance->initResult = initResult;
+        instance->model.transform.scale = 2.5f;          // GetTransform must carry it into the built matrix
         created.push_back(instance);
         return instance;
     }
@@ -449,15 +450,27 @@ int main() {
     exemplar->AddRef();
     exemplar->SetKey(cGZPersistResourceKey{0x496678fe, 0x296678f7, 0x2c});
     const float modelPosition[3] = {4.0f, 5.0f, 6.0f};
+    // the base class hands its own +0x68 instance to the union; ComputeBoundingBox must skip it but release it
+    host.baseInstance = &occupantModel;
+    const int baseRefsBefore = occupantModel.refs;
     occ->AddModel(exemplar, modelPosition, 2);
     CHECK(occ->GetRotation() == 2);
     CHECK_NEAR(occ->ModelOffset().x, 4.0f);
     CHECK_NEAR(occ->ModelOffset().z, 6.0f);
     CHECK(occ->AsPropertyHolder()->HasProperty(0x4835c6a6));
+    CHECK(occupantModel.setOwnerCalls == 0);             // excluded instance: released without clearing the owner
+    CHECK(occupantModel.refs == baseRefsBefore);         // added by the base list, released by the union
     float lo[3], hi[3];
     occ->GetBoundingBox(lo, hi);
     CHECK_NEAR(lo[0], 16.0f);
     CHECK_NEAR(hi[2], 48.0f);
+    // quirk (0x1001baa63): with no model instance at all the output box is left untouched
+    host.baseInstance = nullptr;
+    float untouchedLo[3] = {123.0f, 123.0f, 123.0f};
+    float untouchedHi[3] = {-123.0f, -123.0f, -123.0f};
+    occ->ComputeBoundingBox(untouchedLo, untouchedHi);
+    CHECK(untouchedLo[0] == 123.0f && untouchedLo[2] == 123.0f);
+    CHECK(untouchedHi[0] == -123.0f && untouchedHi[2] == -123.0f);
 
     // ---- shadows: land ---------------------------------------------------------------------------------------
     occ->SetRotationAndFlip(0);
@@ -539,6 +552,7 @@ int main() {
     CHECK_NEAR(host.created[0]->model.transform.translation[2], 6.0f + 40.0f);
     CHECK_NEAR(host.created[0]->model.transform.rotation[0][0], 0.0f);
     CHECK_NEAR(host.created[0]->model.transform.rotation[0][2], -1.0f);
+    CHECK_NEAR(host.created[0]->model.transform.scale, 2.5f);   // copied from GetTransform, not forced to 1
     CHECK(host.created[0]->model.setOwnerCalls >= 1);
     CHECK(occ->PreBuiltModel() == &host.created[0]->model);
     CHECK(occ->SupportModel() == &host.created[1]->model);

@@ -183,6 +183,7 @@ struct FakeHost final : ILotRetainingWallHost {
     }
     bool RendererAvailable() override { return rendererAvailable; }
     bool RendererHasModel(cIS3DModelInstance* model) override {
+        ++hasModelCalls;
         return std::find(renderer.begin(), renderer.end(), model) != renderer.end();
     }
     void RendererAddModel(cIS3DModelInstance* model) override { renderer.push_back(model); }
@@ -228,6 +229,7 @@ struct FakeHost final : ILotRetainingWallHost {
     bool readCalled = false;
     int inserts = 0;
     int removals = 0;
+    int hasModelCalls = 0;
 };
 
 cSC4Lot* MakeLot(int x, int z, int sx, int sz, float altitude, int flags) {
@@ -297,6 +299,8 @@ int main() {
         CHECK(occupant->GetLot() == lot);
         occupant->SetLot(lot);   // same pointer: no reference churn
         CHECK(occupant->IsInitialized() == false);
+        CHECK(occupant->Shutdown());          // not initialized: still reports success...
+        CHECK(occupant->GetLot() == lot);     // ...and keeps the lot reference
         CHECK(occupant->Init());
         CHECK(occupant->IsInitialized());
         CHECK(occupant->Shutdown());
@@ -363,6 +367,11 @@ int main() {
         CHECK(fresh->GetRetainingWallType() == 0);
         CHECK(fresh->GetEdgeFlags() == 0);
         CHECK(nestedStream.RemainingBytes() == 0);
+
+        // a record that ends inside the occupant base record sets the stream error and fails
+        const std::uint8_t truncated[] = {2, 0};
+        PortMemoryIStream shortStream(truncated, sizeof truncated);
+        CHECK(!fresh->Read(shortStream));
 
         source->Release();
         copy->Release();
@@ -433,6 +442,54 @@ int main() {
         SetLotRetainingWallHost(nullptr);
     }
 
+    // ------------------------------------------------------------------ edge mask bit order
+    {
+        FakeHost host;
+        SetLotRetainingWallHost(&host);
+        host.terrain = [](int, int) { return 0.0f; };
+        host.hasEdgeCell[1] = true;
+        host.edgeCells[1] = SC4CellRect{0, 0, 1, 1};      // x outer, z inner: (0,0) (0,1) (1,0) (1,1)
+        host.terrainCells[1] = SC4CellRect{0, 0, 0, 0};   // one vertex of height 0
+        // (0,0) has no lot: the edge is flagged but that cell gets no bit. The locked lots take the
+        // next bits from the top (30 and 28); the demolishable one (1,0) takes none.
+        cSC4Lot* lockedA = MakeLot(0, 1, 1, 1, 0.0f, 1);
+        cSC4Lot* lockedB = MakeLot(1, 0, 1, 1, 0.0f, 1);
+        cSC4Lot* lockedC = MakeLot(1, 1, 1, 1, 0.0f, 1);
+        lockedB->SetState(kLotStateDemolishable, 0, 0);
+        host.lotsAtCell[{0, 1}] = lockedA;
+        host.lotsAtCell[{1, 0}] = lockedB;
+        host.lotsAtCell[{1, 1}] = lockedC;
+        int flags[4] = {0, 0, 0, 0};
+        float maxAltitude = 0.0f;
+        CHECK(cSC4LotRetainingWallOccupant::GetLotWallEdgeFlags(nullptr, 0.0f, SC4CellRect{0, 0, 1, 1}, flags,
+                                                                maxAltitude));
+        // 0x50000000 from the two cell bits, +1 for the single terrain vertex (0 * (0*0) + 1)
+        CHECK(flags[1] == static_cast<int>(0x50000001u));
+        CHECK(maxAltitude == 0.1f);
+        lockedA->Release();
+        lockedB->Release();
+        lockedC->Release();
+        SetLotRetainingWallHost(nullptr);
+    }
+
+    // ------------------------------------------------------------------ altitude rounding
+    {
+        FakeHost host;
+        SetLotRetainingWallHost(&host);
+        host.terrain = [](int, int) { return 1.5f; };
+        host.hasEdgeCell[0] = true;
+        host.edgeCells[0] = SC4CellRect{0, 0, 0, 0};
+        host.terrainCells[0] = SC4CellRect{1, 1, 1, 1};   // one vertex, x*z = 1
+        int flags[4] = {0, 0, 0, 0};
+        float maxAltitude = 0.0f;
+        CHECK(cSC4LotRetainingWallOccupant::GetLotWallEdgeFlags(nullptr, 0.0f, SC4CellRect{0, 0, 0, 0}, flags,
+                                                                maxAltitude));
+        // the 2^23 bias bit trick (MOVD at 0x10015da9b) rounds 1.5 up to 2, a plain (int) cast would keep 1
+        CHECK(flags[0] == 3);
+        CHECK(maxAltitude == 1.5f);
+        SetLotRetainingWallHost(nullptr);
+    }
+
     // ------------------------------------------------------------------ create/update/remove the occupant
     {
         FakeHost host;
@@ -459,7 +516,8 @@ int main() {
         CHECK(wall->GetEdgeFlags() == (1 | 4));
         CHECK(wall->GetLot() == lot);
         float position[3] = {};
-        wall->AsOccupant();   // the interface view of the same object
+        CHECK(wall->AsOccupant() ==
+              static_cast<cISC4Occupant*>(static_cast<cSC4LotRetainingWallOccupant*>(wall)));
         static_cast<cSC4LotRetainingWallOccupant*>(wall)->GetPosition(position);
         CHECK(position[0] == 48.0f && position[1] == 5.0f && position[2] == 48.0f);
         float lo[3] = {}, hi[3] = {};
@@ -495,7 +553,27 @@ int main() {
         CHECK(host.removals == 1);
         CHECK(host.occupants.empty());
         CHECK(lot->GetFlags() == 1);
+        // quirk: the remove path clears the lot flag even when there is no occupant to remove
+        lot->SetFlags(1 | kLotFlagRetainingWall);
         CHECK(!cSC4LotRetainingWallOccupant::AddRetainingWallOccupant(lot, false));   // nothing left to remove
+        CHECK(lot->GetFlags() == 1);
+
+        // the building-development simulator can refuse the wall type: the wall is dropped, nothing is inserted
+        host.loadOk = false;
+        host.loadedWall = nullptr;
+        CHECK(!cSC4LotRetainingWallOccupant::AddRetainingWallOccupant(lot, true));
+        CHECK(host.inserts == 1);
+        CHECK(host.occupants.empty());
+        CHECK(lot->GetFlags() == 1);
+
+        // no edge is flagged (no lot manager cell rect): no occupant either
+        host.loadOk = true;
+        host.hasEdgeCell[0] = false;
+        host.hasEdgeCell[2] = false;
+        CHECK(!cSC4LotRetainingWallOccupant::AddRetainingWallOccupant(lot, true));
+        CHECK(host.inserts == 1);
+        CHECK(host.occupants.empty());
+        CHECK(lot->GetFlags() == 1);
 
         lot->Release();
         SetLotRetainingWallHost(nullptr);
@@ -544,11 +622,20 @@ int main() {
         CHECK(found == host.created[1]);
         found->Release();
         CHECK(!cSC4LotRetainingWallOccupant::FindRetainingWallModel(placeable, 1, found));
+        CHECK(found == host.created[1]);   // quirk: the out pointer is written even without a match
 
         // remove the model of edge 0
         CHECK(cSC4LotRetainingWallOccupant::AddRetainingWallModel(occupant, occupant, 0, false, false));
         CHECK(placeable->GetModelCount() == 1);
         CHECK(host.renderer.size() == 1);
+
+        // quirk: the remove path asks the renderer about the model without checking that the renderer exists
+        host.rendererAvailable = false;
+        const int checksBefore = host.hasModelCalls;
+        CHECK(cSC4LotRetainingWallOccupant::AddRetainingWallModel(occupant, occupant, 2, false, false));
+        CHECK(host.hasModelCalls == checksBefore + 1);
+        CHECK(placeable->GetModelCount() == 0);
+        host.rendererAvailable = true;
 
         // create=false on AddRetainingWallModels removes every model of the placeable object
         CHECK(cSC4LotRetainingWallOccupant::AddRetainingWallModels(occupant, false, false));
@@ -606,6 +693,17 @@ int main() {
         CHECK(host.created[0]->textureIds[0] == 0 && host.created[0]->textureIds[4] == 0);
         CHECK(host.created[0]->textureScale == 0.0f);
         CHECK(cSC4LotRetainingWallOccupant::AddRetainingWallModel(third, third, 0, false, false));
+
+        // ---- no placeable object at all (GetOrCreatePlaceableObject may return null): nothing happens
+        auto* noPlaceable = new cSC4LotRetainingWallOccupant();
+        noPlaceable->AddRef();
+        noPlaceable->SetEdgeFlags(1);
+        host.created.clear();
+        CHECK(cSC4LotRetainingWallOccupant::AddRetainingWallModel(noPlaceable, noPlaceable, 0, true, false));
+        CHECK(noPlaceable->GetEdgeFlags() == 1);
+        CHECK(host.created.empty());
+        CHECK(cSC4LotRetainingWallOccupant::AddRetainingWallModel(noPlaceable, noPlaceable, 0, false, false));
+        noPlaceable->Release();
         third->Release();
         SetLotRetainingWallHost(nullptr);
     }
@@ -622,6 +720,10 @@ int main() {
         cSC4Lot* first = MakeLot(1, 1, 1, 1, 5.0f, 1);
         cSC4Lot* second = MakeLot(4, 4, 1, 1, 5.0f, 1);
         host.around = {first, second};
+        cSC4LotRetainingWallOccupant::UpdateSurroundingRetainingWalls(first);
+        CHECK(host.inserts == 2);
+        CHECK(host.occupants.size() == 2);
+        host.around.clear();   // an empty neighbour list changes nothing
         cSC4LotRetainingWallOccupant::UpdateSurroundingRetainingWalls(first);
         CHECK(host.inserts == 2);
         CHECK(host.occupants.size() == 2);

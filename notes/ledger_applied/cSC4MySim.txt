@@ -59,8 +59,11 @@ EVIDENCE test scripts/tests/sc4_mysim_test.cpp - construction/interface views an
 0x1007a5778 cSC4MySim_DoMessageThunk
 0x1007a5786 cSC4MySim_FindNewJob
 0x1007a5800 cSC4MySim_UpdateQuickVariables
+0x1007a5be9 MySimSetTableBuilding
+0x1007a5ce4 MySimSetTableString
 0x1007a5d5e cSC4MySim_UpdateLocalBuildings
 0x1007a6160 cSC4MySim_UpdateJobTitle
+0x1007a61d0 MySimSetTableOccupantSubject
 0x1007a6344 cSC4MySim_simulate_day
 0x1007a64f2 cSC4MySim_CheckCommute
 0x1007a6676 cSC4MySim_simulate_day_events
@@ -212,4 +215,5 @@ EVIDENCE test scripts/tests/sc4_mysim_test.cpp - construction/interface views an
 PARTIAL:
 0x10079fcb2 cSC4MySim_UpdateVariables only UpdateQuickVariables() and the Lua-table guard are ported; the ~40 simulator-driven mysim table values (home/local power, water, fire, police, crime, pollution, residential, building-development and traffic statistics) need the unrecovered simulators (see the source's PARTIAL note)
 0x1007a3e66 cSC4MySim_UpdateTripVariables only the trip_in_transit / trip_at_location / destination_subject block is ported; the transit-switch and travel-type values (trip_at_transit_switch, trip_idle, trip_on_*, last_trip_type) and the traffic simulator's local-area congestion sweep are missing
+0x1007a60fc MySimGetCongestion the traffic-volume pre-check is not ported (the original asks the traffic simulator's vslot 0xb8 and answers 0 when it reports no volume) and the helper has no caller yet because UpdateVariables is partial
 SKIPPED: none (every symbol is needed by the macOS build); the cSC4MySimDispatch, cSC4MySimBalloonWinProc, cSC4WinCalloutBox, cSC4PylonOccupant and input-control neighbours are unrecovered and go through the IMySimDispatch / IMySimBalloonWinProc / IMySimCallout / IMySimPylon / IMySimHost seams
