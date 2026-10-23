@@ -81,7 +81,7 @@ struct FakeMessageServer final : cIGZMessageServer2 {
     bool CreateMessage(std::uint32_t, std::uint32_t, void**) override { return false; }
 };
 
-struct FakeGenerator final : ILuaCommandGenerator {
+struct FakeGenerator final : ILuaCommandGeneratorApi {
     std::uint32_t refs = 0;
     int inits = 0, shutdowns = 0;
     cIGZCommandServer* lastServer = nullptr;
@@ -138,7 +138,7 @@ struct Host final : ILuaScriptServerHost {
         lua->AddRef();
         return lua;
     }
-    ILuaCommandGenerator* CreateCommandGenerator() override {
+    ILuaCommandGeneratorApi* CreateCommandGenerator() override {
         generator->AddRef();
         return generator;
     }

@@ -242,7 +242,13 @@ public:
     int dobuffer(lua_State*, const char*, std::size_t, const char*) override { return 0; }
     int load(lua_State*, lua_Chunkreader, void*, const char*) override { return 0; }
     int loadfile(lua_State*, const char*) override { return 0; }
-    int loadbuffer(lua_State*, const char*, std::size_t, const char*) override { return 0; }
+    int loadbuffer(lua_State* L, const char*, std::size_t, const char*) override {
+        // A chunk is a Lua-function stand-in; `chunkBody` lets a test decide what running it does.
+        Val v; v.t = Val::LuaFn; v.fn = std::make_shared<Closure>();
+        v.fn->body = chunkBody ? chunkBody : [](lua_State*) { return 0; };
+        L->stack.push_back(v);
+        return 0;
+    }
     int error(lua_State*, const char*) override { return 0; }
     int next(lua_State* L, int i) override {
         Table* t = AsTable(L, i);
@@ -320,6 +326,7 @@ public:
     void typerror(lua_State*, int, const char* tname) override { throw LuaError{Str(std::string("typerror ") + tname)}; }
 
     std::vector<std::string> dostrings;
+    std::function<int(lua_State*)> chunkBody;   // body of every loadbuffer chunk
     int dostringResult = 0;
     std::vector<lua_State*> closed;
     std::vector<int> libs;

@@ -78,6 +78,7 @@ struct LuaDebug {
 static_assert(offsetof(LuaDebug, currentline) == 0x28, "lua_Debug::currentline offset");
 
 class cGZLuaScriptServer;
+class ILuaCommandGeneratorApi;
 
 // What the server needs from the rest of the engine. Every method mirrors one call of the original.
 class ILuaScriptServerHost {
@@ -87,7 +88,7 @@ public:
     // (counted reference). The port takes the recovered base to stay independent of the cSCLua GDR bridge.
     virtual lua5::cGZLua5* CreateLua() = 0;
     // GZCOM()->CreateInstance(0x2bd13fb4, 0x2bd144df, &out): a counted cGZLua5CommandGenerator.
-    virtual class ILuaCommandGenerator* CreateCommandGenerator() = 0;
+    virtual ILuaCommandGeneratorApi* CreateCommandGenerator() = 0;
     // RZGetFramework()->GetSystemService(0xeb903a32, 0xcb90253a, &out): counted cIGZCommandServer.
     virtual cIGZCommandServer* GetCommandServer() = 0;
     // RZGetFramework()->GetSystemService(0x04fa845b, 0x652294c7, &out): counted cIGZMessageServer2.
@@ -112,9 +113,9 @@ void SetLuaScriptServerHost(ILuaScriptServerHost* host);
 ILuaScriptServerHost* GetLuaScriptServerHost();
 
 // The seam for the unrecovered cGZLua5CommandGenerator (clsid 0x2bd13fb4, iid 0x2bd144df).
-class ILuaCommandGenerator {
+class ILuaCommandGeneratorApi {
 public:
-    virtual ~ILuaCommandGenerator() = default;
+    virtual ~ILuaCommandGeneratorApi() = default;
     virtual std::uint32_t AddRef() = 0;
     virtual std::uint32_t Release() = 0;
     // 0x10069556a: registers itself with the command server and installs the "sc4app" Lua table.
@@ -240,7 +241,7 @@ private:
     int scriptCounter_ = 0;                          // +0x38
     int lastCreatedScriptId_ = -1;                   // +0x3c
     lua5::cGZLua5* lua_ = nullptr;                   // +0x40 (counted reference)
-    ILuaCommandGenerator* generator_ = nullptr;      // +0x48 (counted reference)
+    ILuaCommandGeneratorApi* generator_ = nullptr;      // +0x48 (counted reference)
     std::map<int, LuaThreadData*> threads_;          // +0x50
     LuaThreadData* currentRunning_ = nullptr;        // +0x68
 };
