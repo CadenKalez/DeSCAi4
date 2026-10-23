@@ -32,7 +32,8 @@ PARTIAL:
 0x10012959a ZoneDeveloperDoMessage - every branch now executes except the PlopAllBuildings cheat, whose PlopAllBuildingTypes is not recovered
 0x10012ad80 ZoneDeveloperPlopAllBuildingTypes - needs the spiral position walk (cSpiralIterator is recovered in SpiralIterator.h but the zone developer test line does not link SpiralIterator.cpp) and the building-type catalogue
 0x100132cde ZoneDeveloperCreateLot - unchanged, the live cSC4SafeList iterator is not recovered
+0x100133466 ZoneDeveloperGetSafeLotIterator - unchanged, cSC4SafeList is not recovered
 
 SKIPPED:
-0x100133466 ZoneDeveloperGetSafeLotIterator - cSC4SafeList is not recovered
+0x100131ecc ZoneDeveloperCanCreatePloppedLot - still needs DecodeNetworkConnectionObject and the network occupant edge flags (not part of this pass)
 0x100132396 ZoneDeveloperCheckLotTerrainConstraints - still needs the lot configuration object list, the surface water query and the city world-to-cell conversion (not part of this pass)

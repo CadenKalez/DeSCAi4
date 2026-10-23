@@ -124,6 +124,7 @@ LEDGER-cGZGraphicWin32COMDirector,cGZGraphicWin32COMDirector,finish 2 partial/pe
 CLASS-cGZLegacyControl,cGZLegacyControl,"recover 44 remaining function(s) (44 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZLegacyControl,cGZLegacyControl,finish 13 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEGACY-1,cGZLegacyControl,Recover cRZStringArray (variant vtbl 0x100b0ecb8) so InterpretPropertiesGZWinCommon can write the seven comment strings at 0x108..0x10f,,open,src/gz/LegacyControl.cpp
+LEGACY-2,cGZLegacyControl,"InterpretPropertiesGZWinBtn: tip resource {6a231eaa,0a6cf0d3} is replaced in the original by a CFBundle localised string (ImportTooltipReplacement); add a host seam",,open,src/gz/LegacyControl.cpp
 LEDGER-cGZLua5,cGZLua5,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZLua5CommandGenerator,cGZLua5CommandGenerator,"recover 15 remaining function(s) (15 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZLua5DebugInfo,cGZLua5DebugInfo,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv

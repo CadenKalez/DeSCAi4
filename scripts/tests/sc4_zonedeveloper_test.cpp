@@ -1488,8 +1488,8 @@ void TestExamineBoundariesAndOnZone() {
     CHECK(developer->Init());
 
     // Streets on the north side only; the lot then faces north.
-    std::vector<FakeNetworkOccupant> northViews(4);
-    std::vector<FakeOccupant> northOccupants(4);
+    FakeNetworkOccupant northViews[4];
+    FakeOccupant northOccupants[4];
     for (int i = 0; i < 4; ++i) {
         northViews[i].flags = 0x10c;   // street-like: 0x104 for ExamineCell, 0x8 for the facing test
         northOccupants[i].occupantType = 0xc772bf98;

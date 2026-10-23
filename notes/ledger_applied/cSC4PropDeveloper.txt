@@ -1,0 +1,40 @@
+SOURCE src/sc4/PropDeveloper.cpp|h
+EVIDENCE test scripts/tests/sc4_propdeveloper_test.cpp - sc4_propdeveloper ok: fake IPropDeveloperHost plus real cSC4Lot / cSC4PropertyHolder / cSCProperty / cRZVariant / cSC4NetworkLot and port memory streams drive the three COM views and their shared reference count, Init (the four services, the cSC4WealthRequester it creates, the tract rectangle measured from the city cells, the 13 message registrations, the two simulator agents and the animation-tick notification) and Shutdown, the requester list, every DoMessage branch (lights on/off, minute change with both time-of-day window shapes and the 0.4 h threshold, day-night with a pinned visual time, city init, day tick, idle time, power rectangle, lot state change and its posted reply, occupant insert/remove for both occupant types, terrain change, global effect trigger and animation tick), the three-state tract walk of DoIdle and its wrap, UpdateTract on a real cSC4Lot and a real cSC4NetworkLot (optional-slot matching by lot tag, keep, removal when the requester rejects the prop, creation through the lot developer, occupancy scaling and the round-robin remainder), SelectAndCreateProp (family expansion, satisfaction-id filtering, the custom selector, the lot and network-lot paths and the (idCount & ~0xff) | 1 return quirk), the five prop lists and their timers, RemoveOptionalPropsInLot, UpdateLotStateProps, UpdateSignpostHeights, ShowSignsAndLabels / ToggleSignsAndLabels and the version-5 stream layout plus the version gate
+0x1001217ce PropDeveloperConstruct
+0x1001219fc PropDeveloperDestruct
+0x100121ae2 PropDeveloperDestructBase
+0x100121aec PropDeveloperDestructDeleting
+0x100121b1a PropDeveloperAddRef
+0x100121b44 PropDeveloperRelease
+0x100121ba2 PropDeveloperQueryInterface
+0x100121c04 PropDeveloperInit
+0x100121f7e PropDeveloperShutdown
+0x1001222c8 PropDeveloperWrite
+0x1001225d0 PropDeveloperRead
+0x100122d70 PropDeveloperAddPropRequester
+0x100122dc8 PropDeveloperRemovePropRequester
+0x100122e36 PropDeveloperDoMessage
+0x1001235a0 PropDeveloperDoIdle
+0x100123632 PropDeveloperHandleInsertOccupant
+0x100123edc PropDeveloperHandleRemoveOccupant
+0x10012428c PropDeveloperHandleRemoveNetworkOccupant
+0x1001243ae PropDeveloperDoAnimationTick
+0x1001245e6 PropDeveloperSwitchNightChangeProps
+0x10012471c PropDeveloperRemoveOptionalPropsInLot
+0x100124842 PropDeveloperDoPowerChanged
+0x100124b06 PropDeveloperUpdateLotStateProps
+0x100124bfe PropDeveloperUpdateSignpostHeights
+0x100124d32 PropDeveloperUpdateTract
+0x100125d30 PropDeveloperSelectAndCreateProp
+0x1001260b2 PropDeveloperUpdateAllOptionalProps
+0x10012612a PropDeveloperShowSignsAndLabels
+0x100126448 PropDeveloperToggleSignsAndLabels
+0x100126464 PropDeveloperAreSignsAndLabelsVisible
+0x100126470 PropDeveloperGetGZCLSID
+PARTIAL:
+none - all 31 symbols are recovered. The open work is the host hook-up listed by scripts/list_seams.py
+(IPropDeveloperHost and the cISC4PropOccupant view over cSC4PropOccupant) and the
+GZCOM factory symbol GZCOM_CreatecSC4PropDeveloper (address 0x100121780, ledger row owned by src/gz/GZCOM.cpp),
+which can now construct the class.
+SKIPPED:
+none

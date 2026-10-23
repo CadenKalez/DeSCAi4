@@ -1,0 +1,1 @@
+ "sc4_tutorialsystem:$T/sc4_tutorialsystem_test.cpp $S/sc4/TutorialSystem.cpp $S/rz/cRZString.cpp $S/rz/cRZCmdLine.cpp $S/rz/RZConvert.cpp $S/rz/cRZStream.cpp -I$T"
