@@ -624,7 +624,8 @@ CLASS-cSC4PolygonClipper<sVF_V3F_C4UB_T2F>,cSC4PolygonClipper<sVF_V3F_C4UB_T2F>,
 CLASS-cSC4PolygonClipper<sVF_V3F_T2F>,cSC4PolygonClipper<sVF_V3F_T2F>,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4PolygonClipperCommon,cSC4PolygonClipperCommon,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4PortDeveloper,cSC4PortDeveloper,"recover 32 remaining function(s) (32 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4PowerLineTool,cSC4PowerLineTool,"recover 32 remaining function(s) (32 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4PowerLineTool,cSC4PowerLineTool,"recover 3 remaining function(s) (0 not started, 3 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4PowerLineTool,cSC4PowerLineTool,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cSC4PowerPoleOccupant,cSC4PowerPoleOccupant,finish 110 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cSC4PowerSimulator,cSC4PowerSimulator,finish 42 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4ProgressScreen,cSC4ProgressScreen,"recover 14 remaining function(s) (14 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv

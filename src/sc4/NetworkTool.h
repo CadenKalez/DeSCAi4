@@ -234,6 +234,7 @@ struct tNeighborConnection {
 // insertion pass and the smoothing pass consume it.
 class cSC4NetworkOccupant;
 class cSC4UndergroundNetworkTool;
+class cSC4PowerLineTool;
 
 struct tSolvedCell {
     std::uint32_t pieceType = 0;              // +0x00 (cISC4NetworkOccupant vtable +0xb8 at creation time)
@@ -664,6 +665,10 @@ private:
     // vector +0x110, the fixed-vertex set +0x150, the constraint satisfier +0x228, the world cache +0x30, the
     // terrain +0x80, the occupant manager +0x88, the placement block +0x500, network type +0x628, +0x458).
     friend class cSC4UndergroundNetworkTool;
+    // The power-line tool derives from this class and reaches the same base state directly in the original
+    // (the dragged steps +0xa0 and cells +0xb8, the step counters +0xd4..+0xdc, the anchors +0x210, the
+    // preview +0x430, the occupant manager +0x88, the network type +0x628 and the +0x98 update flag).
+    friend class cSC4PowerLineTool;
 };
 
 }  // namespace sc4

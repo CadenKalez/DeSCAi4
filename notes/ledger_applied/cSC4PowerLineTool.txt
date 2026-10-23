@@ -1,0 +1,37 @@
+SOURCE src/sc4/PowerLineTool.cpp|h
+EVIDENCE vtable 0x100a92ca0 (Init/Shutdown/UpdateOnZoneChange/ClearCellPreviews/GetCostOfSolution/CursorId/DirectionalCursorBase/GetFailureReasonString/DoNetworkSpecificPlacement/CheckForReservedTiles/SetTerrainHilight override slots) + 0x1002e9c30..0x1002ed8e0; scripts/tests/sc4_powerlinetool_test.cpp covers the pole-info bookkeeping, AddConnection direction masks (Get0To3Direction mapping), the zone/occupant/lot placement test (duplicate (x,z) zone query and the (z,z) quirk), the existing/created pole hookup, the per-step solver pass, connection groups, the cost/failure strings, the ini-driven direction exemplar table, the preview lists/clear path and the destructor's reference leak quirk; 27 recovered, 3 recovered-partial, 3 compiler-generated aliases skipped
+0x1002e9c30 AddConnection
+0x1002e9cd2 AddPowerPoleInfo
+0x1002e9d28 ComputePolePosition
+0x1002e9e2c CreatePowerPole
+0x1002e9f9e FindPoleOccupant
+0x1002ea12c cSC4PowerLineToolConstructor
+0x1002ea220 CursorId
+0x1002ea22c DirectionalCursorBase
+0x1002ea238 PlacePole
+0x1002ea38c CellIsOccupiedByPowerLine
+0x1002ea4a2 IntersectionIsInList
+0x1002ea4f2 ReleasePoleInfos
+0x1002ea594 GetPrimaryCell
+0x1002ea616 PoleIsInList
+0x1002eb380 CellIsOKForPlacement
+0x1002eb536 FindNewPolePosition
+0x1002ecaec CheckForReservedTiles
+0x1002ecc80 SetTerrainHilight
+0x1002ecde4 DoNetworkSpecificPlacement
+0x1002ecf2a Init
+0x1002ed0a4 StaticInit
+0x1002ed0c6 ClearCellPreviews
+0x1002ed208 ReadPowerPoleInfos
+0x1002ed32a Shutdown
+0x1002ed348 GetCostOfSolution
+0x1002ed37c GetFailureReasonString
+0x1002ed8e0 DestroyPowerLineTool
+PARTIAL:
+0x1002ea67e DeterminePolePositions moved to the new pole/wire occupants' neighbour interfaces: recovered only the entry/exit bookkeeping (release the previous pole references, drop the line-info lists, reset the counters) and a reduced per-step pass that places one pole at the first and one at the last placeable cell of each step and connects them; the original 3271-byte body's candidate/pop-two logic, anchor and pole-spacing tests, line-of-sight test, wire/intersection bookkeeping and line-info lists are NOT reproduced, so lineInfos_ stays empty and wireCellCount_ is the Manhattan distance between the placed poles
+0x1002eb7de PlacePoles moved to the new pole/wire occupants' neighbour interfaces: recovered the connection-group pass, creating every pole occupant, the +0x38/+0x40 intersection bookkeeping and tIntersectionInfo list, the city insertion and the created/preview pole lists plus the final connection pass; the per-pole exemplar matching and the creation of the cSC4PowerLineOccupant wire objects (the ConnectPoles line-info vector) are NOT reproduced, so no wire occupants are created and lineInfos_ is never consumed
+0x1002ec3c2 UpdateOnZoneChange moved to the new pole/wire occupants' neighbour interfaces: only the +0x98 update flag is recovered; the original walks every pole and wire occupant of the changed rectangle, destroys the poles outside it, breaks the affected connections and re-routes the wires through FindNewPolePosition - none of that occupant-level work is reproduced
+SKIPPED:
+0x1002ea216 compiler-generated C2 constructor alias (calls the C1 constructor, no hand-written body)
+0x1002ed6a4 compiler-generated complete destructor alias (calls the destructor body, no hand-written body)
+0x1002ed6ae compiler-generated deleting destructor alias (calls the destructor body then operator delete, no hand-written body)
