@@ -209,18 +209,30 @@ static NSString* GameData() {
     return [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/GameData"];
 }
 
-// PNG bytes as a CPU buffer (ImageIO).
+// PNG bytes as a CPU buffer (ImageIO): ARGB8888 with straight (non-premultiplied) alpha, which is what the engine's
+// alpha blits expect from a 32-bit image resource.
 static cGZBuffer* DecodePngBytes(const std::vector<uint8_t>& png) {
     CGImageSourceRef src = CGImageSourceCreateWithData((__bridge CFDataRef)[NSData dataWithBytes:png.data() length:png.size()], nullptr);
     CGImageRef img = src ? CGImageSourceCreateImageAtIndex(src, 0, nullptr) : nullptr;
     if (!img) return nullptr;
+    const std::uint32_t w = std::uint32_t(CGImageGetWidth(img)), h = std::uint32_t(CGImageGetHeight(img));
     auto* buffer = new cGZBuffer();
     buffer->AddRef();
-    buffer->Init(std::uint32_t(CGImageGetWidth(img)), std::uint32_t(CGImageGetHeight(img)), cGZBufferColorType{kBufferColorXRGB8888, 32});
+    buffer->Init(w, h, cGZBufferColorType{kBufferColorARGB8888, 32});
+    auto* bits = static_cast<std::uint8_t*>(buffer->GetColorSurfaceBits());
+    const std::uint32_t stride = buffer->GetColorSurfaceStride();
+    std::memset(bits, 0, std::size_t(stride) * h);
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
-    CGContextRef cg = CGBitmapContextCreate(buffer->GetColorSurfaceBits(), CGImageGetWidth(img), CGImageGetHeight(img), 8, buffer->GetColorSurfaceStride(), cs, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
-    CGContextDrawImage(cg, CGRectMake(0, 0, CGImageGetWidth(img), CGImageGetHeight(img)), img);
+    CGContextRef cg = CGBitmapContextCreate(bits, w, h, 8, stride, cs, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst);
+    CGContextDrawImage(cg, CGRectMake(0, 0, w, h), img);
     CGContextRelease(cg); CGColorSpaceRelease(cs); CGImageRelease(img); CFRelease(src);
+    for (std::uint32_t y = 0; y < h; ++y) {   // un-premultiply (B, G, R, A in memory)
+        std::uint8_t* row = bits + std::size_t(y) * stride;
+        for (std::uint32_t x = 0; x < w; ++x, row += 4) {
+            const unsigned a = row[3];
+            if (a != 0 && a != 255) for (int c = 0; c < 3; ++c) row[c] = std::uint8_t(std::min(255u, (row[c] * 255u + a / 2) / a));
+        }
+    }
     return buffer;
 }
 
@@ -323,6 +335,21 @@ static void PumpTimers() {
     }
 }
 
+// The region screen's own UI script ({0, 96a006b0, aa920991}: the toolbar strip with its buttons, bitmaps and text), the
+// script cSC4WinRegionScreen::LoadGUI builds with child id 0x09ebe9ee. The screen object itself (region data, 3D view)
+// is not wired: only its script window is.
+static void BuildRegionScreen() {
+    cIGZWin* desktop = gMgr->GetMainWindow();
+    desktop->SetArea(0, 0, kW, kH);
+    AddRect(desktop, 0, 0, kW, kH, 0x000000);
+    const cGZPersistResourceKey toolbar{0, 0x96a006b0, 0xaa920991};
+    cIGZWin* window = exphost::CreateWindowFromScript(toolbar, desktop, 0x09ebe9ee);
+    std::printf("region screen: script window %s\n", window ? "built" : "FAILED");
+    if (window) window->Release();
+    desktop->SetBufferToDrawToRecursive();
+    desktop->InvalidateSelf();
+}
+
 static void StartSplash() {
     gPhase = Phase::Splash;
     cIGZWin* desktop = gMgr->GetMainWindow();
@@ -346,13 +373,13 @@ static void Frame() {
             desktop->ChildDeleteAll();
             gSplash->Release(); gSplash = nullptr;
             gPhase = Phase::Menu;
-            BuildMenu();
+            if (std::getenv("HOST_TEST_MENU")) BuildMenu(); else BuildRegionScreen();
             desktop->SetBufferToDrawToRecursive();
             desktop->InvalidateSelf();
         }
     }
     gMgr->Pump(); gMgr->Plot();
-    if (gPhase == Phase::Menu) DrawLabels();   // (the splash text is a window of the game's UI script now)
+    if (gPhase == Phase::Menu && std::getenv("HOST_TEST_MENU")) DrawLabels();
 }
 
 int main(int argc, char** argv) {

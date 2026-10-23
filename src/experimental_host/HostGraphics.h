@@ -27,6 +27,12 @@ public:
     void* GetDrawContext() override { return asBuffer_->GetDrawContext(); }   // attaches the buffer as the context target when needed
     bool SetFadeAlpha(std::uint8_t) override { return false; }
     bool Fill(std::uint32_t color, const cRZRect& rect) override { return buffer_->Fill(color, rect, nullptr); }
+    // colour keying (private buffers of transparent windows): the window code sets / queries the key on its buffer
+    void SetTransparency(std::uint32_t color) override { buffer_->SetTransparency(color); }
+    bool GetTransparency() override { return buffer_->GetTransparency(); }
+    bool IsPixelTransparent(int x, int y) override { return buffer_->IsPixelTransparent(std::uint32_t(x), std::uint32_t(y)); }
+    bool GetTransparentColor(std::uint32_t& color) override { return buffer_->GetTransparentColor(color); }
+    void RemoveTransparency() override { buffer_->RemoveTransparency(); }
     gz::IDrawTargetBuffer* AsDrawSource() override { return buffer_; }
     // a private buffer shown on its parent (cGZWin::PlotPresent without a draw target): the software blit
     bool Blt(IWinBuffer* source, const cRZRect& sourceRect, const cRZRect& destRect) override {
@@ -64,6 +70,8 @@ public:
     // windows with a private buffer (winflag_pbuff) get a buffer of their own size, drawn like the primary one
     IWinBuffer* DrawSystemCreateBuffer(int width, int height) override { return new HostBuffer(width, height); }
     IWinBuffer* GraphicsCreateBuffer() override { return nullptr; }
+    // the colour transparent private buffers are cleared to and keyed out by (the original asks the colour manager)
+    bool GetPrivateBufferKeyColor(std::uint32_t& nativeColor) override { nativeColor = primary_->MakeNativeColor(0xff, 0x00, 0xff); return true; }
 
     gz::cIGZDrawEngine* CreateEngine(gz::IDrawTargetBuffer* target) override;
 

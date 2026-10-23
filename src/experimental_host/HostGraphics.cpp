@@ -88,6 +88,7 @@ private:
 HostBuffer::HostBuffer(int width, int height) {
     buffer_ = new cGZBuffer();
     buffer_->Init(std::uint32_t(width), std::uint32_t(height), cGZBufferColorType{kBufferColorXRGB8888, 32});
+    buffer_->Fill(0, nullptr);   // a fresh buffer is not cleared by the allocation
     context_ = new gz::cGZDrawContext();
     context_->AddRef();   // the window plot code AddRef/Releases around every paint; the buffer owns one reference
     context_->SetTarget(buffer_);

@@ -148,7 +148,8 @@ bool cSC4EstablishCityWinProc::DoWinProcMessage(cIGZWin* window, cGZMessage& mes
             return DoCommand(message);
         case kGZMsgCharacter:
             return GZOnCharacter(static_cast<char>(message.param1));
-        case kGZMsgKillFocus: {
+        // message 0x11: the window got the focus (this case was named KillFocus while the enum names were swapped)
+        case kGZMsgSetFocus: {
             gz::cIGZWinTextEdit* city = nullptr;
             if (window->GetChildAsRecursive(kCityNameEdit, gz::kGZIID_cIGZWinTextEdit, reinterpret_cast<void**>(&city))) {
                 g_host->SetFocus(city->AsIGZWin());

@@ -2,6 +2,7 @@
 #include "experimental_host/HostUi.h"
 
 #include <cstdio>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -15,6 +16,7 @@
 #include "gz/ScriptVocab.h"
 #include "gz/ScriptableControlSet.h"
 #include "gz/UIScriptService.h"
+#include "gz/SmallObjects.h"
 #include "gz/WinBMP.h"
 #include "gz/WinBtn.h"
 #include "gz/WinFlatRect.h"
@@ -22,6 +24,7 @@
 #include "gz/WinStyle.h"
 #include "gz/WinText.h"
 #include "rz/COMDirectors.h"
+#include "sc4/WinSmallViews.h"
 #include "rz/cRZString.h"
 
 #include "dbpf/DBPFReader.h"
@@ -65,7 +68,10 @@ public:
     // ---- IScriptControlHost
     cIGZWin* CreateControl(std::uint32_t clsid, std::uint32_t iid) override {
         void* object = nullptr;
-        if (!GZCOM() || !GZCOM()->CreateInstance(clsid, iid, &object) || !object) return nullptr;
+        if (!GZCOM() || !GZCOM()->CreateInstance(clsid, iid, &object) || !object) {
+            if (std::getenv("HOST_DEBUG")) std::printf("ui: no class for control clsid %08x (iid %08x)\n", clsid, iid);
+            return nullptr;
+        }
         void* window = nullptr;
         const bool ok = static_cast<cIGZUnknown*>(object)->QueryInterface(0x22ba0121, &window);
         static_cast<cIGZUnknown*>(object)->Release();
@@ -77,13 +83,21 @@ public:
     cIGZBuffer* LoadScriptBuffer(std::uint32_t group, std::uint32_t instance) override {
         if (std::getenv("HOST_DEBUG")) std::printf("ui: LoadScriptBuffer(%08x, %08x)\n", group, instance);
         if (!g_decodePng) return nullptr;
-        for (const char* name : {"Intro.dat", "SimCity_1.dat", "SimCity_2.dat", "SimCity_3.dat", "SimCity_4.dat", "SimCity_5.dat", "EP1.dat"}) {
-            dbpf::Package package;
-            if (!package.Open(GameDataDir() + name)) continue;
-            const dbpf::Entry* entry = package.Find(0x856ddbac, group, instance);
+        // The packages stay open once read (each .dat is read whole by the DBPF reader), in the engine's search order.
+        static std::vector<std::unique_ptr<dbpf::Package>> packages;
+        static const char* kNames[] = {"Intro.dat", "SimCity_1.dat", "SimCity_2.dat", "SimCity_3.dat", "SimCity_4.dat", "SimCity_5.dat", "EP1.dat"};
+        static std::size_t opened = 0;
+        for (std::size_t i = 0; i <= opened && i < 7; ++i) {
+            if (i == packages.size()) {   // open the next one only when the earlier ones do not have it
+                auto package = std::make_unique<dbpf::Package>();
+                package->Open(GameDataDir() + kNames[i]);
+                packages.push_back(std::move(package));
+                opened = packages.size();
+            }
+            const dbpf::Entry* entry = packages[i]->Find(0x856ddbac, group, instance);
             std::vector<std::uint8_t> bytes;
-            if (entry && package.Read(*entry, bytes)) {
-                if (cGZBuffer* buffer = g_decodePng(bytes)) { if (std::getenv("HOST_DEBUG")) std::printf("ui:   found in %s %ux%u\n", name, buffer->Width(), buffer->Height()); return buffer; }   // one counted reference
+            if (entry && packages[i]->Read(*entry, bytes)) {
+                if (cGZBuffer* buffer = g_decodePng(bytes)) { if (std::getenv("HOST_DEBUG")) std::printf("ui:   found in %s %ux%u\n", kNames[i], buffer->Width(), buffer->Height()); return buffer; }   // one counted reference
             }
         }
         return nullptr;
@@ -118,6 +132,10 @@ bool InitUiScripts(HostWinMgr* mgr) {
     gz::RegisterDirectorMaker("cGZWinText", +[]() -> cIGZUnknown* { return MakeWin<gz::cGZWinText>(); });
     gz::RegisterDirectorMaker("cGZWinBtn", +[]() -> cIGZUnknown* { return MakeWin<gz::cGZWinBtn>(); });
     gz::RegisterDirectorMaker("cGZWinBMP", +[]() -> cIGZUnknown* { return MakeWin<gz::cGZWinBMP>(); });
+    gz::RegisterDirectorMaker("cGZWinCustom", +[]() -> cIGZUnknown* { return MakeWin<gz::cGZWinCustom>(); });
+    gz::RegisterDirectorMaker("cSC4WinGenTransparent", +[]() -> cIGZUnknown* { return MakeWin<sc4::cSC4WinGenTransparent>(); });
+    // cSC4WinText (clsid 0xaa7cecfd) is not recovered (3 functions); a plain cGZWinText stands in for it
+    gz::RegisterDirectorMaker("cSC4WinText", +[]() -> cIGZUnknown* { return MakeWin<gz::cGZWinText>(); });
     gz::RegisterDirectorMaker("cGZWinFlatRect", +[]() -> cIGZUnknown* { return MakeWin<gz::cGZWinFlatRect>(); });
 
     // seams

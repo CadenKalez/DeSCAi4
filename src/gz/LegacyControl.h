@@ -171,6 +171,9 @@ public:
     // (src/render/MacDisplay.h) but needs CoreFoundation, which the class' test harness does not link; it stays
     // injectable like the other services.
     virtual void GetNativeResolution(int index, int& width, int& height) = 0;
+    // RZ::WCM() vslot 0x130: the font style id registered under a name ("main9" for a button without a font); 0 when
+    // unknown. Defaulted so test hosts that never reach it need not model it.
+    virtual std::uint32_t FontStyleFromName(const cIGZString& name) { (void)name; return 0; }
 };
 
 IVocabularyServices* VocabularyServices();

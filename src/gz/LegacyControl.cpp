@@ -16,8 +16,11 @@
 #include "gz/WinFlatRect.h"
 #include "gz/WinGen.h"
 #include "gz/WinScrollbar.h"
+#include "gz/WinBtn.h"
 #include "gz/WinSlider.h"
+#include "gz/WinSpinner.h"
 #include "gz/WinText.h"
+#include "gz/WinTextEdit.h"
 #include "rz/cRZVariant.h"
 #include "sc4/WinProcs.h"
 
@@ -1451,6 +1454,324 @@ void cGZLegacyControl::InterpretPropertiesGZWinText(cIGZWin* window, tScriptProp
     text->Release();
 }
 
+// InterpretPropertiesGZWinBtn (0x10053f238): the push button's keywords (cIGZWinBtn, iid 0x8810; the decompiler
+// drops the QueryInterface out-parameter, so the slots were read off the vtable offsets: SetBtnFlag [5] +0x28,
+// SetStyle(style, image, area) [12] +0x60, SetFont [19] +0x98, SetFontStyle [20] +0xa0, SetFontColor [22] +0xb0,
+// SetCaptionStyle [27] +0xd8, SetGutters [29] +0xe8 / [31] +0xf8, SetTipText [35] +0x118, SetTipPlacementType [38]
+// +0x130, SetTipPlacementOffsets [40] +0x140, SetSoundID [45] +0x168). Second pass: only the 0xa02 flag again.
+// Init pass: flags 1, 2, 4, 0x20, 0x40, 0x80, 0x100 (plain) and 0x10, 0x200, 0x400 (inverted: the keyword says
+// "has", the flag says "has not"); the style keyword -> 0..4 (unlisted keywords stay 0, 0xa00 means 3); the font
+// (a style id, else a name, else the font named "main9"); six colours; the gutters ("(x,y)" or "(l,t,r,b)", decided by
+// counting commas); the image {group,instance} and its resource keys; the caption alignment; the tool tip text and
+// its resource key; the tip offsets and placement (default 0x1000000); two sound ids with their {group,instance} params.
+// Kept: the tip text of resource {6a231eaa, 0a6cf0d3} is replaced by a CFBundle localisation in the original
+// (macOS only); it is not reproduced here (see LEGACY-2).
+void cGZLegacyControl::InterpretPropertiesGZWinBtn(cIGZWin* window, tScriptPropertyArray& parameters, bool init) {
+    if (!window) return;
+    gz::cIGZWinBtn* btn = nullptr;
+    if (!window->QueryInterface(gz::kGZIID_cIGZWinBtn, reinterpret_cast<void**>(&btn))) return;
+    std::uint32_t value = 0;
+    if (!init) {
+        if (GetPropertyUint32(parameters, 0xa02, value)) btn->SetBtnFlag(4, value != 0);
+        btn->Release();
+        return;
+    }
+    static constexpr struct { std::uint32_t property; int flag; bool inverted; } kFlags[] = {
+        {0xa00, 0x1, false}, {0xa01, 0x2, false}, {0xa02, 0x4, false}, {0xf00d, 0x10, true}, {0xa03, 0x20, false},
+        {0xa04, 0x40, false}, {0xa05, 0x80, false}, {0xa06, 0x100, false}, {0xa07, 0x200, true}, {0xa08, 0x400, true},
+    };
+    for (const auto& entry : kFlags) {
+        if (GetPropertyUint32(parameters, entry.property, value)) btn->SetBtnFlag(entry.flag, entry.inverted ? value == 0 : value != 0);
+    }
+    int style = 0;
+    if (GetPropertyUint32(parameters, 0xf005, value)) {
+        switch (value) {
+            case 0xa09: style = 1; break;
+            case 0xa0a: case 0xa0b: style = 2; break;
+            case 0xa0c: case 0xa0d: case 0xa00: style = 3; break;
+            case 0xa0e: case 0xa0f: case 0xa1b: style = 4; break;
+            default: break;   // 0xa10..0xa1a and anything else: 0
+        }
+    }
+    std::uint32_t styleId = 0;
+    cRZString text;
+    if (GetPropertyUint32(parameters, 0xf000, styleId)) {
+        btn->SetFontStyle(styleId);
+        SetGZWinFont(window, styleId, 0);
+    } else if (GetPropertyString(parameters, 0xf000, text)) {
+        SetGZWinFont(window, text, 0);
+    } else {
+        IScriptControlHost* host = gScriptControlHost;
+        const std::uint32_t id = host ? host->FontStyleFromName(cRZString("main9")) : 0;   // WCM vslot 0x130
+        gz::IWinButtonHost* buttons = gz::WinButtonHost();
+        btn->SetFont(buttons ? buttons->Font(id) : nullptr);                               // WCM vslot 0x28
+    }
+    static constexpr struct { std::uint32_t property; int index; } kColors[] = {
+        {0xf00f, 0}, {0xf010, 4}, {0xf011, 2}, {0xf012, 1}, {0xf013, 5}, {0xf014, 3},
+    };
+    for (const auto& entry : kColors) {
+        std::uint8_t r = 0, g = 0, b = 0;
+        if (GetPropertyColor(parameters, entry.property, r, g, b)) {
+            btn->SetFontColor(entry.index, WinGraphics() ? WinGraphics()->MakeNativeColor(r, g, b) : 0);
+        }
+    }
+    cRZString gutters;
+    if (GetPropertyString(parameters, 0xf004, gutters) && gutters.Strlen() != 0) {
+        int commas = 0;
+        for (const char* c = gutters.ToChar(); *c; ++c) commas += *c == ',';
+        int a = 0, b = 0, c = 0, d = 0;
+        if (commas == 1) {
+            std::sscanf(gutters.ToChar(), "(%d,%d)", &a, &b);
+            btn->SetGutters(static_cast<std::uint8_t>(a), static_cast<std::uint8_t>(b));
+        } else if (commas == 3) {
+            std::sscanf(gutters.ToChar(), "(%d,%d,%d,%d)", &a, &b, &c, &d);
+            btn->SetGutters(static_cast<std::uint8_t>(a), static_cast<std::uint8_t>(b), static_cast<std::uint8_t>(c), static_cast<std::uint8_t>(d));
+        }
+    }
+    cRZString imageText;
+    if (GetPropertyString(parameters, 0xf016, imageText)) {
+        unsigned group = 0, instance = 0;
+        std::sscanf(imageText.ToChar(), "{%x,%x}", &group, &instance);
+        cIGZBuffer* image = LoadBuffer(group, instance);
+        if (!image) {
+            btn->SetStyle(style, nullptr, nullptr);
+        } else {
+            const cRZRect area = *image->GetBufferArea();   // buffer vslot 0x68
+            btn->SetStyle(style, image, &area);
+        }
+        cGZPersistResourceKey key{0x856ddbacu, group, instance};
+        SetResourceKeyParam(window, 0x2b343becu, key);
+        SetGZWinImage(window, group, instance, 0);
+        if (image) image->Release();
+    } else {
+        btn->SetStyle(style, nullptr, nullptr);
+    }
+    if (GetPropertyUint32(parameters, 0xf015, value)) {
+        if (value == 0xf006) btn->SetCaptionStyle(1);
+        else if (value == 0xf007) btn->SetCaptionStyle(2);
+        else if (value == 0xf008) btn->SetCaptionStyle(0);
+    }
+    cRZString tip;
+    if (GetPropertyString(parameters, 0xa10, tip)) btn->SetTipText(tip);
+    cRZString tipResource;
+    if (GetPropertyString(parameters, 0xa12, tipResource)) {
+        unsigned group = 0, instance = 0;
+        std::sscanf(tipResource.ToChar(), "{%x,%x}", &group, &instance);
+        cRZString loaded;
+        if (LoadStringA(group, instance, loaded)) btn->SetTipText(loaded);
+        cGZPersistResourceKey key{0x2026960bu, group, instance};
+        SetResourceKeyParam(window, 0x2b340ffeu, key);
+    }
+    int tx = 0, ty = 0;
+    if (GetPropertyCoords(parameters, 0xa11, tx, ty)) btn->SetTipPlacementOffsets(tx, ty);
+    if (GetPropertyUint32(parameters, 0xa18, value)) btn->SetTipPlacementType(int(value));
+    else btn->SetTipPlacementType(0x1000000);
+    cRZString sound;
+    if (GetPropertyString(parameters, 0xa19, sound)) {
+        unsigned group = 0, instance = 0;
+        std::sscanf(sound.ToChar(), "{%x,%x}", &group, &instance);
+        std::uint32_t blob[2] = {group, instance};
+        window->SetParam(0xa5be39du, new cRZVariant(blob, sizeof(blob), 0x8000));
+        btn->SetSoundID(0, instance);
+    } else {
+        btn->SetSoundID(0, 0);
+    }
+    if (GetPropertyString(parameters, 0xa1a, sound)) {
+        unsigned group = 0, instance = 0;
+        std::sscanf(sound.ToChar(), "{%x,%x}", &group, &instance);
+        std::uint32_t blob[2] = {group, instance};
+        window->SetParam(0x4a5be2f8u, new cRZVariant(blob, sizeof(blob), 0x8000));
+        btn->SetSoundID(1, instance);
+    } else {
+        btn->SetSoundID(1, 0);
+    }
+    btn->Release();
+}
+
+// InterpretPropertiesGZWinTextEdit (0x10053d96e): the edit control's keywords (cIGZWinTextEdit, iid 0x231a1c57; slots
+// read off the vtable offsets because the decompiler drops the QueryInterface out-parameter: SetFontStyle [10]
+// +0x50, SetFontColor(index, c) [13] +0x68, SetCaretColor [18] +0x90, SetHighlightFillColor [23] +0xb8,
+// SetOutlineUse [37] +0x128, SetMaximumTextToAllow [33] +0x108, SetTextGutterX/Y [40]/[42] +0x140/+0x150,
+// SetInsertMode [64] +0x200, SetInsertionIndex [66] +0x210, SetInsertionLineAndColumn [68] +0x220,
+// SetCaretPeriod [72] +0x240, SetMaxUndoLevelCount [81] +0x288, SetScrollBarImageVertical/Horizontal [87]/[88]
+// +0x2b8/+0x2c0, SetFlags [77] +0x268, GetFlags [80] +0x280, ResizeWindowForExactLineHeights [43] +0x158).
+// Init pass: the flag word is read, each flag keyword of the table at 0x100a24044 (property -> bit) sets (value 1) or
+// clears (any other value) its bit, and the word is written back; then the font (id or name), six font colours, the
+// caret / highlight / outline colours, the maximum text, gutters, insert mode, insertion index / line+column, caret
+// period, undo depth and the two scroll bar images with their resource-key params. Second pass: the autofit
+// parameter (property 0x304 -> true and a resize to exact line heights, else false).
+// Kept: the outline switch (0xf019) is read without testing the lookup, so an absent property leaves the previous
+// value; the port uses 0 (see LEGACY-3).
+void cGZLegacyControl::InterpretPropertiesGZWinTextEdit(cIGZWin* window, tScriptPropertyArray& parameters, bool init) {
+    if (!window) return;
+    gz::cIGZWinTextEdit* edit = nullptr;
+    if (!window->QueryInterface(gz::kGZIID_cIGZWinTextEdit, reinterpret_cast<void**>(&edit))) return;
+    if (init) {
+        static constexpr struct { std::uint32_t property; std::uint32_t mask; } kFlagTable[] = {
+            {0x400, 0x1}, {0x300, 0x2}, {0x401, 0x4}, {0x402, 0x8}, {0xf019, 0x10}, {0x301, 0x20}, {0x403, 0x40},
+            {0x404, 0x80}, {0x405, 0x100}, {0x406, 0x200}, {0x415, 0x400}, {0x416, 0x800}, {0x417, 0x8000},
+            {0x418, 0x1000}, {0x419, 0x2000},
+        };
+        std::uint32_t flags = edit->GetFlags();
+        for (const auto& entry : kFlagTable) {
+            std::uint32_t value = 0;
+            if (GetPropertyUint32(parameters, entry.property, value)) flags = value == 1 ? (flags | entry.mask) : (flags & ~entry.mask);
+        }
+        edit->SetFlags(flags);
+        std::uint32_t styleId = 0;
+        cRZString name;
+        if (GetPropertyUint32(parameters, 0xf000, styleId)) {
+            edit->SetFontStyle(styleId);
+            SetGZWinFont(window, styleId, 0);
+        } else if (GetPropertyString(parameters, 0xf000, name)) {
+            SetGZWinFont(window, name, 0);
+        }
+        auto native = [](std::uint8_t r, std::uint8_t g, std::uint8_t b) { return WinGraphics() ? WinGraphics()->MakeNativeColor(r, g, b) : 0u; };
+        static constexpr struct { std::uint32_t property; gz::cIGZWinTextEdit::ColorIndex index; } kFontColors[] = {
+            {0xf00f, gz::cIGZWinTextEdit::kColorText}, {0xf010, gz::cIGZWinTextEdit::kColor2},
+            {0xf011, gz::cIGZWinTextEdit::kColorSelectedText}, {0xf012, gz::cIGZWinTextEdit::kColorTextBack},
+            {0xf013, gz::cIGZWinTextEdit::kColor3}, {0xf014, gz::cIGZWinTextEdit::kColorSelectedBack},
+        };
+        std::uint8_t r = 0, g = 0, b = 0;
+        for (const auto& entry : kFontColors) {
+            if (GetPropertyColor(parameters, entry.property, r, g, b)) edit->SetFontColor(entry.index, native(r, g, b));
+        }
+        if (GetPropertyColor(parameters, 0x407, r, g, b)) edit->SetCaretColor(native(r, g, b));
+        if (GetPropertyColor(parameters, 0x408, r, g, b)) edit->SetHighlightFillColor(native(r, g, b));
+        if (GetPropertyColor(parameters, 0x40b, r, g, b)) {
+            std::uint32_t outline = 0;
+            GetPropertyUint32(parameters, 0xf019, outline);
+            edit->SetOutlineUse(outline != 0, native(r, g, b));
+        }
+        std::uint32_t value = 0;
+        if (GetPropertyUint32(parameters, 0x409, value)) edit->SetMaximumTextToAllow(value);
+        int x = 0, y = 0;
+        if (GetPropertyCoords(parameters, 0xf004, x, y)) {
+            edit->SetTextGutterX(static_cast<std::uint32_t>(x));
+            edit->SetTextGutterY(static_cast<std::uint32_t>(y));
+        }
+        std::uint32_t mode = 0;
+        if (GetPropertyUint32(parameters, 0x40c, mode)) edit->SetInsertMode(mode == 0);
+        if (GetPropertyUint32(parameters, 0x40d, value)) edit->SetInsertionIndex(value);
+        if (GetPropertyCoords(parameters, 0x40e, x, y)) edit->SetInsertionLineAndColumn(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+        if (GetPropertyUint32(parameters, 0x40f, value)) edit->SetCaretPeriod(value);
+        if (GetPropertyUint32(parameters, 0x410, value)) edit->SetMaxUndoLevelCount(value);
+        auto scrollImage = [&](std::uint32_t property, std::uint32_t rectProperty, std::uint32_t keyParam, std::uint32_t imageIndex, bool vertical) {
+            cRZString text;
+            if (!GetPropertyString(parameters, property, text)) return;
+            unsigned group = 0, instance = 0;
+            if (std::sscanf(text.ToChar(), "{%x,%x}", &group, &instance) != 2) return;
+            cIGZBuffer* image = LoadBuffer(group, instance);
+            if (image) {
+                cRZRect area{0, 0, 0, 0};
+                GetPropertyRect(parameters, rectProperty, area);
+                if (vertical) edit->SetScrollBarImageVertical(image, area);
+                else edit->SetScrollBarImageHorizontal(image, area);
+            }
+            cGZPersistResourceKey key{0x856ddbacu, group, instance};
+            SetResourceKeyParam(window, keyParam, key);
+            SetGZWinImage(window, group, instance, imageIndex);
+            if (image) image->Release();
+        };
+        scrollImage(0x413, 0x414, 0x8b4bfefcu, 0, false);
+        scrollImage(0x411, 0x412, 0x8b4bfefdu, 1, true);
+    } else {
+        bool autofit = false;
+        for (const tScriptProperty& property : parameters) {
+            if (property.id == 0x304) { autofit = true; break; }
+        }
+        auto* autofitParam = new cRZVariant();
+        autofitParam->SetValBool(autofit);
+        window->SetParam(0xdacf8f9cu, autofitParam);
+        if (autofit) edit->ResizeWindowForExactLineHeights();
+    }
+    edit->Release();
+}
+
+// InterpretPropertiesGZWinSpinner (0x1005422b8): the spinner's keywords (cIGZWinSpinner, iid 0x612ce0c3; slots read
+// off the vtable offsets: SetSpinnerType [4] +0x20, SetSpinnerFlag [6] +0x30, SetValue [9] +0x48, SetMinMax [10]
+// +0x50, SetStepSize [12] +0x60, SetImage [14] +0x70, SetFont [19] +0x98, SetFontColor [22] +0xb0, SetTextAlignment
+// [27] +0xd8, SetGutters [29] +0xe8, SetOutlineColors [31] +0xf8). Init pass: the button placement keyword (none /
+// right / left -> 0 / 1 / 2), five flags, the font (an id or name, else the font named "main9", the font object
+// coming from the window colour manager's style table), three font colours, the image, the text alignment (left 0,
+// right 2, centre 1), the gutters and the four outline colours (each side falls back to the first colour, or to 0
+// when none of the five was written; nothing is set when none was). Second pass: min/max, step and value.
+void cGZLegacyControl::InterpretPropertiesGZWinSpinner(cIGZWin* window, tScriptPropertyArray& parameters, bool init) {
+    if (!window) return;
+    gz::cIGZWinSpinner* spinner = nullptr;
+    if (!window->QueryInterface(gz::kGZIID_cIGZWinSpinner, reinterpret_cast<void**>(&spinner))) return;
+    if (!init) {
+        int low = 0, high = 0, value = 0;
+        if (GetPropertyCoords(parameters, 0x1004, low, high)) spinner->SetMinMax(low, high);
+        if (GetPropertySint32(parameters, 0x1005, value)) spinner->SetStepSize(value);
+        if (GetPropertySint32(parameters, 0x40a, value)) spinner->SetValue(value);
+        spinner->Release();
+        return;
+    }
+    std::uint32_t value = 0;
+    if (GetPropertyUint32(parameters, 0x1000, value)) {
+        if (value == 0) spinner->SetSpinnerType(gz::cIGZWinSpinner::kButtonsOnly);
+        else if (value == 0xf006) spinner->SetSpinnerType(gz::cIGZWinSpinner::kButtonsRight);
+        else if (value == 0xf007) spinner->SetSpinnerType(gz::cIGZWinSpinner::kButtonsLeft);
+    }
+    static constexpr struct { std::uint32_t property; std::uint32_t flag; } kFlags[] = {
+        {0xf019, 1}, {0xf00d, 2}, {0x1001, 0x1000}, {0x1002, 0x2000}, {0x1003, 0x4000},
+    };
+    for (const auto& entry : kFlags) {
+        if (GetPropertyUint32(parameters, entry.property, value)) spinner->SetSpinnerFlag(entry.flag, value != 0);
+    }
+    gz::IWinFontSource* fonts = gz::WinFontSource();
+    std::uint32_t styleId = 0;
+    cRZString name;
+    if (GetPropertyUint32(parameters, 0xf000, styleId)) {
+        spinner->SetFont(fonts ? fonts->Font(styleId) : nullptr);   // WCM vslot 0x28
+        SetGZWinFont(window, styleId, 0);
+    } else if (GetPropertyString(parameters, 0xf000, name)) {
+        SetGZWinFont(window, name, 0);
+    } else {
+        IScriptControlHost* host = gScriptControlHost;
+        const std::uint32_t id = host ? host->FontStyleFromName(cRZString("main9")) : 0;   // WCM vslot 0x130
+        spinner->SetFont(fonts ? fonts->Font(id) : nullptr);
+    }
+    auto native = [](std::uint8_t r, std::uint8_t g, std::uint8_t b) { return WinGraphics() ? WinGraphics()->MakeNativeColor(r, g, b) : 0u; };
+    static constexpr struct { std::uint32_t property; gz::cIGZWinSpinner::tFontColorIdx index; } kColors[] = {
+        {0xf00f, gz::cIGZWinSpinner::kColorNormal}, {0xf010, gz::cIGZWinSpinner::kColorDisabled}, {0xf011, gz::cIGZWinSpinner::kColorHover},
+    };
+    std::uint8_t r = 0, g = 0, b = 0;
+    for (const auto& entry : kColors) {
+        if (GetPropertyColor(parameters, entry.property, r, g, b)) spinner->SetFontColor(entry.index, native(r, g, b));
+    }
+    cRZString imageText;
+    if (GetPropertyString(parameters, 0xf016, imageText)) {
+        unsigned group = 0, instance = 0;
+        std::sscanf(imageText.ToChar(), "{%x,%x}", &group, &instance);
+        cIGZBuffer* image = LoadBuffer(group, instance);
+        if (image) spinner->SetImage(image, nullptr);
+        cGZPersistResourceKey key{0x856ddbacu, group, instance};
+        SetResourceKeyParam(window, 0x8bd1333au, key);
+        SetGZWinImage(window, group, instance, 0);
+        if (image) image->Release();
+    }
+    if (GetPropertyUint32(parameters, 0xf015, value)) {
+        if (value == 0xf006) spinner->SetTextAlignment(0);
+        else if (value == 0xf007) spinner->SetTextAlignment(2);
+        else if (value == 0xf008) spinner->SetTextAlignment(1);
+    }
+    int gx = 0, gy = 0;
+    if (GetPropertyCoords(parameters, 0xf004, gx, gy)) spinner->SetGutters(static_cast<std::uint8_t>(gx), static_cast<std::uint8_t>(gy));
+    // outline colours: 0x1006 is the base, 0x1007..0x100a the left / top / right / bottom overrides
+    const bool hasBase = GetPropertyColor(parameters, 0x1006, r, g, b);
+    const std::uint32_t base = hasBase ? native(r, g, b) : 0u;
+    std::uint32_t sides[4] = {base, base, base, base};
+    bool any = hasBase;
+    static constexpr std::uint32_t kSideProperties[4] = {0x1007, 0x1008, 0x1009, 0x100a};
+    for (int i = 0; i < 4; ++i) {
+        if (GetPropertyColor(parameters, kSideProperties[i], r, g, b)) { sides[i] = native(r, g, b); any = true; }
+    }
+    if (any) spinner->SetOutlineColors(sides[0], sides[1], sides[2], sides[3]);
+    spinner->Release();
+}
+
 // ---------------------------------------------------------------------------------------------------------
 // PARTIAL per-class interpreters (addresses in LegacyControl.h). Their bodies apply the control-specific view
 // interface setters; the decompiler drops the QueryInterface result base in every one of them (the `local_*`
@@ -1465,13 +1786,10 @@ void cGZLegacyControl::InterpretPropertiesGZWinText(cIGZWin* window, tScriptProp
         (void)window; (void)parameters; (void)init;                                              \
     }
 
-GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinTextEdit)
 GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinListBox)
 GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinCombo)
-GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinBtn)
 GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinLineInput)
 GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinOptGrp)
-GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinSpinner)
 GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinTextTicker)
 GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinFileBrowser)
 GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinTreeView)

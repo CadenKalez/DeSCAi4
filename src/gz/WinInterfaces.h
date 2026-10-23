@@ -25,7 +25,7 @@ struct cGZMessage {
 enum GZMessageType : std::uint32_t {
     kGZMsgDeleteChild = 1, kGZMsgCommand = 3, kGZMsgCharacter = 4, kGZMsgKeyDown = 5, kGZMsgKeyUp = 6,
     kGZMsgMouseDownL = 7, kGZMsgMouseDownR = 8, kGZMsgMouseUpL = 10, kGZMsgMouseUpR = 11, kGZMsgMouseMove = 13,
-    kGZMsgMouseWheel = 14, kGZMsgSetFocus = 16, kGZMsgKillFocus = 17, kGZMsgCaptureChanged = 18,
+    kGZMsgMouseWheel = 14, kGZMsgKillFocus = 16, kGZMsgSetFocus = 17, kGZMsgCaptureChanged = 18,   // 16 goes to the window that LOSES the focus (cGZWin::DoMessage -> vslot 0x428 GZOnKillFocus), 17 to the one that gets it (0x420 GZOnSetFocus); the names were swapped before
     kGZMsgMouseEnter = 19, kGZMsgMouseExit = 20, kGZMsgPaint = 0x16,
 };
 

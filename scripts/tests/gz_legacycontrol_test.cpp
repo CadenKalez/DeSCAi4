@@ -22,7 +22,9 @@
 #include "gz/WinScrollbar.h"
 #include "gz/WinBtn.h"
 #include "gz/WinSlider.h"
+#include "gz/WinSpinner.h"
 #include "gz/WinText.h"
+#include "gz/WinTextEdit.h"
 #include "rz/cRZVariant.h"
 
 static int gFailures = 0;
@@ -526,6 +528,168 @@ struct BtnWindow final : gz::cGZWinFlatRect {
     FakeBtn btn;
     bool QueryInterface(std::uint32_t iid, void** out) override {
         if (iid == gz::kGZIID_cIGZWinBtn) { *out = &btn; return true; }
+        return gz::cGZWinFlatRect::QueryInterface(iid, out);
+    }
+};
+
+struct FakeTextEdit final : gz::cIGZWinTextEdit {
+    std::uint32_t flags = 0x10b;
+    int setFlagsCalls = 0, resizes = 0;
+    std::uint32_t fontStyle = 0, maxText = 0, gutterX = 99, gutterY = 99, insertIndex = 99, caretPeriod = 0, undo = 0;
+    std::uint32_t caret = 0, highlight = 0, line = 99, column = 99;
+    std::vector<std::pair<int, std::uint32_t>> fontColors;
+    bool outlineOn = false; std::uint32_t outlineColor = 0; bool insertMode = true;
+    int vertImages = 0, horzImages = 0; cRZRect vertArea{}, horzArea{};
+    int releases = 0;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return 1; }
+    std::uint32_t Release() override { ++releases; return 1; }
+    void SetFlags(std::uint32_t f) override { flags = f; ++setFlagsCalls; }
+    std::uint32_t GetFlags() override { return flags; }
+    bool SetFontStyle(std::uint32_t id) override { fontStyle = id; return true; }
+    bool SetFontColor(std::uint32_t) override { return false; }
+    bool SetFontColor(ColorIndex index, std::uint32_t c) override { fontColors.emplace_back(int(index), c); return true; }
+    void SetCaretColor(std::uint32_t c) override { caret = c; }
+    void SetHighlightFillColor(std::uint32_t c) override { highlight = c; }
+    void SetOutlineUse(bool on, std::uint32_t c) override { outlineOn = on; outlineColor = c; }
+    void SetMaximumTextToAllow(std::uint32_t m) override { maxText = m; }
+    void SetTextGutterX(std::uint32_t g) override { gutterX = g; }
+    void SetTextGutterY(std::uint32_t g) override { gutterY = g; }
+    bool SetInsertMode(bool m) override { insertMode = m; return true; }
+    bool SetInsertionIndex(std::uint32_t i) override { insertIndex = i; return true; }
+    bool SetInsertionLineAndColumn(std::uint32_t l, std::uint32_t c) override { line = l; column = c; return true; }
+    bool SetCaretPeriod(std::uint32_t ms) override { caretPeriod = ms; return true; }
+    void SetMaxUndoLevelCount(std::uint32_t n) override { undo = n; }
+    bool SetScrollBarImageVertical(cIGZBuffer*, const cRZRect& a) override { ++vertImages; vertArea = a; return true; }
+    bool SetScrollBarImageHorizontal(cIGZBuffer*, const cRZRect& a) override { ++horzImages; horzArea = a; return true; }
+    bool ResizeWindowForExactLineHeights() override { ++resizes; return true; }
+    bool Init() override { return false; }
+    bool Shutdown() override { return false; }
+    cIGZWin* AsIGZWin() override { return nullptr; }
+    void SetArea(int l, int t, int r, int b) override { }
+    void GetTextArea(cRZRect& out) override { }
+    cIGZFont* GetFont() const override { return nullptr; }
+    void SetFont(cIGZFont* font) override { }
+    bool GetFontStyle(std::uint32_t& styleId) override { return false; }
+    bool GetFontColor(ColorIndex index, std::uint32_t& native) const override { return false; }
+    bool SetColor(ColorIndex index, std::uint32_t color) override { return false; }
+    bool GetColor(ColorIndex index, std::uint32_t& color) const override { return false; }
+    bool ClearFontColor(ColorIndex index) override { return false; }
+    bool GetCaretColor(std::uint32_t& native) const override { return false; }
+    void SetFillColor(std::uint32_t native) override { }
+    std::uint32_t GetHighlightFillColor() override { return 0; }
+    void GetBackgroundImage(cIGZBuffer*& image, bool& stretch) override { }
+    void SetBackgroundImage(cIGZBuffer* image, bool stretch) override { }
+    bool ScrollLineUp() override { return false; }
+    bool ScrollLineDown() override { return false; }
+    bool ScrollToStart() override { return false; }
+    bool ScrollToEnd() override { return false; }
+    bool ScrollPageUp() override { return false; }
+    bool ScrollPageDown() override { return false; }
+    std::uint32_t GetMaximumTextToAllow() override { return 0; }
+    std::uint32_t GetFirstVisibleLine() override { return 0; }
+    std::uint32_t GetLineCount() override { return 0; }
+    std::uint32_t GetLineHeight() override { return 0; }
+    void GetOutlineUse(bool& on, std::uint32_t& native) const override { }
+    std::uint32_t GetTextGutterX() override { return 0; }
+    std::uint32_t GetTextGutterY() override { return 0; }
+    const char* GetText() override { return nullptr; }
+    std::uint32_t GetTextLength() override { return 0; }
+    void GetText(cIGZString& out) override { }
+    void GetText(char* buffer, std::uint32_t& length) override { }
+    bool SetText(const char* text, std::uint32_t length, bool notify) override { return false; }
+    void SetText(const cIGZString& text, bool notify) override { }
+    std::uint32_t InsertText(const char* text, std::uint32_t length, std::uint32_t index) override { return 0; }
+    void InsertText(const char* text, std::uint32_t length, std::uint32_t line, std::uint32_t column) override { }
+    bool RemoveChar(std::uint32_t index, bool plain, cIGZString* removed) override { return false; }
+    std::uint32_t RemoveText(std::uint32_t index, std::uint32_t length, cIGZString* removed) override { return 0; }
+    void RemoveText(std::uint32_t line, std::uint32_t column, std::uint32_t length, cIGZString* removed) override { }
+    void RemoveText(std::uint32_t line0, std::uint32_t column0, std::uint32_t line1, std::uint32_t column1, cIGZString* removed) override { }
+    std::uint32_t FindText(const char* text, std::uint32_t length, std::uint32_t start, bool forward) override { return 0; }
+    void GetIndexFromPosition(std::uint32_t& index, int x, int y) override { }
+    void GetColumnFromPosition(std::uint32_t line, std::uint32_t& column, int x) override { }
+    void GetLineAndColumnFromPosition(std::uint32_t& line, std::uint32_t& column, int x, int y) override { }
+    void GetPositionFromLineAndColumn(std::uint32_t line, std::uint32_t column, int& x, int& y) override { }
+    void GetLineAndColumnFromIndex(std::uint32_t& line, std::uint32_t& column, std::uint32_t index) override { }
+    bool GetIndexFromLineAndColumn(std::uint32_t line, std::uint32_t column, std::uint32_t& index) override { return false; }
+    std::uint32_t GetCharacterCountOfLine(std::uint32_t line) override { return 0; }
+    bool GetInsertMode() const override { return false; }
+    bool GetInsertionIndex(std::uint32_t& index) const override { return false; }
+    bool GetInsertionLineAndColumn(std::uint32_t& line, std::uint32_t& column) const override { return false; }
+    void IncrementInsertionPosition(int characters) override { }
+    void IncrementInsertionPositionByWord(int words) override { }
+    bool GetCaretPeriod(std::uint32_t& ms) const override { return false; }
+    bool GetSelection(std::uint32_t& start, std::uint32_t& end) override { return false; }
+    bool SetSelection(std::uint32_t start, std::uint32_t end) override { return false; }
+    void SetFlag(std::uint32_t flag) override { }
+    void ClearFlag(std::uint32_t flag) override { }
+    bool IsFlagSet(std::uint32_t flag) override { return false; }
+    std::uint32_t GetMaxUndoLevelCount() const override { return 0; }
+    bool Undo() override { return false; }
+    bool Redo() override { return false; }
+    bool GetScrollBarImageVertical(cIGZBuffer*& image, cRZRect& area) const override { return false; }
+    bool GetScrollBarImageHorizontal(cIGZBuffer*& image, cRZRect& area) const override { return false; }
+    bool SetSoundID(int which, int soundId) override { return false; }
+};
+
+struct TextEditWindow final : gz::cGZWinFlatRect {
+    explicit TextEditWindow(cIGZWinMgr* mgr) : cGZWinFlatRect(mgr) {}
+    FakeTextEdit edit;
+    bool QueryInterface(std::uint32_t iid, void** out) override {
+        if (iid == gz::kGZIID_cIGZWinTextEdit) { *out = &edit; return true; }
+        return gz::cGZWinFlatRect::QueryInterface(iid, out);
+    }
+};
+
+struct FakeSpinner final : gz::cIGZWinSpinner {
+    int type = -1; std::map<std::uint32_t, bool> flags;
+    int value = -99, low = -99, high = -99, step = -99, fontSets = 0, imageSets = 0, align = -1, gx = -1, gy = -1;
+    gz::IWinFont* font = reinterpret_cast<gz::IWinFont*>(1);
+    std::vector<std::pair<int, std::uint32_t>> colors;
+    std::uint32_t outline[4] = {7, 7, 7, 7}; int outlineCalls = 0;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return 1; }
+    std::uint32_t Release() override { return 1; }
+    bool SetSpinnerType(tSpinnerType t) override { type = int(t); return true; }
+    bool SetSpinnerFlag(std::uint32_t f, bool on) override { flags[f] = on; return true; }
+    bool SetValue(int v) override { value = v; return true; }
+    bool SetMinMax(int l, int h) override { low = l; high = h; return true; }
+    bool SetStepSize(int s) override { step = s; return true; }
+    bool SetImage(cIGZBuffer*, const cRZRect*) override { ++imageSets; return true; }
+    bool SetFont(gz::IWinFont* f) override { ++fontSets; font = f; return true; }
+    bool SetFontColor(tFontColorIdx i, std::uint32_t c) override { colors.emplace_back(int(i), c); return true; }
+    bool SetFontColor(tFontColorIdx, gz::cRZColor) override { return false; }
+    bool SetTextAlignment(std::uint32_t a) override { align = int(a); return true; }
+    bool SetGutters(std::uint8_t x, std::uint8_t y) override { gx = x; gy = y; return true; }
+    bool SetOutlineColors(std::uint32_t l, std::uint32_t t, std::uint32_t r, std::uint32_t b) override { outline[0] = l; outline[1] = t; outline[2] = r; outline[3] = b; ++outlineCalls; return true; }
+    cIGZWin* AsIGZWin() override { return nullptr; }
+    bool GetSpinnerType(tSpinnerType& type) const override { return false; }
+    bool GetSpinnerFlag(std::uint32_t flag) const override { return false; }
+    int GetValue() const override { return 0; }
+    bool GetMinMax(int& low, int& high) const override { return false; }
+    bool GetStepSize(int& step) const override { return false; }
+    bool SetButtonImage(cIGZBuffer* image) override { return false; }
+    bool GetButtonImage(cIGZBuffer*& image) override { return false; }
+    bool SetButtonImageArea(const cRZRect& area) override { return false; }
+    bool GetButtonImageArea(cRZRect& area) override { return false; }
+    bool SetFontStyle(std::uint32_t styleId) override { return false; }
+    bool GetFontStyle(std::uint32_t& styleId) override { return false; }
+    bool GetFontColor(tFontColorIdx index, std::uint32_t& native) const override { return false; }
+    bool GetFontColor(tFontColorIdx index, gz::cRZColor& color) const override { return false; }
+    bool ClearFontColor(tFontColorIdx index) override { return false; }
+    bool GetTextAlignment(std::uint32_t& alignment) const override { return false; }
+    bool GetGutters(std::uint8_t& x, std::uint8_t& y) const override { return false; }
+    bool GetOutlineColors(std::uint32_t& left, std::uint32_t& top, std::uint32_t& right, std::uint32_t& bottom) const override { return false; }
+    bool SetOutlineColor(tOutlineIndex index, const gz::cRZColor& color) override { return false; }
+    bool GetOutlineColor(tOutlineIndex index, gz::cRZColor& color) const override { return false; }
+
+};
+
+struct SpinnerWindow final : gz::cGZWinFlatRect {
+    explicit SpinnerWindow(cIGZWinMgr* mgr) : cGZWinFlatRect(mgr) {}
+    FakeSpinner spin;
+    bool QueryInterface(std::uint32_t iid, void** out) override {
+        if (iid == gz::kGZIID_cIGZWinSpinner) { *out = &spin; return true; }
         return gz::cGZWinFlatRect::QueryInterface(iid, out);
     }
 };
@@ -1250,6 +1414,89 @@ int main() {
         cGZLegacyControl::InterpretPropertiesGZWinBtn(btnWindow, second.list, false);
         CHECK(b.flags.at(4));
         btnWindow->Release();
+        SetWinGraphics(nullptr);
+    }
+
+    // The edit control interpreter: the flag table (1 sets, anything else clears), font, colours, caret / highlight /
+    // outline colours, limits, gutters, insertion state and the autofit second pass.
+    {
+        RgbGraphics rgb;
+        SetWinGraphics(&rgb);
+        auto* editWindow = new TextEditWindow(&mgr);
+        editWindow->AddRef();
+        mgr.valid.insert(editWindow);
+        Params p;
+        p.Uint(0x400u, 0u);          // clears bit 0x1 (default word 0x10b has it)
+        p.Uint(0x300u, 1u);          // sets 0x2 (already set)
+        p.Uint(0x401u, 1u);          // sets 0x4
+        p.Uint(0xf019u, 1u);         // sets 0x10
+        p.Uint(0x417u, 1u);          // sets 0x8000
+        p.Uint(0x416u, 2u);          // value 2 is not 1: clears 0x800 (not set anyway)
+        p.Uint(0xf000u, 21u);
+        p.Text(0xf00fu, "(1,2,3)"); p.Text(0xf014u, "(7,8,9)");
+        p.Text(0x407u, "(10,20,30)"); p.Text(0x408u, "(40,50,60)"); p.Text(0x40bu, "(1,1,1)");
+        p.Uint(0x409u, 255u); p.Text(0xf004u, "(3,4)"); p.Uint(0x40cu, 0u); p.Uint(0x40du, 5u);
+        p.Text(0x40eu, "(2,6)"); p.Uint(0x40fu, 500u); p.Uint(0x410u, 20u);
+        cGZLegacyControl::InterpretPropertiesGZWinTextEdit(editWindow, p.list, true);
+        const auto& e = editWindow->edit;
+        CHECK(e.setFlagsCalls == 1 && e.flags == ((0x10bu & ~0x1u) | 0x4u | 0x10u | 0x8000u));
+        CHECK(e.fontStyle == 21u);
+        CHECK(e.fontColors.size() == 2 && e.fontColors[0].first == int(gz::cIGZWinTextEdit::kColorText) && e.fontColors[0].second == 0xff010203u);
+        CHECK(e.fontColors[1].first == int(gz::cIGZWinTextEdit::kColorSelectedBack) && e.fontColors[1].second == 0xff070809u);
+        CHECK(e.caret == 0xff0a141eu && e.highlight == 0xff28323cu);
+        CHECK(e.outlineOn && e.outlineColor == 0xff010101u);          // the outline switch is the flag keyword 0xf019 (1)
+        CHECK(e.maxText == 255u && e.gutterX == 3u && e.gutterY == 4u && e.insertMode && e.insertIndex == 5u);
+        CHECK(e.line == 2u && e.column == 6u && e.caretPeriod == 500u && e.undo == 20u);
+        CHECK(e.vertImages == 0 && e.horzImages == 0);                // the fake host loads no images
+        cIGZVariant* keyParam2 = nullptr;
+        CHECK(editWindow->GetParam(0xdacf8f9cu, &keyParam2) == false);   // the autofit param belongs to the second pass
+        Params second;
+        second.Uint(0x304u, 1u);
+        cGZLegacyControl::InterpretPropertiesGZWinTextEdit(editWindow, second.list, false);
+        CHECK(e.resizes == 1);
+        CHECK(editWindow->GetParam(0xdacf8f9cu, &keyParam2)); keyParam2->Release();
+        Params none;
+        cGZLegacyControl::InterpretPropertiesGZWinTextEdit(editWindow, none.list, false);
+        CHECK(e.resizes == 1);
+        editWindow->Release();
+        SetWinGraphics(nullptr);
+    }
+
+    // The spinner interpreter: placement keyword, flags, fonts (default "main9" goes through the font source), colours,
+    // alignment, gutters, the outline colour fallback rule, and the second pass' min/max, step and value.
+    {
+        RgbGraphics rgb;
+        SetWinGraphics(&rgb);
+        auto* spinWindow = new SpinnerWindow(&mgr);
+        spinWindow->AddRef();
+        mgr.valid.insert(spinWindow);
+        Params p;
+        p.Uint(0x1000u, 0xf007u);                    // buttons left -> 2
+        p.Uint(0xf019u, 1u); p.Uint(0x1002u, 0u);    // flag 1 on, 0x2000 off
+        p.Text(0xf00fu, "(1,2,3)"); p.Text(0xf011u, "(4,5,6)");
+        p.Uint(0xf015u, 0xf008u);                    // centre -> 1
+        p.Text(0xf004u, "(2,3)");
+        p.Text(0x1006u, "(9,9,9)"); p.Text(0x1008u, "(1,1,1)"); p.Text(0x100au, "(2,2,2)");
+        cGZLegacyControl::InterpretPropertiesGZWinSpinner(spinWindow, p.list, true);
+        const auto& sp = spinWindow->spin;
+        CHECK(sp.type == 2 && sp.flags.at(1) && !sp.flags.at(0x2000));
+        CHECK(sp.fontSets == 1 && sp.font == nullptr);               // default font: no font source installed
+        CHECK(sp.colors.size() == 2 && sp.colors[0].first == 0 && sp.colors[1].first == 1);   // hover is index 1
+        CHECK(sp.align == 1 && sp.gx == 2 && sp.gy == 3);
+        CHECK(sp.outlineCalls == 1 && sp.outline[0] == 0xff090909u && sp.outline[1] == 0xff010101u && sp.outline[2] == 0xff090909u && sp.outline[3] == 0xff020202u);
+        // no outline property at all: SetOutlineColors is not called
+        Params none;
+        cGZLegacyControl::InterpretPropertiesGZWinSpinner(spinWindow, none.list, true);
+        CHECK(sp.outlineCalls == 1);
+        // only the first one: the four sides are all that colour
+        Params base; base.Text(0x1006u, "(5,6,7)");
+        cGZLegacyControl::InterpretPropertiesGZWinSpinner(spinWindow, base.list, true);
+        CHECK(sp.outlineCalls == 2 && sp.outline[0] == 0xff050607u && sp.outline[3] == 0xff050607u);
+        Params second;
+        second.Text(0x1004u, "(2,40)"); second.Uint(0x1005u, 5u); second.Uint(0x40au, 12u);
+        cGZLegacyControl::InterpretPropertiesGZWinSpinner(spinWindow, second.list, false);
+        CHECK(sp.low == 2 && sp.high == 40 && sp.step == 5 && sp.value == 12);
+        spinWindow->Release();
         SetWinGraphics(nullptr);
     }
 

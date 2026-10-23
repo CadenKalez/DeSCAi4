@@ -92,5 +92,6 @@ src/sc4/RenderProperties.cpp
 src/sc4/ServiceLocator.cpp
 src/sc4/SimStreamOps.cpp
 src/sc4/WinProcs.cpp
+src/sc4/WinSmallViews.cpp
 src/sc4/WinSplashScreen.cpp
 src/sc4/cSC4ResponseCurve.cpp

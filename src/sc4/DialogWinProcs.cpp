@@ -98,7 +98,8 @@ bool cSC4DialogWinProcBase::DoWinProcMessage(cIGZWin* window, cGZMessage& messag
         case kGZMsgCommand:
             if (message.param1 == kSenderButton) GZOnButtonActivate(static_cast<std::uint32_t>(message.param2));
             return false;
-        case kGZMsgKillFocus:
+        // message 0x11: the window got the focus (this case was named KillFocus while the enum names were swapped)
+        case kGZMsgSetFocus:
             if (!window->GetFlag(0x1000) && defaultFocusId_ != 0) {
                 if (cIGZWin* control = window->GetChildWindowFromIDRecursive(defaultFocusId_)) {
                     control->GetWindowManager()->GZSetFocus(control);
