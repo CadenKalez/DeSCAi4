@@ -89,3 +89,14 @@ Finishing a class is not the end: add its follow-ups (neighbours to recover, sea
 `python3 scripts/todo.py list --ready`; close items with `todo.py done ID`; `todo.py sync-ledger` refreshes the auto rows for
 recovered-partial / pending functions and `todo.py sync-classes` the CLASS-<name> rows (one per unfinished class, blocked by its
 unfinished base classes from `notes/class_bases.json`; rows close themselves at 0 remaining). Run both after each class. Terrain view items are TERRAIN-VIEW-*, terrain model items TERRAIN-*.
+
+## Update (sparse-matrix + sprite session)
+- Done: cRZSparseMatrix<T> (39 symbols, src/rz/SparseMatrix.h + test; unblocks the grid and tree view), cS3DModelInstanceAnimatedSprite
+  (54 symbols, src/s3d/ModelInstanceAnimatedSprite.{h,cpp} + test; salvaged, its test had failed on raw-vs-derived table counts,
+  unsigned row/column offsets, a SetFrame accumulator assumption and the camera reference count).
+- Progress: 16,388 / 26,880 game functions (60.97%). notes/SC4_decompilation_status.xlsx has the per-class breakdown,
+  regenerate with `scripts/progress_workbook.py` (python3, needs openpyxl).
+- Next: GRID-1/GRID-2 - cGZWinGrid (189 functions) on top of cRZSparseMatrix. The decompilation is already exported in
+  work/gz/cGZWinGrid.txt (9.4k lines); the object is 0x3c8+ bytes, three cRZSparseMatrix members at +0x238/+0x268/+0x298,
+  cells addressed through cIGZWinGrid::CellData. Start with the data model (cells, formats, rows/columns), leave GZPaint
+  (4.3 KB) and the mouse/sort paths for the end.
