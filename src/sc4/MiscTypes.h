@@ -73,6 +73,7 @@ public:
 class CacheData {
 public:
     unsigned char* data = nullptr;   // +0
+    std::uint32_t size = 0;          // +8 (the NetworkFileCache RAM record: bytes in data)
     std::uint16_t refCount = 0;      // +0xc
     short Release();                 // 0x100630d34
 };

@@ -65,18 +65,18 @@ bool cGZWinFlatRect::GZPaint() {
 // Raised / sunken pick the bevel colours from the window colour manager (black / white without one).
 bool cGZWinFlatRect::SetOutlineFlags(int flags) {
     outlineFlags_ = static_cast<std::uint8_t>(flags);
-    if ((flags & (kOutlineRaised | kOutlineSunken)) == 0) return true;
+    if ((flags & (kFlatRectRaised | kFlatRectSunken)) == 0) return true;
     std::uint8_t r1 = 0, g1 = 0, b1 = 0, r2 = 0xff, g2 = 0xff, b2 = 0xff;
     if (IWinColorManager* colors = WinColorManager()) {
         colors->GetColor(kWinColorShadow, r1, g1, b1);
         colors->GetColor(kWinColorHighlight, r2, g2, b2);
     }
-    if (outlineFlags_ & kOutlineRaised) {
+    if (outlineFlags_ & kFlatRectRaised) {
         SetOutlineColor(0, r2, g2, b2);
         SetOutlineColor(1, r2, g2, b2);
         SetOutlineColor(2, r1, g1, b1);
         SetOutlineColor(3, r1, g1, b1);
-    } else if (outlineFlags_ & kOutlineSunken) {
+    } else if (outlineFlags_ & kFlatRectSunken) {
         SetOutlineColor(0, r1, g1, b1);
         SetOutlineColor(1, r1, g1, b1);
         SetOutlineColor(2, r2, g2, b2);

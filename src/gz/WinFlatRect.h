@@ -21,8 +21,8 @@ public:
 IWinColorManager* WinColorManager();
 void SetWinColorManager(IWinColorManager* manager);
 
-constexpr std::uint8_t kOutlineLeft = 1, kOutlineTop = 2, kOutlineRight = 4, kOutlineBottom = 8, kOutlineRaised = 0x10,
-                       kOutlineSunken = 0x20, kOutlineNoFill = 0x40;
+constexpr std::uint8_t kOutlineLeft = 1, kOutlineTop = 2, kOutlineRight = 4, kOutlineBottom = 8,
+                       kFlatRectRaised = 0x10, kFlatRectSunken = 0x20, kOutlineNoFill = 0x40;   // renamed: WinOutline.h owns gz::kOutlineRaised/kOutlineSunken
 
 class cIGZWinFlatRect : public cIGZUnknown {
 public:
