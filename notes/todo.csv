@@ -164,9 +164,10 @@ WINFB-7,cGZWinFileBrowser,hook IFileBrowserHost to RZ::GS() (vslots 0x118/0x120)
 CLASS-cGZWinFolderRow,cGZWinFolderRow,"recover 21 remaining function(s) (21 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinFolders,cGZWinFolders,"recover 23 remaining function(s) (23 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZWinGenTitleBar,cGZWinGenTitleBar,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
-CLASS-cGZWinGrid,cGZWinGrid,"recover 189 remaining function(s) (189 not started, 0 partial/pending); bases still unfinished: cIGZWinGrid",CLASS-cIGZWinGrid,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cGZWinGrid,cGZWinGrid,"recover 189 remaining function(s) (189 not started, 0 partial/pending); bases still unfinished: cIGZWinGrid",CLASS-cIGZWinGrid,done,scripts/export_class.py + notes/remaining_functions.csv
 GRID-1,cGZWinGrid,"Recover cGZWinGrid (189 functions, 0x10025086a..0x10025ef00) now that cRZSparseMatrix exists; the 9.4k-line export is in work/gz/cGZWinGrid.txt",,open,src/gz/WinGrid.h
 GRID-2,cGZWinGrid,"Wire the grid's three cRZSparseMatrix members (cell data +0x298, formats +0x238/+0x268) once the class body is written",GRID-1,open,src/gz/WinGrid.cpp
+LEDGER-cGZWinGrid,cGZWinGrid,finish 10 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZWinHTML,cGZWinHTML,"recover 55 remaining function(s) (55 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinIMECandidateList,cGZWinIMECandidateList,"recover 24 remaining function(s) (24 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinIMEComposition,cGZWinIMEComposition,"recover 40 remaining function(s) (40 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -716,7 +717,7 @@ CLASS-cSC4WinCalloutBox,cSC4WinCalloutBox,"recover 29 remaining function(s) (29 
 CLASS-cSC4WinCatalogView,cSC4WinCatalogView,"recover 38 remaining function(s) (38 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinGameDelay,cSC4WinGameDelay,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinGenTransparent,cSC4WinGenTransparent,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4WinGridPopupStringListMenu,cSC4WinGridPopupStringListMenu,"recover 4 remaining function(s) (4 not started, 0 partial/pending); bases still unfinished: cGZWinGrid",CLASS-cGZWinGrid,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4WinGridPopupStringListMenu,cSC4WinGridPopupStringListMenu,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinIMECandidateList,cSC4WinIMECandidateList,"recover 5 remaining function(s) (5 not started, 0 partial/pending); bases still unfinished: cGZWinIMECandidateList",CLASS-cGZWinIMECandidateList,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinIntroVideoScreen,cSC4WinIntroVideoScreen,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinLoadHeightField,cSC4WinLoadHeightField,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
