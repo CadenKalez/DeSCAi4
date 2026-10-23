@@ -771,7 +771,8 @@ CLASS-cSC4TrailerVehicle,cSC4TrailerVehicle,"recover 23 remaining function(s) (2
 CLASS-cSC4Train,cSC4Train,"recover 35 remaining function(s) (35 not started, 0 partial/pending); bases still unfinished: cSC4TrainCar",CLASS-cSC4TrainCar,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4TrainCar,cSC4TrainCar,"recover 22 remaining function(s) (22 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4TutorialRegistry,cSC4TutorialRegistry,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4TutorialSystem,cSC4TutorialSystem,"recover 30 remaining function(s) (30 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4TutorialSystem,cSC4TutorialSystem,"recover 2 remaining function(s) (2 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+TUTORIAL-1,cSC4TutorialSystem,"Hook ITutorialSystemHost/ITutorialUIWinProc/ITutorialCheatCodes/SetTutorialFilterSystem to the real services, and recover cSC4TutorialUIWinProc (55 symbols, 0xc0 bytes) and cSC4TutorialRegistry",,open,src/sc4/TutorialSystem.cpp
 CLASS-cSC4TutorialTask,cSC4TutorialTask,"recover 41 remaining function(s) (41 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4TutorialTask,cSC4TutorialTask,finish 7 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4TutorialUIWinProc,cSC4TutorialUIWinProc,"recover 30 remaining function(s) (30 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2, cIGZWinProc","CLASS-cIGZMessageTarget2,CLASS-cIGZWinProc",open,scripts/export_class.py + notes/remaining_functions.csv
@@ -986,7 +987,7 @@ CLASS-nSCRes,nSCRes,"recover 2 remaining function(s) (2 not started, 0 partial/p
 CLASS-nSGLDX7,nSGLDX7,"recover 18 remaining function(s) (18 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-nSGLDX7,nSGLDX7,finish 17 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-nsIGZLua5,nsIGZLua5,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-nsSC4TutorialSystem,nsSC4TutorialSystem,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-nsSC4TutorialSystem,nsSC4TutorialSystem,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-nsTexUtil,nsTexUtil,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-nsTexelOp,nsTexelOp,finish 6 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 RENDER-1,render,UI path textures (RENDER_STATUS.md 'Next' item 1) so terrain textures can load through cMetalGDriver,,open,RENDER_STATUS.md
