@@ -57,6 +57,7 @@ cSC4NetworkTool::cSC4NetworkTool(std::uint32_t networkType) : networkType_(netwo
     directionA_ = 0;
     directionB_ = 0;
     solvedCells_.clear();
+    solvedCellList_.clear();   // +0x110, the member the base port used to be missing
     unknown128_.clear();
     unknown150_.clear();
     intersections_.clear();

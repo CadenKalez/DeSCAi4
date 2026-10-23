@@ -104,10 +104,23 @@ struct FakePreview : INetworkPreview {
 struct FakeWorldCache : INetworkWorldCache {
     void Clear() override { ++clears; }
     cSC4NetworkCellInfo* GetCell(std::uint32_t) override { return nullptr; }
+    void GetAllCells(std::vector<cSC4NetworkCellInfo>& out) override { out.clear(); }
+    cSC4NetworkCellInfo* CreateCell(std::uint32_t) override { return nullptr; }
     int clears = 0;
 };
 
-struct FakeConstraintSatisfier : INetworkConstraintSatisfier {};
+struct FakeConstraintSatisfier : INetworkConstraintSatisfier {
+    void AddVertexToSolve(int, float) override {}
+    bool GetHeight(int, float& out) override {
+        out = 0.0f;
+        return false;
+    }
+    void InsertRangeConstraint(int, float, float) override {}
+    void InsertPreferredRangeConstraint(int, float, float) override {}
+    void InsertPreferredValueConstraint(int, float) override {}
+    void InsertFixedVertex(int, float) override {}
+    void InsertEqualityConstraint(std::uint32_t, std::uint32_t) override {}
+};
 
 struct FakeTypeInfo : INetworkTypeInfo {
     std::uint32_t ViewInputControlId() const override { return 0x11; }

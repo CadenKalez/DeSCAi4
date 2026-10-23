@@ -208,6 +208,10 @@ public:
     bool HeadAnimGender1() const { return headAnimList_; }         // +0xf4
     const EventList& Events() const { return events_; }            // +0x128
     bool Subscribed() const { return subscribed_; }                // +0x140
+    // +0xa8 (the event -> advice map) is private; cSC4MySim::init_balloons remaps it onto its balloon list and erases
+    // the events that have no balloon advice, so the subclass may read and erase single entries.
+    const std::map<int, int>& EventAdvices() const { return eventAdvices_; }
+    void EraseEventAdvice(int eventId) { eventAdvices_.erase(eventId); }
 
 private:
     int tableRow_ = 0;              // +0x28

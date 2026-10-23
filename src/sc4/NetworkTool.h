@@ -10,10 +10,10 @@
 // padded-rect helper, the terrain highlight of the valid part of the drag and the straight/diagonal splitter
 // (`BreakIntoStraightAndDiagSegments`).  The solving pipeline (SolveNetwork, ApplyNetworkRules, bridges, tunnels,
 // highway intersections), the occupant insertion and the preview/occupant drawing are still unrecovered — every
-// such function is listed under PARTIAL/SKIPPED in notes/ledger_pending/cSC4NetworkTool.txt and named in the
-// vtable-order comment blocks below so the gaps are visible.
+// such function is `recovered-partial` in notes/ledger.csv (applied from notes/ledger_applied/cSC4NetworkTool.txt)
+// and named in the vtable-order comment blocks below so the gaps are visible.
 //
-// Object layout (0x634 bytes; offsets are the original ones):
+// Object layout (0x638 bytes through the last stored pointer; offsets are the original ones):
 //   +0x000 vtable cISC4NetworkTool        +0x008 vtable cIGZMessageTarget2
 //   +0x010 std::vector<uint32_t>          +0x028 AddRef/Release count (starts at 0)
 //   +0x02c bool inited (Init guard)       +0x030 cSC4NetworkWorldCache (0x50 B)
@@ -22,7 +22,8 @@
 //   +0x0a0 std::vector<tDraggedStep> (12-byte steps)        +0x0b8 std::vector<SC4Point<u32>> cells
 //   +0x0d0 bool stepIsHorizontal           +0x0d4 totalSteps
 //   +0x0d8 straightSteps                   +0x0dc validSteps   +0x0e0/+0x0e4 int (segment split output)
-//   +0x0e8 unordered_set<u32>              +0x128 unordered_set<u32>  +0x150 unordered_set<u32>
+//   +0x0e8 unordered_set<u32>              +0x110 std::vector<tSolvedCell> (12-byte solved tiles)
+//   +0x128 unordered_set<u32>              +0x150 unordered_set<u32> (the fixed-vertex ids)
 //   +0x178 std::vector<tIntersection> (0x38)              +0x190 std::vector<tBridge> (0x2c)
 //   +0x1a8 std::vector<u32>                +0x1c0 std::vector<tReservedCell> (0x14)
 //   +0x1d8 uint32 (renderer altitude from message 0xa6b79602)  +0x1e0 std::vector<u32>
@@ -43,6 +44,7 @@
 //   +0x628 uint32 networkType (ctor argument)             +0x62c uint32 placementFlagMask
 //   +0x630 cISC4NetworkORFilter* (counted)
 #pragma once
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <string>
@@ -221,28 +223,77 @@ struct tNeighborConnection {
     NeighborConnectionInfo info; // +0x8..+0x14
 };
 
+// cSC4NetworkTool::tSolvedCell (12 bytes, the vector at +0x110): one tile the solver produced. The underground
+// tool fills it while it propagates the drag (PropagateFromCell adds the neighbours of a solved cell); the
+// insertion pass and the smoothing pass consume it.
+class cSC4NetworkOccupant;
+class cSC4UndergroundNetworkTool;
+
+struct tSolvedCell {
+    std::uint32_t pieceType = 0;              // +0x00 (cISC4NetworkOccupant vtable +0xb8 at creation time)
+    std::uint8_t rotationFlip = 0;            // +0x04 (the same call's +0xd0)
+    std::uint8_t unknown05[3] = {};           // +0x05
+    std::uint32_t cellKey = 0;                // +0x08 x | z << 16
+};
+static_assert(sizeof(tSolvedCell) == 0x0c, "tSolvedCell stride");
+
+// cSC4NetworkTool::tImmovablePortion (0x10 bytes, argument of ApplyPlaneConstraintToRegularCells): the vertical
+// range one drag segment pins. Only its size is used by the underground tool's empty override.
+struct tImmovablePortion {
+    std::int32_t x = 0;            // +0x0
+    std::int32_t step = 0;         // +0x4
+    float valueA = 0.0f;           // +0x8
+    float valueB = 0.0f;           // +0xc
+};
+static_assert(sizeof(tImmovablePortion) == 0x10, "tImmovablePortion stride");
+
+// The two bounds of one tile corner's allowed height (a std::pair<float, float> in the original).
+struct tVertexHeightRange {
+    float low = 0.0f;              // +0x0
+    float high = 0.0f;             // +0x4
+};
+
 // cSC4NetworkCellInfo: the per-cell cache the solving pipeline keeps in the world cache at +0x30. The class
-// itself (GetCellInfo 0x1001b4bc0, CreateCellInfosForCurrentPlacementTiles, ...) is unrecovered, so the tool
-// asks the host for the record; only the fields the recovered functions read are named.
+// itself (GetCellInfo 0x1001b4bc0, RecomputeEdgesFromAllTypes 0x10079d6e2, ...) is unrecovered, so the tool
+// asks the host for the record. The layout below is the original's byte for byte (0xc4 bytes; read from
+// CreateCellInfosForCurrentPlacementTiles 0x1001a78ee and InsertRangeConstraintsForCell 0x1001a7616).
 struct cSC4NetworkCellInfo {
     std::uint32_t x = 0;                     // +0x00 (SC4Point<u32>)
     std::uint32_t z = 0;                     // +0x04
     std::uint32_t networkFlags = 0;          // +0x08 OccupantExists tests it against its mask
-    std::uint8_t unknown0c[0x18 - 0x0c];     // +0x0c
-    int status = 0;                          // +0x18 < 0 = newly solved (UpdatePositionChangedPreviews)
-    std::uint8_t unknown1c[0x20 - 0x1c];     // +0x1c
+    std::int32_t unknown0c = 0;              // +0x0c
+    // +0x10: the counted network occupant of the tile (cRZAutoRefCount<cISC4NetworkOccupant> in the
+    // original). InsertNetworkSpecificConstraintsForCell reads the piece id through it; AddCellPreview
+    // takes and drops a reference.
+    cSC4NetworkOccupant* occupant = nullptr;
+    std::uint8_t status = 0;                 // +0x18 1 = the record was (re)solved for the current drag
+    std::uint8_t unknown19[3] = {};          // +0x19
+    std::int32_t stepIndex = 0;              // +0x1c the drag step (+0xa0 vector) that produced the cell
     // +0x20 + type*4: the packed cSC4TileNeighborhoodCompact of this cell for that network type. OccupantExists
     // returns it as its out value (0x10018fe2e) and IsSimpleDiagonalNetwork classifies its edges (0x10018b0a0).
     std::uint32_t tileNeighborhoods[13] = {};
-    std::uint8_t unknown54[0x59 - 0x54];     // +0x54
+    std::uint32_t compact54 = 0;             // +0x54 another cSC4TileNeighborhoodCompact
+    std::uint8_t unknown58 = 0;              // +0x58
     bool hasOccupant = false;                // +0x59
-    std::uint8_t unknown5a[0x5e - 0x5a];     // +0x5a
+    std::uint8_t unknown5a = 0;              // +0x5a
+    // +0x5b: set when the cell belongs to a step whose direction is not 0 (CreateCellInfosForCurrentPlacementTiles).
+    // InsertRangeConstraintsForCell / InsertNetworkSpecificConstraintsForCell treat it as "height is fixed".
+    bool solvedOrImmovable = false;
+    std::uint8_t occupantId = 0;             // +0x5c the occupant manager handle, only the low byte is kept
+    bool shortStep = false;                  // +0x5d the step direction was 3 (a short/stepped step)
     bool buildable = false;                  // +0x5e (IsTerrainOK)
-    std::uint8_t unknown5f = 0;              // +0x5f
+    bool pieceFromSolvedList = false;        // +0x5f read the piece id from the solved-cell vector, not the occupant
     float vertexHeights[4] = {};             // +0x60
-    std::uint8_t unknown70[0xb0 - 0x70];     // +0x70
-    std::int32_t vertexBaseHeights[4] = {};  // +0xb0 + i*4, added to the terrain height
+    tVertexHeightRange range70[4] = {};      // +0x70 the range the constraints allow this corner
+    tVertexHeightRange preferred90[4] = {};  // +0x90 the preferred range
+    std::int32_t vertexBaseHeights[4] = {};  // +0xb0 + i*4, the vertex ids the terrain query takes
+    std::int32_t solvedCellIndex = 0;        // +0xc0 index into solvedCellList_ (piece id / smoothing seed)
 };
+static_assert(offsetof(cSC4NetworkCellInfo, occupant) == 0x10, "cell info offsets");
+static_assert(offsetof(cSC4NetworkCellInfo, tileNeighborhoods) == 0x20, "cell info offsets");
+static_assert(offsetof(cSC4NetworkCellInfo, vertexHeights) == 0x60, "cell info offsets");
+static_assert(offsetof(cSC4NetworkCellInfo, vertexBaseHeights) == 0xb0, "cell info offsets");
+static_assert(offsetof(cSC4NetworkCellInfo, solvedCellIndex) == 0xc0, "cell info offsets");
 
 class INetworkPreview;
 class INetworkWorldCache;
@@ -272,12 +323,29 @@ public:
     virtual ~INetworkWorldCache() = default;
     virtual void Clear() = 0;                                 // 0x10079d868 (Reset)
     virtual cSC4NetworkCellInfo* GetCell(std::uint32_t cellKey) = 0;  // 0x10079d774
+    // 0x10079ddbe: the whole cache as a flat copy (cSC4UndergroundNetworkTool::StartPlacing walks it).
+    virtual void GetAllCells(std::vector<cSC4NetworkCellInfo>& out) = 0;
+    // 0x10079d7a4: the record for cellKey, created (and stored) when it does not exist yet. The pointer stays
+    // valid until Clear (the underground tool keeps several of them across a loop).
+    virtual cSC4NetworkCellInfo* CreateCell(std::uint32_t cellKey) = 0;
 };
 
-// cSC4VertexHtConstraintSatisfier (members at +0x228 / +0x328, 0x100 bytes each, not recovered).
+// cSC4VertexHtConstraintSatisfier (members at +0x228 / +0x328, 0x100 bytes each, not recovered). The
+// underground tool drives one of them as it walks the drag: the methods below are the ones it calls, in the
+// original's own order of appearance.
 class INetworkConstraintSatisfier {
 public:
     virtual ~INetworkConstraintSatisfier() = default;
+    // 0x1001bc9c2: put the vertex into the solve set with an initial height.
+    virtual void AddVertexToSolve(int vertexId, float height) = 0;
+    // 0x1001bd0ea: the height the solver settled on; false when the vertex is not in the system.
+    virtual bool GetHeight(int vertexId, float& out) = 0;
+    // 0x1001bd6b2 / 0x1001bd7c2 / 0x1001bd78a / 0x1001bd67c / 0x1001bd178: the constraints of one vertex.
+    virtual void InsertRangeConstraint(int vertexId, float low, float high) = 0;
+    virtual void InsertPreferredRangeConstraint(int vertexId, float low, float high) = 0;
+    virtual void InsertPreferredValueConstraint(int vertexId, float value) = 0;
+    virtual void InsertFixedVertex(int vertexId, float height) = 0;
+    virtual void InsertEqualityConstraint(std::uint32_t vertexA, std::uint32_t vertexB) = 0;
 };
 
 // One cSC4NetworkTypeInfo record (&sNetworkTypeInfo + networkType * 0x180, @ 0x100b23190; the record is
@@ -534,6 +602,10 @@ private:
     int directionA_ = 0;                                    // +0x0e0
     int directionB_ = 0;                                    // +0x0e4
     std::unordered_set<std::uint32_t> solvedCells_;         // +0x0e8
+    // +0x110 std::vector<tSolvedCell>: the tiles the solver produced this drag. The base port was missing this
+    // member (its comments jumped from +0x0e8 to +0x128, which shifted every following offset by 0x18); it is
+    // restored here because the underground tool is its main user (0x1001a7616, 0x1001a913c, 0x1001a932a, ...).
+    std::vector<tSolvedCell> solvedCellList_;               // +0x110
     std::unordered_set<std::uint32_t> unknown128_;          // +0x128
     std::unordered_set<std::uint32_t> unknown150_;          // +0x150
     std::vector<tIntersection> intersections_;               // +0x178
@@ -582,6 +654,10 @@ private:
     // scripts/tests/sc4_networktool_test.cpp reads the private state below to check the offsets/quirk cases the
     // public interface cannot reach (the original has the same members private).
     friend struct NetworkToolTestAccess;
+    // The underground tool is a derived class in the original and drives this state directly (solved-cell
+    // vector +0x110, the fixed-vertex set +0x150, the constraint satisfier +0x228, the world cache +0x30, the
+    // terrain +0x80, the occupant manager +0x88, the placement block +0x500, network type +0x628, +0x458).
+    friend class cSC4UndergroundNetworkTool;
 };
 
 }  // namespace sc4

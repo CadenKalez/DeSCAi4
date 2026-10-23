@@ -145,22 +145,22 @@ public:
     virtual ~IGraphicSystemHost() = default;
 
     // ---- cGZGraphicSystem base state (0x10061c100 is the base constructor; none of the base methods are recovered)
-    virtual std::uint32_t DriverCount() const = 0;                             // +0xc8 (W32 override reads it at 0x100618270)
-    virtual gd::cIGZGDriver* DriverByIndex(std::uint32_t index) const = 0;     // base vslot 0x2e0 @ 0x10061...
-    virtual gd::cIGZGDriver* CurrentDriver() const = 0;                        // base vslot 0x2d8 (+0x100)
-    virtual void SetDriver(gd::cIGZGDriver* driver) = 0;                       // base vslot 0x2f0
-    virtual void SetFullScreenMode(bool fullScreen) = 0;                       // base vslot 0x140
-    virtual bool ScreenBufferEnabled() const = 0;                              // +0x69 (cleared by DisableScreenBuffer)
+    virtual std::uint32_t DriverCount() const = 0;                             // +0xc8 (base GetGDriverCount @ 0x10061e68c; W32 reads it at 0x100618270)
+    virtual gd::cIGZGDriver* DriverByIndex(std::uint32_t index) const = 0;     // base vslot 0x2e0 @ 0x10061e6a4
+    virtual gd::cIGZGDriver* CurrentDriver() const = 0;                        // base vslot 0x2d8 @ 0x100619062 (+0x100)
+    virtual void SetDriver(gd::cIGZGDriver* driver) = 0;                       // base vslot 0x2f0 @ 0x10061da06
+    virtual void SetFullScreenMode(bool fullScreen) = 0;                       // base vslot 0x140 @ 0x10061e0da
+    virtual bool ScreenBufferEnabled() const = 0;                              // +0x69 (cleared by DisableScreenBuffer @ 0x10061908e)
     virtual bool CursorSupport() const = 0;                                    // +0x164
     virtual cGZScreenBuffer* ScreenBuffer() = 0;                               // +0x168
-    virtual IGZCanvas* Canvas() = 0;                                           // +0x178 (base GetCanvas() const, vslot 0x1f8)
+    virtual IGZCanvas* Canvas() = 0;                                           // +0x178 (base GetCanvas() const @ 0x10061db2c, vslot 0x1f8)
     virtual cGZDisplayMetrics DesiredStartupMetrics() const = 0;               // 0x100b117b8 (mDesiredStartupDisplayMetrics)
     virtual bool PreferFlipping() const = 0;                                   // 0x100b117b1 (mbDesiredPreferFlipping)
     virtual void SetPreferFlipping(bool prefer) = 0;                           // the same static, written by OnCanvasInit
 
     // ---- framework glue (RZGetFramework() @ 0x10002ab30)
-    virtual cIGZFrameWorkWindow* MainWindowInterface() = 0;                    // RZGetFramework()->QI 0x23ea70a1 (counted reference)
-    virtual cIGZDrawSystem* DrawSystem() = 0;                                  // GetSystemService(0xeb2ea3cb, 0x4b2ea3b3) (counted reference)
+    virtual cIGZFrameWorkWindow* MainWindowInterface() = 0;                    // RZGetFramework() @ 0x10002ab30 -> QI 0x23ea70a1 (counted reference)
+    virtual cIGZDrawSystem* DrawSystem() = 0;                                  // RZGetFramework()->GetSystemService(0xeb2ea3cb, 0x4b2ea3b3) (counted reference)
 };
 
 void SetGraphicSystemHost(IGraphicSystemHost* host);
