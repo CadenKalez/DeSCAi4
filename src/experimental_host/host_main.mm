@@ -16,6 +16,10 @@
 #include "experimental_host/HostGraphics.h"
 #include "dbpf/DBPFReader.h"
 #include "gz/GZFont.h"
+#include "gz/cIGZMessage2.h"
+#include "rz/cRZMessage2Standard.h"
+#include "sc4/WinSplashScreen.h"
+#include <SDL.h>   // the test stub: its timers never fire by themselves, the host fires them (see PumpTimers)
 #include "experimental_host/HostWinMgr.h"
 #include "gz/WinFlatRect.h"
 
@@ -101,7 +105,7 @@ gz::cGZWinFlatRect* AddRect(cIGZWin* parent, int l, int t, int r, int b, std::ui
     return w;
 }
 
-void BuildScene() {
+void BuildMenu() {
     cIGZWin* desktop = gMgr->GetMainWindow();
     desktop->SetArea(0, 0, kW, kH);
     AddRect(desktop, 0, 0, kW, kH, 0x10243c);                          // backdrop
@@ -155,48 +159,169 @@ static CGImageRef MakeImage() {
     return img;
 }
 
-// The real splash art: SimCity_1.dat, PNG 856ddbac/46a006b0/362b8543 (800x600), read with the recovered DBPF reader.
-// (The game shows it through cSC4WinSplashScreen, which is not recovered yet, so the host just paints the picture.)
 static NSString* GameData() {
     return [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/GameData"];
 }
-static bool gSplashReady = false;
-static int gSplashFrames = 0;   // >0: still showing the splash
-static bool LoadSplash() {
+
+// A PNG resource of the game data as a CPU buffer (read with the recovered DBPF reader, decoded by ImageIO).
+static cGZBuffer* LoadPngBuffer(const char* package, std::uint32_t type, std::uint32_t group, std::uint32_t instance) {
     dbpf::Package pkg;
-    if (!pkg.Open([[GameData() stringByAppendingPathComponent:@"SimCity_1.dat"] UTF8String])) return false;
-    const dbpf::Entry* e = pkg.Find(0x856ddbac, 0x46a006b0, 0x362b8543);
+    if (!pkg.Open([[GameData() stringByAppendingPathComponent:[NSString stringWithUTF8String:package]] UTF8String])) return nullptr;
+    const dbpf::Entry* e = pkg.Find(type, group, instance);
     std::vector<uint8_t> png;
-    if (!e || !pkg.Read(*e, png)) return false;
+    if (!e || !pkg.Read(*e, png)) return nullptr;
     CGImageSourceRef src = CGImageSourceCreateWithData((__bridge CFDataRef)[NSData dataWithBytes:png.data() length:png.size()], nullptr);
     CGImageRef img = src ? CGImageSourceCreateImageAtIndex(src, 0, nullptr) : nullptr;
-    if (!img) return false;
-    auto* buf = gGraphics->Primary();
+    if (!img) return nullptr;
+    auto* buffer = new cGZBuffer();
+    buffer->AddRef();
+    buffer->Init(std::uint32_t(CGImageGetWidth(img)), std::uint32_t(CGImageGetHeight(img)), cGZBufferColorType{kBufferColorXRGB8888, 32});
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
-    CGContextRef cg = CGBitmapContextCreate((void*)buf->Pixels(), kW, kH, 8, buf->Stride(), cs, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
-    CGContextSetRGBFillColor(cg, 0, 0, 0, 1); CGContextFillRect(cg, CGRectMake(0, 0, kW, kH));
-    const double sc = std::min(double(kW) / CGImageGetWidth(img), double(kH) / CGImageGetHeight(img));
-    const double w = CGImageGetWidth(img) * sc, h = CGImageGetHeight(img) * sc;
-    CGContextSetInterpolationQuality(cg, kCGInterpolationHigh);
-    CGContextDrawImage(cg, CGRectMake((kW - w) / 2, (kH - h) / 2, w, h), img);
+    CGContextRef cg = CGBitmapContextCreate(buffer->GetColorSurfaceBits(), CGImageGetWidth(img), CGImageGetHeight(img), 8, buffer->GetColorSurfaceStride(), cs, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
+    CGContextDrawImage(cg, CGRectMake(0, 0, CGImageGetWidth(img), CGImageGetHeight(img)), img);
     CGContextRelease(cg); CGColorSpaceRelease(cs); CGImageRelease(img); CFRelease(src);
-    gSplashReady = true;
-    return true;
+    return buffer;
+}
+
+// The window the splash script describes: GZWinGen 0xaaa9c9d9, 768 x 600, image {46a006b0, ea7f0eae} (Intro.dat).
+class ImageWin final : public HostRect {
+public:
+    ImageWin(cIGZWinMgr* m, cGZBuffer* image) : HostRect(m), image_(image) {}
+    bool GZPaint() override {
+        if (!image_) return true;
+        auto* ctx = static_cast<gz::cIGZDrawContext*>(drawContext_);
+        const cRZRect all{0, 0, int(image_->Width()), int(image_->Height())};
+        ctx->Blt(image_, all, drawArea_);
+        return true;
+    }
+private:
+    cGZBuffer* image_;
+};
+
+// SL::spMS2: posts are delivered by the host's frame loop.
+struct HostMessageServer2 final : cIGZMessageServer2 {
+    struct Post { cIGZMessage2* message; cIGZMessageTarget2* target; };
+    std::vector<Post> queue;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return 1; }
+    std::uint32_t Release() override { return 1; }
+    bool MessageSend(cIGZMessage2*) override { return true; }
+    bool MessagePost(cIGZMessage2*, bool) override { return true; }
+    bool AddNotification(cIGZMessageTarget2*, std::uint32_t) override { return true; }
+    bool RemoveNotification(cIGZMessageTarget2*, std::uint32_t) override { return true; }
+    bool GeneralMessagePostToTarget(cIGZMessage2* m, cIGZMessageTarget2* t) override { m->AddRef(); t->AddRef(); queue.push_back({m, t}); return true; }
+    bool CancelGeneralMessagePostsToTarget(cIGZMessageTarget2*) override { return true; }
+    bool OnTick(std::uint32_t) override { return true; }
+    std::uint32_t GetMessageQueueSize() override { return std::uint32_t(queue.size()); }
+    void SetAlwaysClearQueueOnTick(bool) override {}
+    std::uint32_t GetRefCount() const override { return 1; }
+    bool CreateMessage(std::uint32_t, std::uint32_t, void**) override { return false; }
+    void Deliver() {
+        auto pending = std::move(queue); queue.clear();
+        for (auto& p : pending) { p.target->DoMessage(p.message); p.message->Release(); p.target->Release(); }
+    }
+};
+
+enum class Phase { Splash, Menu };
+Phase gPhase = Phase::Menu;
+sc4::cSC4WinSplashScreen* gSplash = nullptr;
+bool gToMenu = false;
+cGZBuffer* gSplashImage = nullptr;
+HostMessageServer2 gMS2;
+
+// The splash screen is the recovered cSC4WinSplashScreen; this is what it reaches outside itself.
+struct SplashHost final : sc4::ISplashScreenHost {
+    struct Unknown final : cIGZUnknown {
+        bool QueryInterface(std::uint32_t, void**) override { return false; }
+        std::uint32_t AddRef() override { return 1; }
+        std::uint32_t Release() override { return 1; }
+    } graphics;
+    cIGZWin* CreateWindowFromScript(const cGZPersistResourceKey& key, cIGZWin* parent, std::uint32_t id) override {
+        // The script (SimCity_1.dat 0/96a006b0/8aa9aa14) is a 768x600 window with the Intro.dat picture; the script
+        // interpreter is not wired to the host yet, so the host builds that one window itself.
+        if (key.group != sc4::kSplashScriptGroup || key.instance != sc4::kSplashScriptInstance) return nullptr;
+        gSplashImage = LoadPngBuffer("Intro.dat", 0x856ddbac, 0x46a006b0, 0xea7f0eae);
+        auto* w = new ImageWin(gMgr, gSplashImage);
+        w->Init();
+        w->SetArea(0, 0, 768, 600);
+        w->SetID(id);
+        parent->ChildAdd(w);
+        w->AddRef();   // the caller's reference
+        return w;
+    }
+    cIGZUnknown* GraphicSystemObject() override { return &graphics; }
+    cIGZMessageServer2* MessageServer2() override { return &gMS2; }
+    cIGZMessage2Standard* CreateStandardMessage() override { auto* m = new cRZMessage2Standard(); m->AddRef(); return m; }
+    void ClearScreenToBlack() override { gGraphics->Primary()->Buffer()->Fill(0, nullptr); }
+    void DestroyCurrentScreen() override {}                       // the swap happens after the message is delivered
+    void CreateRegionScreen() override { gToMenu = true; }         // (the region screen is not wired: the test menu stands in)
+} gSplashHost;
+
+// The SDL stub's timers never fire by themselves: fire the armed one when its period has passed.
+static void PumpTimers() {
+    static double armedAt = -1; static int armedId = 0;
+    const double now = [[NSDate date] timeIntervalSince1970] * 1000.0;
+    g_ticks = std::uint32_t(now);
+    if (g_activeTimerId != armedId) { armedId = g_activeTimerId; armedAt = armedId ? now : -1; }
+    if (armedId && g_timerCallback && now - armedAt >= g_timerInterval) {
+        auto cb = g_timerCallback; void* param = g_timerParam;
+        armedId = 0; armedAt = -1;
+        cb(g_timerInterval, param);
+    }
+}
+
+static void StartSplash() {
+    gPhase = Phase::Splash;
+    cIGZWin* desktop = gMgr->GetMainWindow();
+    desktop->SetArea(0, 0, kW, kH);
+    AddRect(desktop, 0, 0, kW, kH, 0x000000);   // black behind the 768 x 600 window
+    sc4::SetSplashScreenHost(&gSplashHost);
+    gSplash = new sc4::cSC4WinSplashScreen(gMgr);
+    gSplash->AddRef();
+    desktop->ChildAdd(gSplash);   // Init: builds the script window, arms nothing until the first paint
+    desktop->SetBufferToDrawToRecursive();
+    desktop->InvalidateSelf();
+}
+
+static void DrawCopyright() {
+    if (!gFont) return;
+    static const char kText[] = "\xC2\xA9 2003 Electronic Arts Inc.  All rights reserved.";
+    gFont->SetCodePage(8);   // UTF-8
+    cIGZBuffer* surface = gGraphics->Primary()->Buffer();
+    const int len = int(sizeof(kText) - 1);
+    const int w = gFont->GetStringWidth(kText, len);
+    // script child area (5,580,761,600) inside the 768x600 window centred on the screen: (128, 84)
+    gFont->DrawTextLine(surface, 128 + 5 + (756 - w) / 2, 84 + 580 + 2, kText, len, 0x00ffcc00, kFontDefaultColor, nullptr, nullptr);
 }
 
 static void Frame() {
-    if (gSplashFrames > 0) { --gSplashFrames; return; }   // splash picture stays in the buffer
-    gMgr->Pump(); gMgr->Plot(); DrawLabels();
+    if (gPhase == Phase::Splash) {
+        PumpTimers();
+        gMS2.Deliver();
+        if (gToMenu) {   // DestroyCurrentScreen + CreateRegionScreen ran: drop the splash, show the menu
+            gToMenu = false;
+            cIGZWin* desktop = gMgr->GetMainWindow();
+            desktop->ChildDeleteAll();
+            gSplash->Release(); gSplash = nullptr;
+            gPhase = Phase::Menu;
+            BuildMenu();
+            desktop->SetBufferToDrawToRecursive();
+            desktop->InvalidateSelf();
+        }
+    }
+    gMgr->Pump(); gMgr->Plot();
+    if (gPhase == Phase::Splash) DrawCopyright(); else DrawLabels();
 }
 
 int main(int argc, char** argv) {
-    std::string shot; int frames = -1; bool selftest = false, boot = false, game = false, splash = false;
+    std::string shot; int frames = -1; bool selftest = false, boot = false, game = false, splash = false; int waitMs = 0;
     for (int i = 1; i < argc; ++i) {
         if (!std::strcmp(argv[i], "--screenshot") && i + 1 < argc) shot = argv[++i];
         else if (!std::strcmp(argv[i], "--selftest")) selftest = true;
         else if (!std::strcmp(argv[i], "--boot")) boot = true;
         else if (!std::strcmp(argv[i], "--game")) game = true;
         else if (!std::strcmp(argv[i], "--splash")) splash = true;
+        else if (!std::strcmp(argv[i], "--wait") && i + 1 < argc) waitMs = std::atoi(argv[++i]);
         else if (!std::strcmp(argv[i], "--frames") && i + 1 < argc) frames = std::atoi(argv[++i]);
     }
     if (boot) return exphost::RunBoot(true) ? 0 : 1;
@@ -207,7 +332,7 @@ int main(int argc, char** argv) {
         gMgr->AddRef();
         gMgr->Init();
         if (game && !exphost::RunBoot(false)) std::printf("boot: FAILED (continuing to the UI anyway)\n");
-        BuildScene();
+        if (game || splash) StartSplash(); else BuildMenu();
         std::printf("font: %s\n", InitFont() ? "FreeType + cGZFont ready" : "FAILED to initialise");
         gMgr->GetMainWindow()->InvalidateSelf();
         for (cIGZWin* w : {gMgr->GetMainWindow()}) w->SetBufferToDrawToRecursive();
@@ -230,9 +355,9 @@ int main(int argc, char** argv) {
             std::printf("selftest: window under pointer id=%u\n", b ? b->GetID() : 0);
             return 0;
         }
-        if (game || splash) {
-            std::printf(LoadSplash() ? "splash: loaded SimCity_1.dat 856ddbac/46a006b0/362b8543\n" : "splash: FAILED to load\n");
-            gSplashFrames = 150;   // ~2.5 s at the loop's pace, then the menu
+        if (waitMs > 0) {   // let the frame loop run (timers, messages) before the screenshot
+            const double end = [[NSDate date] timeIntervalSince1970] * 1000.0 + waitMs;
+            while ([[NSDate date] timeIntervalSince1970] * 1000.0 < end) { Frame(); [NSThread sleepForTimeInterval:0.008]; }
         }
         if (!shot.empty()) {
             CGImageRef img = MakeImage();

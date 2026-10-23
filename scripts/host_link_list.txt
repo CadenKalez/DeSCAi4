@@ -82,4 +82,5 @@ src/sc4/DBSegment.cpp
 src/sc4/RenderProperties.cpp
 src/sc4/ServiceLocator.cpp
 src/sc4/SimStreamOps.cpp
+src/sc4/WinSplashScreen.cpp
 src/sc4/cSC4ResponseCurve.cpp
