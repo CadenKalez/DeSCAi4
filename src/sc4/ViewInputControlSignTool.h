@@ -26,26 +26,18 @@
 #include "rz/cRZString.h"
 #include "sc4/Occupant.h"
 #include "sc4/OccupantManager.h"
+#include "sc4/SignpostOccupant.h"   // the sign interface (cISC4SignpostOccupant) lives with its class
 #include "sc4/ViewInputControl.h"
 
 namespace sc4 {
 
-constexpr std::uint32_t kGZIID_cISC4SignpostOccupant = 0x4b44fbe2;
 constexpr std::uint32_t kGZIID_cIGZMessageTargetLegacy = 0xe98b2f57;
 constexpr std::uint32_t kSignToolMessage = 0x0be10a20;   // asks the tool for the screen position of the edited sign
 constexpr std::uint32_t kSignToolSoundGroup = 0xea451903;
 constexpr std::uint32_t kSignToolSoundPlace = 0x2c16da29;
 constexpr std::uint32_t kSignToolSoundGrab = 0x2c16da45;
 
-// cISC4SignpostOccupant as the tool uses it (vslots 0x18..0x38 of the sign's first vtable).
-class cISC4SignpostOccupant : public cIGZUnknown {
-public:
-    virtual cISC4Occupant* AsOccupant() = 0;                  // 0x18
-    virtual void SetText(const cIGZString& text) = 0;         // 0x20
-    virtual void GetText(cIGZString& text) = 0;               // 0x28
-    virtual void SetDynamic(bool dynamic) = 0;                // 0x30
-    virtual void SetEditMode(bool editing) = 0;               // 0x38
-};
+// cISC4SignpostOccupant (vslots 0x18..0x38 of the sign's first vtable) is declared in sc4/SignpostOccupant.h.
 
 // What the renderer's occupant pick hands back (vslot 0x18 returns the owning object, queried for the signpost).
 class IPickedObject : public cIGZUnknown {

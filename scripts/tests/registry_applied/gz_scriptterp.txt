@@ -1,0 +1,1 @@
+"gz_scriptterp:$T/gz_scriptterp_test.cpp $S/gz/ScriptTerp.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/cRZFile.cpp $S/rz/RZConvert.cpp $S/rz/cRZSysServPtr.cpp -I$T"

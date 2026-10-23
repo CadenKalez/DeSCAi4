@@ -1,0 +1,1 @@
+"render_primitivemanager:$T/render_primitivemanager_test.cpp $S/render/gd/PrimitiveManager.cpp $S/render/SimGL.cpp $S/render/GDIndexOps.cpp $S/gz/MiscFunctions.cpp $S/rz/CharLength.cpp $S/rz/TextEncoding.cpp $S/rz/RZConvert.cpp $S/rz/RZStringUtils.cpp -I$T"

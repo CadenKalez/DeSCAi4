@@ -1,0 +1,43 @@
+SOURCE src/gz/ScriptTerp.cpp|h
+EVIDENCE test scripts/tests/gz_scriptterp_test.cpp - the interpreter driven through a recording target that implements all three target interfaces the way cGZUIScriptService does: COM lifetime/QueryInterface/AddRef/Release (the count starts at 0 and Release deletes at 1), SetScriptTarget with the two QueryInterface'd sub-targets (iids 0x1a2bdeb9/0x1a2bdeba) and their release, the borrowed context and the destructor's refusal to release it, the vocabulary stack (creation reference, Push/Pop above the interpreter's own vocabulary, never popping the bottom entry, top-first lookup, counted translations, case-insensitive names, first translation wins), the token forwarders, GetUint32's digit gate with the hex/digit-led quirks and the uint32-only translation rule, the tokenizer (four whitespace characters, the 0x7000000500002601 delimiter set, quoted strings including the empty and unterminated forms, literal text up to '<'), the eleven-state parser over a real window script (tag ids, properties, the property array handed to ScriptTag holding one reference, literal text), the unknown-property/unknown-tag/closing-tag quirks, every error path (ScriptEnd(false) plus a false result), the refused re-entrant script, ExecuteScriptFile (file, missing file, empty file, the dangling +0x50), ExecuteScriptResource through the cRZSysServPtr service seam (OpenDBRecord, the 0xc56b8f08 sized-record view, GetSize/GetFieldVoid, CloseDBRecord and both failure paths) and the cross-script pending-name leak; scripts/tests/registry/gz_scriptterp.txt
+0x10054e6e4 cGZScriptTerp_Construct
+0x10054e80e cGZScriptTerp_ConstructBaseObject
+0x10054e818 cGZScriptTerp_Destruct
+0x10054e92c cGZScriptTerp_DestructBaseObject
+0x10054e936 cGZScriptTerp_DestructAndDelete
+0x10054e964 cGZScriptTerp_SetScriptTarget
+0x10054ea00 cGZScriptTerp_SetContext
+0x10054ea3e cGZScriptTerp_AddTokenVariant
+0x10054ea54 cGZScriptTerp_AddTokenUint32
+0x10054eabe cGZScriptTerp_RemoveToken
+0x10054ead4 cGZScriptTerp_RemoveAllTokens
+0x10054eae8 cGZScriptTerp_PushVocabulary
+0x10054eb3e cGZScriptTerp_PopVocabulary
+0x10054eb7e cGZScriptTerp_GetLocalTranslation
+0x10054ec00 cGZScriptTerp_ExecuteScriptFile
+0x10054ecf0 cGZScriptTerp_ExecuteScript
+0x10054efb8 cGZScriptTerp_ExecuteScriptString
+0x10054efdc cGZScriptTerp_ExecuteScriptResource
+0x10054f1be cGZScriptTerp_GetToken
+0x10054f3d0 cGZScriptTerp_ParseOpenTag
+0x10054f418 cGZScriptTerp_ParseFlushLastParm
+0x10054f4e6 cGZScriptTerp_ParseCloseTag
+0x10054f538 cGZScriptTerp_ParseParmValue
+0x10054f5c8 cGZScriptTerp_ParseParmStrValue
+0x10054f634 cGZScriptTerp_ClearParams
+0x10054f6b2 cGZScriptTerp_GetUint32
+0x10054f756 cGZScriptTerp_QueryInterface
+0x10054f778 cGZScriptTerp_AddRef
+0x10054f786 cGZScriptTerp_Release
+0x10054f7a6 cGZScriptTerp_GetContext
+PARTIAL:
+# none: all 30 functions are hand-written and complete. Deliberate, commented deviations: QueryInterface
+# rejects a null out pointer; GetToken clears *out on its two "the script ends here" paths (the original leaves
+# a released pointer); ExecuteScriptResource returns false instead of dereferencing a missing persistence
+# service (0x10054f031); the constructor creates its own vocabulary through the IScriptTerpHost seam because
+# cGZScriptVocab (13 symbols, 0x10054ddb4..0x10054e6d6) is unrecovered; AddToken/RemoveToken/RemoveAllTokens
+# return the vocabulary's bool (the original tail-jumps into it, so that is what its caller sees).
+SKIPPED:
+# none: the class has no thunks. 0x10054e80e / 0x10054e92c / 0x10054e936 are the Itanium ABI's base-object
+# constructor and base-object / deleting destructor variants of the two hand-written functions; they are the
+# compiler's own emissions, so they get a row but no separate source body.
