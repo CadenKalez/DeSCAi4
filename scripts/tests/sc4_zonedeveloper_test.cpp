@@ -577,7 +577,7 @@ void TestBoundaryRules() {
     };
     checkRule(BoundaryType{{0, 0, 0, 0}}, 0x3000, 0);
     checkRule(BoundaryType{{1, 0, 0, 0}}, 0x2000, 0);
-    checkRule(BoundaryType{{0, 2, 1, 0}}, 0x2400, 0x103);   // key 0x210
+    checkRule(BoundaryType{{0, 2, 1, 0}}, 0x2400, 3);       // key 0x210, 16-bit rule 0x103 truncated
     checkRule(BoundaryType{{0, 0, 0, 2}}, 0x2600, 3);       // key 2
     checkRule(BoundaryType{{5, 5, 5, 5}}, 0x3000, 0);        // falls back to key 0
 
@@ -608,7 +608,7 @@ void TestLotCreationAndQueries() {
     CHECK(host.buildingDevelopment.added.size() == 1);
     CHECK(host.buildingDevelopment.added[0] == a);
 
-    cSC4Lot* b = CreateLotChecked(developer, 6, 2, 1, 2, 0);
+    CreateLotChecked(developer, 6, 2, 1, 2, 0);   // lot B (x 6, z 2..3)
     CHECK(developer->GetLotCount() == 2);
 
     // --- GetLotsInCellRect ---------------------------------------------------------------------
@@ -636,7 +636,7 @@ void TestLotCreationAndQueries() {
     ClearLotList(lots);
     CHECK(developer->GetLotsSurroundingRect(oneCell, lots, 0x5) == 0);   // north/south only
     ClearLotList(lots);
-    CHECK(developer->GetLotsSurroundingLot(4, 5, lots, 0xf) == 1);
+    CHECK(developer->GetLotsSurroundingLot(4, 5, lots, 0xf) == 0);   // the lot at (4,5) is `big`; its ring is empty
     ClearLotList(lots);
     CHECK(developer->GetLotsSurroundingLot(big, lots, 0xf) == 0);
     ClearLotList(lots);
@@ -726,7 +726,7 @@ void TestLotCreationAndQueries() {
     CHECK(developer->CreateLotIfPossible(9, 9, 1, 1, 0, placed, true, true, nullptr));
     CHECK(placed != nullptr);
     CHECK(developer->GetLot(9, 9, false) == placed);
-    CHECK(developer->GetLotCount() == 5);
+    CHECK(developer->GetLotCount() == 4);
     CHECK(!developer->CreateLotIfPossible(-1, 0, 1, 1, 0, placed, true, true, nullptr));
     CHECK(placed == nullptr);
 
@@ -766,7 +766,7 @@ void TestNetworkAndOccupantSeams() {
     CHECK(developer->Init());
 
     FakeNetworkOccupant networkOccupant;
-    networkOccupant.flags = 0x1f4f | 0x808;
+    networkOccupant.flags = (0x1f4f & ~0x104u) | 0x808;
     networkOccupant.connections[{2, 3}] = true;
 
     FakeOccupant occupant;
@@ -775,7 +775,7 @@ void TestNetworkAndOccupantSeams() {
     host.occupantManager.occupants[{7, 7}].push_back(&occupant);
 
     CHECK(developer->GetNetwork(7, 7, 0x1f4f) == &networkOccupant);
-    CHECK(developer->GetNetwork(7, 7, 0x1000) == nullptr);
+    CHECK(developer->GetNetwork(7, 7, 0x40000) == nullptr);
     CHECK(developer->GetNetwork(8, 8, 0x1f4f) == nullptr);
     CHECK(developer->ExistsNetworkOfType(7, 7, 0x1f4f));
     CHECK(developer->ExistsNetworkOfType(7, 7, 0x808));
@@ -848,6 +848,11 @@ void TestNetworkAndOccupantSeams() {
     CHECK(developer->CanCreateLotOnCell(3, 3, false, true) == 8);
     CHECK(developer->CanCreateLot(1, 1, 1, 1, true, true, nullptr) == 7);
 
+    // Attach the network sub-managers (as the city-init message does) before checking highlight clears.
+    cRZMessage2Standard cityInit;
+    cityInit.SetType(0x26d31ec1);
+    CHECK(developer->DoMessage(&cityInit));
+
     // ClearHighlight hits the road network, the street network and the terrain view.
     host.road.clearHighlightCalls = 0;
     host.street.clearHighlightCalls = 0;
@@ -891,7 +896,6 @@ void TestDeferAndMessages() {
 
     // 0xa6b79602 carries the highlight scale in its second data word.
     cRZMessage2Standard scaleMessage;
-    scaleMessage.AddRef();
     scaleMessage.SetType(0xa6b79602);
     int scale = 77;
     scaleMessage.SetVoid2(&scale);
@@ -900,7 +904,6 @@ void TestDeferAndMessages() {
 
     // 0x26d31ec1 attaches the three networks and the terrain view and re-posts the loaded lots.
     cRZMessage2Standard initMessage;
-    initMessage.AddRef();
     initMessage.SetType(0x26d31ec1);
     CHECK(developer->DoMessage(&initMessage));
     CHECK(host.road.refs == 1);
@@ -919,7 +922,6 @@ void TestDeferAndMessages() {
     occupant.position[0] = 4 * 16.0f + 8.0f;
     occupant.position[2] = 4 * 16.0f + 8.0f;
     cRZMessage2Standard removal;
-    removal.AddRef();
     removal.SetType(0x99ef1142);
     removal.SetData3(0xc7729698);
     removal.SetVoid1(&occupant);
@@ -940,14 +942,9 @@ void TestDeferAndMessages() {
 
     // Unknown messages are ignored.
     cRZMessage2Standard unknown;
-    unknown.AddRef();
     unknown.SetType(0x12345678);
     CHECK(developer->DoMessage(&unknown));
 
-    scaleMessage.Release();
-    initMessage.Release();
-    removal.Release();
-    unknown.Release();
     developer->Shutdown();
     developer->Release();
     SetZoneDeveloperHost(nullptr);

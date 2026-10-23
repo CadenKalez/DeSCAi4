@@ -457,12 +457,12 @@ private:
     std::list<cSC4Lot*> lots_;                                      // +0xb0
     std::list<void*> lotIterators_;                                 // +0xc8
     int lotCount_ = 0;                                              // +0xe0
-    std::uint64_t reservedE8_ = 0;                                  // +0xe8
-    std::uint64_t reservedF0_ = 0;                                  // +0xf0
+    [[maybe_unused]] std::uint64_t reservedE8_ = 0;                                  // +0xe8
+    [[maybe_unused]] std::uint64_t reservedF0_ = 0;                                  // +0xf0
     cSC4SimGrid<std::uint16_t>* capacityGrid_ = nullptr;            // +0xf8
     DemandMap demandMap_;                                           // +0x100
-    int parcellizationSizes_[5] = {2, 2, 1, 3, 6};                  // +0x118
-    std::uint8_t scratch12c_ = 0;                                   // +0x12c
+    [[maybe_unused]] int parcellizationSizes_[5] = {2, 2, 1, 3, 6};                  // +0x118
+    [[maybe_unused]] std::uint8_t scratch12c_ = 0;                                   // +0x12c
     std::uint8_t lotChangesEnabled_ = 1;                            // +0x12d
     std::uint8_t extendAsStreets_ = 1;                              // +0x12e
     std::uint8_t swapOrientation_ = 0;                              // +0x12f
@@ -470,11 +470,11 @@ private:
     int currentZoneType_ = 0;                                       // +0x134
     SC4CellRegion<int>* currentRegion_ = nullptr;                   // +0x138
     SC4Point<int>* highlightOrigin_ = nullptr;                      // +0x140
-    int unknown144_ = 0;                                            // +0x144
-    int boundaryCost_[4] = {0, 0, 0, 0};                            // +0x148
-    int boundary_[4] = {0, 0, 0, 0};                                // +0x158
-    int lotOrientation_ = 0;                                        // +0x168
-    int lotOrientationAlt_ = 0;                                     // +0x16c
+    [[maybe_unused]] int unknown144_ = 0;                                            // +0x144
+    [[maybe_unused]] int boundaryCost_[4] = {0, 0, 0, 0};                            // +0x148
+    [[maybe_unused]] int boundary_[4] = {0, 0, 0, 0};                                // +0x158
+    [[maybe_unused]] int lotOrientation_ = 0;                                        // +0x168
+    [[maybe_unused]] int lotOrientationAlt_ = 0;                                     // +0x16c
     int highlightScale_ = 0;                                        // +0x170
     std::map<SC4Point<int>, PendingLot, SC4PointSintCompare> pendingLots_;      // +0x178
     std::map<SC4Point<int>, PendingDelete, SC4PointSintCompare> pendingDeletes_;  // +0x190

@@ -839,6 +839,9 @@ CLASS-cSC4WinText,cSC4WinText,"recover 3 remaining function(s) (3 not started, 0
 CLASS-cSC4WinTrendBar,cSC4WinTrendBar,"recover 19 remaining function(s) (19 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4ZoneDeveloper,cSC4ZoneDeveloper,"recover 21 remaining function(s) (0 not started, 21 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4ZoneDeveloper,cSC4ZoneDeveloper,finish 7 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+ZONEDEV-1,cSC4ZoneDeveloper,Recover cSC4SafeList and cSC4SafeListIterator so CreateLot/DeleteLot/GetSafeLotIterator and the removal notifications can be finished,,open,src/sc4/ZoneDeveloper.cpp
+ZONEDEV-2,cSC4ZoneDeveloper,Recover the parcellization pipeline (OnZone/OnDezone/Parcellize/SubdivideTheZone/DrawStreet/DetermineLotSize) that DoParcellization and UpdateHighlightTextures call,,open,src/sc4/ZoneDeveloper.cpp
+ZONEDEV-3,cSC4ZoneDeveloper,"Recover DecodeNetworkConnectionObject (0x100132a04), the lot-config objects and surface water so CanCreatePloppedLot and CheckLotTerrainConstraints can be written",,open,src/sc4/ZoneDeveloper.cpp
 LEDGER-cSC4ZoneManager,cSC4ZoneManager,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4ZoomRotationModelChangeOccupantFilter,cSC4ZoomRotationModelChangeOccupantFilter,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSCBoolTextEntryView,cSCBoolTextEntryView,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv

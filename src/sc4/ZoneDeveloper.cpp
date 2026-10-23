@@ -364,10 +364,12 @@ bool cSC4ZoneDeveloper::DoMessage(cIGZMessage2* message) {
     if (!message) return false;
     auto* standard = dynamic_cast<cIGZMessage2Standard*>(message);
     if (!standard) return false;
-    const std::uint32_t type = standard->GetType();
+    // The original compares the message type as a signed 32-bit value (`if (type < 0x230e27ac)`),
+    // which is why the two negative ids 0x99ef1142 / 0xa6b79602 are handled by the first branch.
+    const std::int32_t type = static_cast<std::int32_t>(standard->GetType());
 
-    if (type < kZoneMessageCheatCode) {
-        if (type == kZoneMessageOccupantRemoved) {
+    if (type < static_cast<std::int32_t>(kZoneMessageCheatCode)) {
+        if (type == static_cast<std::int32_t>(kZoneMessageOccupantRemoved)) {
             if (standard->GetData3() != kZoneMessageOccupantRemovedSubType) return true;
             auto* occupant = static_cast<cISC4Occupant*>(standard->GetVoid1());
             if (!occupant) return true;
@@ -407,17 +409,17 @@ bool cSC4ZoneDeveloper::DoMessage(cIGZMessage2* message) {
             } else if (removalKind == 3) {
                 // ConnectStreetsAcrossRail (0x10012a534) is not recovered.
             }
-        } else if (type == kZoneMessageHighLightScale) {
+        } else if (type == static_cast<std::int32_t>(kZoneMessageHighLightScale)) {
             if (void* data = standard->GetVoid2()) highlightScale_ = *static_cast<int*>(data);
         }
-    } else if (type == kZoneMessageCheatCode) {
+    } else if (type == static_cast<std::int32_t>(kZoneMessageCheatCode)) {
         const std::uint64_t command = standard->GetData1();
         if (command == kCheatPlopAllLots) {
             // PlopAllLotTypes (0x10012abe4) is not recovered.
         } else if (command == kCheatPlopAllBuildings) {
             // PlopAllBuildingTypes (0x10012ad80) is not recovered.
         }
-    } else if (type == kZoneMessageCityInit) {
+    } else if (type == static_cast<std::int32_t>(kZoneMessageCityInit)) {
         if (!terrainView_ && g_host) {
             terrainView_ = g_host->TerrainView();                  // SL::spTerrainView
             if (terrainView_) terrainView_->AddRef();
@@ -492,7 +494,7 @@ bool cSC4ZoneDeveloper::Read(cIGZIStream& stream) {
     lotMap_.resize(countX);
     std::unordered_set<cSC4Lot*> seen;
     for (std::uint32_t x = 0; x < countX; ++x) {
-        lotMap_[x].assign(countZ, nullptr);
+        lotMap_[x].resize(countZ, nullptr);   // keeps pre-existing cells, like the original resize
         for (std::uint32_t z = 0; z < countZ; ++z) {
             cSC4Lot* lot = g_host ? g_host->ReadLot(stream) : nullptr;
             lotMap_[x][z] = lot;
@@ -1107,6 +1109,7 @@ void cSC4ZoneDeveloper::DeleteLot(cSC4Lot* lot) {
         auto it = std::find(lots_.begin(), lots_.end(), lot);
         if (it != lots_.end()) {
             lots_.erase(it);
+            if (lotCount_ > 0) --lotCount_;   // cSC4SafeList::Remove keeps the +0xe0 count
             lot->Release();
         }
         if (lot->GetUnit() != nullptr && buildingDevelopment_) buildingDevelopment_->ForgetLot(lot);   // 0x120 -> 0x108
