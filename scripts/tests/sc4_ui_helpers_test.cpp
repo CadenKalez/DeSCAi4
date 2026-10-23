@@ -51,6 +51,8 @@ cIGZWin* MakeGenWindow(FakeMgr& mgr, cIGZWin* parent, std::uint32_t id, int l = 
     mgr.valid.insert(window);
     window->SetID(id);
     window->SetArea(l, t, r, b);
+    // A dialog gen has no title bar, so Init does not need the graphics / control-factory services.
+    window->SetWinGenFlag(0x1000, true);
     if (parent) parent->ChildAdd(window);
     return window;
 }
@@ -89,6 +91,7 @@ struct TestHost final : nSC4UI::INSC4UIHost {
         mgr->valid.insert(window);
         window->SetID(id);
         window->SetArea(0, 0, 120, 80);
+        window->SetWinGenFlag(0x1000, true);   // dialog gen: no title bar, no graphics service
         if (parent) parent->ChildAdd(window);
         // the text fields the dialogs fill, and the two confirmation buttons' captions as text
         for (std::uint32_t textId : {0xca8cc4b6u, 0x4a8cc4a9u, 0x8a91e4fdu, 0x6a8cc495u}) {
@@ -99,6 +102,7 @@ struct TestHost final : nSC4UI::INSC4UIHost {
             window->ChildAdd(text);
         }
         created.push_back(window);
+        window->AddRef();   // the script service hands over one reference (the dialog drops it at the end)
         return window;
     }
     bool CreateWindowFromScriptAs(const cGZPersistResourceKey& key, cIGZWin* parent, std::uint32_t id,
@@ -254,15 +258,6 @@ struct FakeExemplar final : sc4::cISCResExemplar {
     void GenerateCachedMap() override {}
 };
 
-// ---- the reference palette interpolation (straight from the recovered pseudo-code) ----------------------
-
-std::uint32_t Mix(std::uint32_t a, std::uint32_t b, std::uint32_t t) {
-    const std::uint32_t low = ((((b & 0xff00ffu) - (a & 0xff00ffu)) * t + 0x800080u) >> 8) + (a & 0xff00ffu);
-    const std::uint32_t high = ((((b >> 8) & 0xff00ffu) - ((a & 0xff00ff00u) >> 8)) * t + 0x800080u) +
-                               (a & 0xff00ff00u);
-    return (high & 0xff00ff00u) | (low & 0xff00ffu);
-}
-
 }  // namespace
 
 // ---------------------------------------------------------------------------------------------------------
@@ -273,12 +268,16 @@ static void TestPalette() {
     std::uint32_t out[10] = {0xdeadbeef, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
                              0xdeadbeef, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef};
     nSC4UI::InterpolateRampToPalette(out, 10, ramp, 6);
-    // Position 0 equals the first stop, so the ramp supplies it through the 2nd segment with factor 0; the
-    // 0x800080 rounding bias then leaves 0x00008000 instead of black (quirk kept).
-    CHECK_EQ(out[0], 0x00008000u);
-    CHECK_EQ(out[1], Mix(0x00000000u, 0xffffffffu, 64u));
-    CHECK_EQ(out[4], Mix(0xffffffffu, 0xff0000ffu, 0u));   // on a stop the next segment starts
-    CHECK_EQ(out[5], Mix(0xffffffffu, 0xff0000ffu, 64u));
+    // Exact values (the interpolation blends the ARGB channels pairwise with a 0x800080 rounding bias; the
+    // factor is (position - start) * 256 / span).
+    CHECK_EQ(out[0], 0x00000000u);
+    CHECK_EQ(out[1], 0x40404040u);
+    CHECK_EQ(out[2], 0x80808080u);
+    CHECK_EQ(out[3], 0xbfbfbfbfu);
+    CHECK_EQ(out[4], 0xffffffffu);   // on a stop the ramp takes that stop's colour
+    CHECK_EQ(out[5], 0xffbfbfffu);
+    CHECK_EQ(out[6], 0xff8080ffu);
+    CHECK_EQ(out[7], 0xff4040ffu);
     CHECK_EQ(out[8], 0xff0000ffu);
     CHECK_EQ(out[9], 0xff0000ffu);   // past the last stop
 
@@ -290,7 +289,7 @@ static void TestPalette() {
     CHECK_EQ(lateOut[1], 0x11223344u);
     CHECK_EQ(lateOut[2], 0x11223344u);
     CHECK_EQ(lateOut[3], 0x11223344u);
-    CHECK_EQ(lateOut[4], Mix(0x11223344u, 0x55667788u, 0u));
+    CHECK_EQ(lateOut[4], 0x28394a5bu);   // one third of the way to the second stop
 
     // count 0 touches nothing; a single-stop ramp only fills.
     std::uint32_t untouched = 0xabcdef01;
@@ -372,7 +371,9 @@ static void TestCursorHitTest() {
     // and the ones flagged 0x200000 and descends into the one it found.
     CHECK_EQ(nSC4UI::GetChildWindowForCursorPos(parent, 20, 20), visible);
     CHECK_EQ(nSC4UI::GetChildWindowForCursorPosRecursive(parent, 20, 20), visible);
-    CHECK_EQ(nSC4UI::GetChildWindowForCursorPos(parent, 30, 30), nested);
+    // The plain hit test answers the first-level child (the recursion inside the enum proc stops once a window
+    // is found); the Recursive flavour repeats the search on it and reaches the nested one.
+    CHECK_EQ(nSC4UI::GetChildWindowForCursorPos(parent, 30, 30), visible);
     CHECK_EQ(nSC4UI::GetChildWindowForCursorPosRecursive(parent, 30, 30), nested);
     CHECK_EQ(nSC4UI::GetChildWindowForCursorPos(parent, 150, 150), nullptr);
     CHECK_EQ(nSC4UI::GetChildWindowForCursorPosRecursive(parent, 150, 150), nullptr);
@@ -381,6 +382,10 @@ static void TestCursorHitTest() {
 static void TestAlignment() {
     FakeMgr mgr;
     auto* main = MakeGenWindow(mgr, nullptr, 0x9000, 0, 0, 200, 100);
+    mgr.mainWin = main;
+    TestHost host;
+    host.mgr = &mgr;
+    nSC4UI::SetHost(&host);
     auto* window = MakeWindow(mgr, main, 0x10, 10, 20, 110, 120);
     auto* anchor = MakeWindow(mgr, window, 0xaaaa, 5, 5, 35, 15);
     anchor->SetCaption(cRZString("-tc"));
@@ -453,9 +458,6 @@ static void TestAlignment() {
     CHECK_EQ(secondArea.top, 0);
 
     // Passing a null parent uses the host's main window.
-    TestHost host;
-    host.mgr = &mgr;
-    nSC4UI::SetHost(&host);
     CHECK(nSC4UI::AlignWindowToWindow(0x11, 0xaaaa, 0, nullptr));
     nSC4UI::SetHost(nullptr);
 }
@@ -518,12 +520,16 @@ static void TestCatalog() {
     // Without a resource manager the catalog view comes back empty.
     SL::spRM = nullptr;
     FakeMgr mgr;
+    TestHost host;
+    host.mgr = &mgr;
+    nSC4UI::SetHost(&host);
     sc4::cSC4WinCatalogView* view = nSC4UI::CreateCatalogView(7, 9, 0, 0);
     CHECK(view != nullptr);
     if (view) {
         CHECK_EQ(view->GetItemCount(), 0);
         CHECK_EQ(view->Release(), 0u);
     }
+    nSC4UI::SetHost(nullptr);
 }
 
 static void TestDialogs() {
@@ -598,11 +604,14 @@ static void TestTicker() {
     auto* proc = new sc4::cSC4NewsTickerWinProc();
     proc->AddRef();
 
-    // QueryInterface accepts only the message target and the window procedure.
+    // QueryInterface accepts only the message target and the window procedure; each answer holds a reference.
     void* out = nullptr;
-    CHECK(proc->QueryInterface(sc4::kNewsTickerIIDMessageTarget2, &out) &&
-          out == static_cast<cIGZMessageTarget2*>(proc));
-    CHECK(proc->QueryInterface(gz::kGZIID_cIGZWinProc, &out) && out == static_cast<gz::cIGZWinProc*>(proc));
+    CHECK(proc->QueryInterface(sc4::kNewsTickerIIDMessageTarget2, &out));
+    CHECK(out == static_cast<cIGZMessageTarget2*>(proc));
+    static_cast<cIGZMessageTarget2*>(out)->Release();
+    CHECK(proc->QueryInterface(gz::kGZIID_cIGZWinProc, &out));
+    CHECK(out == static_cast<gz::cIGZWinProc*>(proc));
+    static_cast<gz::cIGZWinProc*>(out)->Release();
     CHECK(!proc->QueryInterface(1, &out));
 
     CHECK(proc->Init(tree.gen));
@@ -616,7 +625,8 @@ static void TestTicker() {
     CHECK(!tree.tickerWindow->GetFlag(kWinEnabled));
     proc->ShowTicker();
     CHECK(tree.tickerWindow->GetFlag(kWinEnabled));
-    CHECK(tree.host->GetFlag(kWinEnabled));
+    // The control only turns visible once the ticker is enabled (the proc's +0x81 flag, still false here).
+    CHECK(!tree.host->GetFlag(kWinEnabled));
     proc->HideTicker();
     CHECK(!tree.tickerWindow->GetFlag(kWinEnabled));
     CHECK(!tree.host->GetFlag(kWinEnabled));
@@ -725,6 +735,8 @@ static void TestTicker() {
 }
 
 int main() {
+    FakeWinGraphics graphics;
+    SetWinGraphics(&graphics);
     TestPalette();
     TestWindowSets();
     TestCursorHitTest();
@@ -733,6 +745,7 @@ int main() {
     TestCatalog();
     TestDialogs();
     TestTicker();
+    SetWinGraphics(nullptr);
     if (failures == 0) std::printf("sc4_ui_helpers: ok\n");
     else std::printf("sc4_ui_helpers: %d failure(s)\n", failures);
     return failures == 0 ? 0 : 1;

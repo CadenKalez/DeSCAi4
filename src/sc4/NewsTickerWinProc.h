@@ -80,7 +80,7 @@ public:
     virtual void DisableVerticalScrollbar() = 0;                                         // [10] 0x50
 };
 
-class cSC4NewsTickerWinProc final : public cIGZMessageTarget2, public gz::cIGZWinProc {
+class cSC4NewsTickerWinProc : public cIGZMessageTarget2, public gz::cIGZWinProc {
 public:
     cSC4NewsTickerWinProc();
     ~cSC4NewsTickerWinProc();
@@ -133,12 +133,12 @@ private:
     cRZAutoRefCount<IC4WinAdviceList> flipperList_;    // +0x58
     std::list<cRZAutoRefCount<cISC4Advice>> messages_; // +0x60
     cRZAutoRefCount<gz::cIGZWinGen> window_;               // +0x78
-    std::uint16_t flags_ = 1;                          // +0x80 (the second byte is +0x81)
+    [[maybe_unused]] std::uint16_t flags_ = 1;         // +0x80 (the second byte is +0x81)
     bool tickerVisible_ = false;                       // +0x81
     cRZAutoRefCount<cISC4Advice> ring_[3];             // +0x88 / +0x90 / +0x98
-    bool fieldA0_ = false;                             // +0xa0 (set to 0 by the ctor, never read)
+    [[maybe_unused]] bool fieldA0_ = false;            // +0xa0 (set to 0 by the ctor, never read)
     std::uint32_t flipperScroll_ = 0;                  // +0xa4 pixels the flipper area has moved up
-    std::uint32_t fieldA8_ = 0;                        // +0xa8 (never read by recovered code)
+    [[maybe_unused]] std::uint32_t fieldA8_ = 0;       // +0xa8 (never read by recovered code)
     cRZRect flipperArea_{};                            // +0xac
     std::uint32_t ringCount_ = 0;                      // +0xbc ring entries set
     std::uint32_t flipperScrolled_ = 0;                // +0xc0 a line has been scrolled already

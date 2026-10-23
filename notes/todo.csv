@@ -619,7 +619,9 @@ CLASS-cSC4NetworkTunnelOccupant,cSC4NetworkTunnelOccupant,"recover 14 remaining 
 CLASS-cSC4NetworkTypeInfo,cSC4NetworkTypeInfo,"recover 11 remaining function(s) (11 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4NetworkWorldCache,cSC4NetworkWorldCache,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4NewRegionDialog,cSC4NewRegionDialog,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+ADVICELIST-1,cSC4NewsTickerWinProc,Recover cSC4WinAdviceList (22 functions 0x1005c79f6..0x1005c8a2a) so the ticker's three partials and cSC4MySimWinProc's IWinAdviceList seam become real calls,,open,src/sc4/NewsTickerWinProc.cpp
 CLASS-cSC4NewsTickerWinProc,cSC4NewsTickerWinProc,"recover 21 remaining function(s) (21 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2, cIGZWinProc","CLASS-cIGZMessageTarget2,CLASS-cIGZWinProc",done,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4NewsTickerWinProc,cSC4NewsTickerWinProc,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4ObliterateCity,cSC4ObliterateCity,"recover 27 remaining function(s) (27 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4OccupantFilterByGroupAndDistance,cSC4OccupantFilterByGroupAndDistance,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4OccupantFilterByNetworkFlags,cSC4OccupantFilterByNetworkFlags,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -791,6 +793,7 @@ CLASS-cSC4View3DWin,cSC4View3DWin,"recover 51 remaining function(s) (0 not start
 LEDGER-cSC4View3DWin,cSC4View3DWin,finish 8 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 UI-NS4UI-1,cSC4View3DWin,nSC4UI (12 functions) is not in src/ at all; AddGUI needs GetWindowChildrenSet/GetWindowChildrenNotInSet/AlignWindowSetToWindow/ClearAcceptFocusFlagRecursive and CreateCatalogView for the catalog menus,,open,src/sc4/View3DWin.cpp
 UI-PROCS-1,cSC4View3DWin,"AddGUI (0x1007892fc) constructs five classes that do not exist in src/: cSC4NewsTickerWinProc (21), cSC4MySimWinProc (31), cSC4BudgetUIWinProc (32), cSC4AdvisorPopupTracker (13), cSC4GraphsViewWinProc (21) - recover them first",,open,src/sc4/View3DWin.cpp
+UI-UNSKIP-1,cSC4View3DWin,"nSC4UI::CreateCatalogView and DoScriptedModalDialog now resolve, so the catalog rows (0x100790aa0 DoLandscapeCatalogView, 0x100790b98 DoFloraCatalogView, 0x100790c4a DoZoneCatalogView, 0x10078afde HandleButtonActivated) and DoBudgetFailure (0x100788d0e) can be un-skipped and written",,open,src/sc4/View3DWin.cpp
 UI-V3D-1,cSC4View3DWin,"Finish the 54 skipped View3DWin GUI functions once the five WinProcs + nSC4UI exist; feasible now with no missing class: DoLoad/DoSave (packed DB-segment rig), ReadTunableValues, AddBackgroundImageToRenderer",,open,src/sc4/View3DWin.cpp
 VIEW3D-CATALOG-1,cSC4View3DWin,Catalog menus and ProcessCommand: need cISC4WinCatalogView/cSC4WinTertiaryMenuFrame/cSC4CatalogItem and the modal preference/snapshot tools,,open,src/sc4/View3DWin.cpp
 VIEW3D-GUI-1,cSC4View3DWin,"AddGUI/RemoveGUI/HandleButtonActivated/DoPanelCommandGUI and the panel refresh/layout set: they need the AddGUI-created panel windows (+0x280, +0x4b8..+0x4d0), nsGZWinUtils, RZ::LM() and the cSC4*WinProc objects",,open,src/sc4/View3DWin.cpp
@@ -974,6 +977,7 @@ CLASS-nS3D,nS3D,"recover 2 remaining function(s) (2 not started, 0 partial/pendi
 LEDGER-nS3D,nS3D,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,done,notes/ledger.csv
 CLASS-nSC4Networks,nSC4Networks,"recover 10 remaining function(s) (10 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-nSC4UI,nSC4UI,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-nSC4UI,nSC4UI,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-nSCRes,nSCRes,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-nSGLDX7,nSGLDX7,"recover 18 remaining function(s) (18 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-nSGLDX7,nSGLDX7,finish 17 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
