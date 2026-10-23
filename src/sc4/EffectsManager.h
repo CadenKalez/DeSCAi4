@@ -101,6 +101,12 @@
 //    seasonal altitudes / the bias and always enables.
 //  * Init is a no-op the second time (the u16 flag), and its effect-tick callback ignores the user pointer: the
 //    free 0x1005dc8c9 posts a 0x697d01ed message through the message server instead.
+//  * The cSC4GlobalEffectParams block the particle effects receive starts at +0xee0 and is only 0x18 bytes long: its
+//    maxAlpha field (+0x44) would land on +0xf24, the "world units per viewport unit" value DoZoomChanged writes, so
+//    the port copies that value into globalParams_.maxAlpha whenever it recomputes it.
+//  * FinalRelease is the only path that destroys the object (Release never does); the destructor releases the
+//    renderer / weather / vertex-buffer / resource / parser references but deliberately leaves the effect maps at
+//    +0x1060 and the atmospheric / water effects at +0x1050 / +0x1058 alone (Shutdown releases those).
 #pragma once
 #include <cstdint>
 #include <string>

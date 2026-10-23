@@ -1,0 +1,88 @@
+SOURCE src/sc4/EffectsManager.cpp|h
+EVIDENCE test scripts/tests/sc4_effectsmanager_test.cpp - the fake IEffectsManagerHost and IParticlesTerrain drive the COM quirks (Release stays 1, the four QueryInterface ids, FinalRelease deleting the object), the collection registry (name lowercasing, highest-version-above-zero-and-at-most-five selection, the single-node group/type binding table with first-binding-wins, the redundant lookup that makes unknown names fail), the visual-effect pool and its new/active/free slot lists (free-list reuse from the back, the recycle of stopped effects, the running-not-kept active count, the killing guard, the ten-round activation loop), the ancilliary effects (event bits for shakes, screen flashes and lighting tints, the asymmetric screen position, the shake handle, the description label restarted by StopAncilliary), the flash and tint timing, the snowline curve with its hemisphere mirror and eight-unit threshold, the Snow cheat, the effects tick with the resource reload and the weather wind, the message dispatch subset including the cursor ray, the Init/Shutdown host protocol and call order, and the particles pool with its retirement gated on a recycled visual effect
+0x1005dad3e EffectsManagerConstruct
+0x1005db26c EffectsManagerDestructBody
+0x1005db97a EffectsManagerDestruct
+0x1005db9b2 EffectsManagerDestructAndDelete
+0x1005dd616 EffectsManagerQueryInterface
+0x1005dd6ce EffectsManagerAddRef
+0x1005dd746 EffectsManagerRelease
+0x1005dd78e EffectsManagerFinalRelease
+0x1005dc2a2 EffectsManagerCreateFlashMaterials
+0x1005e06ce EffectsManagerHasVisualEffect
+0x1005e075c EffectsManagerCreateVisualEffectByName
+0x1005e099c EffectsManagerNewVisualEffect
+0x1005e0b2e EffectsManagerActivateNewVisualEffects
+0x1005e0c08 EffectsManagerCreateVisualEffectByType
+0x1005e0d32 EffectsManagerBeginCollection
+0x1005e0dea EffectsManagerEndCollection
+0x1005e1318 EffectsManagerGetStatsString
+0x1005e341a EffectsManagerGetEffectMaps
+0x1005e3428 EffectsManagerGetTallestBuildingAltitude
+0x1005e1464 EffectsManagerStartAncilliary
+0x1005e162e EffectsManagerStartScreenFlash
+0x1005e16de EffectsManagerStartLightingTint
+0x1005e174a EffectsManagerStopAncilliary
+0x1005e0102 EffectsManagerDeactivateUnusedVisualEffects
+0x1005de2b6 EffectsManagerUpdateActiveVisualEffects
+0x1005de004 EffectsManagerDoRotationChanged
+0x1005ddf00 EffectsManagerDoZoomChanged
+0x1005e21f8 EffectsManagerUpdateLODScale
+0x1005e30f8 EffectsManagerKillOrphanedEffects
+0x1005e31cc EffectsManagerSetSnowlineState
+0x1005de13c EffectsManagerUpdateSnowline
+0x1005dff0a EffectsManagerUpdateLightingTint
+0x1005de8d4 EffectsManagerDoSnowCheat
+0x1005de054 EffectsManagerDoEffectsTick
+0x1005e2a74 EffectsManagerNewParticlesEffect
+0x1005e06be EffectsManagerPick
+0x1005dc8c9 EffectsTickCallback
+
+PARTIAL:
+0x1005dba0e EffectsManagerInit - the guard, the thread id, the progress messages, the terrain map extents, the renderer / weather / vertex-buffer attachment, the flash materials, the effect maps, the resource and parser creation, the eleven message handlers, the cheats, the tick callback, the ATM registration and the game-data functions are ported in the original order, but LoadAllEffects, the resource / parser construction and every service call go through IEffectsManagerHost because those neighbours are unrecovered
+0x1005dcd62 EffectsManagerShutdown - the visual-effect and particles pools, both registries, the collection tables and every service reference are torn down in the original order, but the decal and the three unrecovered particle-family pools are not modelled and the resource teardown is a host call
+0x1005dd7b8 EffectsManagerDoMessage - the zoom / rotation pair, the snowline update, the effects tick, the active flag and the cursor-ray broadcast are dispatched, but the message-trigger effect placement, the cheat console, occupant insert / remove, the animation tick and the render-properties refresh are not ported because Ghidra dropped their payload transforms and their neighbours are unrecovered
+0x1005df48a EffectsManagerUpdate - the draw path needs the cSC4DrawContext to IParticlesDrawContext adapter, the decal and the three unrecovered particle-family classes; only the successful return is kept
+0x1005dfb64 EffectsManagerDrawScreenFlashes - the elapsed-time bookkeeping is ported, but the colour / intensity curve lookup and the renderer quad need the draw context's driver
+0x1005ddd1c EffectsManagerDoAnimationTick - the tick accumulation is ported, but the view-cursor ray and the per-effect Update need the unrecovered view manager and the particles draw-context seam
+0x1005e1850 EffectsManagerUpdateVisualEffect - the description retarget (name or group / type key) and the parameter re-application are ported, but the component merge needs CreateComponentFromDescription and the unrecovered effect classes
+0x1005e23c6 EffectsManagerCreateComponentFromDescription - needs the unrecovered model-based / geometry-sourced / dynamic / decal effect classes and the component description tables
+0x1005de30a EffectsManagerDoRenderPropertiesChanged - needs the render-properties object graph, the lighting manager and the atmospheric / water effect lookup
+0x1005de68c EffectsManagerDoOccupantInserted - needs the effect maps and the occupant box / flags plus the free IsStaticBuilding helper at 0x1005e3337
+0x1005de762 EffectsManagerDoOccupantRemoved - the same neighbours as DoOccupantInserted plus the occupant-manager box query at vslot 0x140
+
+SKIPPED:
+0x1005dc340 EffectsManagerLoadAllEffects - loads through the resource manager, PluginDirectory / DataDirectory and the framework and then calls the unrecovered effects parser; the manager reaches it through IEffectsManagerHost in the port
+0x1005e324a EffectsManagerParseEffectsFiles - posts the parse request to the 3D view and the message server, both unrecovered interfaces
+0x1005de9c6 EffectsManagerDoEffectCheat - 2633 bytes of debug cheat console driving the renderer, GZCOM, the effect maps and the cheat-effect pool
+0x1005dcb24 EffectsManagerCreateEffectCommand - the game-data-registry create_effect command needs cIGZCommandParameterSet, cRZVariant and the framework registry
+0x1005e279c EffectsManagerNewModelBasedParticlesEffect - class cSC4ModelBasedParticlesEffect is unrecovered
+0x1005e2908 EffectsManagerNewGeometrySourcedParticlesEffect - class cSC4GeometrySourcedParticlesEffect is unrecovered
+0x1005e2c12 EffectsManagerNewDynamicParticleEffect - class cSC4DynamicParticleEffect is unrecovered
+0x1005e2d80 EffectsManagerNewDecalEffect - class cSC4DecalEffect is unrecovered
+0x1005db984 EffectsManagerDestructThunkEffectMaps - compiler-emitted multiple-inheritance thunk (this-0x18); the port's single-vtable layout has no adjusted sub-object
+0x1005db992 EffectsManagerDestructThunkSecondary - compiler-emitted multiple-inheritance thunk (this-0x20); no adjusted sub-object in the port
+0x1005db9a0 EffectsManagerDestructThunkCollection - compiler-emitted multiple-inheritance thunk (this-0xd0); no adjusted sub-object in the port
+0x1005db9e0 EffectsManagerDestructAndDeleteThunkEffectMaps - compiler-emitted deleting thunk (this-0x18); no adjusted sub-object in the port
+0x1005db9ee EffectsManagerDestructAndDeleteThunkSecondary - compiler-emitted deleting thunk (this-0x20); no adjusted sub-object in the port
+0x1005db9fc EffectsManagerDestructAndDeleteThunkCollection - compiler-emitted deleting thunk (this-0xd0); no adjusted sub-object in the port
+0x1005dd684 EffectsManagerQueryInterfaceThunk1 - compiler-emitted vtable-adjustor thunk (this-8); no adjusted sub-object in the port
+0x1005dd692 EffectsManagerQueryInterfaceThunk2 - compiler-emitted vtable-adjustor thunk (this-0x10); no adjusted sub-object in the port
+0x1005dd6a0 EffectsManagerQueryInterfaceThunk3 - compiler-emitted vtable-adjustor thunk (this-0x18); no adjusted sub-object in the port
+0x1005dd6ae EffectsManagerQueryInterfaceThunk4 - compiler-emitted vtable-adjustor thunk (this-0x20); no adjusted sub-object in the port
+0x1005dd6bc EffectsManagerQueryInterfaceThunkCollection - compiler-emitted vtable-adjustor thunk (this-0xd0); no adjusted sub-object in the port
+0x1005dd6e2 EffectsManagerAddRefThunk1 - compiler-emitted vtable-adjustor thunk (this-8); no adjusted sub-object in the port
+0x1005dd6f6 EffectsManagerAddRefThunk2 - compiler-emitted vtable-adjustor thunk (this-0x10); no adjusted sub-object in the port
+0x1005dd70a EffectsManagerAddRefThunk3 - compiler-emitted vtable-adjustor thunk (this-0x18); no adjusted sub-object in the port
+0x1005dd71e EffectsManagerAddRefThunk4 - compiler-emitted vtable-adjustor thunk (this-0x20); no adjusted sub-object in the port
+0x1005dd732 EffectsManagerAddRefThunkCollection - compiler-emitted vtable-adjustor thunk (this-0xd0); no adjusted sub-object in the port
+0x1005dd752 EffectsManagerReleaseThunk1 - compiler-emitted vtable-adjustor thunk (this-8); no adjusted sub-object in the port
+0x1005dd75e EffectsManagerReleaseThunk2 - compiler-emitted vtable-adjustor thunk (this-0x10); no adjusted sub-object in the port
+0x1005dd76a EffectsManagerReleaseThunk3 - compiler-emitted vtable-adjustor thunk (this-0x18); no adjusted sub-object in the port
+0x1005dd776 EffectsManagerReleaseThunk4 - compiler-emitted vtable-adjustor thunk (this-0x20); no adjusted sub-object in the port
+0x1005dd782 EffectsManagerReleaseThunkCollection - compiler-emitted vtable-adjustor thunk (this-0xd0); no adjusted sub-object in the port
+0x1005df47c EffectsManagerDoMessageThunk - compiler-emitted vtable-adjustor thunk (this-0x10); no adjusted sub-object in the port
+0x1005e06ac EffectsManagerUpdateThunk - compiler-emitted vtable-adjustor thunk (this-8); no adjusted sub-object in the port
+0x1005e06c6 EffectsManagerPickThunk - compiler-emitted vtable-adjustor thunk (this-8); no adjusted sub-object in the port
+0x1005e0dd8 EffectsManagerBeginCollectionThunk - compiler-emitted vtable-adjustor thunk (this-0xd0); no adjusted sub-object in the port
+0x1005e1306 EffectsManagerEndCollectionThunk - compiler-emitted vtable-adjustor thunk (this-0xd0); no adjusted sub-object in the port

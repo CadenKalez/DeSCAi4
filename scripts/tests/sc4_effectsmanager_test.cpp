@@ -53,6 +53,24 @@ public:
     bool deleted = false;
 };
 
+class FakeParticlesTerrain final : public IParticlesTerrain {
+public:
+    void AddRef() override { ++refs; }
+    void Release() override {
+        if (refs > 0) --refs;
+        if (refs == 0) deleted = true;
+    }
+    float CellSize() const override { return 16.0f; }
+    int CellCountX() const override { return 8; }
+    int CellCountZ() const override { return 6; }
+    float TerrainHeight(float, float) override { return 0.0f; }
+    float WaterHeight(float, float) override { return 0.0f; }
+    void TerrainNormal(float, float, cS3DVector3& out) override { out = cS3DVector3{}; }
+    float WaterLevel() const override { return 0.0f; }
+    int refs = 0;
+    bool deleted = false;
+};
+
 class FakeHost final : public IEffectsManagerHost {
 public:
     void SendProgressMessage(int stage, const char* text) override {
@@ -455,7 +473,8 @@ void TestPoolAndRecycle() {
     CHECK(held->CheckEffectFlag(1));
     manager.DeactivateUnusedVisualEffects();
     CHECK(manager.ActiveVisualEffectCount() == 1);
-    CHECK(manager.ActiveVisualEffectSlots().size() == 2);
+    // The unstarted "smoke" instance was recycled during the same pass, so only "hold" is left.
+    CHECK(manager.ActiveVisualEffectSlots().size() == 1);
     held->Release();
 
     // KillOrphanedEffects stops everything only the manager holds and leaves the killing guard set, so a newly
@@ -464,7 +483,7 @@ void TestPoolAndRecycle() {
     CHECK(!manager.KillGuardCleared());
     cSC4VisualEffect* blocked = nullptr;
     CHECK(manager.CreateVisualEffect("hold", &blocked));
-    CHECK(manager.ActiveVisualEffectSlots().size() == 2);
+    CHECK(manager.ActiveVisualEffectSlots().size() == 1);   // the killing guard blocks the activation
     blocked->Release();
     manager.DeactivateUnusedVisualEffects();
     CHECK(manager.KillGuardCleared());
@@ -609,12 +628,12 @@ void TestSnowline() {
     CHECK(host.snowlineSets == 2);
     CHECK(host.lastSnowlineAltitude == 600.0f);
 
-    // The southern hemisphere is mirrored by half a year.
+    // The southern hemisphere is mirrored by half a year: day 183 is 600 in the north and 300 here.
     host.hemisphere = 2;
-    host.dayOfYear = 1;                    // would be 300 in the north, 600 here
+    host.dayOfYear = 183;
     manager.UpdateSnowline();
     CHECK(host.snowlineSets == 3);
-    CHECK(host.lastSnowlineAltitude == 600.0f);
+    CHECK(host.lastSnowlineAltitude == 300.0f);
 
     manager.SetSnowlineState(false);
     CHECK(host.snowlineRemoves == 1);
@@ -780,9 +799,22 @@ void TestInitShutdownAndTick() {
 void TestParticlePool() {
     FakeHost host;
     SetEffectsManagerHost(&host);
+    FakeParticlesTerrain terrain;
+    SetParticlesTerrain(&terrain);          // cSC4ParticlesEffect::Init dereferences the terrain host
     cSC4EffectsManager manager;
     manager.SetHost(&host);
     CHECK(manager.Init());
+
+    // DeactivateUnusedVisualEffects only sweeps the particle families when it recycled a visual effect in the same
+    // pass (the original gates the whole block on that "changed" flag), so give it one finished visual effect.
+    manager.BeginCollection();
+    cSC4EffectDescription smoke;
+    smoke.version = 1;
+    manager.Collection().AddEffectDescription("smoke", smoke);
+    manager.EndCollection();
+    cSC4VisualEffect* visual = nullptr;
+    CHECK(manager.CreateVisualEffect("smoke", &visual));
+    visual->Release();                     // not started, only the pool holds it
 
     cSC4ParticlesEffect* effect = manager.NewParticlesEffect();
     CHECK(effect != nullptr);
@@ -793,6 +825,7 @@ void TestParticlePool() {
 
     // The finished particle system (refcount 1, not started) is retired by the visual-effect deactivation.
     manager.DeactivateUnusedVisualEffects();
+    CHECK(manager.FreeVisualEffectSlots().size() == 1);
     CHECK(manager.NewParticlesEffectSlots().empty());
     CHECK(manager.FreeParticlesEffectSlots().size() == 1);
     const cSC4ParticlesEffect* pooled = manager.ParticleEffects()[0].get();
@@ -804,6 +837,8 @@ void TestParticlePool() {
     // Shutdown shuts the particle systems down and clears the pool (the host has no Init state, so call it directly).
     manager.Shutdown();
     CHECK(manager.ParticleEffects().empty());
+    SetParticlesTerrain(nullptr);
+    CHECK(terrain.refs == 0);               // Shutdown released the reference Init took
 }
 
 void TestDuplicateBindings() {
