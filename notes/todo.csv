@@ -1,6 +1,6 @@
 id,class,task,blocked_by,status,where
 CLASS-(anonymous namespace),(anonymous namespace),"recover 288 remaining function(s) (288 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-(free),(free),"recover 403 remaining function(s) (294 not started, 109 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-(free),(free),"recover 402 remaining function(s) (293 not started, 109 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-(free),(free),finish 186 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-AspyrDXTTools,AspyrDXTTools,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-CQTPlayer,CQTPlayer,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -716,7 +716,7 @@ CLASS-cSC4WeatherSimulator,cSC4WeatherSimulator,"recover 42 remaining function(s
 CLASS-cSC4WinAdviceList,cSC4WinAdviceList,"recover 19 remaining function(s) (19 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinAnimationRecorder,cSC4WinAnimationRecorder,"recover 28 remaining function(s) (28 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinCalloutBox,cSC4WinCalloutBox,"recover 29 remaining function(s) (29 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4WinCatalogView,cSC4WinCatalogView,"recover 38 remaining function(s) (38 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4WinCatalogView,cSC4WinCatalogView,"recover 38 remaining function(s) (38 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinGameDelay,cSC4WinGameDelay,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinGenTransparent,cSC4WinGenTransparent,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinGridPopupStringListMenu,cSC4WinGridPopupStringListMenu,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -724,7 +724,8 @@ CLASS-cSC4WinIMECandidateList,cSC4WinIMECandidateList,"recover 5 remaining funct
 CLASS-cSC4WinIntroVideoScreen,cSC4WinIntroVideoScreen,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinLoadHeightField,cSC4WinLoadHeightField,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinLotConfigurationChooser,cSC4WinLotConfigurationChooser,"recover 20 remaining function(s) (20 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4WinLotConfigurationEditor,cSC4WinLotConfigurationEditor,"recover 94 remaining function(s) (94 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4WinLotConfigurationEditor,cSC4WinLotConfigurationEditor,"recover 15 remaining function(s) (0 not started, 15 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4WinLotConfigurationEditor,cSC4WinLotConfigurationEditor,finish 10 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4WinMapView,cSC4WinMapView,"recover 37 remaining function(s) (37 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinMiniMap,cSC4WinMiniMap,"recover 35 remaining function(s) (35 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinNetworkLotChooser,cSC4WinNetworkLotChooser,"recover 17 remaining function(s) (17 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv

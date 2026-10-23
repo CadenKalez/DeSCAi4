@@ -72,6 +72,8 @@ public:
 ILotConfigurationHost* LotConfigurationHost();
 void SetLotConfigurationHost(ILotConfigurationHost* host);
 
+class cSC4WinLotConfigurationEditor;
+
 class cSC4LotConfiguration {
 public:
     cSC4LotConfiguration();
@@ -134,6 +136,10 @@ public:
                                        float minX, float minZ);
 
 private:
+    // The lot editor (cSC4WinLotConfigurationEditor) edits the size, name and slopes in place, as the
+    // original does through these same fields.
+    friend class cSC4WinLotConfigurationEditor;
+
     static bool Test(const std::vector<bool>& bits, int index) {
         return index >= 0 && static_cast<std::size_t>(index) < bits.size() && bits[index];
     }
