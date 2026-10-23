@@ -24,7 +24,8 @@ LEDGER-RZ,RZ,finish 2 partial/pending function(s) (see notes/ledger.csv status r
 CLASS-RZFileTimeSort,RZFileTimeSort,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-SC43DGridElement,SC43DGridElement,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-SC4CellRegion<int>,SC4CellRegion<int>,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-SC4DrawContext,SC4DrawContext,"recover 59 remaining function(s) (59 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-SC4DrawContext,SC4DrawContext,"recover 59 remaining function(s) (59 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-SC4DrawContext,SC4DrawContext,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-SC4MarkedCellView,SC4MarkedCellView,"recover 17 remaining function(s) (17 not started, 0 partial/pending); bases still unfinished: cSC4ViewObject3D",CLASS-cSC4ViewObject3D,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-SC4PathInfoView,SC4PathInfoView,"recover 7 remaining function(s) (7 not started, 0 partial/pending); bases still unfinished: cSC4ViewObject3D",CLASS-cSC4ViewObject3D,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-SC4Rect<float>,SC4Rect<float>,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
@@ -204,7 +205,7 @@ CLASS-cGZWinTestService,cGZWinTestService,"recover 15 remaining function(s) (15 
 CLASS-cGZWinTextTicker,cGZWinTextTicker,"recover 30 remaining function(s) (30 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinToolTip,cGZWinToolTip,"recover 18 remaining function(s) (18 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinToolTipMgr,cGZWinToolTipMgr,"recover 16 remaining function(s) (16 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cGZWinTreeView,cGZWinTreeView,"recover 94 remaining function(s) (94 not started, 0 partial/pending); bases still unfinished: cIGZWinTreeView",CLASS-cIGZWinTreeView,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cGZWinTreeView,cGZWinTreeView,"recover 1 remaining function(s) (1 not started, 0 partial/pending); bases still unfinished: cIGZWinTreeView",CLASS-cIGZWinTreeView,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinTreeViewDrag,cGZWinTreeViewDrag,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGarbageHeap,cGarbageHeap,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cHTMLDocument,cHTMLDocument,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
@@ -321,7 +322,7 @@ CLASS-cS3DIndexArray,cS3DIndexArray,"recover 1 remaining function(s) (1 not star
 CLASS-cS3DMaterial,cS3DMaterial,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DMaterialManager,cS3DMaterialManager,"recover 10 remaining function(s) (10 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 S3DMAT-1,cS3DMaterialManager,Hook the manager up to the COM director (service id / priority) and recover cS3DMaterialInstance + variants (stubs in the shipped build); name the cS3DResMaterial 'other' bytes (wrap/filter) and the cS3DMaterial layer fields,,open,src/s3d/MaterialManager.h
-CLASS-cS3DMatrix4,cS3DMatrix4,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cS3DMatrix4,cS3DMatrix4,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DMesh,cS3DMesh,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DMeshBuilder,cS3DMeshBuilder,"recover 10 remaining function(s) (10 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cS3DModelInstanceAnimated,cS3DModelInstanceAnimated,finish 14 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv

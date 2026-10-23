@@ -320,6 +320,8 @@ declare -a TESTS=(
  "gz_wingrid:$T/gz_wingrid_test.cpp $S/gz/WinGrid.cpp $S/gz/Win.cpp $S/gz/WinText.cpp $S/gz/WinCtrlFactory.cpp $S/gz/RZDraw.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp -I$T"
  "rz_radio:$T/rz_radio_test.cpp $S/rz/Radio.cpp $S/rz/cRZString.cpp $S/rz/cRZDirectory.cpp $S/gz/FileFind.cpp $S/rz/cRZFile.cpp $S/rz/cRZSysServPtr.cpp $S/gz/GZCOMDirector.cpp $S/rz/cRZCOMDllDirector.cpp $S/rz/LanguageManager.cpp $S/gz/FileSystem.cpp $S/audio/GZSndEventStd.cpp $S/rz/cRZMessage2Standard.cpp $S/rz/RZStringUtils.cpp $S/rz/StringConversion.cpp $S/rz/TextEncoding.cpp $S/rz/cRZIniFile.cpp $S/rz/CharLength.cpp $S/rz/RZConvert.cpp"
  sc4_viewutilities:$T/sc4_viewutilities_test.cpp $S/sc4/ViewUtilities.cpp $S/sc4/CameraControl.cpp $S/s3d/Camera.cpp $S/s3d/S3DMath.cpp $S/s3d/TriangleIterator.cpp $S/sc4/GeometryUtilities.cpp $S/rz/cRZRandom.cpp $S/gz/StreamOps.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp
+ "gz_wintreeview:$T/gz_wintreeview_test.cpp $S/gz/WinTreeView.cpp $S/gz/Win.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp $S/gz/Graph.cpp $S/gz/WinCtrlFactory.cpp $S/gz/WinScrollbar.cpp $S/gz/WinSlider.cpp $S/gz/RZDraw.cpp $S/gz/WinText.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/cRZTimer.cpp $S/rz/cRZKeyboard.cpp $S/platform/MacTools.cpp $S/rz/cRZCallbackTimer.cpp -I$T"
+ "sc4_drawcontext:$T/sc4_drawcontext_test.cpp $S/sc4/DrawContext.cpp $S/sc4/PackedRenderState.cpp $S/render/gd/GDriverBase.cpp $S/s3d/Camera.cpp $S/s3d/S3DMath.cpp $S/sc4/RenderProperties.cpp $S/rz/cRZRandom.cpp"
 )
 fail=0
 for entry in "${TESTS[@]}"; do
