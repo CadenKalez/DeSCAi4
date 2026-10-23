@@ -107,6 +107,15 @@ int main() {
         CHECK(S(localhost.GetAbsolutePath()) == "localhost/x");
     }
 
+    // --- quirk: an empty FTP path is assigned to the working string ("/") and then cleared, so
+    // m_absolutePath stays empty (0x1002415bc..0x1002415f4 + 0x10024165c) ----------------------
+    {
+        cRZURL url(cRZString("ftp://host"));
+        CHECK(S(url.GetAbsolutePath()).empty());
+        CHECK(url.MakeURLStringFromComponents());
+        CHECK(S(url.GetFullURL()) == "ftp://host");
+    }
+
     // --- quirk: userinfo URLs lose the "//" while consuming the '@' ------------------------------
     {
         cRZURL url(cRZString("ftp://user:pass@ftp.example.com/pub/file"));

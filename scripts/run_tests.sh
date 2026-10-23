@@ -341,6 +341,7 @@ declare -a TESTS=(
  "gz_graphicsystemw32:$T/gz_graphicsystemw32_test.cpp $S/gz/GraphicSystemW32.cpp $S/gz/ScreenBuffer.cpp $S/gz/Buffer.cpp $S/render/MacDisplay.cpp $S/render/MacPreferences.cpp $S/render/gd/GDriverBase.cpp $S/rz/cRZString.cpp"
  "sc4_resourcecatalogview:$T/sc4_resourcecatalogview_test.cpp $S/sc4/ResourceCatalogView.cpp $S/sc4/SLBuffer.cpp $S/gz/Win.cpp $S/rz/cRZString.cpp $S/rz/cRZIniFile.cpp $S/rz/cRZFile.cpp $S/rz/cRZPath.cpp $S/rz/RZStringUtils.cpp $S/rz/RZConvert.cpp $S/rz/cRZVariant.cpp -I$T"
  "sc4_winregionview:$T/sc4_winregionview_test.cpp $S/sc4/WinRegionView.cpp $S/gz/Win.cpp $S/gz/Buffer.cpp $S/gz/RZDraw.cpp $S/gz/DrawContext.cpp $S/gz/GZCOMDirector.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/CharLength.cpp $S/rz/RZConvert.cpp $S/rz/cRZUnknownList.cpp $S/rz/PathUtils.cpp $S/rz/TextEncoding.cpp $S/rz/cRZCOMDllDirector.cpp $S/sc4/SLBuffer.cpp $S/sc4/SCProperty.cpp $S/sc4/SCPropertyHelp.cpp $S/sc4/SC4Utilities.cpp $S/sc4/WinAuraAlert.cpp $S/sc4/SmallWinProcs.cpp"
+ "rz_url:$T/rz_url_test.cpp $S/rz/URL.cpp $S/rz/cRZString.cpp $S/rz/RZStringUtils.cpp $S/rz/RZConvert.cpp"
 )
 fail=0
 for entry in "${TESTS[@]}"; do

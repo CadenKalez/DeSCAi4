@@ -1,0 +1,44 @@
+SOURCE src/rz/URL.cpp|h
+EVIDENCE test scripts/tests/rz_url_test.cpp - layout offsets, every getter with lazy re-parse, SetFullURL/operator= caching, scheme detection (generic, www/ftp/news/nntp/irc guessing, explicit scheme), HTTP/FILE/FTP/mailto/news/relative parsing, server/port (including the 16-byte port buffer), parameters/query/fragment splitting, MakeURLStringFromComponents, both ChangeURL overloads (relative, network-path, fragment-only, absolute, empty reference/base), CanonicalizePath, percent decoding, and the kept quirks: https typed as http, mailto type 0, userinfo "//user" + double-username builder, dead file-localhost check, empty FTP path, GetPort without lazy parse
+0x10023e7e0 cRZURL_Construct
+0x10023e90c cRZURL_ConstructComplete
+0x10023e916 cRZURL_ConstructFromString
+0x10023ea66 cRZURL_ConstructFromStringComplete
+0x10023ea7a cRZURL_Assign
+0x10023eb58 cRZURL_GetType
+0x10023ebe4 cRZURL_GetFullURL
+0x10023ebee cRZURL_GetScheme
+0x10023ec7e cRZURL_GetUsername
+0x10023ed0e cRZURL_GetPassword
+0x10023ed9e cRZURL_GetServer
+0x10023ee32 cRZURL_GetAbsolutePath
+0x10023eec6 cRZURL_GetParameters
+0x10023ef5a cRZURL_GetQuery
+0x10023efee cRZURL_GetFragment
+0x10023f082 cRZURL_GetPort
+0x10023f098 cRZURL_SetFullURL
+0x10023f0b6 cRZURL_ChangeURL
+0x10023f754 cRZURL_ParseURL
+0x10023f914 cRZURL_CanonicalizePath
+0x10023fcbe cRZURL_MakeURLString
+0x10023ff88 cRZURL_ChangeURLFromURL
+0x10023ffbc cRZURL_ParseScheme
+0x100240a58 cRZURL_ParseUsernamePassword
+0x100240c1a cRZURL_ParseServerPort
+0x100240ff6 cRZURL_ParseHTTP
+0x100241424 cRZURL_ParseFile
+0x100241508 cRZURL_ParseFTP
+0x100241698 cRZURL_ParseMailTo
+0x100241748 cRZURL_ParseNews
+0x1002417fa cRZURL_ConvertPathFromURL
+0x100241890 cRZURL_ConvertPathFromEncoded
+0x100569cbc cRZURL_Destruct
+PARTIAL:
+SKIPPED:
+# none: all 33 symbols are hand-written. Two notes for the lead:
+#  * 0x100241698 ParseURLMailTo is unreachable in this build (ParseScheme never yields type 6 because the
+#    "mailto:" prefix returns before the type table); it is ported 1:1 and the test asserts the observed
+#    dead-branch behaviour through ParseScheme/GetURLType. Not partial: nothing is missing.
+#  * 0x100240c1a ParseServerAndPort keeps the original's 16-byte port buffer but clamps it to 15 digits;
+#    a longer digit run overflows that buffer on the stack in the original (undefined behaviour), so the
+#    clamp is a documented deviation, not a behaviour that can be reproduced.
