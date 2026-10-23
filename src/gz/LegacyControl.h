@@ -78,8 +78,8 @@ using tScriptPropertyArray = std::vector<tScriptProperty>;
 // AddTranslation(cIGZString const&, unsigned int) at vslot 0x20.
 class IVocabulary : public cIGZUnknown {
 public:
-    virtual bool AddTranslation(const cIGZString& name, std::uint32_t value) = 0;                  // vslot 0x20
     virtual bool AddTranslation(const cIGZString& name, cIGZVariant* value) = 0;                   // vslot 0x18
+    virtual bool AddTranslation(const cIGZString& name, std::uint32_t value) = 0;                  // vslot 0x20
 };
 
 // ---------------------------------------------------------------------------------------------------------
