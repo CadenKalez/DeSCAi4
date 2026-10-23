@@ -1,7 +1,7 @@
 id,class,task,blocked_by,status,where
 CLASS-(anonymous namespace),(anonymous namespace),"recover 288 remaining function(s) (288 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-(free),(free),"recover 396 remaining function(s) (287 not started, 109 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-(free),(free),finish 188 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-(free),(free),"recover 393 remaining function(s) (285 not started, 108 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-(free),(free),finish 187 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-AspyrDXTTools,AspyrDXTTools,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-CQTPlayer,CQTPlayer,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-CacheData,CacheData,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
@@ -116,7 +116,7 @@ LEGACY-1,cGZLegacyControl,Recover cRZStringArray (variant vtbl 0x100b0ecb8) so I
 LEDGER-cGZLua5,cGZLua5,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZLua5CommandGenerator,cGZLua5CommandGenerator,"recover 15 remaining function(s) (15 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZLua5DebugInfo,cGZLua5DebugInfo,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cGZLuaScriptServer,cGZLuaScriptServer,"recover 43 remaining function(s) (43 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cGZLuaScriptServer,cGZLuaScriptServer,"recover 43 remaining function(s) (43 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZMiscCommandSystemSupport,cGZMiscCommandSystemSupport,"recover 9 remaining function(s) (9 not started, 0 partial/pending); bases still unfinished: cGZCommandSystemSupport",CLASS-cGZCommandSystemSupport,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZPersistBufferResource,cGZPersistBufferResource,"recover 28 remaining function(s) (28 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZPersistBufferResourceFactory,cGZPersistBufferResourceFactory,"recover 16 remaining function(s) (16 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -353,8 +353,8 @@ ADVICE-7,cSC4Advice,"Verify cSC4Advice flag names (0x8 no links, 0x200 show text
 CLASS-cSC4Advice,cSC4Advice,"recover 39 remaining function(s) (39 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 ADVICE-11,cSC4AdviceNeghborDeal,Constructor is inlined into the class factory; default deal type 0 assumed,,open,src/sc4/AdviceNeighborDeal.h
 CLASS-cSC4AdviceNeghborDeal,cSC4AdviceNeghborDeal,"recover 11 remaining function(s) (11 not started, 0 partial/pending); bases still unfinished: cSC4Advice",CLASS-cSC4Advice,done,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4Advisor,cSC4Advisor,"recover 35 remaining function(s) (35 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4AdvisorBase,cSC4AdvisorBase,"recover 11 remaining function(s) (11 not started, 0 partial/pending); bases still unfinished: cSC4Advisor",CLASS-cSC4Advisor,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4Advisor,cSC4Advisor,"recover 35 remaining function(s) (35 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,done,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4AdvisorBase,cSC4AdvisorBase,"recover 11 remaining function(s) (11 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4AdvisorCityPlanning,cSC4AdvisorCityPlanning,"recover 13 remaining function(s) (13 not started, 0 partial/pending); bases still unfinished: cSC4AdvisorBase",CLASS-cSC4AdvisorBase,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4AdvisorCitySituations,cSC4AdvisorCitySituations,"recover 8 remaining function(s) (8 not started, 0 partial/pending); bases still unfinished: cSC4AdvisorBase",CLASS-cSC4AdvisorBase,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4AdvisorFinance,cSC4AdvisorFinance,"recover 7 remaining function(s) (7 not started, 0 partial/pending); bases still unfinished: cSC4AdvisorBase",CLASS-cSC4AdvisorBase,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -412,7 +412,7 @@ CLASS-cSC4Blimp,cSC4Blimp,"recover 7 remaining function(s) (7 not started, 0 par
 CLASS-cSC4BudgetUIWinProc,cSC4BudgetUIWinProc,"recover 32 remaining function(s) (32 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2, cIGZWinProc","CLASS-cIGZMessageTarget2,CLASS-cIGZWinProc",open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4BuildingDevelopmentSimulator,cSC4BuildingDevelopmentSimulator,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4Bus,cSC4Bus,"recover 10 remaining function(s) (10 not started, 0 partial/pending); bases still unfinished: cSC4Vehicle",CLASS-cSC4Vehicle,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4CameraControl,cSC4CameraControl,"recover 43 remaining function(s) (43 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4CameraControl,cSC4CameraControl,"recover 43 remaining function(s) (43 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4CameraParams,cSC4CameraParams,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4CarjackedVehicle,cSC4CarjackedVehicle,"recover 7 remaining function(s) (7 not started, 0 partial/pending); bases still unfinished: cSC4Vehicle",CLASS-cSC4Vehicle,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4CellTextureModel,cSC4CellTextureModel,"recover 19 remaining function(s) (19 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -505,7 +505,7 @@ CLASS-cSC4ModelBasedParticlesEffect,cSC4ModelBasedParticlesEffect,"recover 20 re
 CLASS-cSC4ModelMaker,cSC4ModelMaker,"recover 63 remaining function(s) (63 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4ModelMakerUtility,cSC4ModelMakerUtility,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4ModelRegEffects,cSC4ModelRegEffects,"recover 18 remaining function(s) (18 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4MySim,cSC4MySim,"recover 125 remaining function(s) (125 not started, 0 partial/pending); bases still unfinished: cSC4Advisor",CLASS-cSC4Advisor,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4MySim,cSC4MySim,"recover 125 remaining function(s) (125 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 ADVICE-9,cSC4MySimAdvice,"Hook IMySimAdviceHost::NotifySimOfLink to SL::spCity vslot 0x288 -> vslot 0x38 -> sim vslot 0x2d8; original crashes on a missing sim, we skip",,open,src/sc4/MySimAdvice.h
 CLASS-cSC4MySimAdvice,cSC4MySimAdvice,"recover 4 remaining function(s) (4 not started, 0 partial/pending); bases still unfinished: cSC4Advice",CLASS-cSC4Advice,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4MySimAgentSimulator,cSC4MySimAgentSimulator,"recover 30 remaining function(s) (30 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
