@@ -1,0 +1,41 @@
+SOURCE src/sc4/Region.cpp|h
+EVIDENCE test scripts/tests/sc4_region_test.cpp - fake IRegionHost (app/nation directories, the path-based save-file helpers, the resource manager, the tutorial registry and the city virtuals the partial cISC4RegionalCity interface does not declare) plus a fake ISLBufferHost over a real cGZBuffer drive the cell map and its ((x&0xf)<<4)|(z&0xf) hash, GetAllCities dedupe, config-bitmap city locations (1x1/2x2/4x4 pure colours, non-power-of-two colours rejected, left/top ignored, degenerate rectangle), the region.ini round trip (name, terrain type, water min/max clamps), city-file load with the overflow city moved to the download directory, ReloadCity/DeleteCity, CreateRegion directory sanitising and " (n)" suffixes with the numbered config-bitmap extraction, ResetTutorialCity's inverted result, MoveCity's serial decrement/rename/rewrite path and the Delete/RemoveCity instancing quirks
+0x1002a246c cSC4RegionConstruct
+0x1002a251a cSC4RegionDestruct
+0x1002a25cc cSC4RegionDestructComplete
+0x1002a25d6 cSC4RegionDestructAndDelete
+0x1002a2604 RegionQueryInterface
+0x1002a2626 RegionAddRef
+0x1002a2634 RegionRelease
+0x1002a2678 RegionInit
+0x1002a26ce RegionLoadCityLocations
+0x1002a2982 RegionLoadCities
+0x1002a2c1c RegionMoveOverflowCitiesToDownloadDirectory
+0x1002a2e06 RegionShutdown
+0x1002a3672 RegionSetName
+0x1002a3680 RegionSetDirectoryName
+0x1002a368e RegionLoadConfig
+0x1002a3fd4 RegionLoadCitiesFromDirectory
+0x1002a428e RegionIsCitySpaceOccupied
+0x1002a4336 RegionDelete
+0x1002a461a RegionGetCity
+0x1002a464e RegionGetAllCities
+0x1002a4812 RegionInsertCity
+0x1002a4948 RegionRemoveCity
+0x1002a4a5c RegionReloadCity
+0x1002a4b6a RegionDeleteCity
+0x1002a4c28 RegionMoveCity
+0x1002a4ec8 RegionCreateRegion
+0x1002a5390 RegionCreateStarterRegion
+0x1002a53e4 RegionResetTutorialCity
+0x1002a557a RegionGetBoundingRect
+0x1002a5604 RegionGetCityLocations
+0x1002a5630 RegionParseCityLocations
+0x1002a588e RegionGetName
+0x1002a5898 RegionGetDirectoryName
+0x1002a58a2 RegionGetBaseTerrainType
+0x1002a58ac RegionSetBaseTerrainType
+0x1002a58b6 RegionGetBaseTerrainHeight
+0x1002a58ca RegionGetWaterPrefs
+PARTIAL:
+SKIPPED:

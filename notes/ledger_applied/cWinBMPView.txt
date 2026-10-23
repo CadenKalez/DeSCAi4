@@ -1,0 +1,63 @@
+SOURCE src/sc4/WinBMPView.cpp|h
+EVIDENCE test scripts/tests/sc4_winbmpview_test.cpp - a fake window manager with a settable cursor and an IWinBMPViewHost over a real cGZBuffer exercise CalculateAllMetrics (both alignments, the origin clamps, the zoom clamp, the image rectangle incl. the 12.5 to 12 truncation), SetZoom around the window centre, SetOrigin/Scroll (image size over 32 steps), CenterOnImagePixel/CenterOnWindowPixel/WindowPixelToImagePixel, the arrow and k/m key handling with the enable flags, the right-button capture and the throttled 0xfe342d2a drag message with its 8-pixel dead zone, painting through a real cGZBuffer (fill, 1 1 blit, stretched blit, the draw-area offset, no draw buffer), Init/Shutdown of the shared Gimex factory, a fake cGZGimexReader behind the real cGZGimexFactory 8-bit palette load path, the fit-to-view host seam, and the WriteBMPToFile extension plus remove-original quirk
+0x1003a2334 WinBMPViewSetMinMsPerScroll
+0x1003a2340 WinBMPViewGetBMP
+0x1003a2350 WinBMPViewGetImageWidth
+0x1003a236c WinBMPViewGetImageHeight
+0x1003a2388 WinBMPViewSetMinMsPerScrollThunk
+0x1003a23a0 WinBMPViewGetImageWidthThunk
+0x1003a23b8 WinBMPViewGetImageHeightThunk
+0x1003c8230 WinBMPViewConstruct
+0x1003c82d8 WinBMPViewDestruct
+0x1003c8354 WinBMPViewDestructWrapper
+0x1003c835e WinBMPViewDestructAndDelete
+0x1003c838c WinBMPViewInit
+0x1003c83e0 WinBMPViewCalculateAllMetrics
+0x1003c8678 WinBMPViewShutdown
+0x1003c86ac WinBMPViewGZPaint
+0x1003c884e WinBMPViewSetShouldFitImageInView
+0x1003c885c WinBMPViewEnableZooming
+0x1003c886a WinBMPViewEnableScrolling
+0x1003c8878 WinBMPViewSetArea
+0x1003c8894 WinBMPViewGZOnKeyDown
+0x1003c8960 WinBMPViewGZOnKeyUp
+0x1003c8968 WinBMPViewGZOnMouseDownL
+0x1003c8982 WinBMPViewGZOnMouseDownR
+0x1003c89d4 WinBMPViewGZOnMouseUpR
+0x1003c8a14 WinBMPViewGZOnMouseMove
+0x1003c8a1c WinBMPViewGZOnMouseWheel
+0x1003c8a24 WinBMPViewSetAlignment
+0x1003c8a5c WinBMPViewSetZoomRangeMinMax
+0x1003c8a8c WinBMPViewSetZoomRangeMinMaxThunk
+0x1003c8ab6 WinBMPViewSetZoom
+0x1003c8bcc WinBMPViewSetZoomThunk
+0x1003c8be0 WinBMPViewZoomIn
+0x1003c8bfa WinBMPViewZoomInThunk
+0x1003c8c1c WinBMPViewZoomOut
+0x1003c8c4e WinBMPViewZoomOutThunk
+0x1003c8c84 WinBMPViewSetOrigin
+0x1003c8cb4 WinBMPViewSetOriginThunk
+0x1003c8cea WinBMPViewCenterOnImagePixel
+0x1003c8e2a WinBMPViewCenterOnImagePixelThunk
+0x1003c8e3c WinBMPViewCenterOnWindowPixel
+0x1003c8e7e WinBMPViewCenterOnWindowPixelThunk
+0x1003c8eda WinBMPViewWindowPixelToImagePixel
+0x1003c8f76 WinBMPViewWindowPixelToImagePixelThunk
+0x1003c8f88 WinBMPViewScroll
+0x1003c9070 WinBMPViewScrollThunk
+0x1003c9084 WinBMPViewClearBMP
+0x1003c9098 WinBMPViewSetBMP
+0x1003c90cc WinBMPViewSetBMPThunk
+0x1003c910a WinBMPViewSetBMPThunk2
+0x1003c9ce4 WinBMPViewLoadBMPFromFile
+0x1003ca144 WinBMPViewFreeMemory
+0x1003ca158 WinBMPViewFreeMemoryThunk
+0x1003ca16e WinBMPViewDoMessage
+0x1003ca280 WinBMPViewQueryInterface
+0x1003ca2a4 WinBMPViewQueryInterfaceThunk
+0x1003ca2d0 WinBMPViewGetBMPThunk
+PARTIAL:
+0x1003c9148 needs the fit-to-view downscale (0x1003c938c..0x1003c9c60), a two-pass separable tent filter (16 subpixel phases, 1/16384 weights, 4/scale support) over a window-sized ARGB8888 graphic-system buffer; the port loads through the Gimex factory (verified) and delegates the downscale to IWinBMPViewHost::DownscaleImageToFit, which the test fakes
+0x1003c9d6c dispatches to the partial SetBMPFromFile above, so it inherits its status
+0x1003c9d7e the save half goes through cGZGimexFactory::SaveToFile with flags 100; the port has no Gimex writer so the save cannot succeed and only the extension handling, the caller-string write-back, the remove-original quirk and the target file creation are verified against a real file
+SKIPPED:

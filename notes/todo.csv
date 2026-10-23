@@ -618,7 +618,7 @@ CLASS-cSC4PylonOccupant,cSC4PylonOccupant,"recover 50 remaining function(s) (50 
 CLASS-cSC4QueryDialogWinProc,cSC4QueryDialogWinProc,"recover 11 remaining function(s) (11 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2, cIGZWinProc","CLASS-cIGZMessageTarget2,CLASS-cIGZWinProc",open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4QueryMessageFilter,cSC4QueryMessageFilter,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4RealisticOccupantFilter,cSC4RealisticOccupantFilter,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4Region,cSC4Region,"recover 36 remaining function(s) (36 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4Region,cSC4Region,"recover 36 remaining function(s) (36 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4RegionViewCity,cSC4RegionViewCity,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4RegionalCity,cSC4RegionalCity,"recover 89 remaining function(s) (89 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4RegionalTerrainView,cSC4RegionalTerrainView,"recover 4 remaining function(s) (4 not started, 0 partial/pending); bases still unfinished: cSC4ViewObject3D",CLASS-cSC4ViewObject3D,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -826,8 +826,9 @@ CLASS-cTrafficNetworkFilter_NetworkMap,cTrafficNetworkFilter_NetworkMap,"recover
 TRAFFICFILTER-1,cTrafficNetworkFilter_NetworkMap,"Make cSC4NetworkOccupant's QueryInterface(0xa821ef94) hand out an ITrafficNetworkOccupant adapter (HasAnyNetworkFlag slot 0x48, IsOfType slot 0xb0); the three filters cast the QI result to it",,open,src/sc4/TrafficFilters.h
 CLASS-cTrafficNetworkFilter_PlayerDrive,cTrafficNetworkFilter_PlayerDrive,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cTutorialString,cTutorialString,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cWinBMPView,cWinBMPView,"recover 41 remaining function(s) (41 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cWinBMPViewGVExtra,cWinBMPViewGVExtra,"recover 9 remaining function(s) (9 not started, 0 partial/pending); bases still unfinished: cWinBMPView",CLASS-cWinBMPView,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cWinBMPView,cWinBMPView,"recover 41 remaining function(s) (41 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cWinBMPView,cWinBMPView,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cWinBMPViewGVExtra,cWinBMPViewGVExtra,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cWinSC4App,cWinSC4App,"recover 24 remaining function(s) (24 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cZoneDeveloperLotFilter,cZoneDeveloperLotFilter,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-iTunesPlayer,iTunesPlayer,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
