@@ -7,13 +7,14 @@
 ![macOS port](https://img.shields.io/badge/macOS_port-80.9%25-blue) **80.9%** of the 26,597 functions the macOS port needs (21,526 recovered; 80% = 21,278)
 <!-- progress:end -->
 
-A **hand-written C++20 decompilation of SimCity 4 Deluxe Edition** (Aspyr macOS port, Steam, v1.2.1 build 185949),
-recovered one function at a time from the shipped x86_64 binary with Ghidra, and a native macOS host that runs it.
+A **hand-written C++20 decompilation of a 2003 city-building simulation game** (the retail macOS build, v1.2.1
+build 185949), recovered one function at a time from its shipped x86_64 binary with Ghidra, plus a native macOS
+host that runs it.
 
-> **No game files are included.** You need your own copy of SimCity 4 from Steam. The binary, the 1.2 GB of
-> `GameData` and the Ghidra databases are never committed — only original source, notes and scripts live here.
-> This project is not affiliated with or endorsed by Electronic Arts, Maxis or Aspyr. SimCity is a trademark
-> of Electronic Arts.
+> **No game files are included.** You need your own legitimately obtained copy of the game. Its executable, its
+> 1.2 GB of `GameData` and the Ghidra databases are never committed — only original source, notes and scripts live
+> here. The game, its assets and its marks belong to their respective owners; this project is not affiliated with
+> or endorsed by them.
 
 **What this is not:** a patch, a reimplementation "inspired by" the game, or an emulator. Every function under
 `src/sc4`, `src/gz`, `src/rz`, `src/s3d`, `src/lua`, `src/audio`, `src/html` is a transcription of the original
@@ -172,7 +173,7 @@ which is what makes a readable decompilation possible at all.
 
 1. `scripts/ghidra-gui.sh` launches Ghidra; open the project at `ghidra/projects/SC4.gpr`.
 2. Enable the **GhidraMCPPlugin** in the project window (*File → Configure → Utility*), then open
-   `Sim City 4 Deluxe Editionsub` in the CodeBrowser.
+   the game's executable in the CodeBrowser.
 3. `scripts/check-mcp.sh` should report a connection at `http://127.0.0.1:8089`. The extraction scripts and every
    agent assume that server is running; none of them starts or stops Ghidra.
 4. The project is imported, not auto-analysed: the symbols and vtables come from the binary itself, and each
@@ -217,8 +218,8 @@ is malformed, or the message has no `Co-Authored-By:` trailer naming the tool th
 - **Ghidra** and the **GhidraMCP** bridge do the analysis. The decompiler's output is a starting point, never the
   answer — most functions here were corrected against `otool` disassembly, and the ones that could not be stay
   marked partial rather than guessed.
-- **The host** uses FreeType for fonts and macOS ImageIO as a stand-in for EA's Gimex decoder, a third-party
-  library outside the decompiled code. Every stand-in is labelled at its use site.
-- **SimCity 4** is © Electronic Arts / Maxis; the macOS port is by Aspyr. This repository contains no game code,
-  assets or binaries derived from the retail package — only independent reimplementation, notes and tooling, for
-  study and preservation. Use it only with a copy of the game you own.
+- **The host** uses FreeType for fonts and macOS ImageIO as a stand-in for the publisher's image-decoder library,
+  a third-party component outside the decompiled code. Every stand-in is labelled at its use site.
+- **The game** and all of its assets remain the property of their respective rights holders. This repository
+  contains no game code, assets or binaries taken from the retail package — only independent reimplementation,
+  notes and tooling, for study and preservation. Use it only with a copy of the game you own.
