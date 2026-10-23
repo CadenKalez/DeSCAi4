@@ -33,6 +33,7 @@ struct FakeMgr final : cIGZWinMgr {
     cIGZWin* mainWin = nullptr;
     cIGZWin *focus = nullptr, *capture = nullptr, *mouseWin = nullptr;
     int mouseX = 0, mouseY = 0;
+    int mousePosQueries = 0;
     int cleanups = 0;
     FakeCursors cursors;
 
@@ -54,7 +55,7 @@ struct FakeMgr final : cIGZWinMgr {
     bool DestroyWindow(cIGZWin* w) override { return w && w->GetParentWin() ? w->GetParentWin()->ChildRemove(w) : true; }
     bool IsWindowValid(cIGZWin* w) override { return valid.count(w) != 0; }
     cIGZWin* GetWindowFromPoint(int, int) override { return nullptr; }
-    void GetMousePosition(int& x, int& y) override { x = mouseX; y = mouseY; }   // cIGZWinMgr vslot 0x108
+    void GetMousePosition(int& x, int& y) override { ++mousePosQueries; x = mouseX; y = mouseY; }   // cIGZWinMgr vslot 0x108
     void GetCursorPos(cIGZWin*, int& x, int& y) override { x = mouseX; y = mouseY; }
     void SetCurrentMouseWin(cIGZWin* w) override { mouseWin = w; }
     cIGZWin* GZGetCapture() override { return capture; }
@@ -145,9 +146,6 @@ struct FakeGfx final : IWinGraphics {
     bool GetPrivateBufferKeyColor(std::uint32_t& color) override { color = 0x00ff00ffu; return true; }
 };
 
-std::uint64_t Pack(int x, int y) {
-    return std::uint64_t(std::uint32_t(x)) | (std::uint64_t(std::uint32_t(y)) << 32);
-}
 std::uintptr_t Ptr(const void* p) { return reinterpret_cast<std::uintptr_t>(p); }
 
 // ---------------------------------------------------------------- fixture
@@ -406,8 +404,10 @@ void TestDropCancelMessages() {
     const cGZMessage drop = targetLog->received.back();
     CHECK(drop.type == gz::kDragMsgDrop);
     CHECK(drop.param1 == Ptr(data));
-    CHECK(drop.param2 == Pack(7, 8));
-    CHECK(drop.param3 == Ptr(image));
+    // The payload is (DragData*, x, y) - two zero-extended 32-bit coordinates, not a packed position and no image
+    // (0x1007b1b5e: PMOVZXDQ of DragData +0x38 into message +0x10; the receiver reads the image from the DragData).
+    CHECK(drop.param2 == 7);
+    CHECK(drop.param3 == 8);
     CHECK(sourceLog->received.size() == 1);
     CHECK(sourceLog->received.back().type == gz::kDragMsgDrop);
 
@@ -425,7 +425,7 @@ void TestDropCancelMessages() {
     CHECK(fx.mgr.capture == nullptr);
     CHECK(targetLog->received.size() == 2);
     CHECK(targetLog->received.back().type == gz::kDragMsgCancel);
-    CHECK(targetLog->received.back().param2 == Pack(9, 10));
+    CHECK(targetLog->received.back().param2 == 9 && targetLog->received.back().param3 == 10);
     CHECK(!m->IsDragging());
 
     // a pending (not yet started) drag is cancelled without a message
@@ -535,8 +535,7 @@ void TestDeferredStart() {
     CHECK(log->received.size() == 1);
     CHECK(log->received[0].type == gz::kDragMsgBegin);
     CHECK(log->received[0].param1 == Ptr(m->GetDragData()));
-    CHECK(log->received[0].param2 == Pack(0, 0));   // quirk: the begin message carries the position before tracking
-    CHECK(log->received[0].param3 == 0);            // ... and no image yet
+    CHECK(log->received[0].param2 == 0 && log->received[0].param3 == 0);   // quirk: the position before tracking
     CHECK(source->GetFlag(kWinPrivateBuffer));      // the begin path forces a private buffer on the source
     CHECK(!m->GetDragData()->image.get());
     CHECK(fx.mgr.focus == fx.Image());              // SetFocus on the drag image window
@@ -602,8 +601,8 @@ void TestTargetSearchAndImage() {
     CHECK(targetLog->received[0].type == gz::kDragMsgEnter);
     CHECK(targetLog->received[1].type == gz::kDragMsgOver);
     CHECK(targetLog->received[1].param1 == Ptr(data));
-    CHECK(targetLog->received[1].param2 == Pack(30, 40));
-    CHECK(targetLog->received[1].param3 == Ptr(image));
+    CHECK(targetLog->received[1].param2 == 30);
+    CHECK(targetLog->received[1].param3 == 40);
     CHECK(data->target.get() == target);
 
     // a third move elsewhere leaves the target
@@ -666,8 +665,12 @@ void TestTargetFlags() {
     CHECK(m->GetDragData()->target.get() == target);
     // ... and neither is an invisible or mouse-transparent one
     target->SetFlag(kWinVisible, false);
+    const int queriesBefore = fx.mgr.mousePosQueries;
     CHECK(m->GZOnMouseMove(312, 312, 0));
     CHECK(m->GetDragData()->target.get() == nullptr);
+    // Quirk kept (0x1007b0fd0): the callback reads the pointer position before it tests the window, so both children
+    // enumerated at the root (the dragged-from window and the invisible target) are queried.
+    CHECK(fx.mgr.mousePosQueries - queriesBefore == 2);
     target->SetFlag(kWinVisible, true);
     target->SetFlag(kWinIgnoreCursor, true);
     CHECK(m->GZOnMouseMove(313, 313, 0));

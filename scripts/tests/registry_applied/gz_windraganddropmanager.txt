@@ -1,0 +1,1 @@
+"gz_windraganddropmanager:$T/gz_windraganddropmanager_test.cpp $S/gz/WinDragAndDropManager.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"

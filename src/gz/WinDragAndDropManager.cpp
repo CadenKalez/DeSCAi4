@@ -10,21 +10,18 @@ namespace {
 // kWinFlag4. Its meaning is not recovered (no other recovered class reads it); kept as the original's literal.
 constexpr std::uint32_t kWinFlag40000 = 0x40000;
 
-// The position word of a drag message: two 32-bit ints (the original copies DragData +0x38/+0x3c as one qword).
-std::uint64_t PackPosition(int x, int y) {
-    return std::uint64_t(std::uint32_t(x)) | (std::uint64_t(std::uint32_t(y)) << 32);
-}
-
 int AbsInt(int value) { return value < 0 ? -value : value; }
 
-// Every drag notification the manager builds has the same payload: param1 = DragData*, param2 = its position and
-// param3 = its image (the buffer at +0x40; the original copies the 16 bytes at DragData +0x38 there).
+// Every drag notification the manager builds has the same payload: param1 = DragData*, param2 = the drag x and param3
+// = the drag y (no image: the receiver finds it in the DragData at +0x40). The original loads DragData +0x38 as one
+// qword and zero-extends both 32-bit halves into the two 64-bit parameters with PMOVZXDQ, i.e. param2 = (uint64)x and
+// param3 = (uint64)y (see 0x1007b1b5e in Drop, 0x1007b1a3c in CancelDrag, 0x1007b22cc/0x1007b243d in GZOnMouseMove).
 cGZMessage DragMessage(std::uint32_t type, const cIGZWinDragAndDropManager::DragData& data) {
     cGZMessage message;
     message.type = type;
     message.param1 = reinterpret_cast<std::uintptr_t>(&data);
-    message.param2 = PackPosition(data.x, data.y);
-    message.param3 = reinterpret_cast<std::uintptr_t>(data.image.get());
+    message.param2 = static_cast<std::uint32_t>(data.x);
+    message.param3 = static_cast<std::uint32_t>(data.y);
     return message;
 }
 
@@ -37,7 +34,8 @@ int BufferHeight(const IWinBuffer& buffer) { return buffer.GetBounds()->bottom -
 cGZWinDragAndDropManager::cGZWinDragAndDropManager(cIGZWinMgr* mgr)   // @ 0x1007b10d0
     : cRZSystemService(kGZSID_cGZWinDragAndDropManager, kGZWinDragAndDropServicePriority,
                        kGZWinDragAndDropServicePriority),
-      cGZWin(mgr) {}   // the original passes the global window manager to cGZWin; the recovered base takes it here
+      cGZWin(mgr) {}   // the original's cGZWin() takes no manager (it reaches the framework itself); the recovered base
+                       // takes one, so the manager's creator passes the window manager it was built with
 
 cGZWinDragAndDropManager::~cGZWinDragAndDropManager() {   // @ 0x1007b11d6 (body) / 0x1007b12aa (deleting)
     // Quirk kept: the DragData is only freed by Shutdown() in the original; make sure it ran before this point.
@@ -392,12 +390,14 @@ bool cGZWinDragAndDropManager::SetDestWin(cIGZWin* parent, std::uint32_t id, voi
     auto* self = static_cast<cGZWinDragAndDropManager*>(context);
     cIGZWin* window = static_cast<cIGZWin*>(child);
     DragData* data = self->GetDragData();
+    // Quirk kept: the original reads the pointer position before it looks at the window at all, so every enumerated
+    // window costs one GetMousePosition call - including the drag source and windows the flags then reject.
+    int mouseX = 0, mouseY = 0;
+    window->GetWindowManager()->GetMousePosition(mouseX, mouseY);   // cIGZWinMgr vslot 0x108
     if (window == static_cast<cGZWin*>(self) || window == data->source.get()) return true;
     if (!window->GetFlag(kWinVisible) || !window->GetFlag(kWinFlagCanFocus) ||
         window->GetFlag(kWinIgnoreCursor))
         return true;
-    int mouseX = 0, mouseY = 0;
-    window->GetWindowManager()->GetMousePosition(mouseX, mouseY);   // cIGZWinMgr vslot 0x108
     if (!window->IsPointInWindowScreenCoordinates(mouseX, mouseY)) return true;
     data->target = window;
     window->EnumChildren(kGZIID_cIGZWin, &cGZWinDragAndDropManager::SetDestWin, self);

@@ -15,7 +15,7 @@
 // Drag image buffers: the original holds cIGZBuffer* at DragData +0x40/+0x48 and creates the image with
 // GZCOM()->CreateInstance(0xc470d325, 0x20732180) + Init(w, h, ARGB8888). In this port a window's buffer is the
 // window-layer seam IWinBuffer (gz/Win.h) and the image comes from WinGraphics()->GraphicsCreateBuffer(), i.e. the
-// same factory cGZWin's private buffers use; see the DND-IMAGE note in the ledger.
+// same factory cGZWin's private buffers use; see the DND-IMAGE note in the ledger evidence.
 //
 // Window manager access: the original re-fetches the window manager service (0xa417445e, 0x5a4) from RZGetFramework
 // in every message send; SendMessageA here uses the manager the window was created with (cGZWin::mgr_), the same
@@ -36,8 +36,10 @@ constexpr std::uint32_t kGZIID_cIGZWinMessageFilter = 0xc6ae7085;   // the +8 vi
 constexpr std::uint32_t kGZSID_cGZWinDragAndDropManager = 0x0c0874c6;
 constexpr std::int32_t kGZWinDragAndDropServicePriority = 0x1312cf;
 
-// The messages the manager sends while a drag runs. param1 is the DragData*, param2 the drag position packed as
-// two 32-bit ints and param3 the drag image (the buffer at DragData +0x40).
+// The messages the manager sends while a drag runs. They all carry the same payload (DragMessage in the .cpp):
+// param1 = the DragData*, param2 = the drag x and param3 = the drag y, each zero-extended from 32 bits
+// (cGZMessage +8/+0x10/+0x18; the original writes DragData +0x38 as one qword through PMOVZXDQ). None of them
+// carries the drag image - a receiver gets it from the DragData* (image at +0x40).
 constexpr std::uint32_t kDragMsgBegin = 0xac0fe76d;    // the deferred drag left its 4-pixel threshold: start it
 constexpr std::uint32_t kDragMsgEnter = 0xac085f43;    // the pointer entered a new drop target
 constexpr std::uint32_t kDragMsgLeave = 0x6c085f45;    // ... and left the previous one

@@ -342,6 +342,7 @@ declare -a TESTS=(
  "sc4_resourcecatalogview:$T/sc4_resourcecatalogview_test.cpp $S/sc4/ResourceCatalogView.cpp $S/sc4/SLBuffer.cpp $S/gz/Win.cpp $S/rz/cRZString.cpp $S/rz/cRZIniFile.cpp $S/rz/cRZFile.cpp $S/rz/cRZPath.cpp $S/rz/RZStringUtils.cpp $S/rz/RZConvert.cpp $S/rz/cRZVariant.cpp -I$T"
  "sc4_winregionview:$T/sc4_winregionview_test.cpp $S/sc4/WinRegionView.cpp $S/gz/Win.cpp $S/gz/Buffer.cpp $S/gz/RZDraw.cpp $S/gz/DrawContext.cpp $S/gz/GZCOMDirector.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/CharLength.cpp $S/rz/RZConvert.cpp $S/rz/cRZUnknownList.cpp $S/rz/PathUtils.cpp $S/rz/TextEncoding.cpp $S/rz/cRZCOMDllDirector.cpp $S/sc4/SLBuffer.cpp $S/sc4/SCProperty.cpp $S/sc4/SCPropertyHelp.cpp $S/sc4/SC4Utilities.cpp $S/sc4/WinAuraAlert.cpp $S/sc4/SmallWinProcs.cpp"
  "rz_url:$T/rz_url_test.cpp $S/rz/URL.cpp $S/rz/cRZString.cpp $S/rz/RZStringUtils.cpp $S/rz/RZConvert.cpp"
+ "gz_windraganddropmanager:$T/gz_windraganddropmanager_test.cpp $S/gz/WinDragAndDropManager.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
 )
 fail=0
 for entry in "${TESTS[@]}"; do
