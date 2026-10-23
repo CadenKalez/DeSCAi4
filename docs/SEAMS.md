@@ -128,7 +128,7 @@ the caller fills (see `scripts/terrain_shot.mm`).
 | `IModelInstanceHost` | `src/s3d/ModelInstance.h` | src/s3d/ModelInstance.cpp | test fake only | scripts/tests/s3d_modelinstance_test.cpp |
 | `IMySimAdviceHost` | `src/sc4/MySimAdvice.h` | src/sc4/MySimAdvice.cpp | test fake only | scripts/tests/sc4_advice_subclasses_test.cpp |
 | `IMySimFilterHost` | `src/sc4/MySimFilters.h` | src/sc4/MySimFilters.cpp | test fake only | scripts/tests/sc4_mysimfilters_test.cpp |
-| `IMySimHost` | `src/sc4/MySim.h` |  | NOT IMPLEMENTED |  |
+| `IMySimHost` | `src/sc4/MySim.h` | src/sc4/MySim.cpp | NOT IMPLEMENTED |  |
 | `INeighborConnectionHost` | `src/sc4/NeighborConnection.h` | src/sc4/NeighborConnection.cpp | test fake only | scripts/tests/sc4_neighborconnection_test.cpp |
 | `INeighborDealHost` | `src/sc4/NeighborDeal.h` | src/sc4/NeighborDeal.cpp | test fake only | scripts/tests/sc4_neighbordeal_test.cpp |
 | `INetworkOccupantHost` | `src/sc4/NetworkOccupant.h` | src/sc4/NetworkOccupant.cpp | test fake only | scripts/tests/sc4_networkoccupant_test.cpp, scripts/tests/sc4_undergroundoccupant_test.cpp |
