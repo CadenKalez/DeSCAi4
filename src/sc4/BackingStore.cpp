@@ -2,8 +2,6 @@
 
 namespace sc4 {
 
-bool cSC43DBackingStore::justZoomed = false;
-
 TranslatedBlit ComputeTranslatedBlit(int W, int H, int dx, int dy) {
     TranslatedBlit r;
     r.validW = W;

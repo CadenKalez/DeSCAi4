@@ -39,7 +39,9 @@ public:
     bool partialWritesOk = true;                 // +0xb0 (driver CanDoPartialRegionWrites)
     bool storeValid = false;                     // +0xb1
     int shakeX = 0, shakeY = 0;                  // +0x398, +0x39c (screen shake offsets)
-    static bool justZoomed;                      // g_MacJustZoomed
+    // g_MacJustZoomed: set by cSC4CameraControl::SetZoom, read and cleared by SaveBackingStore(). Inline so both
+    // classes share one flag without the camera control having to link this class (the original has one global).
+    static inline bool justZoomed = false;
 
 private:
     gd::IBackingStore* store_;
