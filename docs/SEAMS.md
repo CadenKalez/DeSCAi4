@@ -221,7 +221,7 @@ the caller fills (see `scripts/terrain_shot.mm`).
 | `IWinGridHost` | `src/gz/WinGrid.h` | src/gz/WinGrid.cpp | test fake only | scripts/tests/gz_wingrid_test.cpp |
 | `IWinLotConfigurationEditorHost` | `src/sc4/WinLotConfigurationEditor.h` | src/sc4/WinLotConfigurationEditor.cpp | test fake only | scripts/tests/sc4_winlotconfigurationeditor_test.cpp |
 | `IWinMgrBaseHost` | `src/gz/WinMgrBase.h` | src/gz/WinMgrBase.cpp | test fake only | scripts/tests/gz_winmgrbase_test.cpp |
-| `IWinTertiaryMenuFrameHost` | `src/sc4/WinTertiaryMenuFrame.h` |  | NOT IMPLEMENTED |  |
+| `IWinTertiaryMenuFrameHost` | `src/sc4/WinTertiaryMenuFrame.h` | src/sc4/WinTertiaryMenuFrame.cpp | NOT IMPLEMENTED |  |
 | `IWinTextEditHost` | `src/gz/WinTextEdit.h` | src/gz/WinTextEdit.cpp | test fake only | scripts/tests/gz_wincombo_test.cpp, scripts/tests/gz_wintextedit_test.cpp |
 | `IWinTextTickerHost` | `src/gz/WinTextTicker.h` | src/gz/WinTextTicker.cpp | test fake only | scripts/tests/gz_winttextticker_test.cpp |
 | `IZoneManagerHost` | `src/sc4/cSC4ZoneManager.h` | src/gz/SimHostRegistry.h, src/sc4/cSC4ZoneManager.cpp | test fake only | scripts/tests/sc4_zonemanager_test.cpp |

@@ -1,0 +1,30 @@
+SOURCE src/gz/WinFolders.cpp|h
+EVIDENCE decompiled in Ghidra (work/gz/cGZWinFolders.txt plus the disassembly of every function for the libc++ list walks, the row calls and the SendMsg arguments); test scripts/tests/gz_winfolders_test.cpp exercises the folder list (AddFolder / GetCount / GetFolderByIndex order, DeleteAllFolders), Init (default font through IWinFontSource = RZ::FO() gate + RZ::WCM() vslot 0x28 style 0x68963c4c, outline bitmap through IWinCtrlFactory::Image = WCM vslot 0x38 id 0xe8963edf, width / 2, height), the tab measuring and row building (gutter max(width/8,4), ceil(total/width) rows, rolling AddTab cursor, SetArea / ChildAdd / SetFlag 0x800, StretchToFit, SetH, Invalidate parents), the paint order (last row of the list at y = 0), the click protocol (deselect the other rows, move the hit row to the front, the kGZMsgCommand 0xe87111be message and the return value 0), the selection protocol (SelectTab x2, ClearSelection sweep, no invalidation), the font / outline bitmap reference counting, the relayout flag and the guarded paths (no bitmap, empty list, over wide tab, failing row factory, no init flag, Shutdown); built and run with ASan/UBSan
+0x100512b82 FoldersConstruct
+0x100512c80 FoldersConstructComplete
+0x100512c8a FoldersAddRef
+0x100512ca2 FoldersRelease
+0x100512cba FoldersQueryInterface
+0x100512d02 FoldersInit
+0x100512ddc FoldersShutdown
+0x100512e40 FoldersMouseDownLeft
+0x100513046 FoldersPaint
+0x1005130d4 FoldersAsIGZWin
+0x1005130de FoldersAddFolder
+0x10051316a FoldersGetSelectedFolderName
+0x100513192 FoldersGetSelectedFolderID
+0x1005131ba FoldersSelectFolderByName
+0x100513270 FoldersSelectFolderByID
+0x100513868 FoldersDeleteAllFolders
+0x10051388c FoldersGetFolderByIndex
+0x1005138cc FoldersGetCount
+0x1005138da FoldersSetFont
+0x10051393c FoldersSetOutlineBitmap
+0x100513b46 FoldersDestruct
+0x100513b9c FoldersDeletingDestruct
+PARTIAL:
+0x100513326 FoldersRecalcTabs (layout logic complete and tested, but it builds the tab rows through IWinFoldersHost::CreateFolderRow, i.e. the unrecovered cGZWinFolderRow: todo CLASS-cGZWinFolderRow; the default host returns no row, so the recovered control cannot lay out real tabs yet)
+SKIPPED:
+0x100512078 cGZWinFolderRow (AddRef, Release, QueryInterface, Init, Shutdown, SetOutlineBmp, GZOnMouseDownL, GZPaint, DrawTab, SelectTab x2, CanThisTabBeAdded, AddTab, StretchToFit, SetFont, GetSelectedTabName, GetSelectedTabID, ClearSelection, GetSelection and its destructors, 0x100512078..0x100513b46): the tab-row neighbour class is not recovered (todo CLASS-cGZWinFolderRow); WinFolders.h declares its cIGZWinFolderRow interface and the control creates rows through the IWinFoldersHost seam
+0x10051299a libc++ list glue inside the span (push_back 0x10051299a, remove 0x100512f7c, clear 0x100513cc8 / 0x100513d18, splice 0x100513d8a): compiler-generated std::list code, replaced by std::list<tFolderTab> / std::list<WinFolderRow> operations
+0x100512c98 non-virtual thunks to cGZWinFolders's methods (AddRef 0x100512c98, Release 0x100512cb0, QueryInterface 0x100512cdc, Init 0x100512dca, Shutdown 0x100512e32, GZOnMouseDownL 0x100513034, GZPaint 0x1005130c2, destructors 0x100513c0a / 0x100513c5a): compiler-generated this-adjusting thunks of the recovered class layout, not hand-written
