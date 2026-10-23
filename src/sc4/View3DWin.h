@@ -333,6 +333,10 @@ public:
     virtual bool SetZoomAndRotation(int zoom, int rotation) = 0;   // vslot 0x148
     virtual bool PickTerrain(int x, int y, float* out3, bool always, bool arg5) = 0;   // vslot 0x1e8
     virtual bool Pick(int x, int y, cISC4OccupantFilter* filter, s3d::cIS3DModelInstance*& model) = 0;   // vslot 0x200
+    // cISC43DRender vslots 0x40 / 0x48 (the SC4ViewUtilities / IS4LightingManager objects): what SL::OnView3DInit
+    // stores in SL::spViewUtilities and SL::spLightingManager. A host renderer adapter answers them; null otherwise.
+    virtual cIGZUnknown* ViewUtilities() { return nullptr; }
+    virtual cIGZUnknown* LightingManager() { return nullptr; }
 };
 class ICoverageHelper3D : public cIGZUnknown {          // cSC4CoverageRadiusEffectHelper at +0x5f8
 public:

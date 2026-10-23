@@ -2,9 +2,8 @@
 #pragma once
 #include <cstdint>
 
+#include "gz/Font.h"
 #include "gz/Win.h"
-
-class cIGZFont;
 
 namespace gz {
 
@@ -27,6 +26,22 @@ public:
     virtual std::uint32_t MeasureTextWidth(const char* text, std::uint32_t length, std::uint32_t*) { return static_cast<std::uint32_t>(TextWidth(text, length)); }   // 0x188
     virtual void DrawTextBox(IWinBuffer* target, const cRZRect& box, const char* text, std::uint32_t length,
                              std::uint32_t alignment, std::uint32_t color, std::uint32_t color2, const cRZRect* clip, int flags) = 0;   // 0x1a0
+    // cIGZFont [41] 0x148: how many bytes of `text` fit on one line of `width` (mode 2 is the break cSC4WinText uses).
+    // Defaults to the plain character fit when the font does not expose the full interface.
+    virtual std::uint32_t WordsToFitInWidth(const char* text, std::uint32_t length, int width,
+                                            std::uint32_t* fitted, int mode) {
+        if (cIGZFont* font = AsFont())
+            return font->CalculateWordsToFitInWidth(text, length, static_cast<std::uint32_t>(width), fitted,
+                                                    static_cast<cIGZFont::WordWrapMode>(mode));
+        return FitLength(text, length, width, 0);
+    }
+    // cIGZFont [50] 0x190: shortens `text` in place so it fits `area`, appending `ellipsis` (the second argument is
+    // the ellipsis string, not the text: cGZFont::FormatForEllipsis(text, ellipsis, area, skip)). False when the font
+    // has no full interface; the text is then left as it is.
+    virtual bool FormatForEllipsis(cIGZString& text, const cIGZString& ellipsis, const cRZRect& area, bool skip) {
+        if (cIGZFont* font = AsFont()) return font->FormatForEllipsis(text, ellipsis, area, skip);
+        return false;
+    }
 };
 
 // RZ::WCM() vslot 0x28: the font registered under a style id (borrowed pointer, null when unknown).

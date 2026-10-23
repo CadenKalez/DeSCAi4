@@ -102,7 +102,9 @@ public:
     void CalcTextPos();
     void GetMinTextArea(cRZRect& out, bool a, bool b);
 
-private:
+protected:
+    // The members are protected for the derived cSC4WinText (sc4/WinText.h): its GZPaint is a full rewrite of this one
+    // and reaches the same state (the original has them private and the two classes live in the same translation unit).
     cIGZDrawContext* Context() const { return static_cast<cIGZDrawContext*>(drawContext_); }
     IWinFont* font_ = nullptr;                  // +0x158
     std::uint32_t fontStyle_ = 0;               // +0x160

@@ -1,30 +1,28 @@
 SOURCE src/sc4/Render3D.cpp|h
-EVIDENCE test scripts/tests/sc4_3drender_test.cpp - the per-frame draw pass covers the frame-start driver clear sequence (ClearColor/ClearDepth/Clear 0x1000 vs 0x5000), DrawViewportRectangle and DrawTexturedViewportRectangle (V3F_C4UB / V3F_T2F quad, format, primitive and vertex count recorded by the fake driver), ClearViewportWithSolidColor's clear + clear-colour restore, ProcessDirtyRectangleQueue (kind 0 model redraw with its SaveFromFrame, kind 2 partial update), DoPartialViewUpdate, DoTranslatedViewUpdate (RestoreToFrame/Frames source, destination, size and the two uncovered strips), AttemptTranslatedViewUpdate (14/16 limit, dirty-rectangle translation, full-redraw fallback), the static and dynamic quad-grid passes (overlap test, sort lists, pass counter, highlight pass), GetVisibleContainerRect, and the view-cleanup trickle
+EVIDENCE test scripts/tests/sc4_3drender_test.cpp - the model change queue and the quad grid: WorldToContainerRect's clamp / degenerate-repair path and GetViewportRayContainerRect's 2 x 2 window, InsertModel building the grid element (bounds box, quadrant cell 93/140, the 0x4 / 0x40 / 0x800 / 0x10 flags) and Draw's drain (0x100765a93) turning it static (0x8) so DrawStaticView draws it, the backing store then restoring instead of redrawing, MoveModel / ChangeModel(1, 3, 5) / RemoveModel queueing changes 2 / 4 / 5 / 1 and the drain applying them (RemoveModel leaves through the queue and clears the model's custom data), IsModelInserted draining a nine-item queue, the InsertModel double-insert quirk, a dynamic model staying out of the queue, ModelShouldGoIntoBackingStore at zoom 0 vs 3, RebuildQuadGrid re-creating the elements for a new rotation (cell 43/199) and ReevaluateBackingStoreObjectFlags flipping the static flag with the zoom, DoViewRotationChange2 / DoViewZoomChange3 dropping the store and the dirty rectangles and disabling the store past the +0x278 threshold; fake driver / host / model
+0x100761e58 Render3DInsertModel
+0x100762628 Render3DRemoveModel
+0x10076279c Render3DMoveModel
+0x100762968 Render3DChangeModel
+0x1007628d6 Render3DMoveGridElement
+0x100762458 Render3DUpdateGridElementObjectFlags
+0x100762538 Render3DModelShouldGoIntoBackingStore
+0x1007620c4 Render3DWorldToContainerRect
+0x100761896 Render3DProcessModelChangeQueue
+0x100765592 Render3DRebuildQuadGrid
+0x1007657c6 Render3DReevaluateBackingStoreObjectFlags
+0x10076385e Render3DDoViewRotationChange2
+0x100763936 Render3DDoViewZoomChange3
+0x10076113a Render3DClearModelChangeQueue
+0x10076180e Render3DIsModelInserted
 0x1007659f6 Render3DDraw
-0x100764c54 Render3DDrawStaticView
-0x100764240 Render3DDrawDynamicView
-0x1007650d0 Render3DDoSingleModelStaticDrawAddition
-0x100763ac6 Render3DDoTranslatedViewUpdate
-0x100764a6c Render3DDoPartialViewUpdate
-0x1007660ee Render3DDoViewCleanup
-0x1007661ba Render3DProcessDirtyRectangleQueue
-0x100766d5e Render3DClearViewport
-0x100767716 Render3DClearViewportWithSolidColor
-0x1007677da Render3DDrawViewportRectangle
-0x1007695a2 Render3DDrawTexturedViewportRectangle
-0x100765194 Render3DGetVisibleContainerRect
-0x100766b22 Render3DGetViewFrustumContainerRect
-0x100766c30 Render3DGetDrawFrustumContainerRect
-0x100764096 Render3DUpdateViewportRect
-0x1007658be Render3DAttemptTranslatedViewUpdate
-0x10076529e Render3DComputeViewportZProjection
-PARTIAL
-0x1007659f6 Render3DDraw the model-change queue drain (ProcessModelChangeQueue, 0x100761896, RENDER3D-2) is not ported, so Draw skips it; nothing can fill the queue until InsertModel/RemoveModel/MoveModel/ChangeModel are recovered (they are still PARTIAL and return false), so the frame is unaffected, but a queued insert would not be applied
-0x1007663a8 Render3DSetShakeOffsets the per-shake curve + random/sine table sampling (0x1007666xx) is not ported: the decompiler's float->int truncation chains for the curve index and the double use of the frequency field (+0x60/+0x64) could not be pinned down without the full disassembly. Ported: the one-time tables (seed 0x58, 64 uniform(-10,10) pairs, 64 sin(i*0.09817477)*10 pairs), the offset reset and dropping shakes whose fade window elapsed, so with no live shake the result is identical
-SKIPPED
-0x100769718 TakeSnapshot(cIGZBuffer**, bool) needs cIGZBuffer + the snapshot extension's CopyColorBuffer round trip (the pixel read-back the Metal driver has not implemented yet); not needed for the draw pass
-0x100769760 TakeSnapshot(cIGZString&, bool) same as above, plus the file write
-0x100767b12 PickTerrain and the other Pick* entries belong to the picking pass (RENDER3D-3), not the draw pass; unchanged in this pass
-NOTE the ledger's existing rows for 0x100764096 / 0x1007658be are recovered-partial and are now complete (this file's entries upgrade them)
-NOTE 0x1007641b4 / 0x100764aec / 0x10076605c / 0x100769b1c (SaveBackingStore / RestoreBackingStore) are already ledgered as recovered against src/sc4/BackingStore.cpp|h (cSC43DBackingStore + ComputeTranslatedBlit). This pass also implements them as the cSC43DRender members the original has (the registered sc4_3drender line cannot link a new source file), so the logic now exists twice; the lead should either drop the cSC43DBackingStore copies or make these members delegate to them. The two implementations agree on every case of the translated blit (checked case by case)
-NOTE the two anonymous-namespace sort helpers 0x100765366 / 0x10076547c (cModelSort<...>::sort, reimplemented as SortModelList) are not ledgered: they are static template instantiations, so renaming them in Ghidra is meaningless. The class's remaining-function count therefore still lists them as free functions
+0x1007679b4 Render3DGetViewportRayContainerRect
+PARTIAL:
+0x100762b36 Render3DDoMessage the dispatcher needs the cIGZMessage2 accessor slots (0x20 / 0x48 / 0x50 / 0x70 / 0x78 / 0x98 / 0xc0) and the city / terrain services behind SL::spCity / SL::spTerrain, neither of which is recovered; the two camera messages it forwards to are now ported (DoViewRotationChange2 / DoViewZoomChange3) and tested directly
+0x1007630ca Render3DUpdateVisibleTerrainMetrics needs the terrain view (SL::spTerrain, +0x290) slots 0x28 / 0x30 / 0x38 / 0x40 / 0x70 / 0xa8, unrecovered; only the PickTerrainAlways probes and the +0x3e4 container bounds it writes into the view utilities are understood
+0x100767b12 Render3DPickTerrain not ported: returns false; the decompiler drops the `this` argument (param_1 is the renderer) and the terrain view / QI path at +0x290 plus RayIntersectsGroundPlane need the terrain view service
+0x100767d26 Render3DPickTerrainAtPoint not ported: returns false; the screen-point overload of the same path
+0x100767e2a Render3DPickTerrainAlways not ported: returns false; same path with the always-hits flag
+0x1007687de Render3DPickTerrainAlwaysAtPoint not ported: returns false; same path with the always-hits flag
+0x1007688d6 Render3DPick not ported: returns false; needs the quad-grid walk, cSC4PickContext (unrecovered) and the occupant-filter test
+0x100768972 Render3DPickWithRay not ported: returns false; the explicit origin / direction overload of Pick

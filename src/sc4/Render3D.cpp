@@ -1,8 +1,10 @@
 // cSC43DRender — see src/sc4/Render3D.h for the layout and the quirks. This file holds the object's lifecycle
 // (0x10075f3a8..0x100760dbc), the render-property read (0x100760546), the view-object lists (0x10075f3e6..0x10075f4ce,
-// 0x1007693d0..0x100769508), the camera / clip / driver / backing-store wiring, the screen-shake list and the two
-// stats strings. The draw passes and the model / quad-grid queue are declared in the header but not implemented here;
-// the pending ledger file lists them with the reason.
+// 0x1007693d0..0x100769508), the camera / clip / driver / backing-store wiring, the screen-shake list, the two
+// stats strings, the per-frame draw pass (0x100763ac6..0x1007663a8) and — since RENDER3D-2 — the model change queue
+// and the quad-grid rebuild (0x10076113a..0x1007657c6). What is left in the class is the camera / city message
+// handling (DoMessage 0x100762b36, UpdateVisibleTerrainMetrics 0x1007630ca) and picking; the pending ledger file
+// says why.
 #include "sc4/Render3D.h"
 
 #include <algorithm>
@@ -1140,19 +1142,118 @@ bool cSC43DRender::Read(cIGZIStream& stream) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Model change queue (PARTIAL: the queue and its invalidation are here; the quad-grid work the original does when it
-// drains the queue, ProcessModelChangeQueue, is not ported, so the list is only emptied and the models released).
+// The model change queue (RENDER3D-2)
+//
+// The queue is what puts models into the recovered draw pass: InsertModel builds the grid element that DrawStaticView
+// and DrawDynamicView collect, and every static (backing-store) change is deferred into +0x2c0 until Draw drains it.
+// The four entry points take their own reference on the model twice — once for the duration of the call and once on
+// behalf of the grid or the queue — and release the call's reference before returning.
 // ---------------------------------------------------------------------------------------------
+namespace {
+// 0x2bc0 in the original: the queue's byte size, i.e. 200 items of 0x38. Reaching it forces a full redraw.
+constexpr std::size_t kMaxQueuedModelChanges = 0x2bc0 / sizeof(cSC43DRender::ModelChangeQueueItem);
+// The tolerance ProcessModelChangeQueue's box intersection uses (the original compares |a - b| against 0.0001).
+constexpr float kBoxEpsilon = 0.0001f;
+// The isometric corner offsets WorldToContainerRect adds per rotation (0x1007620c4).
+constexpr float kBoxDiagonal = 0.35355339f;   // 1 / (2 * sqrt(2))
+constexpr float kBoxEdge = 0.14644661f;       // (1 - 1 / sqrt(2)) / 2
+
+// The box the queue item stores (its +0x1c / +0x28 words).
+cS3DBoundingBox ItemBox(const cSC43DRender::ModelChangeQueueItem& item) {
+    cS3DBoundingBox box;
+    std::memcpy(box.min, item.boundsMin, sizeof(box.min));
+    std::memcpy(box.max, item.boundsMax, sizeof(box.max));
+    return box;
+}
+
+// The drain's "do the old and the new box meet" test: every axis pair is compared with a 0.0001 tolerance so that
+// boxes that merely touch still count as intersecting.
+bool BoxesIntersect(const cS3DBoundingBox& a, const cS3DBoundingBox& b) {
+    for (int axis = 0; axis < 3; ++axis) {
+        if (!(a.min[axis] < b.max[axis] || std::fabs(a.min[axis] - b.max[axis]) < kBoxEpsilon)) return false;
+        if (!(a.max[axis] > b.min[axis] || std::fabs(a.max[axis] - b.min[axis]) < kBoxEpsilon)) return false;
+    }
+    return true;
+}
+
+// The original's inlined box union (0x100762e6a..0x1007631ce): an empty first box leaves the second alone, an empty
+// second box takes the first, otherwise the six min/max merges.
+cS3DBoundingBox UnionBox(const cS3DBoundingBox& oldBox, const cS3DBoundingBox& newBox) {
+    if (!(oldBox.min[0] <= oldBox.max[0])) return newBox;
+    if (!(newBox.min[0] <= newBox.max[0])) return oldBox;
+    cS3DBoundingBox merged = newBox;
+    for (int axis = 0; axis < 3; ++axis) {
+        merged.min[axis] = std::min(newBox.min[axis], oldBox.min[axis]);
+        merged.max[axis] = std::max(newBox.max[axis], oldBox.max[axis]);
+    }
+    return merged;
+}
+}  // namespace
+
+SC43DGridElement* cSC43DRender::CreateGridElement() {
+    // 0x100761edf..0x100761f08 (and the identical block in RebuildQuadGrid, 0x100765700): the element is 0x40 bytes,
+    // its bounds start as the empty box 1,1,1,0,0,0 and its reference count at 1.
+    auto* element = new SC43DGridElement();
+    element->refCount = 1;
+    return element;
+}
+
+cS3DBoundingBox cSC43DRender::ElementBox(const SC43DGridElement* element) {
+    cS3DBoundingBox box;
+    std::memcpy(box.min, &element->boundsMinX, sizeof(box.min));
+    std::memcpy(box.max, &element->boundsMaxX, sizeof(box.max));
+    return box;
+}
+
+void cSC43DRender::SetElementBox(SC43DGridElement* element, const cS3DBoundingBox& box) {
+    std::memcpy(&element->boundsMinX, box.min, sizeof(box.min));
+    std::memcpy(&element->boundsMaxX, box.max, sizeof(box.max));
+}
+
+void cSC43DRender::QueueDirtyRectangleForBox(int kind, const float* boxMin, const float* boxMax,
+                                             s3d::cIS3DModelInstance* model, int extra) {
+    // 0x100761a4e: ProjectBoundingBoxToViewportRectangle writes the rectangle's top-left and bottom-right corners into
+    // two adjacent pairs, which is exactly a cRZRect.
+    int rectMin[2] = {0, 0};
+    int rectMax[2] = {0, 0};
+    viewUtilities_->ProjectBoundingBoxToViewportRectangle(boxMin, boxMax, rectMin, rectMax);
+    AddDirtyRectangle(kind, cRZRect{rectMin[0], rectMin[1], rectMax[0], rectMax[1]}, model, extra);
+}
+
+void cSC43DRender::QueueModelChange(SC43DGridElement* element, s3d::cIS3DModelInstance* model, std::uint8_t change,
+                                    const float* boxMin, const float* boxMax) {
+    // The tail of InsertModel / RemoveModel / MoveModel / ChangeModel: reference the model for the queue, mark the
+    // element queued and append the item (with the caller's box, or the empty box for the changes that carry none).
+    model->AddRef();
+    element->flags = static_cast<std::uint16_t>(element->flags | 0x10);
+    ModelChangeQueueItem item;
+    item.model = model;
+    item.change = change;
+    if (boxMin) {
+        std::memcpy(item.boundsMin, boxMin, sizeof(item.boundsMin));
+        std::memcpy(item.boundsMax, boxMax, sizeof(item.boundsMax));
+    }
+    modelChanges_.push_back(item);
+    // The original compares the vector's byte size against 0x2bc0 (200 items).
+    if (modelChanges_.size() == kMaxQueuedModelChanges) DoFullViewUpdate(kViewUpdateDirtyRectOverflow);
+}
+
 void cSC43DRender::ClearModelChangeQueue() {
-    // 0x10076113a: for each queued model, clear the two "in the grid" flag bits on its grid element and release it.
-    // The original also calls RemoveModel for each drained item; that is the part which is not ported (see PARTIAL).
+    // 0x10076113a: for each queued model clear the queued (0x10) and static (0x8) flags, then let RemoveModel do the
+    // grid work while the queue slot's model pointer is temporarily cleared, and release the queue's reference.
     if (walkingModelChanges_) return;
     walkingModelChanges_ = true;
     for (ModelChangeQueueItem& item : modelChanges_) {
         if (!item.model) continue;
         auto* element = static_cast<SC43DGridElement*>(item.model->GetCustomData());
-        if (element) element->flags = static_cast<std::uint16_t>(element->flags & ~0x18);
-        item.model->Release();
+        s3d::cIS3DModelInstance* model = item.model;
+        if (element) {
+            element->flags = static_cast<std::uint16_t>(element->flags & ~0x18);
+            item.model = nullptr;
+            RemoveModel(model);
+            item.model = model;
+        }
+        model->Release();
     }
     modelChanges_.clear();
     walkingModelChanges_ = false;
@@ -1167,27 +1268,511 @@ bool cSC43DRender::IsModelInserted(s3d::cIS3DModelInstance* model) {
         for (const ModelChangeQueueItem& item : modelChanges_) {
             if (item.model == model && item.change == 1) return false;
         }
-        // The original drains the queue here once it holds more than eight items (ProcessModelChangeQueue).
+        // An element that has been queued for more than eight changes is drained right here.
+        if (modelChanges_.size() > 8) ProcessModelChangeQueue();
     }
     return true;
 }
 
-bool cSC43DRender::InsertModel(s3d::cIS3DModelInstance*) {
-    // 0x100761e58 (PARTIAL: needs SC43DGridElement creation + WorldToContainerRect + the quad-grid insert)
-    return false;
+bool cSC43DRender::InsertModel(s3d::cIS3DModelInstance* model) {
+    // 0x100761e58
+    if (!model) return false;
+    // The original dereferences +0x188 without a check; the port's grid is created by Init, so guard it.
+    if (!quadGrid_) return false;
+    model->AddRef();
+    bool result = false;
+    bool create = false;
+    auto* element = static_cast<SC43DGridElement*>(model->GetCustomData());
+    if (!element) {
+        create = true;
+    } else if ((element->flags & 0x10) != 0) {
+        // The element has changes waiting: drain them, then build the element anyway (the original's jump to the
+        // create path, see the header quirk).
+        for (const ModelChangeQueueItem& item : modelChanges_) {
+            if (item.model == model) {
+                ProcessModelChangeQueue();
+                create = true;
+                break;
+            }
+        }
+    }
+    if (create) {
+        element = CreateGridElement();
+        model->SetCustomData(element);
+        cS3DBoundingBox box;
+        model->GetWorldBounds(box);
+        SetElementBox(element, box);
+        SC4RectFloat cellRect;
+        WorldToContainerRect(&element->boundsMinX, &element->boundsMaxX, cellRect, viewUtilities_->Rotation());
+        quadGrid_->SetGridRectForElement(cellRect, element);
+        element->model = model;
+        element->flags = 0;
+        UpdateGridElementObjectFlags(model, element);
+        result = quadGrid_->AddElement(element, 1);
+        if (!result) {
+            model->SetCustomData(nullptr);
+        } else {
+            model->AddRef();   // the reference the grid holds while the element is in it
+            element->flags = static_cast<std::uint16_t>(element->flags | 0x4);
+            if (ModelShouldGoIntoBackingStore(element)) {
+                // Insert: change 0, empty box (the item's defaults).
+                QueueModelChange(element, model, 0, nullptr, nullptr);
+            }
+        }
+        // Drop the local reference taken by CreateGridElement; the quadrants hold the element from here on.
+        if (--element->refCount == 0) delete element;
+    }
+    model->Release();
+    return result;
 }
-bool cSC43DRender::RemoveModel(s3d::cIS3DModelInstance*) {
-    // 0x100762628 (PARTIAL)
-    return false;
+
+bool cSC43DRender::RemoveModel(s3d::cIS3DModelInstance* model) {
+    // 0x100762628
+    if (!model) return false;
+    model->AddRef();
+    bool result = false;
+    auto* element = static_cast<SC43DGridElement*>(model->GetCustomData());
+    if (!element) {
+        result = false;
+    } else if ((element->flags & 0x8) == 0) {
+        // A dynamic element leaves the grid immediately; RemoveElement deletes it when the last quadrant lets go.
+        if ((element->flags & 0x10) != 0) ProcessModelChangeQueue();
+        if (quadGrid_ && quadGrid_->RemoveElement(element)) {
+            model->Release();   // the reference InsertModel took for the grid
+            result = true;
+        }
+        model->SetCustomData(nullptr);
+    } else {
+        // A static element has to leave the backing store through the queue (change 1, its current box so the drain
+        // can repaint where it was).
+        if ((element->flags & 0x10) != 0) {
+            ProcessModelChangeQueue();
+            element = static_cast<SC43DGridElement*>(model->GetCustomData());
+            if (!element) {
+                model->Release();
+                return false;
+            }
+        }
+        const cS3DBoundingBox box = ElementBox(element);
+        QueueModelChange(element, model, 1, box.min, box.max);
+        result = true;
+    }
+    model->Release();
+    return result;
 }
-bool cSC43DRender::MoveModel(s3d::cIS3DModelInstance*) {
-    // 0x10076279c (PARTIAL)
-    return false;
+
+bool cSC43DRender::MoveModel(s3d::cIS3DModelInstance* model) {
+    // 0x10076279c: a model without an element is inserted; a dynamic one moves in place; a static one is queued with
+    // the box it is leaving.
+    if (!model) return false;
+    model->AddRef();
+    auto* element = static_cast<SC43DGridElement*>(model->GetCustomData());
+    if (!element) {
+        InsertModel(model);
+    } else if ((element->flags & 0x8) == 0) {
+        MoveGridElement(element, model);
+    } else {
+        const cS3DBoundingBox box = ElementBox(element);
+        QueueModelChange(element, model, 2, box.min, box.max);
+    }
+    model->Release();
+    return true;
 }
-bool cSC43DRender::ChangeModel(s3d::cIS3DModelInstance*, int) {
-    // 0x100762968 (PARTIAL)
-    return false;
+
+bool cSC43DRender::ChangeModel(s3d::cIS3DModelInstance* model, int change) {
+    // 0x100762968. The change code is the queue item's byte: 1 toggles the 0x80 draw-attribute bit, 2 / 3 / 4 / 5 map
+    // to the queue's 3 / 4 / 5 / 5 (4 never reaches the lookup: it forwards to MoveModel).
+    if (!model) return false;
+    if (change == 4) return MoveModel(model);
+    model->AddRef();
+    bool result = false;
+    auto* element = static_cast<SC43DGridElement*>(model->GetCustomData());
+    if (element) {
+        result = true;
+        if (change == 1) {
+            const s3d::SC4DrawAttributes attributes = model->GetDrawAttributes();
+            // The original tests the byte after the flags word (local_7f at +1 of the returned struct).
+            if (((attributes.flags >> 8) & 0xff) == 0) {
+                element->flags = static_cast<std::uint16_t>(element->flags & ~0x80);
+            } else {
+                element->flags = static_cast<std::uint16_t>(element->flags | 0x80);
+                if (quadGrid_) quadGrid_->SetQuadrantFlagsForElement(element, 1);
+            }
+        } else if (change == 5 || (element->flags & 0x8) != 0) {
+            // 0x05050403 >> (8 * ((change - 2) & 3)), and 5 for anything past the table.
+            static constexpr std::uint8_t kChangeCodes[4] = {3, 4, 5, 5};
+            const std::uint32_t index = static_cast<std::uint32_t>(change - 2) & 3u;
+            const std::uint8_t queued = (change - 2u) > 3u ? 5 : kChangeCodes[index];
+            QueueModelChange(element, model, queued, nullptr, nullptr);
+        }
+    }
+    model->Release();
+    return result;
 }
+
+// ---------------------------------------------------------------------------------------------
+// The drain Draw calls before the static view pass
+// ---------------------------------------------------------------------------------------------
+void cSC43DRender::ProcessModelChangeQueue() {
+    // 0x100761896. For every queued item: clear the queued flag, apply the change to the element's flags, and (when
+    // the backing store is live) queue the dirty rectangles the redraw needs. The queue is emptied at the end and the
+    // walking guard keeps the entry points from re-entering it through RemoveModel.
+    if (walkingModelChanges_) return;
+    walkingModelChanges_ = true;
+    const bool addDirty = mbBackingStoreEnabled && !captureDirtyRectangles_;
+    for (ModelChangeQueueItem& item : modelChanges_) {
+        s3d::cIS3DModelInstance* model = item.model;
+        if (!model) continue;
+        auto* element = static_cast<SC43DGridElement*>(model->GetCustomData());
+        if (element) {
+            const std::uint16_t flags = element->flags;
+            element->flags = static_cast<std::uint16_t>(flags & ~0x10);
+            switch (item.change) {
+                case 0: {   // insert: from here on the element belongs in the static view
+                    element->flags = static_cast<std::uint16_t>((flags & ~0x10) | 0x8);
+                    if (addDirty) {
+                        const int kind = (flags >> 9) & 1;   // the 0x200 property picks a partial update
+                        cS3DBoundingBox box;
+                        model->GetWorldBounds(box);
+                        QueueDirtyRectangleForBox(kind, box.min, box.max, model, 0);
+                    }
+                    break;
+                }
+                case 1: {   // remove: repaint where it was, then take it out of the grid
+                    element->flags = static_cast<std::uint16_t>(flags & ~0x18);
+                    if (addDirty) {
+                        const cS3DBoundingBox oldBox = ItemBox(item);
+                        QueueDirtyRectangleForBox(2, oldBox.min, oldBox.max, model, 0);
+                    }
+                    s3d::cIS3DModelInstance* saved = item.model;
+                    item.model = nullptr;
+                    RemoveModel(saved);
+                    item.model = saved;
+                    break;
+                }
+                case 2: {   // move
+                    if (!MoveGridElement(element, model) || !addDirty) break;
+                    const int kind = (element->flags >> 9) & 1;
+                    const cS3DBoundingBox oldBox = ItemBox(item);
+                    cS3DBoundingBox box;
+                    model->GetWorldBounds(box);
+                    // The original repaints the union of the old and the new box when they meet, and both boxes
+                    // separately when the move jumped over a gap.
+                    if (BoxesIntersect(oldBox, box)) {
+                        box = UnionBox(oldBox, box);
+                        QueueDirtyRectangleForBox(kind, box.min, box.max, model, 0);
+                    } else {
+                        QueueDirtyRectangleForBox(kind, oldBox.min, oldBox.max, model, 0);
+                        QueueDirtyRectangleForBox(kind, box.min, box.max, model, 0);
+                    }
+                    break;
+                }
+                case 3:
+                case 4: {   // redraw a changed model (3 is an ordinary change, 4 a partial-update one)
+                    if (!addDirty) break;
+                    const int kind = item.change != 3 ? 3 : 0;
+                    cS3DBoundingBox box;
+                    model->GetWorldBounds(box);
+                    QueueDirtyRectangleForBox(kind, box.min, box.max, model, 0);
+                    break;
+                }
+                case 5: {   // the model's draw properties changed
+                    UpdateGridElementObjectFlags(model, element);
+                    const std::uint16_t updated = element->flags;
+                    const bool staticNow = ModelShouldGoIntoBackingStore(element);
+                    const std::uint16_t after = static_cast<std::uint16_t>(staticNow ? (updated | 0x8)
+                                                                                    : (updated & ~0x8u));
+                    element->flags = after;
+                    if (!addDirty) break;
+                    if ((updated & 0x8) == 0 && (after & 0x8) != 0) {
+                        // It became static: draw it into the backing store (the 8 marks the model draw).
+                        const int kind = (after >> 9) & 1;
+                        cS3DBoundingBox box;
+                        model->GetWorldBounds(box);
+                        QueueDirtyRectangleForBox(kind, box.min, box.max, model, 8);
+                    } else if ((after & 0x8) == 0 && (updated & 0x8) != 0) {
+                        // It stopped being static: flag the quadrants and repaint the area.
+                        if (quadGrid_) quadGrid_->SetQuadrantFlagsForElement(element, 1);
+                        cS3DBoundingBox box;
+                        model->GetWorldBounds(box);
+                        QueueDirtyRectangleForBox(2, box.min, box.max, model, 0);
+                    }
+                    break;
+                }
+                default: break;
+            }
+        }
+        model->Release();   // the queue's reference
+    }
+    modelChanges_.clear();
+    walkingModelChanges_ = false;
+}
+
+// ---------------------------------------------------------------------------------------------
+// The world -> container mapping and the object flags (the queue's two helpers)
+// ---------------------------------------------------------------------------------------------
+void cSC43DRender::WorldToContainerRect(const float* boxMin, const float* boxMax, SC4RectFloat& out,
+                                        int rotation) {
+    // 0x1007620c4: two corners of the world box, chosen by the camera rotation, projected into fixed-view space and
+    // shifted into container space; then widened by 2 units, clamped into the grid and repaired if degenerate. The
+    // four rotations only differ in which two corners they pick and in the isometric offsets they apply to them.
+    float first[3] = {0.0f, 0.0f, 0.0f};
+    float second[3] = {0.0f, 0.0f, 0.0f};
+    switch (rotation) {
+        case 1: {
+            const float size = boxMax[0] - boxMin[0];
+            const float diagonal = size * kBoxDiagonal;
+            const float edge = size * kBoxEdge;
+            first[0] = boxMax[0] - edge;
+            first[1] = boxMax[1];
+            first[2] = boxMin[2] - diagonal;
+            second[0] = boxMin[0] + edge;
+            second[1] = boxMin[1];
+            second[2] = boxMax[2] + diagonal;
+            break;
+        }
+        case 2: {
+            const float size = boxMax[2] - boxMin[2];
+            const float diagonal = size * kBoxDiagonal;
+            const float edge = size * kBoxEdge;
+            first[0] = boxMax[0] + diagonal;
+            first[1] = boxMax[1];
+            first[2] = boxMax[2] - edge;
+            second[0] = boxMin[0] - diagonal;
+            second[1] = boxMin[1];
+            second[2] = boxMin[2] + edge;
+            break;
+        }
+        case 3: {
+            const float size = boxMax[0] - boxMin[0];
+            const float diagonal = size * kBoxDiagonal;
+            const float edge = size * kBoxEdge;
+            first[0] = boxMin[0] + edge;
+            first[1] = boxMax[1];
+            first[2] = boxMax[2] + diagonal;
+            second[0] = boxMax[0] - edge;
+            second[1] = boxMin[1];
+            second[2] = boxMin[2] - diagonal;
+            break;
+        }
+        default: {   // rotation 0
+            const float size = boxMax[2] - boxMin[2];
+            const float diagonal = size * kBoxDiagonal;
+            const float edge = size * kBoxEdge;
+            first[0] = boxMin[0] - diagonal;
+            first[1] = boxMax[1];
+            first[2] = boxMin[2] + edge;
+            second[0] = boxMax[0] + diagonal;
+            second[1] = boxMin[1];
+            second[2] = boxMax[2] - edge;
+            break;
+        }
+    }
+    // The two fixed-view -> container offset tables (+0x3a8 / +0x3b8). The original indexes them with the rotation
+    // unchecked; the port masks it so a caller cannot read past the arrays (every original caller passes 0..3).
+    const int index = rotation & 3;
+    viewUtilities_->ProjectPointToFixedViewCoordinates(first);
+    first[0] = fixedViewToContainerX_[index] + first[0];
+    first[1] = fixedViewToContainerY_[index] - first[1];
+    viewUtilities_->ProjectPointToFixedViewCoordinates(second);
+    second[0] = fixedViewToContainerX_[index] + second[0];
+    second[1] = fixedViewToContainerY_[index] - second[1];
+    float minX = first[0] - 2.0f;
+    float minY = first[1] - 2.0f;
+    float maxX = second[0] + 2.0f;
+    float maxY = second[1] + 2.0f;
+    out.x0 = minX;
+    out.z0 = minY;
+    out.x1 = maxX;
+    out.z1 = maxY;
+    if (minX <= 0.5f) {
+        minX = 0.5f;
+        out.x0 = minX;
+    }
+    if (minY <= 0.5f) {
+        minY = 0.5f;
+        out.z0 = minY;
+    }
+    const float gridSize = unknown190_;
+    if (gridSize - 0.5f <= maxX) {
+        maxX = gridSize - 0.5f;
+        out.x1 = maxX;
+    }
+    if (gridSize - 0.5f <= maxY) {
+        maxY = gridSize - 0.5f;
+        out.z1 = maxY;
+    }
+    if (maxX <= minX) {
+        minX = maxX - 0.1f;
+        out.x0 = minX;
+    }
+    if (maxY <= minY) {
+        minY = maxY - 0.1f;
+        out.z0 = minY;
+    }
+    if (gridSize * 0.5f < maxX - minX) out.x1 = minX + 1.0f;
+    if (gridSize * 0.5f < maxY - minY) out.z1 = minY + 1.0f;
+}
+
+void cSC43DRender::UpdateGridElementObjectFlags(s3d::cIS3DModelInstance* model, SC43DGridElement* element) {
+    // 0x100762458: fold the model's properties and draw attributes into the element's flag word. 0xc01f is cleared
+    // first, so every flag here is recomputed.
+    const int properties = model->GetProperties();
+    element->flags = static_cast<std::uint16_t>(((properties & 1) << 5) | (element->flags & 0xc01f));
+    std::uint16_t bits = 0x101;
+    const s3d::SC4DrawAttributes attributes = model->GetDrawAttributes();
+    if ((attributes.flags & 4) == 0) {
+        const s3d::SC4DrawAttributes other = model->GetDrawAttributes();   // the original asks twice
+        bits = 0x100;
+        if ((other.flags & 2) == 0) {
+            if ((properties & 2) != 0) element->flags = static_cast<std::uint16_t>(element->flags | 0x40);
+            if ((properties & 4) == 0) goto propertyBits;
+        }
+    }
+    element->flags = static_cast<std::uint16_t>(element->flags | bits);
+propertyBits:
+    if ((properties & 8) != 0) element->flags = static_cast<std::uint16_t>(element->flags | 0x200);
+    if ((properties & 0xf0) == 0) {
+        element->flags = static_cast<std::uint16_t>(element->flags | 0x800);
+        return;
+    }
+    if ((properties & 0x10) != 0) element->flags = static_cast<std::uint16_t>(element->flags | 0x400);
+    if ((properties & 0x20) != 0) element->flags = static_cast<std::uint16_t>(element->flags | 0x800);
+    if ((properties & 0x40) != 0) element->flags = static_cast<std::uint16_t>(element->flags | 0x1000);
+    if ((properties & 0x80) != 0) element->flags = static_cast<std::uint16_t>(element->flags | 0x2000);
+}
+
+bool cSC43DRender::ModelShouldGoIntoBackingStore(const SC43DGridElement* element) {
+    // 0x100762538: an always-dynamic (0x100) or not-plainly-static element stays out, and each zoom-threshold group
+    // (0x400 / 0x1800 / 0x2000) drops out once the zoom reaches its threshold. The zoom is the draw context's +0x14.
+    const std::uint16_t flags = element->flags;
+    const int zoom = drawContext_ ? drawContext_->Zoom() : 0;
+    IRender3DSettings& settings = RendererSettings();
+    if ((flags & 0x100) != 0) return false;
+    if ((flags & 0x60) != 0x40) return false;
+    if ((flags & 0x400) != 0 && zoom >= settings.StaticViewMaxZoomB()) return false;   // +0x308
+    if ((flags & 0x1800) != 0 && zoom >= settings.StaticViewMaxZoomA()) return false;  // +0x2c0
+    if ((flags & 0x2000) != 0 && zoom >= settings.StaticViewMaxZoomC()) return false;  // +0x350
+    return true;
+}
+
+bool cSC43DRender::MoveGridElement(SC43DGridElement* element, s3d::cIS3DModelInstance* model) {
+    // 0x1007628d6: refresh the element's box, remap it to cells and move it; a rejected move drops the element.
+    if (!element || !model || !quadGrid_) return false;
+    cS3DBoundingBox box;
+    model->GetWorldBounds(box);
+    SetElementBox(element, box);
+    SC4RectFloat cellRect;
+    WorldToContainerRect(&element->boundsMinX, &element->boundsMaxX, cellRect, viewUtilities_->Rotation());
+    // The quadrant flag is 1 unless the element is both not-highlighted and static:
+    // ((flags >> 7) | ~(flags >> 3)) & 1.
+    const std::uint16_t flags = element->flags;
+    const std::uint32_t gridFlags = ((flags >> 7) | ~(flags >> 3)) & 1u;
+    const bool moved = quadGrid_->MoveElement(element, cellRect, gridFlags);
+    if (!moved) model->SetCustomData(nullptr);
+    return moved;
+}
+
+// ---------------------------------------------------------------------------------------------
+// The quad grid rebuild (zoom / rotation changes)
+// ---------------------------------------------------------------------------------------------
+void cSC43DRender::RebuildQuadGrid(int oldZoom, int oldRotation, int newZoom, int newRotation) {
+    // 0x100765592: only a zoom or rotation change matters; every element is re-created and re-inserted into a fresh
+    // grid (the old grid's cell metrics are still used for the cell rectangle, see the header quirk).
+    if (newZoom == oldZoom && newRotation == oldRotation) return;
+    if (!quadGrid_) return;
+    int count = quadGrid_->ElementCount();
+    if (count <= 0) return;
+    std::vector<SC4GridElement*> elements(static_cast<std::size_t>(count));
+    quadGrid_->GetAllElements(elements.data(), count);
+    SC4QuadGrid* newGrid = CreateQuadGrid();
+    for (int i = 0; i < count; ++i) {
+        auto* old = static_cast<SC43DGridElement*>(elements[static_cast<std::size_t>(i)]);
+        s3d::cIS3DModelInstance* model = old->model;
+        if (!model) continue;
+        auto* element = CreateGridElement();
+        element->flags = old->flags;
+        element->model = model;
+        const cS3DBoundingBox box = ElementBox(old);
+        SetElementBox(element, box);
+        cS3DBoundingBox worldBox;
+        model->GetWorldBounds(worldBox);
+        SC4RectFloat cellRect;
+        WorldToContainerRect(worldBox.min, worldBox.max, cellRect, newRotation);
+        quadGrid_->SetGridRectForElement(cellRect, element);   // quirk: the old grid's cell size
+        model->SetCustomData(element);
+        const std::uint32_t gridFlags = ((element->flags >> 7) | ~(element->flags >> 3)) & 1u;
+        if (!newGrid->AddElement(element, gridFlags)) {
+            // The original retries with the cell rectangle (0, 0)-(1, 1) and gives up on the model's element.
+            element->x0 = 0;
+            element->z0 = 0;
+            element->x1 = 1;
+            element->z1 = 1;
+            if (!newGrid->AddElement(element, gridFlags)) model->SetCustomData(nullptr);
+        }
+        if (--element->refCount == 0) delete element;
+    }
+    delete quadGrid_;
+    quadGrid_ = newGrid;
+}
+
+void cSC43DRender::DoViewRotationChange2(int oldZoom, int oldRotation, int newZoom, int newRotation) {
+    // 0x10076385e: the camera rotation changed (the caller already compared the two rotations). Everything the old
+    // rotation placed in the grid is rebuilt, the backing store goes stale and the dirty rectangles are dropped.
+    if (oldRotation == newRotation) return;
+    if (!modelChanges_.empty()) ProcessModelChangeQueue();
+    captureDirtyRectangles_ = true;
+    backingStoreValid_ = false;
+    drawContext_->SetZoomAndRotation(newZoom, newRotation);
+    RebuildQuadGrid(oldZoom, oldRotation, newZoom, newRotation);
+    viewUtilities_->BuildDrawFrustumDataFromViewportRect(drawFrustumRect_, drawFrustumRect_ + 2);
+    viewContainerRectValid_ = false;
+    drawContainerRectValid_ = false;
+    ++changeCounter_;
+    ClearDirtyRectangleQueue();
+}
+
+void cSC43DRender::DoViewZoomChange3(int oldZoom, int oldRotation, int newZoom, int newRotation) {
+    // 0x100763936: the zoom changed. The backing store is disabled past the property threshold (+0x278), the grid is
+    // rebuilt and every element's static flag re-evaluated.
+    if (oldZoom == newZoom) return;
+    if (!modelChanges_.empty()) ProcessModelChangeQueue();
+    SetBackingStoreEnabled(newZoom < RendererSettings().BackingStoreMaxZoom());
+    captureDirtyRectangles_ = true;
+    backingStoreValid_ = false;
+    drawContext_->SetZoomAndRotation(newZoom, newRotation);
+    RebuildQuadGrid(oldZoom, oldRotation, newZoom, newRotation);
+    viewUtilities_->BuildDrawFrustumDataFromViewportRect(drawFrustumRect_, drawFrustumRect_ + 2);
+    ReevaluateBackingStoreObjectFlags();
+    viewContainerRectValid_ = false;
+    drawContainerRectValid_ = false;
+    ++changeCounter_;
+    ClearDirtyRectangleQueue();
+}
+
+void cSC43DRender::ReevaluateBackingStoreObjectFlags() {
+    // 0x1007657c6: after a zoom change every element's static flag is recomputed, and every quadrant is marked as
+    // filled so the dynamic pass walks it.
+    if (!quadGrid_) return;
+    int count = quadGrid_->ElementCount();
+    if (count > 0) {
+        std::vector<SC4GridElement*> elements(static_cast<std::size_t>(count));
+        quadGrid_->GetAllElements(elements.data(), count);
+        for (int i = 0; i < count; ++i) {
+            auto* element = static_cast<SC43DGridElement*>(elements[static_cast<std::size_t>(i)]);
+            const std::uint16_t flags = element->flags;
+            element->flags = static_cast<std::uint16_t>(flags | 0x8);
+            if (!ModelShouldGoIntoBackingStore(element))
+                element->flags = static_cast<std::uint16_t>(flags & ~0x8u);
+        }
+    }
+    // The original walks the grid's own quadrant vectors; the port walks the axes.
+    const int dimension = quadGrid_->Dimension();
+    for (int x = 0; x < dimension; ++x)
+        for (int z = 0; z < dimension; ++z)
+            quadGrid_->Quadrant(x, z).flags = (quadGrid_->Quadrant(x, z).flags & 0xffff0000u) | 1u;
+}
+
 
 // ---------------------------------------------------------------------------------------------
 // The per-frame draw pass (RENDER3D-1)
@@ -1490,6 +2075,44 @@ void cSC43DRender::GetDrawFrustumContainerRect(SC4RectFloat& out) {
     out.z0 = fixedViewToContainerY_[rotation] - origin[1];
     out.x1 = fixedViewToContainerX_[viewUtilities_->Rotation()] + farCorner[0];
     out.z1 = fixedViewToContainerY_[viewUtilities_->Rotation()] - farCorner[1];
+}
+
+void cSC43DRender::GetViewportRayContainerRect(int x, int y, SC4RectFloat& out) {
+    // 0x1007679b4: the container rectangle the picking path scans the grid with for one viewport point. The point is
+    // unprojected to the world, mapped to fixed-view / container space, widened to a 2 x 2 window and clamped into
+    // [0, gridSize - 2]; only a window that would end up degenerate is pulled forward by one unit.
+    float point[3] = {static_cast<float>(x), static_cast<float>(y), 0.0f};
+    viewUtilities_->UnProjectPointFromViewportCoordinatesToWorldCoordinates(point);
+    // The original indexes the offset tables with the rotation unclamped; the port masks it (as WorldToContainerRect).
+    const int rotation = viewUtilities_->Rotation() & 3;
+    viewUtilities_->ProjectPointToFixedViewCoordinates(point);
+    const float containerX = fixedViewToContainerX_[rotation] + point[0];
+    const float containerY = fixedViewToContainerY_[rotation] - point[1];
+    out.x0 = containerX;
+    out.z0 = containerY;
+    out.x1 = containerX + 2.0f;
+    out.z1 = containerY + 2.0f;
+    const float limit = unknown190_ - 2.0f;
+    float startX = containerX;
+    if (containerX < 0.0f) {
+        out.x0 = 0.0f;
+        startX = 0.0f;
+    }
+    if (limit < startX) {
+        out.x0 = limit;
+        startX = limit;
+    }
+    if (containerX + 2.0f < startX + 1.0f) out.x1 = startX + 1.0f;
+    float startY = containerY;
+    if (containerY < 0.0f) {
+        out.z0 = 0.0f;
+        startY = 0.0f;
+    }
+    if (limit < startY) {
+        out.z0 = limit;
+        startY = limit;
+    }
+    if (containerY + 2.0f < startY + 1.0f) out.z1 = startY + 1.0f;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -2137,9 +2760,8 @@ void cSC43DRender::Draw() {
                                                   static_cast<float>(shakeY_) + subpixelImageBiasY_);
     }
     ++changeCounter_;
-    // The original drains the model-change queue here (ProcessModelChangeQueue, 0x100761896). Nothing can fill that
-    // queue in this port yet: InsertModel / RemoveModel / MoveModel / ChangeModel are still PARTIAL, so the drain is
-    // deferred with them (RENDER3D-2, see the pending ledger).
+    // 0x100765a93: the model changes queued since the last frame are applied before the static view pass.
+    if (!modelChanges_.empty()) ProcessModelChangeQueue();
     drawContext_->SetDefaultRenderStateUnilaterally();
     drawContext_->SetLighting(false);
     bool restored = false;
@@ -2304,8 +2926,11 @@ bool cSC43DRender::Pick(int, int, const float*, const float*, cISC4OccupantFilte
 }
 
 bool cSC43DRender::DoMessage(cIGZMessage2*) {
-    // 0x100762b36 (PARTIAL: only the two property / lighting notifications are handled; the camera and city messages
-    // need UpdateVisibleTerrainMetrics / DoViewZoomChange3 / DoViewRotationChange2, which need the model queue).
+    // 0x100762b36 (PARTIAL: the dispatcher itself is not ported. It switches on the message's type id (vslot 0x20)
+    // and forwards to DoViewRotationChange2 / DoViewZoomChange3 (now ported and tested), ReadProperties,
+    // ForceFullRedraw, UpdateVisibleTerrainMetrics and the backing-store / dirty-rectangle paths; the city and terrain
+    // messages need the SL::spCity / SL::spTerrain services through the cIGZMessage2 accessors, which the port's host
+    // seam does not expose yet. See notes/ledger_pending/cSC43DRender.txt.)
     return true;
 }
 

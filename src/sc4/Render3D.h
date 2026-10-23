@@ -48,10 +48,21 @@
 //   +0x3a8 / +0x3b8 float[4] fixed-view -> container offsets
 //   +0x3c8..+0x41c performance counters (16 ints, only the two stats strings read them)
 //
-// The draw calls themselves (Draw / DrawStaticView / DrawDynamicView / DoTranslatedViewUpdate / ClearViewport* /
-// PickTerrain*) are NOT in this file yet; see notes/ledger_pending/cSC43DRender.txt for the reason. What is here is the
-// object's lifecycle, its driver / property / camera / view-object plumbing and the small services the window layer,
-// the camera control and the terrain view call every frame.
+// What is in this file: the object's lifecycle, its driver / property / camera / view-object plumbing, the small
+// services the window layer, the camera control and the terrain view call every frame, the per-frame draw pass
+// (Draw / Draw*View / the partial / translated updates) and — since RENDER3D-2 — the model change queue
+// (InsertModel / RemoveModel / MoveModel / ChangeModel / ProcessModelChangeQueue) and the quad-grid rebuild. Still
+// missing: the camera / city messages (DoMessage) and picking; see notes/ledger_pending/cSC43DRender.txt.
+//
+// The model change queue in one paragraph, because it is what feeds DrawStaticView: InsertModel builds an
+// SC43DGridElement, stores it as the model's custom data (cIS3DModelInstance vslot 0x28), inserts it into the quad grid
+// and, when the model belongs in the backing store, appends a change-0 item. RemoveModel / MoveModel / ChangeModel only
+// queue an item for an element that is in the backing store (flag 0x8); a dynamic element is changed in place. Draw
+// drains the queue before the static view pass (0x100765a93), and the drain sets the 0x8 / 0x10 flags and queues the
+// dirty rectangles the redraw needs. The element flags the queue maintains: 0x1 never drawn dynamically, 0x4 set by
+// InsertModel once the element is in the grid, 0x8 static (backing store), 0x10 in the change queue, 0x20 / 0x40 / 0x80
+// the model-property and draw-attribute bits, 0x100 draw behind the dynamic models, 0x200 the dirty rectangle is a
+// partial update, 0x400 / 0x800 / 0x1000 / 0x2000 the zoom-threshold groups.
 //
 // Quirks kept (with their addresses):
 //  * Release() tears the object down when the primary count is below 2: it calls Shutdown (vslot 0x20) and then the
@@ -75,6 +86,26 @@
 //    from +0x378 (0x100769064). StopScreenShake with a non-zero falloff shortens the shake to now + the remaining
 //    falloff instead of removing it (0x10076929a).
 //  * GetStatsString1 reads a counter set the draw path normally fills; the format strings are kept verbatim.
+//  * InsertModel on a model that already has an element with the 0x10 (queued) flag sets: if the queue holds an item
+//    for it, InsertModel drains the queue and then builds a *second* element anyway, overwriting the model's custom
+//    data and leaking the element the drain left in the grid (0x100761ecd jumps straight into the create path). The
+//    port keeps the jump; the second element is what the model then points at.
+//  * A full model change queue (0x2bc0 bytes = 200 items) forces a full static-view redraw, reason 4
+//    (0x100762049 / 0x10076203e).
+//  * ChangeModel(4) forwards to MoveModel, and ChangeModel(1) only toggles the 0x80 draw-attribute bit (plus the
+//    quadrant flag) without any dirty rectangle (0x100762968).
+//  * ClearModelChangeQueue calls the virtual RemoveModel for every queued model (0x10076113a), and IsModelInserted
+//    drains the queue once it grows past eight items and an element is queued (0x10076180e).
+//  * RebuildQuadGrid sets the new elements' grid cells with the *old* grid's cell size, because SetGridRectForElement
+//    still runs on +0x188 before the new grid is stored; if AddElement then fails it retries the cell rectangle
+//    (0,0)-(1,1) and, if that fails too, leaves the model with no element without releasing its reference
+//    (0x100765592).
+//  * MoveModel / MoveGridElement drop the model's element when the grid rejects the move (SetCustomData(null)) while
+//    the model keeps the reference the grid took (0x1007628d6 / 0x100762458).
+//  * WorldToContainerRect always widens the projected box by 2 units per side, clamps it into [0.5, gridSize-0.5],
+//    then pulls a degenerate corner back by 0.1 and caps a box wider / taller than half the grid at one unit
+//    (0x1007620c4). The four rotations pick the two corners and swap in the isometric diagonal offsets
+//    (0.35355339 = 1/(2*sqrt(2)) and 0.14644661 = (1-1/sqrt(2))/2).
 //
 // Seams (unrecovered neighbours; original slot / address in the comment):
 //  * IRender3DHost        — SL::spMS2 (message server), SL::spRM property group 0x4a639ef2, SL::spSC4 static-shutdown
@@ -344,13 +375,18 @@ public:
         std::uint32_t priority = 0;            // +0x10
     };
     // One queued model change (+0x2c0, stride 0x38 in the original). `change` is the original byte: 0 insert,
-    // 1 remove, 2 move, 3/4 change, 5 flags.
+    // 1 remove, 2 move, 3/4 change, 5 flags. The box at +0x1c is the element's box when the change was queued (an
+    // empty box 1,1,1,0,0,0 for the changes that do not carry one); the move drain unions it with the new box.
     struct ModelChangeQueueItem {
-        s3d::cIS3DModelInstance* model = nullptr;   // +0
-        std::uint8_t change = 0;                    // +8
+        s3d::cIS3DModelInstance* model = nullptr;   // +0x00
+        std::uint8_t change = 0;                    // +0x08
+        // +0x09..+0x1b: never read. The original writes the stale stack words at +0x10 / +0x18 here (see the
+        // disassembly of 0x100761ff6); the port keeps them zero.
+        std::uint8_t reserved[0x13] = {};
         float boundsMin[3] = {1.0f, 1.0f, 1.0f};    // +0x1c
         float boundsMax[3] = {0.0f, 0.0f, 0.0f};    // +0x28
     };
+    static_assert(sizeof(ModelChangeQueueItem) == 0x38, "the original queue item is 0x38 bytes");
     // One queued dirty rectangle (+0x2e0). `kind` is the original's +0x14 word.
     struct DirtyRectangleQueueItem {
         int kind = 0;                 // +0x14
@@ -405,17 +441,17 @@ public:
     const float* GetProjectionMatrixEntries() const override;       // @ 0x10076a1ba
     const float* GetViewMatrixEntries() const override;             // @ 0x10076a1c2
     void ForceFullRedraw() override;                                // @ 0x1007658ae
-    void Draw() override;                                           // @ 0x1007659f6 (PARTIAL)
+    void Draw() override;                                           // @ 0x1007659f6
     bool TakeSnapshot(cIGZBuffer** out, bool a) override;           // @ 0x100769718 (PARTIAL)
     bool TakeSnapshot(cIGZString& path, bool a) override;           // @ 0x100769760 (PARTIAL)
     void Set3DCameraView() override;                                // @ 0x100766a22
     void Set2DCameraView() override;                                // @ 0x100766a6a
     void SetUICameraView() override;                                // @ 0x100766aa0
     bool IsModelInserted(s3d::cIS3DModelInstance* model) override;  // @ 0x10076180e
-    bool InsertModel(s3d::cIS3DModelInstance* model) override;      // @ 0x100761e58 (PARTIAL)
-    bool RemoveModel(s3d::cIS3DModelInstance* model) override;      // @ 0x100762628 (PARTIAL)
-    bool MoveModel(s3d::cIS3DModelInstance* model) override;        // @ 0x10076279c (PARTIAL)
-    bool ChangeModel(s3d::cIS3DModelInstance* model, int change) override;   // @ 0x100762968 (PARTIAL)
+    bool InsertModel(s3d::cIS3DModelInstance* model) override;      // @ 0x100761e58
+    bool RemoveModel(s3d::cIS3DModelInstance* model) override;      // @ 0x100762628
+    bool MoveModel(s3d::cIS3DModelInstance* model) override;        // @ 0x10076279c
+    bool ChangeModel(s3d::cIS3DModelInstance* model, int change) override;   // @ 0x100762968
     bool AddViewObject(cISC4ViewObject3D* object, int list, std::uint32_t priority) override;   // @ 0x1007693d0
     bool RemoveViewObject(cISC4ViewObject3D* object) override;      // @ 0x100769450
     bool FindViewObject(cISC4ViewObject3D* object) const override;  // @ 0x100769508
@@ -483,7 +519,7 @@ public:
     void InsertIntoViewObjectList(std::list<ViewObjectInfo>& list, cISC4ViewObject3D* object,
                                   std::uint32_t priority);          // @ 0x10075f3e6
     bool RemoveFromViewObjectList(std::list<ViewObjectInfo>& list, cISC4ViewObject3D* object);   // @ 0x10075f474
-    void ClearModelChangeQueue();                                   // @ 0x10076113a (PARTIAL)
+    void ClearModelChangeQueue();                                   // @ 0x10076113a
     void ClearDirtyRectangleQueue();                                // @ 0x100763a56
     void DoFullViewUpdate(ViewUpdateReason reason);                 // @ 0x1007625c0
     void ReadProperties();                                          // @ 0x100760546
@@ -507,11 +543,30 @@ public:
     void GetVisibleContainerRect(SC4RectFloat& out, FrustumType frustum);        // @ 0x100765194
     void GetViewFrustumContainerRect(SC4RectFloat& out);            // @ 0x100766b22
     void GetDrawFrustumContainerRect(SC4RectFloat& out);            // @ 0x100766c30
+    void GetViewportRayContainerRect(int x, int y, SC4RectFloat& out);   // @ 0x1007679b4
     bool SaveBackingStore();                                        // @ 0x1007641b4
     bool SaveBackingStore(int x, int y, int width, int height);     // @ 0x100764aec
     bool RestoreBackingStore();                                     // @ 0x10076605c
     bool RestoreBackingStore(int dstX, int dstY, int width, int height, int srcX, int srcY);   // @ 0x100769b1c
     void SetShakeOffsets();                                         // @ 0x1007663a8
+
+    // ---- the model change queue and the quad grid (RENDER3D-2) ----------------------------------
+    void ProcessModelChangeQueue();                                 // @ 0x100761896
+    // (float const*, float const*, SC4Rect<float>&, int): the world box -> container-space rectangle of one element,
+    // for the camera rotation (the original's 4th argument is the rotation, read from the view utilities).
+    void WorldToContainerRect(const float* boxMin, const float* boxMax, SC4RectFloat& out, int rotation);   // @ 0x1007620c4
+    void UpdateGridElementObjectFlags(s3d::cIS3DModelInstance* model, SC43DGridElement* element);   // @ 0x100762458
+    bool ModelShouldGoIntoBackingStore(const SC43DGridElement* element);   // @ 0x100762538
+    bool MoveGridElement(SC43DGridElement* element, s3d::cIS3DModelInstance* model);   // @ 0x1007628d6
+    // (int oldZoom, int oldRotation, int newZoom, int newRotation): rebuilds the grid when either changed. The
+    // original's 4th argument is the new rotation, not a city coordinate (0x1007657c6 passes it to
+    // WorldToContainerRect).
+    void RebuildQuadGrid(int oldZoom, int oldRotation, int newZoom, int newRotation);   // @ 0x100765592
+    void ReevaluateBackingStoreObjectFlags();                       // @ 0x1007657c6
+    // The two camera-change notifications the zoom / rotation message handler calls (DoMessage is still PARTIAL):
+    // (oldZoom, oldRotation, newZoom, newRotation), each ignoring the axis that did not change.
+    void DoViewRotationChange2(int oldZoom, int oldRotation, int newZoom, int newRotation);   // @ 0x10076385e
+    void DoViewZoomChange3(int oldZoom, int oldRotation, int newZoom, int newRotation);       // @ 0x100763936
 
     // ---- inspection for the tests / the host ----------------------------------------------------
     bool IsInitialized() const { return initialized_; }
@@ -671,6 +726,22 @@ private:
     std::int32_t statsSps_ = 0;                   // +0x3c4 (the original reads the engine global 0x100b73800)
     std::int32_t stats_[16] = {};                 // +0x3c8..+0x404 (only the two stats strings read them)
     std::int32_t stats2_[6] = {};                 // +0x408..+0x41c
+
+    // ---- port-only helpers (the original inlines these at every call site) -----------------------
+    // malloc(0x40) + the empty bounds box + reference count 1 (0x100761edf / 0x100765700 are the same seven
+    // instructions).
+    static SC43DGridElement* CreateGridElement();
+    // model->GetWorldBounds into the eight floats at +0x28 of the element's block (the original passes the element
+    // itself as the out box).
+    static cS3DBoundingBox ElementBox(const SC43DGridElement* element);
+    static void SetElementBox(SC43DGridElement* element, const cS3DBoundingBox& box);
+    // The project + AddDirtyRectangle tail every ProcessModelChangeQueue case jumps to (0x100761a4e / 0x100761a63).
+    void QueueDirtyRectangleForBox(int kind, const float* boxMin, const float* boxMax,
+                                   s3d::cIS3DModelInstance* model, int extra);
+    // The push_back + "queue full" check InsertModel / RemoveModel / MoveModel / ChangeModel repeat
+    // (0x100761fdb..0x1007620a3 and its three copies).
+    void QueueModelChange(SC43DGridElement* element, s3d::cIS3DModelInstance* model, std::uint8_t change,
+                          const float* boxMin, const float* boxMax);
 
     // ---- statics (the original's file-scope globals) --------------------------------------------
 public:

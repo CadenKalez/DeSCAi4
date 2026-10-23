@@ -1,0 +1,32 @@
+SOURCE src/sc4/WinSC4App.cpp|h
+EVIDENCE test scripts/tests/sc4_winsc4app_test.cpp - two-vtable QueryInterface and the shared reference count; Init (caption "WinSC4App", id 0x6104489a, flag 0x800 cleared, desktop-sized area, accelerator, graphic system + its 0xc47b747c view, fps overlay on RZ::RDD, message + cheat notifications, clock preference, splash screen); the screen swap (splash, region, city 3D view, one at a time, DestroyCurrentScreen removing the child and the registry); the key-unhandled accelerator path, the cheat-typed, focus-change and command messages, GZPaint's frame counter / fps text, Shutdown's release order and init-flag quirk, and the SL::IWinSC4App view over the city screen
+0x1006cbd30 cWinSC4App_Construct
+0x1006cbe6c cWinSC4App_ConstructAlias
+0x1006cbe76 cWinSC4App_Destruct
+0x1006cbf5e cWinSC4App_DestructAlias
+0x1006cbf68 cWinSC4App_DestructAndDelete
+0x1006cbf96 cWinSC4App_QueryInterface
+0x1006cbfba cWinSC4App_QueryInterfaceThunk
+0x1006cbfe6 cWinSC4App_AddRef
+0x1006cbff0 cWinSC4App_AddRefThunk
+0x1006cc002 cWinSC4App_Release
+0x1006cc00c cWinSC4App_ReleaseThunk
+0x1006cc01e cWinSC4App_Init
+0x1006cc39a cWinSC4App_CreateSplashScreen
+0x1006cc446 cWinSC4App_Shutdown
+0x1006cc584 cWinSC4App_DoMessage
+0x1006cc700 cWinSC4App_DoMessage2
+0x1006cc730 cWinSC4App_ProcessCommand
+0x1006cc7ba cWinSC4App_DoMessage2Thunk
+0x1006cc7f0 cWinSC4App_GZOnKeyDown
+0x1006cc7f8 cWinSC4App_GZOnKeyUp
+0x1006cc800 cWinSC4App_GetFrameRate
+0x1006cc80e cWinSC4App_GetFrameCount
+0x1006cc81a cWinSC4App_GZPaint
+0x1006cc912 cWinSC4App_GZOnCommand
+0x1006cc91a cWinSC4App_View3D
+0x1006cc934 cWinSC4App_CreateRegionScreen
+0x1006cc9e8 cWinSC4App_CreateCityScreen
+0x1006ccaa0 cWinSC4App_DestroyCurrentScreen
+PARTIAL:
+SKIPPED:

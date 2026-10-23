@@ -1,0 +1,48 @@
+SOURCE src/sc4/GraphsViewWinProc.cpp|h
+EVIDENCE test scripts/tests/sc4_graphsviewwinproc_test.cpp - window wiring (panel adoption, notification targets, EnumChildren, month subscription), expand/collapse/option/slider commands, ShowGraphType for the line/bar/pie/unknown styles, and the exemplar -> history -> graph data feed including the legend-toggle series compaction; the axis scaling quirks are asserted
+0x1002dfbf6 GraphsViewConstruct
+0x1002dfc9c GraphsViewConstructWrapper
+0x1002dfca6 GraphsViewDestruct
+0x1002dfdc0 GraphsViewShutdown
+0x1002dfee6 GraphsViewDestructAndDelete
+0x1002dfef0 GraphsViewDestructBody
+0x1002dff1e GraphsViewQueryInterface
+0x1002dff4c GraphsViewQueryInterfaceThunk
+0x1002dff82 GraphsViewAddRef
+0x1002dff90 GraphsViewAddRefThunk
+0x1002dff9e GraphsViewRelease
+0x1002dffba GraphsViewReleaseThunk
+0x1002dffda GraphsViewInit
+0x1002e0266 GraphsViewSetTimeScale
+0x1002e0341 SetupGraphButtons
+0x1002e0358 GraphsViewDoWinProcMessage
+0x1002e0518 GraphsViewSetExpanded
+0x1002e056a GraphsViewSelectOption
+0x1002e0688 GraphsViewShowGraph
+0x1002e1a80 GraphsViewRefreshGraph
+0x1002e29a4 GraphsViewDoWinProcMessageThunk
+0x1002e29b2 GraphsViewDoMessage
+0x1002e2a7a GraphsViewShowWindow
+0x1002e2ad2 GraphsViewHideWindow
+0x1002e2b2e GraphsViewShowGraphType
+0x1002e2b86 GraphsViewIsVisible
+0x1002e2cb0 LineGraphDestruct
+0x1002e2cba LineGraphDestructAndDelete
+0x1002e2cf6 LineGraphDrawAntialiased
+0x1002e2d2a LineGraphDrawSegment
+0x1002e2d50 LineGraphDrawAntialiasedThunk
+0x1002e2d88 LineGraphDrawSegmentThunk
+PARTIAL:
+0x1002dffda the cIGZWinGen SetWinProc path is not exercised by the test (a plain cGZWin does not answer 0x5386d516); the panel adoption, notification targets, EnumChildren and the month subscription are covered (see GVW-1)
+0x1002e1a80 the line-chart sample date is a reconstruction: the decompiler shows one step date reused for every sample (the +period date is rebuilt per sample but never advanced); the port advances step by one period per sample, the only reading that gives a real time series (see GVW-6)
+0x1002e2cf6 the antialiased primitive DrawLineAntialiased @ 0x100390498 is not recovered; without an IGraphLineDrawing the port falls back to the plain cGZGraph line (see GVW-4)
+SKIPPED:
+0x1002e29f8 libc++ instantiation of std::vector<cSC4GraphsViewWinProc::LinePlotInfo>::resize; emitted by the compiler from the plot vector, no hand-written code
+0x1002e2b90 libc++ instantiation of std::map<unsigned int,bool>::operator[]; emitted by the compiler from the legend map, no hand-written code
+0x1002e2c4c libc++ instantiation of std::__vector_base<cSC4GraphsViewWinProc::LinePlotInfo>::~__vector_base; compiler-generated
+0x1002e2db6 libc++ instantiation of std::vector<cSC4GraphsViewWinProc::LinePlotInfo>::__append; compiler-generated
+0x1002e2f32 libc++ instantiation of std::vector<cSC4GraphsViewWinProc::LinePlotInfo>::__swap_out_circular_buffer; compiler-generated
+0x1002e300c libc++ instantiation of std::__split_buffer<cSC4GraphsViewWinProc::LinePlotInfo>::__split_buffer; compiler-generated
+0x1002e30d0 libc++ instantiation of std::__split_buffer<cSC4GraphsViewWinProc::LinePlotInfo>::~__split_buffer; compiler-generated
+0x1002e3126 libc++ instantiation of std::__tree<std::__value_type<unsigned int,bool>>::__insert_node_at; compiler-generated
+0x1002e3167 compiler-generated static initialiser (__GLOBAL__sub_I_SC4GraphsViewWinProc.cpp); the port has no file-scope objects to initialise

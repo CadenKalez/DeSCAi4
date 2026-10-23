@@ -1,0 +1,19 @@
+SOURCE src/sc4/AdvisorPopupTracker.cpp|h
+EVIDENCE test scripts/tests/sc4_advisorpopuptracker_test.cpp - object layout (0x38 bytes, the +0 / +8 views, the member offsets), QueryInterface / AddRef / Release, Init / Shutdown, the clear / activation / show-tick routes with every popup suppression rule, the dialog build (script key and instance by mood, the HTML page text, the height clamp, the advice window parameter, the image window procedure) and the window procedure / EndDialog; fake host, message server, window manager, advice, HTML page and generic window
+0x10032f2ac AdvisorPopupTracker_Construct
+0x10032f2f4 AdvisorPopupTracker_DestructInPlace
+0x10032f354 AdvisorPopupTracker_DestructWrapper
+0x10032f35e AdvisorPopupTracker_DestructAndDelete
+0x10032f38c AdvisorPopupTracker_Init
+0x10032f460 AdvisorPopupTracker_Shutdown
+0x10032f4c0 AdvisorPopupTracker_QueryInterface
+0x10032f4ea AdvisorPopupTracker_QueryInterfaceThunk
+0x10032f4f8 AdvisorPopupTracker_AddRef
+0x10032f506 AdvisorPopupTracker_AddRefThunk
+0x10032f514 AdvisorPopupTracker_Release
+0x10032f530 AdvisorPopupTracker_ReleaseThunk
+0x10032f550 AdvisorPopupTracker_DoMessage
+0x10032fa3c AdvisorPopupTracker_SetupDialog
+0x1003301f2 AdvisorPopupTracker_DoWinProcMessage
+0x10033034e AdvisorPopupTracker_EndDialog
+0x1003303ca AdvisorPopupTracker_DoWinProcMessageThunk

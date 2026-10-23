@@ -1,0 +1,7 @@
+SOURCE src/sc4/WinText.cpp|h
+EVIDENCE test scripts/tests/sc4_winsc4app_test.cpp - GZPaint single line (FormatForEllipsis of the caption with the ellipsis text, one DrawTextBox at drawArea + textRect, the "use the font's colours" sentinel), the opaque background (Lock 0x8001 / Fill / Unlock), the outline (Lock 0x8008 and the four fills of RZDrawRectangleOutline), the wrapped path (one line per font word fit, the box stepping by the line height, middle alignment halving the slack), the cut last line (CalculateCharsToFitInWidth + appended ellipsis, skipped when the ellipsis does not fit), the no-buffer early return, and the GZCOM maker (0x198 bytes in the original; the port derives it from the 0x190-byte cGZWinText) answering the cIGZWinText view at +0x150
+0x1005c333c cSC4WinText_GZPaint
+0x1005c3a90 cSC4WinText_Destruct
+0x1005c3a9a cSC4WinText_DestructAndDelete
+PARTIAL:
+SKIPPED:

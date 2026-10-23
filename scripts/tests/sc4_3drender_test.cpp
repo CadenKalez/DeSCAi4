@@ -1,6 +1,7 @@
 // cSC43DRender (src/sc4/Render3D.*): lifecycle, reference counting, interface queries, static driver plumbing, Init /
 // Shutdown, render properties, clip / camera wiring, view-object lists, dirty rectangles, backing-store flags, screen
 // shake and the stream round trip, against a recording driver and host.
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -17,6 +18,7 @@ static int failures = 0;
 #define CHECK(c) do { if (!(c)) { std::printf("FAIL line %d: %s\n", __LINE__, #c); ++failures; } } while (0)
 
 namespace {
+bool Near(float a, float b) { return std::fabs(a - b) < 1e-5f; }
 
 int gLiveViewObjects = 0;
 
@@ -81,6 +83,8 @@ struct FakeModel final : s3d::cIS3DModelInstance {
     std::uint32_t refs = 1;
     std::int32_t properties = 0;
     cS3DBoundingBox worldBox;
+    void* customData = nullptr;
+    s3d::SC4DrawAttributes attributes;
     int draws = 0;
     int highlightDraws = 0;
     int drawResult = 1;
@@ -89,8 +93,8 @@ struct FakeModel final : s3d::cIS3DModelInstance {
     std::uint32_t Release() override { return refs > 1 ? --refs : 0; }
     cIGZUnknown* GetOwner() override { return nullptr; }
     void SetOwner(cIGZUnknown*) override {}
-    void* GetCustomData() override { return nullptr; }
-    void SetCustomData(void*) override {}
+    void* GetCustomData() override { return customData; }
+    void SetCustomData(void* data) override { customData = data; }
     void GetBounds(cS3DBoundingBox& out) override { out = worldBox; }
     void GetWorldBounds(cS3DBoundingBox& out) override { out = worldBox; }
     void GetTransform(cS3DTransform&) override {}
@@ -103,7 +107,7 @@ struct FakeModel final : s3d::cIS3DModelInstance {
     }
     std::int32_t GetProperties() override { return properties; }
     void SetProperties(std::int32_t value) override { properties = value; }
-    s3d::SC4DrawAttributes GetDrawAttributes() const override { return {}; }
+    s3d::SC4DrawAttributes GetDrawAttributes() const override { return attributes; }
     void SetDrawAttributes(const s3d::SC4DrawAttributes&) override {}
     void GetSortValue(std::uint32_t& out) const override { out = 0; }
     s3d::cIS3DResModel* GetResModel() const override { return nullptr; }
@@ -863,6 +867,308 @@ int main() {
         CHECK(render->HighlightElements().size() == 1);
         CHECK(render->HighlightElements().front() == dynamicElement);
         CHECK(render->GetDrawContext()->ViewPass() == 4);   // the dynamic view's own pass
+        CHECK(render->Shutdown());
+        CHECK(render->Release() == 0);
+    }
+
+    // ---- the world -> container rectangle (0x1007620c4) -------------------------------------------------------
+    {
+        FakeHost host;
+        SetRender3DHost(&host);
+        // Before Init the cached grid size (+0x190) is 0 and the fixed-view offsets are 0, so both projected corners
+        // are (0, 0): the clamp path runs and the degenerate size is repaired. The two projected corners are 2 units
+        // outside the box, get clamped to 0.5 and to gridSize - 0.5 = -0.5, then the 0.1 pull-back and the "wider than
+        // half the grid" cap give a 1.0 x 1.0 rectangle.
+        auto* render = new cSC43DRender();
+        render->AddRef();
+        const float boxMin[3] = {0.0f, 0.0f, 0.0f};
+        const float boxMax[3] = {10.0f, 10.0f, 10.0f};
+        for (int rotation = 0; rotation < 4; ++rotation) {
+            SC4RectFloat rect;
+            render->WorldToContainerRect(boxMin, boxMax, rect, rotation);
+            // The zeroed view utilities flatten every 3D point to (0, 0), so all four rotations land on the same
+            // clamped rectangle; what is asserted here is the clamp / repair, which the rotations do not change.
+            CHECK(Near(rect.x0, -0.6f) && Near(rect.z0, -0.6f));
+            CHECK(Near(rect.x1, 0.4f) && Near(rect.z1, 0.4f));
+        }
+        // GetViewportRayContainerRect: the 2 x 2 window around the (0, 0) container point, pulled to gridSize - 2
+        // = -2 here because the grid has not been created yet, then repaired to the one-unit minimum.
+        SC4RectFloat rayRect;
+        render->GetViewportRayContainerRect(10, 20, rayRect);
+        CHECK(Near(rayRect.x0, -2.0f) && Near(rayRect.z0, -2.0f));
+        CHECK(Near(rayRect.x1, 2.0f) && Near(rayRect.z1, 2.0f));
+        CHECK(render->Release() == 0);
+    }
+
+    // ---- the model change queue: an inserted model reaches the static draw pass --------------------------------
+    {
+        FakeHost host;
+        SetRender3DHost(&host);
+        auto* render = new cSC43DRender();
+        render->AddRef();
+        render->SetViewportSize(640, 480);
+        CHECK(render->Init());
+        render->SetBackingStoreEnabled(true);
+        CHECK(render->QuadGrid() != nullptr);
+
+        FakeModel model;
+        model.properties = 2;   // cS3DModelInstanceBasic's default: bit 2 is "static model"
+        model.worldBox.min[0] = model.worldBox.min[1] = model.worldBox.min[2] = 0.0f;
+        model.worldBox.max[0] = model.worldBox.max[1] = model.worldBox.max[2] = 10.0f;
+        CHECK(!render->IsModelInserted(&model));
+        CHECK(render->InsertModel(&model));
+
+        // InsertModel built the grid element, registered it at the model's custom data and put it in the grid.
+        auto* element = static_cast<SC43DGridElement*>(model.customData);
+        CHECK(element != nullptr);
+        CHECK(element->model == &model);
+        CHECK(render->QuadGrid()->ElementCount() == 1);
+        // The zeroed view utilities map the world box onto the single visible container cell (the same (3000, 4500)
+        // corner GetVisibleContainerRect reports), so the element covers the quadrant (93, 140) only.
+        CHECK(element->x0 == 93 && element->z0 == 140 && element->x1 == 93 && element->z1 == 140);
+        CHECK(render->QuadGrid()->Quadrant(93, 140).flags & 1);
+        // Flag 4 is "in the grid"; the element is static-capable (0x40 draw bit + the 0x800 zoom group) but only the
+        // drain turns it into a static (0x8) element.
+        CHECK((element->flags & 0x4) != 0);
+        CHECK((element->flags & 0x40) != 0);
+        CHECK((element->flags & 0x800) != 0);
+        CHECK((element->flags & 0x8) == 0);
+        CHECK((element->flags & 0x10) != 0);   // queued
+        CHECK(render->ModelChanges().size() == 1);
+        CHECK(render->ModelChanges().front().model == &model);
+        CHECK(render->ModelChanges().front().change == 0);
+        CHECK(render->IsModelInserted(&model));
+
+        // Draw drains the queue before the static pass: the element becomes static and the model is drawn by
+        // DrawStaticView. This is the whole point of the queue (RENDER3D-2).
+        render->Draw();
+        CHECK(render->ModelChanges().empty());
+        CHECK((element->flags & 0x10) == 0);
+        CHECK((element->flags & 0x8) != 0);
+        CHECK(model.draws == 1);   // once, by the front-to-back static list
+        CHECK(render->ModelSortCount(0) == 0);
+        CHECK(render->BackingStoreValid());   // the pass was saved into the store
+
+        // The next frame restores the store instead of redrawing the static view, so the model is not drawn again
+        // (the insert's dirty rectangle projects to nothing here: the view utilities are zeroed).
+        render->Draw();
+        CHECK(render->ModelChanges().empty());
+        CHECK(model.draws == 1);
+
+        // ---- MoveModel: a static element is queued with the box it is leaving ---------------------------------
+        model.worldBox.max[0] = 20.0f;
+        CHECK(render->MoveModel(&model));
+        CHECK(render->ModelChanges().size() == 1);
+        CHECK(render->ModelChanges().front().change == 2);
+        CHECK(Near(render->ModelChanges().front().boundsMin[0], 1.0f) == false);   // an element box, not the empty one
+        CHECK(Near(render->ModelChanges().front().boundsMax[0], 10.0f));           // the box before the move
+        CHECK(render->IsModelInserted(&model));
+        render->ProcessModelChangeQueue();
+        CHECK(render->ModelChanges().empty());
+        CHECK(Near(element->boundsMaxX, 20.0f));   // MoveGridElement refreshed the element's box
+        render->DrawStaticView();
+        CHECK(model.draws == 2);
+
+        // ---- ChangeModel: 1 toggles the 0x80 draw-attribute bit, 2/3/5 queue a changed element -----------------
+        model.attributes.flags = 0x0500;               // a non-zero byte at +1 of the draw attributes
+        CHECK(render->ChangeModel(&model, 1));
+        CHECK(render->ModelChanges().empty());        // no dirty rectangle for this one
+        CHECK((element->flags & 0x80) != 0);          // set: the dynamic pass draws it too
+        CHECK(render->QuadGrid()->Quadrant(93, 140).flags & 1);
+        model.attributes.flags = 0;
+        CHECK(render->ChangeModel(&model, 1));
+        CHECK((element->flags & 0x80) == 0);          // cleared again
+        CHECK(render->ChangeModel(&model, 3));
+        CHECK(render->ModelChanges().size() == 1);
+        CHECK(render->ModelChanges().front().change == 4);   // the 0x05050403 table maps 3 -> 4
+        render->ProcessModelChangeQueue();
+        CHECK(render->ModelChanges().empty());
+        render->DrawStaticView();
+        CHECK(model.draws == 3);
+        CHECK(render->ChangeModel(&model, 5));
+        CHECK(render->ModelChanges().size() == 1);
+        CHECK(render->ModelChanges().front().change == 5);
+        render->ProcessModelChangeQueue();
+        CHECK(render->ModelChanges().empty());
+        CHECK((element->flags & 0x8) != 0);           // still static after the property refresh
+        render->DrawStaticView();
+        CHECK(model.draws == 4);
+
+        // ---- IsModelInserted drains a queue longer than eight items ------------------------------------------
+        for (int i = 0; i < 9; ++i) CHECK(render->MoveModel(&model));
+        CHECK(render->ModelChanges().size() == 9);
+        CHECK(render->IsModelInserted(&model));
+        CHECK(render->ModelChanges().empty());
+        CHECK((element->flags & 0x10) == 0);
+
+        // ---- RemoveModel: a static element leaves through the queue -------------------------------------------
+        CHECK(render->RemoveModel(&model));
+        CHECK(render->ModelChanges().size() == 1);
+        CHECK(render->ModelChanges().front().change == 1);
+        CHECK(model.customData == element);           // still in the grid, flagged 0x10
+        render->ProcessModelChangeQueue();             // the drain removes it
+        CHECK(render->ModelChanges().empty());
+        CHECK(model.customData == nullptr);
+        CHECK(render->QuadGrid()->ElementCount() == 0);
+        CHECK(!render->IsModelInserted(&model));
+        render->DrawStaticView();                      // nothing left to collect
+        CHECK(model.draws == 4);
+
+        // ---- the InsertModel quirk: an already-queued model gets a second element -----------------------------
+        CHECK(render->InsertModel(&model));
+        CHECK(render->ModelChanges().size() == 1);
+        auto* firstElement = static_cast<SC43DGridElement*>(model.customData);
+        CHECK(firstElement != nullptr);
+        CHECK(render->InsertModel(&model));             // drains the queue, then builds another element
+        CHECK((firstElement->flags & 0x8) != 0);         // the drain turned the first element static
+        CHECK((firstElement->flags & 0x10) == 0);
+        CHECK(render->ModelChanges().size() == 1);       // and the second insert queued itself
+        CHECK(render->ModelChanges().front().change == 0);
+        CHECK(model.customData != static_cast<void*>(firstElement));
+        CHECK(render->QuadGrid()->ElementCount() == 2);  // the drained element is still in the grid (leak kept)
+        CHECK(render->Shutdown());                       // ...which the grid teardown releases
+        CHECK(render->Release() == 0);
+    }
+
+    // ---- the model change queue: dynamic models, the zoom groups and the grid rebuild -------------------------
+    {
+        FakeHost host;
+        SetRender3DHost(&host);
+        auto* render = new cSC43DRender();
+        render->AddRef();
+        render->SetViewportSize(640, 480);
+        CHECK(render->Init());
+        render->SetBackingStoreEnabled(true);
+
+        // properties 0 leaves the 0x40 bit clear, so ModelShouldGoIntoBackingStore is false and nothing is queued.
+        FakeModel dynamicModel;
+        dynamicModel.worldBox.max[0] = dynamicModel.worldBox.max[1] = dynamicModel.worldBox.max[2] = 4.0f;
+        CHECK(render->InsertModel(&dynamicModel));
+        auto* dynamicElement = static_cast<SC43DGridElement*>(dynamicModel.customData);
+        CHECK(dynamicElement != nullptr);
+        CHECK((dynamicElement->flags & 0x40) == 0);
+        CHECK((dynamicElement->flags & 0x800) != 0);   // no property zoom bit -> the 0x800 group
+        CHECK((dynamicElement->flags & 0x8) == 0);
+        CHECK(render->ModelChanges().empty());          // no backing-store work for a dynamic element
+        CHECK(render->MoveModel(&dynamicModel));        // moves in place, no queue item
+        CHECK(render->ModelChanges().empty());
+        CHECK(render->ChangeModel(&dynamicModel, 3));   // dynamic: only change 5 is queued
+        CHECK(render->ModelChanges().empty());
+
+        FakeModel staticModel;
+        staticModel.properties = 2;
+        staticModel.worldBox.max[0] = staticModel.worldBox.max[1] = staticModel.worldBox.max[2] = 8.0f;
+        CHECK(render->InsertModel(&staticModel));
+        auto* staticElement = static_cast<SC43DGridElement*>(staticModel.customData);
+        CHECK(staticElement != nullptr);
+        CHECK(render->QuadGrid()->ElementCount() == 2);
+        render->Draw();
+        CHECK(render->ModelChanges().empty());
+        CHECK((staticElement->flags & 0x8) != 0);
+        // The dynamic element is drawn by the dynamic pass, the static one by the static pass.
+        CHECK(dynamicModel.draws == 1);
+        CHECK(staticModel.draws == 1);
+
+        // ReevaluateBackingStoreObjectFlags: at zoom 3 (the fake's threshold for the 0x1800 group) the static
+        // element no longer belongs in the store; every quadrant is marked filled either way.
+        const int dimension = render->QuadGrid()->Dimension();
+        render->GetDrawContext()->SetZoomAndRotation(3, 0);
+        render->ReevaluateBackingStoreObjectFlags();
+        CHECK((staticElement->flags & 0x8) == 0);
+        CHECK((dynamicElement->flags & 0x8) == 0);
+        CHECK(render->QuadGrid()->Quadrant(0, 0).flags & 1);
+        CHECK(render->QuadGrid()->Quadrant(dimension - 1, dimension - 1).flags & 1);
+        render->GetDrawContext()->SetZoomAndRotation(0, 0);
+        render->ReevaluateBackingStoreObjectFlags();
+        CHECK((staticElement->flags & 0x8) != 0);
+        CHECK((dynamicElement->flags & 0x8) == 0);
+
+        // RebuildQuadGrid: no zoom / rotation change does nothing; a zoom change re-creates the grid and every
+        // element (the models' custom data moves to the new elements, the old ones die with the old grid).
+        SC4QuadGrid* const oldGrid = render->QuadGrid();
+        render->RebuildQuadGrid(0, 0, 0, 0);
+        CHECK(render->QuadGrid() == oldGrid);
+        render->RebuildQuadGrid(0, 0, 2, 0);
+        CHECK(render->QuadGrid() != oldGrid);
+        CHECK(render->QuadGrid()->ElementCount() == 2);
+        CHECK(staticModel.customData != static_cast<void*>(staticElement));
+        CHECK(dynamicModel.customData != static_cast<void*>(dynamicElement));
+        auto* rebuiltStatic = static_cast<SC43DGridElement*>(staticModel.customData);
+        CHECK(rebuiltStatic != nullptr && rebuiltStatic->model == &staticModel);
+        CHECK((rebuiltStatic->flags & 0x8) != 0);
+        CHECK(Near(rebuiltStatic->boundsMaxX, 8.0f));
+        // The rebuilt elements are drawn by the next static pass.
+        const int staticDraws = staticModel.draws;
+        render->DrawStaticView();
+        CHECK(staticModel.draws == staticDraws + 1);
+
+        // Removing a dynamic model takes the immediate path: no queue item, the element goes at once.
+        CHECK(render->RemoveModel(&dynamicModel));
+        CHECK(render->ModelChanges().empty());
+        CHECK(dynamicModel.customData == nullptr);
+        CHECK(render->QuadGrid()->ElementCount() == 1);
+        CHECK(render->RemoveModel(&staticModel));
+        CHECK(render->ModelChanges().size() == 1);
+        render->Draw();
+        CHECK(render->QuadGrid()->ElementCount() == 0);
+        CHECK(render->Shutdown());
+        CHECK(render->Release() == 0);
+    }
+
+    // ---- the camera notifications that rebuild the grid -------------------------------------------------------
+    {
+        FakeHost host;
+        SetRender3DHost(&host);
+        auto* render = new cSC43DRender();
+        render->AddRef();
+        render->SetViewportSize(640, 480);
+        CHECK(render->Init());
+        render->SetBackingStoreEnabled(true);
+        FakeModel model;
+        model.properties = 2;
+        model.worldBox.max[0] = model.worldBox.max[1] = model.worldBox.max[2] = 6.0f;
+        CHECK(render->InsertModel(&model));
+        render->Draw();
+        CHECK(render->BackingStoreValid());
+        auto* element = static_cast<SC43DGridElement*>(model.customData);
+        CHECK(element != nullptr);
+
+        // DoViewRotationChange2: the grid is rebuilt for the new rotation, the store and the dirty rectangles go.
+        render->AddDirtyRectangle(0, cRZRect{0, 0, 10, 10}, nullptr, 0);
+        CHECK(render->DirtyRectangleCount() == 1);
+        render->DoViewRotationChange2(0, 0, 0, 1);
+        CHECK(render->GetDrawContext()->ViewRotation() == 1);
+        CHECK(!render->BackingStoreValid());
+        CHECK(render->DirtyRectangleCount() == 0);
+        CHECK(render->QuadGrid()->ElementCount() == 1);
+        CHECK(model.customData != static_cast<void*>(element));   // the element was re-created
+        // Rotation 1 moves the container origin to (1400, 6400): (1400 / 32 - 0.5) = 43.25 -> cell 43 and
+        // (6400 / 32 - 0.5) = 199.5 -> cell 199 (the cell size stays 32 at map scale 1).
+        auto* rotated = static_cast<SC43DGridElement*>(model.customData);
+        CHECK(rotated != nullptr);
+        CHECK(rotated->x0 == 43 && rotated->z0 == 199);
+        CHECK((rotated->flags & 0x8) != 0);
+
+        // The same rotation again is a no-op (the handler compares the two rotations).
+        render->DoViewRotationChange2(0, 1, 0, 1);
+        CHECK(model.customData == static_cast<void*>(rotated));
+
+        // DoViewZoomChange3: below the +0x278 threshold (the fake answers 3) the backing store stays enabled, and
+        // every element's static flag is re-evaluated at the new zoom.
+        render->DoViewZoomChange3(0, 1, 2, 1);
+        CHECK(render->GetDrawContext()->Zoom() == 2);
+        CHECK(render->GetBackingStoreEnabled());
+        CHECK(render->QuadGrid()->ElementCount() == 1);
+        CHECK((static_cast<SC43DGridElement*>(model.customData)->flags & 0x8) != 0);
+        // At zoom 3 the 0x1800 group reaches its threshold (the fake answers 3 for +0x2c0): the store is disabled
+        // and the element stops being static.
+        render->DoViewZoomChange3(2, 1, 3, 1);
+        CHECK(!render->GetBackingStoreEnabled());
+        CHECK((static_cast<SC43DGridElement*>(model.customData)->flags & 0x8) == 0);
+        // Back to zoom 0: the store is enabled again and the element is static again.
+        render->DoViewZoomChange3(3, 1, 0, 1);
+        CHECK(render->GetBackingStoreEnabled());
+        CHECK((static_cast<SC43DGridElement*>(model.customData)->flags & 0x8) != 0);
         CHECK(render->Shutdown());
         CHECK(render->Release() == 0);
     }
