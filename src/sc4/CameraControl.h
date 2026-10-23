@@ -151,6 +151,7 @@ public:
     cS3DVector2 CameraPlanePoint() const { return planePoint_; }
     cS3DVector2 ScreenOffset() const { return screenOffset_; }
     float WorldPerPixel() const { return worldPerPixel_; }
+    float PixelPerWorld() const { return pixelPerWorld_; }   // +0x140 (read by SC4ViewUtilities::UpdateCameraPosition)
     float YawAngle() const { return yaw_; }
     float PitchAngle() const { return pitch_; }
 
