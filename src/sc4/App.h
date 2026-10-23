@@ -14,6 +14,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "gz/GZApp.h"
 #include "gz/WinCtrlMgr.h"
@@ -128,8 +129,34 @@ struct AppStartupHooks {
     std::function<void()> registerSegmentCategoryCallback;
     // the WWW system was created: set its cache directory, enable it and hook the HTML UI
     std::function<void(cIGZUnknown* wwwSystem, const cIGZString& cacheDirectory)> configureWWWSystem;
+    // CreateFontStyleFromSpecification(specification, styleId) @ 0x1003d9360: the font style of a [Font Styles] entry
+    // (one reference; null when the specification is unusable)
+    std::function<gz::IWinFont*(const cRZString& specification, std::uint32_t& styleId)> createFontStyleFromSpecification;
+    // the font style script vocabulary (COM class 0xba2e7954 / iid 0x1a2bdebb) vslot 0x20: a script variable per style
+    std::function<void(const cRZString& name, std::uint32_t styleId)> addFontStyleScriptVariable;
+    // RZSpawnWait(program, program, 0) @ 0x1000274df: start a program and wait for it
+    std::function<void(const std::string& path)> spawnWait;
 };
 
+
+// The "load height field" dialog (cSC4WinLoadHeightField) as DoMessage(cIGZWin*, cGZMessage&) drives it. The dialog is
+// recovered (sc4/WinLoadHeightField.h); this interface keeps its window machinery out of this file's link unit.
+class ILoadHeightFieldDialog {
+public:
+    virtual ~ILoadHeightFieldDialog() = default;
+    virtual void AddRef() = 0;                                          // cGZWin vslot 0x8
+    virtual void Release() = 0;                                         // vslot 0x10
+    virtual void SetFlag(std::uint32_t flag, bool on) = 0;              // vslot 0x220 (0x10000, then 0x100)
+    virtual bool Init() = 0;                                            // vslot 0x20
+    virtual void GZWinMoveTo(int x, int y) = 0;                         // vslot 0x1c0
+    virtual int GetW() = 0;                                             // vslot 0x148
+    virtual int GetH() = 0;                                             // vslot 0x150
+    virtual void SetInitialDirectory(const cRZString& directory) = 0;
+    virtual void GetInitialDirectory(cRZString& out) = 0;
+    // cSC4WinLoadHeightField::GetSelection: the full path of the chosen file, false when nothing was chosen.
+    virtual bool GetSelection(cRZString& fullPath) = 0;
+    virtual cIGZWin* AsWindow() = 0;                                    // the same object as a window (for the manager)
+};
 
 // Collaborators of the city life cycle (new / load / save / close / quit) that are not recovered yet.
 struct AppCityHooks {
@@ -163,6 +190,22 @@ struct AppCityHooks {
     std::function<void(cISC4RegionalCity* city, const std::string& savePath)> regionCityClosed;
     // the shutdown path of the framework: cIGZFrameWork::Quit(0)
     std::function<void()> quitFramework;
+    // SC4CreateSavePathForCity(cityName, serial, out) @ 0x1001e98a4 (the city's own save path)
+    std::function<void(const cRZString& cityName, std::uint32_t serial, cRZString& out)> createSavePathForCity;
+    // SC4WriteRegionalCity(cIGZString const& path, cISC4RegionalCity*) @ 0x1001e9799: a neighbour's regional record
+    std::function<bool(const cRZString& path, cISC4RegionalCity* city)> writeRegionalCityFile;
+    // SL::spNeighborsSim vslot 0xa0: the regional cities connected to this one (borrowed pointers)
+    std::function<void(std::vector<cISC4RegionalCity*>& out)> connectedCities;
+    // SC4ViewUtilities::GetZoomAndRotation(zoom, rotation) @ 0x10017375a (SL::spViewUtilities)
+    std::function<void(int& zoom, int& rotation)> viewZoomAndRotation;
+    // SL::spView3D vslot 0x40 (zoom) and 0x70 (rotation): put the camera back after the city is gone
+    std::function<void(int zoom, int rotation)> setViewZoomAndRotation;
+    // cSLWinLocationSaver vslot 0x48 (restore) / 0x28 (save) around the height-field dialog
+    std::function<void(cIGZWin* window)> restoreDialogLocation, saveDialogLocation;
+    // new cSC4WinLoadHeightField + its Init (the dialog DoMessage(cIGZWin*, cGZMessage&) opens)
+    std::function<ILoadHeightFieldDialog*()> createLoadHeightFieldDialog;
+    // SC4WriteAppLoadSaveVersion(segment) @ 0x1001e9585: the save version record of a city file
+    std::function<bool(cIGZPersistDBSegment*)> writeLoadSaveVersion;
 };
 
 }  // namespace sc4
@@ -170,6 +213,10 @@ struct AppCityHooks {
 // set when Init fails to set up the resources: SC4AppStart then shows the localised error (gbAppResourcesInitializedOK)
 extern bool gbAppResourcesInitializedOK;
 extern std::uint32_t gbAppResourceErrorLanguage;
+// The -packedexemplars / -packedtextures switches LoadRegistry reads once <data>/Sys/Resources.ini exists (the
+// original's sbUsingPackedExemplars / sbUsingPackedTextures); the resource loader that reads them is not recovered.
+extern bool gbUsingPackedExemplars;
+extern bool gbUsingPackedTextures;
 
 class cSC4App final : public SL::IApplicationWindowSource, public cIGZMessageTarget, public cIGZMessageTarget2, public cIGZWinMessageFilter,
                       public cISC4App, public cGZApp {
@@ -313,6 +360,10 @@ public:
     void SetupWinCtrlMgr();                                        // @ 0x10000b128
     void ShutdownWinCtrlMgr();                                     // @ 0x10000c7ca
     void SetupFontSet();                                           // @ 0x10000c7d0
+    // the two callbacks of SetupWinCtrlMgr's [Font Aliases] / [Font Styles] sections (context = the application)
+    static void SetFontAliasStatic(const cRZString& key, const cRZString& value, void* context);   // @ 0x10000ab6c
+    static void SetFontStyleStatic(const cRZString& key, const cRZString& value, void* context);   // @ 0x10000aba8
+    void SetFontStyle(const cRZString& name, const cRZString& specification);                      // @ 0x10000abbc
     bool PreFrameWorkShutdown() override;
     // the city life cycle (AppCity.cpp)
     bool NewCity();                                                // @ 0x1000453d4
@@ -323,9 +374,15 @@ public:
     bool Write(cIGZOStream& stream, cIGZPersistDBSegment* segment) const;   // @ 0x100044510
     bool Read(cIGZIStream& stream, cIGZPersistDBSegment* segment);          // @ 0x100044576
     void PostCityMessage(cISC4City* city, std::uint32_t type, std::uint32_t data2, std::uint32_t data3, bool post);   // @ 0x100011f14
-    bool DoCityObliteration();                                     // @ 0x100047350 (not recovered)
-    void LaunchExceptionReportUploader();                          // @ 0x10000f146 (not recovered)
-    bool LoadRegistry() override;
+    bool DoCityObliteration();                                     // @ 0x100047350
+    bool SaveCityForObliteration(const cRZString& path);           // @ 0x1000475cc
+    void RegisterCityDBSegment(const cRZString& path);             // @ 0x100046d9e
+    void LaunchExceptionReportUploader();                          // @ 0x10000f146
+    bool LoadRegistry() override;                                  // @ 0x1000b20be
+    // cGZRegistry category callbacks (Sys/Resources.ini and the registry of segment creators)
+    static void CreateDBSegmentCallback(const cIGZString& key, const cIGZString& value, void* context);   // @ 0x1000b12e6
+    static void RegisterDBSegmentCallback(const cRZString& key, const cRZString& value, void* context);   // @ 0x1000b269a
+    static void RegisterDBSegmentDirectoryFilesCallback(const cRZString& key, const cRZString& value, void* context);   // @ 0x1000b2c22
     bool OnTick(std::uint32_t elapsed) override;
 
 private:
@@ -404,6 +461,9 @@ private:
     sc4::AppStartupHooks startupHooks_;
     sc4::AppCityHooks cityHooks_;
     cIGZPersistDBSegment* citySegment_ = nullptr;        // +0x7a8 (the registered city file segment)
+    // +0x670: the scratch slot DoCityObliteration parks the temporary segment in around NewCity; nothing recovered
+    // reads it (the original probably lets the city-creation path see the segment)
+    cIGZPersistDBSegment* obliterationSegment_ = nullptr;
     static bool sMacQuitDialogIsShowing_;
     std::map<std::string, ServiceFactory> serviceFactories_;
     std::uint32_t requestedGraphicsDriver_ = 0;          // +0x7b8 (set by the -d switch)

@@ -137,3 +137,24 @@ bool cSC4App::AddDynamicLibraryByName(const cIGZString& name, cRZString* directo
 
 // The original is an empty function: the control manager's resources die with the window system.
 void cSC4App::ShutdownWinCtrlMgr() {}
+
+// The "Exception Report Uploader.exe" the crash handler starts: looked for in the user plugin directory, then the plugin
+// directory, then the application directory; the first that exists is started and waited for.
+// PARTIAL: the program is started through RZSpawnWait (0x1000274df, a spawnv wrapper) which is not recovered; the host
+// hook starts it.
+void cSC4App::LaunchExceptionReportUploader() {
+    static constexpr char kUploader[] = "Exception Report Uploader.exe";
+    cRZString path;
+    GetUserPluginDirectory(path);
+    path.AppendChars(kUploader, sizeof(kUploader) - 1);
+    if (!cRZFile::FileExists(path)) {
+        GetPluginDirectory(path);
+        path.AppendChars(kUploader, sizeof(kUploader) - 1);
+        if (!cRZFile::FileExists(path)) {
+            GetAppDirectory(path);
+            path.AppendChars(kUploader, sizeof(kUploader) - 1);
+            if (!cRZFile::FileExists(path)) return;
+        }
+    }
+    if (startupHooks_.spawnWait) startupHooks_.spawnWait(path.ToChar());
+}

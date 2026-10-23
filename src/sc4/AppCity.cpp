@@ -9,11 +9,16 @@
 //  * Quit and the "go to region" request flush the graphics system twice before the city is closed.
 //  * PartialCloseCity pauses the game (all but graphics) and never resumes it itself.
 #include <cstring>
+#include <string>
+#include <vector>
 
 #include "gz/RZServices.h"
+#include "gz/WinInterfaces.h"
 #include "rz/cRZFile.h"
+#include "rz/cRZIniFile.h"
 #include "rz/cRZKeyboard.h"
 #include "rz/cRZMessage2Standard.h"
+#include "rz/cRZVersion.h"
 #include "rz/cRZVariant.h"
 #include "sc4/App.h"
 #include "sc4/AutoHelpers.h"
@@ -434,5 +439,272 @@ bool cSC4App::CloseCity() {
     if (!PartialCloseCity()) return false;
     if (regional && cityHooks_.regionCityClosed) cityHooks_.regionCityClosed(regional, savePath);
     if (SL::spRM) SL::spRM->ForceGarbageCollection();
+    return true;
+}
+
+// ---- the height-field dialog (window message filter) ---------------------------------------------------------------
+
+// The app is the message filter of the "establish city" window (0x27df05be): its height-field button (0x30) opens the
+// load-height-field dialog with the folder remembered under [Settings]/"Terrain Load/Save Location" in the app's .ini and
+// copies the chosen path into the new city specification (a 0x200-byte buffer); the other command (0x20) closes the
+// window with code 0xf. Every message of another window or sender is not handled.
+bool cSC4App::DoMessage(cIGZWin* window, cGZMessage& message) {
+    if (!window || window->GetID() != 0x27df05be || message.type != kGZMsgCommand || message.param1 != 0x287259f6) return false;
+    cIGZWinMgr* manager = RZ::WM();
+    if (message.param2 == 0x20) {
+        if (manager) manager->EndDialog(0xf, window, 0x20);
+        return true;
+    }
+    if (message.param2 != 0x30 || !cityHooks_.createLoadHeightFieldDialog) return true;
+
+    const cRZString section("Settings"), key("Terrain Load/Save Location");
+    cRZIniFile ini;
+    cRZString iniPath;
+    GetAppIniFilePath(iniPath);
+    ini.SetPath(iniPath);
+    cRZString directory;
+    ini.ReadEntry(section, key, directory);
+
+    sc4::ILoadHeightFieldDialog* dialog = cityHooks_.createLoadHeightFieldDialog();
+    if (!dialog) return true;
+    dialog->AddRef();
+    dialog->SetFlag(0x10000, true);     // kWinPrivateBuffer
+    dialog->SetFlag(0x100, true);       // kWinFlag100
+    dialog->SetInitialDirectory(directory);
+    dialog->Init();
+    if (manager) {
+        if (cIGZWin* main = manager->GetMainWindow()) dialog->GZWinMoveTo((main->GetW() - dialog->GetW()) / 2, (main->GetH() - dialog->GetH()) / 2);
+    }
+    cIGZWin* dialogWindow = dialog->AsWindow();
+    if (dialogWindow && cityHooks_.restoreDialogLocation) cityHooks_.restoreDialogLocation(dialogWindow);
+
+    bool picked = false;
+    cRZString selected;
+    if (manager && manager->RunPopup(dialogWindow) != 0) {
+        cRZString current;
+        dialog->GetInitialDirectory(current);
+        ini.WriteEntry(section, key, current);
+        picked = dialog->GetSelection(selected);
+    }
+    if (dialogWindow && cityHooks_.saveDialogLocation) cityHooks_.saveDialogLocation(dialogWindow);
+    if (manager && dialogWindow) manager->DestroyWindow(dialogWindow);
+    dialog->Release();
+    if (picked) {
+        std::string path = selected.ToChar();
+        if (path.size() > 0x1ff) path.resize(0x1ff);
+        std::strcpy(reinterpret_cast<char*>(newCitySpecification_), path.c_str());
+    }
+    return true;
+}
+
+// ---- saving --------------------------------------------------------------------------------------------------------
+
+namespace {
+constexpr std::uint32_t kSaveVersionStream[] = {0xb7d45e0, 0xb7d45e1, 0xb7d45e2};   // version record, stream version 3
+constexpr std::uint32_t kAppRecordStream[] = {0x49dd6f4c, 0x49dd6f4e, 1};            // the application record, version 1
+// the save progress messages: segment + temporary path + final path + (data4 = the alternate flag)
+constexpr std::uint32_t kSaveStartedMessage = 0x26c63343, kSaveDataWrittenMessage = 0x26c63346,
+                        kSaveAppRecordMessage = 0x26c63344, kSaveFinishedMessage = 0x26c63345;
+}
+
+// Writes the city file. The canonical path is rebuilt from the city name and serial number; the file is written to a
+// temporary segment, then the old file is renamed aside, the temporary file takes its place and the backup is dropped.
+// PARTIAL: the canonical path comes from SC4CreateSavePathForCity (0x1001e98a4, unrecovered) through a host hook, and the
+// neighbour sweep that rewrites the connected regional cities goes through two more hooks (SL::spNeighborsSim vslot 0xa0
+// and SC4WriteRegionalCity(path, city) @ 0x1001e9799).
+bool cSC4App::SaveCity(const cRZString& path, bool alternate) {
+    sc4::cSC4AutoGamePause pause(false, true, true, true);
+    sc4::cSC4AutoFlushInputMessageQueue flush(1000);
+    sc4::cSC4AutoDisableAppSwitching switchBlock;
+    (void)switchBlock;
+    BusyScope busy(cityHooks_);
+    if (!city_) return false;
+
+    cRZString cityName;
+    city_->GetCityName(cityName);
+    const std::uint32_t serial = city_->GetCitySerialNumber();
+    cRZString savePath;
+    if (cityHooks_.createSavePathForCity) cityHooks_.createSavePathForCity(cityName, serial, savePath);
+    const bool pathDiffers = savePath.Strlen() == 0 || std::strcmp(savePath.ToChar(), path.ToChar()) != 0;
+
+    cRZString previousSavePath;
+    city_->GetCitySaveFilePath(previousSavePath);
+    city_->SetCitySaveFilePath(savePath);
+
+    bool success = false;
+    cRZString tempPath;
+    if (cRZFile::MakeTempPathName(tempPath, nullptr)) {
+        cRZAutoRefCount<cRZString> tempCopy(new cRZString(tempPath.ToChar()));
+        cRZAutoRefCount<cRZString> saveCopy(new cRZString(savePath.ToChar()));
+        auto* rawSegment = new sc4::cSC4DBSegment();
+        cIGZPersistDBSegment* segment = rawSegment->AsIGZPersistDBSegment();
+        segment->AddRef();
+        auto sendProgress = [&](std::uint32_t type) {
+            if (!SL::spMS2) return;
+            cRZAutoRefCount<cRZMessage2Standard> message(new cRZMessage2Standard());
+            message->SetType(type);
+            message->SetVoid1(segment);
+            message->SetVoid2(tempCopy.get());
+            message->SetVoid3(saveCopy.get());
+            message->SetData4(alternate ? 1 : 0);
+            SL::spMS2->MessageSend(message.get());
+        };
+
+        if (segment->Init() && segment->SetPath(*tempCopy) && segment->Open(false, true)) {
+            sendProgress(kSaveStartedMessage);
+            sendProgress(kSaveDataWrittenMessage);
+            if (cityHooks_.writeLoadSaveVersion) (void)cityHooks_.writeLoadSaveVersion(segment);
+            {
+                sc4::cSC4AutoSaveStream record(segment, kSaveVersionStream[0], kSaveVersionStream[1], kSaveVersionStream[2], 3);
+                if (sc4::cISC4DBSegmentOStream* stream = record.GetStream()) {
+                    // the four module version words (cRZVersion::GetModuleVersion always answers 0xffffffff)
+                    cRZVersion version;
+                    for (std::uint32_t module = 0; module < 4; ++module) stream->SetUint32(version.GetModuleVersion(module));
+                }
+            }
+            {
+                sc4::cSC4AutoSaveStream appRecord(segment, kAppRecordStream[0], kAppRecordStream[1], kAppRecordStream[2], 1);
+                if (sc4::cISC4DBSegmentOStream* stream = appRecord.GetStream()) {
+                    if (Write(*stream, segment)) {
+                        sendProgress(kSaveAppRecordMessage);
+                        sendProgress(kSaveFinishedMessage);
+                        success = true;
+                    }
+                }
+            }
+            if (success) success = rawSegment->SaveClassObjects();
+            segment->Close();
+            segment->Shutdown();
+        } else {
+            segment->Shutdown();
+        }
+        segment->Release();
+    }
+
+    UnregisterCityDBSegment();
+    cRZString backupPath;
+    if (success) {
+        city_->SetCityNameChanged(false);
+        if (cRZFile::FileExists(savePath)) {
+            backupPath = savePath.ToChar();
+            backupPath.AppendChars("_", 1);
+            if (cRZFile::FileExists(backupPath)) success = cRZFile::Remove(backupPath);
+            if (success) success = cRZFile::Rename(savePath, backupPath);
+        }
+    }
+    if (success) {
+        if (cRZFile::Rename(tempPath, savePath)) {
+            if (backupPath.Strlen() != 0) cRZFile::Remove(backupPath);
+        } else {
+            cRZFile::Remove(tempPath);
+            if (backupPath.Strlen() != 0) cRZFile::Rename(backupPath, savePath);
+            success = false;
+        }
+        if (pathDiffers && cRZFile::FileExists(path)) cRZFile::Remove(path);
+    }
+    if (tempPath.Strlen() != 0) cRZFile::Remove(tempPath);
+
+    city_->SetCitySaveFilePath(success ? savePath : previousSavePath);
+    cRZString reopenPath;
+    city_->GetCitySaveFilePath(reopenPath);
+    RegisterCityDBSegment(reopenPath);
+
+    if (success) {
+        std::vector<cISC4RegionalCity*> neighbours;
+        if (cityHooks_.connectedCities) cityHooks_.connectedCities(neighbours);
+        for (cISC4RegionalCity* neighbour : neighbours) {
+            if (!neighbour) continue;
+            cRZString neighbourPath;
+            neighbour->GetCitySaveFilePath(neighbourPath);
+            if (neighbourPath.Strlen() != 0 && cityHooks_.writeRegionalCityFile) cityHooks_.writeRegionalCityFile(neighbourPath, neighbour);
+        }
+    }
+    return success;
+}
+
+// The segment the city file is mounted as: <path> opened read-only, kept in +0x7a8 and registered at the back of the
+// resource manager's segment list. Its reference is held by citySegment_.
+void cSC4App::RegisterCityDBSegment(const cRZString& path) {
+    auto* rawSegment = new sc4::cSC4DBSegment();
+    cIGZPersistDBSegment* segment = rawSegment->AsIGZPersistDBSegment();
+    segment->AddRef();
+    segment->Init();
+    segment->SetPath(path);
+    if (!segment->Open(true, false)) {
+        segment->Shutdown();
+    } else {
+        citySegment_ = segment;
+        segment->AddRef();
+        if (SL::spRM) SL::spRM->RegisterDBSegmentBack(*segment);
+    }
+    segment->Release();
+}
+
+// ---- obliterating a city -------------------------------------------------------------------------------------------
+
+// Saves an empty ("obliterated") city over the city's file: the camera position is kept across the close, the city is
+// partially closed, the old file is removed, a new empty city is created with a temporary segment parked in +0x670,
+// saved to the old path and the segment is dropped. Returns false only when no temporary path could be made.
+bool cSC4App::DoCityObliteration() {
+    BusyScope busy(cityHooks_);
+    bool result = false;
+    cRZString tempPath;
+    if (cRZFile::MakeTempPathName(tempPath, nullptr)) {
+        result = true;
+        SaveCityForObliteration(tempPath);
+    }
+
+    int zoom = 0, rotation = 0;
+    if (SL::spViewUtilities && cityHooks_.viewZoomAndRotation) cityHooks_.viewZoomAndRotation(zoom, rotation);
+
+    cRZString previousPath;
+    if (city_) {
+        city_->GetCitySaveFilePath(previousPath);
+        city_->SetEstablished(false);
+    }
+    PartialCloseCity();
+    if (previousPath.Strlen() != 0) cRZFile::Remove(previousPath);
+
+    auto* rawSegment = new sc4::cSC4DBSegment();
+    cIGZPersistDBSegment* segment = rawSegment->AsIGZPersistDBSegment();
+    segment->AddRef();
+    if (segment->Init()) {
+        segment->SetPath(tempPath);
+        if (segment->Open(true, false)) {
+            obliterationSegment_ = segment;
+            NewCity();
+            if (city_) {
+                city_->SetEstablished(false);
+                city_->SetCitySaveFilePath(previousPath);
+            }
+            obliterationSegment_ = nullptr;
+            segment->Close();
+            if (city_) SaveCity(previousPath, false);
+        }
+    }
+    if (SL::spView3D && cityHooks_.setViewZoomAndRotation) cityHooks_.setViewZoomAndRotation(zoom, rotation);
+    segment->Shutdown();
+    segment->Release();
+    cRZFile::Remove(tempPath);
+    return result;
+}
+
+// The city object writes its empty state into <path> (opened for writing); the game is paused and the input queue
+// flushed around it. Always answers true.
+bool cSC4App::SaveCityForObliteration(const cRZString& path) {
+    sc4::cSC4AutoFlushInputMessageQueue flush(1000);
+    sc4::cSC4AutoGamePause pause(false, true, true, true);
+    auto* rawSegment = new sc4::cSC4DBSegment();
+    cIGZPersistDBSegment* segment = rawSegment->AsIGZPersistDBSegment();
+    segment->AddRef();
+    if (segment->Init()) {
+        segment->SetPath(path);
+        if (segment->Open(false, true)) {
+            if (city_) city_->SaveObliterated(segment);
+            segment->Close();
+        }
+        segment->Shutdown();
+    }
+    segment->Release();
     return true;
 }

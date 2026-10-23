@@ -1,5 +1,6 @@
 // cSC4App: accessors, derived directories, ini / preferences file names, shutdown callbacks, video option mapping,
 // and the preferences blob defaults.
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <map>
@@ -13,13 +14,17 @@
 #include <unistd.h>
 
 #include "rz/cRZCmdLine.h"
+#include "gz/FontSys.h"
 #include "gz/GZFramework.h"
+#include "gz/RZServices.h"
+#include "gz/WinFont.h"
 #include "gz/cGZDBSegmentPackedFile.h"
 #include "gz/cGZPersistResourceManager.h"
 #include "rz/LanguageManager.h"
 #include "sc4/App.h"
 #include "sc4/AppPlatform.h"
 #include "sc4/AppPreferences.h"
+#include "sc4/ServiceLocator.h"
 
 static int failures = 0;
 #define CHECK(c) do { if (!(c)) { std::printf("FAIL line %d: %s\n", __LINE__, #c); ++failures; } } while (0)
@@ -345,6 +350,247 @@ int main() {
         CHECK(a->GetCheatCodeManager() != nullptr && SL::spSC4 == static_cast<cISC4App*>(a));
         CHECK(resources->GetSegmentCount() >= 3);
         CHECK(initialized.size() >= 5);
+        std::string cleanup = "rm -rf " + root; std::system(cleanup.c_str());
+    }
+
+    // ---- the app's remaining work: saving, obliteration, the registry, the fonts, the exception uploader
+    {
+        struct Server final : cIGZMessageServer2 {
+            bool QueryInterface(std::uint32_t, void**) override { return false; }
+            std::uint32_t AddRef() override { return 2; }
+            std::uint32_t Release() override { return 1; }
+            bool MessageSend(cIGZMessage2* m) override { sent.push_back(m->GetType()); return true; }
+            bool MessagePost(cIGZMessage2* m, bool) override { posted.push_back(m->GetType()); return true; }
+            bool AddNotification(cIGZMessageTarget2*, std::uint32_t) override { return true; }
+            bool RemoveNotification(cIGZMessageTarget2*, std::uint32_t) override { return true; }
+            bool GeneralMessagePostToTarget(cIGZMessage2*, cIGZMessageTarget2*) override { return true; }
+            bool CancelGeneralMessagePostsToTarget(cIGZMessageTarget2*) override { return true; }
+            bool OnTick(std::uint32_t) override { return true; }
+            std::uint32_t GetMessageQueueSize() override { return 0; }
+            void SetAlwaysClearQueueOnTick(bool) override {}
+            std::uint32_t GetRefCount() const override { return 1; }
+            bool CreateMessage(std::uint32_t, std::uint32_t, void**) override { return false; }
+            std::vector<std::uint32_t> sent, posted;
+        };
+        struct Files final : cRZSystemService {
+            Files() : cRZSystemService(kGZSID_cGZFileSystem, 100) {}
+            struct View final : cIGZFileSystem {
+                std::string data = "/data/";
+                const char* AppDrive() override { return ""; }
+                const char* AppDirectory() override { return "/app/"; }
+                const char* AppName() override { return "sc4"; }
+                const char* AppExtension() override { return ""; }
+                const char* DataDirectory() override { return data.c_str(); }
+                const char* PlugInDirectory() override { return ""; }
+                const char* CDAppDrive() override { return ""; }
+                const char* CDAppDirectory() override { return ""; }
+                const char* CDDataDirectory() override { return ""; }
+                const char* CDPlugInDirectory() override { return ""; }
+                bool FindCDDrive() override { return false; }
+                void UseCDIniFile(bool) override {}
+                void AllowRecursiveCDSearch(bool) override {}
+                void SetExpectedCDName(const cIGZString&) override {}
+                void SetExpectedCDAppPath(const cIGZString&) override {}
+                void SetDataDirectory(const cIGZString&) override {}
+                void SetPluginDirectory(const cIGZString&) override {}
+                void GetPluginDirectoryName(cIGZString&) override {}
+                void SetPluginDirectoryName(const cIGZString&) override {}
+                bool QueryInterface(std::uint32_t, void**) override { return false; }
+                std::uint32_t AddRef() override { return 1; }
+                std::uint32_t Release() override { return 1; }
+            } view;
+            bool QueryInterface(std::uint32_t iid, void** out) override {
+                if (iid == kGZIID_cIGZFileSystem) { *out = static_cast<cIGZFileSystem*>(&view); return true; }
+                return cRZSystemService::QueryInterface(iid, out);
+            }
+            std::uint32_t AddRef() override { return cRZSystemService::AddRef(); }
+            std::uint32_t Release() override { return cRZSystemService::Release(); }
+        };
+        struct Fonts final : cRZSystemService, cIGZFontSys {
+            Fonts() : cRZSystemService(kGZFontSysDefaultServiceID, 100) {}
+            std::vector<std::string> directories, aliases, removed;
+            bool QueryInterface(std::uint32_t iid, void** out) override {
+                if (iid == kGZIID_cIGZFontSys) { *out = static_cast<cIGZFontSys*>(this); return true; }
+                return cRZSystemService::QueryInterface(iid, out);
+            }
+            std::uint32_t AddRef() override { return cRZSystemService::AddRef(); }
+            std::uint32_t Release() override { return cRZSystemService::Release(); }
+            bool Init() override { return true; }
+            bool Shutdown() override { return true; }
+            bool SetDefaultCodePage(int) override { return true; }
+            void SetDefaultFontRenderer(cIGZFontRenderer*) override {}
+            void SetDefaultFontAntialiasing(int) override {}
+            void SetDefaultUnantialiasedSizeRange(int, int, const cIGZString*) override {}
+            cIGZFont* FontAcquire(const cIGZString&, int, std::uint32_t, int, bool) override { return nullptr; }
+            cIGZFont* FontAcquire(const cIGZString&, std::uint32_t, int, bool) override { return nullptr; }
+            cIGZFont* FontAcquire(int, std::uint32_t, int, std::uint32_t, bool) override { return nullptr; }
+            int FontRelease(cIGZFont*) override { return 0; }
+            bool AddFont(const cIGZString&) override { return false; }
+            int AddAllFontsFromDirectory(const cIGZString& directory) override { directories.push_back(directory.ToChar()); return 0; }
+            bool AddFont(cIGZFont*) override { return false; }
+            bool RemoveFontByFile(const cIGZString&) override { return false; }
+            bool RemoveFontByName(const cIGZString& name) override { removed.push_back(name.ToChar()); return true; }
+            std::uint32_t EnumerateFontInfo(cIGZFontSys::FontInfo*, std::uint32_t) override { return 0; }
+            std::uint32_t EnumerateManagedFonts(cIGZFont**, std::uint32_t) override { return 0; }
+            bool AddSubstitution(const cIGZString& from, const cIGZString& to) override { aliases.push_back(std::string(from.ToChar()) + "->" + to.ToChar()); return true; }
+            std::uint32_t EnumerateFontSubstitutions(const cIGZString&, cIGZString**, std::uint32_t) override { return 0; }
+            bool IsFontAvailable(const cIGZString&, std::uint32_t, int) override { return false; }
+            bool IsSubstitutionAvailable(const cIGZString&, cIGZString&) override { return false; }
+        };
+        struct Style final : gz::IWinFont {
+            int refs = 1;
+            bool QueryInterface(std::uint32_t, void**) override { return false; }
+            std::uint32_t AddRef() override { return ++refs; }
+            std::uint32_t Release() override { return --refs; }
+            std::uint32_t DefaultTextColor() override { return 0; }
+            std::uint32_t DefaultShadowColor() override { return 0; }
+            std::int16_t LineHeight(int, int) override { return 0; }
+            int CountLines(const char*, std::uint32_t, int) override { return 0; }
+            int WrappedWidth(const char*, std::uint32_t, int) override { return 0; }
+            void MeasureText(const char*, std::uint32_t, cRZRect&) override {}
+            int TextWidth(const char*, std::uint32_t) override { return 0; }
+            void DrawText(IWinBuffer*, int, int, const char*, std::uint32_t, std::uint32_t, std::uint32_t, const cRZRect*, int) override {}
+            void DrawTextBox(IWinBuffer*, const cRZRect&, const char*, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, const cRZRect*, int) override {}
+        };
+        struct City final : cISC4City {
+            std::string name = "Twin Peaks", path, newPath;
+            std::uint32_t serial = 0x1234;
+            int refs = 1, obliterations = 0, establishedCalls = 0, nameChangedCalls = 0, shutdowns = 0;
+            bool established = true;
+            bool QueryInterface(std::uint32_t, void**) override { return false; }
+            std::uint32_t AddRef() override { return ++refs; }
+            std::uint32_t Release() override { return --refs; }
+            bool Init() override { return true; }
+            bool Shutdown() override { ++shutdowns; return true; }
+            std::uint32_t GetCitySerialNumber() const override { return serial; }
+            void GetCityName(cIGZString& out) const override { out.AssignFromCString(name.c_str()); }
+            void SetCitySerialNumber(std::uint32_t value) override { serial = value; }
+            void GetCitySaveFilePath(cIGZString& out) const override { out.AssignFromCString(path.c_str()); }
+            void SetCitySaveFilePath(const cIGZString& value) override { newPath = value.ToChar(); }
+            void SetCityNameChanged(bool) override { ++nameChangedCalls; }
+            void SetEstablished(bool value) override { ++establishedCalls; established = value; }
+            bool IsSaveDisabled() const override { return false; }
+            bool SaveObliterated(cIGZPersistDBSegment*) const override { const_cast<City*>(this)->obliterations++; return true; }
+        };
+
+        char dir[] = "/tmp/sc4saveXXXXXX"; CHECK(mkdtemp(dir));
+        std::string root = dir;
+        std::filesystem::create_directories(root + "/Data/Sys");
+        std::ofstream(root + "/Data/Sys/Resources.ini")
+            << "[DBSegments]\npackedexemplars=off\npackedtextures=on\n"
+            << "[DBSegmentDirectories]\n0x11111111=0x22222222 %DataDirectory%/Foo\n";
+        RZ::ResetCaches();
+        auto* f = new cGZFramework();
+        cGZFramework::sSetFrameWork(f);
+        f->COM().RealInit();
+        auto* files = new Files(); files->view.data = root + "/Data/";
+        f->AddSystemService(files);
+        auto* fonts = new Fonts();
+        f->AddSystemService(fonts);
+        auto* a = new cSC4App("T", f->AppView()); a->AddRef();
+        a->SetFramework(f);
+        a->SetDirectories((root + "/App/").c_str(), (root + "/Data/").c_str(), (root + "/Docs/").c_str());
+        a->SetPluginDirectories((root + "/Data/Plugins/").c_str(), (root + "/Docs/Plugins/").c_str(), (root + "/Data/Sku/").c_str());
+        Server server; SL::spMS2 = &server;
+
+        // the registry: -packedexemplars / -packedtextures override the globals (only when Resources.ini exists), then the
+        // [DBSegments] and [DBSegmentDirectories] entries go to their callbacks
+        cRZCmdLine switches("sc4 -packedexemplars:off -packedtextures:on");
+        f->SetCommandLine(switches);
+        CHECK(a->LoadRegistry());
+        CHECK(!gbUsingPackedExemplars && gbUsingPackedTextures);
+        cRZCmdLine other("sc4");
+        f->SetCommandLine(other);
+        gbUsingPackedExemplars = true;
+        CHECK(a->LoadRegistry());
+        CHECK(gbUsingPackedExemplars);
+        std::filesystem::remove(root + "/Data/Sys/Resources.ini");
+        CHECK(a->LoadRegistry());                                    // no ini: the switches are not read
+        CHECK(gbUsingPackedExemplars);
+
+        // fonts: an alias is AddSubstitution(value, key); the font set adds the plugin directory and <data>/Fonts/
+        cSC4App::SetFontAliasStatic(cRZString("Arial"), cRZString("Helvetica"), a);
+        CHECK(fonts->aliases.size() == 1 && fonts->aliases[0] == "Helvetica->Arial");
+        a->SetupFontSet();
+        CHECK(fonts->directories.size() == 2 && fonts->directories[0] == root + "/Data/Plugins/" && fonts->directories[1] == root + "/Data/Fonts/");
+
+        // [Font Styles]: the style object is registered and released; without a control manager only the release is seen
+        Style style;
+        std::uint32_t styleId = 0;
+        a->StartupHooks().createFontStyleFromSpecification = [&](const cRZString& spec, std::uint32_t& id) -> gz::IWinFont* {
+            CHECK(std::strcmp(spec.ToChar(), "arial mt|12") == 0);
+            id = 0x68963c4c;
+            styleId = id;                      // what the application registered the style under
+            return &style;
+        };
+        style.refs = 1;
+        a->SetFontStyle(cRZString("Status"), cRZString("arial mt|12"));
+        CHECK(style.refs == 0 && styleId == 0x68963c4c);   // the style is released once it is registered
+        style.refs = 1;
+        cSC4App::SetFontStyleStatic(cRZString("Status"), cRZString("arial mt|12"), a);
+        CHECK(style.refs == 0);
+
+        // the exception report uploader: found in the user plugin directory, then the plugin directory, then the app's
+        std::vector<std::string> spawned;
+        a->StartupHooks().spawnWait = [&](const std::string& path) { spawned.push_back(path); };
+        a->LaunchExceptionReportUploader();
+        CHECK(spawned.empty());
+        std::filesystem::create_directories(root + "/Docs/Plugins");
+        std::ofstream(root + "/Docs/Plugins/Exception Report Uploader.exe") << "x";
+        a->LaunchExceptionReportUploader();
+        CHECK(spawned.size() == 1 && spawned[0] == root + "/Docs/Plugins/Exception Report Uploader.exe");
+
+        // saving: the canonical path is asked from the host; on failure the city keeps its old path and the file is not
+        // replaced. The messages carry the segment and both paths.
+        City* city = new City();
+        city->path = root + "/docs/Twin Peaks.sc4";
+        a->SetCity(city);
+        std::vector<std::string> savePaths;
+        a->CityHooks().createSavePathForCity = [&](const cRZString& name, std::uint32_t serial, cRZString& out) {
+            std::string p = root + "/save/" + name.ToChar() + "." + std::to_string(serial) + ".sc4";
+            savePaths.push_back(p);
+            out.AssignFromCString(p.c_str());
+        };
+        std::filesystem::create_directories(root + "/save");
+        int versionRecords = 0;
+        a->CityHooks().writeLoadSaveVersion = [&](cIGZPersistDBSegment*) { ++versionRecords; return true; };
+        server.sent.clear();
+        CHECK(a->SaveCity(cRZString(city->path.c_str()), true));
+        CHECK(savePaths.size() == 1 && savePaths[0] == root + "/save/Twin Peaks." + std::to_string(city->serial) + ".sc4");
+        CHECK(std::find(server.sent.begin(), server.sent.end(), 0x26c63343u) != server.sent.end());
+        CHECK(std::find(server.sent.begin(), server.sent.end(), 0x26c63346u) != server.sent.end());
+        CHECK(std::find(server.sent.begin(), server.sent.end(), 0x26c63344u) != server.sent.end());
+        CHECK(std::find(server.sent.begin(), server.sent.end(), 0x26c63345u) != server.sent.end());
+        CHECK(versionRecords == 1);
+        CHECK(city->newPath == savePaths[0]);                        // the canonical path became the city's save path
+        CHECK(std::filesystem::exists(savePaths[0]));                // the temporary file was renamed into place
+        CHECK(city->nameChangedCalls == 1);
+
+        // obliterating: the empty state is written into a temporary segment, the city's own file removed, a new city made
+        // and saved to the old path with the camera kept
+        Object viewUtilities;
+        SL::spViewUtilities = static_cast<cIGZUnknown*>(&viewUtilities);
+        SL::spView3D = reinterpret_cast<SL::IView3DSystems*>(&viewUtilities);
+        a->CityHooks().viewZoomAndRotation = [&](int& z, int& r) { z = 3; r = 5; };
+        std::vector<std::pair<int, int>> restored;
+        a->CityHooks().setViewZoomAndRotation = [&](int z, int r) { restored.emplace_back(z, r); };
+        City* created = nullptr;
+        a->CityHooks().createCity = [&]() -> cISC4City* { created = new City(); created->path = root + "/docs/Obliterated.sc4"; return created; };
+        savePaths.clear();
+        CHECK(a->DoCityObliteration());
+        CHECK(city->obliterations == 1);                             // SaveCityForObliteration used the city
+        CHECK(restored.size() == 1 && restored[0].first == 3 && restored[0].second == 5);
+        CHECK(created != nullptr && created->establishedCalls >= 1);
+        CHECK(savePaths.size() >= 1);                                // the empty city went through SaveCity
+
+        // the two registry entry callbacks never crash, whatever the entries are
+        cSC4App::RegisterDBSegmentCallback(cRZString("BEGIN_GROUP"), cRZString("NON_PACKED_EXEMPLARS"), a);
+        cSC4App::RegisterDBSegmentCallback(cRZString("0x1234"), cRZString("0x5678 x"), a);
+        cSC4App::RegisterDBSegmentCallback(cRZString("END_GROUP"), cRZString("NON_PACKED_EXEMPLARS"), a);
+        cSC4App::RegisterDBSegmentDirectoryFilesCallback(cRZString("0x1234"), cRZString("0x5678 x"), a);
+        SL::spMS2 = nullptr;
+        SL::spViewUtilities = nullptr;
+        SL::spView3D = nullptr;
         std::string cleanup = "rm -rf " + root; std::system(cleanup.c_str());
     }
 
