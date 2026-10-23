@@ -48,6 +48,8 @@ public:
     // colours are native; the sentinel -0xff means "pick the default in Init"
     void SetColors(std::int32_t normal, std::int32_t active, std::int32_t idle) { normalColor_ = normal; activeColor_ = active; idleColor_ = idle; }
     bool Dragging() const { return dragging_; }
+    bool Resizing() const { return resizing_; }
+    bool Moving() const { return moving_; }
     ResizeType ActiveZone() const { return zone_; }
     std::uint32_t CurrentCursorId() const { return cursorId_; }
 

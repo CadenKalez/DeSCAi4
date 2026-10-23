@@ -61,6 +61,9 @@ public:
     std::int32_t GetOrientation() const { return orientation_; }
     bool SetOrientation(std::int32_t orientation);
     void SetState(std::uint32_t state);
+    // Raw state byte: no change message and no model notification. cSC4PropOccupantVisualEffect::SetState
+    // (@ 0x100161482) writes prop +0x9b directly and restarts its effect instead of going through SetState.
+    void SetStateRaw(std::uint8_t state) { state_ = state; }
     std::uint32_t GetState() const { return state_; }
     void SetTimeOfDayRange(float start, float end);
     void GetTimeOfDayRange(float& start, float& end) const;

@@ -1,6 +1,7 @@
 // Minimal window manager for window-control tests.
 #pragma once
 #include <set>
+#include <string>
 #include <vector>
 
 #include "gz/Win.h"
@@ -33,7 +34,7 @@ struct FakeMgr final : cIGZWinMgr {
     void AddWindowToValidList(cIGZWin* w) override { valid.insert(w); }
     void RemoveWindowFromValidList(cIGZWin* w) override { valid.erase(w); }
     void CleanUpWindowReferences(cIGZWin* w) override { ++cleanups; if (focus == w) focus = nullptr; if (capture == w) capture = nullptr; }
-    bool DestroyWindow(cIGZWin* w) override { if (w->GetParentWin()) return w->GetParentWin()->ChildRemove(w); return true; }
+    bool DestroyWindow(cIGZWin* w) override { if (!w) return false; if (w->GetParentWin()) return w->GetParentWin()->ChildRemove(w); return true; }
     bool IsWindowValid(cIGZWin* w) override { return valid.count(w) != 0; }
     cIGZWin* GetWindowFromPoint(int, int) override { return nullptr; }
     int cursorX = 0, cursorY = 0;
@@ -50,6 +51,15 @@ struct FakeMgr final : cIGZWinMgr {
     cIGZKeyboard* GetKeyboard() override { return nullptr; }
     int popupAnswer = -1, popups = 0;
     int RunPopup(cIGZWin*) override { ++popups; return popupAnswer; }
+    // Window manager GZMsgBox (vslot 0x160): answers `msgBoxAnswer` and records what was asked.
+    struct MsgBoxCall { std::string text, title; std::uint32_t style; bool unused1; std::uint32_t unused2; };
+    std::vector<MsgBoxCall> msgBoxes;
+    int msgBoxAnswer = 0;
+    int GZMsgBox(const cIGZString& text, const cIGZString& title, std::uint32_t style, bool unused1,
+                 std::uint32_t unused2) override {
+        msgBoxes.push_back({text.Data(), title.Data(), style, unused1, unused2});
+        return msgBoxAnswer;
+    }
 };
 
 // A graphics system whose native colour is simply 0xff000000 | rgb.

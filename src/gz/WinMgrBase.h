@@ -159,7 +159,7 @@ public:
     std::uint32_t GetModalNestCount() const { return modalNest_; }    // @ 0x10062319a
     virtual std::uint64_t DoModalWin(cIGZWin* window);                        // @ 0x1006232a8
     int RunPopup(cIGZWin* popup) override { return int(DoModalWin(popup)); }   // slot 0x148 is DoModalWin
-    int GZMsgBox(const cIGZString& text, const cIGZString& title, std::uint32_t style, bool unused1, std::uint32_t unused2);   // @ 0x100623722
+    int GZMsgBox(const cIGZString& text, const cIGZString& title, std::uint32_t style, bool unused1, std::uint32_t unused2) override;   // @ 0x100623722
     bool SetGZMsgBoxCMDID(std::uint32_t, std::uint32_t, bool) { return false; }              // @ 0x100623824
     bool GetGZMsgBoxCMDID(std::uint32_t&, std::uint32_t&, bool&) const { return false; }     // @ 0x10062382c
 

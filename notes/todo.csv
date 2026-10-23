@@ -762,7 +762,7 @@ CLASS-cSC4Watercraft,cSC4Watercraft,"recover 64 remaining function(s) (64 not st
 CLASS-cSC4WatercraftManager,cSC4WatercraftManager,"recover 33 remaining function(s) (33 not started, 0 partial/pending); bases still unfinished: cSC4AutomataManager",CLASS-cSC4AutomataManager,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WeatherSimulator,cSC4WeatherSimulator,"recover 42 remaining function(s) (42 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinAdviceList,cSC4WinAdviceList,"recover 19 remaining function(s) (19 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4WinAnimationRecorder,cSC4WinAnimationRecorder,"recover 4 remaining function(s) (1 not started, 3 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4WinAnimationRecorder,cSC4WinAnimationRecorder,"recover 3 remaining function(s) (0 not started, 3 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinCalloutBox,cSC4WinCalloutBox,"recover 29 remaining function(s) (29 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinCatalogView,cSC4WinCatalogView,"recover 38 remaining function(s) (38 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 T-WCV-1,cSC4WinCatalogView,hook ICatalogViewHost: SC4MakeMoneyString (0x1000392b0) and SL::spSS vslot 0x50 sound player; font comes from gz::WinFontSource (RZ::WCM() vslot 0x28),,open,src/sc4/WinCatalogView.h

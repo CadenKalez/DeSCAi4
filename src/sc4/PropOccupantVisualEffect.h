@@ -1,10 +1,11 @@
 // cSC4PropOccupantVisualEffect — the visual effect a prop occupant plays (chimney smoke, street-light glow,
 // fountain spray...). It is the cISC4PropOccupantVisualEffect implementation (iid 0x09820792, class id
 // 0x2977aa49) that cSC4PropManager attaches to a prop. 24 function symbols at 0x1001606f2..0x100163494 (the
-// GZCOM factory helpers at 0x1001605d4 / 0x1001607d7 are registered as stubs in src/gz/GZCOM.cpp, the class id
-// constant lives in src/gz/GZCOM.h), plus the multiple-inheritance thunks that the compiler generates.
+// GZCOM helpers at 0x1001605d4 / 0x1001607d7 are recorded in src/gz/GZCOM.cpp: the CLSID getter already returns
+// 0x2977aa49 and the creator is the weak nullptr stub, like the other recovered classes), plus the
+// multiple-inheritance thunks that the compiler generates.
 //
-// Original layout (0xe8 bytes; sPropOccupantVisualEffectAllocator = 0xe8, set at 0x1001607d7's sibling):
+// Original layout (0xe8 bytes; sPropOccupantVisualEffectAllocator = 0xe8, read by the creator at 0x1001605d4):
 //   +0x00 cISC4PropOccupantVisualEffect vptr (primary table 0x100a77228)
 //   +0x08 cSC4PropOccupant (0xa0 bytes; its cSC4Occupant sub-object at +0x18, the secondary vtables 0x100a772d8 /
 //         0x100a77410 / 0x100a77440 / 0x100a77588 / 0x100a775c8 / 0x100a776b8)
@@ -16,10 +17,16 @@
 //   +0xe4 u8 the effect is (or should be) running; saved in the record
 //   +0xe5 u8 the first start uses the effect's default transition; saved in the record
 //
+// Port layout note: the repo's cSC4PropOccupant keeps its cSC4Occupant sub-object at the prop's +0x00 (the original
+// nests it at prop +0x10 behind two more interface vtables; the repo base is 0x10 bytes larger, so the prop's own
+// field offsets still match the binary). AsOccupant() therefore resolves to object +0x08 here, where the original
+// returns object +0x18; every field and the 0xe8 object size are unchanged.
+//
 // Primary vtable 0x100a77228: +0x00 QueryInterface 0x100161188, +0x08 AddRef 0x1001610cc, +0x10 Release
 // 0x10016112a, +0x18 AsOccupant 0x100163452, +0x20 AsPropOccupant 0x10016345c, +0x28 SetEffectType(char const*)
 // 0x1001614c2, +0x30 SetEffectType(uint) 0x10016162c, +0x38 StartEffect(bool) 0x10016167a, +0x40 StopEffect(bool)
-// 0x1001616cc, +0x48/+0x50 destructors 0x1001608b4 / 0x1001608e8, +0x58 Init 0x100160950, +0x60 Shutdown
+// 0x1001616cc, +0x48/+0x50 destructor entries 0x1001608b4 / 0x1001608e8 (both call the body at 0x1001607e6),
+// +0x58 Init 0x100160950, +0x60 Shutdown
 // 0x100160e40, +0x68 Write 0x100160ec2, +0x70 Read 0x100160ffa, +0x78 GetGZCLSID 0x100163466.
 //
 // Properties (exemplar ids, read in Init):
@@ -71,6 +78,8 @@ constexpr std::uint8_t kOccupantFlagShown = 0x2;   // cSC4Occupant flags byte, b
 
 // The effects manager (SL::spEffectsManager, the global at 0x100b21368) as this class uses it. The manager itself
 // (cSC4EffectsManager) is not recovered; each method mirrors one original vtable call.
+// The effect object is the cSC4VisualEffect the manager returns; the calls this class makes on it are its primary
+// vtable's 0x18 Start / 0x20 Stop / 0x38 SetEffectTransform / 0x10 Release.
 class IPropVisualEffectHost {
 public:
     virtual ~IPropVisualEffectHost() = default;
@@ -144,7 +153,6 @@ public:
     std::uint32_t TypeVariantCount() const { return typeVariantCount_; }
     bool EffectActive() const { return effectActive_; }
     bool DefaultTransition() const { return defaultTransition_; }
-    void SetDefaultTransition(bool value) { defaultTransition_ = value; }   // tests only (stream field)
 
 private:
     bool RestartFromNameVariant();   // the 0xc98204b8 + state property family

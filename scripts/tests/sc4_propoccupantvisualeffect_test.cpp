@@ -113,7 +113,6 @@ int main() {
     CHECK(object->AsOccupant() == static_cast<cISC4Occupant*>(object->AsPropOccupant()));
     CHECK(reinterpret_cast<const char*>(object->AsPropOccupant()) - reinterpret_cast<const char*>(object) == 0x08);
     CHECK(reinterpret_cast<const char*>(&object->EffectName()) - reinterpret_cast<const char*>(object) == 0xb0);
-    CHECK(reinterpret_cast<const char*>(&object->EffectName()) - reinterpret_cast<const char*>(object) >= 0xb0);
     CHECK(object->Effect() == nullptr && !object->EffectActive() && object->DefaultTransition());
     CHECK(object->EffectName().Strlen() == 0 && object->EffectType() == 0);
     CHECK(object->NameVariantCount() == 0 && object->TypeVariantCount() == 0);

@@ -279,4 +279,15 @@ public:
     virtual cIGZWin* GZGetFocus() = 0;                                   // [36]
     virtual void GZSetFocus(cIGZWin* window) = 0;                        // [37]
     virtual cIGZKeyboard* GetKeyboard() = 0;                             // [38]
+    // [44] +0x160: the game's own message box (cGZWinMgrBase::GZMsgBox @ 0x100623722); answers the button id
+    // (gz::kMsgBoxYes 0x5301814c and friends) or 0 when no box could be shown. Default: no box.
+    virtual int GZMsgBox(const cIGZString& text, const cIGZString& title, std::uint32_t style, bool unused1,
+                         std::uint32_t unused2) {
+        (void)text;
+        (void)title;
+        (void)style;
+        (void)unused1;
+        (void)unused2;
+        return 0;
+    }
 };
