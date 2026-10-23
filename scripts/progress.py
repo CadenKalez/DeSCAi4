@@ -117,6 +117,18 @@ def main():
                 out.append(f"| {cat} *({'library' if kind=='lib' else 'compiler'})* | {v:,} | — | — |")
     pend = [h for h,s in done.items() if s=="pending"]
     out.append(f"\nPending (blocked on a dependency): {len(pend)} functions in the ledger.")
+    # macOS port scope: what the shipping target does not need (scripts/macos_scope.py is the one list).
+    try:
+        import importlib.util as _iu
+        _spec = _iu.spec_from_file_location("macos_scope", ROOT / "scripts/macos_scope.py")
+        _scope = _iu.module_from_spec(_spec); _spec.loader.exec_module(_scope)
+        _m = _scope.summary()
+        out.append(f"\n**macOS port scope**: {_m['excluded_total']:,} functions in {len(_scope.EXCLUDED)} classes are not needed on this "
+                   f"target (`scripts/macos_scope.py`), so the necessary set is **{_m['necessary_total']:,}**. Recovered "
+                   f"**{_m['necessary_recovered']:,}** = **{_m['necessary_pct']:.2%}** of it; 80% needs **{_m['target_80']:,}** "
+                   f"({_m['target_80'] - _m['necessary_recovered']:+,}).")
+    except Exception as _e:   # the meter must never fail because of the scope module
+        out.append(f"\n**macOS port scope** unavailable: {_e}")
     text = "\n".join(out)+"\n"
     (ROOT/"notes/progress.md").write_text(text)
     # README meter: static shields.io badge + text bar between markers (works in a private repo)
@@ -124,10 +136,18 @@ def main():
     filled = round(pct/5)
     bar = "█"*filled + "░"*(20-filled)
     color = "red" if pct < 25 else "orange" if pct < 50 else "yellow" if pct < 75 else "green"
+    try:                                  # the shipping target counts only what the macOS port needs
+        _mc = _scope.summary()
+        _mline = (f"\n![macOS port](https://img.shields.io/badge/macOS_port-{_mc['necessary_pct']*100:.1f}%25-blue) "
+                  f"**{_mc['necessary_pct']*100:.1f}%** of the {_mc['necessary_total']:,} functions the macOS port needs "
+                  f"({_mc['necessary_recovered']:,} recovered; 80% = {_mc['target_80']:,})")
+    except Exception:
+        _mline = ""
     block = ("<!-- progress:start -->\n"
              f"![decompiled](https://img.shields.io/badge/decompiled-{pct:.1f}%25-{color})\n\n"
              f"`{bar}` **{pct:.1f}%** — {nrec:,} of {ngame:,} game functions recovered, {ngame-nrec:,} remaining "
-             "(details: [notes/progress.md](notes/progress.md))\n"
+             "(details: [notes/progress.md](notes/progress.md))"
+             + _mline + "\n"
              "<!-- progress:end -->")
     rd = ROOT/"README.md"
     if rd.exists():

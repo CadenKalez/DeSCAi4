@@ -24,3 +24,5 @@ Binary: Sim City 4 Deluxe Editionsub (x86_64). Functions in Ghidra: **43,280**; 
 | compiler thunks / static-init glue *(compiler)* | 7,935 | — | — |
 
 Pending (blocked on a dependency): 171 functions in the ledger.
+
+**macOS port scope**: 283 functions in 17 classes are not needed on this target (`scripts/macos_scope.py`), so the necessary set is **26,597**. Recovered **18,942** = **71.22%** of it; 80% needs **21,278** (+2,336).
