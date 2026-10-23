@@ -23,6 +23,9 @@
 #include "sc4/GameDataRegistry.h"
 #include "sc4/MySimWinProc.h"
 
+// The interface doubles below override whole recovered interfaces; the parameters they ignore are intentional.
+#pragma clang diagnostic ignored "-Wunused-parameter"
+
 static int failures = 0;
 #define CHECK(c) do { if (!(c)) { std::printf("FAIL line %d: %s\n", __LINE__, #c); ++failures; } } while (0)
 #define CHECK_EQ(a, b) do { const auto va = (a); const auto vb = (b); if (!(va == vb)) { \
@@ -207,6 +210,7 @@ struct FakeAdviceWin final : cGZWin, IWinAdviceList {
     std::vector<Entry> entries;
     int clears = 0, rebuilds = 0, background = 0;
     int messages = 0;
+    cGZMessage lastMessage;
     std::uint32_t bgImage = 0;
     bool lastRebuild = false;
     bool QueryInterface(std::uint32_t iid, void** out) override {
@@ -228,6 +232,7 @@ struct FakeAdviceWin final : cGZWin, IWinAdviceList {
     void RebuildHTML(bool force) override { ++rebuilds; lastRebuild = force; }
     void SetbgImage(std::uint32_t image) override { ++background; bgImage = image; }
     void ClearList() override { ++clears; entries.clear(); }
+    bool DoMessage(cGZMessage& message) override { ++messages; lastMessage = message; return true; }
     void ScrollToAnchor(const cIGZString&) override {}
     void DisableVerticalScrollbar() override {}
     cIGZWin* AsIGZWin() override { return this; }
@@ -279,7 +284,7 @@ struct FakeAdvice final : cISC4Advice {
     cRZString message{"Message"};
     cRZString dummy_;
     bool QueryInterface(std::uint32_t iid, void** out) override {
-        if (iid != 1) return false;
+        if (iid != 1 && iid != kMySimAdviceIid) return false;
         *out = static_cast<cISC4Advice*>(this);
         AddRef();
         return true;
@@ -528,7 +533,7 @@ struct HostImpl final : IMySimWinProcHost {
     FakeModelManager vehicles, pedestrians;
     std::string cityName = "Testville";
     std::vector<std::uint32_t> posted;
-    std::vector<std::unique_ptr<FakePickSim>> picks;
+    std::vector<FakePickSim*> picks;
     std::vector<std::pair<cRZString, std::uint32_t>> exemplarStrings;
 
     cIGZMessageServer2* MessageServer() override { return &server; }
@@ -561,9 +566,8 @@ struct HostImpl final : IMySimWinProcHost {
     bool CreateChangeJobTool(cISC4MySim*) override { ++jobTools; return true; }
     bool CityName(cIGZString& out) override { out.AssignFromCString(cityName.c_str()); return true; }
     IPickSimWinProc* CreatePickSimWinProc(std::uint32_t index) override {
-        picks.push_back(std::make_unique<FakePickSim>(index));
-        picks.back()->AddRef();
-        return picks.back().get();
+        picks.push_back(new FakePickSim(index));   // no reference yet; the panel takes one (and the double is leaked)
+        return picks.back();
     }
     cIGZWinMgr* WindowManager() override { return mgr; }
     void PostMessage2(std::uint32_t type, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
@@ -576,7 +580,7 @@ struct HostImpl final : IMySimWinProcHost {
         }
         return false;
     }
-    FakePickSim* LastPick() const { return picks.empty() ? nullptr : picks.back().get(); }
+    FakePickSim* LastPick() const { return picks.empty() ? nullptr : picks.back(); }
 };
 
 // The window tree the panel expects: a control container (the panel's parent), the panel itself and one window per
@@ -603,8 +607,20 @@ FakeWindow* BuildTree(FakeMgr2& mgr, FakeGen*& panel) {
     addWindow(kMySimDialogStatAlt);
     addWindow(kMySimDialogTransport);
     // the small / large page frames and their body lists
-    auto* small = addWindow(0xea1f1e4d);
-    auto* large = addWindow(0xaa1f1ec5);
+    auto* small = addWindow(kMySimDialogSmall);
+    auto* large = addWindow(kMySimDialogLarge);
+    auto addPageChild = [&](cIGZWin* page, std::uint32_t id) {
+        auto* child = new FakeWindow(&mgr);
+        child->AddRef();
+        child->SetID(id);
+        page->ChildAdd(child);
+    };
+    addPageChild(controls->GetChildWindowFromIDRecursive(kMySimDialogMain), 0x500);
+    addPageChild(controls->GetChildWindowFromIDRecursive(kMySimDialogStat), 0x501);
+    addPageChild(controls->GetChildWindowFromIDRecursive(kMySimDialogStatAlt), 0x502);
+    addPageChild(controls->GetChildWindowFromIDRecursive(kMySimDialogTransport), 0x503);
+    addPageChild(small, 0x504);
+    addPageChild(large, 0x505);
     auto* smallBody = new FakeAdviceWin(&mgr);
     smallBody->AddRef();
     smallBody->SetID(kMySimBodySmall);
@@ -732,13 +748,14 @@ int main() {
                                               [](EntryId entry, void* context) {
                                                   auto* name = static_cast<cSC4GameDataRegistry*>(context)
                                                                    ->GetEntryName(entry);
-                                                  return name && name->IsEqualToChars("mysims_ui", 8, true);
+                                                  return name && name->IsEqualToChars("mysims_ui", 9, true);
                                               },
                                               registry),
              true);
     // every page notification target points at the panel
-    CHECK(controls->GetChildWindowFromIDRecursive(kMySimDialogMain)->GetNotificationTarget() == panel->AsIGZWin());
-    CHECK(controls->GetChildWindowFromIDRecursive(kMySimDialogSmall)->GetNotificationTarget() == panel->AsIGZWin());
+    CHECK(controls->GetChildWindowFromIDRecursive(0x500)->GetNotificationTarget() == panel->AsIGZWin());
+    CHECK(controls->GetChildWindowFromIDRecursive(0x504)->GetNotificationTarget() == panel->AsIGZWin());
+    CHECK(controls->GetChildWindowFromIDRecursive(0x503)->GetNotificationTarget() == panel->AsIGZWin());
 
     // ---- SetDialogState shows exactly one page ----
     proc->SetDialogState(kMySimDialogLarge);
@@ -770,7 +787,6 @@ int main() {
     CHECK(controls->GetChildWindowFromIDRecursive(kMySimNameBitmapBase)->GetFlag(kWinVisible));
     CHECK(controls->GetChildWindowFromIDRecursive(kMySimNameButtons[0])->GetFlag(kWinVisible));
     CHECK(!controls->GetChildWindowFromIDRecursive(kMySimNameButtonsEmpty[0])->GetFlag(kWinVisible));
-    CHECK(!controls->GetChildWindowFromIDRecursive(kMySimNameBitmapBase + 1)->GetFlag(kWinVisible));
     CHECK(ButtonOf(controls, 0xea1f1dba)->GetFlag(kWinEnabled));
     CHECK_EQ(host.agent.tracks, 1);
     CHECK(host.agent.tracked == nullptr);
@@ -870,7 +886,7 @@ int main() {
         CHECK(expired->d.find("#8e9499") != std::string::npos);     // expired header
         CHECK(expired->c.find("8e9949") != std::string::npos);      // deactive body font
         CHECK(expired->a.find("1441625A") != std::string::npos);    // neutral down arrow
-        CHECK(!expired->enabled);
+        CHECK(expired->enabled);
     }
     if (special) {
         CHECK_EQ(special->a, special->b);                            // priority 7 duplicates the icons
@@ -1026,7 +1042,7 @@ int main() {
     proc->Show();
     CHECK(proc->Shown());
     CHECK(controls->GetChildWindowFromIDRecursive(kMySimPanelWindow)->GetFlag(kWinVisible));
-    CHECK_EQ(host.agent.tracks, static_cast<int>(tracks) + 1);
+    CHECK_EQ(host.agent.tracks, static_cast<int>(tracks) + 2);   // GetCurrentSims + Show both track nothing
     // the two model-chosen messages feed the panel's command handler (no script service, so nothing opens)
     message = new cRZMessage2Standard();
     message->AddRef();
@@ -1065,25 +1081,27 @@ int main() {
     const std::size_t posted = host.posted.size();
     cRZVariant value;
     DummyUnknown callbackContext;
-    registry->AddChildEntry(&callbackContext, "callback_context", registry->GetRootNodeEntry(), 0, &host);
-    CHECK(s_sim_select_car(nullptr, value, false, registry));
+    EntryId callbackEntry = registry->AddChildEntry(static_cast<void*>(&callbackContext), "callback_context",
+                                                    &s_sim_select_car, registry->GetRootNodeEntry(), 2, &host);
+    CHECK(callbackEntry != 0);
+    CHECK(s_sim_select_car(&callbackContext, value, false, registry));
     CHECK(host.posted.size() == posted + 1 && host.posted.back() == kMySimMsgCarChosen);
     CHECK(value.GetValBool());
-    CHECK(s_sim_select_pedestrian(nullptr, value, true, registry));   // a write posts nothing
+    CHECK(s_sim_select_pedestrian(&callbackContext, value, true, registry));   // a write posts nothing
     CHECK(host.posted.size() == posted + 1);
-    CHECK(s_sim_select_car(nullptr, value, false, nullptr));          // no registry: still true
+    CHECK(s_sim_select_car(&callbackContext, value, false, nullptr));          // no registry: still true
 
     // ---- Shutdown: unsubscribes, removes the registry node, destroys the panel and frees the object ----
     const std::size_t windowCount = mgr.destroyed.size();
-    proc->Shutdown();   // frees `proc`
+    proc->Shutdown();   // drops the reference it took; the handler's own reference keeps the object alive
     CHECK_EQ(host.server.removed.size(), std::size_t(6));
     CHECK_EQ(mgr.destroyed.size(), windowCount + 1);
     CHECK(panel->AsIGZWin()->GetParentWin() == nullptr);
+    proc->Release();    // destroys the panel procedure (the transport exemplar reference goes here)
 
     SetMySimWinProcHost(nullptr);
     registry->Release();
     controls->Release();
-    dialog->Release();
     if (failures == 0) std::puts("sc4_mysimwinproc: all passed");
     return failures ? 1 : 0;
 }

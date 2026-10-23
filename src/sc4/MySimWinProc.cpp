@@ -1,7 +1,7 @@
 #include "sc4/MySimWinProc.h"
 
 #include <algorithm>
-#include <cstring>
+#include <iterator>
 #include <string>
 
 #include "gz/RZServices.h"
@@ -26,7 +26,7 @@ constexpr const char* kLowPriorityHeader = "<FONT COLOR=\"#3f4967\"";
 constexpr const char* kMediumPriorityHeader = "<FONT COLOR=\"#09a225\"";
 constexpr const char* kHighPriorityHeader = "<FONT COLOR=\"#b00000\"";
 constexpr const char* kHighestPriorityHeader = "<BLINK><FONT COLOR=\"#f70a0b\"";
-constexpr const char* kStandardPriorityHeader = "<FONT COLOR=\"#0f0f0f\"";
+[[maybe_unused]] constexpr const char* kStandardPriorityHeader = "<FONT COLOR=\"#0f0f0f\"";
 constexpr const char* kPriorityFooter = "</B></FONT>";
 constexpr const char* kBodyFooter = "</I></FONT>";
 constexpr const char* kHighestPriorityFooter = "</B></FONT></BLINK>";
@@ -246,7 +246,8 @@ void cSC4MySimWinProc::SetDialogState(std::uint32_t state) {
 }
 
 // @ 0x100315eb2. Clears the advice list, removes the "mysims_ui" registry node, unsubscribes, destroys the panel window,
-// releases everything and finally drops the last two references (one taken here, one the caller's).
+// releases everything, then drops the reference it took on entry (net zero: the handler's own reference keeps the object
+// alive, View3DWin's RemoveGUI is what releases it).
 bool cSC4MySimWinProc::Shutdown() {
     AddRef();
     if (adviceList_) adviceList_->ClearList();
@@ -308,17 +309,20 @@ bool cSC4MySimWinProc::DoWinProcMessage(cIGZWin* window, cGZMessage& message) {
                     ShowChooseTransportDialog(false);
                     break;
                 case 0x2bbaaa79:
-                    if (g_host) g_host->CreateChangeHouseTool(sims_[currentSim_]);
+                    if (g_host && sims_[currentSim_]) g_host->CreateChangeHouseTool(sims_[currentSim_]);
                     break;
                 case 0x4a1f1dea: case 0xca9df380:
                     select = true; target = 4;
                     break;
                 case 0x4bba8aa1: {
+                    // The original dereferences the current sim here without a check; the port skips a missing one.
                     SetDialogState(kMySimDialogTransport);
                     cRZString name;
-                    Assign(name, sims_[currentSim_]->AsAdvisor()->GetPersonalName());
-                    if (cIGZWin* controls = ControlsOf(panel_)) {
-                        nsGZWinUtils::SetWindowCaption(controls, kMySimTransportCaption, name);
+                    if (cISC4MySim* sim = sims_[currentSim_]) {
+                        Assign(name, sim->AsAdvisor()->GetPersonalName());
+                        if (cIGZWin* controls = ControlsOf(panel_)) {
+                            nsGZWinUtils::SetWindowCaption(controls, kMySimTransportCaption, name);
+                        }
                     }
                     break;
                 }
@@ -356,7 +360,7 @@ bool cSC4MySimWinProc::DoWinProcMessage(cIGZWin* window, cGZMessage& message) {
                     select = true; target = 4;
                     break;
                 case 0x8bbaaa80:
-                    if (g_host) g_host->CreateChangeJobTool(sims_[currentSim_]);
+                    if (g_host && sims_[currentSim_]) g_host->CreateChangeJobTool(sims_[currentSim_]);
                     break;
                 case 0xaa1d9734: case 0xaa90b2ca:
                     small = true;
@@ -396,49 +400,36 @@ bool cSC4MySimWinProc::DoWinProcMessage(cIGZWin* window, cGZMessage& message) {
 
     if (message.type != kGZMsgCommand || message.param1 != kMySimCommandSender) return false;
     const std::uint32_t id = static_cast<std::uint32_t>(message.param2);
-    if (id < kMySimIconButtonBase) {
-        if (id - kMySimWealthButtonBase < 3) {
-            wealthFilter_ = id - kMySimWealthButtonBase;
-            nsGZWinUtils::ExcludeButtonByRange(window, kMySimWealthButtonBase, 3, id);
-            DisplayVehicleIcons(window);
-            return false;
-        }
-        switch (id) {
-            case 0x2bf3269b: case 0xabf326da:
-                if (cIGZWinMgr* manager = g_host ? g_host->WindowManager() : nullptr) manager->EndDialog(0xf, window, 0);
-                return true;
-            case 0x6bf326d1:
-                if (cIGZWinMgr* manager = g_host ? g_host->WindowManager() : nullptr) manager->EndDialog(0xf, window, 1);
-                return true;
-            case 0x6bfafa68:
-                --iconPage_;
-                break;
-            case 0x6bfafa6e:
-                ++iconPage_;
-                break;
-            default:
-                return false;
-        }
-        DisplayVehicleIcons(window);
-        return true;
-    }
-    if (id > 0x3456001b) {
-        if (id - kMySimPageButtonBase - 1 > 5) {
-            // Not a page button either: fall through to the wealth-button range test as the original does.
-            if (id - kMySimWealthButtonBase < 3) {
-                wealthFilter_ = id - kMySimWealthButtonBase;
-                nsGZWinUtils::ExcludeButtonByRange(window, kMySimWealthButtonBase, 3, id);
-                DisplayVehicleIcons(window);
-            }
-            return false;
-        }
+    bool displayIcons = false;
+    bool handled = true;
+    // The icon buttons come first; the six page buttons jump straight to the refresh. Everything else (the wealth filter
+    // and the dialog's OK / cancel buttons) shares the "common" dispatch the original reaches through LAB_100316325.
+    if (id >= kMySimIconButtonBase && id <= 0x3456001b) {
+        selectedIconButton_ = id;
+        nsGZWinUtils::ExcludeButtonByRange(window, kMySimIconButtonBase, iconsPerPage_, id);
+    } else if (id - kMySimPageButtonBase - 1 <= 5) {
         iconPage_ = iconPageOffset_ + static_cast<std::int32_t>(id - kMySimPageButtonBase - 1);
-        DisplayVehicleIcons(window);
-        return true;
+        displayIcons = true;
+    } else if (id - kMySimWealthButtonBase < 3) {
+        wealthFilter_ = id - kMySimWealthButtonBase;
+        nsGZWinUtils::ExcludeButtonByRange(window, kMySimWealthButtonBase, 3, id);
+        displayIcons = true;
+        handled = false;   // the wealth buttons let the command propagate
+    } else if (id == 0x2bf3269b || id == 0xabf326da) {
+        if (cIGZWinMgr* manager = g_host ? g_host->WindowManager() : nullptr) manager->EndDialog(0xf, window, 0);
+    } else if (id == 0x6bf326d1) {
+        if (cIGZWinMgr* manager = g_host ? g_host->WindowManager() : nullptr) manager->EndDialog(0xf, window, 1);
+    } else if (id == 0x6bfafa68) {
+        --iconPage_;
+        displayIcons = true;
+    } else if (id == 0x6bfafa6e) {
+        ++iconPage_;
+        displayIcons = true;
+    } else {
+        handled = false;
     }
-    selectedIconButton_ = id;
-    nsGZWinUtils::ExcludeButtonByRange(window, kMySimIconButtonBase, iconsPerPage_, id);
-    return true;
+    if (displayIcons) DisplayVehicleIcons(window);
+    return handled;
 }
 
 // @ 0x100316900. Fills the transport dialog's model icon buttons. The models come from the vehicle (or pedestrian)
@@ -675,7 +666,9 @@ void cSC4MySimWinProc::SetMySimStatWindow() {
     wealth.AssignFromCString("\xc2\xa7");
     std::string pips;
     const int level = sim->GetWealth();   // 0x98
-    for (int i = 0; i < level && i < 3; ++i) pips.append(wealth.ToChar(), wealth.Strlen());
+    if (level >= 1 && level <= 3) {
+        for (int i = 0; i < level; ++i) pips.append(wealth.ToChar(), wealth.Strlen());
+    }
     cRZString pipText;
     pipText.AssignFromCString(pips.c_str());
     nsGZWinUtils::SetWindowCaption(controls, kMySimStatWealth, pipText);
@@ -755,12 +748,13 @@ void cSC4MySimWinProc::ShowChooseTransportDialog(bool pedestrian) {
                         if (transportExemplar_) transportExemplar_->Release();
                         transportExemplar_ = exemplar;
                         if (sim->IsActive()) {   // 0xa0
-                            const bool applied = pedestrian ? sim->SetPedestrian(transportExemplar_)
-                                                            : sim->SetCar(transportExemplar_);
+                            // The original ignores the SetCar / SetPedestrian answer and always refreshes the button
+                            // image from the exemplar's bitmap property (kept).
+                            if (pedestrian) sim->SetPedestrian(transportExemplar_);
+                            else sim->SetCar(transportExemplar_);
                             cISCPropertyHolder* holder = transportExemplar_->AsISCPropertyHolder();
                             std::uint32_t bitmapId = 0;
-                            if (applied && holder &&
-                                cSCPropertyHelp::GetPropertyValue(holder, kMySimPropertyBitmap, bitmapId)) {
+                            if (holder && cSCPropertyHelp::GetPropertyValue(holder, kMySimPropertyBitmap, bitmapId)) {
                                 SetTransportButtonImage(bitmapId, pedestrian);
                             }
                         }

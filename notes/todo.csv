@@ -2,7 +2,7 @@ id,class,task,blocked_by,status,where
 CLASS-(anonymous namespace),(anonymous namespace),"recover 286 remaining function(s) (286 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 AUDIT-1,(audit),1378 ledger rows (314 classes) still name no verification. Repair = point each at a registered test or oracle (scripts/ledger_audit.py lists them by class); do not edit evidence to claim a test that does not cover them,,done,notes/ledger_audit.md
 ODR-1,(build),"OccupantManager.h and NetworkTool.h both define kGZIID_cIGZMessageTarget2, so the two headers cannot be included in one TU; move the constant to a single shared header",,open,src/sc4/OccupantManager.h
-CLASS-(free),(free),"recover 382 remaining function(s) (273 not started, 109 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-(free),(free),"recover 376 remaining function(s) (267 not started, 109 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-(free),(free),finish 188 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-AspyrDXTTools,AspyrDXTTools,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-CQTPlayer,CQTPlayer,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -588,7 +588,7 @@ CLASS-cSC4MySimInputControlChangeJob,cSC4MySimInputControlChangeJob,"recover 12 
 CLASS-cSC4MySimInputControlDispatch,cSC4MySimInputControlDispatch,"recover 20 remaining function(s) (20 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4MySimInputControlMoveIn,cSC4MySimInputControlMoveIn,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4MySimPool,cSC4MySimPool,"recover 8 remaining function(s) (8 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4MySimWinProc,cSC4MySimWinProc,"recover 31 remaining function(s) (31 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2, cIGZWinProc","CLASS-cIGZMessageTarget2,CLASS-cIGZWinProc",open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4MySimWinProc,cSC4MySimWinProc,"recover 3 remaining function(s) (3 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2, cIGZWinProc","CLASS-cIGZMessageTarget2,CLASS-cIGZWinProc",open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4MyStreetSim,cSC4MyStreetSim,"recover 23 remaining function(s) (23 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4MyStreetSimInputControl,cSC4MyStreetSimInputControl,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4Nation,cSC4Nation,"recover 29 remaining function(s) (29 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -619,7 +619,7 @@ CLASS-cSC4NetworkTunnelOccupant,cSC4NetworkTunnelOccupant,"recover 14 remaining 
 CLASS-cSC4NetworkTypeInfo,cSC4NetworkTypeInfo,"recover 11 remaining function(s) (11 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4NetworkWorldCache,cSC4NetworkWorldCache,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4NewRegionDialog,cSC4NewRegionDialog,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4NewsTickerWinProc,cSC4NewsTickerWinProc,"recover 21 remaining function(s) (21 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2, cIGZWinProc","CLASS-cIGZMessageTarget2,CLASS-cIGZWinProc",open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4NewsTickerWinProc,cSC4NewsTickerWinProc,"recover 21 remaining function(s) (21 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2, cIGZWinProc","CLASS-cIGZMessageTarget2,CLASS-cIGZWinProc",done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4ObliterateCity,cSC4ObliterateCity,"recover 27 remaining function(s) (27 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4OccupantFilterByGroupAndDistance,cSC4OccupantFilterByGroupAndDistance,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4OccupantFilterByNetworkFlags,cSC4OccupantFilterByNetworkFlags,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -973,7 +973,7 @@ LEDGER-nRZSimGL,nRZSimGL,finish 6 partial/pending function(s) (see notes/ledger.
 CLASS-nS3D,nS3D,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-nS3D,nS3D,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,done,notes/ledger.csv
 CLASS-nSC4Networks,nSC4Networks,"recover 10 remaining function(s) (10 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-nSC4UI,nSC4UI,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-nSC4UI,nSC4UI,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-nSCRes,nSCRes,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-nSGLDX7,nSGLDX7,"recover 18 remaining function(s) (18 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-nSGLDX7,nSGLDX7,finish 17 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv

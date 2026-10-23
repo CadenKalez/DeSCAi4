@@ -171,7 +171,7 @@ public:
     virtual void ClearList() = 0;                         // 0x38
     virtual void ScrollToAnchor(const cIGZString& anchor) = 0;   // 0x40
     virtual void DisableVerticalScrollbar() = 0;          // 0x48
-    virtual cIGZWin* AsIGZWin() = 0;                      // 0x18 of the interface? see the .cpp comment
+    virtual cIGZWin* AsIGZWin() = 0;                      // 0x18 (first method of the interface)
 };
 
 // cISC4MySimAgentSimulator (the object SL::spCity vslot 0x238 answers; cSC4MySimAgentSimulator). Only the five calls the
@@ -217,7 +217,9 @@ public:
     virtual void RestoreWindowLocation(cIGZWin* window) = 0;             // SL::spWinLocationSaver vslot 0x48
     virtual void SaveWindowLocation(cIGZWin* window) = 0;                // SL::spWinLocationSaver vslot 0x28
     virtual bool CityName(cIGZString& out) = 0;                          // SL::spSC4 vslot 0x1d8
-    virtual IPickSimWinProc* CreatePickSimWinProc(std::uint32_t index) = 0;   // cSC4PickSimWinProc ctor; one reference
+    virtual IPickSimWinProc* CreatePickSimWinProc(std::uint32_t index) = 0;
+        // cSC4PickSimWinProc ctor @ 0x1003549dc: a fresh object with no reference yet (like cRZUnknown's ctor); AddSim
+        // takes the reference and releases it after the modal Init loop.
     virtual cIGZWinMgr* WindowManager() = 0;                             // RZ::WM()
     // SC4CreateWindowFromScript(key, parent, id, iid, out) @ 0x100039bf7 (the UI script service); a cIGZWinGen* here.
     virtual bool CreateTransportDialog(const cGZPersistResourceKey& key, cIGZWin* parent, std::uint32_t id,
