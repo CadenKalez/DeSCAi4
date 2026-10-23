@@ -14,7 +14,7 @@ CLASS-HTMLDocumentAutoShutdown,HTMLDocumentAutoShutdown,"recover 1 remaining fun
 CLASS-HTTPMessage,HTTPMessage,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 MISCTYPES-1,HTTPMessage,"Field layout of CookieData / TVNode / WinGridCellData / HELI_TYPE_DATA is by offset only (records copied wholesale); name the fields when their owners (cGZWinTreeView, cGZWinGrid, helicopter sim) are recovered",,open,src/sc4/MiscTypes.h
 CLASS-ICMPDLLUnloader,ICMPDLLUnloader,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-MacTools,MacTools,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-MacTools,MacTools,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-MatrixRow<WinGridCellData>,MatrixRow<WinGridCellData>,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-MatrixRow<WinGridColData>,MatrixRow<WinGridColData>,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-MatrixRow<WinGridRowData>,MatrixRow<WinGridRowData>,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
