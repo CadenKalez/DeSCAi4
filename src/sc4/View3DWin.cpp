@@ -7,7 +7,9 @@
 #include <utility>
 
 #include "gz/CommandParameterSet.h"
+#include "gz/WinUtils.h"
 #include "rz/cRZMessage2Standard.h"
+#include "sc4/SCResParser.h"
 #include "s3d/ModelInstance.h"
 
 namespace sc4 {
@@ -159,7 +161,7 @@ bool cSC4View3DWin::Shutdown() {
     if (cIGZWin* recorder = GetChildWindowFromID(kView3DAnimationRecorderId)) ChildRemove(recorder);
     if (host_) host_->ShutdownLotConfigurationEditors();                    // +0x270 / +0x278
     if (coverageHelper_) coverageHelper_->Shutdown();
-    if (host_) host_->RemoveGui();                                          // @ 0x100780eaa
+    RemoveGUI();                                                            // @ 0x100780eaa
     if (progressScreen_) {
         if (host_) host_->ShutdownProgressScreen(progressScreen_);
         progressScreen_->Release();
@@ -1102,6 +1104,183 @@ void cSC4View3DWin::AddWinAnimationRecorder(bool enable) {                  // 0
     recorder->SetID(kView3DAnimationRecorderId);
     ChildAdd(recorder);
     recorder->Release();
+}
+
+// ==================================================================================================== the GUI
+
+// The toolbar / panel refresh functions. AddGUI (0x1007892fc) is not recovered — it builds 8 script windows,
+// attaches the five window procedures and needs nSC4UI's four window-set helpers, none of which exist yet — so
+// in the port panelWindow_ and the panel block below are whatever the host filled in. Each function is the
+// original's, with a guard for the windows a missing AddGUI leaves null (the original would fault there).
+
+void cSC4View3DWin::UpdateZoomButtons() {                                   // 0x1007872e8
+    if (!panelWindow_) return;
+    nsGZWinUtils::SetWindowEnabled(panelWindow_, kPanelZoomInButtonId, CanZoomIn());     // vslot 0x60
+    nsGZWinUtils::SetWindowEnabled(panelWindow_, kPanelZoomOutButtonId, CanZoomOut());   // vslot 0x68
+}
+
+void cSC4View3DWin::DoCityEstablished() {                                   // 0x100786f3e
+    if (panelWindow_) {
+        nsGZWinUtils::SetWindowEnabled(panelWindow_, kPanelNewCityButtonId, true);
+        nsGZWinUtils::SetWindowEnabled(panelWindow_, kPanelMayorButtonId, true);
+        nsGZWinUtils::SetWindowEnabled(panelWindow_, kPanelObliterateButtonId, true);
+    }
+    // The original only drops the tool that is active when the city is established (vslot 0xc0 / 0xd0).
+    if (GetCurrentViewInputControl()) RemoveCurrentViewInputControl(false);
+    UpdateBudget();
+    UpdateCityName();
+}
+
+void cSC4View3DWin::UpdateCityName() {                                      // 0x10078700a
+    cRZString name;
+    if (host_) host_->GetCityName(name);                     // SL::spCity vslot 0x60
+    if (panelWindow_) nsGZWinUtils::SetWindowCaption(panelWindow_, kPanelCityNameId, name);
+}
+
+void cSC4View3DWin::UpdateDayNightButtons() {                               // 0x10078aa58
+    const int mode = host_ ? host_->VisualTimeMode() : 0;    // SL::sp24HourClock vslot 0x30: 0 real, 1 noon, 2 midnight
+    if (!secondaryMenu_) return;
+    nsGZWinUtils::SetButtonToggleState(secondaryMenu_, kPanelRealTimeButtonId, mode == 0);
+    for (int i = 0; i < 2; ++i)
+        nsGZWinUtils::SetButtonToggleState(secondaryMenu_, kPanelVisualModeButtonIds[i],
+                                           mode == kPanelVisualModeButtonModes[i]);
+}
+
+void cSC4View3DWin::UpdatePopulation() {                                    // 0x100787fb6
+    if (!populationText_) return;
+    const std::int64_t population = host_ ? host_->CityPopulation() : 0;   // SL::spResidentialSim vslot 0x80
+    cRZString text;
+    if (host_) host_->FormatNumber(population, text);        // RZ::LM() string 0 -> vslot 0x90
+    populationText_->SetCaption(text);                       // vslot 0x20
+}
+
+void cSC4View3DWin::UpdateBudget() {                                        // 0x1007887bc
+    if (budgetText_) {
+        if (!host_ || !host_->CityExists()) return;          // the original returns when SL::spCity is null
+        const std::int64_t funds = host_->CityFunds();      // SL::spCity vslot 0x1a0 -> vslot 0x30
+        cRZString money;
+        host_->MakeMoneyString(funds, money);               // SC4MakeMoneyString @ 0x1000392b0
+        budgetText_->SetCaption(money);                     // vslot 0x20
+        // Red when the treasury is negative, blue-grey otherwise (0x77,0,0 / 0x44,0x55,0x66).
+        budgetText_->SetTextColor(gz::cIGZWinText::kColorText,
+                                  funds < 0 ? host_->MakeNativeColor(0x77, 0, 0)
+                                            : host_->MakeNativeColor(0x44, 0x55, 0x66));
+        // An affordable cost indicator is re-rendered against the new treasury (vslot 0x150).
+        if (costState_ == 1 && costColorState_ == 1) SetCostIndicator(costValue_);
+    }
+    if (budgetUIWinProc_ && host_ && host_->BudgetDialogOpen(budgetUIWinProc_))
+        host_->RefreshBudgetDialog(budgetUIWinProc_);
+}
+
+// The "RenderProp" / "Render Properties" cheat's single property setter (0x10079064e). The name is looked up
+// in the bool, int and float tables in that order; a bool with an empty value is toggled, and every accepted
+// property posts 0xc9f775bb so the renderer picks the change up. Returns false when no table knows the name.
+bool cSC4View3DWin::SetRenderProperties(const cIGZString& name, const cIGZString& value) {
+    if (!host_) return false;
+    cSC4RenderProperties* properties = host_->GlobalRenderProperties();   // SL::spRenderProperties
+    if (!properties) return false;
+    const char* key = name.ToChar();
+    const std::string text = value.ToChar();
+    std::uint32_t index = properties->BoolPropertyIDFromName(key);        // vslot 0x60
+    if (static_cast<std::int32_t>(index) >= 0) {
+        if (!text.empty()) properties->SetBoolValue(index, nSCRes::ParseBool(text));      // vslot 0x48
+        else properties->SetBoolValue(index, !properties->BoolValue(index));              // vslot 0x30
+    } else if (static_cast<std::int32_t>(index = properties->IntPropertyIDFromName(key)) >= 0) {   // vslot 0x68
+        properties->SetIntValue(index, nSCRes::ParseInt(text));                          // vslot 0x50
+    } else if (static_cast<std::int32_t>(index = properties->FloatPropertyIDFromName(key)) >= 0) { // vslot 0x70
+        properties->SetFloatValue(index, nSCRes::ParseFloat(text));                      // vslot 0x58
+    } else {
+        return false;
+    }
+    host_->PostGameMessage(kMsgRenderPropertiesChanged);
+    return true;
+}
+
+void cSC4View3DWin::SetRenderPropertiesStatic(const cRZString& name, const cRZString& value, void* context) {
+    // cRZIniFile::EnumEntries callback with the view as its context (0x100792b3a).
+    if (auto* view = static_cast<cSC4View3DWin*>(context)) view->SetRenderProperties(name, value);
+}
+
+// The whole GUI teardown (0x100780eaa): every window is taken out of the window manager's valid list, shut down
+// and released, the guiWindows_ vector releases its references in reverse, and the five window procedures get
+// their own Shutdown. The port does not model the cost-indicator windows (+0x5c0 / +0x5c8 / +0x5f0) and borrows
+// the cursor-text window from the host (AddGUI would own it), so those three blocks are skipped.
+void cSC4View3DWin::RemoveGUI() {
+    cIGZWinMgr* mgr = GetWindowManager();
+    auto releaseWindow = [mgr](cIGZWin*& window) {
+        if (!window) return;
+        cIGZWin* released = window;
+        window = nullptr;
+        if (mgr) mgr->RemoveWindowFromValidList(released);
+        released->Shutdown();
+        released->Release();
+    };
+    releaseWindow(panelWindow_);                                            // +0x280
+    if (panelInterface_) { panelInterface_->Release(); panelInterface_ = nullptr; }   // +0x288
+    releaseWindow(toolbarWindow_);                                          // +0x290
+    for (cIGZWin* window : guiWindows_) {                                   // +0x298
+        if (!window) continue;
+        window->RemoveMessageFilter(static_cast<cIGZWinMessageFilter*>(this));   // vslot 0x3a8
+        if (mgr) mgr->RemoveWindowFromValidList(window);
+        window->Shutdown();
+    }
+    for (auto it = guiWindows_.rbegin(); it != guiWindows_.rend(); ++it) {
+        if (*it) (*it)->Release();
+    }
+    guiWindows_.clear();
+    for (cIGZWin*& attach : panelAttach_) {                                 // +0x328..+0x348
+        if (attach) { attach->Release(); attach = nullptr; }
+    }
+    if (newsTickerWinProc_) {                                               // +0x450
+        if (host_) host_->ShutdownNewsTickerWinProc(newsTickerWinProc_);
+        newsTickerWinProc_->Release();
+        newsTickerWinProc_ = nullptr;
+    }
+    if (mySimWinProc_) {                                                    // +0x460
+        if (host_) host_->ShutdownMySimWinProc(mySimWinProc_);
+        mySimWinProc_->Release();
+        mySimWinProc_ = nullptr;
+    }
+    if (panelUIWinProc_) { panelUIWinProc_->Release(); panelUIWinProc_ = nullptr; }   // +0x448
+    if (window470_) { window470_->Shutdown(); window470_->Release(); window470_ = nullptr; }   // +0x470
+    if (window478_) { window478_->Release(); window478_ = nullptr; }        // +0x478
+    releaseWindow(window4b0_);                                              // +0x4b0
+    releaseWindow(viewManagerSource_);                                      // +0x498
+    releaseWindow(window4a0_);                                              // +0x4a0
+    releaseWindow(window4a8_);                                              // +0x4a8
+    if (graphsViewWinProc_) {                                               // +0x488
+        if (host_) host_->ShutdownGraphsViewWinProc(graphsViewWinProc_);
+        cIGZWin* proc = graphsViewWinProc_;
+        graphsViewWinProc_ = nullptr;
+        proc->Release();
+    }
+    if (buildingSelectWinProc_) {                                           // +0x490
+        if (host_) host_->ShutdownBuildingSelectWinProc(buildingSelectWinProc_);
+        cIGZWin* proc = buildingSelectWinProc_;
+        buildingSelectWinProc_ = nullptr;
+        proc->Release();
+    }
+    if (budgetUIWinProc_) {                                                 // +0x468
+        if (host_) host_->ShutdownBudgetUIWinProc(budgetUIWinProc_);
+        budgetUIWinProc_->Release();
+        budgetUIWinProc_ = nullptr;
+    }
+    for (gz::cIGZWinText** text : {&dateText_, &budgetText_, &populationText_}) {   // +0x4b8 / +0x4c0 / +0x4c8
+        if (!*text) continue;
+        cIGZWin* window = (*text)->AsIGZWin();                              // vslot 0x18
+        if (window) {
+            if (mgr) mgr->RemoveWindowFromValidList(window);
+            window->Shutdown();
+        }
+        gz::cIGZWinText* released = *text;
+        *text = nullptr;
+        released->Release();
+    }
+    if (tipManager_) {                                                      // +0x4d0
+        if (host_) host_->ShutdownToolTipManager(tipManager_);
+        tipManager_->Release();
+        tipManager_ = nullptr;
+    }
 }
 
 // ==================================================================================================== tool invokers

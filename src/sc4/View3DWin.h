@@ -22,7 +22,7 @@
 //   +0x218 list<cRZAutoRefCount<cIGZMessage2>> (deferred messages)  +0x228 its count
 //   +0x230 window service (referenced)  +0x238 the simulator to pause while the city is hidden
 //   +0x248 cRZTimer(milliseconds)        +0x260 sim-hidden pause active  +0x264 2000 ms timeout
-//   +0x270..+0x4d0 the GUI windows and panel vectors (see RemoveGUI / AddGUI, not recovered)
+//   +0x270..+0x4d0 the GUI windows and panel vectors (AddGUI, not recovered; RemoveGUI is)
 //   +0x4d8 the current view filter information (referenced)   +0x4e0 the view level
 //   +0x4e4 scroll angle   +0x4e8 scroll speed   +0x4ec scrolling   +0x4f0 stop speed factor (1.0)
 //   +0x4f4 stop scaled by speed   +0x4f5 stopping   +0x4f8 stop speed
@@ -79,6 +79,10 @@
 //   moves the window when it is already visible; the position comes from the window manager's
 //   GetCursorPos (0x100791631).
 // * AddWinAnimationRecorder appends "RecordedAnimations/" to the user-data directory (0x100780e02).
+// * DoCityEstablished only drops the active tool when one is on the stack (0x100786f8a: GetCurrentViewInputControl
+//   first, so RemoveCurrentViewInputControl(false) is never called on an empty stack).
+// * UpdateZoomButtons maps CanZoomIn (vslot 0x60) to button 0x4992046a and CanZoomOut (0x68) to 0xe9920494
+//   (0x1007872ec..0x100787320), the opposite of what the ids' names suggest.
 // The port keeps the host services as one IView3DWinHost method per original call; the object at
 // +0x1d0 and the coverage helper at +0x5f8 are seams (their classes are not recovered). Every offset
 // in the comments is the original's: the port's base layout matches it exactly up to +0x1d0 (verified:
@@ -87,7 +91,8 @@
 // became an 8-byte pointer (tools_ is at +0x1d8, not +0x1e8), most of the GUI blocks at +0x270..+0x4d0
 // are not modelled (only the two menu windows, the cursor-text block and the scroll state are;
 // filterInfo_ is at +0x268, not +0x4d8) and cSC4RenderProperties is 8 bytes shorter (so
-// renderProperties_ is at +0x2c0, not +0x540). sizeof(cSC4View3DWin) is 0x3f0 in the port.
+// renderProperties_ is at +0x2c0, not +0x540). sizeof(cSC4View3DWin) is 0x558 in the port (the original's
+// 0x6b0 is not reachable: the 42 GUI members keep their meaning but take the port's smaller vector/string sizes).
 // Compile without FMA contraction: the results follow the original single-precision operation order.
 #pragma once
 #include <cstddef>
@@ -99,6 +104,7 @@
 #include "gz/CommandServer.h"
 #include "gz/Win.h"
 #include "gz/WinInterfaces.h"
+#include "gz/WinText.h"
 #include "gz/cIGZMessage2.h"
 #include "rz/cRZAutoRefCount.h"
 #include "rz/cRZString.h"
@@ -140,6 +146,7 @@ constexpr std::uint32_t kMsgViewTerrainDisplayChanged = 0x470bd214;  // RunGloba
 constexpr std::uint32_t kMsgViewCommand = 0x00000003;                // the command message (cGZMsgCommand)
 constexpr std::uint32_t kCmdViewCatalogItem = 0x49d993d4;            // DoMessage case 3's parameter id
 constexpr std::uint32_t kMsgViewCheatCode = 0x230e27ac;              // DoMessage: run a cheat
+constexpr std::uint32_t kMsgRenderPropertiesChanged = 0xc9f775bb;    // SetRenderProperties (0x100790a20)
 constexpr std::uint32_t kMsgViewFocus = 0x00000010;                 // cGZMsgSetFocus
 constexpr std::uint32_t kMsgViewMouseMove = 0x0000000d;             // cGZMsgMouseMove
 constexpr std::uint32_t kMsgViewMouseEnter = 0x00000013;
@@ -174,6 +181,25 @@ constexpr std::uint32_t kView3DCheatCodes[13] = {
 constexpr const char* kView3DCheatStrings[13] = {
     "GOL", "SizeOf", "TastyZots", "Zoneria", "RenderProp", "RP", "WatchMeMove", "TerrainQuery", "Recorder",
     "You don't deserve it", "LotPlop", "BuildingPlop", "toll"};
+
+// ---------------------------------------------------------------------------------------------------------------
+// The panel / toolbar ids the refresh functions poke (the binary's literal pools).
+// ---------------------------------------------------------------------------------------------------------------
+constexpr std::uint32_t kPanelZoomInButtonId = 0x4992046a;           // UpdateZoomButtons, vslot 0x60 (CanZoomIn)
+constexpr std::uint32_t kPanelZoomOutButtonId = 0xe9920494;          // UpdateZoomButtons, vslot 0x68 (CanZoomOut)
+constexpr std::uint32_t kPanelCityNameId = 2;                        // UpdateCityName, the toolbar caption
+constexpr std::uint32_t kPanelNewCityButtonId = 0x99887766;          // DoCityEstablished
+constexpr std::uint32_t kPanelMayorButtonId = 0x8b96b73e;            // DoCityEstablished
+constexpr std::uint32_t kPanelObliterateButtonId = 0x4988bc6a;       // DoCityEstablished / DoCityObliterated
+constexpr std::uint32_t kPanelObliterateToggleId = 0x2988bc85;       // DoCityObliterated
+constexpr int kPanelBudgetIndex = 4;                                 // DoCityObliterated hides panel 4
+// 0x100a2a828 (ids) / 0x100a2a834 (modes): the two visual-time buttons, and the real-time button above them.
+constexpr std::uint32_t kPanelRealTimeButtonId = 0xca35cb74;
+constexpr std::uint32_t kPanelVisualModeButtonIds[2] = {0xca35cb76, 0xca35cb78};
+constexpr int kPanelVisualModeButtonModes[2] = {1, 2};               // 1 = noon, 2 = midnight
+// 0x100a2a9c0: the toolbar button each panel index toggles (DoPanelCommandGUI; kept for the next step).
+constexpr std::uint32_t kPanelToggleButtonIds[5] = {
+    0x2988bc85, 0xc988bc79, 0x4988bc6a, 0x8988bc94, 0x2988bc85};
 
 // The 132 message types the notification helper at +0x1d0 registers (the static array at 0x100a2a550,
 // constructor call at 0x10077f4c8 with count 0x84).
@@ -409,7 +435,6 @@ public:
     virtual void ShutdownProgressScreen(cIGZUnknown* screen) = 0;     // @ 0x10032d0a8 + Release
     virtual void ShutdownValidationWindow(cIGZUnknown* window) = 0;   // +0x648 vslot 0x20 + Release
     virtual void ShutdownLotConfigurationEditors() = 0;               // +0x270 / +0x278 Shutdown + Release
-    virtual void RemoveGui() = 0;                                     // cSC4View3DWin::RemoveGUI @ 0x100780eaa
     virtual void ShutdownModelMaker(cIGZUnknown* modelMaker) = 0;     // +0x190 Shutdown + Release
     virtual void ShutdownCameraObject(cIGZUnknown* camera) = 0;       // +0x178 cS3DCamera::Shutdown + Release
     virtual void ShutdownSimulationClock(cIGZUnknown* clock) = 0;     // +0x170 vslot 0x20 + Release
@@ -457,6 +482,23 @@ public:
     // --- service locator (src/sc4/ServiceLocator.cpp)
     virtual void OnView3DCreate(cISC4View3DWin* view) = 0;            // SL::OnView3DCreate  @ 0x100040fec
     virtual void OnView3DShutdown() = 0;                              // SL::OnView3DShutdown @ 0x10004107c
+    // --- the panel refresh functions (UpdateCityName / UpdatePopulation / UpdateDayNightButtons / RemoveGUI)
+    virtual void GetCityName(cIGZString& out) = 0;                    // SL::spCity vslot 0x60 (0x100787032)
+    virtual int VisualTimeMode() = 0;                                 // SL::sp24HourClock vslot 0x30 (0x10078aa70)
+    virtual int CityPopulation() = 0;                                 // SL::spResidentialSim vslot 0x80 (0x100787fca)
+    virtual std::int64_t CityFunds() = 0;                             // SL::spCity vslot 0x1a0 -> vslot 0x30 (0x1007887f6)
+    virtual void FormatNumber(std::int64_t value, cIGZString& out) = 0;   // RZ::LM() string 0 vslot 0x90 (0x100788046)
+    virtual void MakeMoneyString(std::int64_t value, cIGZString& out) = 0;   // SC4MakeMoneyString @ 0x1000392b0
+    virtual std::uint32_t MakeNativeColor(std::uint8_t r, std::uint8_t g, std::uint8_t b) = 0;   // RZ::GS() vslot 0x118
+    virtual bool BudgetDialogOpen(cIGZUnknown* dialog) = 0;               // cSC4BudgetUIWinProc vslot 0x50 (0x10078883e)
+    virtual void RefreshBudgetDialog(cIGZUnknown* dialog) = 0;            // cSC4BudgetUIWinProc vslot 0x48 (0x100788846)
+    // --- the five window procedures RemoveGUI shuts down (each is the original's static Shutdown + Release)
+    virtual void ShutdownNewsTickerWinProc(cIGZUnknown* proc) = 0;    // cSC4NewsTickerWinProc::Shutdown @ 0x10031c016
+    virtual void ShutdownMySimWinProc(cIGZUnknown* proc) = 0;         // cSC4MySimWinProc::Shutdown     @ 0x100315eb2
+    virtual void ShutdownBudgetUIWinProc(cIGZUnknown* proc) = 0;      // cSC4BudgetUIWinProc::Shutdown  @ 0x1002e4872
+    virtual void ShutdownGraphsViewWinProc(cIGZUnknown* proc) = 0;    // cSC4GraphsViewWinProc::Shutdown @ 0x1002dfdc0
+    virtual void ShutdownBuildingSelectWinProc(cIGZUnknown* proc) = 0;   // cSC4BuildingSelectWinProc::Shutdown @ 0x100759232
+    virtual void ShutdownToolTipManager(cIGZUnknown* manager) = 0;       // cSC4ToolTipManager::Shutdown @ 0x1007935a4
 };
 IView3DWinHost* View3DWinHost();
 void SetView3DWinHost(IView3DWinHost* host);
@@ -580,6 +622,17 @@ public:
     void RunGlobalTerrainTool(int tool);                           // @ 0x1007849bc
     bool ToggleContourDisplay();                                   // @ 0x10078fe00
     void AddWinAnimationRecorder(bool enable);                     // @ 0x100780d78
+    // --- the GUI (see "the GUI windows" below). AddGUI is not recovered, so everything it builds is null
+    // until the host fills it; RemoveGUI and the refresh functions below cope with any window being absent.
+    void RemoveGUI();                                              // @ 0x100780eaa (PARTIAL: AddGUI missing)
+    bool SetRenderProperties(const cIGZString& name, const cIGZString& value);   // @ 0x10079064e
+    static void SetRenderPropertiesStatic(const cRZString& name, const cRZString& value, void* context);   // @ 0x100792b3a
+    void UpdateZoomButtons();                                      // @ 0x1007872e8 (PARTIAL: AddGUI missing)
+    void DoCityEstablished();                                      // @ 0x100786f3e (PARTIAL: AddGUI missing)
+    void UpdateCityName();                                         // @ 0x10078700a (PARTIAL: AddGUI missing)
+    void UpdateDayNightButtons();                                  // @ 0x10078aa58 (PARTIAL: AddGUI missing)
+    void UpdatePopulation();                                       // @ 0x100787fb6 (PARTIAL: AddGUI missing)
+    void UpdateBudget();                                           // @ 0x1007887bc (PARTIAL: AddGUI missing)
 
 protected:
     void ApplyScrollSpeed();                                       // the shared tail of RecalcScrollVelocity
@@ -609,7 +662,35 @@ protected:
     bool simHiddenPaused_ = false;                      // +0x260
     std::uint32_t simHiddenTimeoutMs_ = 2000;           // +0x264
     bool paintEnabled_ = false;                         // +0x244 (Init and Shutdown clear it; GZPaint needs it)
-    cIGZWin* viewManagerSource_ = nullptr;              // +0x498 (borrowed; set by AddGUI, asked by GetViewManager)
+    cIGZWin* viewManagerSource_ = nullptr;              // +0x498 (set by AddGUI; GetViewManager queries it, RemoveGUI shuts it down)
+
+    // ---- the GUI windows (the original's +0x280..+0x4d0 block; AddGUI @ 0x1007892fc builds them and
+    // RemoveGUI tears them down). AddGUI is not recovered: it needs the five window procedures below, the
+    // advisor popup tracker and the four nSC4UI window-set helpers. The port keeps the same members so the
+    // refresh functions and RemoveGUI are the original's; in the port they only hold what the host fills.
+    cIGZWin* panelWindow_ = nullptr;                    // +0x280 (the toolbar; every SetWindowEnabled target)
+    cIGZWin* panelInterface_ = nullptr;                 // +0x288 (its interface 0x5386d516)
+    cIGZWin* toolbarWindow_ = nullptr;                  // +0x290 (the second toolbar window)
+    std::vector<cIGZWin*> guiWindows_;                  // +0x298 (each holds one reference)
+    std::vector<cIGZWin*> panelWindows_[5];             // +0x2b0..+0x328 (panel i's windows, stride 0x18)
+    cIGZWin* panelAttach_[5] = {};                      // +0x328..+0x348 (each holds one reference)
+    bool panelShown_[3] = {};                           // +0x440 mayor sub-panel / +0x441 my sim / +0x442 tertiary
+    cIGZWin* panelUIWinProc_ = nullptr;                 // +0x448 cSC4PanelUIWinProc (referenced)
+    cIGZWin* newsTickerWinProc_ = nullptr;              // +0x450 cSC4NewsTickerWinProc
+    cIGZWin* mySimWinProc_ = nullptr;                   // +0x460 cSC4MySimWinProc
+    cIGZWin* budgetUIWinProc_ = nullptr;                // +0x468 cSC4BudgetUIWinProc
+    cIGZWin* window470_ = nullptr;                      // +0x470
+    cIGZWin* window478_ = nullptr;                      // +0x478
+    cIGZWin* graphsViewWinProc_ = nullptr;              // +0x488 cSC4GraphsViewWinProc
+    cIGZWin* buildingSelectWinProc_ = nullptr;          // +0x490 cSC4BuildingSelectWinProc
+    cIGZWin* window4a0_ = nullptr;                      // +0x4a0
+    cIGZWin* window4a8_ = nullptr;                      // +0x4a8
+    cIGZWin* window4b0_ = nullptr;                      // +0x4b0
+    gz::cIGZWinText* dateText_ = nullptr;               // +0x4b8 (SetCaption = vslot 0x20)
+    gz::cIGZWinText* budgetText_ = nullptr;             // +0x4c0
+    gz::cIGZWinText* populationText_ = nullptr;         // +0x4c8
+    cIGZUnknown* tipManager_ = nullptr;                 // +0x4d0 (Shutdown = vslot 0x38)
+    int currentPanel_ = -1;                             // +0x350
     ICoverageHelper3D* coverageHelper_ = nullptr;        // +0x5f8 (the helper object, borrowed from the host)
     cIGZUnknown* filterInfo_ = nullptr;                 // +0x4d8 (the cSC4ViewFilterInformation's object)
     std::uint32_t viewLevel_ = 1;                       // +0x4e0 (constructor)
@@ -639,6 +720,11 @@ protected:
     cIGZWin* missionPanel_ = nullptr;                   // +0x640 (referenced; HideMissionStatusPanel ChildDeletes it)
     cIGZUnknown* validationWindow_ = nullptr;           // +0x648 (referenced)
     cRZString errorReport_;                             // +0x650
+    // The cost-indicator state (+0x5a0..+0x5ac). The two windows (+0x5c0 / +0x5c8) are not modelled yet.
+    std::uint32_t costValue_ = 0;                       // +0x5a0 (the amount SetCostIndicator was given)
+    std::int32_t costState_ = 0;                        // +0x5a4 (1 = the indicator is active)
+    std::uint32_t costColorState_ = 0;                  // +0x5a8 (0 = cannot afford, 1 = affordable, 2 = free)
+    float costTimer_ = 0.0f;                            // +0x5ac (UpdateCostIndicator's countdown, seconds)
     // The cursor-text block (+0x5a0..+0x5f0). The two windows and the bitmap window belong to the GUI AddGUI
     // builds; the port borrows the text window from the host and does not model the other two yet.
     int cursorTextX_ = 0;                               // +0x5b0

@@ -58,9 +58,15 @@ for f in sorted(pending.glob("*.txt")) if pending.exists() else []:
         status = {"ok": "recovered", "partial": "recovered-partial", "skipped": "skipped"}[section]
         if addr in index:
             r = body[index[addr]]
-            if section == "ok" and not r[4].startswith("recovered") or (section == "ok" and r[4] == "recovered-partial"):
+            # "ok" upgrades anything not already recovered; "partial" corrects a skipped or over-claimed row
+            # (an agent reporting an honest recovered-partial must be able to override a stale "recovered").
+            if section == "ok" and r[4] != "recovered":
                 r[3], r[4] = source or r[3], "recovered"
                 if evidence: r[5] = evidence
+                upgraded += 1
+            elif section == "partial" and r[4] != "recovered-partial":
+                r[3], r[4] = source or r[3], "recovered-partial"
+                if evidence: r[5] = evidence + " [partial: " + rest[:120] + "]"
                 upgraded += 1
             continue
         uname = unique(rest.split()[0]) if section != "skipped" else unique("Skipped_" + addr[2:])
@@ -82,9 +88,18 @@ new = 0
 for f in sorted(reg.glob("*.txt")) if reg.exists() else []:
     entry = f.read_text().strip()
     name = entry.strip('"').split(":", 1)[0]
-    if f' "{name}:' not in tests:
+    marker = f' "{name}:'
+    if marker not in tests:
         tests = tests.replace("\n)\nfail=0", f"\n {entry}\n)\nfail=0", 1); new += 1
+    else:
+        # replace the existing entry line when its source list changed
+        pat = re.compile(r'^ "?' + re.escape(name) + r':.*$', re.M)
+        m = pat.search(tests)
+        if m and m.group(0).strip().strip('"') != entry.strip().strip('"'):
+            tests = tests[:m.start()] + " " + entry + tests[m.end():]
+            updated = globals().get("updated", 0) + 1
+            globals()["updated"] = updated
     done = ROOT / "scripts/tests/registry_applied"; done.mkdir(exist_ok=True)
     shutil.move(str(f), str(done / f.name))
 (ROOT / "scripts/run_tests.sh").write_text(tests)
-print(f"run_tests.sh: {new} test entries added")
+print(f"run_tests.sh: {new} test entries added, {globals().get('updated', 0)} replaced")

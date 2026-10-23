@@ -65,6 +65,28 @@ struct View3DWinTestAccess {
     static int& MouseDownX(cSC4View3DWin& v) { return v.mouseDownX_; }
     static int& MouseDownY(cSC4View3DWin& v) { return v.mouseDownY_; }
     static bool& DraggedPastDeadZone(cSC4View3DWin& v) { return v.draggedPastDeadZone_; }
+    // The GUI block (AddGUI is not recovered; the tests fill it in by hand).
+    static cIGZWin*& PanelWindow(cSC4View3DWin& v) { return v.panelWindow_; }
+    static cIGZWin*& PanelInterface(cSC4View3DWin& v) { return v.panelInterface_; }
+    static cIGZWin*& ToolbarWindow(cSC4View3DWin& v) { return v.toolbarWindow_; }
+    static std::vector<cIGZWin*>& GuiWindows(cSC4View3DWin& v) { return v.guiWindows_; }
+    static cIGZWin** PanelAttach(cSC4View3DWin& v) { return v.panelAttach_; }
+    static cIGZWin*& PanelUIWinProc(cSC4View3DWin& v) { return v.panelUIWinProc_; }
+    static cIGZWin*& NewsTickerWinProc(cSC4View3DWin& v) { return v.newsTickerWinProc_; }
+    static cIGZWin*& MySimWinProc(cSC4View3DWin& v) { return v.mySimWinProc_; }
+    static cIGZWin*& BudgetUIWinProc(cSC4View3DWin& v) { return v.budgetUIWinProc_; }
+    static cIGZWin*& Window470(cSC4View3DWin& v) { return v.window470_; }
+    static cIGZWin*& Window478(cSC4View3DWin& v) { return v.window478_; }
+    static cIGZWin*& GraphsViewWinProc(cSC4View3DWin& v) { return v.graphsViewWinProc_; }
+    static cIGZWin*& BuildingSelectWinProc(cSC4View3DWin& v) { return v.buildingSelectWinProc_; }
+    static cIGZWin*& Window4a0(cSC4View3DWin& v) { return v.window4a0_; }
+    static cIGZWin*& Window4a8(cSC4View3DWin& v) { return v.window4a8_; }
+    static cIGZWin*& Window4b0(cSC4View3DWin& v) { return v.window4b0_; }
+    static gz::cIGZWinText*& DateText(cSC4View3DWin& v) { return v.dateText_; }
+    static gz::cIGZWinText*& BudgetText(cSC4View3DWin& v) { return v.budgetText_; }
+    static gz::cIGZWinText*& PopulationText(cSC4View3DWin& v) { return v.populationText_; }
+    static cIGZUnknown*& TipManager(cSC4View3DWin& v) { return v.tipManager_; }
+    static int& CurrentPanel(cSC4View3DWin& v) { return v.currentPanel_; }
 };
 }  // namespace sc4
 
@@ -102,7 +124,11 @@ struct FakeMgr final : cIGZWinMgr {
     void AddWindowToValidList(cIGZWin*) override {}
     void RemoveWindowFromValidList(cIGZWin*) override {}
     void CleanUpWindowReferences(cIGZWin* w) override { if (focus == w) focus = nullptr; if (capture == w) capture = nullptr; }
-    bool DestroyWindow(cIGZWin*) override { return true; }
+    bool DestroyWindow(cIGZWin* w) override {
+        if (!w) return false;
+        if (w->GetParentWin()) return w->GetParentWin()->ChildRemove(w);
+        return true;
+    }
     bool IsWindowValid(cIGZWin*) override { return true; }
     cIGZWin* GetWindowFromPoint(int, int) override { return nullptr; }
     void SetCurrentMouseWin(cIGZWin*) override {}
@@ -393,7 +419,7 @@ struct FakeHost final : IView3DWinHost {
     std::vector<std::uint32_t> registeredCheats, unregisteredCheats;
     std::vector<std::string> registeredCheatStrings;
     int addTargets = 0, removeTargets = 0, registerTables = 0, unregisterTables = 0;
-    int lotConfigShutdowns = 0, guiRemovals = 0, modelMakerShutdowns = 0, cameraShutdowns = 0;
+    int lotConfigShutdowns = 0, modelMakerShutdowns = 0, cameraShutdowns = 0;
     int clockShutdowns = 0, validationShutdowns = 0, progressShutdowns = 0;
     std::vector<std::uint32_t> gameMessages;
     int lightingHighlights = 0, lightingRestores = 0;
@@ -473,6 +499,44 @@ struct FakeHost final : IView3DWinHost {
         out.AssignFromCString("/Users/test/SimCity 4");
         return true;
     }
+    // The panel / GUI seams.
+    std::string cityName = "Testville";
+    int visualTimeMode = 0;
+    int population = 123456;
+    std::int64_t funds = 1234;
+    int numberFormats = 0, moneyFormats = 0;
+    std::string lastFormatted;
+    std::uint32_t lastNative = 0;
+    int budgetOpenCalls = 0, budgetRefreshes = 0;
+    bool budgetOpen = false;
+    int newsShutdowns = 0, mysimShutdowns = 0, budgetShutdowns = 0, graphsShutdowns = 0;
+    int buildingShutdowns = 0, tipShutdowns = 0;
+    void GetCityName(cIGZString& out) override { out.AssignFromCString(cityName.c_str()); }
+    int VisualTimeMode() override { return visualTimeMode; }
+    int CityPopulation() override { return population; }
+    std::int64_t CityFunds() override { return funds; }
+    void FormatNumber(std::int64_t value, cIGZString& out) override {
+        ++numberFormats;
+        lastFormatted = std::to_string(value);
+        out.AssignFromCString(lastFormatted.c_str());
+    }
+    void MakeMoneyString(std::int64_t value, cIGZString& out) override {
+        ++moneyFormats;
+        lastFormatted = "$" + std::to_string(value);
+        out.AssignFromCString(lastFormatted.c_str());
+    }
+    std::uint32_t MakeNativeColor(std::uint8_t r, std::uint8_t g, std::uint8_t b) override {
+        lastNative = (static_cast<std::uint32_t>(r) << 16) | (static_cast<std::uint32_t>(g) << 8) | b;
+        return lastNative;
+    }
+    bool BudgetDialogOpen(cIGZUnknown*) override { ++budgetOpenCalls; return budgetOpen; }
+    void RefreshBudgetDialog(cIGZUnknown*) override { ++budgetRefreshes; }
+    void ShutdownNewsTickerWinProc(cIGZUnknown*) override { ++newsShutdowns; }
+    void ShutdownMySimWinProc(cIGZUnknown*) override { ++mysimShutdowns; }
+    void ShutdownBudgetUIWinProc(cIGZUnknown*) override { ++budgetShutdowns; }
+    void ShutdownGraphsViewWinProc(cIGZUnknown*) override { ++graphsShutdowns; }
+    void ShutdownBuildingSelectWinProc(cIGZUnknown*) override { ++buildingShutdowns; }
+    void ShutdownToolTipManager(cIGZUnknown*) override { ++tipShutdowns; }
     cIGZWin* CreateWinAnimationRecorder() override {
         if (!recorder) return nullptr;
         recorder->AddRef();
@@ -517,7 +581,6 @@ struct FakeHost final : IView3DWinHost {
     void ShutdownProgressScreen(cIGZUnknown*) override { ++progressShutdowns; }
     void ShutdownValidationWindow(cIGZUnknown*) override { ++validationShutdowns; }
     void ShutdownLotConfigurationEditors() override { ++lotConfigShutdowns; }
-    void RemoveGui() override { ++guiRemovals; }
     void ShutdownModelMaker(cIGZUnknown*) override { ++modelMakerShutdowns; }
     void ShutdownCameraObject(cIGZUnknown*) override { ++cameraShutdowns; }
     void ShutdownSimulationClock(cIGZUnknown*) override { ++clockShutdowns; }
@@ -587,6 +650,111 @@ struct TestControl final : cSC4ViewInputControl {
     bool OnMouseMove(int, int, std::uint32_t) override { ++log_.moves; return log_.handleMove; }
     bool OnMouseExit() override { ++log_.mouseExits; return true; }
     ControlLog& log_;
+};
+
+// A toggle button the panel helpers can find (gz::kGZIID_cIGZWinBtn): it records the toggle state.
+struct FakePanelButton final : cGZWin, gz::cIGZWinBtn {
+    explicit FakePanelButton(cIGZWinMgr* mgr) : cGZWin(mgr) {}
+    bool QueryInterface(std::uint32_t iid, void** out) override {
+        if (iid == gz::kGZIID_cIGZWinBtn) { *out = static_cast<gz::cIGZWinBtn*>(this); AddRef(); return true; }
+        return cGZWin::QueryInterface(iid, out);
+    }
+    std::uint32_t AddRef() override { return cGZWin::AddRef(); }
+    std::uint32_t Release() override { return cGZWin::Release(); }
+    cIGZWin* AsIGZWin() override { return static_cast<cIGZWin*>(static_cast<cGZWin*>(this)); }
+    bool GetBtnFlag(int flag) const override { return (flags & flag) != 0; }
+    bool SetBtnFlag(int flag, bool on) override { if (on) flags |= flag; else flags &= ~flag; return true; }
+    bool ToggleOn() override { flags |= gz::kBtnOn; ++toggles; return true; }
+    bool ToggleOff() override { flags &= ~gz::kBtnOn; ++toggles; return true; }
+    bool IsOn() const override { return (flags & gz::kBtnOn) != 0; }
+    bool SetChecked(bool checked) override { return SetBtnFlag(gz::kBtnOn, checked); }
+    bool IsChecked() const override { return IsOn(); }
+    int GetStyle() override { return 0; }
+    bool SetStyle(int, cIGZBuffer*, const cRZRect*) override { return true; }
+    bool SetButtonStyle(int) override { return true; }
+    int GetImageW() const override { return 1; }
+    int GetImageH() const override { return 1; }
+    bool GetImageArea(cRZRect& out) const override { out = {0, 0, 1, 1}; return true; }
+    bool SetBuffer(cIGZBuffer*) override { return true; }
+    bool GetBuffer(cIGZBuffer*& out) const override { out = nullptr; return true; }
+    bool SetFont(gz::IWinButtonFont*) override { return true; }
+    bool SetFontStyle(std::uint32_t) override { return true; }
+    bool GetFontStyle(std::uint32_t& style) override { style = 0; return true; }
+    bool SetFontColor(int, std::uint32_t) override { return true; }
+    bool GetFontColor(int, std::uint32_t& native) const override { native = 0; return true; }
+    bool SetFontColor(int, gz::cRZColor) override { return true; }
+    bool GetFontColor(int, gz::cRZColor&) const override { return true; }
+    bool ClearFontColor(int) override { return true; }
+    bool SetCaptionStyle(int) override { return true; }
+    bool GetCaptionStyle(int& style) const override { style = 0; return true; }
+    bool SetGutters(std::uint8_t, std::uint8_t) override { return true; }
+    bool GetGutters(int& x, int& y) const override { x = y = 0; return true; }
+    bool SetGutters(std::uint8_t, std::uint8_t, std::uint8_t, std::uint8_t) override { return true; }
+    bool GetGutters(int& l, int& t, int& r, int& b) const override { l = t = r = b = 0; return true; }
+    bool FitSizeToContent() override { return true; }
+    bool GetMinMaxInfo(cRZRect& out) override { out = {1, 1, 1, 1}; return true; }
+    bool SetTipText(const cIGZString&) override { return true; }
+    bool GetTipText(cIGZString&) const override { return true; }
+    bool ClearTipText() override { return true; }
+    bool SetTipPlacementType(int) override { return true; }
+    bool GetTipPlacementType(int& type) const override { type = 0; return true; }
+    bool SetTipPlacementOffsets(int, int) override { return true; }
+    bool GetTipPlacementOffsets(int& x, int& y) const override { x = y = 0; return true; }
+    bool SetTipColor(int, std::uint8_t, std::uint8_t, std::uint8_t) override { return true; }
+    bool GetTipColor(int, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b) const override { r = g = b = 0; return true; }
+    void Flash(std::uint32_t, std::uint32_t) override {}
+    bool SetSoundID(int, std::uint32_t) override { return true; }
+    std::uint32_t GetSoundID(int) const override { return 0; }
+    int flags = 0, toggles = 0;
+};
+
+// A text control (gz::cIGZWinText) that records the caption and colour the refresh functions set.
+struct FakeTextControl final : cGZWin, gz::cIGZWinText {
+    explicit FakeTextControl(cIGZWinMgr* mgr) : cGZWin(mgr) {}
+    bool QueryInterface(std::uint32_t iid, void** out) override {
+        if (iid == gz::kGZIID_cIGZWinText) { *out = static_cast<gz::cIGZWinText*>(this); AddRef(); return true; }
+        return cGZWin::QueryInterface(iid, out);
+    }
+    std::uint32_t AddRef() override { return cGZWin::AddRef(); }
+    std::uint32_t Release() override { return cGZWin::Release(); }
+    cIGZWin* AsIGZWin() override { return static_cast<cIGZWin*>(static_cast<cGZWin*>(this)); }
+    void SetCaption(const cIGZString& value) override { caption = value.ToChar(); ++captions; }
+    bool FitWindowToText(bool, bool) override { return true; }
+    bool GetWinTextFlag(int) override { return false; }
+    bool SetWinTextFlag(int, bool) override { return true; }
+    void SetTextColor(std::uint32_t native) override { SetTextColor(kColorText, native); }
+    void GetTextColor(std::uint32_t& native) override { native = colors[0]; }
+    void ClearTextColor() override { colors[0] = colors[1] = 0; }
+    bool SetTextColor(tFontColorIdx index, std::uint32_t native) override {
+        colors[index & 1] = native; ++colorSets; return true;
+    }
+    bool GetTextColor(tFontColorIdx index, std::uint32_t& native) const override {
+        native = colors[index & 1]; return true;
+    }
+    bool SetTextColor(tFontColorIdx index, gz::cRZColor color) override {
+        return SetTextColor(index, color.rgb);
+    }
+    bool GetTextColor(tFontColorIdx index, gz::cRZColor& color) const override {
+        color.rgb = colors[index & 1]; return true;
+    }
+    bool ClearTextColor(tFontColorIdx index) override { colors[index & 1] = 0; return true; }
+    void SetBackgroundOpaque(bool) override {}
+    bool IsBackgroundOpaque() override { return false; }
+    bool SetFont(gz::IWinFont*) override { return true; }
+    bool SetFontStyle(std::uint32_t) override { return true; }
+    bool GetFontStyle(std::uint32_t& style) override { style = 0; return true; }
+    bool SetAlignment(std::uint32_t) override { return true; }
+    bool GetAlignment(std::uint32_t& alignment) const override { alignment = 0; return true; }
+    bool SetGutters(std::int8_t x, std::int8_t y) override { gutters[0] = x; gutters[1] = y; return true; }
+    bool GetGutters(std::int8_t& x, std::int8_t& y) override { x = gutters[0]; y = gutters[1]; return true; }
+    bool SetTextOffsets(std::int8_t, std::int8_t) override { return true; }
+    bool GetTextOffsets(std::int8_t& x, std::int8_t& y) override { x = y = 0; return true; }
+    void SetOutlineUse(bool, std::uint32_t) override {}
+    void GetOutlineUse(bool& on, std::uint32_t& color) const override { on = false; color = 0; }
+    std::string caption;
+    std::uint32_t colors[2] = {0, 0};
+    std::int8_t gutters[2] = {0, 0};
+    int captions = 0, colorSets = 0;
 };
 
 }  // namespace
@@ -681,6 +849,8 @@ int main() {
     cIGZUnknown* manager = view->GetViewManager();
     CHECK(manager == static_cast<cIGZUnknown*>(static_cast<cGZWin*>(&mainWindow)));
     if (manager) manager->Release();
+    // +0x498 is a stack window here; RemoveGUI owns it, so stop pointing at it.
+    View3DWinTestAccess::ViewManagerSource(*view) = nullptr;
 
     // ------------------------------------------------------------------ plain accessors
     CHECK(view->GetRenderer() == nullptr);                     // set below
@@ -1692,6 +1862,200 @@ int main() {
         View3DWinTestAccess::CursorTextWindow(*view) = nullptr;
     }
 
+    // ------------------------------------------------------------------ the GUI: panel refresh, render properties, RemoveGUI
+    {
+        host.cityExists = true;                    // UpdateBudget returns early without a city
+        // The toolbar AddGUI would build: five buttons and the title text, all children of +0x280.
+        auto* panel = new cGZWin(&mgr);
+        auto* zoomIn = new cGZWin(&mgr); zoomIn->SetID(kPanelZoomInButtonId);
+        auto* zoomOut = new cGZWin(&mgr); zoomOut->SetID(kPanelZoomOutButtonId);
+        auto* newCity = new cGZWin(&mgr); newCity->SetID(kPanelNewCityButtonId);
+        auto* mayor = new cGZWin(&mgr); mayor->SetID(kPanelMayorButtonId);
+        auto* obliterate = new cGZWin(&mgr); obliterate->SetID(kPanelObliterateButtonId);
+        auto* title = new cGZWin(&mgr); title->SetID(kPanelCityNameId);
+        panel->ChildAdd(zoomIn);
+        panel->ChildAdd(zoomOut);
+        panel->ChildAdd(newCity);
+        panel->ChildAdd(mayor);
+        panel->ChildAdd(obliterate);
+        panel->ChildAdd(title);
+        newCity->SetFlag(kWinEnabled, false);
+        mayor->SetFlag(kWinEnabled, false);
+        obliterate->SetFlag(kWinEnabled, false);
+        View3DWinTestAccess::PanelWindow(*view) = panel;
+
+        // UpdateZoomButtons: the two zoom buttons follow CanZoomIn / CanZoomOut.
+        camera->SetZoom(2.0f);
+        View3DWinTestAccess::ZoomMin(*view) = 0;
+        View3DWinTestAccess::ZoomMax(*view) = 5;
+        view->UpdateZoomButtons();
+        CHECK(zoomIn->GetFlag(kWinEnabled) && zoomOut->GetFlag(kWinEnabled));
+        View3DWinTestAccess::ZoomMax(*view) = 2;
+        view->UpdateZoomButtons();
+        CHECK(!zoomIn->GetFlag(kWinEnabled) && zoomOut->GetFlag(kWinEnabled));
+        View3DWinTestAccess::ZoomMax(*view) = 5;
+
+        // UpdateCityName copies the city's name into the toolbar's text 2.
+        host.cityName = "Testville";
+        view->UpdateCityName();
+        CHECK(std::strcmp(title->GetCaption().ToChar(), "Testville") == 0);
+        host.cityName = "New Name";
+        view->UpdateCityName();
+        CHECK(std::strcmp(title->GetCaption().ToChar(), "New Name") == 0);
+
+        // UpdatePopulation formats the residential simulator's population through the language manager.
+        auto* population = new FakeTextControl(&mgr);
+        population->AddRef();
+        View3DWinTestAccess::PopulationText(*view) = population;
+        host.population = 4242;
+        view->UpdatePopulation();
+        CHECK(host.numberFormats == 1 && population->caption == "4242");
+        host.population = -1;
+        view->UpdatePopulation();
+        CHECK(population->caption == "-1");
+
+        // UpdateBudget: money string, colour by sign, and the open budget dialog refresh.
+        auto* budget = new FakeTextControl(&mgr);
+        budget->AddRef();
+        View3DWinTestAccess::BudgetText(*view) = budget;
+        host.funds = 5000;
+        view->UpdateBudget();
+        CHECK(host.moneyFormats == 1 && budget->caption == "$5000");
+        CHECK(budget->colors[0] == 0x445566 && host.lastNative == 0x445566);
+        host.funds = -25;
+        view->UpdateBudget();
+        CHECK(budget->caption == "$-25" && budget->colors[0] == 0x770000 && host.lastNative == 0x770000);
+        host.budgetOpen = false;
+        host.budgetOpenCalls = 0;
+        View3DWinTestAccess::BudgetUIWinProc(*view) = new cGZWin(&mgr);
+        view->UpdateBudget();
+        CHECK(host.budgetOpenCalls == 1 && host.budgetRefreshes == 0);
+        host.budgetOpen = true;
+        view->UpdateBudget();
+        CHECK(host.budgetOpenCalls == 2 && host.budgetRefreshes == 1);
+
+        // DoCityEstablished re-enables the three city buttons, drops the active tool, refreshes budget and name.
+        ControlLog establishLog;
+        auto* tool = new TestControl(establishLog);
+        tool->AddRef();                                  // the caller's reference (the view AddRefs too)
+        CHECK(view->SetCurrentViewInputControl(tool, 0));
+        CHECK(view->GetCurrentViewInputControl() == tool);
+        const int moneyBefore = host.moneyFormats;
+        view->DoCityEstablished();
+        CHECK(newCity->GetFlag(kWinEnabled) && mayor->GetFlag(kWinEnabled) && obliterate->GetFlag(kWinEnabled));
+        CHECK(view->GetCurrentViewInputControl() == nullptr);
+        CHECK(establishLog.deactivations == 1 && establishLog.shutdowns == 1);
+        tool->Release();                                 // drop the caller's reference
+        CHECK(host.moneyFormats == moneyBefore + 1);
+        CHECK(std::strcmp(title->GetCaption().ToChar(), "New Name") == 0);
+
+        // UpdateDayNightButtons: real-time / noon / midnight, from the clock's visual mode.
+        auto* menu = new cGZWin(&mgr);
+        auto* realTime = new FakePanelButton(&mgr); realTime->SetID(kPanelRealTimeButtonId);
+        auto* noon = new FakePanelButton(&mgr); noon->SetID(kPanelVisualModeButtonIds[0]);
+        auto* midnight = new FakePanelButton(&mgr); midnight->SetID(kPanelVisualModeButtonIds[1]);
+        menu->ChildAdd(realTime);
+        menu->ChildAdd(noon);
+        menu->ChildAdd(midnight);
+        View3DWinTestAccess::SecondaryMenu(*view) = menu;
+        host.visualTimeMode = 0;
+        view->UpdateDayNightButtons();
+        CHECK(realTime->IsOn() && !noon->IsOn() && !midnight->IsOn());
+        host.visualTimeMode = 2;
+        view->UpdateDayNightButtons();
+        CHECK(!realTime->IsOn() && !noon->IsOn() && midnight->IsOn());
+        host.visualTimeMode = 1;
+        view->UpdateDayNightButtons();
+        CHECK(!realTime->IsOn() && noon->IsOn() && !midnight->IsOn());
+        View3DWinTestAccess::SecondaryMenu(*view) = nullptr;   // RemoveGUI does not own the menus
+        delete menu;
+
+        // SetRenderProperties: bool toggle / parse, int, float, an unknown name, and the notification each
+        // accepted property posts. The ini callback applies the same setter.
+        host.gameMessages.clear();
+        cRZString name, value;
+        name.AssignFromCString(host.globalProperties.NameFromBoolPropertyID(kPropRenderShadows));
+        const bool shadowsBefore = host.globalProperties.BoolValue(kPropRenderShadows);
+        CHECK(view->SetRenderProperties(name, cRZString()));            // empty: toggle
+        CHECK(host.globalProperties.BoolValue(kPropRenderShadows) == !shadowsBefore);
+        CHECK(host.gameMessages.size() == 1 && host.gameMessages[0] == kMsgRenderPropertiesChanged);
+        value.AssignFromCString("true");
+        CHECK(view->SetRenderProperties(name, value));
+        CHECK(host.globalProperties.BoolValue(kPropRenderShadows));
+        value.AssignFromCString("false");
+        CHECK(view->SetRenderProperties(name, value));
+        CHECK(!host.globalProperties.BoolValue(kPropRenderShadows));
+        cRZString intName;
+        intName.AssignFromCString(host.globalProperties.NameFromIntPropertyID(0));
+        value.AssignFromCString("42");
+        CHECK(view->SetRenderProperties(intName, value));
+        CHECK(host.globalProperties.IntValue(0) == 42);
+        cRZString floatName;
+        floatName.AssignFromCString(host.globalProperties.NameFromFloatPropertyID(0));
+        value.AssignFromCString("2.5");
+        CHECK(view->SetRenderProperties(floatName, value));
+        CHECK(host.globalProperties.FloatValue(0) == 2.5f);
+        cRZString unknown, one;
+        unknown.AssignFromCString("notAProperty");
+        one.AssignFromCString("1");
+        const std::size_t messagesBefore = host.gameMessages.size();
+        CHECK(!view->SetRenderProperties(unknown, one));
+        CHECK(host.gameMessages.size() == messagesBefore);
+        cSC4View3DWin::SetRenderPropertiesStatic(intName, one, view);
+        CHECK(host.globalProperties.IntValue(0) == 1);
+        cSC4View3DWin::SetRenderPropertiesStatic(intName, value, nullptr);   // no context: nothing happens
+
+        // RemoveGUI: every window leaves the manager, is shut down and released; the five window procedures and
+        // the tool tip manager get their Shutdown. A second call is a no-op.
+        auto makeWindow = [&mgr]() { auto* window = new cGZWin(&mgr); window->AddRef(); return window; };
+        View3DWinTestAccess::PanelInterface(*view) = makeWindow();
+        View3DWinTestAccess::ToolbarWindow(*view) = makeWindow();
+        View3DWinTestAccess::GuiWindows(*view).push_back(makeWindow());
+        View3DWinTestAccess::PanelAttach(*view)[0] = makeWindow();
+        View3DWinTestAccess::PanelUIWinProc(*view) = makeWindow();
+        View3DWinTestAccess::NewsTickerWinProc(*view) = makeWindow();
+        View3DWinTestAccess::MySimWinProc(*view) = makeWindow();
+        View3DWinTestAccess::Window470(*view) = makeWindow();
+        View3DWinTestAccess::Window478(*view) = makeWindow();
+        View3DWinTestAccess::GraphsViewWinProc(*view) = makeWindow();
+        View3DWinTestAccess::BuildingSelectWinProc(*view) = makeWindow();
+        View3DWinTestAccess::Window4a0(*view) = makeWindow();
+        View3DWinTestAccess::Window4a8(*view) = makeWindow();
+        View3DWinTestAccess::Window4b0(*view) = makeWindow();
+        View3DWinTestAccess::TipManager(*view) = makeWindow();
+        auto* dateText = new FakeTextControl(&mgr);
+        dateText->AddRef();
+        View3DWinTestAccess::DateText(*view) = dateText;
+        view->RemoveGUI();
+        CHECK(host.newsShutdowns == 1 && host.mysimShutdowns == 1 && host.budgetShutdowns == 1);
+        CHECK(host.graphsShutdowns == 1 && host.buildingShutdowns == 1 && host.tipShutdowns == 1);
+        CHECK(View3DWinTestAccess::PanelWindow(*view) == nullptr);
+        CHECK(View3DWinTestAccess::PanelInterface(*view) == nullptr);
+        CHECK(View3DWinTestAccess::ToolbarWindow(*view) == nullptr);
+        CHECK(View3DWinTestAccess::GuiWindows(*view).empty());
+        CHECK(View3DWinTestAccess::PanelAttach(*view)[0] == nullptr);
+        CHECK(View3DWinTestAccess::PanelUIWinProc(*view) == nullptr);
+        CHECK(View3DWinTestAccess::NewsTickerWinProc(*view) == nullptr);
+        CHECK(View3DWinTestAccess::MySimWinProc(*view) == nullptr);
+        CHECK(View3DWinTestAccess::BudgetUIWinProc(*view) == nullptr);
+        CHECK(View3DWinTestAccess::Window470(*view) == nullptr);
+        CHECK(View3DWinTestAccess::Window478(*view) == nullptr);
+        CHECK(View3DWinTestAccess::GraphsViewWinProc(*view) == nullptr);
+        CHECK(View3DWinTestAccess::BuildingSelectWinProc(*view) == nullptr);
+        CHECK(View3DWinTestAccess::Window4a0(*view) == nullptr);
+        CHECK(View3DWinTestAccess::Window4a8(*view) == nullptr);
+        CHECK(View3DWinTestAccess::Window4b0(*view) == nullptr);
+        CHECK(View3DWinTestAccess::DateText(*view) == nullptr);
+        CHECK(View3DWinTestAccess::BudgetText(*view) == nullptr);
+        CHECK(View3DWinTestAccess::PopulationText(*view) == nullptr);
+        CHECK(View3DWinTestAccess::TipManager(*view) == nullptr);
+        view->RemoveGUI();                                          // all null: no-op
+        view->UpdateZoomButtons();                                  // no panel: no crash
+        view->UpdateDayNightButtons();                              // no menu: no crash
+        view->UpdatePopulation();                                   // no text: no crash
+        host.cityExists = false;
+    }
+
     // ------------------------------------------------------------------ Shutdown
     {
         const int removeAllBefore = host.notifications.removeAll;
@@ -1703,14 +2067,15 @@ int main() {
         renderer.shutdowns = 0;
         const int coverageShutdowns = host.coverage.shutdowns;
         const int lotConfigBefore = host.lotConfigShutdowns;
-        const int guiRemovalsBefore = host.guiRemovals;
+        View3DWinTestAccess::PanelWindow(*view) = new cGZWin(&mgr);
         const int progressShutdownsBefore = host.progressShutdowns;
         CHECK(view->Shutdown());
         CHECK(host.notifications.removeAll == removeAllBefore + 1);
         CHECK(host.unregisterTables == unregisterBefore + 1);
         CHECK(host.removeTargets == 1);
         CHECK(host.unregisteredCheats.size() == 13 && host.unregisteredCheats[0] == kCheatGameOfLife);
-        CHECK(host.lotConfigShutdowns == lotConfigBefore + 1 && host.guiRemovals == guiRemovalsBefore + 1);
+        CHECK(host.lotConfigShutdowns == lotConfigBefore + 1);
+        CHECK(View3DWinTestAccess::PanelWindow(*view) == nullptr);   // Shutdown ran RemoveGUI
         CHECK(host.progressShutdowns == progressShutdownsBefore + 1);
         CHECK(host.onView3DShutdown == onShutdownBefore + 1);
         CHECK(renderer.shutdowns == 1);
