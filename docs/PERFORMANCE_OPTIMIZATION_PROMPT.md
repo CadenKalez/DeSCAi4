@@ -78,6 +78,20 @@ Quality checks on that work:
 6. **The test suite is slow.** `scripts/run_tests.sh` rebuilds every test from scratch, one at a time, with ASan/UBSan. With 361 tests, one run takes well over 30 minutes. This is the biggest drag on the development loop (see Part 2, task A).
 7. **The app build is basic.** `scripts/build_app.sh` is a single arm64 `-O2` command line with no LTO, no PGO, no release/debug split and no x86_64 slice. The ECS layer the architecture rules ask for (`src/ecs/`) is only two headers so far: `JobSystem.h` and `SimdKernels.h`.
 
+### Status of the issues (2026-10-23, after the fixes)
+
+| # | Issue | Status |
+|---|---|---|
+| 1 | Concurrent writers | Guarded. `scripts/hooks/pre-commit` refuses a ledger that shrinks (a lost update), duplicate names and a malformed TESTS array (`scripts/check_test_registry.py`). The single-writer rules are in AGENT_RULES.md ("Shared-checkout guards"). The broken registry entries and the overwritten helper were already repaired. |
+| 2 | Missing attribution | Guarded from now on. `scripts/hooks/commit-msg` requires a `Co-Authored-By:` line naming the tool (Claude, DeepSeek, ...). Past commits are not rewritten; DeepSeek already pushed them, so rewriting history would need a force-push. |
+| 3 | Active tool | DeepSeek finished and committed its audit work (`87e1eec`). Note: it **pushed** to `origin`, which AGENT_RULES.md forbids ("never push"). |
+| 4 | Ledger hygiene | Fixed. The six `src/` prefixes are added. The real-data S3D tool is registered as `s3d_realdata` and skips cleanly when no game package is given (set `SC4_S3D_PACKAGE` to run it). Leftover Ghidra local names are removed from comments. DeepSeek also normalized 3,796 source-column rows and listed 32 port-only files (`notes/port_only_sources.md`). |
+| 5 | `SimCity 4.cfg` tracked | Fixed. It is untracked and in `.gitignore`. |
+| 6 | Slow test suite | Fixed for the development loop. `python3 scripts/run_tests_fast.py` caches objects per source and flag set (clang `-MMD` dependencies), and links and runs the tests in parallel. `scripts/run_tests.sh` stays the from-scratch reference run. Measured on this Mac: all 362 tests in 276 s cold (the serial script took over an hour), and in 12 s when nothing changed. |
+| 7 | Basic app build | Partly fixed. `scripts/build_app.sh` takes `dev`, `release` (-O3, ThinLTO, hidden visibility, dead-strip) or `debug` (ASan/UBSan), plus `ARCH="arm64 x86_64"` for a universal binary. CMake, PGO and the ECS layer remain prompt tasks B to D. |
+
+DeepSeek's audit also exposed a new backlog. 1,378 ledger rows in 314 classes name no verification at all; 161 were repaired mechanically. The rest needs real tests and is tracked as `AUDIT-1`, with the per-class list in `notes/ledger_audit.md`.
+
 ---
 
 ## Part 2 — Performance and optimization prompt (paste as the agent's first message)

@@ -1,0 +1,32 @@
+#!/bin/bash
+# Guards for the shared bookkeeping (several tools commit to this checkout). Installed with:
+#   git config core.hooksPath scripts/hooks
+# Override a single check with SC4_ALLOW_LEDGER_SHRINK=1 when rows were removed on purpose.
+set -u
+cd "$(git rev-parse --show-toplevel)"
+fail=0
+staged=$(git diff --cached --name-only)
+
+if grep -qx "scripts/run_tests.sh" <<<"$staged"; then
+  tmp=$(mktemp); git show :scripts/run_tests.sh > "$tmp"
+  if ! python3 scripts/check_test_registry.py "$tmp" >/tmp/sc4-registry-lint.txt; then
+    echo "pre-commit: scripts/run_tests.sh TESTS array is malformed:"; head -20 /tmp/sc4-registry-lint.txt; fail=1
+  fi
+  rm -f "$tmp"
+fi
+
+if grep -qx "notes/ledger.csv" <<<"$staged"; then
+  before=$(git show HEAD:notes/ledger.csv 2>/dev/null | wc -l | tr -d ' ')
+  after=$(git show :notes/ledger.csv | wc -l | tr -d ' ')
+  if [ "${SC4_ALLOW_LEDGER_SHRINK:-0}" != 1 ] && [ "$after" -lt "$before" ]; then
+    echo "pre-commit: notes/ledger.csv would shrink from $before to $after lines."
+    echo "  This is usually a lost update from another tool writing the ledger at the same time."
+    echo "  Re-apply your rows on top of the current file (scripts/apply_agent_results.py), or set"
+    echo "  SC4_ALLOW_LEDGER_SHRINK=1 if the rows were removed on purpose."
+    fail=1
+  fi
+  if ! python3 scripts/check_unique_names.py >/tmp/sc4-names.txt 2>&1 || ! grep -q " 0 duplicates" /tmp/sc4-names.txt; then
+    echo "pre-commit: duplicate ledger names:"; tail -5 /tmp/sc4-names.txt; fail=1
+  fi
+fi
+exit $fail

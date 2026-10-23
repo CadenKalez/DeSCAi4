@@ -62,6 +62,22 @@ cSC4TrafficSimulator, cSC4PoliceSimulator, cSC4ResidentialSimulator,
 growth planner of cSC4BuildingDevelopmentSimulator, cSC4ZoneDeveloper, cSC4PowerPoleOccupant, cGZWin* UI family,
 cSCLua, remaining free utilities (SC4 helper functions, GZCOM factories, UTF16/Thai line-break tables).
 
+## Shared-checkout guards (added 2026-10-23 after lost ledger updates)
+Several AI tools (Claude sessions, DeepSeek, background agents) commit to this one checkout. To keep the bookkeeping intact:
+- **One writer for shared files.** `notes/ledger.csv`, `notes/todo.csv`, `scripts/run_tests.sh` and `docs/SEAMS.md` are
+  changed only through the scripts (`apply_agent_results.py`, `ledger_class.py`, `todo.py`, `add_test.py`), never by
+  rewriting the whole file from an old copy. Agents running in parallel use the pending files (`notes/ledger_pending/`,
+  `notes/todo_pending/`, `scripts/tests/registry/`) and do not commit.
+- **Hooks** (`git config core.hooksPath scripts/hooks`, already set in this checkout):
+  `pre-commit` refuses a commit that shrinks `notes/ledger.csv` (a lost update; override with SC4_ALLOW_LEDGER_SHRINK=1
+  when rows are removed on purpose), duplicate ledger names, or a malformed TESTS array (`scripts/check_test_registry.py`);
+  `commit-msg` requires a `Co-Authored-By:` line naming the tool that wrote the commit (Claude, DeepSeek, ...).
+- **Do not reuse a file name for a different helper** (a test fake was overwritten this way), and run the full suite before
+  committing a change to a header other classes include.
+- **Tests:** `python3 scripts/run_tests_fast.py` is the incremental, parallel runner (object cache in $TMPDIR/sc4-obj,
+  `--clean` to rebuild, test names to run a subset). `scripts/run_tests.sh` stays the from-scratch reference run (bash, not zsh).
+- `SimCity 4.cfg` is written by the game and is not tracked.
+
 ## Architecture rules
 See .claudecode (ECS, SIMD intrinsics with scalar fallback, cross-platform, profile first).
 

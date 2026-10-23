@@ -1,0 +1,9 @@
+#!/bin/bash
+# Every commit names the tool that wrote it (AGENT_RULES.md, hard rules), so the history stays attributable when
+# several AI tools work on the repo. Accepts any Co-Authored-By trailer, e.g.
+#   Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+#   Co-Authored-By: DeepSeek <noreply@deepseek.com>
+if ! grep -qiE '^Co-Authored-By: .+' "$1"; then
+  echo "commit-msg: add a 'Co-Authored-By: <tool> <email>' line naming the tool that wrote this commit."
+  exit 1
+fi
