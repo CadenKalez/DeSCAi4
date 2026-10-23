@@ -653,8 +653,8 @@ void cSC4WinRegionScreen::ComputeBaseLimits() {   // @ 0x100237106
     const int halfY = cityHalfSizeY_;
     const int height = GetH();
     float originPartY = static_cast<float>(-halfY - height / 2) + -45.25f;
-    float widthExcess = 0.0f;   // local_34
-    int heightExcess = 0;       // iVar1
+    float widthExcess = 0.0f;
+    int heightExcess = 0;
     width = GetW();
     if (width < totalWidth) {
         width = GetW();

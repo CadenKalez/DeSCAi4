@@ -39,3 +39,8 @@ build/
 # bulk decompiler exports (derived from the game binary)
 work/
 .claude/worktrees/
+
+# rewritten by the game on every run
+/SimCity 4.cfg
+# local test-run snapshot (do not commit)
+/scripts/run_tests_snapshot.sh

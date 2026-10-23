@@ -1,4 +1,4 @@
-// Parses every S3D resource of a game package and reports failures. usage: s3d_realdata_test <package.dat> [max]
+// Parses every S3D resource of a game package and reports failures. usage: s3d_realdata_test [package.dat] [max]
 #include <cstdio>
 #include <cstdlib>
 #include <map>
@@ -10,11 +10,13 @@
 #include "s3d/S3DModel.h"
 
 int main(int argc, char** argv) {
-    if (argc < 2) { std::puts("usage"); return 2; }
+    // In the suite it runs on $SC4_S3D_PACKAGE when set and skips otherwise (the game data is not in the repo).
+    const char* package = argc >= 2 ? argv[1] : std::getenv("SC4_S3D_PACKAGE");
+    if (!package || !*package) { std::puts("s3d_realdata SKIP (no package: pass a .dat or set SC4_S3D_PACKAGE)"); return 0; }
     auto* seg = new cGZDBSegmentPackedFile();
     seg->AddRef();
     seg->Init();
-    cRZString path(argv[1]);
+    cRZString path(package);
     seg->SetPath(path);
     if (!seg->Open(true, false)) { std::puts("cannot open"); return 1; }
     auto* keys = new cGZPersistResourceKeyList();

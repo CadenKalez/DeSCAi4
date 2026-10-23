@@ -211,18 +211,18 @@ void cSC4WinTertiaryMenuFrame::SetBackgroundImage(cIGZBuffer* image, int marginX
 void cSC4WinTertiaryMenuFrame::PositionFrame(int contentWidth, int contentHeight, int anchorX, int anchorY,
                                              int minTop, int maxBottom) {   // @ 0x1002feb52
     // The original's locals (0x1002feb6d..0x1002fec64); names follow what they feed.
-    const int frameWidth = (bodyTileWidth_ + marginX_) - rightColumnWidth_;   // iVar4
+    const int frameWidth = (bodyTileWidth_ + marginX_) - rightColumnWidth_;
     const int frameHeight = (contentHeight > bodyTileHeight_ ? contentHeight : bodyTileHeight_) +
-                            2 * marginY_;   // iVar7
-    const int belowAnchor = anchorY - anchorOffsetY_;   // iVar6
-    int top = (bodyTileHeight_ / 2 + belowAnchor) - frameHeight / 2;   // iVar3
-    if (top < minTop) top = minTop;                 // iVar3 = max(iVar3, minTop)
-    int clamped = maxBottom - frameHeight;          // iVar2
-    if (top <= clamped) clamped = top;              // iVar2 = min(maxBottom - height, iVar3)
+                            2 * marginY_;
+    const int belowAnchor = anchorY - anchorOffsetY_;
+    int top = (bodyTileHeight_ / 2 + belowAnchor) - frameHeight / 2;
+    if (top < minTop) top = minTop;
+    int clamped = maxBottom - frameHeight;
+    if (top <= clamped) clamped = top;
     int limit = belowAnchor - marginY_;
-    if (clamped <= limit) limit = clamped;          // limit = min(limit, iVar2)
+    if (clamped <= limit) limit = clamped;
     int placeTop = ((marginY_ + bodyTileHeight_) - frameHeight) + belowAnchor;
-    if (placeTop <= limit) placeTop = limit;        // iVar5 = max(placeTop, limit)
+    if (placeTop <= limit) placeTop = limit;
 
     const int left = anchorX - anchorOffsetX_;
     cGZWin::SetArea(left, placeTop, left + frameWidth, placeTop + frameHeight);

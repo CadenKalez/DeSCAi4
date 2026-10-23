@@ -402,7 +402,7 @@ bool cSC4ViewInputControlQuery::DoMessage(cIGZMessage2* message) {
     cRZString title, text;
     std::uint32_t icon = 0;
     std::uint32_t meter = 0;
-    float meterValue = 0.5f;   // local_28 = 0x3f000000
+    float meterValue = 0.5f;
     if (!occupant_) {
         if (hoverValid_) {
             GetTerrainSummaryInfo(title, text);

@@ -39,7 +39,7 @@ bool cGZWinMsgBox::QueryInterface(std::uint32_t iid, void** out) {   // @ 0x1005
 bool cGZWinMsgBox::Init() {   // @ 0x10051fe40
     if (get_init_flag()) return true;
     cIGZWinCtrlMgr* manager = WinCtrlMgr();
-    int buttonRow = 100;     // local_54: the width the button row is centred on
+    int buttonRow = 100;   // the width the button row is centred on
     int width = 200;
     if (style_ >= 1 && style_ <= 3) {
         buttonRow = width = 0xd0;

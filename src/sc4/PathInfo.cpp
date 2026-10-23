@@ -1041,11 +1041,11 @@ cISC4PathInfo* cSC4PathInfo::OffsetAndScissor(float ox, float oy, float oz, cons
         const std::uint32_t type = (key >> 24) & 0xf;
         const std::uint32_t lane = (key >> 16) & 0xff;
         std::vector<cS3DVector3> current;
-        cS3DVector3 prev;   // local_b0 / local_a8
+        cS3DVector3 prev;
         bool hasPrev = false;
         std::uint32_t prevCode = 0;
         std::uint8_t entryEdge = 0, exitEdge = 0;   // indeterminate in the original until assigned
-        std::uint32_t exitByte = type;              // local_44 starts as the type nibble
+        std::uint32_t exitByte = type;   // starts as the type nibble
         std::uint32_t code = 0;
 
         auto emit = [&](std::uint32_t entry, std::uint32_t exit) {
