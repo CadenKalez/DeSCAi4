@@ -1,59 +1,42 @@
 SOURCE src/sc4/cSTETerrain.cpp|h
-EVIDENCE test scripts/tests/sc4_steterrain_test.cpp - Init/Shutdown take and release the city, surface-water, simulator and land/flora/effects services through a fake host, the ten message subscriptions and the seven RZ script commands, the post-city-init view hand-off, the scripting commands through parameter-set and property-holder fakes, the redisplay posts and the altitude-range packing, the water-proximity grid with a fake flood fill, the land-type weight ratios, the two shoreline quirks, the effect-id property and the accumulation rectangle
-# part 3 of cSTETerrain: the first-boot path and the display/surface helpers, from work/sc4/cSTETerrain.txt.
-# Byte offsets, statistic defaults and the kept quirks are in the source comments. The seams are ITerrainHost
-# (city/surface water/simulator/ATM/command server/message notifications/view factory/flood fill/visible edges)
-# and the extended ITerrainView (Init/Shutdown/dirty rows/texture type/overlay managers/altitude range).
-0x10073e5c6 Shutdown
-0x10073e9de StaticShutdown
-0x10073846c DoMessageThunk
-0x10073de82 RedisplayTerrain_bool_bool_SC4Point_int_const_SC4Point_int_const_uint
-0x100735a58 ComputeMinAndMaxAltitudeForTerrainRedisplay
-0x1007361a0 EnsureMinAllowedHeight
-0x100735746 ChangeTerrainLevel
-0x10073ea34 StopAccumulatingTextureUpdates
-0x100733d98 UpdateMoistureValues
-0x100733c62 ComputeWaterProximityValues
-0x10073173a AdjustLandTypeRatios
-0x100731338 AddLandTypeAtVertex
-0x100738dcc GetEffectIDProperty
-0x100731a1c GetNeighboringSeaVertex
-# already recovered before this session and corrected/extended here (the applier leaves a recovered row alone):
-# 0x10073751a IsShoreVertex now stops at direction 4 (the original's loop bound was 6, so a sea neighbour to
-# the south is not seen) and 0x10073e1f2 SetAltitude now has the original's four-argument slot signature
-# (+ SC4Rect<int>&, float, bool, uint) with the water recompute and the redisplay it performs.
+EVIDENCE test scripts/tests/sc4_steterrain_test.cpp - the exemplar/texture pipeline: ReadTuningParameters reads ~50 properties from a fake property holder (the sea-level/default-height clamps, the degree-to-radian conversions, the candidate-sum times six, the ash interval divide), ReadTextureInfos/ReadTextureInfo parse the cover weight and five interleaved response curves from fake resources, ReadTerrainIniFile feeds the TropicalTextureMapTable temperature rows plus the WindErosion/Hydrology tunables through a fake ini (including the 0x-prefixed tokens and the two clamps), DetermineTextureFamilyMembersForGridCells sizes the family grids from the exemplar's randomization table, DecideSurfaceCover picks the temperature/moisture map id, the beach id, the low-cliff id and the deep/shallow sea-bed id and spreads each texture's curve over its padded neighbourhood, and CalculateNormalsAndAssignCliffTextures/MarkCliff give a unit-y normal on flat ground plus the cliff mark and the internal-triangulation flip on a spike; the existing lifecycle/display/edge-subfile/stream tests still pass
+# Part 4 of cSTETerrain: the data readers and the surface/normal pass. The new seams are
+# ITerrainIniFile (cRZIniFile's ReadEntry/EnumEntries) and, on ITerrainHost, GetPropertyHolder
+# (spRM GetResource + the cISCPropertyHolder), ListTerrainTextureResources (GetAvailableResourceList with
+# cSCResFilterFixedGroupAndTypeId), OpenTerrainIni (SC4GetResourceAsFile {0x8a5971c5,0,0xaa597172}),
+# ChangeTerrainType / SetUpTexturesForCurrentTerrainTypeAndZoom / TerrainTextureSubTextureCount (the view
+# statics), and MoistureIndexAtX (the land simulator's +0x140 vslot 0x98). The statics block now holds the
+# __data globals with the binary's initialised values (macho_read of 0x100b175c0..0x100b17698).
+0x10073d8a4 ReadTextureInfos
+0x10073d22a ReadTextureInfo
+0x10073d95e ReadTuningParameters
+0x10073bb96 ReadTerrainIniFile
+0x10073b602 ReadMiscTexturesForTerrainTypes
+0x100731418 AddTemperatureAndMoistureToSurfaceCoverEntry
+0x10073159e AddToTerrainTypeTextureList
+0x100737430 DetermineTextureFamilyMembersForGridCells
+0x100733e48 DecideSurfaceCover
+0x100734dc8 CalculateNormalsAndAssignCliffTextures
+0x100735398 MarkCliff
+# already partial rows this session completes:
+0x10073defa RedisplayTerrain_bool_bool_SC4Rect_int_const_uint
+0x10073e4e6 SetTerrainType
+0x10073847e DoPostCityInit
 PARTIAL:
-# (the applier only upgrades an existing row from the plain list; these already exist as "pending", so the lead
-# has to set them to recovered-partial - ledger_promote/ledger_set - and paste the reason into the evidence)
-0x100739cb0 Init: the whole body is written except the Create() branch (0x100735cfc) that imports the city height image and erodes it - Create needs the city image buffer, the gray-scale import and the erosion kernels - so the first boot sizes the grid from spCity but leaves it flat; the cSTETriangleGridIterator (+0x1a0) is elided and the exact spSimulator/ATM argument sets are adapter-side (TERRAIN-7, TERRAIN-1)
-0x10073a346 StaticInit: sets sbInited, registers the spSC4 shutdown hook and holds spResMan, but the four data readers it calls (ReadTextureInfos 0x10073d8a4, ReadTerrainIniFile 0x10073bb96 5.5 KB, ReadTuningParameters 0x10073d95e, ReadBrushDescriptions 0x10073b49c) are not recovered, so the statics keep the port defaults (TERRAIN-1, TERRAIN-3, TERRAIN-5)
-0x10073847e DoPostCityInit: the view creation/initialisation, the display flag, the land-simulator reset and the three overlay managers are in place, but CalculateNormalsAndAssignCliffTextures (0x100734dc8, the packed two-triangle normal/cliff pass) is not recovered and AssignSurfaceTexturesAndColors is itself partial; the GZCOM-failure fallback `new cSTETerrainView3D` is the host's job in the port (TERRAIN-4, TERRAIN-3, TERRAIN-7)
-0x100737d3e DoMessage: every branch except two is in place - 0x2a612643 needs ReconcileEdgesWithNeighboringCities (0x10073f916) and the message-target adapter to re-post to itself (the terrain is not a cIGZMessageTarget2 in the port), and 0xc4a6af6 ApplyTerrainBrush needs cISTETerrain::tBrushParameters/ApplyBrush (TERRAIN-8, TERRAIN-5, TERRAIN-1)
-0x10073defa RedisplayTerrain_bool_bool_SC4Rect_int_const_uint: the posts, the accumulate rect and the altitude range are complete, but the CalculateNormalsAndAssignCliffTextures call on the padded rect and the AssignSurfaceTexturesAndColors call are missing (TERRAIN-4, TERRAIN-3)
-0x10073e4e6 SetTerrainType: the type change, the 0xc922eb91 post and the redisplay are in place; the surface pass it triggers is partial (DecideSurfaceCover, TERRAIN-3)
-0x100736216 DoErosion: the pass counts and the from-image variants are modelled, but DoWaterErosion (0x1007335e6) and DoWindErosion (0x100736baa) are not recovered, so no terrain is actually moved (TERRAIN-6)
-0x10073e932 StartFlood: saves the water levels, floods the 20..40 cell block with 500 m and arms +0xf4, but DoFloodFlowStep (0x100737712) is not recovered, so the flood does not flow (TERRAIN-6)
-0x10073759e DoAnimationTick: the two-tick arming, the region-changed preference post and the 10 s water-proximity sweep are in place; DoFloodFlowStep (TERRAIN-6) and TickVolcanicAshRegions 0x1007379be (TERRAIN-9) are missing
-0x100733bc8 AssignSurfaceTexturesAndColors: the water proximity, the padding, the moisture update, the texture clear, the view's dirty rows and the land-type ratios run, but DecideSurfaceCover (0x100733e48) and the sMaxSurfaceTextureSpread table (both TERRAIN-3) and SprayVolcanicAsh (0x100734724, TERRAIN-9) are missing
+0x100733bc8 AssignSurfaceTexturesAndColors: the whole pass is in place except SprayVolcanicAsh 0x100734724 (volcanic ash, TERRAIN-9)
+0x10073a346 StaticInit: calls ReadTextureInfos/ReadTerrainIniFile/ReadTuningParameters; ReadBrushDescriptions 0x10073b49c (the brush exemplars, TERRAIN-5) is still missing
+0x100739cb0 Init: the Create branch 0x100735cfc (the city height image import and its erosion) is still missing
 SKIPPED:
-0x100737020 Construct: the constructor body only stores the three vtables and zeroes the fields, which the port's member initialisers do; the elided members (triangle grid iterator +0x1a0, decal map +0x268, ash list +0x230) are noted in the header
-0x1007372a8 Destruct: the original calls Shutdown and frees the three blocks; the port keeps the destructor implicit (a user-defined one would make every translation unit that includes the header link cSTETerrain.cpp) and its owner calls Shutdown explicitly - the member vectors free themselves
-0x1007373f2 DestructAndDelete: the Itanium deleting destructor, covered by Release()'s `delete this`
-0x1007373fc DestructBody: the Itanium complete-object destructor, covered by the single ~cSTETerrain
-# Still pending (not attempted this session, each blocked on a missing neighbour or a layout):
-#   the brush path (ApplyBrush 0x100731c50, ApplyBrushComponents 0x100731d10, the two ApplyBrushAtLocation
-#   overloads, the ten BrushFn* bodies, GetTextureValue, DoPostBrushApplicationOperation, Begin/EndBrushScrub,
-#   ApplyWaterErosionBrush): needs the cISTETerrain::tBrushParameters / tBrushContext layouts, the brush
-#   exemplar descriptions (ReadBrushDescriptions/ReadBrushDescription) and the decal + volcanic-ash state;
-#   the surface-texture/exemplar pipeline (ReadTextureInfos/ReadTextureInfo/ReadTerrainIniFile/
-#   ReadTuningParameters/ReadTextureInfo/ReadMiscTexturesForTerrainTypes/DecideSurfaceCover/
-#   CalculateNormalsAndAssignCliffTextures/MarkCliff/AddToTerrainTypeTextureList): needs the response-curve
-#   exemplars, the per-terrain-type texture tables and the packed SIMD normal pass;
-#   the erosion/flood kernels (DoWaterErosion/DoWindErosion/DoFloodFlowStep/StartFlood's step);
-#   the cliff/shore creation (CreateShoreCliffs/DetectShoreVertices/GetShoreStartingAtVert/TrackShore* /
-#   AnalyzeShoreAndCreateCliffs/CreateShoreCliff) and the wave producers (UpdateWaveProducers,
-#   IsGoodWaveProducerLocation, TryToCreateWaveProducerForShore);
-#   the volcanic ash (AddVolcanicAshRegion/SprayVolcanicAsh/TickVolcanicAshRegions) and the terrain shaping
-#   (Create/CreateFromGrayScaleImage x2/DoErosion's kernels/MarkRegion/SmoothenMarkedRegion/CreateFlatAreas/
-#   LevelAreaStartingAt/InitFloraBrushInfo/DetermineTextureFamilyMembersForGridCells/StartFlood's flood);
-#   the neighbour-city edge reconcile (ReconcileEdgesWithNeighboringCities + its eight helpers).
+0x100737020 cSTETerrain::cSTETerrain(): covered by the member initialisers
+0x1007372a8 cSTETerrain::~cSTETerrain(): covered by the owner calling Shutdown
+0x1007373f2 cSTETerrain::~cSTETerrain(): the Itanium deleting destructor
+0x1007373fc cSTETerrain::~cSTETerrain(): the Itanium complete-object destructor
+# Still pending (not attempted this session), each blocked on a missing neighbour or the brush layout:
+#   the brush path (ApplyBrush/ApplyBrushComponents/the two ApplyBrushAtLocation/the ten BrushFn*/
+#   GetTextureValue/Begin/EndBrushScrub/ApplyWaterErosionBrush/ReadBrushDescriptions+the four readers);
+#   the erosion/flood kernels (DoWaterErosion/DoWindErosion/DoFloodFlowStep); the cliff/shore creation
+#   (CreateShoreCliffs/DetectShoreVertices/TrackShore*/AnalyzeShoreAndCreateCliffs/CreateShoreCliff) and the
+#   wave producers; the volcanic ash (AddVolcanicAshRegion/SprayVolcanicAsh/TickVolcanicAshRegions); the
+#   terrain shaping (Create/CreateFromGrayScaleImage x2/MarkRegion/SmoothenMarkedRegion/CreateFlatAreas/
+#   LevelAreaStartingAt/InitFloraBrushInfo); the neighbour-city edge reconcile and its helpers. They also
+#   need todo rows (notes/todo.csv is the lead's to edit).

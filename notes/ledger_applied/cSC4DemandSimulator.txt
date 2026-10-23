@@ -1,0 +1,75 @@
+SOURCE src/sc4/DemandSimulator.cpp|h
+EVIDENCE test scripts/tests/sc4_demandsimulator_test.cpp - the exemplar pipeline builds the demand channels with their max/min/supply/demand and economy links (DoDemandIndexLinks settles a 0x47bb3f50 sum link at 30, a 0x47bb3f41 cap at 0.4, a 50% 0x47bb3f31 supply link at +5 and a 25% 0x47bb3f30 demand link at +2.5), ReadSimulatorTunableValues installs both response curves, the 90-day history window, the 13 utilization weights and the 12 salary weights, UpdateTaxAndEconomyModifiers writes the curve(history max * 0.1 / neutral tax) + ordinance - 1 tax modifier and the nation + saved economy modifier on all 12 channels, the 2-cell census produces 100 in 0x1011/0x2112 from capacity 100 x workforce 0.5 and pushes the delta into the two region-use-2 demands, the lot-state message applies the exemplar agent effects and the building capacity (-40 for 0x1020), EvaluateConnectionUtilization gives 24.0 / 140002.297 (log of the distinct regional-city sets, traffic 7000*20, airport 3, seaport 1), ResetRegionalDemands sets the counterpart supply to the connected-city extrapolated population, ExportDemand spends the 300 remaining demand on the lower-tax city (300 to 0x11010, shares 30/22.5/15/7.5 to 0x12111..4) and ExtrapolateBusinessCensus writes 5/2.5/1.25 jobs to 0x12010/20/30, and the stream round-trips the channels, the tax modifiers and the previous-census map
+# 53 symbols. New seams (each in IDemandSimulatorHost unless noted): SL::spMS2 +0x28/+0x30 notifications,
+# SL::spSimulator +0x98/+0xa8 agents (intervals 0/4/6/10, priority 2) and +0x30 -> date +0xd0, SL::spSC4 +0x218
+# shutdown callback, +0x120 current regional city and +0x110 -> nation +0x80, SL::spCity +0x2e8/+0x2f0 cell
+# counts, +0x260/+0x268 developer +0x68 airport/seaport trip counts, SL::spHistoryWarehouse +0x38/+0x60/+0x68,
+# the resource manager +0x90 available-exemplar list + key-list EnumKeys and +0x18 GetResource (iid 0xa52160f5),
+# the neighbours simulator +0x80/+0x88/+0xa8/+0xb0, the traffic simulator +0xa8 GetTrafficArrived, the ordinance
+# simulator +0xc8 GetCumulativeFactor, the building development simulator +0x50/+0x68/+0xf0/+0x108/+0x110/+0x138/
+# +0x1a0, the lot manager +0x28, the residential simulator +0xf0/+0x118, and the small IDemandRegionCity (+0x28/
+# 0x38/0x60/0x78/0x80/0x88/0x90/0x98), IDemandLot (+0x130/0x148/0x170/0x198), IDemandLotState (+0x170/0x180),
+# IDemandOccupant (+0x30) and IDemandDeveloper (+0x28/+0x30/+0x68/+0x90) views.
+# Quirks kept and asserted where they matter: Shutdown frees the +0x140 curve and clears +0x138 twice (leaving
+# +0x140 dangling, and the destructor frees neither curve); the census and previous-census maps are walked in
+# lock step by position; the salary average divides unsigned; 0x47bb3f30 feeds the target's demand while
+# 0x47bb3f31 feeds its supply; the lot-state handler drops GetData4 and the connection handler drops all three
+# payload reads.
+# Follow-ups for the lead (todo rows): hook GZCOM_CreatecSC4DemandSimulator (src/gz/GZCOMCreators.cpp) up to
+# this class, and add an I*Host implementation in the game wiring for every seam above (the Services/Seams table
+# in docs/SEAMS.md is generated, so do not edit it here).
+0x100223f6a Construct
+0x10022417c Destruct
+0x100224262 QueryInterface
+0x1002242ac QueryInterfaceThunk_2ac
+0x1002242ba QueryInterfaceThunk_2ba
+0x1002242c8 AddRef
+0x1002242d6 AddRefThunk_2d6
+0x1002242e4 AddRefThunk_2e4
+0x1002242f2 Release
+0x100224330 ReleaseThunk_330
+0x100224368 ReleaseThunk_368
+0x1002243a0 StaticInit
+0x10022446e StaticShutdown
+0x100224520 Init
+0x100224982 InitDynamicDataFromExemplar
+0x100224a42 ZeroCensusInfo
+0x100224cb2 ReadSimulatorTunableValues
+0x1002250a4 ResetRegionalDemands
+0x100225380 DoDemandIndexLinks
+0x100225776 Shutdown
+0x100225a28 Write
+0x100225bb8 WriteThunk
+0x100225bc6 Read
+0x100225e36 ReadThunk
+0x100225e44 GetNeutralTaxRate
+0x100225eda GetSimulatorType
+0x100225ef4 AddToAgentEffectMap
+0x100226278 DoMessage
+0x1002264b2 DoIdle
+0x100226b92 DoDailySimulation
+0x100226e40 DoMonthlySimulation
+0x100226e6a SimulatorBegin
+0x100226ed2 AddAgentEffect
+0x100226fd6 UpdateCapacity
+0x1002270cc DoMessageThunk
+0x1002270de GetJobsBySensus
+0x10022718a UpdateTaxAndEconomyModifiers
+0x100227bfe PerformCensus
+0x100227ea6 EvaluateConnectionUtilization
+0x100228f18 ExportDemand
+0x100229568 AddDemandToSimulator
+0x100229608 GetDemand
+0x100229678 CalculateJobsPerUnitOfDemand
+0x1002297e2 CreateDemandFromExemplar
+0x10022a096 GetLocalPopulationSummary
+0x10022a2ec ExtrapolateResidentialCensus
+0x10022a588 ExtrapolateBusinessCensus
+0x10022a7c6 UpdateOccupantEffects
+0x10022a81a GetGZCLSID
+0x10022a826 GetGZCLSIDThunk
+PARTIAL:
+0x100229458 CreateNewDemand - the port has a single cSC4Demand implementation, so the GZCOM class-factory lookup + QueryInterface(iid) are replaced by direct construction and the iid argument is ignored; the map replacement and the AddRef/Release bookkeeping are reproduced
+SKIPPED:
+0x10022422a cSC4DemandSimulator::~cSC4DemandSimulator(): the Itanium complete-object destructor, emitted by the compiler
+0x100224234 cSC4DemandSimulator::~cSC4DemandSimulator(): the Itanium deleting destructor, emitted by the compiler

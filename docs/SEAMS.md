@@ -165,7 +165,7 @@ the caller fills (see `scripts/terrain_shot.mm`).
 | `IMySimFilterHost` | `src/sc4/MySimFilters.h` | src/sc4/MySimFilters.cpp | test fake only | scripts/tests/sc4_mysimfilters_test.cpp |
 | `IMySimHost` | `src/sc4/MySim.h` | src/sc4/MySim.cpp | test fake only | scripts/tests/sc4_mysim_test.cpp |
 | `IMySimWinProcHost` | `src/sc4/MySimWinProc.h` | src/sc4/MySimWinProc.cpp | test fake only | scripts/tests/sc4_mysimwinproc_test.cpp |
-| `INSC4UIHost` | `src/sc4/SC4UI.h` |  | implemented | src/sc4/SC4UI.cpp |
+| `INSC4UIHost` | `src/sc4/SC4UI.h` |  | implemented | scripts/tests/sc4_ui_helpers_test.cpp, src/sc4/SC4UI.cpp |
 | `INeighborConnectionHost` | `src/sc4/NeighborConnection.h` | src/sc4/NeighborConnection.cpp | test fake only | scripts/tests/sc4_neighborconnection_test.cpp, scripts/tests/sc4_neighborssimulator_test.cpp |
 | `INeighborDealHost` | `src/sc4/NeighborDeal.h` | src/sc4/NeighborDeal.cpp | test fake only | scripts/tests/sc4_neighbordeal_test.cpp, scripts/tests/sc4_neighborssimulator_test.cpp |
 | `INeighborsHost` | `src/sc4/NeighborsSimulator.h` | src/sc4/NeighborsSimulator.cpp | test fake only | scripts/tests/sc4_neighborssimulator_test.cpp |

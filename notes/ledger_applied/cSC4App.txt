@@ -1,0 +1,37 @@
+SOURCE src/sc4/App.cpp|h
+EVIDENCE test scripts/tests/sc4_app_test.cpp - the last cSC4App functions: canonical save path + temporary segment + the four save messages + backup/rename + path revert, the canonical path on success, the obliteration path (empty state written, new city, camera restored), the -packedexemplars/-packedtextures switches and the two Resources.ini sections, the [Font Aliases]/[Font Styles] callbacks and the font set directories, and the exception report uploader lookup order
+0x10000ab6c cSC4AppSetFontAliasStatic
+0x10000aba8 cSC4AppSetFontStyleStatic
+0x10000abbc cSC4AppSetFontStyle
+0x10000c7d0 cSC4AppSetupFontSet
+0x10000f146 cSC4AppLaunchExceptionReportUploader
+0x100011a14 cSC4AppDoMessageGZ
+0x100011df8 cSC4AppDoMessage2
+0x100011f02 cSC4AppDoMessage2Thunk_11f02
+0x100046e70 cSC4AppDoMessageWindow
+0x100047346 cSC4AppDoMessageWindowThunk_47346
+0x100045f6e cSC4AppSaveCity
+0x100046024 cSC4AppSaveCityThunk_46024
+0x100046036 cSC4AppSaveCityToPath
+0x100046e5e cSC4AppSaveCityToPathThunk_46e5e
+0x100046d9e cSC4AppRegisterCityDBSegment
+0x100047350 cSC4AppDoCityObliteration
+0x1000475cc cSC4AppSaveCityForObliteration
+0x1000b12e6 cSC4AppCreateDBSegmentCallback
+0x1000b20be cSC4AppLoadRegistry
+0x1000b2d0c cSC4AppLoadRegistryThunk_2d0c
+0x1000b2d1e cSC4AppLoadRegistryThunk_2d1e
+0x1000b269a cSC4AppRegisterDBSegmentCallback
+0x1000b2c22 cSC4AppRegisterDBSegmentDirectoryFilesCallback
+PARTIAL:
+0x10000abbc cSC4AppSetFontStyle CreateFontStyleFromSpecification (0x1003d9360, 4.5 KB) and the font-style script vocabulary (COM class 0xba2e7954 / iid 0x1a2bdebb) are unrecovered; both are host hooks (createFontStyleFromSpecification / addFontStyleScriptVariable) and the WCM registration is the recovered cIGZWinCtrlMgr::SetSystemFont/SetFontMapping
+0x10000aba8 cSC4AppSetFontStyleStatic forwards into the partial SetFontStyle
+0x10000c7d0 cSC4AppSetupFontSet the live Mac part (AddAllFontsFromDirectory of the plugin directory and of <data>/Fonts/) is ported; the per-language filter tail (five switch cases with ~20 inlined cRZString pushes each plus the RemoveFontByName sweep, and the SC4GetSystemFontsDirectory @ 0x100039a97 path that answers false on this build) is not decoded yet
+0x10000f146 cSC4AppLaunchExceptionReportUploader RZSpawnWait (0x1000274df, a spawnv wrapper) is unrecovered; the program is started through the startupHooks_.spawnWait host hook
+0x100046036 cSC4AppSaveCityToPath SC4CreateSavePathForCity (0x1001e98a4), SC4WriteAppLoadSaveVersion (0x1001e9585), SL::spNeighborsSim vslot 0xa0 and SC4WriteRegionalCity(path, city) (0x1001e9799) go through cityHooks_ (createSavePathForCity / writeLoadSaveVersion / connectedCities / writeRegionalCityFile); the segment record layout, the four messages and the backup/rename/revert sequence are ported
+0x100046e70 cSC4AppDoMessageWindow the cSC4WinLoadHeightField dialog is reached through sc4::ILoadHeightFieldDialog (cityHooks_.createLoadHeightFieldDialog) and the two cSLWinLocationSaver calls through restoreDialogLocation / saveDialogLocation, so the window machinery stays out of this link unit
+0x1000b12e6 cSC4AppCreateDBSegmentCallback the registry category's key/value grammar ("<segment id> = <class id> <path spec>") and the two path candidates (data directory, and data directory plus the language folder, tested as file or directory by the segment kind) could not be verified against the live cGZRegistry service; the COM creation, %DataDirectory%/%Language% substitution, SetPath/Open(true,false) and the resource-manager registration are ported, the language-folder retry is an approximation
+0x1000b269a cSC4AppRegisterDBSegmentCallback the group bookkeeping (BEGIN_GROUP/END_GROUP against PACKED_EXEMPLARS/NON_PACKED_EXEMPLARS/PACKED_TEXTURES/NON_PACKED_TEXTURES and the packed-file switches) is ported, but the segment creation itself is cGZRegistry vslot 0x30 + 0x18 (class cGZRegistry, unrecovered)
+0x1000b2c22 cSC4AppRegisterDBSegmentDirectoryFilesCallback cGZRegistry vslot 0x30 (create the object an entry describes) and 0x18 (hand it back) are unrecovered, so the callback only records nothing yet
+SKIPPED:
+# none of the 121 cSC4App functions is left out: all of them are now hand-written (the window message filter's dialog and the registry creation are the seams above).
