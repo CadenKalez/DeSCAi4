@@ -335,7 +335,7 @@ the caller fills (see `scripts/terrain_shot.mm`).
 | `IWeatherHost` | `src/sc4/WeatherSimulator.h` | src/sc4/WeatherSimulator.cpp | test fake only | scripts/tests/sc4_weathersimulator_test.cpp |
 | `IWinAnimationRecorderHost` | `src/sc4/WinAnimationRecorder.h` | src/sc4/WinAnimationRecorder.cpp | test fake only | scripts/tests/sc4_winanimationrecorder_test.cpp |
 | `IWinBMPViewHost` | `src/sc4/WinBMPView.h` |  | implemented | scripts/tests/sc4_winbmpview_test.cpp, src/sc4/WinBMPView.cpp |
-| `IWinButtonHost` | `src/gz/WinBtn.h` | src/gz/WinBtn.cpp, src/gz/WinCombo.cpp, src/gz/WinLineInput.cpp ... | test fake only | scripts/tests/gz_winbtn_test.cpp, scripts/tests/gz_wincombo_test.cpp |
+| `IWinButtonHost` | `src/gz/WinBtn.h` | src/gz/LegacyControl.cpp, src/gz/WinBtn.cpp, src/gz/WinCombo.cpp ... | test fake only | scripts/tests/gz_winbtn_test.cpp, scripts/tests/gz_wincombo_test.cpp |
 | `IWinCalloutBoxServices` | `src/sc4/WinCalloutBox.h` | src/sc4/WinCalloutBox.cpp | test fake only | scripts/tests/sc4_wincalloutbox_test.cpp |
 | `IWinCompatHost` | `src/platform/WinCompat.h` | src/platform/WinCompat.cpp | test fake only | scripts/tests/rz_netsocket_test.cpp |
 | `IWinFoldersHost` | `src/gz/WinFolders.h` |  | implemented | scripts/tests/gz_winfolders_test.cpp, src/gz/WinFolders.cpp |

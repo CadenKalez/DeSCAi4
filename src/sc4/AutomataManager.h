@@ -93,7 +93,10 @@ namespace sc4 {
 constexpr std::uint32_t kGZCLSID_cSC4AutomataManager = 0x498f9cb5;
 constexpr std::uint32_t kGZIID_cISC4AutomataManager = 0x98f9bf4;
 constexpr std::uint32_t kGZIID_cISC4Automaton = 0xa9b40f05;
+#ifndef SC4_GZIID_CISC4BuildingOccupant_DEFINED
+#define SC4_GZIID_CISC4BuildingOccupant_DEFINED
 constexpr std::uint32_t kGZIID_cISC4BuildingOccupant = 0x87dda3a9;
+#endif
 constexpr std::uint32_t kGZIID_cISC4NetworkOccupant = 0xa821ef94;
 constexpr std::uint32_t kGZIID_cIGZSerializableView = 0xe4fda3d4;
 constexpr std::uint32_t kGZIID_cIGZMessageTarget2View = 0x452294aa;
@@ -118,7 +121,10 @@ constexpr int kAutomataTickChannel = 0xff;
 // Occupant property that excludes an occupant from the automata system (HandleInsert/RemoveOccupant).
 constexpr std::uint32_t kPropertyNoAutomata = 0x029244db;
 // Automaton property: the group ids it belongs to (cRZVariant of u32s).
+#ifndef SC4_kPropertyOccupantGroups_DEFINED
+#define SC4_kPropertyOccupantGroups_DEFINED
 constexpr std::uint32_t kPropertyOccupantGroups = 0xaa1dd396;
+#endif
 constexpr std::uint32_t kBuildingOccupantType = 0x278128a0;
 constexpr std::uint32_t kNetworkOccupantType = 0xc772bf98;
 
@@ -754,6 +760,10 @@ public:
 
     // ---- test / engine access
     bool Initialized() const { return initialized_; }
+    // The per-kind managers (cSC4VehicleManager / the traffic manager) share the base's +0x78 random stream and read the
+    // base's default group (+0xa8c); both are private, so expose them.
+    cRZRandomSuper& Random() { return random_; }                       // +0x78
+    std::uint32_t DefaultGroup() const { return defaultGroup_; }        // +0xa8c
     bool PostCityInitPending() const { return postCityInitPending_; }
     int MinZoom() const { return minZoom_; }
     std::uint32_t RefCount() const { return refCount_; }

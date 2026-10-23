@@ -20,10 +20,17 @@
 namespace sc4 {
 
 constexpr std::uint32_t kGZIID_cISC4Occupant = 0x26bb767e;
+// The constant is also declared by AutomataManager.h (same value); guard it so a translation unit can include both.
+#ifndef SC4_GZIID_CISC4BuildingOccupant_DEFINED
+#define SC4_GZIID_CISC4BuildingOccupant_DEFINED
 constexpr std::uint32_t kGZIID_cISC4BuildingOccupant = 0x87dda3a9;
+#endif
 constexpr std::uint32_t kGZCLSID_cSC4Occupant = 0xa9bc9ab6;
 constexpr std::uint32_t kOccupantDefaultType = 0x74758925;
+#ifndef SC4_kPropertyOccupantGroups_DEFINED
+#define SC4_kPropertyOccupantGroups_DEFINED
 constexpr std::uint32_t kPropertyOccupantGroups = 0xaa1dd396;
+#endif
 
 // messages posted by occupants
 constexpr std::uint32_t kMessageOccupantInitialized = 0x99ef1140;

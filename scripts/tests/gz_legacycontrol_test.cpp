@@ -20,6 +20,7 @@
 #include "gz/WinGen.h"
 #include "gz/WinBMP.h"
 #include "gz/WinScrollbar.h"
+#include "gz/WinBtn.h"
 #include "gz/WinSlider.h"
 #include "gz/WinText.h"
 #include "rz/cRZVariant.h"
@@ -460,6 +461,73 @@ struct RgbGraphics final : IWinGraphics {
     void NativeToRGB(std::uint32_t, std::uint8_t&, std::uint8_t&, std::uint8_t&) override {}
     IWinBuffer* PrimaryBuffer() override { return nullptr; }
     bool DrawSystemActive() override { return false; }
+};
+
+struct FakeBtn final : gz::cIGZWinBtn {
+    std::map<int, bool> flags;
+    std::vector<std::pair<int, std::uint32_t>> colors;
+    int styleCalls = 0, style = -1; bool styleHasImage = false; cRZRect styleArea{};
+    std::uint32_t fontStyle = 0; int fontSets = 0; gz::IWinFont* font = reinterpret_cast<gz::IWinFont*>(1);
+    int captionStyle = -1, g1x = -1, g1y = -1, g4[4] = {-1, -1, -1, -1};
+    std::string tip; int tipType = -1, tipX = -99, tipY = -99;
+    std::uint32_t sounds[2] = {7, 7};
+    int releases = 0;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return 1; }
+    std::uint32_t Release() override { ++releases; return 1; }
+    cIGZWin* AsIGZWin() override { return nullptr; }
+    bool GetBtnFlag(int f) const override { auto it = flags.find(f); return it != flags.end() && it->second; }
+    bool SetBtnFlag(int f, bool on) override { flags[f] = on; return true; }
+    bool ToggleOn() override { return false; }
+    bool ToggleOff() override { return false; }
+    bool IsOn() const override { return false; }
+    bool SetChecked(bool) override { return false; }
+    bool IsChecked() const override { return false; }
+    int GetStyle() override { return 0; }
+    bool SetStyle(int st, cIGZBuffer* image, const cRZRect* area) override { ++styleCalls; style = st; styleHasImage = image != nullptr; if (area) styleArea = *area; return true; }
+    bool SetButtonStyle(int) override { return false; }
+    int GetImageW() const override { return 0; }
+    int GetImageH() const override { return 0; }
+    bool GetImageArea(cRZRect&) const override { return false; }
+    bool SetBuffer(cIGZBuffer*) override { return false; }
+    bool GetBuffer(cIGZBuffer*&) const override { return false; }
+    bool SetFont(gz::IWinButtonFont* f) override { ++fontSets; font = f; return true; }
+    bool SetFontStyle(std::uint32_t id) override { fontStyle = id; return true; }
+    bool GetFontStyle(std::uint32_t&) override { return false; }
+    bool SetFontColor(int index, std::uint32_t native) override { colors.emplace_back(index, native); return true; }
+    bool GetFontColor(int, std::uint32_t&) const override { return false; }
+    bool SetFontColor(int, gz::cRZColor) override { return false; }
+    bool GetFontColor(int, gz::cRZColor&) const override { return false; }
+    bool ClearFontColor(int) override { return false; }
+    bool SetCaptionStyle(int st) override { captionStyle = st; return true; }
+    bool GetCaptionStyle(int&) const override { return false; }
+    bool SetGutters(std::uint8_t x, std::uint8_t y) override { g1x = x; g1y = y; return true; }
+    bool GetGutters(int&, int&) const override { return false; }
+    bool SetGutters(std::uint8_t l, std::uint8_t t, std::uint8_t r, std::uint8_t b) override { g4[0] = l; g4[1] = t; g4[2] = r; g4[3] = b; return true; }
+    bool GetGutters(int&, int&, int&, int&) const override { return false; }
+    bool FitSizeToContent() override { return false; }
+    bool GetMinMaxInfo(cRZRect&) override { return false; }
+    bool SetTipText(const cIGZString& t) override { tip = t.ToChar(); return true; }
+    bool GetTipText(cIGZString&) const override { return false; }
+    bool ClearTipText() override { return false; }
+    bool SetTipPlacementType(int t) override { tipType = t; return true; }
+    bool GetTipPlacementType(int&) const override { return false; }
+    bool SetTipPlacementOffsets(int x, int y) override { tipX = x; tipY = y; return true; }
+    bool GetTipPlacementOffsets(int&, int&) const override { return false; }
+    bool SetTipColor(int, std::uint8_t, std::uint8_t, std::uint8_t) override { return false; }
+    bool GetTipColor(int, std::uint8_t&, std::uint8_t&, std::uint8_t&) const override { return false; }
+    void Flash(std::uint32_t, std::uint32_t) override {}
+    bool SetSoundID(int which, std::uint32_t id) override { sounds[which] = id; return true; }
+    std::uint32_t GetSoundID(int which) const override { return sounds[which]; }
+};
+
+struct BtnWindow final : gz::cGZWinFlatRect {
+    explicit BtnWindow(cIGZWinMgr* mgr) : cGZWinFlatRect(mgr) {}
+    FakeBtn btn;
+    bool QueryInterface(std::uint32_t iid, void** out) override {
+        if (iid == gz::kGZIID_cIGZWinBtn) { *out = &btn; return true; }
+        return gz::cGZWinFlatRect::QueryInterface(iid, out);
+    }
 };
 
 struct FakeLegacyBinding final : cIGZLegacyControl {
@@ -1131,6 +1199,57 @@ int main() {
         cGZLegacyControl::InterpretPropertiesGZWinText(textWindow, none.list, true);
         CHECK(t.gutterX == 0 && t.gutterY == 0);
         textWindow->Release();
+        SetWinGraphics(nullptr);
+    }
+
+    // The button interpreter: plain and inverted flags, the style keyword table, the default "main9" font, colours,
+    // gutters (2 or 4 numbers), caption alignment, tip text / offsets / placement, sound ids and their params.
+    {
+        RgbGraphics rgb;
+        SetWinGraphics(&rgb);
+        auto* btnWindow = new BtnWindow(&mgr);
+        btnWindow->AddRef();
+        mgr.valid.insert(btnWindow);
+        Params p;
+        p.Uint(0xa00u, 1u); p.Uint(0xa01u, 0u); p.Uint(0xf00du, 0u);     // flag 1 on, 2 off, 0x10 ON (inverted)
+        p.Uint(0xa07u, 1u); p.Uint(0xa08u, 0u);                         // 0x200 off, 0x400 on (inverted)
+        p.Uint(0xf005u, 0xa0bu);                                        // style keyword -> 2
+        p.Uint(0xf000u, 77u);                                           // font style id
+        p.Text(0xf00fu, "(1,2,3)"); p.Text(0xf012u, "(9,8,7)");
+        p.Text(0xf004u, "(4,5)");
+        p.Text(0xf015u, "x");                                           // wrong type for the keyword: ignored
+        p.Uint(0xf015u, 0xf007u);                                       // right -> caption style 2
+        p.Text(0xa10u, "Hello tip");
+        p.Text(0xa11u, "(3,-4)");
+        p.Text(0xa19u, "{11,22}");
+        cGZLegacyControl::InterpretPropertiesGZWinBtn(btnWindow, p.list, true);
+        const auto& b = btnWindow->btn;
+        CHECK(b.flags.at(1) && !b.flags.at(2) && b.flags.at(0x10) && !b.flags.at(0x200) && b.flags.at(0x400));
+        CHECK(b.style == 2 && b.styleCalls == 1 && !b.styleHasImage);
+        CHECK(b.fontStyle == 77u && b.fontSets == 0);
+        CHECK(b.colors.size() == 2 && b.colors[0].first == 0 && b.colors[0].second == 0xff010203u && b.colors[1].first == 1 && b.colors[1].second == 0xff090807u);
+        CHECK(b.g1x == 4 && b.g1y == 5 && b.g4[0] == -1);
+        CHECK(b.captionStyle == 2);
+        CHECK(b.tip == "Hello tip" && b.tipX == 3 && b.tipY == -4 && b.tipType == 0x1000000);
+        CHECK(b.sounds[0] == 0x22u && b.sounds[1] == 0u);
+        cIGZVariant* soundParam = nullptr;
+        CHECK(btnWindow->GetParam(0xa5be39du, &soundParam)); soundParam->Release();
+        CHECK(!btnWindow->GetParam(0x4a5be2f8u, &soundParam));
+        // four gutters, style keyword 0xa00 -> 3, no font -> the "main9" lookup through the host, explicit tip type
+        Params q;
+        q.Text(0xf004u, "(1,2,3,4)");
+        q.Uint(0xf005u, 0xa00u);
+        q.Uint(0xa18u, 5u);
+        q.Text(0xa1au, "{aa,bb}");
+        cGZLegacyControl::InterpretPropertiesGZWinBtn(btnWindow, q.list, true);
+        CHECK(b.g4[0] == 1 && b.g4[1] == 2 && b.g4[2] == 3 && b.g4[3] == 4);
+        CHECK(b.style == 3 && b.tipType == 5 && b.sounds[1] == 0xbbu && b.sounds[0] == 0u);
+        CHECK(b.fontSets == 1 && b.font == nullptr);                   // no button host: SetFont(null), as the original passes the lookup result on
+        // second pass: only flag 4
+        Params second; second.Uint(0xa02u, 1u);
+        cGZLegacyControl::InterpretPropertiesGZWinBtn(btnWindow, second.list, false);
+        CHECK(b.flags.at(4));
+        btnWindow->Release();
         SetWinGraphics(nullptr);
     }
 

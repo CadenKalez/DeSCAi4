@@ -122,7 +122,7 @@ CLASS-cGZGraphicSystemW32,cGZGraphicSystemW32,"recover 35 remaining function(s) 
 LEDGER-cGZGraphicSystemW32,cGZGraphicSystemW32,finish 12 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cGZGraphicWin32COMDirector,cGZGraphicWin32COMDirector,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZLegacyControl,cGZLegacyControl,"recover 44 remaining function(s) (44 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-cGZLegacyControl,cGZLegacyControl,finish 13 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cGZLegacyControl,cGZLegacyControl,finish 12 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEGACY-1,cGZLegacyControl,Recover cRZStringArray (variant vtbl 0x100b0ecb8) so InterpretPropertiesGZWinCommon can write the seven comment strings at 0x108..0x10f,,open,src/gz/LegacyControl.cpp
 LEGACY-2,cGZLegacyControl,"InterpretPropertiesGZWinBtn: tip resource {6a231eaa,0a6cf0d3} is replaced in the original by a CFBundle localised string (ImportTooltipReplacement); add a host seam",,open,src/gz/LegacyControl.cpp
 LEDGER-cGZLua5,cGZLua5,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
@@ -759,7 +759,9 @@ CLASS-cSC4TractDeveloper,cSC4TractDeveloper,"recover 56 remaining function(s) (5
 LEDGER-cSC4TractDeveloper,cSC4TractDeveloper,finish 17 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 TRACT-GROW,cSC4TractDeveloper,"Finish Grow and the candidate loops: they need cISC4GrowthDeveloper's growth/decline lists, GrowthStageFitsInZone and the building-occupant group tables",,open,src/sc4/TractDeveloper.cpp
 TRACT-GROW-2,cSC4TractDeveloper,"Grow is now unblocked on the growth-developer side (lists, maps, thresholds, styles); it still needs GrowthStageFitsInZone (BUILDD3-1) and the occupant/build passes",,open,src/sc4/TractDeveloper.cpp
-CLASS-cSC4TrafficAutomataManager,cSC4TrafficAutomataManager,"recover 48 remaining function(s) (48 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4TrafficAutomataManager,cSC4TrafficAutomataManager,"recover 2 remaining function(s) (0 not started, 2 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4TrafficAutomataManager,cSC4TrafficAutomataManager,finish 14 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+TRAFFICAUTOMATA-1,cSC4TrafficAutomataManager,Build the cSC4TrafficAutomaton -> IAutomataAutomaton/ITrafficAutomataAutomaton adapter; it unblocks the 14 partial spawn/dispatch functions and lets TrafficAutomaton.cpp call the real manager instead of the seam,,open,src/sc4/TrafficAutomataManager.cpp
 CLASS-cSC4TrafficAutomaton,cSC4TrafficAutomaton,"recover 2 remaining function(s) (0 not started, 2 partial/pending); bases still unfinished: cSC4Automaton",CLASS-cSC4Automaton,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4TrafficAutomaton,cSC4TrafficAutomaton,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 TRAFFICAUTO-1,cSC4TrafficAutomaton,Finish FindBestNeighborConnection (0x10011af24): needs cISC4NeighborConnection (the neighbours simulator's five lists) and cISC4PathFinder::FindPath (vslot 0xb8),,open,src/sc4/TrafficAutomaton.cpp
