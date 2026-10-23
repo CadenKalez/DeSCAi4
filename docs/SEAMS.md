@@ -76,7 +76,7 @@ the caller fills (see `scripts/terrain_shot.mm`).
 | `IBuildingDevelopmentSimHost` | `src/sc4/BuildingDevelopmentSimulator.h` | src/sc4/BuildingDevelopmentSimulator.cpp | test fake only | scripts/tests/sc4_buildingdevelopment_test.cpp |
 | `ICameraControlHost` | `src/sc4/CameraControl.h` | src/sc4/CameraControl.cpp | test fake only | scripts/tests/sc4_cameracontrol_test.cpp |
 | `ICatalogViewHost` | `src/sc4/WinCatalogView.h` | src/sc4/WinCatalogView.cpp | test fake only | scripts/tests/sc4_wincatalogview_test.cpp |
-| `ICityHost` | `src/sc4/cSC4City.h` | src/gz/SimHostRegistry.h, src/sc4/cSC4City.cpp | test fake only | scripts/tests/sc4_city_test.cpp |
+| `ICityHost` | `src/sc4/cSC4City.h` | src/gz/SimHostRegistry.h, src/sc4/cSC4City.cpp | test fake only | scripts/tests/gzcomcreators_core_part2.cpp, scripts/tests/sc4_city_test.cpp |
 | `ICitySituationAdviceHost` | `src/sc4/CitySituationAdvice.h` | src/sc4/CitySituationAdvice.cpp | test fake only | scripts/tests/sc4_citysituationadvice_test.cpp |
 | `IClockHost` | `src/sc4/cSC424HourClock.h` | src/sc4/cSC424HourClock.cpp | test fake only | scripts/tests/sc4_clock_test.cpp |
 | `ICommercialHost` | `src/sc4/CommercialSimulator.h` | src/gz/SimHostRegistry.h | test fake only | scripts/tests/sc4_commercialsimulator_test.cpp |

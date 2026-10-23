@@ -90,7 +90,16 @@ Quality checks on that work:
 | 6 | Slow test suite | Fixed for the development loop. `python3 scripts/run_tests_fast.py` caches objects per source and flag set (clang `-MMD` dependencies), and links and runs the tests in parallel. `scripts/run_tests.sh` stays the from-scratch reference run. Measured on this Mac: all 362 tests in 276 s cold (the serial script took over an hour), and in 12 s when nothing changed. |
 | 7 | Basic app build | Partly fixed. `scripts/build_app.sh` takes `dev`, `release` (-O3, ThinLTO, hidden visibility, dead-strip) or `debug` (ASan/UBSan), plus `ARCH="arm64 x86_64"` for a universal binary. CMake, PGO and the ECS layer remain prompt tasks B to D. |
 
-DeepSeek's audit also exposed a new backlog. 1,378 ledger rows in 314 classes name no verification at all; 161 were repaired mechanically. The rest needs real tests and is tracked as `AUDIT-1`, with the per-class list in `notes/ledger_audit.md`.
+DeepSeek's audit also exposed a backlog of 1,378 ledger rows that named no verification. **Status: closed for every recovered row** (AUDIT-1 is done):
+- 906 rows (the 888 software blitters and 18 span renderers) cite `scripts/run_blitter_oracle.sh`. It was re-run on 2026-10-23: 888 of 888 blitters and 3,600 span cases match the decompiled originals.
+- About 240 rows cite the test that executes them, as measured by `scripts/coverage_evidence.py` (clang source coverage: a function counts only if a registered test actually runs it).
+- New or extended tests cover the rest:
+  - `gz_gzcomcreators_core` calls all 36 recovered GZCOM creators;
+  - `s3d_fsh`, `gz_spanrender`, `rz_smallfunctions` and `audio_freshnessdirector` are new;
+  - `sc4_disastermanagers`, `audio_hitresourcefactory` and `gz_drawsystem` gained entry-point checks.
+- 17 rows were downgraded to `partial` because the port has no counterpart for them; they are tracked as FSH-1, HITRES-1, FRESH-1 and MULTIPACK-1.
+- What the audit still lists is 55 skipped rows, which were never recovered and need no test, plus 23 partial rows that are tied to those to-dos.
+- Two tests passed only under ASan because they read freed or out-of-scope memory (`gz_winfilebrowser`, `sc4_winregionview`). Both were fixed, and they now pass with and without sanitizers.
 
 ---
 

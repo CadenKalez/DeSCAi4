@@ -114,6 +114,18 @@ int main() {
     CHECK(sys->CreateEngine(&target, &engine) && engine == &g_engine && g_engine.refs == 1);
     CHECK(target.refs == 2);   // the buffer reference taken by the query is never released
 
+    // The software factory on its own: its interfaces, and destruction through the last reference.
+    {
+        auto* factory = new cGZDrawContextRenderToBufferFactory();
+        factory->AddRef();
+        void* view = nullptr;
+        CHECK(factory->QueryInterface(kGZIID_cIGZDrawContextEngineFactory, &view) && view == static_cast<cIGZDrawContextEngineFactory*>(factory));
+        CHECK(factory->QueryInterface(kGZIID_cIGZUnknown, &view));
+        CHECK(!factory->QueryInterface(0x1234, &view));
+        factory->Release(); factory->Release();
+        factory->Release();        // the last reference destroys it
+    }
+
     // Added factories go in front; the first that accepts wins.
     Factory refuses(false), accepts(true);
     sys->AddEngine(&refuses);

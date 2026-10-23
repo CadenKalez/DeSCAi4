@@ -354,6 +354,44 @@ int main() {
         m->Release();
     }
 
+    // ---- the small per-manager entry points: interface views, standard-message hooks, interface queries, riot
+    //      occupant registration, and destruction through the last Release.
+    {
+        struct RiotOccupant final : cISC4RiotNetworkOccupant {
+            bool QueryInterface(std::uint32_t, void**) override { return false; }
+            std::uint32_t AddRef() override { return ++refs; }
+            std::uint32_t Release() override { return --refs; }
+            void ClearState(std::uint32_t bits) override { state &= ~bits; }
+            void SetState(std::uint32_t bits) override { state |= bits; }
+            std::uint32_t refs = 0, state = 0;
+        };
+        cRZMessage2Standard message;
+        auto* fire = new cSC4DisasterManagerFire();
+        CHECK(fire->AsISC4DisasterManager() == static_cast<cISC4DisasterManager*>(fire));
+        CHECK(fire->OnStandardMessage(&message));
+        static_cast<cISC4DisasterManagerFire*>(fire)->Release();     // count 0: destroys
+        auto* volcano = new cSC4DisasterManagerVolcano();
+        CHECK(volcano->AsISC4DisasterManager() == static_cast<cISC4DisasterManager*>(volcano));
+        CHECK(volcano->OnStandardMessage(&message));
+        void* view = nullptr;
+        CHECK(volcano->QueryInterface(kGZIID_cISC4DisasterManagerVolcano, &view) && view == static_cast<cISC4DisasterManagerVolcano*>(volcano));
+        CHECK(volcano->QueryInterface(kGZIID_cISC4DisasterManager, &view) && view != nullptr);
+        CHECK(!volcano->QueryInterface(0x12345678, &view) && view == nullptr);
+        while (static_cast<cISC4DisasterManagerVolcano*>(volcano)->Release() != 0) {}   // drop the two query references, then destroy
+        auto* riot = new cSC4DisasterManagerRiot();
+        CHECK(riot->AsISC4DisasterManager() == static_cast<cISC4DisasterManager*>(riot));
+        CHECK(riot->OnStandardMessage(&message) && !riot->AttemptDisasterStart());
+        RiotOccupant occupant;
+        riot->AddRiotNetworkOccupant(&occupant);
+        riot->AddRiotNetworkOccupant(&occupant);                        // already registered: no second reference
+        CHECK(occupant.refs == 1 && (occupant.state & 2) != 0);
+        riot->Release();
+        auto* quake = new cSC4DisasterManagerEarthquake();
+        CHECK(quake->AsISC4DisasterManager() == static_cast<cISC4DisasterManager*>(quake));
+        CHECK(quake->OnStandardMessage(&message) && !quake->AttemptDisasterStart());
+        quake->Release();
+    }
+
     SetDisasterInstanceFactory(nullptr);
     if (failures == 0) std::printf("sc4_disastermanagers: all passed\n");
     return failures == 0 ? 0 : 1;

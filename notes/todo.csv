@@ -1,8 +1,8 @@
 id,class,task,blocked_by,status,where
 CLASS-(anonymous namespace),(anonymous namespace),"recover 287 remaining function(s) (287 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-AUDIT-1,(audit),1378 ledger rows (314 classes) still name no verification. Repair = point each at a registered test or oracle (scripts/ledger_audit.py lists them by class); do not edit evidence to claim a test that does not cover them,,open,notes/ledger_audit.md
-CLASS-(free),(free),"recover 386 remaining function(s) (278 not started, 108 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-(free),(free),finish 187 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+AUDIT-1,(audit),1378 ledger rows (314 classes) still name no verification. Repair = point each at a registered test or oracle (scripts/ledger_audit.py lists them by class); do not edit evidence to claim a test that does not cover them,,done,notes/ledger_audit.md
+CLASS-(free),(free),"recover 387 remaining function(s) (278 not started, 109 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-(free),(free),finish 188 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-AspyrDXTTools,AspyrDXTTools,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-CQTPlayer,CQTPlayer,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-CacheData,CacheData,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
@@ -55,6 +55,9 @@ CLASS-cAnimatedSpriteTableData,cAnimatedSpriteTableData,"recover 1 remaining fun
 CLASS-cDumpSubTreeVisitor,cDumpSubTreeVisitor,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cFontCOMDirector,cFontCOMDirector,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cFontCOMDirector,cFontCOMDirector,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cFreshnessCOMDirector,cFreshnessCOMDirector,"recover 4 remaining function(s) (0 not started, 4 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+FRESH-1,cFreshnessCOMDirector,"The port has only the registration table: recover the director class itself (GetDirector singleton, OnStart, destructors) on top of cRZCOMDllDirector",,open,src/audio/FreshnessDirector.h
+LEDGER-cFreshnessCOMDirector,cFreshnessCOMDirector,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cGXCOMDirector,cGXCOMDirector,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZAllocatorServiceSTLAllocator<cISC4Occupant*>,cGZAllocatorServiceSTLAllocator<cISC4Occupant*>,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZAllocatorServiceSTLAllocator<char>,cGZAllocatorServiceSTLAllocator<char>,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -133,6 +136,7 @@ CLASS-cGZPersistBufferResourceFactory,cGZPersistBufferResourceFactory,"recover 1
 PBUFRESFAC-1,cGZPersistBufferResourceFactory,Register the factory for type 0x856ddbac with the resource manager and hook IPersistBufferHost (see PBUFRES-1),PBUFRES-1,open,src/gz/PersistBufferResourceFactory.h
 PBUFRESFAC-2,cGZPersistBufferResourceFactory,"Quirks kept: version 1 records with a padded surface stride copy rows with swapped strides; an unknown record version reports success with a null buffer; the 5-argument CreateInstance is the real one (the 3-argument form calls it, as in the vtable); LoadFromFile releases the scratch resource (the original leaks it); version 2 decode is guarded against headers larger than the image",,open,src/gz/PersistBufferResourceFactory.cpp
 PBUFRESFAC-3,cGZPersistBufferResourceFactory,"SerialRead assumes (dynamic_cast) the target is a cGZPersistBufferResource, as the original assumes by calling vslot 0x78",,open,src/gz/PersistBufferResourceFactory.cpp
+MULTIPACK-1,cGZPersistDBSegmentMultiPackedFiles,AddFileKeyEnumerate (0x1004eb687) was ledgered as recovered but has no counterpart in the source: recover the key-enumeration callback,,open,src/gz/cGZPersistDBSegmentMultiPackedFiles.cpp
 LEDGER-cGZPersistDBSerialRecord,cGZPersistDBSerialRecord,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZPlayList,cGZPlayList,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 PLAYLIST-1,cGZPlayList,Quirks kept: PLS drops the last entry unless a line follows; m3u path-prefix test uses a found-index as bool; ExtM3U stops at the first non-#EXTINF line; Open returns the parser result for ext m3u/pls. Check against real playlists the game ships,,open,src/gz/PlayList.h
@@ -231,6 +235,9 @@ LEDGER-cHTMLDocument,cHTMLDocument,finish 4 partial/pending function(s) (see not
 LEDGER-cHitIniFile,cHitIniFile,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cHitList,cHitList,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cHitMan,cHitMan,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+HITRES-1,cHitResource<T>,"Recover Read/Write (through the DB-record interface, id kIidRecordAccess) and the DebugInstanceTag/DebugClassTag/DebugTypeTag methods of the resource template",,open,src/audio/HitResource.h
+CLASS-cHitResource<cHitList>,cHitResource<cHitList>,"recover 3 remaining function(s) (0 not started, 3 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cHitResource<cHitTrackPlayer>,cHitResource<cHitTrackPlayer>,"recover 3 remaining function(s) (0 not started, 3 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cHitTrackDataBlock,cHitTrackDataBlock,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cHitTrackPlayer,cHitTrackPlayer,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cIGZBuffer,cIGZBuffer,"recover 2 remaining function(s) (2 not started, 0 partial/pending); bases still unfinished: cIGZUnknown",CLASS-cIGZUnknown,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -356,7 +363,9 @@ CLASS-cS3DResModelFactory,cS3DResModelFactory,"recover 3 remaining function(s) (
 CLASS-cS3DResSpriteAnim,cS3DResSpriteAnim,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DResSpriteAnimFactory,cS3DResSpriteAnimFactory,"recover 8 remaining function(s) (8 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DResSpriteAnimTable,cS3DResSpriteAnimTable,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-cS3DShapeFile,cS3DShapeFile,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cS3DShapeFile,cS3DShapeFile,"recover 5 remaining function(s) (0 not started, 5 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+FSH-1,cS3DShapeFile,"s3d::FshFile is a reader, not a faithful cS3DShapeFile: recover Close, SwapDirectoryAndFrames, Open(cIGZPersistDBSerialRecord*), OpenInfoOnly, DumpShapeFile and GetCurrentFramePaletteInfo (palette attachments for code 0x7b) as the real class",,open,src/s3d/FSH.h
+LEDGER-cS3DShapeFile,cS3DShapeFile,finish 6 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cS3DTextureBinding,cS3DTextureBinding,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DTextureBindingFactory,cS3DTextureBindingFactory,"recover 33 remaining function(s) (33 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cS3DTransform,cS3DTransform,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,done,notes/ledger.csv

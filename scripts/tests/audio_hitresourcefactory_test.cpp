@@ -32,6 +32,24 @@ int main() {
     void* none = nullptr;
     CHECK(!factory->CreateInstance(0x12345678u, kGZIID_cIHitPersistResource, &none));
 
+    // cHitResource<T> key setters, private copies and destruction for the playable track and the hit list
+    for (std::uint32_t type : {HitIds::kResTypeTrackPlayer, HitIds::kResTypeHitList}) {
+        cIHitPersistResource* r = nullptr;
+        CHECK(factory->CreateInstance(type, kGZIID_cIHitPersistResource, reinterpret_cast<void**>(&r)) && r);
+        if (!r) continue;
+        CHECK(r->SetType(0x11) && r->SetGroup(0x22) && r->SetInstance(0x33));
+        const cGZPersistResourceKey key = r->GetKey();
+        CHECK(key.type == 0x11 && key.group == 0x22 && key.instance == 0x33);
+        void* copy = nullptr;
+        CHECK(r->CreatePrivateCopy(kGZIID_cIHitPersistResource, &copy) && copy && copy != r);
+        if (copy) {
+            auto* c = static_cast<cIHitPersistResource*>(copy);
+            CHECK(c->GetInstance() == 0x33);       // the copy keeps the key
+            while (c->Release() != 0) {}           // drops the copy (destructor)
+        }
+        r->Release();
+    }
+
     // track property sets start with the default parent sound and the "Track" type name
     cIHitPersistResource* track = nullptr;
     CHECK(factory->CreateInstance(0x0b8d821au, kGZIID_cIHitPersistResource, reinterpret_cast<void**>(&track)));

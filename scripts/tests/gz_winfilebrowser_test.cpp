@@ -15,8 +15,19 @@ namespace fs = std::filesystem;
 namespace {
 struct Target final : cGZWin {
     std::vector<cGZMessage> got;
+    // The selection message points at a FileBrowserSelection on the sender's stack: it is only valid while the
+    // message is being handled, so the receiver copies it here (reading it later would be a dangling read).
+    struct SelectionCopy { std::uint32_t kind = 0, field = 0; std::string name, fullPath; };
+    std::vector<SelectionCopy> selections;
     explicit Target(cIGZWinMgr* m) : cGZWin(m, nullptr) {}
-    bool DoMessage(cGZMessage& m) override { got.push_back(m); return true; }
+    bool DoMessage(cGZMessage& m) override {
+        got.push_back(m);
+        if (m.type == kFileBrowserMsgSelectionChanged && m.param2) {
+            const auto* s = reinterpret_cast<const FileBrowserSelection*>(m.param2);
+            selections.push_back({s->kind, s->field, s->name ? s->name->str() : "", s->fullPath ? s->fullPath->str() : ""});
+        }
+        return true;
+    }
 };
 struct Combo final : IFileBrowserCombo {
     std::vector<std::pair<std::string, int>> items;
@@ -178,8 +189,9 @@ int main() {
     CHECK(fb->SelectedRow() == 2 && edit.text == "f.txt");
     CHECK(notify.got.size() == 1 && notify.got[0].type == kFileBrowserMsgSelectionChanged && notify.got[0].param1 == fb->GetID());
     {
-        auto* s = reinterpret_cast<FileBrowserSelection*>(notify.got[0].param2);
-        CHECK(s->kind == 2 && s->field == 77 && s->name->str() == "f.txt" && s->fullPath->str() == fb->CurrentDirectory() + "f.txt");
+        CHECK(notify.selections.size() == 1);
+        const auto& s = notify.selections.back();
+        CHECK(s.kind == 2 && s.field == 77 && s.name == "f.txt" && s.fullPath == fb->CurrentDirectory() + "f.txt");
     }
     CHECK(fb->HandleSelectionChange(1));
     fb->GetSelectionInternal(sel);
