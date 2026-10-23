@@ -1,0 +1,1 @@
+"sc4_networkfilecache:$T/sc4_networkfilecache_test.cpp $S/sc4/NetworkFileCache.cpp $S/sc4/MiscTypes.cpp $S/rz/cRZString.cpp $S/rz/cRZFile.cpp $S/rz/cRZDirectory.cpp $S/rz/cRZIniFile.cpp $S/rz/RZStringUtils.cpp $S/rz/RZConvert.cpp $S/rz/CharLength.cpp $S/rz/TextEncoding.cpp $S/gz/FileFind.cpp"

@@ -1,0 +1,151 @@
+SOURCE src/render/gd/SGLDX7Driver.cpp|h
+EVIDENCE test scripts/tests/render_sgldx7driver_test.cpp - driver interface, state mirror and capability/format logic against fake D3D7/GL/manager seams (cIGZGDriver slots, clear/state mapping, texture stages/combiners, indexed draws, video modes, buffer regions, lighting, capability enumeration)
+0x100603692 SGLDX7DriverConstruct
+0x100603bcc SGLDX7DriverDestruct
+0x100603ef2 SGLDX7DriverDestructComplete
+0x100603f0a SGLDX7DriverDestructAndDelete
+0x100603f52 SGLDX7DriverInit
+0x100603fe2 SGLDX7DriverShutdown
+0x10060401e SGLDX7DriverQueryInterface
+0x1006040b8 SGLDX7DriverAddRef
+0x1006040fa SGLDX7DriverRelease
+0x10060413c SGLDX7DriverFinalRelease
+0x100604162 MatrixMode
+0x10060417a LoadMatrix
+0x1006041e4 LoadIdentity
+0x10060421a SGLDX7DriverDrawArrays
+0x1006044a8 SGLDX7DriverDrawElements
+0x100604ce4 InterleavedArrays
+0x100604da0 SGLDX7DriverMakeVertexFormatElements
+0x100604dc0 SGLDX7DriverMakeVertexFormatPacked
+0x100604dd8 VertexFormatStride
+0x100604df0 SGLDX7DriverVertexFormatElementOffset
+0x100604e10 SGLDX7DriverVertexFormatNumElements
+0x100604e2c Clear
+0x100604e9e ClearColor
+0x100604f2e ClearDepth
+0x100604f52 SGLDX7DriverClearStencil
+0x100604f6a DepthFunc
+0x100604fea ColorMask
+0x100605006 DepthMask
+0x100605072 SGLDX7DriverStencilFunc
+0x10060515a SGLDX7DriverStencilMask
+0x1006051c6 SGLDX7DriverStencilOp
+0x1006052b6 BlendFunc
+0x10060532c AlphaFunc
+0x1006053bc SGLDX7DriverShadeModel
+0x10060543c BindTexture
+0x100605514 SetTexture
+0x10060556e GetTexture
+0x10060559e CreateTexture_eGDInternalTextureFormat_uint_uint_uint_eGDTextureHintFlags
+0x10060561a LoadTextureLevel_561a
+0x1006056a4 SGLDX7DriverTexImage2D
+0x1006057d8 SGLDX7DriverPixelStore
+0x1006057f8 TexEnv
+0x10060584c SGLDX7DriverTexEnvColor
+0x10060592c TexParameter
+0x100605a32 SGLDX7DriverSetCombiner
+0x100605b80 SGLDX7DriverFogMode
+0x100605c20 SGLDX7DriverFogValue
+0x100605d8a SGLDX7DriverColorMultiplier
+0x100605ed2 SGLDX7DriverAlphaMultiplier
+0x100605fe6 SGLDX7DriverEnableVertexColors
+0x100606080 GenTextures
+0x1006060ec DeleteTextures
+0x10060613e IsTexture
+0x10060615a SGLDX7DriverPrioritizeTextures
+0x1006061de SGLDX7DriverAreTexturesResident
+0x100606266 Flush
+0x100606734 Enable
+0x10060683a Disable
+0x10060696a SGLDX7DriverIsEnabled
+0x100606a0e SGLDX7DriverGetBoolean
+0x100606a1a SGLDX7DriverGetInteger
+0x100606a36 SGLDX7DriverGetFloat
+0x100606a42 GetError
+0x100606a6e TexStage
+0x100606aae SGLDX7DriverTexStageCoord
+0x100606b5c SGLDX7DriverTexStageMatrix
+0x100606d9e SGLDX7DriverTexStageCombineMode
+0x100606e06 SGLDX7DriverTexStageCombineSource
+0x100606e9e SGLDX7DriverTexStageCombineOperand
+0x100606f4e SGLDX7DriverTexStageCombineScale
+0x100606fb6 SGLDX7DriverPolygonOffset
+0x10060702c SGLDX7DriverPunt
+0x10060703c SGLDX7DriverBitBlt
+0x10060705c SGLDX7DriverStretchBlt
+0x10060707c SGLDX7DriverBitBltAlpha
+0x10060709c SGLDX7DriverStretchBltAlpha
+0x1006070bc SGLDX7DriverBitBltAlphaModulate
+0x1006070dc SGLDX7DriverStretchBltAlphaModulate
+0x1006070fc SetViewport_void
+0x100607176 SetViewport_uint_uint_uint_uint
+0x10060721c GetViewport
+0x10060727c SGLDX7DriverBufferRegionEnabled
+0x100607284 SGLDX7DriverNewBufferRegion
+0x100607548 SGLDX7DriverDeleteBufferRegion
+0x1006075ce SGLDX7DriverReadBufferRegion
+0x100607714 SGLDX7DriverDrawBufferRegion
+0x10060787a SGLDX7DriverIsBufferRegion
+0x1006078ae SGLDX7DriverCanDoPartialRegionWrites
+0x1006078b6 SGLDX7DriverCanDoOffsetReads
+0x1006078be SGLDX7DriverDeleteAllBufferRegions
+0x1006079b8 SGLDX7DriverCopyColorBuffer
+0x1006081ba SGLDX7DriverEnableLighting
+0x100608248 SGLDX7DriverEnableLight
+0x1006082cc SGLDX7DriverLightModelAmbient
+0x10060839a SGLDX7DriverLightColorComponent
+0x10060852a SGLDX7DriverLightColorTriple
+0x100608696 SGLDX7DriverLightPosition
+0x1006086a2 SGLDX7DriverLightDirection
+0x1006086ae SGLDX7DriverMaterialColorComponent
+0x1006087ee SGLDX7DriverMaterialColorAll
+0x100608914 SGLDX7DriverApplyTextureState
+0x100609188 SGLDX7DriverIsDeviceReady
+0x10060cc36 SGLDX7DriverGetDriverInfo
+0x10060cc6e SGLDX7DriverGetGZCLSID
+0x10060cc86 VideoModeEnumeratorWindowed
+0x10060cd4a CountVideoModes
+0x10060cf32 VideoModeEnumerator
+0x10060d094 GetVideoModeInfo_uint_sGDMode
+0x10060d158 GetVideoModeInfo_sGDMode
+0x10060d1f8 SetVideoMode
+0x10060d322 SGLDX7DriverEndScene
+0x10060d36e SGLDX7DriverDestroyViewport
+0x10060d3f4 SGLDX7DriverSetupViewport
+0x10060d54a SGLDX7DriverInitViewport
+0x10060db0c SGLDX7DriverShutdownViewport
+0x10060dbfe SGLDX7DriverInitialize3DEnvironment
+0x10060df46 SGLDX7DriverGetDeviceProperties
+0x10060e0ea SGLDX7DriverSetDefaultD3DDeviceState
+0x10060e51c SGLDX7DriverCleanup3DEnvironment
+0x10060e682 SGLDX7DriverSetupD3DX
+0x10060e80e SGLDX7DriverBeginScene
+0x10060e919 SurfaceFormatEnumerator
+
+PARTIAL:
+0x100603f52 Init runs InitViewport, which needs the cISGLDX7D3DX context-info seam
+0x100603fe2 Shutdown tears down the viewport created by the partial InitViewport path
+0x10060401e the four-interface COM object is one C++ class here; the primitive-manager query returns the seam without its AddRef
+0x100606266 message-server notifications around a device reset are outside this class; the D3DX context comes from ID3D7Environment
+0x100607284 surface creation goes through ID3D7Environment; the DDSURFACEDESC2 capability bits were lost by the decompiler
+0x100607548 the region surface is owned by the environment seam, so its Release is not called here
+0x1006075ce the IDirectDrawSurface7::Blt argument set was lost; the copy goes through ID3D7Surface::BltFast
+0x100607714 the IDirectDrawSurface7::Blt argument set was lost; the copy goes through ID3D7Surface::Blt
+0x1006078be region surfaces are owned by the environment seam, so their Release is not called here
+0x1006079b8 needs cIGZBuffer (not recovered) and its pixel conversion; only the surface/lost checks are reproduced
+0x10060d1f8 display switching and window creation go through ID3D7Environment (MacDisplay unavailable)
+0x10060d36e tears down the D3D7 environment through the seam
+0x10060d3f4 composes the partial Initialize3DEnvironment/InitDevice seam path
+0x10060d54a cISGLDX7D3DX::CreateContextInfoOnly and the libc++ temporaries are modelled by ID3D7Environment::GetDriverInfo
+0x10060db0c releases the context through the environment seam
+0x10060dbfe window/client rects and the D3DX context come from the environment seam
+0x10060e51c releases the environment through the seam
+0x10060e682 cISGLDX7D3DX::CreateContext (surface descriptor and window setup) is the environment seam
+
+SKIPPED:
+0x1006084de libc++ container glue generated by the compiler, no hand-written counterpart
+0x1006091aa libc++ container glue generated by the compiler, no hand-written counterpart
+0x1006092ea libc++ container glue generated by the compiler, no hand-written counterpart
+0x10060939c libc++ container glue generated by the compiler, no hand-written counterpart
+0x1006095b6 libc++ container glue generated by the compiler, no hand-written counterpart

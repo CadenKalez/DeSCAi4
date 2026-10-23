@@ -1,0 +1,55 @@
+SOURCE src/sc4/WinRegionScreen.cpp|h
+EVIDENCE test scripts/tests/sc4_winregionscreen_test.cpp - fake host (region city list, region view, services, tuning property holder) and fake window manager; asserts the constructor field set-up and the three-interface QueryInterface (0xe98b2f57 refused), the scroll / accelerator / command-dispatcher message dispatch, the scroll command table, ComputeBaseLimits' two excess paths, UpdateRendererPosition's basis maths, GZPaint's timer, smooth scroll, clamping and the bit-rounded y-negated scroll position, the signpost mouse paths, the panel switching, ReadTunableValues, SetCitySnapshotsToDefault's large / small sets, LoadRegion, LaunchCity / LaunchRegionalCity, the preference writes, UpdatePopulation and the Shutdown release path; registry scripts/tests/registry/sc4_winregionscreen.txt
+0x100235b78 WinRegionScreenConstruct
+0x100235ed2 WinRegionScreenConstructAlias
+0x100235edc WinRegionScreenDestructor
+0x100236360 WinRegionScreenDestructorAlias
+0x10023636a WinRegionScreenDeletingDestructor
+0x100236b66 WinRegionScreenSetCitySnapshotsToDefault
+0x100237106 WinRegionScreenComputeBaseLimits
+0x100237382 WinRegionScreenPaint
+0x100237632 WinRegionScreenUpdateRendererPosition
+0x100237748 WinRegionScreenMouseEnter
+0x100237794 WinRegionScreenMouseMove
+0x1002377b2 WinRegionScreenMouseDownL
+0x1002379ae WinRegionScreenRestoreSignposts
+0x100237a58 WinRegionScreenShowPanel
+0x100237bda WinRegionScreenMouseDownR
+0x1002388d2 WinRegionScreenPostRegionScreenMessage
+0x10023904e WinRegionScreenReadTunableValues
+0x100239aa0 WinRegionScreenShutdown
+0x100239dac WinRegionScreenShutdownApplicationServices
+0x100239f16 WinRegionScreenAddRef
+0x100239f20 WinRegionScreenAddRefThunkMessageFilter
+0x100239f32 WinRegionScreenAddRefThunkMessageTarget
+0x100239f44 WinRegionScreenRelease
+0x100239f4e WinRegionScreenReleaseThunkMessageFilter
+0x100239f60 WinRegionScreenReleaseThunkMessageTarget
+0x100239f72 WinRegionScreenQueryInterface
+0x100239fa8 WinRegionScreenQueryInterfaceThunkMessageFilter
+0x100239fba WinRegionScreenQueryInterfaceThunkMessageTarget
+0x100239fcc WinRegionScreenDoMessage
+0x10023a0dc WinRegionScreenDoMessageTarget2
+0x10023a1fc WinRegionScreenProcessCommand
+0x10023a648 WinRegionScreenDoMessageTarget2Thunk
+0x10023a65c WinRegionScreenDoMessageFilter
+0x10023a664 WinRegionScreenDoMessageFilterThunk
+0x10023b130 WinRegionScreenLoadRegion
+0x10023b366 WinRegionScreenLaunchCity
+0x10023b63c WinRegionScreenLaunchRegionalCity
+0x10023b78e WinRegionScreenMouseExit
+0x10023b7ac WinRegionScreenKeyDown
+0x10023b7b4 WinRegionScreenKeyUp
+0x10023b7bc WinRegionScreenSetUserPreferencesToCurrentRegion
+0x10023b846 WinRegionScreenSetUserPreferencesToCurrentPosition
+0x10023c54c WinRegionScreenUpdatePopulation
+PARTIAL:
+0x100236398 WinRegionScreenPutCitiesInView - the recovered slice adds the cities already in the vector and calls ComputeBaseLimits; the original reads the region's city-location list (region vslot 0xb8, sort by depth), builds each 0xf0-byte cSC4RegionViewCity (constructor 0x10023e27a), loads the thumbnails with SC4ReadCityRegionViewThumbnails (0x1001d2cf3) and resamples them (RecalculateImagesFromCitySnapshots, also partial) - cSC4RegionViewCity is only modelled as data here
+0x100236c36 WinRegionScreenRecalculateImagesFromCitySnapshots - not written: it resamples both city images with (1 - fract(x)) / (1 - fract(y)) through ::Resample (0x10023c642), moves the mask into alpha with SC4MoveMaskToAlpha (0x10023ce10) and builds three span lists with SC4CreateSpanList (0x10023cf28), all of which work on cIGZBuffer lock bits and are not recovered
+0x100237bf2 WinRegionScreenInit - the recovered slice posts the two screen messages, calls cGZWin::Init, sets the window id, registers the 14 commands, creates the key accelerator and adds the notifications; the 3113-byte original also creates cSC4WinRegionView / the backdrop / the 12 snapshot buffers from the graphic system / cSC4WinRegionScroll / cSC4WinRegionClouds, calls PutCitiesInView, centres the camera, calls LoadGUI and reads the "region_global" child (cSC4WinRegionView, cSC43DRender and the window-script loader are not recovered)
+0x100238972 WinRegionScreenInitApplicationServices - the recovered slice creates the terrain map (270.0f altitude, 64.0f cells, region cell count * 0x10 clamped to 0x20), the cS3DCamera, the cSC4CameraControl (viewport, city size, target 64,64) and asks the host for the renderer / frame service / effects manager, then calls UpdateRendererPosition and posts the two engine messages; the original also creates those through GZCOM and configures cSC43DRender's vslots 0x18/0x28/0x30/0x38/0x60/0x78/0x88/0x100/0x1b8 and cSC4RegionalTerrainView - cSC43DRender is not recovered
+0x10023927a WinRegionScreenLoadGUI - not written beyond the preference restore and UpdatePopulation: the 1955-byte original builds the screen from three window scripts (SC4CreateWindowFromScript 0x9ebe9ee / 0xbb0f5e7 / 0x6bb92bca), aligns the child sets, wires the three panels and their buttons, reads the grid / signpost / map-mode preferences and calls RestoreSignposts; the region script resources and cSC4WinRegionView are not recovered
+0x10023a66c WinRegionScreenMakeWholeRegion - not written: it opens cSC4WinLoadHeightField through SL::spWinLocationSaver, validates the bitmap against (city cells << 6 | 1) and copies it cell by cell into a fresh cISC4RegionalCity per city (regional city vslots 0x18/0x30/0x40/0xc0 and the graphic system 0x8080/0x800/0xc0 locks); cISC4RegionalCity and the height-field dialog wiring are not recovered
+0x10023ae9c WinRegionScreenGetOrCreateRegionalCity - the find-or-create flow and its first lookup (city list vslot 0x58) are kept, and the create goes through the host; the original also builds the city name from the region path (region vslot 0x28 vslots 0x40/0x48 plus city list vslot 0x28, then '\\' and "New City" through SC4LoadString 0xaa738c4e) and drives cSC4RegionalCity (constructor 0x1003ad932, Init 0x18, SetCitySize 0x40, SetPosition 0x30, SetName 0x110) and the list's AddCity 0x60 - cSC4RegionalCity is not recovered
+0x10023b92a WinRegionScreenCommand - the recovered slice handles the button-notification command (0x287259f6): restore signposts, the three panel buttons, the panel visibility pair, the signpost-mode check box and the three map-mode buttons with their SetWindowVisible calls; it also handles the check-box notification 0x287259f7 (grid), but the new / load / delete region dialogs, the import / export city dialogs (SC4DisplayImportCityDialog, SC4ReadRegionalCity), the video / audio / game preferences windows, the snapshot album and the web links are not recovered (the original is 2739 bytes)
+SKIPPED:

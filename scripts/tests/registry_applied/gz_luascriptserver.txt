@@ -1,0 +1,1 @@
+gz_luascriptserver:$T/gz_luascriptserver_test.cpp $S/gz/LuaScriptServer.cpp $S/lua/Lua5.cpp $S/lua/Lua5Thread.cpp $S/lua/LuaLibs.cpp $S/lua/ThreadRegistry.cpp $S/rz/cRZString.cpp $S/rz/cRZFile.cpp $S/rz/cRZCmdLine.cpp $S/rz/cRZMessage2Standard.cpp

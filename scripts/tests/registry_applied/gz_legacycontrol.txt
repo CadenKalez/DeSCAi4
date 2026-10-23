@@ -1,0 +1,1 @@
+"gz_legacycontrol:$T/gz_legacycontrol_test.cpp $S/gz/LegacyControl.cpp $S/gz/WinFlatRect.cpp $S/gz/Win.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"

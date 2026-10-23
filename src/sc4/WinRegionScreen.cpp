@@ -1,0 +1,1112 @@
+#include "sc4/WinRegionScreen.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <limits>
+
+#include "gz/WinBtn.h"
+#include "gz/WinUtils.h"
+#include "rz/cRZMessage2Standard.h"
+#include "sc4/SCProperty.h"
+#include "sc4/SCPropertyHelp.h"
+
+namespace sc4 {
+
+namespace {
+
+IRegionScreenHost* g_host = nullptr;
+
+// cGZWin flags the screen toggles (cIGZWin::tWinFlag).
+constexpr std::uint32_t kFlagPrivateBuffer = 0x10000;
+constexpr std::uint32_t kFlagIgnoreCursor = 0x200000;
+constexpr std::uint32_t kGZIIDMessageFilter = 0xc6ae7085;   // cIGZWinMessageFilter (the +0x150 view)
+
+// The two magic-number rounding constants: the original rounds by adding 12582912.0f (0x4b400000) to the float and
+// reading the *bits* of the result (movd, not cvttss2si), then subtracting the bias as an integer
+// (0x100237583..0x1002375a8). For |v| < 2^22 the bits of (v + 12582912.0f) are 0x4b400000 + round(v).
+constexpr float kRoundBias = 12582912.0f;
+constexpr std::int32_t kRoundBiasBits = 0x4b400000;
+
+std::int32_t RoundThroughBits(float value) {
+    const float biased = value + kRoundBias;
+    std::int32_t bits = 0;
+    std::memcpy(&bits, &biased, sizeof bits);
+    return bits;
+}
+
+constexpr std::uint32_t kSignpostTypeCity = 0xca539340;   // an occupied city
+constexpr std::uint32_t kSignpostTypeEmpty = 0x0a8cd184;  // an empty city
+constexpr std::uint32_t kSignpostSubType = 0x0a551c50;
+constexpr std::uint32_t kUiSoundSignpost = 0x2a5c322b;
+
+void ReleaseWindow(cIGZWin*& window) {
+    if (window) {
+        window->Release();
+        window = nullptr;
+    }
+}
+
+void ReleaseUnknown(cIGZUnknown*& object) {
+    if (object) {
+        object->Release();
+        object = nullptr;
+    }
+}
+
+void ReleaseBuffer(IWinBuffer*& buffer) {
+    if (buffer) {
+        buffer->Release();
+        buffer = nullptr;
+    }
+}
+
+}  // namespace
+
+IRegionScreenHost* RegionScreenHost() { return g_host; }
+void SetRegionScreenHost(IRegionScreenHost* host) { g_host = host; }
+
+// ===================================================================================================================
+// Construction / destruction
+// ===================================================================================================================
+
+cSC4WinRegionScreen::cSC4WinRegionScreen(cIGZWinMgr* mgr) : cGZWin(mgr) {   // @ 0x100235b78
+    // +0x2b0..+0x2cf defaults and the two timers are member initialisers; the rest is the original's store sequence.
+    SetFlag(kFlagIgnoreCursor, true);
+    SetFlag(kFlagPrivateBuffer, false);
+    id_ = kRegionScreenWindowId;
+    if (IRegionScreenHost* host = RegionScreenHost()) {
+        notifications_ = host->CreateNotificationHelper();
+    }
+    if (notifications_) notifications_->AddMessageTypes(kRegionScreenMsgTypes, 17);
+}
+
+cSC4WinRegionScreen::~cSC4WinRegionScreen() {   // @ 0x100235edc
+    Shutdown();
+    // The original releases whatever Shutdown left behind, in its field order.
+    if (scroll_) {
+        scroll_->Release();
+        scroll_ = nullptr;
+    }
+    ReleaseWindow(unused280_);
+    if (terrainMap_) {
+        terrainMap_->Release();
+        terrainMap_ = nullptr;
+    }
+    renderer_ = nullptr;   // borrowed from the host (see IRegionScreenHost)
+    if (cameraControl_) {
+        cameraControl_->Release();
+        cameraControl_ = nullptr;
+    }
+    if (camera_) {
+        if (camera_->Release() == 0) delete camera_;
+        camera_ = nullptr;
+    }
+    effects_ = nullptr;       // borrowed
+    frameService_ = nullptr;  // borrowed
+    ReleaseUnknown(graphicSystem_);
+    for (IWinBuffer*& buffer : snapshots_) ReleaseBuffer(buffer);
+    cities_.clear();
+    notifications_ = nullptr;   // owned by the host (the original has the helper inline at +0x1b8)
+    if (accelerator_) {
+        accelerator_->Release();
+        accelerator_ = nullptr;
+    }
+    ReleaseUnknown(unknown1a8_);
+    for (cIGZWin*& button : panelButtons_) ReleaseWindow(button);
+    for (cIGZWin*& panel : panels_) ReleaseWindow(panel);
+    ReleaseWindow(backdrop_);
+    if (clouds_) {
+        clouds_->Release();
+        clouds_ = nullptr;
+    }
+    delete view_;
+    view_ = nullptr;
+}
+
+bool cSC4WinRegionScreen::QueryInterface(std::uint32_t iid, void** out) {   // @ 0x100239f72
+    if (iid == kGZIID_cIGZWin || iid == 1) {
+        *out = static_cast<cIGZWin*>(this);
+    } else if (iid == kGZIIDMessageFilter) {
+        *out = static_cast<cIGZWinMessageFilter*>(this);   // +0x150
+    } else {
+        // Quirk kept: the base window accepts 0xe98b2f57 and 0x452294aa, this override does not (0x100239f72).
+        return false;
+    }
+    AddRef();
+    return true;
+}
+
+// ===================================================================================================================
+// Messages
+// ===================================================================================================================
+
+bool cSC4WinRegionScreen::DoMessage(cGZMessage& message) {   // @ 0x100239fcc
+    const std::uint32_t type = message.type;
+    if (type == kRegionScreenScrollStart) {
+        if (view_) view_->SetScrollIndicator(true);
+        return true;
+    }
+    if (type == kRegionScreenScrollStop) {
+        if (view_) view_->SetScrollIndicator(false);
+        return true;
+    }
+    if (type == kRegionScreenScrollDelta) {
+        targetX_ += static_cast<float>(static_cast<std::int32_t>(message.param1)) * 0.00390625f;
+        targetY_ += static_cast<float>(static_cast<std::int32_t>(message.param2)) * 0.00390625f;
+        return true;
+    }
+    if (type == 0x1b && message.param2 - 5 <= 1) {
+        // A key message: param3 points at a cGZMessage-style record whose +8 / +0x10 words are the key and modifiers.
+        // (The original dereferences param3 without a check; the port guards so a malformed message cannot crash.)
+        if (message.param3 != 0 && accelerator_) {
+            const auto* keyMessage = reinterpret_cast<const cGZMessage*>(static_cast<std::uintptr_t>(message.param3));
+            std::uint32_t command = 0;
+            if (accelerator_->TestForAccelerator(static_cast<std::uint32_t>(keyMessage->param1),
+                                                 static_cast<std::uint32_t>(keyMessage->param2),
+                                                 message.param2 == 5, command)) {
+                if (IRegionScreenHost* host = RegionScreenHost()) {
+                    if (cIGZCommandServer* server = host->CommandServer()) {
+                        server->ExecuteCommand(command, nullptr, nullptr);
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    return cGZWin::DoMessage(message);
+}
+
+bool cSC4WinRegionScreen::DoMessage(cIGZMessage2* message) {   // @ 0x10023a0dc
+    const std::uint32_t type = message->GetType();
+    void* dispatcher = nullptr;
+    if (message->QueryInterface(kRegionScreenCommandMessage, &dispatcher)) {
+        // The dispatcher message is a cRZMessage2Standard, so slots 0x50 / 0x78 are the payload accessors. The port
+        // releases the reference QueryInterface took; the original drops it (a small leak at 0x10023a0df).
+        auto* standard = static_cast<cIGZMessage2Standard*>(message);
+        auto* input = static_cast<cIGZCommandParameterSet*>(standard->GetVoid1());
+        auto* output = static_cast<cIGZCommandParameterSet*>(standard->GetVoid2());
+        ProcessCommand(type, input, output);
+        message->Release();
+        return true;
+    }
+    if (type == kMsgRegionCityViewChanged) {
+        if (cameraControl_) cameraControl_->SendViewChangeMessage();
+        if (backdrop_) backdrop_->SetFlag(kWinVisible, true);
+    } else if (type == kMsgRegionCloudsPreference) {
+        bool visible = false;
+        if (IRegionScreenHost* host = RegionScreenHost()) {
+            if (const std::uint8_t* preferences = host->Preferences()) visible = preferences[kPrefsCloudsVisible] != 0;
+        }
+        if (clouds_) clouds_->SetFlag(kWinVisible, visible);
+    }
+    return true;
+}
+
+bool cSC4WinRegionScreen::DoMessage(cIGZWin*, cGZMessage&) {   // @ 0x10023a65c
+    return false;
+}
+
+// ===================================================================================================================
+// Commands
+// ===================================================================================================================
+
+bool cSC4WinRegionScreen::ProcessCommand(std::uint32_t command, cIGZCommandParameterSet* input,
+                                        cIGZCommandParameterSet* output) {   // @ 0x10023a1fc
+    IRegionScreenHost* host = RegionScreenHost();
+    switch (command) {
+    case kCmdRegionBitmapLoad:
+        MakeWholeRegion();
+        return false;
+    case kCmdRegionSetExpandedToolTips: {
+        bool value;
+        if (cIGZVariant* variant = input ? input->GetParameter(0) : nullptr) {
+            value = variant->GetValBool();
+        } else {
+            const std::uint8_t* preferences = host ? host->Preferences() : nullptr;
+            value = !preferences || preferences[kPrefsExpandedToolTips] == 0;   // the original toggles
+        }
+        if (std::uint8_t* preferences = host ? host->Preferences() : nullptr) {
+            preferences[kPrefsExpandedToolTips] = value ? 1 : 0;
+        }
+        return false;
+    }
+    case kCmdRegionCancel:
+        if (view_) view_->ClearSelection();
+        return false;
+    case kCmdRegionQuitGame: {
+        if (input == nullptr) return false;
+        const bool flag = input->operator[](0).GetValBool();
+        SetUserPreferencesToCurrentRegion();
+        SetUserPreferencesToCurrentPosition();
+        if (host) host->QuitToRegionSelect(flag ^ 1);
+        return false;
+    }
+    case kCmdRegionScrollLeft:
+        if (scroll_) scroll_->SetEdgeVector(-scroll_->EdgeSpeed(), scroll_->EdgeVectorY());
+        return false;
+    case kCmdRegionScrollLeftStop:
+        if (scroll_) scroll_->SetEdgeVector(scroll_->EdgeSpeed() * 0.0f, scroll_->EdgeVectorY());
+        return false;
+    case kCmdRegionScrollRight:
+        if (scroll_) scroll_->SetEdgeVector(scroll_->EdgeSpeed(), scroll_->EdgeVectorY());
+        return false;
+    case kCmdRegionScrollRightStop:
+        if (scroll_) scroll_->SetEdgeVector(scroll_->EdgeSpeed() * 0.0f, scroll_->EdgeVectorY());
+        return false;
+    case kCmdRegionScrollUp:
+        if (scroll_) scroll_->SetEdgeVector(scroll_->EdgeVectorX(), -scroll_->EdgeSpeed());
+        return false;
+    case kCmdRegionScrollUpStop:
+        if (scroll_) scroll_->SetEdgeVector(scroll_->EdgeVectorX(), scroll_->EdgeSpeed() * 0.0f);
+        return false;
+    case kCmdRegionScrollDown:
+        if (scroll_) scroll_->SetEdgeVector(scroll_->EdgeVectorX(), scroll_->EdgeSpeed());
+        return false;
+    case kCmdRegionScrollDownStop:
+        if (scroll_) scroll_->SetEdgeVector(scroll_->EdgeVectorX(), scroll_->EdgeSpeed() * 0.0f);
+        return false;
+    case kCmdRegionLoadCity: {
+        if (input == nullptr) return false;
+        cRZString cityName;
+        input->operator[](0).GetValString(cityName);
+        std::uint32_t size = 0;
+        if (!input->CompareParameterString(1, "small", false)) {
+            size = 1;
+            if (!input->CompareParameterString(1, "medium", false)) {
+                size = 2;
+                if (!input->CompareParameterString(1, "large", false)) {
+                    size = 3;
+                    if (!input->CompareParameterString(1, "any", false)) size = input->operator[](1).GetValUint32();
+                }
+            }
+        }
+        const bool empty = input->CompareParameterString(2, "empty", false);
+        cRZString location;
+        if (!LaunchCity(cityName, size, location, empty)) {
+            if (output) output->SetStatusParameterValue(2);
+        } else if (output) {
+            output->SetParameter(0, cRZVariant(static_cast<const cIGZString&>(location)));
+        }
+        return false;
+    }
+    case kCmdRegionLoadRegion: {
+        if (input == nullptr) return false;
+        cRZString name;
+        input->operator[](0).GetValString(name);
+        if (!LoadRegion(name) && output) output->SetStatusParameterValue(2);
+        return false;
+    }
+    default:
+        return false;
+    }
+}
+
+// ===================================================================================================================
+// Init / Shutdown (the three big init/load routines are partial)
+// ===================================================================================================================
+
+bool cSC4WinRegionScreen::Init() {   // @ 0x100237bf2 (PARTIAL)
+    if (get_init_flag()) return true;
+    IRegionScreenHost* host = RegionScreenHost();
+    PostRegionScreenMessage(kRegionScreenMsgLeavingApp);
+    cGZWin::Init();
+    SetID(kRegionScreenWindowId);
+
+    if (host) {
+        currentRegionIndex_ = host->CurrentRegionIndex();
+        if (cIGZCommandServer* server = host->CommandServer()) {
+            for (int i = 0; i < 14; ++i) {
+                server->RegisterCommand(kRegionScreenCommands[i], kRegionScreenCommandNames[i], nullptr);
+            }
+        }
+        accelerator_ = host->CreateKeyAccelerator();
+        if (accelerator_) accelerator_->Init();
+        if (notifications_) notifications_->AddAllNotifications(static_cast<cIGZMessageTarget2*>(this));
+    }
+    // PARTIAL: the 3113-byte original also creates the region view (vslot 0x10000 / 0x80000 flags), the backdrop, the
+    // 12 snapshot buffers from the graphic system (its do/while runs once: 0x100237...), the scroll and clouds
+    // windows, PutCitiesInView, the camera centre, LoadGUI and the "region_global" child. Those depend on
+    // cSC4WinRegionView, cSC43DRender and the window-script loader, none of which are recovered.
+    PostRegionScreenMessage(kRegionScreenMsgEnteredApp);
+    return true;
+}
+
+bool cSC4WinRegionScreen::Shutdown() {   // @ 0x100239aa0
+    if (!get_init_flag()) return true;
+    IRegionScreenHost* host = RegionScreenHost();
+    PostRegionScreenMessage(kRegionScreenMsgLeavingRegion);
+    if (backdrop_) {
+        ChildDeleteAbsolute(backdrop_);
+        backdrop_->Release();
+        backdrop_ = nullptr;
+    }
+    if (view_) {
+        cIGZWin* viewWindow = view_->AsWindow();
+        if (viewWindow) ChildDeleteAbsolute(viewWindow);
+        delete view_;
+        view_ = nullptr;
+    }
+    if (notifications_) notifications_->RemoveAllNotifications(static_cast<cIGZMessageTarget2*>(this));
+    if (host) {
+        if (cIGZCommandServer* server = host->CommandServer()) {
+            for (std::uint32_t id : kRegionScreenCommands) server->UnregisterCommand(id);
+        }
+    }
+    // The original destructs every city in place and then resets the vector's end pointer.
+    cities_.clear();
+    ShutdownApplicationServices();
+    ReleaseUnknown(graphicSystem_);
+    if (clouds_) {
+        clouds_->Release();
+        clouds_ = nullptr;
+    }
+    ReleaseUnknown(unknown1a8_);
+    if (scroll_) {
+        scroll_->Release();
+        scroll_ = nullptr;
+    }
+    if (accelerator_) {
+        accelerator_->Release();
+        accelerator_ = nullptr;
+    }
+    for (cIGZWin*& panel : panels_) ReleaseWindow(panel);
+    for (cIGZWin*& button : panelButtons_) ReleaseWindow(button);
+    for (IWinBuffer*& buffer : snapshots_) ReleaseBuffer(buffer);
+    if (host) host->FlushResources();
+    cGZWin::Shutdown();
+    PostRegionScreenMessage(kRegionScreenMsgLeftRegion);
+    return true;
+}
+
+void cSC4WinRegionScreen::InitApplicationServices() {   // @ 0x100238972 (PARTIAL)
+    IRegionScreenHost* host = RegionScreenHost();
+    if (host) {
+        frameService_ = host->CreateFrameService();
+        if (frameService_) frameService_->Init();
+    }
+    int left = 0, top = 0, right = 0, bottom = 0;
+    if (host) host->RegionCellBounds(left, top, right, bottom);
+    // The original clamps the cell counts to 0x20 and multiplies them by 0x10 (16 vertices per region cell).
+    int cellsX = std::min((right - left) + 1, 0x20);
+    int cellsZ = std::min((bottom - top) + 1, 0x20);
+    terrainMap_ = new cSC4RegionalTerrainMap(270.0f, 0.0f, cellsX * 0x10, cellsZ * 0x10, 64.0f);
+    terrainMap_->Init();
+    if (host) host->SetTerrainMap(terrainMap_);
+
+    if (!camera_) {
+        camera_ = new s3d::cS3DCamera();
+        camera_->AddRef();
+    }
+    camera_->Init();
+    if (!cameraControl_) {
+        cameraControl_ = new cSC4CameraControl();
+        cameraControl_->AddRef();
+    }
+    cameraControl_->SetViewportSize(GetW(), GetH());
+    cameraControl_->SetCitySize(static_cast<float>((right - left) * 0x400 + 0x400),
+                                static_cast<float>((bottom - top) * 0x400 + 0x400));
+    cameraControl_->Init(cS3DVector3{64.0f, 64.0f, 0.0f}, camera_);
+    renderer_ = host ? host->CreateRenderer() : nullptr;
+    if (renderer_) renderer_->Init(GetW(), GetH());
+    if (host) host->SetViewUtilities(renderer_);
+    UpdateRendererPosition();
+    if (host) {
+        effects_ = host->CreateEffectsManager();
+        if (effects_) effects_->Init();
+        host->PostEngineMessage(kMsgRegionCityViewChanged);
+        host->PostEngineMessage(kRegionScreenCameraGridMessage);
+    }
+    // PARTIAL: the original also builds cSC4RegionalTerrainMap from the region rect, creates the cS3DCamera /
+    // cSC4CameraControl through GZCOM, configures cSC43DRender (vslots 0x18/0x28/0x30/0x38/0x60/0x78/0x88/0x100/0x1b8),
+    // adds the cSC4RegionalTerrainView and assigns SL::spViewUtilities / spLightingManager / spRenderer. The renderer
+    // and the two services come from the host here.
+}
+
+void cSC4WinRegionScreen::LoadGUI() {   // @ 0x10023927a (PARTIAL)
+    // PARTIAL: the whole 1955-byte function builds the region screen from window scripts (SC4CreateWindowFromScript
+    // 0x9ebe9ee / 0xbb0f5e7 / 0x6bb92bca), aligns the child set, wires the three panels and their buttons, reads the
+    // grid / signpost / map-mode preferences and calls UpdatePopulation. nsGZWinUtils and the script loader are
+    // recovered, but cSC4WinRegionView and the region script resources are not, so only the preference restore and the
+    // population refresh are kept.
+    IRegionScreenHost* host = RegionScreenHost();
+    if (host) {
+        if (const std::uint8_t* preferences = host->Preferences()) {
+            if (view_) view_->EnableGrid(preferences[kPrefsShowGrid] != 0);
+            signpostMode_ = preferences[kPrefsSignpostMode] != 0 ? 1 : 0;
+        }
+    }
+    UpdatePopulation();
+    RestoreSignposts();
+}
+
+void cSC4WinRegionScreen::PutCitiesInView() {   // @ 0x100236398 (PARTIAL)
+    // PARTIAL: needs cSC4Region's location list (region vslot 0x58->0xb8), the cSC4RegionViewCity constructor /
+    // 0xf0-byte layout (only modelled as data above) and SC4ReadCityRegionViewThumbnails (0x1001d2cf3). The final
+    // AddCity loop and ComputeBaseLimits are kept so a host that fills cities_ still gets a consistent view.
+    if (view_) {
+        for (const RegionViewCity& city : cities_) view_->AddCity(city);
+        view_->SetSignpostType(0, 0);
+    }
+    ComputeBaseLimits();
+}
+
+void cSC4WinRegionScreen::RecalculateImagesFromCitySnapshots(RegionViewCity&) {   // @ 0x100236c36 (PARTIAL)
+    // PARTIAL: Resample (0x10023c642), SC4MoveMaskToAlpha (0x10023ce10) and SC4CreateSpanList (0x10023cf28) work on
+    // cIGZBuffer lock bits and are not recovered; the city snapshots (the double resample by (1 - fract(x)) /
+    // (1 - fract(y))), the alpha masks and the three span lists stay unimplemented.
+}
+
+void cSC4WinRegionScreen::SetCitySnapshotsToDefault(RegionViewCity& city) {   // @ 0x100236b66
+    const int size = city.size;
+    IRegionScreenHost* host = RegionScreenHost();
+    const int snapshotSet = host ? host->CitySnapshotSet() : 0;
+    // +0x218 / +0x220 for the small set, +0x1e8 / +0x1f0 for the large one; both are two pointers per size code.
+    const int base = snapshotSet == 1 ? 6 : 0;
+    if (size >= 0 && size < 3) {
+        city.snapshot = snapshots_[base + size * 2];
+        city.mask = snapshots_[base + size * 2 + 1];
+    } else {
+        city.snapshot = nullptr;
+        city.mask = nullptr;
+    }
+    if (city.snapshotSmall) {
+        city.snapshotSmall->Release();
+        city.snapshotSmall = nullptr;
+    }
+    if (city.maskSmall) {
+        city.maskSmall->Release();
+        city.maskSmall = nullptr;
+    }
+}
+
+void cSC4WinRegionScreen::MakeWholeRegion() {   // @ 0x10023a66c (PARTIAL)
+    // PARTIAL: the 1855-byte function opens cSC4WinLoadHeightField, validates the chosen bitmap against the region
+    // size (^64 cells + 1) and then copies it cell by cell into a fresh cISC4RegionalCity per city. It needs
+    // cSC4WinLoadHeightField's location saver / file browser wiring and the regional-city image API (vslots
+    // 0x800/0x8080/0xc0), which are not recovered.
+}
+
+// ===================================================================================================================
+// Region / city helpers
+// ===================================================================================================================
+
+RegionCityRef* cSC4WinRegionScreen::GetOrCreateRegionalCity(const RegionViewCity& city, bool create) {   // @ 0x10023ae9c (PARTIAL)
+    // PARTIAL: the original builds the city name from the region name (region vslot 0x28 vslots 0x40 / 0x48 +
+    // city-list vslot 0x28) and then creates the cSC4RegionalCity through its constructor, Init (vslot 0x18),
+    // SetCitySize (0x40), SetPosition (0x30), SetName (0x110) and AddCity (list 0x60). cSC4RegionalCity is not
+    // recovered, so the find-or-create flow goes through the host; the lookup itself is the same slot the original
+    // uses first (city list vslot 0x58).
+    IRegionScreenHost* host = RegionScreenHost();
+    if (!host) return nullptr;
+    if (RegionCityRef* found = host->FindCity(city.x, city.z)) return found;
+    if (!create) return nullptr;
+    return host->FindOrCreateCity(city, create);
+}
+
+bool cSC4WinRegionScreen::LoadRegion(const cRZString& name) {   // @ 0x10023b130
+    IRegionScreenHost* host = RegionScreenHost();
+    if (!host) return false;
+    const int count = host->RegionCount();
+    if (count == 0) return false;
+    for (int i = 0; i < count; ++i) {
+        const char* regionName = host->RegionNameAt(i);
+        if (!regionName) continue;
+        const std::size_t length = std::strlen(regionName);
+        // The original compares the raw character block (memcmp) after comparing the lengths (0x10023b1e6..0x10023b290).
+        if (name.Strlen() != length || std::memcmp(name.Data(), regionName, length) != 0) continue;
+        if (i != currentRegionIndex_) {
+            host->SelectRegion(i);
+            return host->ReloadRegion();
+        }
+        return true;
+    }
+    return false;
+}
+
+bool cSC4WinRegionScreen::LaunchCity(const cRZString& name, std::uint32_t size, cRZString& out, bool empty) {   // @ 0x10023b366
+    IRegionScreenHost* host = RegionScreenHost();
+    if (!host) return false;
+    const std::uint32_t nameLength = name.Strlen();
+    int wantedCells = 0;
+    if (size < 3) wantedCells = kRegionScreenCityCellCounts[size];
+    for (RegionViewCity& city : cities_) {
+        RegionCityRef* cityRef = host->FindCity(city.x, city.z);
+        IRegionalCity* regional = cityRef ? cityRef->get() : nullptr;
+        const bool occupied = regional && regional->IsOccupied();
+        if (nameLength == 0) {
+            // No city name: launch the first city that is not in use and matches the requested size.
+            if (occupied) continue;
+            int cells = 0;
+            if (!regional || empty) {
+                // The original uses the *city's* size code here, not the requested one (0x10023b4a8).
+                cells = (1 << city.size) << city.size;
+            } else {
+                int cellsX = 0, cellsZ = 0;
+                regional->GetSize(cellsX, cellsZ);
+                cells = cellsZ * cellsX;
+            }
+            if (wantedCells != 0 && wantedCells != cells) continue;
+            RegionCityRef* created = GetOrCreateRegionalCity(city, true);
+            if (!created) continue;
+            if (!LaunchRegionalCity(created)) continue;
+            if (created->get()) created->get()->GetName(out);
+            return true;
+        }
+        if (!occupied) continue;
+        cRZString cityName;
+        regional->GetName(cityName);
+        if (cityName.Strlen() != nameLength || std::memcmp(cityName.Data(), name.Data(), nameLength) != 0) continue;
+        if (!LaunchRegionalCity(cityRef)) continue;
+        out = cityName;
+        return true;
+    }
+    return false;
+}
+
+bool cSC4WinRegionScreen::LaunchRegionalCity(RegionCityRef* cityRef) {   // @ 0x10023b63c
+    if (!cityRef) return false;
+    IRegionScreenHost* host = RegionScreenHost();
+    AddRef();   // the original AddRefs itself for the duration of the launch (0x10023b61e)
+    SetUserPreferencesToCurrentPosition();
+    IRegionalCity* city = cityRef->get();
+    if (!city) {
+        Release();
+        return false;
+    }
+    city->AddRef();
+    cRZString name;
+    city->GetName(name);
+    bool launched = false;
+    if (name.Strlen() != 0) {
+        if (host && host->LaunchRegionCityByName(name, cityRef)) {
+            launched = true;
+        }
+    }
+    if (!launched) {
+        if (host) {
+            host->ClearRegionViewSlot();
+            launched = host->LaunchCityFromRegion(cityRef) != 0;
+        }
+    }
+    Release();
+    city->Release();
+    return launched;
+}
+
+void cSC4WinRegionScreen::SetUserPreferencesToCurrentRegion() {   // @ 0x10023b7bc
+    IRegionScreenHost* host = RegionScreenHost();
+    if (!host) return;
+    std::uint8_t* preferences = host->Preferences();
+    if (!preferences) return;
+    const char* regionName = host->RegionName();
+    // The original strncpy's exactly 0x40 bytes (it does not force a NUL); keep the padding.
+    std::strncpy(reinterpret_cast<char*>(preferences + kPrefsRegionName), regionName ? regionName : "", 0x40);
+    const std::int32_t never = std::numeric_limits<std::int32_t>::min();
+    std::memcpy(preferences + kPrefsViewX, &never, sizeof never);
+    std::memcpy(preferences + kPrefsViewY, &never, sizeof never);
+    host->SavePreferences();
+}
+
+void cSC4WinRegionScreen::SetUserPreferencesToCurrentPosition() {   // @ 0x10023b846
+    IRegionScreenHost* host = RegionScreenHost();
+    if (!host) return;
+    std::uint8_t* preferences = host->Preferences();
+    if (!preferences) return;
+    const std::int32_t viewX = static_cast<std::int32_t>((static_cast<float>(GetW()) * 0.5f + targetX_) * 256.0f);
+    const std::int32_t viewY = static_cast<std::int32_t>((static_cast<float>(GetH()) * 0.5f + targetY_) * 256.0f);
+    std::memcpy(preferences + kPrefsViewX, &viewX, sizeof viewX);
+    std::memcpy(preferences + kPrefsViewY, &viewY, sizeof viewY);
+    host->SavePreferences();
+}
+
+void cSC4WinRegionScreen::UpdatePopulation() {   // @ 0x10023c54c
+    int total = 0;
+    for (const RegionViewCity& city : cities_) {
+        RegionCityRef* cityRef = GetOrCreateRegionalCity(city, false);
+        if (cityRef && cityRef->get()) total += cityRef->get()->GetPopulation();
+    }
+    IRegionScreenHost* host = RegionScreenHost();
+    cRZString text;
+    if (host) host->FormatNumber(total, text);
+    cIGZWin* child = GetChildWindowFromIDRecursive(kRegionScreenPopulationChildId);
+    if (child) child->SetCaption(text);
+}
+
+// ===================================================================================================================
+// Layout / paint
+// ===================================================================================================================
+
+void cSC4WinRegionScreen::ComputeBaseLimits() {   // @ 0x100237106
+    IRegionScreenHost* host = RegionScreenHost();
+    int left = 0, top = 0, right = 0, bottom = 0;
+    if (host) host->RegionCellBounds(left, top, right, bottom);
+    const float mapWidth = static_cast<float>((right + 1) - left);
+    const float mapHeight = static_cast<float>((bottom + 1) - top);
+    float heightPart = mapHeight * 37.49f;
+    const int halfX = cityHalfSizeX_;
+    int totalWidth = static_cast<int>(static_cast<float>(halfX * 2) + mapWidth * 90.51f + heightPart);
+    float totalHeight = static_cast<float>(
+        static_cast<int>(static_cast<float>(cityHalfSizeY_ * 2) + mapHeight * 45.25f + mapWidth * 18.75f));
+    int width = GetW();
+    const float originPartX = static_cast<float>(-halfX - width / 2) - heightPart;
+    const int halfY = cityHalfSizeY_;
+    const int height = GetH();
+    float originPartY = static_cast<float>(-halfY - height / 2) + -45.25f;
+    float widthExcess = 0.0f;   // local_34
+    int heightExcess = 0;       // iVar1
+    width = GetW();
+    if (width < totalWidth) {
+        width = GetW();
+        widthExcess = static_cast<float>(totalWidth - width);
+        totalWidth = GetW();
+    }
+    originPartY = static_cast<float>(static_cast<int>(originPartY));
+    const int originX = totalWidth / 2 + static_cast<int>(originPartX);
+    int mapHeightPixels = GetH();
+    if (mapHeightPixels < static_cast<int>(totalHeight)) {
+        mapHeightPixels = GetH();
+        heightExcess = static_cast<int>(totalHeight) - mapHeightPixels;
+        totalHeight = static_cast<float>(GetH());
+    }
+    const int originY = static_cast<int>(totalHeight) / 2 + static_cast<int>(originPartY);
+    const int maxX = static_cast<int>(widthExcess) + originX;
+    boundMinX_ = originX;
+    boundMinY_ = originY;
+    boundMaxX_ = maxX;
+    boundMaxY_ = heightExcess + originY;
+    if (clouds_) {
+        clouds_->SetCloudArea(static_cast<float>(originX), static_cast<float>(originY),
+                              static_cast<float>(GetW() + maxX), static_cast<float>(GetH() + boundMaxY_));
+    }
+}
+
+void cSC4WinRegionScreen::UpdateRendererPosition() {   // @ 0x100237632
+    RegionCameraBasis basis;
+    IRegionScreenHost* host = RegionScreenHost();
+    const bool haveBasis = host && host->CameraBasis(basis);
+    const float worldX = (static_cast<float>(GetW()) * 0.5f + targetX_) * basis.worldPerUnit;
+    const float rightX = basis.right[0] * worldX;
+    const float rightZ = basis.right[2] * worldX;
+    const float rightY = basis.right[1] * worldX;
+    const float worldY = (static_cast<float>(GetH()) * 0.5f + targetY_) * basis.worldPerUnit;
+    cS3DVector3 position{rightX - basis.up[0] * worldY, rightZ - basis.up[2] * worldY,
+                         rightY - basis.up[1] * worldY};
+    // The original calls the control unconditionally (a missing view-utilities object crashes it); the port skips the
+    // call when the host has no basis.
+    if (haveBasis && cameraControl_) cameraControl_->SetViewTargetPosition(position);
+}
+
+bool cSC4WinRegionScreen::GZPaint() {   // @ 0x100237382
+    if (hideCountdown_ != 0) {
+        --hideCountdown_;
+        if (hideCountdown_ == 0) SetFlag(kFlagIgnoreCursor, false);
+    }
+    if (!paintTimer_.IsTimerRunning()) {
+        paintTimer_.Start();
+    } else {
+        const std::uint32_t elapsed = paintTimer_.GetElapsedTimeU32();
+        paintTimer_.Restart();
+        if (smoothing_) {
+            const int milliseconds = elapsed < 0xc9 ? static_cast<int>(elapsed) : 200;
+            const float targetX = smoothTargetX_;
+            const float targetY = smoothTargetY_;
+            float currentX = targetX_;
+            float currentY = targetY_;
+            const float deltaX = targetX - currentX;
+            const float deltaY = targetY - currentY;
+            const float length = std::sqrt(deltaY * deltaY + deltaX * deltaX);
+            float speed = length * 5.0f;
+            if (speed > 1200.0f) speed = 1200.0f;   // minss against 1200.0f
+            const float step = (static_cast<float>(milliseconds) / 1000.0f) * (speed / length);
+            currentX = step * deltaX + currentX;
+            currentY = step * deltaY + currentY;
+            targetX_ = currentX;
+            targetY_ = currentY;
+            if (std::fabs(currentY - targetY) + std::fabs(currentX - targetX) <= 2.0f) smoothing_ = false;
+        }
+    }
+    if (targetX_ < static_cast<float>(boundMinX_)) {
+        targetX_ = static_cast<float>(boundMinX_);
+        smoothing_ = false;
+    } else if (targetX_ > static_cast<float>(boundMaxX_)) {
+        targetX_ = static_cast<float>(boundMaxX_);
+        smoothing_ = false;
+    }
+    if (targetY_ < static_cast<float>(boundMinY_)) {
+        targetY_ = static_cast<float>(boundMinY_);
+        smoothing_ = false;
+    } else if (targetY_ > static_cast<float>(boundMaxY_)) {
+        targetY_ = static_cast<float>(boundMaxY_);
+        smoothing_ = false;
+    }
+    UpdateRendererPosition();
+    float screenX = 0, screenY = 0;
+    if (renderer_) renderer_->GetScreenOffsets(screenX, screenY);
+    float planeX = 0, planeY = 0;
+    if (cameraControl_) {
+        const cS3DVector2 offset = cameraControl_->ScreenOffset();   // camera control +0xa0 / +0xa4
+        planeX = offset.x;
+        planeY = offset.y;
+    }
+    // Quirk: x rounds through the float bits with a +12582912 bias, y with 12582912 - value (a negated result).
+    const int scrollX = RoundThroughBits(planeX) - GetW() / 2 - kRoundBiasBits;
+    const int scrollY = RoundThroughBits(-planeY) - GetH() / 2 - kRoundBiasBits;
+    if (view_) view_->SetScrollPos(scrollX, scrollY);
+    if (clouds_) clouds_->SetOffset(cRZPoint{scrollX, scrollY});
+    if (frameService_) frameService_->EndFrame();
+    return true;
+}
+
+// ===================================================================================================================
+// Mouse / keyboard
+// ===================================================================================================================
+
+bool cSC4WinRegionScreen::GZOnMouseEnter(cIGZWin*) {   // @ 0x100237748
+    int x = 0, y = 0;
+    if (mgr_) mgr_->GetCursorPos(this, x, y);
+    GZOnMouseMove(x, y, 0);
+    return true;
+}
+
+bool cSC4WinRegionScreen::GZOnMouseExit(cIGZWin*) {   // @ 0x10023b78e
+    if (!signpostActive_ && view_) view_->ClearSelection();
+    return true;
+}
+
+bool cSC4WinRegionScreen::GZOnMouseMove(int x, int y, std::uint32_t) {   // @ 0x100237794
+    if (!signpostActive_ && view_) view_->SelectCity(x, y);
+    return true;
+}
+
+bool cSC4WinRegionScreen::GZOnMouseDownR(int x, int y, std::uint32_t modifiers) {   // @ 0x100237bda
+    if (scroll_) scroll_->GZOnMouseDownR(x, y, modifiers);
+    return true;
+}
+
+bool cSC4WinRegionScreen::GZOnMouseDownL(int x, int y, std::uint32_t) {   // @ 0x1002377b2
+    IRegionScreenHost* host = RegionScreenHost();
+    if (signpostActive_) {
+        RegionViewCity* city = view_ ? view_->GetCityAtPoint(x, y) : nullptr;
+        if (city && city == view_->GetSelectedCity()) {
+            const std::uint32_t elapsed = doubleClickTimer_.GetElapsedTimeU32();
+            const int threshold = host ? host->DoubleClickTimeMs() : 0;
+            if (static_cast<int>(elapsed) < threshold) {
+                GZOnCommand(0x287259f6, 0x4a560000);   // open the selected city
+                return true;
+            }
+        }
+        if (view_) view_->SelectCity(x, y);
+        if (!view_ || view_->GetSelectedCity() == nullptr) {
+            RestoreSignposts();
+            return true;
+        }
+    }
+    RegionViewCity* city = view_ ? view_->GetSelectedCity() : nullptr;
+    if (!city) return true;
+    if (host) host->PlayUiSound(kUiSoundSignpost);
+    ShowPanel(-1);
+    if (view_) {
+        view_->EnableTutorialArrow(true);
+        view_->SetSignpostMode(false, true);
+        view_->EnableLabels(signpostMode_ == 1, false);
+    }
+    RegionCityRef* cityRef = host ? host->FindCity(city->x, city->z) : nullptr;
+    const bool occupied = cityRef && cityRef->get() && cityRef->get()->IsOccupied();
+    if (view_) view_->SetSignpostType(occupied ? kSignpostTypeCity : kSignpostTypeEmpty, kSignpostSubType);
+    signpostActive_ = true;
+    doubleClickTimer_.Restart();
+    if (view_) {
+        cRZRect rect;
+        view_->GetRegionPlayfieldRect(city, rect);
+    }
+    return true;
+}
+
+bool cSC4WinRegionScreen::GZOnKeyDown(std::uint32_t, std::uint32_t) {   // @ 0x10023b7ac
+    return false;
+}
+
+bool cSC4WinRegionScreen::GZOnKeyUp(std::uint32_t, std::uint32_t) {   // @ 0x10023b7b4
+    return false;
+}
+
+// ===================================================================================================================
+// Signposts / panels / GUI
+// ===================================================================================================================
+
+void cSC4WinRegionScreen::RestoreSignposts() {   // @ 0x1002379ae
+    if (view_) view_->EnableTutorialArrow(true);
+    if (signpostMode_ == 1) {
+        if (view_) {
+            view_->SetSignpostMode(true, false);
+            view_->SetSignpostType(0, 0);
+            view_->EnableLabels(true, true);
+        }
+    } else if (signpostMode_ == 0) {
+        if (view_) {
+            view_->SetSignpostMode(false, true);
+            view_->SetSignpostType(0, 0);
+            view_->EnableLabels(false, true);
+        }
+    }
+    signpostActive_ = false;
+    if (view_) view_->ClearSelection();
+}
+
+void cSC4WinRegionScreen::ShowPanel(int panel) {   // @ 0x100237a58
+    IRegionScreenHost* host = RegionScreenHost();
+    cIGZWin* rootChild = GetChildWindowFromID(kRegionScreenRootChildId);
+    if (panel >= 0 && panels_[panel] && panels_[panel]->IsVisible()) {
+        // Clicking the visible panel's button hides the panel and its button.
+        panels_[panel]->HideWindow();
+        if (panelButtons_[panel]) panelButtons_[panel]->HideWindow();
+    } else {
+        for (int i = 0; i < 3; ++i) {
+            if (panels_[i]) panels_[i]->SetFlag(kWinVisible, i == panel);
+            if (panelButtons_[i]) {
+                if (i == panel) {
+                    if (host) host->ActivatePanelButton(panelButtons_[i], rootChild);
+                    panelButtons_[i]->ShowWindow();
+                } else {
+                    panelButtons_[i]->HideWindow();
+                }
+            }
+        }
+    }
+    for (int i = 0; i < 3; ++i) {
+        void* button = nullptr;
+        if (GetChildAs(kRegionScreenPanelButtonIds[i], gz::kGZIID_cIGZWinBtn, &button) && button) {
+            static_cast<gz::cIGZWinBtn*>(button)->SetChecked(i == panel);
+            static_cast<gz::cIGZWinBtn*>(button)->Release();
+        }
+    }
+}
+
+bool cSC4WinRegionScreen::GZOnCommand(std::uint32_t command, std::uint64_t param) {   // @ 0x10023b92a (PARTIAL)
+    IRegionScreenHost* host = RegionScreenHost();
+    if (command == 0x287259f7) {   // a check box changed
+        if (param != kRegionScreenGridCheckBoxId) return true;
+        void* raw = nullptr;
+        bool checked = false;
+        if (GetChildAs(kRegionScreenGridCheckBoxId, gz::kGZIID_cIGZWinBtn, &raw) && raw) {
+            auto* button = static_cast<gz::cIGZWinBtn*>(raw);
+            checked = button->IsChecked();
+            button->Release();
+        }
+        if (view_) view_->EnableGrid(checked);
+        if (std::uint8_t* preferences = host ? host->Preferences() : nullptr) {
+            preferences[kPrefsShowGrid] = checked ? 1 : 0;
+        }
+        return true;
+    }
+    if (command != 0x287259f6) return true;   // PARTIAL: only the button command is wired
+    switch (param) {
+    case 0x4a560001:
+        RestoreSignposts();
+        return true;
+    case kRegionScreenPanelButtonIds[0]:
+        ShowPanel(0);
+        return true;
+    case kRegionScreenPanelButtonIds[1]:
+        ShowPanel(1);
+        return true;
+    case kRegionScreenPanelButtonIds[2]:
+        ShowPanel(2);
+        return true;
+    case 0x4bb92c1f:   // hide the info panels
+    case 0xebb91356: {   // show the info panels
+        const bool visible = param == 0xebb91356;
+        panelsVisible_ = visible;
+        nsGZWinUtils::SetWindowVisible(this, 0xbb0f5e7, !visible, true);
+        nsGZWinUtils::SetWindowVisible(this, 0x6bb92bca, visible, true);
+        return true;
+    }
+    case kRegionScreenSignpostCheckBoxId: {   // signpost-mode check box
+        void* raw = nullptr;
+        bool checked = false;
+        if (GetChildAs(kRegionScreenSignpostCheckBoxId, gz::kGZIID_cIGZWinBtn, &raw) && raw) {
+            auto* button = static_cast<gz::cIGZWinBtn*>(raw);
+            checked = button->IsChecked();
+            button->Release();
+        }
+        signpostMode_ = checked ? 1 : 0;
+        RestoreSignposts();
+        if (std::uint8_t* preferences = host ? host->Preferences() : nullptr) {
+            preferences[kPrefsSignpostMode] = checked ? 1 : 0;
+        }
+        return true;
+    }
+    case kRegionScreenMapModeButtonIds[0]:
+    case kRegionScreenMapModeButtonIds[1]:
+    case kRegionScreenMapModeButtonIds[2]: {
+        for (int i = 0; i < 3; ++i) {
+            const std::uint32_t id = kRegionScreenMapModeButtonIds[i];
+            if (id == param) {
+                if (view_) view_->SetMapMode(i);
+                if (std::uint8_t* preferences = host ? host->Preferences() : nullptr) {
+                    preferences[kPrefsMapMode] = static_cast<std::uint8_t>(i);
+                }
+            }
+            void* raw = nullptr;
+            if (GetChildAs(id, gz::kGZIID_cIGZWinBtn, &raw) && raw) {
+                auto* button = static_cast<gz::cIGZWinBtn*>(raw);
+                button->SetChecked(id == param);
+                button->Release();
+            }
+        }
+        nsGZWinUtils::SetWindowVisible(this, 0xbb0f5e7, param != kRegionScreenMapModeButtonIds[0] && !panelsVisible_,
+                                       true);
+        nsGZWinUtils::SetWindowVisible(this, 0x6bb92bca, panelsVisible_ && param != kRegionScreenMapModeButtonIds[0],
+                                       true);
+        return true;
+    }
+    default:
+        break;
+    }
+    // PARTIAL: the new/load/delete region dialogs, the import/export city dialogs, the video / audio / game
+    // preferences windows, the snapshot album and the web links (0x10023b92a is 2739 bytes of that dispatch) are not
+    // recovered.
+    return true;
+}
+
+// ===================================================================================================================
+// Tuning / preferences
+// ===================================================================================================================
+
+void cSC4WinRegionScreen::ReadTunableValues() {   // @ 0x10023904e
+    IRegionScreenHost* host = RegionScreenHost();
+    if (!host) return;
+    cISCPropertyHolder* holder = host->CreateTuningProperties();
+    if (!holder) return;
+    if (scroll_) {
+        std::uint32_t deadZone = 0, maxDistance = 0;
+        float speedDivisor = 0.0f;
+        cSCPropertyHelp::GetPropertyValue(holder, kTuningScrollDeadZone, deadZone);
+        cSCPropertyHelp::GetPropertyValue(holder, kTuningScrollMaxDistance, maxDistance);
+        cSCPropertyHelp::GetPropertyValue(holder, kTuningScrollSpeedDivisor, speedDivisor);
+        scroll_->SetTunables(deadZone, maxDistance, speedDivisor);
+    }
+    cSCPropertyHelp::GetPropertyValue(holder, kTuningCityHalfSizeX, cityHalfSizeX_);
+    cSCPropertyHelp::GetPropertyValue(holder, kTuningCityHalfSizeY, cityHalfSizeY_);
+    std::uint32_t erosionClicks = 0, erosionFlowSteps = 0, erosionSmoothing = 0;
+    cSCPropertyHelp::GetPropertyValue(holder, kTuningWaterErosionClicks, erosionClicks);
+    cSCPropertyHelp::GetPropertyValue(holder, kTuningWaterErosionFlowSteps, erosionFlowSteps);
+    cSCPropertyHelp::GetPropertyValue(holder, kTuningWaterErosionSmoothing, erosionSmoothing);
+    host->SetWaterErosionTunables(erosionClicks, erosionFlowSteps, erosionSmoothing);
+    cSCPropertyHelp::GetPropertyValue(holder, kTuningLabelColor1, labelColor1_);
+    cSCPropertyHelp::GetPropertyValue(holder, kTuningLabelColor2, labelColor2_);
+    cSCPropertyHelp::GetPropertyValue(holder, kTuningBaseTerrainTypeHeight, baseTerrainTypeHeight_);
+    cSCPropertyHelp::GetPropertyValue(holder, kTuningRegionHeightByte, regionHeightByte_);
+    host->SetRegionHeightGlobals(baseTerrainTypeHeight_, regionHeightByte_);
+    cSCPropertyHelp::GetPropertyValue(holder, kTuningSmoothDistance, smoothDistance_);
+    cSCPropertyHelp::GetPropertyValue(holder, kTuningSmoothSeconds, smoothSeconds_);
+    std::uint8_t opacityLow = 0, opacityHigh = 0;
+    if (host->CloudOpacityBytes(holder, opacityLow, opacityHigh) && clouds_) {
+        clouds_->SetOpacityRange(opacityLow, opacityHigh);
+    }
+    if (view_) view_->SetLabelColours(labelColor1_, labelColor2_);
+    holder->Release();
+}
+
+void cSC4WinRegionScreen::PostRegionScreenMessage(std::uint32_t type) {   // @ 0x1002388d2
+    IRegionScreenHost* host = RegionScreenHost();
+    if (!host) return;
+    cIGZMessageServer2* server = host->MessageServer2();
+    if (!server) return;
+    cIGZMessage2Standard* message = host->CreateStandardMessage();
+    if (!message) return;
+    message->SetType(type);
+    server->MessagePost(message, false);
+    message->Release();
+}
+
+void cSC4WinRegionScreen::ShutdownApplicationServices() {   // @ 0x100239dac
+    IRegionScreenHost* host = RegionScreenHost();
+    if (!host) return;
+    host->ClearEffectsManagerGlobal();
+    if (effects_) {
+        effects_->Shutdown();
+        effects_ = nullptr;
+    }
+    host->ClearViewGlobals();
+    if (renderer_) {
+        renderer_->Shutdown();
+        renderer_ = nullptr;
+    }
+    if (cameraControl_) {
+        cameraControl_->Shutdown();
+        cameraControl_->Release();
+        cameraControl_ = nullptr;
+    }
+    if (camera_) {
+        camera_->Shutdown();
+        if (camera_->Release() == 0) delete camera_;
+        camera_ = nullptr;
+    }
+    host->ClearTerrainMapGlobal();
+    if (terrainMap_) {
+        terrainMap_->Shutdown();
+        terrainMap_->Release();
+        terrainMap_ = nullptr;
+    }
+    if (frameService_) {
+        frameService_->Shutdown();
+        frameService_ = nullptr;
+    }
+}
+
+// ===================================================================================================================
+// Test access
+// ===================================================================================================================
+
+void cSC4WinRegionScreen::SetBounds(int minX, int minY, int maxX, int maxY) {
+    boundMinX_ = minX;
+    boundMinY_ = minY;
+    boundMaxX_ = maxX;
+    boundMaxY_ = maxY;
+}
+
+void cSC4WinRegionScreen::SetSnapshotBuffer(int slot, IWinBuffer* buffer) {
+    if (slot < 0 || slot >= static_cast<int>(snapshots_.size())) return;
+    if (buffer) buffer->AddRef();
+    ReleaseBuffer(snapshots_[slot]);
+    snapshots_[slot] = buffer;
+}
+
+void cSC4WinRegionScreen::SetMemberWindow(int which, cIGZWin* window) {
+    cIGZWin** slot = nullptr;
+    if (which >= 0 && which < 3) {
+        slot = &panels_[which];
+    } else if (which >= 3 && which < 6) {
+        slot = &panelButtons_[which - 3];
+    } else if (which == 6) {
+        slot = &backdrop_;
+    } else if (which == 7) {
+        slot = &unused280_;
+    }
+    if (!slot) return;
+    if (window) window->AddRef();
+    ReleaseWindow(*slot);
+    *slot = window;
+}
+
+void cSC4WinRegionScreen::SetClouds(cSC4WinRegionClouds* clouds) {
+    if (clouds) clouds->AddRef();
+    if (clouds_) clouds_->Release();
+    clouds_ = clouds;
+}
+
+void cSC4WinRegionScreen::SetScroll(cSC4WinRegionScroll* scroll) {
+    if (scroll) scroll->AddRef();
+    if (scroll_) scroll_->Release();
+    scroll_ = scroll;
+}
+
+void cSC4WinRegionScreen::SetView(IRegionView* view) {
+    if (view == view_) return;
+    delete view_;
+    view_ = view;
+}
+
+}  // namespace sc4

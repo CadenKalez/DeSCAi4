@@ -44,6 +44,18 @@ public:
     void SetMouseScroll(int x, int y);                 // @ 0x1002350b4
     void SetCursorByID(std::uint32_t id);              // @ 0x100235372
 
+    // The second speed source at +0x174 / +0x178, written by cSC4WinRegionScreen::ProcessCommand's scroll commands
+    // (0x10023a2f1..0x10023a54d) and by the tuning values below (+0x190 / +0x194 / +0x19c, 0x10023904e).
+    void SetEdgeVector(float x, float y) { edgeVector_[0] = x; edgeVector_[1] = y; }
+    float EdgeVectorX() const { return edgeVector_[0]; }   // +0x174
+    float EdgeVectorY() const { return edgeVector_[1]; }   // +0x178
+    float EdgeSpeed() const { return edgeSpeed_; }        // +0x17c
+    void SetTunables(std::uint32_t deadZone, std::uint32_t maxDistance, float speedDivisor) {
+        deadZone_ = deadZone;
+        maxDistance_ = maxDistance;
+        speedDivisor_ = speedDivisor;
+    }
+
     // test access
     float VelocityX() const { return velocity_[0]; }
     float VelocityY() const { return velocity_[1]; }

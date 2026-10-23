@@ -1,0 +1,1 @@
+"render_sgldx7driver:$T/render_sgldx7driver_test.cpp $S/render/gd/SGLDX7Driver.cpp $S/render/gd/VideoModes.cpp $S/render/gd/GDriverBase.cpp $S/render/GDIndexOps.cpp $S/render/SimGL.cpp $S/render/TextureStageData.cpp"

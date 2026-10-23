@@ -1,0 +1,1 @@
+"gz_wingrid:$T/gz_wingrid_test.cpp $S/gz/WinGrid.cpp $S/gz/Win.cpp $S/gz/WinText.cpp $S/gz/WinCtrlFactory.cpp $S/gz/RZDraw.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp -I$T"

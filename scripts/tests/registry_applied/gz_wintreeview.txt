@@ -1,0 +1,1 @@
+"gz_wintreeview:$T/gz_wintreeview_test.cpp $S/gz/WinTreeView.cpp $S/gz/Win.cpp $S/gz/Buffer.cpp $S/gz/DrawContext.cpp $S/gz/Graph.cpp $S/gz/WinCtrlFactory.cpp $S/gz/WinScrollbar.cpp $S/gz/WinSlider.cpp $S/gz/RZDraw.cpp $S/gz/WinText.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/cRZTimer.cpp $S/rz/cRZKeyboard.cpp $S/platform/MacTools.cpp $S/rz/cRZCallbackTimer.cpp -I$T"

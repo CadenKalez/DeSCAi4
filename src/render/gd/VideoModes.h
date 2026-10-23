@@ -39,6 +39,9 @@ public:
     int CountVideoModes();                                                   // @ 0x10060cd4a
     bool GetVideoModeInfo(std::uint32_t index, sGDMode& out) const;          // @ 0x10060d094 (false = driver error 2)
     const std::vector<sGDMode>& Modes() const { return modes_; }
+    // Driver bookkeeping (cGDriver::GetDeviceProperties writes per-mode capability bytes into the current entry).
+    sGDMode* MutableMode(std::size_t index) { return index < modes_.size() ? &modes_[index] : nullptr; }
+    void Clear() { modes_.clear(); maxWidth_ = maxHeight_ = 0; }
 
 private:
     void AddFullScreen(int width, int height, int depth);                    // VideoModeEnumerator @ 0x10060cf32
