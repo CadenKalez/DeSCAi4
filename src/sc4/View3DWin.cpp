@@ -2,6 +2,7 @@
 #include "sc4/View3DWin.h"
 
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
 #include <utility>
 
@@ -135,12 +136,7 @@ bool cSC4View3DWin::Init() {
     frameTimer_.Start();
     if (host_) {
         keyAccelerator_ = host_->CreateKeyAccelerator();                     // exemplar 0x42e3ea4b + GZCOM
-        void* screen = host_->CreateProgressScreen(static_cast<cIGZWin*>(static_cast<cGZWin*>(this)),
-                                                   host_->ProgressScreenWanted());
-        if (screen) {
-            progressScreen_ = static_cast<cIGZUnknown*>(screen);
-            progressScreen_->AddRef();   // the original stores the constructor's reference
-        }
+        CreateProgressScreen(host_->ProgressScreenWanted());                 // @ 0x100780910
     }
     return initialized_;
 }
@@ -722,6 +718,199 @@ bool cSC4View3DWin::GZOnMouseExit(cIGZWin*) {                               // 0
     return true;
 }
 
+// ---------------------------------------------------------------------------------------------------- the mouse
+// The four button handlers and the move handler route the point through the city's mouse router
+// (SL::spCity vslot 0x290) first, then offer it to the persistent tools and the input-tool stack, and
+// finally do the window's own work (scrolling, cursor text, camera target).
+
+bool cSC4View3DWin::GZOnMouseDownL(int x, int y, std::uint32_t modifiers) {   // 0x100782e9e
+    lastMessageModifiers_ = modifiers;
+    if (host_) {
+        if (ICityMouseRouter* router = host_->CityMouseRouter()) {
+            if (router->IsActive() && !router->ProcessMouse(x, y, 0xffffffffu)) return true;
+        }
+    }
+    for (std::size_t i = persistentTools_.size(); i-- > 0;) {
+        cSC4ViewInputControl* control = persistentTools_[i];
+        if (control) control->AddRef();
+        const bool handled = control && control->OnMouseDownL(x, y, modifiers);
+        if (control) control->Release();
+        if (handled) return true;
+    }
+    for (std::size_t i = tools_.size(); i-- > 0;) {
+        cSC4ViewInputControl* control = tools_[i];
+        if (control) control->AddRef();
+        const bool handled = control && control->OnMouseDownL(x, y, modifiers);
+        if (control) control->Release();
+        if (i < 1) return true;           // quirk (0x100783022): the bottom tool's answer is ignored
+        if (handled) return true;
+    }
+    return true;
+}
+
+bool cSC4View3DWin::GZOnMouseDownR(int x, int y, std::uint32_t modifiers) {   // 0x100783068
+    lastMessageModifiers_ = modifiers;
+    GZSetCapture();
+    for (std::size_t i = persistentTools_.size(); i-- > 0;) {
+        cSC4ViewInputControl* control = persistentTools_[i];
+        if (control) control->AddRef();
+        const bool handled = control && control->OnMouseDownR(x, y, modifiers);
+        if (control) control->Release();
+        if (handled) return true;
+    }
+    for (std::size_t i = tools_.size(); i-- > 0;) {
+        cSC4ViewInputControl* control = tools_[i];
+        if (control) control->AddRef();
+        const bool handled = control && control->OnMouseDownR(x, y, modifiers);
+        if (control) control->Release();
+        if (handled) return true;
+    }
+    mouseDownX_ = x;
+    mouseDownY_ = y;
+    draggedPastDeadZone_ = false;
+    if (host_) {
+        // new cSC4ViewInputControlCityScroll @ 0x1002c13a2, then SetMouseScroll @ 0x1002c1930.
+        if (cSC4ViewInputControl* tool = host_->CreateCityScrollTool()) {
+            tool->AddRef();
+            SetCurrentViewInputControl(tool, 0);
+            host_->CityScrollSetMouseScroll(tool, x, y);
+            tool->Release();
+        }
+    }
+    return true;
+}
+
+bool cSC4View3DWin::GZOnMouseUpL(int x, int y, std::uint32_t modifiers) {   // 0x100783268
+    lastMessageModifiers_ = modifiers;
+    cSC4ViewInputControl* current = GetCurrentViewInputControl();
+    if (GZAmCapturing() && current && !current->IsSelfScrollingView() && current->AmCapturing())
+        RecalcScrollVelocity();
+    if (host_) {
+        if (ICityMouseRouter* router = host_->CityMouseRouter()) {
+            if (router->IsActive() && !router->ProcessMouse(x, y, 1)) return true;
+        }
+    }
+    for (std::size_t i = persistentTools_.size(); i-- > 0;) {
+        cSC4ViewInputControl* control = persistentTools_[i];
+        if (control) control->AddRef();
+        const bool handled = control && control->OnMouseUpL(x, y, modifiers);
+        if (control) control->Release();
+        if (handled) return true;
+    }
+    for (std::size_t i = tools_.size(); i-- > 0;) {
+        cSC4ViewInputControl* control = tools_[i];
+        if (control) control->AddRef();
+        const bool handled = control && control->OnMouseUpL(x, y, modifiers);
+        if (control) control->Release();
+        if (i < 1) return true;           // quirk (0x1007833f8): the bottom tool's answer is ignored
+        if (handled) return true;
+    }
+    return true;
+}
+
+bool cSC4View3DWin::GZOnMouseUpR(int x, int y, std::uint32_t modifiers) {   // 0x100783474
+    lastMessageModifiers_ = modifiers;
+    if (GZAmCapturing()) GZReleaseCapture();
+    if ((modifiers & 7) == 0 && !draggedPastDeadZone_) {
+        cS3DVector3 terrainPoint;                       // nS3D::k_zero, k_zero, k_zero
+        s3d::cIS3DModelInstance* model = nullptr;
+        if (renderer_ && renderer_->Pick(x, y, nullptr, model)) {
+            cS3DBoundingBox box;                        // the original's constant: {1,1,1}, {0,0,0}
+            box.min[0] = box.min[1] = box.min[2] = 1.0f;
+            box.max[0] = box.max[1] = box.max[2] = 0.0f;
+            if (model) model->GetWorldBounds(box);
+            const float centreX = (box.min[0] + box.max[0]) * 0.5f;
+            const float centreZ = (box.min[2] + box.max[2]) * 0.5f;
+            // Quirk (0x100783561 / 0x100783574): both terrain heights are queried and both answers dropped.
+            if (ITerrainEditor* terrain = host_ ? host_->TerrainEditor() : nullptr) {
+                terrain->TerrainHeight(centreX, centreZ);
+                terrain->TerrainHeightAt(centreX, centreZ);
+            }
+            const cS3DVector3 target{(box.min[0] + box.max[0]) * 0.5f,
+                                     (box.min[1] + box.max[1]) * 0.5f,
+                                     (box.min[2] + box.max[2]) * 0.5f};
+            if (cameraControl_) cameraControl_->SetViewTargetPosition(target);
+        } else if (renderer_ && renderer_->PickTerrain(x, y, &terrainPoint.x, false, true)) {
+            if (cameraControl_) cameraControl_->SetViewTargetPosition(terrainPoint);
+        }
+        if (model) model->Release();
+    }
+    for (std::size_t i = persistentTools_.size(); i-- > 0;) {
+        cSC4ViewInputControl* control = persistentTools_[i];
+        if (control) control->AddRef();
+        const bool handled = control && control->OnMouseUpR(x, y, modifiers);
+        if (control) control->Release();
+        if (handled) return true;
+    }
+    for (std::size_t i = tools_.size(); i-- > 0;) {
+        cSC4ViewInputControl* control = tools_[i];
+        if (control) control->AddRef();
+        const bool handled = control && control->OnMouseUpR(x, y, modifiers);
+        if (control) control->Release();
+        if (i < 1) return true;
+        if (handled) return true;
+    }
+    return true;
+}
+
+bool cSC4View3DWin::GZOnMouseMove(int x, int y, std::uint32_t modifiers) {   // 0x100783786
+    lastMessageModifiers_ = modifiers;
+    bool allowEdgeScroll = true;
+    if (host_) {
+        if (ICityMouseRouter* router = host_->CityMouseRouter()) {
+            if (router->IsActive()) {
+                if (!router->ProcessMouse(x, y, 0)) return true;
+                allowEdgeScroll = router->AllowsEdgeScroll();
+            }
+        }
+    }
+    const int dx = mouseDownX_ - x;
+    if (std::abs(dx) >= 4) {
+        draggedPastDeadZone_ = true;
+    } else {
+        const int dy = mouseDownY_ - y;
+        if (std::abs(dy) >= 4) draggedPastDeadZone_ = true;
+    }
+    UpdateCursorTextPositions(x, y);
+    for (std::size_t i = persistentTools_.size(); i-- > 0;) {
+        cSC4ViewInputControl* control = persistentTools_[i];
+        if (control) control->AddRef();
+        if (control) control->OnMouseMove(x, y, modifiers);       // the result is ignored
+        if (control) control->Release();
+        if (i < 1) break;
+    }
+    for (std::size_t i = tools_.size(); i-- > 0;) {
+        cSC4ViewInputControl* control = tools_[i];
+        if (control) control->AddRef();
+        const bool handled = control && control->OnMouseMove(x, y, modifiers);
+        if (control) control->Release();
+        if (i < 1 || handled) break;
+    }
+    cSC4ViewInputControl* current = GetCurrentViewInputControl();
+    bool updateEdgeScroll = true;
+    if (allowEdgeScroll && host_ && host_->Preferences()[kPrefsEdgeScrollEnabled]) {
+        if (!current || !current->IsSelfScrollingView()) {
+            int edgeX = -1;
+            if (x > 1) edgeX = (GetW() - 1 <= x) ? 1 : 0;
+            edgeScrollX_ = edgeX;
+            int edgeY = -1;
+            if (y > 1) edgeY = (GetH() - 1 <= y) ? 1 : 0;
+            edgeScrollY_ = edgeY;
+            updateEdgeScroll = false;
+        } else {
+            if (host_->GraphicsSystemAllowsSelfScroll()) return true;
+            if (edgeScrollX_ == 0 && edgeScrollY_ == 0) return true;
+            updateEdgeScroll = false;
+        }
+    }
+    if (updateEdgeScroll) {
+        edgeScrollX_ = 0;
+        edgeScrollY_ = 0;
+    }
+    RecalcScrollVelocity();
+    return true;
+}
+
 bool cSC4View3DWin::GZOnKeyDown(std::uint32_t, std::uint32_t) { return false; }   // 0x100782b82
 bool cSC4View3DWin::GZOnKeyUp(std::uint32_t, std::uint32_t) { return false; }     // 0x100782b92
 bool cSC4View3DWin::GZOnCommand(std::uint32_t command, std::uint64_t param) {     // 0x10078abdc
@@ -757,6 +946,257 @@ bool cSC4View3DWin::PickOccupant(int x, int y, cISC4Occupant*& out) {       // 0
         model->Release();
     }
     return found;
+}
+
+// ==================================================================================================== cursor text
+
+void cSC4View3DWin::UpdateCursorTextPositions(int x, int y) {               // 0x100783a60
+    if (cursorTextWindow_) {
+        // The original only repositions the window while it is visible (0x100783a70..0x100783aaa).
+        if (cursorTextWindow_->IsVisible()) cursorTextWindow_->SetPosition(x, y);
+    }
+    cursorTextX_ = x;                       // +0x5b0
+    cursorTextY_ = y;                       // +0x5b4
+    UpdateCostIndicator(0.0f);              // the cost indicator follows the cursor too
+}
+
+void cSC4View3DWin::UpdateCostIndicator(float dt) {                         // 0x10078178a (PARTIAL)
+    // The cost-indicator windows (+0x5c0 bitmap / +0x5c8 text) are not recovered, so the whole body is
+    // still the host's; see notes/ledger_pending/cSC4View3DWin.txt.
+    if (host_) host_->UpdateCostIndicator(dt);
+}
+
+void cSC4View3DWin::CursorTextChanged() {                                   // 0x10079155e
+    if (!cursorTextWindow_) return;
+    if (!cursorText_.empty()) {
+        const CursorTextInfo& info = cursorText_.back();   // the original reads the sentinel's back link
+        cursorTextWindow_->SetLine1(info.line1);
+        cursorTextWindow_->SetLine2(info.line2);
+        cursorTextWindow_->SetIcon(info.icon == 1 ? cursorTextIcon_ : nullptr);
+        if (!cursorTextWindow_->IsVisible()) {
+            int x = 0;
+            int y = 0;
+            if (cIGZWinMgr* manager = GetWindowManager())
+                manager->GetCursorPos(static_cast<cIGZWin*>(static_cast<cGZWin*>(this)), x, y);
+            cursorTextWindow_->SetPosition(x, y);
+            cursorTextWindow_->ShowWindow();
+        }
+        return;
+    }
+    cursorTextWindow_->HideWindow();
+    cursorTextWindow_->Reset();
+}
+
+void cSC4View3DWin::ClearCursorText(std::uint32_t id) {                     // 0x100791772
+    for (auto it = cursorText_.rbegin(); it != cursorText_.rend(); ++it) {
+        if (it->key != id) continue;
+        cursorText_.erase(std::next(it).base());
+        CursorTextChanged();
+        return;
+    }
+    CursorTextChanged();
+}
+
+void cSC4View3DWin::SetCursorTextPosition3D(const cS3DVector3& position) {  // 0x100791cc4
+    cS3DVector3 projected = position;
+    if (!host_ || !host_->ProjectPointToViewport(projected)) return;
+    UpdateCursorTextPositions(static_cast<int>(projected.x), static_cast<int>(projected.y));
+}
+
+void cSC4View3DWin::SetCursorText(std::uint32_t id, std::uint32_t order, const cIGZString* line1,
+                                  const cIGZString* line2, int icon) {    // 0x10079132c
+    const bool hasLine1 = line1 && line1->Strlen() != 0;
+    const bool hasLine2 = line2 && line2->Strlen() != 0;
+    if (!hasLine1 && !hasLine2) {
+        ClearCursorText(id);
+        CursorTextChanged();                // quirk (0x1007913c6): ClearCursorText already called it
+        return;
+    }
+    auto found = cursorText_.end();
+    for (auto it = cursorText_.rbegin(); it != cursorText_.rend(); ++it) {
+        if (it->key != id) continue;
+        found = std::next(it).base();
+        break;
+    }
+    if (found != cursorText_.end()) {
+        if (line1) found->line1.AssignFromIGZString(*line1);
+        else found->line1.Erase(0, 0xffffffffu);
+        // Quirk (0x10079144a): a missing second line erases the *first* string.
+        if (line2) found->line2.AssignFromIGZString(*line2);
+        else found->line1.Erase(0, 0xffffffffu);
+        found->icon = icon;
+    } else {
+        // The insert scans back from the last node and inserts before the first whose order is <= this
+        // one (0x10079140a); when every node has a larger order it appends at the end, which is the
+        // original's behaviour (0x100791419 inserts before the sentinel).
+        auto position = cursorText_.end();
+        for (auto it = cursorText_.end(); it != cursorText_.begin();) {
+            --it;
+            if (it->order <= order) { position = it; break; }
+        }
+        CursorTextInfo info;
+        info.key = id;
+        info.order = order;
+        if (line1) info.line1.AssignFromIGZString(*line1);
+        if (line2) info.line2.AssignFromIGZString(*line2);
+        info.icon = icon;
+        cursorText_.insert(position, info);
+    }
+    CursorTextChanged();
+}
+
+// ==================================================================================================== panels
+
+void cSC4View3DWin::HideMissionStatusPanel() {                              // 0x100792e7e
+    if (!missionPanel_) return;
+    ChildDelete(missionPanel_);
+    cIGZWin* panel = missionPanel_;
+    missionPanel_ = nullptr;
+    if (panel) panel->Release();
+}
+
+void cSC4View3DWin::CloseSecondaryMenu() {                                  // 0x100791d18
+    cIGZWin* menu = secondaryMenu_;
+    if (!menu) return;
+    secondaryMenu_ = nullptr;
+    secondaryMenuState_ = 0;
+    CloseTertiaryMenu();
+    menu->HideWindow();
+    // The original Releases before it ChildDeletes (0x100791d52..0x100791d60); the window manager owns
+    // a reference there, while the port has to destroy it first or the pointer dangles.
+    ChildDelete(menu);
+    menu->Release();
+}
+
+void cSC4View3DWin::CreateProgressScreen(bool flag) {                       // 0x100780910
+    if (!host_) return;
+    // new cSC4ProgressScreen(GetArea(), flag) @ 0x10032cecc: the host owns the class, the view holds one
+    // reference and initialises it (0x10032d23e).
+    progressScreen_ = host_->CreateProgressScreen(static_cast<cIGZWin*>(static_cast<cGZWin*>(this)),
+                                                 GetArea(), flag);
+    if (!progressScreen_) return;
+    progressScreen_->AddRef();
+    host_->InitProgressScreen(progressScreen_);
+}
+
+void cSC4View3DWin::UpdateProgressMessage() {                               // 0x100788d98
+    if (!progressScreen_ || !host_) return;
+    cRZString empty;                        // the original passes a default-constructed string
+    host_->SetProgressCaption(progressScreen_, 1, empty);
+}
+
+void cSC4View3DWin::AddWinAnimationRecorder(bool enable) {                  // 0x100780d78
+    cIGZWin* existing = GetChildWindowFromID(kView3DAnimationRecorderId);
+    if (!enable) {
+        if (existing) ChildRemove(existing);
+        return;
+    }
+    if (existing || !host_) return;
+    cIGZWin* recorder = host_->CreateWinAnimationRecorder();     // new + ctor + AddRef, 0x1003728a4
+    if (!recorder) return;
+    cRZString directory;
+    host_->UserDataDirectory(directory);                        // SL::UserDataDirectory @ 0x100040556
+    directory.AppendChars("RecordedAnimations", 18);
+    directory.AppendChars("/", 1);
+    host_->RecorderSetAnimationOutputDirectory(recorder, directory, true);
+    recorder->SetID(kView3DAnimationRecorderId);
+    ChildAdd(recorder);
+    recorder->Release();
+}
+
+// ==================================================================================================== tool invokers
+
+void cSC4View3DWin::InvokeZoningTool(std::uint32_t type) {                  // 0x100783d86
+    if (!host_ || !host_->CanInvokeZoningTool()) return;        // SL::spCity vslot 0xb0 (0x100783d92)
+    if (cSC4ViewInputControl* tool = host_->CreateZoningTool(type)) {   // cSC4ViewInputControlZone
+        tool->AddRef();
+        SetCurrentViewInputControl(tool, 2);
+        tool->Release();
+    }
+}
+
+void cSC4View3DWin::InvokeLandscapeTool(std::uint32_t type, bool flag) {    // 0x10078408e
+    if (!host_) return;
+    if (cSC4ViewInputControl* tool = host_->CreateTerrainScrubberTool(type, flag)) {
+        tool->AddRef();
+        SetCurrentViewInputControl(tool, 2);
+        tool->Release();
+    }
+}
+
+void cSC4View3DWin::ApplyDefaultTerrainBrush(int brush, bool flag) {        // 0x100790b4a
+    if (brush == 7 || !host_) return;                           // 7 = no default brush
+    ITerrainEditor* terrain = host_->TerrainEditor();
+    if (!terrain) return;
+    std::uint32_t landscapeType = 0;
+    if (terrain->TerrainTypeForBrush(brush, landscapeType)) InvokeLandscapeTool(landscapeType, flag);
+}
+
+void cSC4View3DWin::ChangeTerrainType() {                                   // 0x1007928da
+    if (!host_) return;
+    ITerrainEditor* terrain = host_->TerrainEditor();
+    if (!terrain) return;
+    int type = terrain->TerrainType();                          // vslot 0x150
+    host_->RunChangeTerrainDialog(type);                        // cSTEChangeTerrainUI + DoDialog
+    terrain->SetTerrainType(type);                              // vslot 0x148
+}
+
+void cSC4View3DWin::RunGlobalTerrainTool(int tool) {                        // 0x1007849bc
+    if (host_) host_->PlayGlobalTerrainEffectSound();           // SL::spSS / spViewUtilities / SFX block
+    ITerrainEditor* terrain = host_ ? host_->TerrainEditor() : nullptr;
+    switch (tool) {
+        case 0:
+            ChangeTerrainType();
+            break;
+        case 1:
+            if (terrain) terrain->SetToolMode158(1);
+            break;
+        case 2:
+            if (terrain) terrain->SetToolMode160(1);
+            break;
+        case 3:
+            if (terrain) { terrain->CancelActiveTool(); terrain->SetActiveToolFlag(true); }
+            break;
+        case 4:
+            if (terrain) { terrain->CancelActiveTool(); terrain->SetActiveToolFlag(false); }
+            break;
+        case 5:
+        case 6:
+            if (cIGZMessageServer2* server = host_ ? host_->MessageServer2() : nullptr) {
+                auto* message = new cRZMessage2Standard();
+                message->AddRef();
+                message->SetType(kMsgViewTerrainDisplayChanged);
+                message->SetData1(tool == 6 ? 1 : 0);
+                server->MessagePost(message, false);
+                message->Release();
+            }
+            break;
+        case 7:
+            if (host_) {
+                if (cSC4ViewInputControl* levelTool = host_->CreateLevelTerrainTool()) {
+                    levelTool->AddRef();
+                    SetCurrentViewInputControl(levelTool, 2);
+                    levelTool->Release();
+                }
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+bool cSC4View3DWin::ToggleContourDisplay() {                                // 0x10078fe00
+    contourDisplay_ = !contourDisplay_;
+    if (!host_) return contourDisplay_;
+    if (!contourDisplay_) {
+        if (contourCallback_ != -1) {
+            host_->RemoveContourCallback(contourCallback_);
+            contourCallback_ = -1;
+        }
+    } else if (contourCallback_ == -1) {
+        contourCallback_ = host_->AddContourCallback();
+    }
+    return contourDisplay_;
 }
 
 // ==================================================================================================== global effects
@@ -812,7 +1252,7 @@ bool cSC4View3DWin::GZPaint() {                                             // 0
             frameTimer_.Restart();
             float dt = static_cast<float>(elapsed) / 1000000.0f;
             if (dt >= 0.5f) dt = 0.5f;
-            if (host_) host_->UpdateCostIndicator(dt);
+            UpdateCostIndicator(dt);
             if (scrolling_ && cameraControl_) {
                 const bool scrolled = cameraControl_->ScrollByViewportAngle(scrollAngle_,
                                                                             dt * scrollSpeed_ * kScrollSpeedPerFrame);

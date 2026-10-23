@@ -1,0 +1,80 @@
+SOURCE src/sc4/TractDeveloper.cpp|h
+EVIDENCE test scripts/tests/sc4_tractdeveloper_test.cpp - fake ITractDeveloperHost over the recovered cSC4Lot / cSC4LotConfiguration drives the three COM views and their shared reference count, Init/Shutdown of every service and the two simulator tick registrations, the ini tunables and the style tables, the version-3 save stream (v1 upgrade, future version and truncation), the style tick rotation quirk, the class-wide candidate pool (ten at a time, template reset, ClearCandidateList), GetBoundingRect for all four facings and the lot fallback, FindExistingCapacity and ScoreCandidateLots (network weight tables), the build/growth attempt records and their deep candidate copies, GetLastSuccessfulBuild/GetLastFailedBuild, the existing-lot sweep over a tract, Decline (state/age/purpose/wealth/capacity, AbandonBuilding reason 6), cLotSizesFilter + IsLotConfigurationSuitable (purpose/wealth/stage/style/capacity outcomes and the per-outcome histogram), ListPossibleLotConfigurations with its filter cache, and Grow's per-pass setup (attempt record fields, object id, 13x28 histograms); the CandidateLot / GrowthRecord / BuildAttemptRecord special members are the port's implicit ones, and cLotSizesFilter (six symbols) lives in TractDeveloper.cpp because only this class uses it
+0x100134bfa TractDeveloperConstruct
+0x100134ddc TractDeveloperDestruct
+0x100134f84 TractDeveloperDestructComplete
+0x100134f8e TractDeveloperDestructDeleting
+0x100134fbc TractDeveloperQueryInterface
+0x100135000 TractDeveloperQueryInterfaceThunkMessageTarget
+0x10013500e TractDeveloperQueryInterfaceThunkSerializable
+0x10013501c TractDeveloperAddRef
+0x10013502a TractDeveloperAddRefThunkMessageTarget
+0x100135038 TractDeveloperAddRefThunkSerializable
+0x100135046 TractDeveloperRelease
+0x10013508a TractDeveloperReleaseThunkMessageTarget
+0x1001350c4 TractDeveloperReleaseThunkSerializable
+0x1001350fe TractDeveloperInit
+0x1001353a6 TractDeveloperReadSimulatorTunableValues
+0x1001356a8 TractDeveloperShutdown
+0x100135a12 TractDeveloperFreeGrowthDatabase
+0x100135b62 TractDeveloperWrite
+0x100135c24 TractDeveloperWriteThunk
+0x100135c32 TractDeveloperRead
+0x100135d88 TractDeveloperReadThunk
+0x100135fe4 TractDeveloperDoMessage
+0x10013605e TractDeveloperDoMessageThunk
+0x10013667c TractDeveloperClearCandidateList
+0x1001366f6 TractDeveloperListExistingLots
+0x100137018 TractDeveloperRecordBuildAttempt
+0x1001372b4 TractDeveloperRecordGrowthAttempt
+0x100137588 TractDeveloperListPossibleLotConfigurations
+0x100138296 TractDeveloperScoreCandidateLots
+0x100138eae TractDeveloperNewCandidateLot
+0x1001390aa TractDeveloperFindExistingCapacity
+0x1001392b6 TractDeveloperDeleteCandidateLot
+0x10013a43c TractDeveloperIsLotConfigurationSuitable
+0x10013b130 TractDeveloperGetBoundingRect
+0x10013b64e TractDeveloperCompareCandidateLots
+0x10013b6bc TractDeveloperFreeBuildAttempt
+0x10013b77c TractDeveloperFreeGrowthAttempt
+0x10013b9d4 TractDeveloperGetLastSuccessfulBuild
+0x10013baf2 TractDeveloperGetLastFailedBuild
+0x10013bbd2 TractDeveloperDecline
+0x10013c0fa TractDeveloperSetActiveStyles
+0x10013c166 TractDeveloperGetCurrentStyle
+0x10013c18a TractDeveloperGetActiveStyles
+0x10013c198 TractDeveloperIsUsingAllStylesAtOnce
+0x10013c1a8 TractDeveloperUseAllStylesAtOnce
+0x10013c1ba TractDeveloperGetYearsBetweenStyleChanges
+0x10013c1c6 TractDeveloperSetYearsBetweenStyleChanges
+0x10013c1d2 TractDeveloperGetGZCLSID
+0x10013c1de TractDeveloperGetGZCLSIDThunk
+0x10013c550 TractDeveloperCandidateLotConstruct
+0x100135ae2 TractDeveloperCandidateLotDestruct
+0x10013c40a TractDeveloperGrowthRecordDestruct
+0x10013d008 TractDeveloperBuildAttemptRecordCopyConstruct
+0x10013c49a LotSizesFilterQueryInterface
+0x10013c4a2 LotSizesFilterAddRef
+0x10013c4ae LotSizesFilterRelease
+0x10013c4ba LotSizesFilterDestruct
+0x10013c4c0 LotSizesFilterDestructDeleting
+0x10013c4ca LotSizesFilterIsLotConfigurationIncluded
+PARTIAL:
+0x100136070 TractDeveloperGrow - only the per-pass setup is ported (growth developer construction info, capacity/population/max-capacity/desirability cells, the attempt limits, the current GrowthAttemptRecord and its 13x28 histograms, simulator day, object id); the pass loop needs TakeOverAbandoned + the three ListCandidateLots_* passes and cISC4GrowthDeveloper's growth/decline lists (unrecovered), so it returns the (zero) built capacity without running
+0x1001369ae TractDeveloperTakeOverAbandoned - needs the growth developer's growth list and the fire-protection / aura / plumbing simulator seams plus cISC4LotConfigurationFilter's per-lot checks; body returns 0
+0x1001377a0 TractDeveloperListCandidateLotsExisting - needs cISC4BuildingDevelopmentSimulator::GrowthStageFitsInZone (growth planner, unrecovered) and the lot-configuration compatibility predicate; body returns 0
+0x100137b04 TractDeveloperListCandidateLotsAggregation - same dependencies plus IsAggregationLegal; body returns 0
+0x100137f44 TractDeveloperListCandidateLotsSubdivision - same dependencies; body returns 0
+0x10013845e TractDeveloperBuildFarm - needs the lot manager's surrounding-lot ring, the exemplar/occupant placement calls and cISC4Demolition; body returns 0
+0x1001388c4 TractDeveloperBuild - needs PickBuilding / PerformAggregation / PerformSubdivision / cISC4Demolition (SL::spDemolition) and the lot developer's StartConstruction; body returns 0
+0x100138b10 TractDeveloperIsLotSuitable - needs cISC4BuildingDevelopmentSimulator::BuildingFitsInZone (growth planner, unrecovered) and the lot configuration lookups; body returns 0
+0x1001392fa TractDeveloperPickBuilding - needs the occupant family/group tables (IsOccupantGroup) and the building compatibility predicate; body returns 0
+0x100139dd2 TractDeveloperPerformAggregation - needs cISC4LotConfiguration object ids and the lot developer's construction call; body returns a null lot
+0x10013a04e TractDeveloperPerformSubdivision - needs the lot developer's construction call and the demolition path; body is empty
+0x10013a5f2 TractDeveloperFindNetworks - needs the city's network manager (city vslot 0x140 -> network vslot 0x50 GetNetworkAt and the cell's vslot 0xb0 type test) as an ITractNetworkManagerApi seam that no recovered class implements yet; body is empty
+0x10013aa5c TractDeveloperIsLotConfigurationCompatible - needs TestForCornerLot, FindExistingCapacity and the lot configuration object tables; body returns 0
+0x10013ae4a TractDeveloperIsAggregationLegal - needs the lot manager ring and the zone/terrain queries; body returns false
+0x10013b318 TractDeveloperTestForCornerLot - needs the lot configuration objects and the network seam; body returns false
+0x10013b436 TractDeveloperIsBuildingCompatible - needs the occupant group/type tables (IsOccupantGroup) and the lot configuration objects; body returns false
+0x10013beb6 TractDeveloperUpdatePopulation - needs cISC4LotManager::GetLotsInCellRect (vslot 0x38) and the cISC4BuildingOccupant occupant interface (slots 0x130/0x148/0x1a0/0x1b8) of the building occupant path, unrecovered; body leaves the population untouched
+SKIPPED:

@@ -1,0 +1,941 @@
+// cSC4TractDeveloper — see TractDeveloper.h for the layout, the three COM views and the list of quirks.
+//
+// Every call outside the object goes through ITractDeveloperHost (one method per original call, with
+// its slot); cSC4Lot and cSC4LotConfiguration are used directly through the recovered methods of
+// Lot.h / LotConfiguration.h. The comments name the original vtable slot of every such call.
+//
+// The growth pass itself (Grow's candidate collection and build loop, TakeOverAbandoned, the three
+// ListCandidateLots_* passes, Build/BuildFarm/PickBuilding, the compatibility predicates, FindNetworks
+// and UpdatePopulation) is PARTIAL: it needs cISC4GrowthDeveloper's growth/decline lists and the
+// occupant-manager occupant interface, neither of which is recovered. Grow still performs its whole
+// per-pass setup (the part that reads the growth developer and fills the attempt record), then stops;
+// the reason is repeated on every partial function below.
+
+#include "sc4/TractDeveloper.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstring>
+
+#include "sc4/LotConfiguration.h"
+#include "sc4/LotConfigurationManager.h"
+
+namespace sc4 {
+
+namespace {
+
+ITractDeveloperHost* g_host = nullptr;
+bool g_staticInitialized = false;          // mbStaticInitialized @ 0x100b7b... (set by the first Init)
+
+// The score weights of ScoreCandidateLots: three three-element float tables at 0x100a18e80,
+// 0x100a18e8c and 0x100a18e98, indexed by purpose - 1 (residential, commercial, industrial).
+constexpr float kNetworkWeight0[3] = {10.0f, 0.0f, -5.0f};
+constexpr float kNetworkWeight1[3] = {2.0f, -5.0f, -1.0f};
+constexpr float kNetworkWeight2[3] = {1.0f, -2.0f, -1.0f};
+
+constexpr std::uint32_t kGZIID_cIGZMessageTarget2 = 0x452294aa;
+constexpr std::uint32_t kTractMessageStyleTick = 0x66956817;   // DoMessage's only message
+constexpr std::int32_t kStyleTickMessageId1 = 6;               // simulator registration ids
+constexpr std::int32_t kStyleTickMessageId2 = 7;
+constexpr const char* kSimulatorName = "cSC4TractDeveloper";
+constexpr std::int32_t kDefaultYearsBetweenStyleChanges = 0x28;
+constexpr std::int32_t kDaysBeforeDecline = 0x3b;              // Decline: 3b < days since last change
+
+// The class-wide candidate pool (sPool / DAT_100b225a8 at 0x100b225a8, capacity at 0x100b225b0) and
+// the static default CandidateLot that NewCandidateLot copies over the popped object.
+std::vector<TractCandidateLot*>& CandidatePool() {
+    static std::vector<TractCandidateLot*> pool;
+    return pool;
+}
+
+const TractCandidateLot& CandidateTemplate() {
+    static const TractCandidateLot tmpl;
+    return tmpl;
+}
+
+}  // namespace
+
+// The cLotSizesFilter of the original (vtable 0x100b00378, 0x10013c4ca): the pass caches one per
+// {wealth, purpose} pair and hands it to the lot configuration manager, which keeps the configurations
+// whose purpose (+0x88) and wealth (+0x80) bits include those values.
+class cSC4TractDeveloper::LotSizesFilter final : public cISC4LotConfigurationFilter {
+public:
+    LotSizesFilter(int wealth, int purpose) : wealth_(wealth), purpose_(purpose) {}
+    // cISC4LotConfigurationFilter::Matches (the original's IsLotConfigurationIncluded, 0x10013c4ca).
+    bool Matches(cSC4LotConfiguration* configuration) override {
+        if (!configuration) return false;
+        if (!configuration->IsCompatibleWithPurposeType(purpose_)) return false;
+        return configuration->IsCompatibleWithWealthType(wealth_);
+    }
+    int Wealth() const { return wealth_; }
+    int Purpose() const { return purpose_; }
+
+private:
+    int wealth_ = 0;      // +0x08
+    int purpose_ = 0;     // +0x0c
+};
+
+ITractDeveloperHost* TractDeveloperHost() { return g_host; }
+void SetTractDeveloperHost(ITractDeveloperHost* host) { g_host = host; }
+
+//==================================================================================================
+// construction / COM
+//==================================================================================================
+
+cSC4TractDeveloper::cSC4TractDeveloper() {
+    // +0x18 initialised byte, +0x1c reference count and the ten service pointers are zeroed; +0x74 is
+    // an unused int; the tunable floats and the style flags are the defaults the original stores.
+    initialized_ = false;
+    refCount_ = 0;
+    messageServer_ = nullptr;
+    city_ = nullptr;
+    buildingDevelopment_ = nullptr;
+    landValue_ = nullptr;
+    lotConfigurationManager_ = nullptr;
+    lotDeveloper_ = nullptr;
+    lotManager_ = nullptr;
+    plumbing_ = nullptr;
+    power_ = nullptr;
+    traffic_ = nullptr;
+    zoneManager_ = nullptr;
+    reserved74_ = 0;
+    capacityFactor_ = 1.5f;          // 0x3fc00000
+    declineFactor_ = 0.0f;
+    buildBias_ = 1.2f;               // 0x3f99999a
+    capacityFactor2_ = 1.5f;
+    existingCapacityWeight_ = 1.0f;
+    abandonedCapacityWeight_ = 0.2f; // 0x3e4ccccd
+    aggregationPenalty_ = 10.0f;     // 0x41200000
+    subdivisionPenalty_ = 5.0f;      // 0x40a00000
+    populationJitter_ = 0.2f;
+    declineJitterLow_ = 0.01f;       // 0x3c23d70a
+    declineJitterHigh_ = 0.1f;       // 0x3dcccccd
+    allowTakeOver_ = true;
+    yearsBetweenStyleChanges_ = 0;
+    singleStyle_ = 1;                // +0x1c0 = 1 (IsUsingAllStylesAtOnce() == false)
+    styleIndex_ = 0;
+    styleYears_ = 0;
+}
+
+cSC4TractDeveloper::~cSC4TractDeveloper() {
+    // The original's destructor releases the containers only; it never releases the services (the
+    // caller must have run Shutdown). The pool and the cached filters are freed here so a test or a
+    // shutdown-less caller does not leak them (the original leaks the filters, see the header).
+    for (TractCandidateLot* candidate : candidates_) delete candidate;
+    candidates_.clear();
+    ClearCandidatePool();
+    for (auto& entry : filterCache_) delete entry.second;
+    filterCache_.clear();
+}
+
+bool cSC4TractDeveloper::QueryInterface(std::uint32_t iid, void** out) {
+    if (!out) return false;
+    if (iid == 1 || iid == kGZIID_cISC4TractDeveloper) {
+        *out = static_cast<cISC4TractDeveloper*>(this);
+    } else if (iid == kGZIID_cIGZMessageTarget2) {
+        *out = static_cast<cIGZMessageTarget2*>(this);
+    } else if (iid == kGZIID_cISC4TractDeveloperSerializable) {
+        *out = static_cast<cIGZSerializable*>(this);
+    } else {
+        return false;
+    }
+    AddRef();
+    return true;
+}
+
+std::uint32_t cSC4TractDeveloper::AddRef() { return ++refCount_; }
+
+std::uint32_t cSC4TractDeveloper::Release() {
+    if (refCount_ < 2) {
+        Shutdown();
+        delete this;
+        return 0;
+    }
+    return --refCount_;
+}
+
+//==================================================================================================
+// Init / Shutdown / tunables
+//==================================================================================================
+
+bool cSC4TractDeveloper::Init() {
+    if (initialized_) return true;
+    if (!g_staticInitialized) g_staticInitialized = true;
+    ReadSimulatorTunableValues();
+    ITractDeveloperHost* host = g_host;
+    if (!host) return false;
+    if (!city_) { city_ = host->City(); if (!city_) return false; city_->AddRef(); }
+    if (!buildingDevelopment_) {
+        buildingDevelopment_ = host->BuildingDevelopment();
+        if (!buildingDevelopment_) return false;
+        buildingDevelopment_->AddRef();
+    }
+    if (!landValue_) {
+        landValue_ = host->LandValue();
+        if (!landValue_) return false;
+        landValue_->AddRef();
+    }
+    if (!lotDeveloper_) {
+        lotDeveloper_ = host->LotDeveloper();
+        if (!lotDeveloper_) return false;
+        lotDeveloper_->AddRef();
+    }
+    if (!lotConfigurationManager_) {
+        lotConfigurationManager_ = host->LotConfigurationManager();
+        if (!lotConfigurationManager_) return false;
+        lotConfigurationManager_->AddRef();
+    }
+    if (!lotManager_) {
+        lotManager_ = host->LotManager();
+        if (!lotManager_) return false;
+        lotManager_->AddRef();
+    }
+    if (!plumbing_) {
+        plumbing_ = host->Plumbing();
+        if (!plumbing_) return false;
+        plumbing_->AddRef();
+    }
+    if (!power_) {
+        power_ = host->Power();
+        if (!power_) return false;
+        power_->AddRef();
+    }
+    if (!traffic_) {
+        traffic_ = host->Traffic();
+        if (!traffic_) return false;
+        traffic_->AddRef();
+    }
+    if (!zoneManager_) {
+        zoneManager_ = host->ZoneManager();
+        if (!zoneManager_) return false;
+        zoneManager_->AddRef();
+    }
+    // SL::spSimulator->vslot 0x98(this + 8, 6/7, "cSC4TractDeveloper", 2): the two messages the
+    // developer ticks on. The registration is skipped when there is no simulator at all.
+    if (host->SimulatorPresent()) {
+        host->RegisterSimulatorCallback(kStyleTickMessageId1, static_cast<cIGZMessageTarget2*>(this),
+                                        kSimulatorName);
+        host->RegisterSimulatorCallback(kStyleTickMessageId2, static_cast<cIGZMessageTarget2*>(this),
+                                        kSimulatorName);
+    }
+    if (!messageServer_) {
+        messageServer_ = host->MessageServer();
+        if (!messageServer_) return false;
+        messageServer_->AddRef();
+    }
+    initialized_ = true;
+    return true;
+}
+
+void cSC4TractDeveloper::ReadSimulatorTunableValues() {
+    ITractDeveloperHost* host = g_host;
+    if (!host) return;
+    TractTunables tunables;
+    tunables.capacityFactor = capacityFactor_;
+    tunables.declineFactor = declineFactor_;
+    tunables.buildBias = buildBias_;
+    tunables.capacityFactor2 = capacityFactor2_;
+    tunables.existingCapacityWeight = existingCapacityWeight_;
+    tunables.abandonedCapacityWeight = abandonedCapacityWeight_;
+    tunables.aggregationPenalty = aggregationPenalty_;
+    tunables.subdivisionPenalty = subdivisionPenalty_;
+    tunables.populationJitter = populationJitter_;
+    tunables.declineJitterLow = declineJitterLow_;
+    tunables.declineJitterHigh = declineJitterHigh_;
+    tunables.allowTakeOver = allowTakeOver_;
+    host->ReadTunables(tunables);   // resource manager -> exemplar (0xe7e2c2db 6534284a / 0xe8da7677)
+    capacityFactor_ = tunables.capacityFactor;
+    declineFactor_ = tunables.declineFactor;
+    buildBias_ = tunables.buildBias;
+    capacityFactor2_ = tunables.capacityFactor2;
+    existingCapacityWeight_ = tunables.existingCapacityWeight;
+    abandonedCapacityWeight_ = tunables.abandonedCapacityWeight;
+    aggregationPenalty_ = tunables.aggregationPenalty;
+    subdivisionPenalty_ = tunables.subdivisionPenalty;
+    populationJitter_ = tunables.populationJitter;
+    declineJitterLow_ = tunables.declineJitterLow;
+    declineJitterHigh_ = tunables.declineJitterHigh;
+    allowTakeOver_ = tunables.allowTakeOver;
+    tunableStyles_ = tunables.styles;                 // +0xa8
+    if (activeStyles_.empty()) {                      // +0x1a0 empty
+        styleIndex_ = 0;
+        activeStyles_ = tunableStyles_;
+    }
+    if (activeStyles_.size() <= static_cast<std::size_t>(styleIndex_)) styleIndex_ = 0;
+    if (yearsBetweenStyleChanges_ == 0) {             // +0xc0 == 0
+        yearsBetweenStyleChanges_ = kDefaultYearsBetweenStyleChanges;
+        if (tunables.hasYearsBetweenStyleChanges) yearsBetweenStyleChanges_ = tunables.yearsBetweenStyleChanges;
+    }
+}
+
+bool cSC4TractDeveloper::Shutdown() {
+    if (!initialized_) return true;
+    initialized_ = false;
+    if (messageServer_) {
+        messageServer_->Release();
+        messageServer_ = nullptr;
+    }
+    if (city_) {
+        // SL::spCity->vslot 0x190->vslot 0xa8(this + 8): the developer registry forgets this developer.
+        city_->RemoveDeveloper(static_cast<cIGZMessageTarget2*>(this));
+        city_->Release();
+        city_ = nullptr;
+    }
+    if (buildingDevelopment_) { buildingDevelopment_->Release(); buildingDevelopment_ = nullptr; }
+    if (landValue_) { landValue_->Release(); landValue_ = nullptr; }
+    if (lotDeveloper_) { lotDeveloper_->Release(); lotDeveloper_ = nullptr; }
+    if (lotConfigurationManager_) {
+        for (auto& entry : filterCache_) {
+            if (g_host) g_host->UnregisterLotConfigurationFilter(entry.second);
+            delete entry.second;      // cLotSizesFilter::Release returns 1 without deleting (quirk)
+        }
+        filterCache_.clear();
+        lotConfigurationManager_->Release();
+        lotConfigurationManager_ = nullptr;
+    }
+    if (lotManager_) { lotManager_->Release(); lotManager_ = nullptr; }
+    if (plumbing_) { plumbing_->Release(); plumbing_ = nullptr; }
+    if (power_) { power_->Release(); power_ = nullptr; }
+    if (traffic_) { traffic_->Release(); traffic_ = nullptr; }
+    if (zoneManager_) { zoneManager_->Release(); zoneManager_ = nullptr; }
+    FreeGrowthDatabase();
+    for (TractCandidateLot* candidate : candidates_) delete candidate;
+    candidates_.clear();
+    ClearCandidatePool();
+    return true;
+}
+
+//==================================================================================================
+// stream
+//==================================================================================================
+
+bool cSC4TractDeveloper::Write(cIGZOStream& stream) const {
+    stream.SetUint16(3);                                              // version
+    stream.SetSint32(styleIndex_);                                    // +0x1b8
+    stream.SetSint32(styleYears_);                                    // +0x1bc
+    stream.SetUint8(singleStyle_);                                    // +0x1c0 (written as stored)
+    stream.SetUint32(static_cast<std::uint32_t>(activeStyles_.size()));
+    for (std::uint32_t style : activeStyles_) stream.SetUint32(style);
+    stream.SetSint32(yearsBetweenStyleChanges_);                      // +0xc0
+    return !stream.GetError();
+}
+
+bool cSC4TractDeveloper::Read(cIGZIStream& stream) {
+    std::uint16_t version = 0;
+    if (!stream.GetUint16(version)) return false;
+    if (version >= 4) return false;   // a future version is rejected (0x100135c32 returns 0)
+    if (!stream.GetSint32(styleIndex_)) return false;
+    if (!stream.GetSint32(styleYears_)) return false;
+    if (version < 2) {
+        // Version 1 did not store the style set: the three default styles are installed and the object
+        // is put in single-style mode (the original sets +0x1c0 = 1).
+        singleStyle_ = 1;
+        activeStyles_.resize(3);
+        activeStyles_[0] = 0x2000;
+        activeStyles_[1] = 0x2001;
+        activeStyles_[2] = 0x2002;
+    } else {
+        std::uint8_t flag = 0;
+        if (!stream.GetUint8(flag)) return false;
+        singleStyle_ = flag != 0;
+        std::uint32_t count = 0;
+        if (!stream.GetUint32(count)) return false;
+        activeStyles_.resize(count);   // quirk: the stored count is not validated
+        for (std::uint32_t i = 0; i < count; ++i) {
+            if (!stream.GetUint32(activeStyles_[i])) return false;
+        }
+    }
+    if (version > 2) {
+        if (!stream.GetSint32(yearsBetweenStyleChanges_)) return false;
+    }
+    return !stream.GetError();
+}
+
+bool cSC4TractDeveloper::DoMessage(cIGZMessage2* message) {
+    if (!message) return true;
+    if (message->GetType() != kTractMessageStyleTick) return true;
+    const std::int32_t years = styleYears_;
+    styleYears_ = years + 1;
+    if (yearsBetweenStyleChanges_ <= years + 1) {
+        styleYears_ = 0;
+        const std::int32_t index = styleIndex_;
+        styleIndex_ = index + 1;
+        if (static_cast<std::uint64_t>(activeStyles_.size()) <= static_cast<std::uint64_t>(index) + 1u) {
+            styleIndex_ = 0;
+        }
+    }
+    return true;
+}
+
+//==================================================================================================
+// styles
+//==================================================================================================
+
+std::uint32_t cSC4TractDeveloper::GetCurrentStyle() const {
+    if (activeStyles_.empty()) return 0;
+    return activeStyles_[static_cast<std::size_t>(styleIndex_)];
+}
+
+void cSC4TractDeveloper::SetActiveStyles(const std::vector<std::uint32_t>& styles) {
+    const int index = styleIndex_;
+    int newIndex = 0;
+    if (static_cast<std::size_t>(index) < styles.size()) newIndex = index;
+    for (std::size_t i = 0; i < styles.size(); ++i) {
+        if (!activeStyles_.empty() && styles[i] == activeStyles_[static_cast<std::size_t>(index)]) {
+            newIndex = static_cast<int>(i);
+        }
+    }
+    activeStyles_ = styles;
+    styleIndex_ = newIndex;
+}
+
+//==================================================================================================
+// growth database bookkeeping
+//==================================================================================================
+
+void cSC4TractDeveloper::FreeBuildAttempt(BuildAttemptRecord& record) {
+    for (CandidateLot* candidate : record.candidates) delete candidate;
+    record.candidates.clear();
+}
+
+void cSC4TractDeveloper::FreeGrowthAttempt(GrowthAttemptRecord& record) {
+    for (BuildAttemptRecord& attempt : record.attempts) FreeBuildAttempt(attempt);
+    record.attempts.clear();
+    record.histograms.clear();
+}
+
+void cSC4TractDeveloper::FreeGrowthDatabase() {
+    for (auto& byType : growthDatabase_) {
+        for (auto& keyed : byType.second) {
+            FreeGrowthAttempt(keyed.second.grown);
+            FreeGrowthAttempt(keyed.second.failed);
+        }
+    }
+    growthDatabase_.clear();
+}
+
+void cSC4TractDeveloper::RecordBuildAttempt() {
+    // vslot 0x1c8: the attempt database only exists in the cheat/debug build.
+    if (!buildingDevelopment_ || !buildingDevelopment_->CheatCodesEnabled()) return;
+    BuildAttemptRecord record;
+    record.attempted = attempted_;                       // this[0x114]
+    record.configurations = configurations_;             // +0x130 copy
+    record.configurationData = configurationData_;       // this+0x160
+    record.configurationId = objectId_;                  // this+0x168
+    record.outcome0 = outcome0_;                         // this+0x16c
+    record.outcome1 = outcome1_;                         // this+0x170
+    record.outcome2 = outcome2_;                         // this+0x174
+    record.outcomeCount = outcomeList_ ? static_cast<std::int32_t>(outcomeList_->size()) : 0;
+    record.candidates.reserve(candidates_.size());
+    for (CandidateLot* candidate : candidates_) {
+        // The original deep-copies every candidate lot (0x100137018); the copies are freed by
+        // FreeBuildAttempt.
+        record.candidates.push_back(new CandidateLot(*candidate));
+    }
+    currentAttempt_.attempts.push_back(std::move(record));
+}
+
+void cSC4TractDeveloper::RecordGrowthAttempt() {
+    if (!buildingDevelopment_ || !buildingDevelopment_->CheatCodesEnabled()) return;
+    if (!growthDeveloper_) return;
+    const std::uint32_t type = static_cast<std::uint32_t>(growthDeveloper_->GetDeveloperType());  // vslot 0x30
+    GrowthRecord& record = growthDatabase_[type][std::pair<int, int>(tractX_, tractZ_)];
+    // A built pass replaces the *grown* attempt, a pass that built nothing replaces the *failed* one;
+    // the other record keeps its own last attempt (0x1001372b4 frees only the target's nodes).
+    const bool built = builtCount_ >= 1;
+    GrowthAttemptRecord& target = built ? record.grown : record.failed;
+    FreeGrowthAttempt(target);
+    if (&target != &currentAttempt_) target = currentAttempt_;
+}
+
+const GrowthRecord* cSC4TractDeveloper::GetLastSuccessfulBuild(
+    int x, int z, const std::list<std::uint32_t>& developerTypes) const {
+    if (!buildingDevelopment_ || !buildingDevelopment_->CheatCodesEnabled()) return nullptr;
+    if (!g_host) return nullptr;
+    const GrowthRecord* best = nullptr;
+    std::uint32_t bestDay = 0;
+    for (std::uint32_t type : developerTypes) {
+        auto byType = growthDatabase_.find(type);
+        if (byType == growthDatabase_.end()) continue;
+        IGrowthDeveloperApi* developer = g_host->GrowthDeveloper(type);   // building dev vslot 0x108
+        if (!developer) continue;
+        ITractValueMap* map = developer->GetDesirabilityMap();            // vslot 0x68
+        const int shift = map ? map->GetTractShift() : 0;                 // map vslot 0x58
+        auto found = byType->second.find(std::pair<int, int>(x >> shift, z >> shift));
+        if (found == byType->second.end()) continue;
+        const std::uint32_t day = static_cast<std::uint32_t>(found->second.grown.day);
+        if (bestDay < day) {
+            bestDay = day;
+            best = &found->second;
+        }
+    }
+    return best;
+}
+
+const GrowthAttemptRecord* cSC4TractDeveloper::GetLastFailedBuild(int x, int z,
+                                                                 std::uint32_t developerType) const {
+    if (!buildingDevelopment_ || !buildingDevelopment_->CheatCodesEnabled()) return nullptr;
+    if (!g_host) return nullptr;
+    auto byType = growthDatabase_.find(developerType);
+    if (byType == growthDatabase_.end()) return nullptr;
+    IGrowthDeveloperApi* developer = g_host->GrowthDeveloper(developerType);
+    if (!developer) return nullptr;
+    ITractValueMap* map = developer->GetDesirabilityMap();
+    const int shift = map ? map->GetTractShift() : 0;
+    auto found = byType->second.find(std::pair<int, int>(x >> shift, z >> shift));
+    if (found == byType->second.end()) return nullptr;
+    if (found->second.failed.day == 0) return nullptr;   // this+0xa0 == 0 in the node
+    return &found->second.failed;
+}
+
+//==================================================================================================
+// the tract pass
+//==================================================================================================
+
+void cSC4TractDeveloper::ListExistingLots() {
+    if (!growthDeveloper_ || !lotManager_ || !g_host) return;
+    ITractValueMap* map = growthDeveloper_->GetDesirabilityMap();   // vslot 0x68
+    if (!map) return;
+    const int shift = map->GetTractShift();                        // map vslot 0x58
+    // The original walks the tract's city cells with a cRZRandomIterator (see the header note); the
+    // set it fills does not depend on the order, so the host supplies the iteration.
+    g_host->ForEachCellInTract(tractX_, tractZ_, shift, [this](int x, int z) {
+        cSC4Lot* lot = lotManager_->GetLot(x, z, false);            // lot manager vslot 0x28
+        if (lot) existingLots_.insert(lot);
+    });
+}
+
+void cSC4TractDeveloper::GetBoundingRect(CandidateLot* candidate) {
+    if (!candidate) return;
+    if (candidate->rectX0 >= 0 && candidate->rectZ0 >= 0 && candidate->rectX1 >= 0 &&
+        candidate->rectZ1 >= 0) {
+        return;
+    }
+    int z1 = 0;
+    switch (candidate->facing) {
+    case 0:
+        candidate->rectX0 = (candidate->x + 1) - candidate->sizeX;
+        candidate->rectX1 = candidate->x;
+        candidate->rectZ0 = candidate->z;
+        z1 = candidate->z - 1 + candidate->sizeZ;
+        break;
+    case 1:
+        candidate->rectX0 = (candidate->x + 1) - candidate->sizeZ;
+        candidate->rectX1 = candidate->x;
+        candidate->rectZ0 = (candidate->z + 1) - candidate->sizeX;
+        z1 = candidate->z;
+        break;
+    case 2:
+        candidate->rectX0 = candidate->x;
+        candidate->rectX1 = candidate->x - 1 + candidate->sizeX;
+        candidate->rectZ0 = (candidate->z + 1) - candidate->sizeZ;
+        z1 = candidate->z;
+        break;
+    case 3:
+        candidate->rectX0 = candidate->x;
+        candidate->rectX1 = candidate->x - 1 + candidate->sizeZ;
+        candidate->rectZ0 = candidate->z;
+        z1 = candidate->z - 1 + candidate->sizeX;
+        break;
+    case -1:
+        // The facing was not set: take the lot's own footprint (lot vslots 0xb8/0xb0/0xa8/0x70).
+        if (candidate->lot) {
+            candidate->facing = candidate->lot->GetFacing();
+            candidate->lot->GetSize(candidate->sizeX, candidate->sizeZ);
+            candidate->lot->GetLocation(candidate->x, candidate->z);
+            candidate->lot->GetBoundingRect(&candidate->rectX0);
+        }
+        return;
+    default:
+        return;
+    }
+    candidate->rectZ1 = z1;
+}
+
+int cSC4TractDeveloper::FindExistingCapacity(CandidateLot* candidate) {
+    if (!candidate) return 0;
+    if (candidate->existingCapacity >= 0 && candidate->abandonedCapacity >= 0) return 0;
+    candidate->existingCapacity = 0;      // 8-byte store at +0x38
+    candidate->abandonedCapacity = 0;
+    candidate->maxGrowthStage = 0;        // 8-byte store at +0x40
+    candidate->maxWealth = 0;
+    const std::uint32_t developerType =
+        growthDeveloper_ ? static_cast<std::uint32_t>(growthDeveloper_->GetDeveloperType()) : 0;
+
+    auto accumulate = [this, candidate, developerType](cSC4Lot* lot) {
+        if (!lot) return;
+        // lot vslot 0x198: GetCapacity(developerType, ignoreState = true)
+        const std::uint16_t capacity = lot->GetCapacity(developerType, true);
+        // lot vslot 0x108: GetState(); 4 = abandoned
+        if (lot->GetState() == kLotStateAbandoned) {
+            candidate->abandonedCapacity += capacity;
+        } else {
+            candidate->existingCapacity += capacity;
+        }
+        // lot vslot 0x48: the lot configuration; its +0x58 growth stage.
+        const std::uint8_t stage = lot->GetLotConfiguration()
+                                       ? static_cast<const cSC4LotConfiguration*>(
+                                             static_cast<const void*>(lot->GetLotConfiguration()))->GetGrowthStage()
+                                       : 0;
+        if (candidate->maxGrowthStage < static_cast<std::int32_t>(stage)) {
+            candidate->maxGrowthStage = stage;
+        }
+        // lot vslot 0x170: GetBuildingType(false); building development vslot 0x138 profile.
+        const std::uint32_t buildingType = lot->GetBuildingType(false);
+        if (buildingType && buildingDevelopment_) {
+            const BuildingProfile& profile = buildingDevelopment_->GetBuildingProfile(buildingType);
+            // The original copies the profile's +0x04 (wealth, not capacity) into +0x44.
+            if (candidate->maxWealth < static_cast<std::int32_t>(profile.wealth)) {
+                candidate->maxWealth = static_cast<std::int32_t>(profile.wealth);
+            }
+        }
+    };
+
+    const std::int32_t kind = candidate->kind;
+    if (static_cast<std::uint32_t>(kind - 1) > 1u) {
+        if (kind == 3) {
+            for (cSC4Lot* neighbour : candidate->neighbours) accumulate(neighbour);
+            return 0;
+        }
+        if (kind != 4) return 0;
+    }
+    accumulate(candidate->lot);
+    return 0;
+}
+
+int cSC4TractDeveloper::ScoreCandidateLots() {
+    const std::int32_t purpose = growthDeveloper_ ? growthDeveloper_->GetPurpose() : 0;   // vslot 0x38
+    float weight0 = 0, weight1 = 0, weight2 = 0;
+    if (static_cast<std::uint32_t>(purpose - 1) < 3u) {
+        weight0 = kNetworkWeight0[purpose - 1];
+        weight1 = kNetworkWeight1[purpose - 1];
+        weight2 = kNetworkWeight2[purpose - 1];
+    }
+    for (CandidateLot* candidate : candidates_) {
+        candidate->score = 0;
+        float score = 0;
+        if (candidate->kind != 1) {
+            FindExistingCapacity(candidate);
+            score = static_cast<float>(candidate->abandonedCapacity) * abandonedCapacityWeight_ +
+                    static_cast<float>(candidate->existingCapacity) * existingCapacityWeight_ +
+                    candidate->score;
+            candidate->score = score;
+            if (candidate->kind == 4) {
+                score += subdivisionPenalty_;
+                candidate->score = score;
+            } else if (candidate->kind == 3) {
+                score += static_cast<float>(static_cast<std::int32_t>(candidate->neighbours.size()) - 1) *
+                         aggregationPenalty_;
+                candidate->score = score;
+            }
+        }
+        if (weight0 != 0.0f || std::isnan(weight0)) {
+            for (int i = 0; i < 4; ++i) {
+                score += static_cast<float>(candidate->otherNetworks[static_cast<std::size_t>(i)]) * weight0 +
+                         static_cast<float>(candidate->highways[static_cast<std::size_t>(i)]) * weight1 +
+                         static_cast<float>(candidate->streets[static_cast<std::size_t>(i)]) * weight2;
+                candidate->score = score;
+            }
+        }
+    }
+    return 0;
+}
+
+bool cSC4TractDeveloper::CompareCandidateLots(const CandidateLot* a, const CandidateLot* b) {
+    return a->score <= b->score && b->score != a->score;
+}
+
+CandidateLot* cSC4TractDeveloper::NewCandidateLot() {
+    // The pool starts empty: ten candidates are allocated at once (0x100138eae).
+    if (CandidatePool().empty()) {
+        for (int i = 0; i < 10; ++i) CandidatePool().push_back(new CandidateLot());
+    }
+    CandidateLot* candidate = CandidatePool().back();
+    CandidatePool().pop_back();
+    *candidate = CandidateTemplate();   // copy the static default over the popped object
+    return candidate;
+}
+
+void cSC4TractDeveloper::DeleteCandidateLot(CandidateLot* candidate) {
+    if (!candidate) return;
+    CandidatePool().push_back(candidate);
+}
+
+void cSC4TractDeveloper::ClearCandidateList(std::vector<CandidateLot*>& list) {
+    while (!list.empty()) {
+        CandidatePool().push_back(list.back());
+        list.pop_back();
+    }
+}
+
+std::size_t cSC4TractDeveloper::CandidatePoolSize() const { return CandidatePool().size(); }
+
+void cSC4TractDeveloper::ClearCandidatePool() {
+    for (CandidateLot* candidate : CandidatePool()) delete candidate;
+    CandidatePool().clear();
+}
+
+//==================================================================================================
+// the configuration pass
+//==================================================================================================
+
+int cSC4TractDeveloper::IsLotConfigurationSuitable(cSC4LotConfiguration* configuration) {
+    int outcome = kTractOutcomeNone;
+    if (!configuration || !growthDeveloper_ || !buildingDevelopment_) return outcome;
+    // cISC4LotConfiguration vslot 0x88: purpose bits; vslot 0x80: wealth bits.
+    if (!configuration->IsCompatibleWithPurposeType(growthDeveloper_->GetPurpose())) {
+        outcome = kTractOutcomePurposeMismatch;
+    } else if (!configuration->IsCompatibleWithWealthType(growthDeveloper_->GetWealth())) {
+        outcome = kTractOutcomeWealthMismatch;
+    } else {
+        const std::int32_t growthStage = configuration->GetGrowthStage();   // vslot 0x58
+        if (static_cast<std::int32_t>(profileFlag_) < growthStage) {
+            outcome = kTractOutcomeGrowthStageTooHigh;
+        } else {
+            const std::int32_t purpose = growthDeveloper_->GetPurpose();
+            bool styleChecked = false;
+            bool styleOk = true;
+            if (static_cast<std::uint32_t>(purpose - 1) < 3u && !activeStyles_.empty()) {
+                styleChecked = true;
+                if (singleStyle_ == 0) {
+                    // "use all styles at once": any active style is enough (vslot 0x90).
+                    styleOk = false;
+                    for (std::uint32_t style : activeStyles_) {
+                        if (configuration->IsCompatibleWithStyle(style)) { styleOk = true; break; }
+                    }
+                } else {
+                    const std::size_t index = static_cast<std::size_t>(styleIndex_);
+                    styleOk = index < activeStyles_.size() &&
+                              configuration->IsCompatibleWithStyle(activeStyles_[index]);
+                }
+            }
+            if (styleChecked && !styleOk) {
+                outcome = kTractOutcomeStyleMismatch;
+            } else if (!configuration->GetPrimaryBuildingConfigurationObject()) {
+                outcome = kTractOutcomeNone;                    // vslot 0xc0 == null: outcome 0
+            } else {
+                const std::uint32_t minCapacity =
+                    growthStage != 1 ? configuration->GetMinBuildingCapacity() : 0;   // vslot 0x60
+                const std::uint32_t maxCapacity = configuration->GetMaxBuildingCapacity();  // vslot 0x68
+                if (attempted_ == 0 && static_cast<std::int32_t>(maxCapacity) < maximumBuildAttempts_) {
+                    outcome = kTractOutcomeCapacityTooLow;
+                } else if (capacity_ + secondAttemptLimit_ < static_cast<std::int32_t>(minCapacity)) {
+                    outcome = kTractOutcomeCapacityTooHigh;
+                } else {
+                    outcome = kTractOutcomeSuccess;
+                }
+            }
+        }
+    }
+    // The original indexes the 13x28 table directly; the port ignores a call made before Grow sized it.
+    if (currentAttempt_.histograms.size() > kHistogramSuitable &&
+        currentAttempt_.histograms[kHistogramSuitable].size() > static_cast<std::size_t>(outcome)) {
+        ++currentAttempt_.histograms[kHistogramSuitable][static_cast<std::size_t>(outcome)];
+    }
+    return outcome;
+}
+
+int cSC4TractDeveloper::ListPossibleLotConfigurations() {
+    if (!growthDeveloper_ || !g_host) return kTractOutcomeNone;
+    const int wealth = growthDeveloper_->GetWealth();      // vslot 0x40
+    const int purpose = growthDeveloper_->GetPurpose();    // vslot 0x38
+    const std::pair<int, int> key(wealth, purpose);
+    auto entry = filterCache_.find(key);
+    if (entry == filterCache_.end()) {
+        auto* filter = new LotSizesFilter(wealth, purpose);
+        entry = filterCache_.emplace(key, filter).first;
+        g_host->RegisterLotConfigurationFilter(filter);   // manager vslot 0x90
+    }
+    std::vector<cSC4LotConfiguration*> configurations;
+    const int count = g_host->LotConfigurationsByFilter(configurations, entry->second);  // vslot 0x48
+    int best = 0;
+    if (count == 0) {
+        best = kTractOutcomeNoConfiguration;
+    } else if (configurations.empty()) {
+        best = kTractOutcomeNone;
+    } else {
+        for (cSC4LotConfiguration* configuration : configurations) {
+            const int outcome = IsLotConfigurationSuitable(configuration);
+            if (currentAttempt_.histograms.size() > kHistogramConfigurations &&
+                currentAttempt_.histograms[kHistogramConfigurations].size() >
+                    static_cast<std::size_t>(outcome)) {
+                ++currentAttempt_.histograms[kHistogramConfigurations][static_cast<std::size_t>(outcome)];
+            }
+            if (best < outcome) best = outcome;
+            if (outcome == kTractOutcomeSuccess) configurations_.insert(configuration);
+            configuration->Release();   // the manager's reference; the set keeps the bare pointer
+        }
+    }
+    return best;
+}
+
+const cISC4LotConfigurationFilter* cSC4TractDeveloper::CachedFilter(int wealth, int purpose) const {
+    auto entry = filterCache_.find(std::pair<int, int>(wealth, purpose));
+    return entry == filterCache_.end() ? nullptr : entry->second;
+}
+
+//==================================================================================================
+// Grow / Decline / UpdatePopulation
+//==================================================================================================
+
+int cSC4TractDeveloper::Grow(const GrowthProfile& profile, std::list<int>& outcomes, bool& declined) {
+    IGrowthDeveloperApi* developer = profile.developer;
+    if (!developer || !g_host || !buildingDevelopment_) {
+        declined = false;
+        return 0;
+    }
+    tractX_ = profile.tractX;
+    tractZ_ = profile.tractZ;
+    profileFlag_ = profile.growthStage;
+    growthDeveloper_ = developer;
+    developer->GetConstructionInfo(construction_);                     // vslot 0x48 -> this+0xdc
+    ITractValueMap* capacityMap = developer->GetCapacityMap();         // vslot 0x70
+    capacity_ = capacityMap ? capacityMap->GetCellValue(tractX_, tractZ_) : 0;   // map vslot 0xb0
+    ITractDemandApi* demand = developer->GetSourceDemand();            // vslot 0x90
+    const float demandValue = demand ? demand->GetValue() : 0.0f;      // demand vslot 0x60
+    int attempts = 1;
+    if (demandValue > 0.0f) attempts = static_cast<int>(demandValue);
+    maximumBuildAttempts_ = attempts;
+    secondAttemptLimit_ = static_cast<std::int32_t>(static_cast<float>(attempts) * capacityFactor_);
+    builtCount_ = 0;                                                   // 8-byte store at +0x10c
+    configurationData_ = 0;                                            // 8-byte store at +0x160
+    outcomeList_ = &outcomes;                                          // +0x178
+    noGrowth_ = 0;                                                     // +0x180
+    const std::int32_t day = g_host->SimulatorDay();                   // cRZDate of simulator vslot 0x30
+    currentAttempt_.day = day;                                         // +0x1e8
+    currentAttempt_.developer = developer;                             // +0x1f0
+    currentAttempt_.tractX = tractX_;                                  // +0x1f8
+    currentAttempt_.tractZ = tractZ_;                                  // +0x1fc
+    ITractValueMap* populationMap = developer->GetPopulationMap();     // vslot 0x78
+    currentAttempt_.population = populationMap ? populationMap->GetCellValue(tractX_, tractZ_) : 0;
+    currentAttempt_.reserved24 = 0;
+    currentAttempt_.capacity = capacity_;                              // +0x208
+    ITractValueMap* maxCapacityMap = developer->GetMaxCapacityMap();   // vslot 0x80
+    currentAttempt_.maxCapacity = maxCapacityMap ? maxCapacityMap->GetCellValue(tractX_, tractZ_) : 0;
+    ITractValueMap* desirabilityMap = developer->GetDesirabilityMap(); // vslot 0x68
+    currentAttempt_.desirability =
+        desirabilityMap ? desirabilityMap->GetCellValue(tractX_, tractZ_) : 0;
+    currentAttempt_.maximumBuilds = maximumBuildAttempts_;             // +0x214
+    currentAttempt_.objectId = buildingDevelopment_->NextObjectId();   // building dev vslot 0x180
+    currentAttempt_.attempts.clear();                                  // +0x220
+    currentAttempt_.histograms.assign(kHistogramBucketCount, std::vector<std::uint32_t>(kTractOutcomeSlots, 0));
+
+    // PARTIAL (0x100136070): the pass loop is not recovered. It needs TakeOverAbandoned, the three
+    // ListCandidateLots_* passes, ScoreCandidateLots (recovered) and Build/BuildFarm, and those need
+    // cISC4GrowthDeveloper's growth list (unrecovered) plus the occupant-manager occupant interface.
+    // The original runs the loop at most n*n+1 times (n = the desirability map's tract size), records
+    // the growth attempt and returns the built capacity; this port stops after the setup above.
+    declined = noGrowth_ != 0;
+    return builtCount_;
+}
+
+int cSC4TractDeveloper::Decline(const GrowthProfile& profile) {
+    IGrowthDeveloperApi* developer = profile.developer;
+    if (!developer || !g_host || !lotManager_ || !buildingDevelopment_ || !lotDeveloper_) return 0;
+    ITractValueMap* map = developer->GetDesirabilityMap();   // vslot 0x68
+    if (!map) return 0;
+    const int shift = map->GetTractShift();                  // map vslot 0x58
+    const std::int32_t purpose = developer->GetPurpose();    // vslot 0x38
+    const std::int32_t wealth = developer->GetWealth();      // vslot 0x40
+    const std::uint32_t developerType = static_cast<std::uint32_t>(developer->GetDeveloperType());  // 0x30
+    int total = 0;
+    g_host->ForEachCellInTract(profile.tractX, profile.tractZ, shift, [&](int x, int z) {
+        cSC4Lot* lot = lotManager_->GetLot(x, z, false);     // lot manager vslot 0x28
+        if (!lot) return;
+        if (lot->GetState() != kLotStateLivable) return;      // lot vslot 0x108 == 3
+        if (lot->GetDaysSinceLastStateChange() <= kDaysBeforeDecline) return;   // lot vslot 0x140
+        const std::uint32_t buildingType = lot->GetBuildingType(false);         // lot vslot 0x170
+        if (!buildingType) return;
+        const BuildingProfile& building = buildingDevelopment_->GetBuildingProfile(buildingType);  // 0x138
+        const std::int32_t lotWealth = lot->GetOccupantWealth();               // lot vslot 0x148
+        if (static_cast<std::int32_t>(building.purpose) != purpose) return;
+        if (lotWealth != wealth) return;
+        // lot vslot 0x198: GetCapacity(developerType, ignoreState = false)
+        const std::uint16_t capacity = lot->GetCapacity(developerType, false);
+        total += capacity;
+        lotDeveloper_->AbandonBuilding(lot, 6);   // lot developer vslot 0x40, VacateReason 6
+    });
+    return total;
+}
+
+void cSC4TractDeveloper::UpdatePopulation(const GrowthProfile& profile) {
+    // PARTIAL (0x10013beb6): the original lists every lot of the tract with
+    // cISC4LotManager::GetLotsInCellRect (lot manager vslot 0x38), asks each lot's building occupant
+    // for its type and capacity (cISC4BuildingOccupant slots 0x130/0x148/0x1a0) and rescales the
+    // population of the matching developer type with cRZRandom seeds derived from the tract
+    // coordinates. That needs the occupant-manager/occupant interfaces of the unrecovered building
+    // occupant path, so this port leaves the population untouched.
+    (void)profile;
+}
+
+//==================================================================================================
+// PARTIAL: the growth decisions themselves (see the file comment)
+//==================================================================================================
+
+int cSC4TractDeveloper::TakeOverAbandoned() { return 0; }        // PARTIAL (0x1001369ae)
+int cSC4TractDeveloper::ListCandidateLots_Existing() { return 0; }      // PARTIAL (0x1001377a0)
+int cSC4TractDeveloper::ListCandidateLots_Aggregation() { return 0; }   // PARTIAL (0x100137b04)
+int cSC4TractDeveloper::ListCandidateLots_Subdivision() { return 0; }   // PARTIAL (0x100137f44)
+
+int cSC4TractDeveloper::Build(CandidateLot* candidate) {         // PARTIAL (0x1001388c4)
+    (void)candidate;
+    return 0;
+}
+
+int cSC4TractDeveloper::BuildFarm(CandidateLot* candidate) {     // PARTIAL (0x10013845e)
+    (void)candidate;
+    return 0;
+}
+
+int cSC4TractDeveloper::IsLotSuitable(cSC4Lot* lot, bool param) {   // PARTIAL (0x100138b10)
+    (void)lot;
+    (void)param;
+    return 0;
+}
+
+int cSC4TractDeveloper::PickBuilding(CandidateLot* candidate) {  // PARTIAL (0x1001392fa)
+    (void)candidate;
+    return 0;
+}
+
+void cSC4TractDeveloper::PerformAggregation(CandidateLot* candidate, cSC4Lot*& out) {  // PARTIAL 0x100139dd2
+    (void)candidate;
+    out = nullptr;
+}
+
+void cSC4TractDeveloper::PerformSubdivision(CandidateLot* candidate) {   // PARTIAL (0x10013a04e)
+    (void)candidate;
+}
+
+void cSC4TractDeveloper::FindNetworks(CandidateLot* candidate) {         // PARTIAL (0x10013a5f2)
+    (void)candidate;
+}
+
+int cSC4TractDeveloper::IsLotConfigurationCompatible(cSC4LotConfiguration* configuration,
+                                                     CandidateLot* candidate, bool param) {  // PARTIAL 0x10013aa5c
+    (void)configuration;
+    (void)candidate;
+    (void)param;
+    return 0;
+}
+
+bool cSC4TractDeveloper::IsAggregationLegal(CandidateLot* candidate) {   // PARTIAL (0x10013ae4a)
+    (void)candidate;
+    return false;
+}
+
+bool cSC4TractDeveloper::TestForCornerLot(cSC4LotConfiguration* configuration,
+                                          CandidateLot* candidate) {      // PARTIAL (0x10013b318)
+    (void)configuration;
+    (void)candidate;
+    return false;
+}
+
+bool cSC4TractDeveloper::IsBuildingCompatible(std::uint32_t buildingType,
+                                              CandidateLot* candidate) {     // PARTIAL (0x10013b436)
+    (void)buildingType;
+    (void)candidate;
+    return false;
+}
+
+}  // namespace sc4

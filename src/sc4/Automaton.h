@@ -336,12 +336,12 @@ public:
     tAutomataState* FindState(std::uint32_t state) const;             // 0x1c8 @ 0x10010d0a6
     tAutomataState* PrevState(const tAutomataState* state) const;     // 0x1d0 @ 0x10010d0d4
     std::uint32_t GetBehavior() const;                                // 0x1d8 @ 0x10010d0f8
-    bool HandlePlayerDriveCommand(std::uint32_t command, bool on);    // 0x1e0 @ 0x1001096e0
+    virtual bool HandlePlayerDriveCommand(std::uint32_t command, bool on);    // 0x1e0 @ 0x1001096e0
     bool StartSFX(std::uint32_t sfx);                                 // 0x1e8 @ 0x10010d250
     bool StopSFX(std::uint32_t sfx);                                  // 0x1f0 @ 0x10010d336
     std::uint8_t GetPriority() const { return priority_; }            // 0x1f8 @ 0x1006d6bc0
     void SetPriority(std::uint8_t priority) { priority_ = priority; }  // 0x200 @ 0x1000e2540
-    bool HandleCollision(cSC4Automaton* other, const cS3DVector3& point);   // 0x208 @ 0x10010d400
+    virtual bool HandleCollision(cSC4Automaton* other, const cS3DVector3& point);   // 0x208 @ 0x10010d400
     void GetCollidePosition(cS3DVector3& out) const;                  // 0x210 @ 0x10010ba66
     IAutomataGroupTemplate* GetAutomataGroup() const;                 // 0x218 @ 0x10010de86
     void RegisterInGameDataRegistry();                                // 0x220 @ 0x10010c00a
@@ -394,17 +394,17 @@ public:
     bool DoIdleTick(float milliseconds);                              // 0x3b8 @ 0x1001083dc
     bool DoRandomWalkTick(float milliseconds);                        // 0x3c0 @ 0x10010840c
     bool DoPlopJumpTick(float milliseconds);                          // 0x3c8 @ 0x1001089f2
-    bool DoPlayerDriveTick(float milliseconds);                       // 0x3d0 @ 0x100108a8e
-    bool DoBumpedTick(float milliseconds);                            // 0x3d8 @ 0x1001092f8
+    virtual bool DoPlayerDriveTick(float milliseconds);               // 0x3d0 @ 0x100108a8e
+    virtual bool DoBumpedTick(float milliseconds);                    // 0x3d8 @ 0x1001092f8
     bool DoMagnetTick(float milliseconds);                            // 0x3e0 @ 0x1001093ce
     bool DoScriptedTick(float milliseconds);                          // 0x3e8 @ 0x1001095a4
     bool DoAttachAnimTick(float milliseconds);                        // 0x3f0 @ 0x1001095ba
-    bool DoCollideTick(float milliseconds);                           // 0x3f8 @ 0x10010930e
-    bool TranslatePlayerDriveCommands(tAutomataStatePlayerDrive* state, float milliseconds);   // 0x400
+    virtual bool DoCollideTick(float milliseconds);                   // 0x3f8 @ 0x10010930e
+    virtual bool TranslatePlayerDriveCommands(tAutomataStatePlayerDrive* state, float milliseconds);   // 0x400
     bool GetChaseVector(cS3DVector3& out) const;                      // 0x408 @ 0x10010bada
-    cSC4Automaton* GetCollidingAutomaton(float distance) { (void)distance; return nullptr; }   // 0x410
-    void RecalculateLeaders() {}                                      // 0x418 @ 0x10010bad4
-    float GetSpeedModifier() const;                                   // 0x420 @ 0x10010bb54
+    virtual cSC4Automaton* GetCollidingAutomaton(float distance) { (void)distance; return nullptr; }   // 0x410
+    virtual void RecalculateLeaders() {}                              // 0x418 @ 0x10010bad4
+    virtual float GetSpeedModifier() const;                           // 0x420 @ 0x10010bb54
     bool InitGhostModel();                                            // 0x428 @ 0x100108b64
     bool ShutdownGhostModel();                                        // 0x430 @ 0x100108ee0
     bool UpdateGhostModel();                                          // 0x438 @ 0x100108f8c

@@ -226,20 +226,20 @@ public:
     const char* GetDebugExtraText() const override;                // @ 0x10011a85e
 
     // ---- traffic interface (the original vtable slots in the comments) ----
-    bool DoPathTick(float milliseconds);                                    // 0x440 @ 0x10011696a
+    virtual bool DoPathTick(float milliseconds);                            // 0x440 @ 0x10011696a
     bool DoStraightLineTick(float milliseconds);                            // 0x448 @ 0x1001176d8
-    bool StartTrip(ITrafficAutomatonOccupant* occupant, std::uint32_t key, bool param3);   // 0x450 @ 0x100119db2
-    void SetPath(ITrafficAutomatonOccupant* occupant, std::uint32_t pathKey,
-                 const std::vector<cS3DVector3>* path, bool keepDestination);   // 0x458 @ 0x100117dbe
+    virtual bool StartTrip(ITrafficAutomatonOccupant* occupant, std::uint32_t key, bool param3);   // 0x450 @ 0x100119db2
+    virtual void SetPath(ITrafficAutomatonOccupant* occupant, std::uint32_t pathKey,
+                         const std::vector<cS3DVector3>* path, bool keepDestination);   // 0x458 @ 0x100117dbe
     bool InterpolateAlongPath(float distance, const cS3DVector3& from, cS3DVector3& out, std::int32_t* index,
                               const std::vector<cS3DVector3>* path, float* remaining);   // 0x460 @ 0x100117a96
     bool SnapToPath();                                                     // 0x468 @ 0x1001182e4
-    void HandleNetworkOccupantRemoved();                                   // 0x470 @ 0x1001187cc
+    virtual void HandleNetworkOccupantRemoved();                           // 0x470 @ 0x1001187cc
     std::uint32_t GetPathKey() const override;                             // 0x478 @ 0x1006f3190
     ITrafficAutomatonOccupant* GetNetworkOccupant() const;                 // 0x480 @ 0x100506880
     float GetPathOffset() const;                                           // 0x488 @ 0x1000e25d0
     void SetPathOffset(float offset);                                      // 0x490 @ 0x100507130
-    const cS3DVector3& GetPathPos() const;                                 // 0x498 @ 0x1000f3cc0
+    virtual const cS3DVector3& GetPathPos() const;                         // 0x498 @ 0x1000f3cc0
     virtual bool IsTrain() const;                                          // 0x4a0 @ 0x1005075b0
     bool BeginRoute(bool onlyStart);                                       // 0x4a8 @ 0x100119aac
     const cS3DVector3& GetDispatchDestination() const;                     // 0x4b0 @ 0x1005075b8
@@ -250,14 +250,14 @@ public:
     cSC4Automaton* FindLeader();                                           // 0x4d8 @ 0x100115b4a
     void SetDetectCollisions(bool on);                                     // 0x4e0 @ 0x10011a24c
     bool GetDetectCollisions() const;                                      // 0x4e8 @ 0x100507140
-    float GetSafeDistance();                                               // 0x4f0 @ 0x10011a2e8
+    virtual float GetSafeDistance();                                       // 0x4f0 @ 0x10011a2e8
     bool GetStopPoint(cS3DVector3& out);                                   // 0x4f8 @ 0x10011a4ac
     std::uint8_t GetCellLifespan() const;                                  // 0x500 @ 0x100508e60
     void SetCellLifespan(std::uint8_t lifespan);                           // 0x508 @ 0x10050f560
     void UpdateOrientation(const cS3DVector3& target, float* out) const;   // 0x510 @ 0x100119eec
     const std::deque<tLookaheadNode>& GetLookaheadDeque() const;           // 0x518 @ 0x1000e25f0
     void OffsetPathPoint(cS3DVector3& point);                              // 0x520 @ 0x100119f70
-    void RecalculatePathOffset();                                          // 0x528 @ 0x10011b73e
+    virtual void RecalculatePathOffset();                                  // 0x528 @ 0x10011b73e
     void SlowDownForStopLight();                                           // 0x530 @ 0x10011a580
     void ReturnToDefaultSpeed();                                           // 0x538 @ 0x10011a5d0
     void UpdateCollision();                                                // 0x540 @ 0x100116cb6

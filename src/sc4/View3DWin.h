@@ -65,14 +65,29 @@
 //   case, so a mouse move also refreshes the 24-hour clock hover (0x100784d02..0x100784d1e).
 // * The accelerator path appends three empty parameters to the command set (0x100784f1e): the key
 //   payload is dropped.
+// * GZOnMouseDownL / GZOnMouseUpL call the *bottom* stacked tool but ignore its answer (0x100783022 /
+//   0x1007833f8 return before the result is looked at); the persistent tools' answers do count.
+// * GZOnMouseUpR queries both terrain heights at the picked model's centre and discards both results
+//   (0x100783561 / 0x100783574); the new view target is the bounding-box centre.
+// * GZOnMouseMove marks the drag as past the dead zone when *either* axis moved 4 pixels, and only
+//   writes the edge-scroll inputs when the city router allowed it, the preference is set and the current
+//   tool is not self-scrolling; otherwise it clears both inputs (0x10078394x).
+// * SetCursorText calls CursorTextChanged twice when both strings are empty: ClearCursorText already
+//   ends with it and the tail jump does it again (0x1007913c6). In the update path a null second string
+//   erases the *first* string instead of the second (0x10079144a) - an original bug kept on purpose.
+// * CursorTextChanged shows the list's *last* node (0x100791580 reads the sentinel's +8 link) and only
+//   moves the window when it is already visible; the position comes from the window manager's
+//   GetCursorPos (0x100791631).
+// * AddWinAnimationRecorder appends "RecordedAnimations/" to the user-data directory (0x100780e02).
 // The port keeps the host services as one IView3DWinHost method per original call; the object at
 // +0x1d0 and the coverage helper at +0x5f8 are seams (their classes are not recovered). Every offset
 // in the comments is the original's: the port's base layout matches it exactly up to +0x1d0 (verified:
 // cGZWin is 0x150 bytes at +0x18, then +0x168 / +0x170 / +0x180 / +0x188 / +0x190 / +0x198 / +0x1a0 /
 // +0x1c0). Past +0x1d0 the port's offsets are *lower* than the original's because the 0x18-byte helper
-// became an 8-byte pointer (tools_ is at +0x1d8, not +0x1e8), the GUI blocks at +0x270..+0x4d0 are not
-// modelled (filterInfo_ is at +0x268, not +0x4d8) and cSC4RenderProperties is 8 bytes shorter (so
-// renderProperties_ is at +0x2c0, not +0x540). sizeof(cSC4View3DWin) is 0x3a8 in the port.
+// became an 8-byte pointer (tools_ is at +0x1d8, not +0x1e8), most of the GUI blocks at +0x270..+0x4d0
+// are not modelled (only the two menu windows, the cursor-text block and the scroll state are;
+// filterInfo_ is at +0x268, not +0x4d8) and cSC4RenderProperties is 8 bytes shorter (so
+// renderProperties_ is at +0x2c0, not +0x540). sizeof(cSC4View3DWin) is 0x3f0 in the port.
 // Compile without FMA contraction: the results follow the original single-precision operation order.
 #pragma once
 #include <cstddef>
@@ -121,6 +136,7 @@ constexpr std::uint32_t kMsgViewInputControlChanged = 0x09c8b8ea;    // SendView
 constexpr std::uint32_t kMsgViewScrollBegin = 0xcad61e00;            // DoScrollBegin
 constexpr std::uint32_t kMsgViewScrollEnd = 0xead61e16;              // DoScrollEnd
 constexpr std::uint32_t kMsgViewGlobalEffectTrigger = 0xaa375fe8;    // Assert/RetractGlobalEffectTrigger
+constexpr std::uint32_t kMsgViewTerrainDisplayChanged = 0x470bd214;  // RunGlobalTerrainTool cases 5 / 6 (data1 0 / 1)
 constexpr std::uint32_t kMsgViewCommand = 0x00000003;                // the command message (cGZMsgCommand)
 constexpr std::uint32_t kCmdViewCatalogItem = 0x49d993d4;            // DoMessage case 3's parameter id
 constexpr std::uint32_t kMsgViewCheatCode = 0x230e27ac;              // DoMessage: run a cheat
@@ -312,6 +328,46 @@ public:
     virtual void RemoveAllNotifications(cIGZMessageTarget2* target) = 0;       // @ 0x100041b6e
 };
 
+// The object SL::spCity vslot 0x290 answers (0x100782eb4, 0x1007836xx, 0x1007837xx): the city's mouse
+// router. Its class is not recovered; the view asks it three things and the router may rewrite the point.
+class ICityMouseRouter {
+public:
+    virtual ~ICityMouseRouter() = default;
+    virtual bool IsActive() = 0;                                         // vslot 0x40
+    virtual bool AllowsEdgeScroll() = 0;                                 // vslot 0x48 (GZOnMouseMove)
+    virtual bool ProcessMouse(int& x, int& y, std::uint32_t flags) = 0;  // vslot 0x80
+};
+
+// The window at +0x5d0, the cursor-text window (a cGZWin-based control AddGUI creates; not recovered). The
+// original calls the window through its own vtable and the cGZWin subobject at +8.
+class ICursorTextWindow {
+public:
+    virtual ~ICursorTextWindow() = default;
+    virtual void SetLine1(const cIGZString& text) = 0;      // vslot 0x30
+    virtual void SetLine2(const cIGZString& text) = 0;      // vslot 0x40
+    virtual void SetIcon(cIGZUnknown* icon) = 0;            // vslot 0x60 (+0x5f0 image or null)
+    virtual void SetPosition(int x, int y) = 0;             // vslot 0x78(&{x, y})
+    virtual void ShowWindow() = 0;                          // subobject +8 vslot 0x228
+    virtual void HideWindow() = 0;                          // subobject +8 vslot 0x230
+    virtual bool IsVisible() = 0;                           // subobject +8 vslot 0x238
+    virtual void Reset() = 0;                               // subobject +8 vslot 0x2e0
+};
+
+// SL::spTerrain (cSTETerrain, recovered by another agent): the slots this window calls.
+class ITerrainEditor {
+public:
+    virtual ~ITerrainEditor() = default;
+    virtual float TerrainHeight(float x, float z) = 0;                      // vslot 0x60
+    virtual float TerrainHeightAt(float x, float z) = 0;                    // vslot 0xf8
+    virtual void SetTerrainType(int type) = 0;                              // vslot 0x148
+    virtual int TerrainType() = 0;                                          // vslot 0x150
+    virtual void SetToolMode158(std::uint32_t mode) = 0;                    // vslot 0x158 (RunGlobalTerrainTool case 1)
+    virtual void SetToolMode160(std::uint32_t mode) = 0;                    // vslot 0x160 (case 2)
+    virtual void CancelActiveTool() = 0;                                    // vslot 0x178 (cases 3 / 4)
+    virtual void SetActiveToolFlag(bool on) = 0;                            // vslot 0x180 (cases 3 / 4)
+    virtual bool TerrainTypeForBrush(int brush, std::uint32_t& out) = 0;    // vslot 0x1d0 (ApplyDefaultTerrainBrush)
+};
+
 // ---------------------------------------------------------------------------------------------------------------
 // Everything the window reaches outside itself: one method per original call.
 // ---------------------------------------------------------------------------------------------------------------
@@ -347,7 +403,9 @@ public:
     virtual int VirtualZoomLimit() = 0;                               // SL::spSC4 vslot 0x130: null -> 5, else 5 - (byte 0xf10 == 0)
     virtual bool ProgressScreenWanted() = 0;                          // SL::spSC4 vslot 0x138 -> +0x208 != nullptr
     // --- objects Init creates and Shutdown tears down (each stands for one original call block)
-    virtual cIGZUnknown* CreateProgressScreen(cIGZWin* parent, bool flag) = 0;   // new cSC4ProgressScreen + Init
+    virtual cIGZUnknown* CreateProgressScreen(cIGZWin* parent, const cRZRect& area, bool flag) = 0;   // new cSC4ProgressScreen(area, flag)
+    virtual void InitProgressScreen(cIGZUnknown* screen) = 0;         // cSC4ProgressScreen::Init @ 0x10032d23e
+    virtual void SetProgressCaption(cIGZUnknown* screen, int id, const cIGZString& text) = 0;   // @ 0x10032d812
     virtual void ShutdownProgressScreen(cIGZUnknown* screen) = 0;     // @ 0x10032d0a8 + Release
     virtual void ShutdownValidationWindow(cIGZUnknown* window) = 0;   // +0x648 vslot 0x20 + Release
     virtual void ShutdownLotConfigurationEditors() = 0;               // +0x270 / +0x278 Shutdown + Release
@@ -355,8 +413,33 @@ public:
     virtual void ShutdownModelMaker(cIGZUnknown* modelMaker) = 0;     // +0x190 Shutdown + Release
     virtual void ShutdownCameraObject(cIGZUnknown* camera) = 0;       // +0x178 cS3DCamera::Shutdown + Release
     virtual void ShutdownSimulationClock(cIGZUnknown* clock) = 0;     // +0x170 vslot 0x20 + Release
+    // --- the animation recorder (cSC4WinAnimationRecorder, unrecovered)
+    virtual bool UserDataDirectory(cIGZString& out) = 0;              // SL::UserDataDirectory @ 0x100040556
+    virtual cIGZWin* CreateWinAnimationRecorder() = 0;                // new + ctor @ 0x1003728a4, AddRef'd
+    virtual void RecorderSetAnimationOutputDirectory(cIGZWin* recorder, const cIGZString& directory, bool create) = 0;   // @ 0x1003754f2
+    // --- SL::spCity / SL::spTerrain, reached by the mouse and tool paths
+    virtual ICityMouseRouter* CityMouseRouter() = 0;                  // SL::spCity vslot 0x290
+    virtual bool CanInvokeZoningTool() = 0;                           // SL::spCity vslot 0xb0 (0x100783d92)
+    virtual ITerrainEditor* TerrainEditor() = 0;                      // SL::spTerrain
+    virtual bool GraphicsSystemAllowsSelfScroll() = 0;                // SL::spGS vslot 0x60 (0x1007839a4; meaning not decoded)
+    virtual void RunChangeTerrainDialog(int& type) = 0;               // cSTEChangeTerrainUI @ 0x1007268f2 + DoDialog @ 0x10072690a
+    // --- the input tools the mouse / tool invokers construct (each is one "new cSC4ViewInputControl*" block)
+    virtual cSC4ViewInputControl* CreateZoningTool(std::uint32_t type) = 0;                 // cSC4ViewInputControlZone @ 0x1003c38fc
+    virtual cSC4ViewInputControl* CreateTerrainScrubberTool(std::uint32_t type, bool flag) = 0;   // @ 0x100395cac
+    virtual cSC4ViewInputControl* CreateLevelTerrainTool() = 0;                             // @ 0x1003b74d4
+    virtual cSC4ViewInputControl* CreateCityScrollTool() = 0;                               // cSC4ViewInputControlCityScroll @ 0x1002c13a2
+    virtual void CityScrollSetMouseScroll(cSC4ViewInputControl* tool, int x, int y) = 0;    // @ 0x1002c1930
+    // --- SL::spSS + SL::spViewUtilities + cSC4AudioSoundManager: the global terrain tool's sound (0x100784a1e)
+    virtual void PlayGlobalTerrainEffectSound() = 0;
+    // --- the cursor-text window (+0x5d0; AddGUI creates it, so the host owns it)
+    virtual ICursorTextWindow* CursorTextWindow() = 0;
+    // --- SL::TerrainView() (cSTETerrainView3D, recovered in parallel): the contour display layer
+    virtual int AddContourCallback() = 0;              // TerrainView()->Layer(0)->vslot 0x40(0x7f94205)
+    virtual void RemoveContourCallback(int handle) = 0;   // TerrainView()->Layer(0)->vslot 0x78(handle)
+    // --- SL::spViewUtilities->ProjectPointToViewportCoordinates2D @ 0x100173a1a; false without the global
+    virtual bool ProjectPointToViewport(cS3DVector3& point) = 0;
     // --- per frame / per message
-    virtual void UpdateCostIndicator(float dt) = 0;                   // @ 0x10078178a
+    virtual void UpdateCostIndicator(float dt) = 0;                   // @ 0x10078178a (PARTIAL: the cost-indicator windows)
     virtual bool PopupModalDialogsSafe() = 0;                         // SC4GetPopupModalDialogsSafe
     virtual bool PopupModalDialogsEnabled() = 0;                      // SC4GetPopupModalDialogsEnabled
     virtual std::uint32_t SimulationFrameCounter() = 0;               // (+0x170) vslot 0x48
@@ -381,6 +464,17 @@ void SetView3DWinHost(IView3DWinHost* host);
 // ---------------------------------------------------------------------------------------------------------------
 // cSC4View3DWin
 // ---------------------------------------------------------------------------------------------------------------
+// One entry of the list at +0x5d8 (SetCursorText / CursorTextChanged / ClearCursorText). The original's
+// list node spends +0 / +8 on the links, so the record starts at +0x10: key, order, the two strings and the
+// icon. The list is kept in the original's own order (the insert only scans from the back, 0x10079140a).
+struct CursorTextInfo {
+    std::uint32_t key = 0;          // +0x10
+    std::uint32_t order = 0;        // +0x14
+    cRZString line1;                // +0x18
+    cRZString line2;                // +0x40
+    int icon = 0;                   // +0x68 (1 = the +0x5f0 image)
+};
+
 class cSC4View3DWin : public cISC4View3DWin, public cIGZMessageTarget2, public cIGZWinMessageFilter, public cGZWin {
 public:
     explicit cSC4View3DWin(cIGZWinMgr* mgr);             // @ 0x10077efc2
@@ -451,6 +545,19 @@ public:
     bool GZOnMouseWheel(int x, int y, std::uint32_t modifiers, int delta) override;   // @ 0x100783ae2
     bool GZOnMouseExit(cIGZWin* to) override;                       // @ 0x100783c7a
     bool GZOnCommand(std::uint32_t command, std::uint64_t param) override;    // @ 0x10078abdc
+    bool GZOnMouseDownL(int x, int y, std::uint32_t modifiers) override;      // @ 0x100782e9e (thunk 0x100783056)
+    bool GZOnMouseDownR(int x, int y, std::uint32_t modifiers) override;      // @ 0x100783068 (thunk 0x100783256)
+    bool GZOnMouseUpL(int x, int y, std::uint32_t modifiers) override;        // @ 0x100783268 (thunk 0x100783462)
+    bool GZOnMouseUpR(int x, int y, std::uint32_t modifiers) override;        // @ 0x100783474 (thunk 0x100783774)
+    bool GZOnMouseMove(int x, int y, std::uint32_t modifiers) override;       // @ 0x100783786 (thunk 0x100783ad0)
+
+    // --- cISC4View3DWin: the mission / cursor-text / cost-indicator and menu members
+    void HideMissionStatusPanel() override;                        // @ 0x100792e7e
+    void SetCursorText(std::uint32_t id, std::uint32_t order, const cIGZString* line1,
+                       const cIGZString* line2, int icon) override;   // @ 0x10079132c
+    void ClearCursorText(std::uint32_t id) override;               // @ 0x100791772
+    void CloseSecondaryMenu() override;                            // @ 0x100791d18
+    void SetCursorTextPosition3D(const cS3DVector3& position) override;   // @ 0x100791cc4
 
     // --- not virtual in the original
     void DoScrollBegin();                                          // @ 0x100781b86
@@ -461,6 +568,18 @@ public:
     bool ProcessKeyDown(std::uint32_t key, std::uint32_t modifiers);   // @ 0x100782ba2
     bool ProcessKeyUp(std::uint32_t key, std::uint32_t modifiers);     // @ 0x100782d20
     void SendViewInputControlChangeMessage(cSC4ViewInputControl* previous, cSC4ViewInputControl* next);   // @ 0x100782556
+    void UpdateCursorTextPositions(int x, int y);                  // @ 0x100783a60
+    void CursorTextChanged();                                      // @ 0x10079155e
+    void UpdateCostIndicator(float dt);                            // @ 0x10078178a (PARTIAL: the cost-indicator windows)
+    void CreateProgressScreen(bool flag);                          // @ 0x100780910
+    void UpdateProgressMessage();                                  // @ 0x100788d98
+    void InvokeZoningTool(std::uint32_t type);                     // @ 0x100783d86
+    void InvokeLandscapeTool(std::uint32_t type, bool flag);       // @ 0x10078408e
+    void ApplyDefaultTerrainBrush(int brush, bool flag);           // @ 0x100790b4a
+    void ChangeTerrainType();                                      // @ 0x1007928da
+    void RunGlobalTerrainTool(int tool);                           // @ 0x1007849bc
+    bool ToggleContourDisplay();                                   // @ 0x10078fe00
+    void AddWinAnimationRecorder(bool enable);                     // @ 0x100780d78
 
 protected:
     void ApplyScrollSpeed();                                       // the shared tail of RecalcScrollVelocity
@@ -517,9 +636,21 @@ protected:
     std::uint32_t renderPropertiesAux_ = 0;             // +0x550 (the dword next to the property vectors)
     cIGZUnknown* progressScreen_ = nullptr;             // +0x630 (referenced)
     bool loadedFromStream_ = true;                      // +0x638 (constructor; DoLoad clears it)
-    cIGZUnknown* missionPanel_ = nullptr;               // +0x640 (referenced)
+    cIGZWin* missionPanel_ = nullptr;                   // +0x640 (referenced; HideMissionStatusPanel ChildDeletes it)
     cIGZUnknown* validationWindow_ = nullptr;           // +0x648 (referenced)
     cRZString errorReport_;                             // +0x650
+    // The cursor-text block (+0x5a0..+0x5f0). The two windows and the bitmap window belong to the GUI AddGUI
+    // builds; the port borrows the text window from the host and does not model the other two yet.
+    int cursorTextX_ = 0;                               // +0x5b0
+    int cursorTextY_ = 0;                               // +0x5b4
+    ICursorTextWindow* cursorTextWindow_ = nullptr;     // +0x5d0 (borrowed from the host)
+    std::list<CursorTextInfo> cursorText_;              // +0x5d8
+    cIGZUnknown* cursorTextIcon_ = nullptr;             // +0x5f0 (the icon image; borrowed)
+    // The secondary menu window (+0x358) and its state word (+0x368).
+    cIGZWin* secondaryMenu_ = nullptr;                  // +0x358 (referenced; CloseSecondaryMenu ChildDeletes it)
+    std::uint32_t secondaryMenuState_ = 0;              // +0x368
+    bool contourDisplay_ = false;                       // +0x628
+    int contourCallback_ = -1;                          // +0x62c (the contour layer's callback handle)
     std::unordered_map<std::uint32_t, std::uint32_t> globalEffects_;   // +0x678
     float unknown698_ = 1.0f;                           // +0x698
     std::uint32_t lastSelectedBuilding_ = 0;            // +0x6a0

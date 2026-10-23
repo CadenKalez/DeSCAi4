@@ -1,5 +1,6 @@
 // cSC4ViewInputControlQuery: lifecycle / message plumbing, the query state machine, the dialog control helpers,
 // picking, and the SetOrGet rows that do not need an unrecovered simulator.
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -82,6 +83,7 @@ struct Holder final : cISCPropertyHolder {
     cSCProperty property;
     std::uint32_t id = 0;
     bool value = false;
+    std::vector<std::uint32_t> values;
     bool QueryInterface(std::uint32_t, void**) override { return false; }
     std::uint32_t AddRef() override { return 1; }
     std::uint32_t Release() override { return 1; }
@@ -91,7 +93,8 @@ struct Holder final : cISCPropertyHolder {
         if (propertyId != id) return nullptr;
         auto* self = const_cast<Holder*>(this);
         cRZVariant v;
-        v.SetValBool(value);
+        if (!values.empty()) v.RefUint32(values.data(), static_cast<std::uint32_t>(values.size()));
+        else v.SetValBool(value);
         self->property.SetPropertyID(id);
         self->property.SetPropertyValue(v);
         return &self->property;
@@ -319,6 +322,140 @@ struct ResSim final : IQueryResidentialSim {
     void SetQueryCell(int cx, int cz) override { ++calls; x = cx; z = cz; }
 };
 
+// ---- the fire / police / budget / neighbour / traffic seams the new rows read ------------------------------
+struct FireSimFake final : IQueryFireSim {
+    float effectiveness = 0.5f;
+    int fundingCost = 0;
+    float fundingFraction = 0.0f;
+    float setFraction = -1.0f;
+    int setFundingCalls = 0;
+    std::uint32_t availability = 0, baseCall = 0, dispatchCount = 0;
+    bool dispatchOk = true;
+    float StationEffectiveness(cISC4Occupant*) override { return effectiveness; }
+    bool StationFunding(cISC4Occupant*, int* cost, float* fraction) override {
+        if (cost) *cost = fundingCost;
+        if (fraction) *fraction = fundingFraction;
+        return true;
+    }
+    void SetStationFunding(cISC4Occupant*, float fraction) override {
+        ++setFundingCalls;
+        setFraction = fraction;
+    }
+    bool DispatchInfo(cISC4Occupant*, std::uint32_t* a, std::uint32_t* b, std::uint32_t* c) override {
+        if (!dispatchOk) return false;
+        if (a) *a = availability;
+        if (b) *b = baseCall;
+        if (c) *c = dispatchCount;
+        return true;
+    }
+};
+
+struct PoliceSimFake final : IQueryPoliceSim {
+    float effectiveness = 0.25f;
+    int arrests = 0, crimes = 0;
+    int fundingCost = 0;
+    float fundingFraction = 0.0f;
+    float setFraction = -1.0f;
+    int setFundingCalls = 0;
+    std::uint32_t dispatchCount = 0;
+    bool dispatchOk = true;
+    float jailEfficiency = 0.0f;
+    int jailCapacity = 0;
+    std::int64_t jailUpkeep = 0;
+    float StationEffectiveness(cISC4Occupant*) override { return effectiveness; }
+    int ArrestCount(cISC4Occupant*) override { return arrests; }
+    int CrimeCount(cISC4Occupant*) override { return crimes; }
+    bool StationFunding(cISC4Occupant*, int* cost, float* fraction) override {
+        if (cost) *cost = fundingCost;
+        if (fraction) *fraction = fundingFraction;
+        return true;
+    }
+    void SetStationFunding(cISC4Occupant*, float fraction) override {
+        ++setFundingCalls;
+        setFraction = fraction;
+    }
+    bool DispatchInfo(cISC4Occupant*, std::uint32_t* a, std::uint32_t* b, std::uint32_t* c) override {
+        if (!dispatchOk) return false;
+        if (a) *a = 0;
+        if (b) *b = 0;
+        if (c) *c = dispatchCount;
+        return true;
+    }
+    float JailEfficiency() override { return jailEfficiency; }
+    int JailCapacity(cISC4Occupant*) override { return jailCapacity; }
+    std::int64_t JailMaintenance(cISC4Occupant*) override { return jailUpkeep; }
+};
+
+struct BudgetSimFake final : IQueryBudgetSim {
+    std::int64_t cost = 0;
+    bool ok = true;
+    int calls = 0;
+    bool OccupantValueCost(cISCPropertyHolder*, std::uint32_t, std::int64_t& out) override {
+        ++calls;
+        if (!ok) return false;
+        out = cost;
+        return true;
+    }
+};
+
+struct NeighborCityFake final : IQueryNeighborCity {
+    int refs = 1;
+    std::string cityName, mayorName;
+    int cityNameCalls = 0, mayorNameCalls = 0;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return ++refs; }
+    std::uint32_t Release() override { return --refs; }
+    void GetCityName(cIGZString& out) const override {
+        ++const_cast<NeighborCityFake*>(this)->cityNameCalls;
+        out.AssignFromCString(cityName.c_str());
+    }
+    void GetMayorName(cIGZString& out) const override {
+        ++const_cast<NeighborCityFake*>(this)->mayorNameCalls;
+        out.AssignFromCString(mayorName.c_str());
+    }
+};
+
+struct NeighborsSimFake final : IQueryNeighborsSim {
+    bool validCell = true;
+    bool hasConnection = true;
+    NeighborCityFake* city = nullptr;
+    int lastType = -1, lastX = 0, lastZ = 0;
+    bool IsValidConnectionCell(int, int) override { return validCell; }
+    bool FindConnection(std::uint32_t type, int x, int z) override {
+        lastType = static_cast<int>(type);
+        lastX = x;
+        lastZ = z;
+        return hasConnection;
+    }
+    IQueryNeighborCity* FindCityOnOtherSide(int, int) override {
+        if (city) city->AddRef();   // the caller releases (the original's returned pointer is owned)
+        return city;
+    }
+};
+
+struct TrafficSimFake final : IQueryTrafficSim {
+    std::uint8_t cell = 0;
+    int x = -1, z = -1;
+    std::uint8_t CongestionCell(int cx, int cz) override {
+        x = cx;
+        z = cz;
+        return cell;
+    }
+};
+
+// A cIGZWinMessageFilter the filter rows can install and remove.
+struct WinFilterFake final : cIGZWinMessageFilter {
+    int refs = 1;
+    int messages = 0;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return ++refs; }
+    std::uint32_t Release() override { return --refs; }
+    bool DoMessage(cIGZWin*, cGZMessage&) override {
+        ++messages;
+        return false;
+    }
+};
+
 // ---- messages ---------------------------------------------------------------------------------------------
 struct MsgServer final : cIGZMessageServer2 {
     int refs = 1;
@@ -357,6 +494,11 @@ struct Host final : IViewInputHost, IQueryHost {
     Aura aura;
     Sim sim;
     ResSim residential;
+    FireSimFake fireSim;
+    PoliceSimFake policeSim;
+    BudgetSimFake budgetSim;
+    NeighborsSimFake neighborsSim;
+    TrafficSimFake trafficSim;
     MsgServer messages;
     cIGZWin* legendParent = nullptr;
     int attached = 0, detached = 0, sounds = 0;
@@ -381,6 +523,11 @@ struct Host final : IViewInputHost, IQueryHost {
     IQueryAuraSim* AuraSim() override { return &aura; }
     IQuerySimulator* Simulator() override { return &sim; }
     IQueryResidentialSim* ResidentialSim() override { return &residential; }
+    IQueryFireSim* FireSim() override { return &fireSim; }
+    IQueryPoliceSim* PoliceSim() override { return &policeSim; }
+    IQueryBudgetSim* BudgetSim() override { return &budgetSim; }
+    IQueryNeighborsSim* NeighborsSim() override { return &neighborsSim; }
+    IQueryTrafficSim* TrafficSim() override { return &trafficSim; }
     IQueryPathView* CreatePathView() override { return nullptr; }
     cISC4WinCalloutBox* CreateCalloutBox() override { return callout; }
     cIGZWin* CreateWindowFromScript(std::uint32_t instance, cIGZWin*, std::uint32_t) override {
@@ -411,8 +558,11 @@ struct Host final : IViewInputHost, IQueryHost {
     struct City final : IQueryCity {
         int follows = 0, props = 0, toCell = 0;
         int cellX = 0, cellZ = 0;
+        int cellsX = 64, cellsZ = 64;
         bool QueryInterface(std::uint32_t, void**) { return false; }
         void PositionToCell(float, float, int& x, int& z) override { ++toCell; x = cellX; z = cellZ; }
+        int CellCountX() override { return cellsX; }
+        int CellCountZ() override { return cellsZ; }
         void FollowAutomaton(cIGZUnknown*) override { ++follows; }
         void SelectStoplightProp(cIGZUnknown*) override { ++props; }
     } city;
@@ -788,6 +938,285 @@ int main() {
         net->Release();
         host.legendParent = nullptr;
         delete legendParent;   // owns both legend children
+    }
+
+    // --- M: fire / police / jail / park / occupant-cost rows ------------------------------------------------
+    {
+        auto* dialog = new cGZWin(&host.mgr);
+        auto* label = new gz::cGZWinText(&host.mgr);
+        label->SetID(0x1007);
+        auto* meter = new gz::cGZWinBMP(&host.mgr);
+        meter->SetID(0x1001);
+        auto* slider = new gz::cGZWinSlider(&host.mgr);
+        slider->SetID(0x1002);
+        slider->SetMinimumValue(0);   // the dialog script gives the funding slider its 0..100 range
+        slider->SetMaximumValue(100);
+        auto* moneyRow = new gz::cGZWinText(&host.mgr);
+        moneyRow->SetID(0x1102);   // the slider's amount row is id + 0x100
+        CHECK(dialog->ChildAdd(label) && dialog->ChildAdd(meter) && dialog->ChildAdd(slider));
+        CHECK(dialog->ChildAdd(moneyRow));
+
+        TestOccupant occupant;
+
+        // effectiveness goes through the performance-meter parameter
+        host.fireSim.effectiveness = 0.75f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetFireStationEffectiveness(dialog, 0x1001, true, &occupant));
+        cIGZVariant* meterValue = nullptr;
+        CHECK(meter->AsIGZWin()->GetParam(0xea563ab0, &meterValue) && meterValue);
+        CHECK(std::fabs(meterValue->GetValFloat32() - 0.75f) < 1e-6f);
+        if (meterValue) meterValue->Release();
+        // every row is set-only: clearing leaves the control alone and answers true
+        CHECK(cSC4ViewInputControlQuery::SetOrGetFireStationEffectiveness(dialog, 0x1001, false, &occupant));
+
+        // engine count is the dispatch interface's third out value
+        host.fireSim.dispatchCount = 4;
+        host.fireSim.dispatchOk = true;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetFireStationEngineCount(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "4");
+        host.fireSim.dispatchOk = false;
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetFireStationEngineCount(dialog, 0x1007, true, &occupant));
+
+        // local funding: the slider is the percentage, the amount row the cost
+        host.fireSim.fundingCost = 500;
+        host.fireSim.fundingFraction = 0.4f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetFireStationLocalFunding(dialog, 0x1002, true, &occupant));
+        int sliderValue = 0;
+        CHECK(cSC4ViewInputControlQuery::GetSliderControlValue(dialog, 0x1002, sliderValue) && sliderValue == 40);
+        CHECK(std::string(moneyRow->GetCaption().ToChar()) == "200");   // 40% of 500
+        // ... and writing it back scales the slider by 0.01
+        host.fireSim.setFundingCalls = 0;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetFireStationLocalFunding(dialog, 0x1002, false, &occupant));
+        CHECK(host.fireSim.setFundingCalls == 1 && std::fabs(host.fireSim.setFraction - 0.4f) < 1e-6f);
+
+        // maintenance cost is the same funding call's cost out value
+        host.fireSim.fundingCost = 1234;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetFireStationMaintenanceCost(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "1234");
+
+        // police effectiveness / arrests / crimes
+        host.policeSim.effectiveness = 0.5f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetPoliceStationEffectiveness(dialog, 0x1001, true, &occupant));
+        meterValue = nullptr;
+        CHECK(meter->AsIGZWin()->GetParam(0xea563ab0, &meterValue) && meterValue);
+        CHECK(std::fabs(meterValue->GetValFloat32() - 0.5f) < 1e-6f);
+        if (meterValue) meterValue->Release();
+        host.policeSim.arrests = 12;
+        host.policeSim.crimes = 34;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetPoliceStationArrestCount(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "12");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetPoliceStationCrimeCount(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "34");
+        host.policeSim.dispatchCount = 3;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetPoliceStationPatrolCarCount(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "3");
+        host.policeSim.fundingCost = 800;
+        host.policeSim.fundingFraction = 0.25f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetPoliceStationLocalFunding(dialog, 0x1002, true, &occupant));
+        CHECK(cSC4ViewInputControlQuery::GetSliderControlValue(dialog, 0x1002, sliderValue) && sliderValue == 25);
+        CHECK(std::string(moneyRow->GetCaption().ToChar()) == "200");   // 25% of 800
+        host.policeSim.setFundingCalls = 0;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetPoliceStationLocalFunding(dialog, 0x1002, false, &occupant));
+        CHECK(host.policeSim.setFundingCalls == 1 && std::fabs(host.policeSim.setFraction - 0.25f) < 1e-6f);
+        host.policeSim.fundingCost = 77;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetPoliceStationMaintenanceCost(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "77");
+
+        // the jail: cells are 0.8 * capacity, inmates capacity * efficiency, and the meter fills the band above 0.8
+        host.policeSim.jailCapacity = 10;
+        host.policeSim.jailEfficiency = 0.5f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetJailCellCount(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "8");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetJailInmateCount(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "5");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetJailCondition(dialog, 0x1001, true, &occupant));
+        meterValue = nullptr;
+        CHECK(meter->AsIGZWin()->GetParam(0xea563ab0, &meterValue) && meterValue);
+        CHECK(std::fabs(meterValue->GetValFloat32() - 1.0f) < 1e-6f);   // at or below the design capacity
+        if (meterValue) meterValue->Release();
+        host.policeSim.jailEfficiency = 0.9f;    // 9 inmates, one free cell: 1 / (10 * 0.2)
+        CHECK(cSC4ViewInputControlQuery::SetOrGetJailCondition(dialog, 0x1001, true, &occupant));
+        meterValue = nullptr;
+        CHECK(meter->AsIGZWin()->GetParam(0xea563ab0, &meterValue) && meterValue);
+        CHECK(std::fabs(meterValue->GetValFloat32() - 0.5f) < 1e-5f);
+        if (meterValue) meterValue->Release();
+        host.policeSim.jailEfficiency = 1.0f;    // completely full: no free cell, meter 0
+        CHECK(cSC4ViewInputControlQuery::SetOrGetJailCondition(dialog, 0x1001, true, &occupant));
+        meterValue = nullptr;
+        CHECK(meter->AsIGZWin()->GetParam(0xea563ab0, &meterValue) && meterValue);
+        CHECK(meterValue->GetValFloat32() == 0.0f);
+        if (meterValue) meterValue->Release();
+        host.policeSim.jailCapacity = 0;         // no jail at all
+        CHECK(cSC4ViewInputControlQuery::SetOrGetJailCondition(dialog, 0x1001, true, &occupant));
+        meterValue = nullptr;
+        CHECK(meter->AsIGZWin()->GetParam(0xea563ab0, &meterValue) && meterValue);
+        CHECK(meterValue->GetValFloat32() == 0.0f);
+        if (meterValue) meterValue->Release();
+        host.policeSim.jailUpkeep = 750;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetJailMaintenanceCost(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "750");
+
+        // the park row is the generic occupant-cost row: one budget lookup per property value
+        Holder holder;
+        holder.id = 0xea54d285;
+        holder.values = {1, 2};
+        occupant.holder = &holder;
+        host.budgetSim.calls = 0;
+        host.budgetSim.ok = true;
+        host.budgetSim.cost = 250;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetParkMaintenanceCost(dialog, 0x1007, true, &occupant));
+        CHECK(host.budgetSim.calls == 2);
+        CHECK(std::string(label->GetCaption().ToChar()) == "500");
+        // a failed lookup contributes nothing
+        host.budgetSim.ok = false;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetOccupantCost(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "0");
+        // no property vector at all: the row declines
+        holder.id = 0;
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetOccupantCost(dialog, 0x1007, true, &occupant));
+        CHECK(cSC4ViewInputControlQuery::SetOrGetOccupantCost(dialog, 0x1007, false, &occupant));   // set-only
+
+        dialog->Release();
+    }
+
+    // --- N: neighbour-connection rows ----------------------------------------------------------------------
+    {
+        auto* dialog = new cGZWin(&host.mgr);
+        auto* label = new gz::cGZWinText(&host.mgr);
+        label->SetID(0x1007);
+        auto* cityRow = new gz::cGZWinText(&host.mgr);
+        cityRow->SetID(0x104b);
+        auto* mayorRow = new gz::cGZWinText(&host.mgr);
+        mayorRow->SetID(0x104c);
+        auto* congestionRow = new gz::cGZWinText(&host.mgr);
+        congestionRow->SetID(0x104d);
+        CHECK(dialog->ChildAdd(label) && dialog->ChildAdd(cityRow));
+        CHECK(dialog->ChildAdd(mayorRow) && dialog->ChildAdd(congestionRow));
+
+        NeighborCityFake city;
+        city.cityName = "Neighbourville";
+        city.mayorName = "Mayor Bob";
+        host.neighborsSim.validCell = true;
+        host.neighborsSim.hasConnection = true;
+        host.neighborsSim.city = &city;
+
+        CHECK(cSC4ViewInputControlQuery::SetOrGetNeighborConnectionNeighborCityName(dialog, 0x1007, true, 5, 6, 2));
+        CHECK(std::string(label->GetCaption().ToChar()) == "Neighbourville");
+        CHECK(host.neighborsSim.lastType == 2 && host.neighborsSim.lastX == 5 && host.neighborsSim.lastZ == 6);
+        CHECK(cSC4ViewInputControlQuery::SetOrGetNeighborConnectionNeighborCityMayorName(dialog, 0x1007, true, 5, 6, 2));
+        CHECK(std::string(label->GetCaption().ToChar()) == "Mayor Bob");
+
+        // the connection lookup runs first: an invalid cell or a missing connection means "no city"
+        host.neighborsSim.validCell = false;
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetNeighborConnectionNeighborCityMayorName(dialog, 0x1007, true, 5, 6, 2));
+        host.neighborsSim.validCell = true;
+        host.neighborsSim.hasConnection = false;
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetNeighborConnectionNeighborCityMayorName(dialog, 0x1007, true, 5, 6, 2));
+        host.neighborsSim.hasConnection = true;
+        // the city-name row still writes the placeholder text and answers true
+        host.neighborsSim.city = nullptr;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetNeighborConnectionNeighborCityName(dialog, 0x1007, true, 5, 6, 2));
+        CHECK(std::string(label->GetCaption().ToChar()) == "Loaded");   // the fake host's placeholder
+        host.neighborsSim.city = &city;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetNeighborConnectionNeighborCityName(dialog, 0x1007, false, 5, 6, 2));
+
+        // congestion: a byte scaled to a percentage and clamped to the city's cell counts
+        host.city.cellsX = 64;
+        host.city.cellsZ = 48;
+        host.trafficSim.cell = 51;   // 20%
+        CHECK(cSC4ViewInputControlQuery::SetOrGetNeighborConnectionCongestion(dialog, 0x1007, true, 5, 6));
+        CHECK(std::string(label->GetCaption().ToChar()) == "20%");
+        CHECK(host.trafficSim.x == 5 && host.trafficSim.z == 6);
+        CHECK(cSC4ViewInputControlQuery::SetOrGetNeighborConnectionCongestion(dialog, 0x1007, true, -4, 1000));
+        CHECK(host.trafficSim.x == 0 && host.trafficSim.z == 47);
+        host.trafficSim.cell = 255;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetNeighborConnectionCongestion(dialog, 0x1007, true, 63, 47));
+        CHECK(std::string(label->GetCaption().ToChar()) == "100%");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetNeighborConnectionCongestion(dialog, 0x1007, false, 5, 6));
+
+        // the cell-based dispatcher picks the row by id and adds the cell info's id offset
+        cSC4ViewInputControlQuery::tCellInfo info;
+        info.x = 5;
+        info.z = 6;
+        info.idOffset = 0;
+        info.connectionType = 2;
+        host.trafficSim.cell = 26;   // 10%
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetControlValue(dialog, 0x104d, true, &info));
+        CHECK(std::string(congestionRow->GetCaption().ToChar()) == "10%");
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetControlValue(dialog, 0x104b, true, &info));
+        CHECK(std::string(cityRow->GetCaption().ToChar()) == "Neighbourville");
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetControlValue(dialog, 0x104c, true, &info));
+        CHECK(std::string(mayorRow->GetCaption().ToChar()) == "Mayor Bob");
+        // the row id is offset by the cell info (used to address several neighbour panels)
+        info.idOffset = 0x100;
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetControlValue(dialog, 0x104d, true, &info));   // 0x114d: no control
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetControlValue(dialog, 0x1011, true, &info));   // no row for the airport ids yet
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetControlValue(dialog, 0x104b, true, nullptr));
+
+        dialog->Release();
+    }
+
+    // --- O: the row enumeration callbacks ------------------------------------------------------------------
+    {
+        auto* dialog = new cGZWin(&host.mgr);
+        auto* label = new gz::cGZWinText(&host.mgr);
+        label->SetID(0x1007);
+        auto* slider = new gz::cGZWinSlider(&host.mgr);
+        slider->SetID(0x1002);
+        slider->SetMinimumValue(0);
+        slider->SetMaximumValue(100);
+        auto* cityRow = new gz::cGZWinText(&host.mgr);
+        cityRow->SetID(0x104b);
+        CHECK(dialog->ChildAdd(label) && dialog->ChildAdd(slider) && dialog->ChildAdd(cityRow));
+
+        TestOccupant occupant;
+        // EnumFuncSetValue applies the row named by the child id (through the 0x7f-entry table)
+        host.policeSim.arrests = 7;
+        CHECK(cSC4ViewInputControlQuery::EnumFuncSetValue(dialog, 0x1007, label, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "7");
+        // a null table entry falls through to the child enumeration (no child answers 0x22ba0121 here)
+        CHECK(cSC4ViewInputControlQuery::EnumFuncSetValue(dialog, 0x1040, label, &occupant));
+        CHECK(cSC4ViewInputControlQuery::EnumFuncSetValue(dialog, 0x1040, nullptr, &occupant));
+        // EnumFuncGetValue calls the same row with set = false: the slider's percentage goes back to the sim
+        host.fireSim.fundingFraction = 0.75f;   // control 0x1002 is the *fire* station funding row
+        CHECK(cSC4ViewInputControlQuery::SetOrGetFireStationLocalFunding(dialog, 0x1002, true, &occupant));
+        host.fireSim.setFundingCalls = 0;
+        CHECK(cSC4ViewInputControlQuery::EnumFuncGetValue(dialog, 0x1002, slider, &occupant));
+        CHECK(host.fireSim.setFundingCalls == 1 && std::fabs(host.fireSim.setFraction - 0.75f) < 1e-6f);
+        // EnumFuncUpdateValue: a plain window is updated like SetValue (id 0x1007 is the arrest-count row)
+        host.policeSim.arrests = 19;
+        CHECK(cSC4ViewInputControlQuery::EnumFuncUpdateValue(dialog, 0x1007, label, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "19");
+
+        // SetFilter installs the filter on the child; ClearFilter removes it and drops the five parameters
+        WinFilterFake filter;
+        CHECK(cSC4ViewInputControlQuery::EnumFuncSetFilter(dialog, 0, label, &filter));
+        CHECK(filter.refs == 2);   // the child holds one reference
+        auto* paramValue = new cRZVariant();
+        paramValue->SetValUint32(3);
+        label->SetParam(0xea563ab0, paramValue);   // the window takes the only counted reference
+        cIGZVariant* stored = nullptr;
+        CHECK(label->GetParam(0xea563ab0, &stored) && stored);
+        if (stored) stored->Release();
+        CHECK(cSC4ViewInputControlQuery::EnumFuncClearFilter(dialog, 0, label, &filter));
+        CHECK(filter.refs == 1);
+        CHECK(!label->GetParam(0xea563ab0, &stored));
+
+        // the neighbour-dialog wrappers are the same dispatcher with the cell info as context
+        NeighborCityFake city;
+        city.cityName = "Across";
+        host.neighborsSim.validCell = true;
+        host.neighborsSim.hasConnection = true;
+        host.neighborsSim.city = &city;
+        cSC4ViewInputControlQuery::tCellInfo info;
+        info.x = 1;
+        info.z = 2;
+        info.idOffset = 0;
+        info.connectionType = 1;
+        CHECK(cSC4ViewInputControlQuery::EnumFuncNeighborDialogSetValue(dialog, 0x104b, &info, nullptr));
+        CHECK(std::string(cityRow->GetCaption().ToChar()) == "Across");
+        CHECK(cSC4ViewInputControlQuery::EnumFuncNeighborDialogGetValue(dialog, 0x104b, &info, nullptr));
+
+        dialog->Release();
     }
 
     // window 0/1 of the tool may already be gone; the view windows are still alive

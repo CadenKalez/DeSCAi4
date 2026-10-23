@@ -1,7 +1,10 @@
 // cSC4View3DWin: the recovered slice — object lifecycle, QueryInterface / refcount, the camera and view
 // state (zoom, rotation, scroll velocity, the scroll render-property snapshot), the view level / filter
-// information messages, the input-tool stack and its dispatch, the two picks, the global effect triggers,
-// the frame (GZPaint) and DoMessage(cGZMessage&). See src/sc4/View3DWin.h for the offsets and the quirks.
+// information messages, the input-tool stack and its dispatch, the five mouse handlers (the city router,
+// the city-scroll tool, the model-bounds camera target and edge scrolling), the cursor-text list/window,
+// the mission-panel / secondary-menu teardown, the progress screen, the animation recorder, the tool
+// invokers, the two picks, the global effect triggers, the frame (GZPaint) and DoMessage(cGZMessage&).
+// See src/sc4/View3DWin.h for the offsets, the seams and the quirks.
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -50,6 +53,18 @@ struct View3DWinTestAccess {
     static std::uint32_t& LastModifiers(cSC4View3DWin& v) { return v.lastMessageModifiers_; }
     static std::uint16_t& Unknown1c8(cSC4View3DWin& v) { return v.unknown1c8_; }
     static std::uint32_t& SimHiddenTimeout(cSC4View3DWin& v) { return v.simHiddenTimeoutMs_; }
+    static ICursorTextWindow*& CursorTextWindow(cSC4View3DWin& v) { return v.cursorTextWindow_; }
+    static std::list<CursorTextInfo>& CursorText(cSC4View3DWin& v) { return v.cursorText_; }
+    static cIGZUnknown*& CursorTextIcon(cSC4View3DWin& v) { return v.cursorTextIcon_; }
+    static int& CursorTextX(cSC4View3DWin& v) { return v.cursorTextX_; }
+    static int& CursorTextY(cSC4View3DWin& v) { return v.cursorTextY_; }
+    static cIGZWin*& MissionPanel(cSC4View3DWin& v) { return v.missionPanel_; }
+    static cIGZWin*& SecondaryMenu(cSC4View3DWin& v) { return v.secondaryMenu_; }
+    static std::uint32_t& SecondaryMenuState(cSC4View3DWin& v) { return v.secondaryMenuState_; }
+    static cIGZUnknown*& ProgressScreen(cSC4View3DWin& v) { return v.progressScreen_; }
+    static int& MouseDownX(cSC4View3DWin& v) { return v.mouseDownX_; }
+    static int& MouseDownY(cSC4View3DWin& v) { return v.mouseDownY_; }
+    static bool& DraggedPastDeadZone(cSC4View3DWin& v) { return v.draggedPastDeadZone_; }
 };
 }  // namespace sc4
 
@@ -252,6 +267,8 @@ struct FakeRenderer final : IRenderer3D {
 struct FakeModelInstance final : s3d::cIS3DModelInstance {
     int refs = 1, releases = 0;
     cIGZUnknown* owner = nullptr;
+    cS3DBoundingBox bounds;
+    int worldBounds = 0;
     bool QueryInterface(std::uint32_t, void**) override { return false; }
     std::uint32_t AddRef() override { return ++refs; }
     std::uint32_t Release() override { ++releases; return --refs; }
@@ -259,8 +276,8 @@ struct FakeModelInstance final : s3d::cIS3DModelInstance {
     void SetOwner(cIGZUnknown*) override {}
     void* GetCustomData() override { return nullptr; }
     void SetCustomData(void*) override {}
-    void GetBounds(cS3DBoundingBox&) override {}
-    void GetWorldBounds(cS3DBoundingBox&) override {}
+    void GetBounds(cS3DBoundingBox& out) override { out = bounds; }
+    void GetWorldBounds(cS3DBoundingBox& out) override { out = bounds; ++worldBounds; }
     void GetTransform(cS3DTransform&) override {}
     void SetTransform(const cS3DTransform&) override {}
     bool Pick(cSC4PickContext*) override { return false; }
@@ -280,6 +297,85 @@ struct FakeOccupant final : cIGZUnknown {
     }
     std::uint32_t AddRef() override { return ++refs; }
     std::uint32_t Release() override { if (refs) --refs; return refs; }
+};
+
+// ------------------------------------------------------------------------------------------------ the seam doubles
+struct FakeCityMouseRouter final : ICityMouseRouter {
+    bool active = false, allowEdgeScroll = true, handled = true;
+    int calls = 0, lastFlags = 0;
+    int mapX = 0, mapY = 0;                       // nonzero: rewrite the point like the city router does
+    bool ProcessMouse(int& x, int& y, std::uint32_t flags) override {
+        ++calls;
+        lastFlags = static_cast<int>(flags);
+        if (mapX) x = mapX;
+        if (mapY) y = mapY;
+        return handled;
+    }
+    bool IsActive() override { return active; }
+    bool AllowsEdgeScroll() override { return allowEdgeScroll; }
+};
+struct FakeCursorTextWindow final : ICursorTextWindow {
+    bool visible = false;
+    int shows = 0, hides = 0, resets = 0, positions = 0, line1Sets = 0, line2Sets = 0, iconSets = 0;
+    int lastX = 0, lastY = 0;
+    std::string line1, line2;
+    cIGZUnknown* icon = reinterpret_cast<cIGZUnknown*>(0x1);
+    void SetLine1(const cIGZString& text) override { line1 = text.ToChar(); ++line1Sets; }
+    void SetLine2(const cIGZString& text) override { line2 = text.ToChar(); ++line2Sets; }
+    void SetIcon(cIGZUnknown* value) override { icon = value; ++iconSets; }
+    void SetPosition(int x, int y) override { positions++; lastX = x; lastY = y; }
+    void ShowWindow() override { ++shows; visible = true; }
+    void HideWindow() override { ++hides; visible = false; }
+    bool IsVisible() override { return visible; }
+    void Reset() override { ++resets; }
+};
+struct FakeTerrainEditor final : ITerrainEditor {
+    float height = 0.0f;
+    int type = 3;
+    int heights = 0, heightsAt = 0, typeSets = 0, mode158 = 0, mode160 = 0, cancels = 0, activeFlags = 0;
+    int brushCalls = 0, brush = -1, brushResultType = 0x77;
+    bool brushResult = true;
+    bool activeFlag = false;
+    float TerrainHeight(float, float) override { ++heights; return height; }
+    float TerrainHeightAt(float, float) override { ++heightsAt; return height + 1.0f; }
+    void SetTerrainType(int value) override { type = value; ++typeSets; }
+    int TerrainType() override { return type; }
+    void SetToolMode158(std::uint32_t mode) override { mode158 = static_cast<int>(mode); }
+    void SetToolMode160(std::uint32_t mode) override { mode160 = static_cast<int>(mode); }
+    void CancelActiveTool() override { ++cancels; }
+    void SetActiveToolFlag(bool on) override { activeFlag = on; ++activeFlags; }
+    bool TerrainTypeForBrush(int value, std::uint32_t& out) override {
+        ++brushCalls;
+        brush = value;
+        out = static_cast<std::uint32_t>(brushResultType);
+        return brushResult;
+    }
+};
+struct FakeAnimationRecorder final : cGZWin {
+    explicit FakeAnimationRecorder(cIGZWinMgr* mgr) : cGZWin(mgr) {}
+    int refs = 0, childAdds = 0;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { ++refs; return static_cast<std::uint32_t>(refs); }
+    std::uint32_t Release() override { return static_cast<std::uint32_t>(--refs); }
+};
+
+
+// The tool base class' Init talks to the view-input service locator.
+struct FakeViewInputView final : IViewInputView {
+    int refs = 0, ends = 0;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return ++refs; }
+    std::uint32_t Release() override { if (refs) --refs; return refs; }
+    void EndInput(int) override { ++ends; }
+    cSC4ViewInputControl* TopControl() override { return nullptr; }
+};
+struct FakeViewInputHost final : IViewInputHost {
+    FakeViewInputView view;
+    cIGZWinMgr* manager = nullptr;
+    int sounds = 0;
+    IViewInputView* View3D() override { return &view; }
+    cIGZWinMgr* WindowManager() override { return manager; }
+    void PlaySound(int, std::uint32_t) override { ++sounds; }
 };
 
 // ------------------------------------------------------------------------------------------------ the host
@@ -318,6 +414,26 @@ struct FakeHost final : IView3DWinHost {
     std::uint32_t lastAcceleratorCommand = 0;
     int uiFilters = 0, adviceLinks = 0, urlHandles = 0;
     bool urlResult = false;
+    // The new seams.
+    FakeCityMouseRouter router;
+    FakeCursorTextWindow cursorWindow;
+    FakeTerrainEditor terrain;
+    bool canZone = true, gsSelfScroll = false;
+    int progressInits = 0, progressCaptions = 0, lastCaptionId = -1;
+    std::string lastCaption;
+    FakeAnimationRecorder* recorder = nullptr;
+    int recordingSetups = 0;
+    std::string recordingDirectory;
+    int terrainDialogs = 0;
+    std::vector<int> dialogResult;              // what RunChangeTerrainDialog leaves in `type`
+    int globalTerrainSounds = 0;
+    cSC4ViewInputControl* toolToCreate = nullptr;
+    std::vector<std::uint32_t> toolTypes;
+    std::vector<bool> toolFlags;
+    int cityScrollSets = 0, lastScrollX = 0, lastScrollY = 0;
+    int contourAdds = 0, contourRemoves = 0, lastContourRemoved = 0, nextContour = 0x99;
+    bool projectResult = true;
+    cS3DVector3 projectedPoint;
     // In the game both accessors answer the one render-property object (SL::spRenderProperties and
     // cISC4App vslot 0x160 are the same instance).
     cSC4RenderProperties globalProperties;
@@ -346,7 +462,58 @@ struct FakeHost final : IView3DWinHost {
     void RestoreLighting() override { ++lightingRestores; }
     int VirtualZoomLimit() override { return virtualZoomLimit; }
     bool ProgressScreenWanted() override { return progressWanted; }
-    cIGZUnknown* CreateProgressScreen(cIGZWin*, bool) override { return &progress; }   // the view takes the reference
+    cIGZUnknown* CreateProgressScreen(cIGZWin*, const cRZRect&, bool) override { return &progress; }
+    void InitProgressScreen(cIGZUnknown*) override { ++progressInits; }
+    void SetProgressCaption(cIGZUnknown*, int id, const cIGZString& text) override {
+        ++progressCaptions;
+        lastCaptionId = id;
+        lastCaption = text.ToChar();
+    }
+    bool UserDataDirectory(cIGZString& out) override {
+        out.AssignFromCString("/Users/test/SimCity 4");
+        return true;
+    }
+    cIGZWin* CreateWinAnimationRecorder() override {
+        if (!recorder) return nullptr;
+        recorder->AddRef();
+        return recorder;
+    }
+    void RecorderSetAnimationOutputDirectory(cIGZWin*, const cIGZString& directory, bool) override {
+        ++recordingSetups;
+        recordingDirectory = directory.ToChar();
+    }
+    ICityMouseRouter* CityMouseRouter() override { return &router; }
+    bool CanInvokeZoningTool() override { return canZone; }
+    ITerrainEditor* TerrainEditor() override { return &terrain; }
+    bool GraphicsSystemAllowsSelfScroll() override { return gsSelfScroll; }
+    void RunChangeTerrainDialog(int& type) override {
+        ++terrainDialogs;
+        if (!dialogResult.empty()) type = dialogResult[0];
+    }
+    cSC4ViewInputControl* CreateZoningTool(std::uint32_t type) override {
+        toolTypes.push_back(type);
+        return toolToCreate;
+    }
+    cSC4ViewInputControl* CreateTerrainScrubberTool(std::uint32_t type, bool flag) override {
+        toolTypes.push_back(type);
+        toolFlags.push_back(flag);
+        return toolToCreate;
+    }
+    cSC4ViewInputControl* CreateLevelTerrainTool() override { return toolToCreate; }
+    cSC4ViewInputControl* CreateCityScrollTool() override { return toolToCreate; }
+    void CityScrollSetMouseScroll(cSC4ViewInputControl*, int x, int y) override {
+        ++cityScrollSets;
+        lastScrollX = x;
+        lastScrollY = y;
+    }
+    void PlayGlobalTerrainEffectSound() override { ++globalTerrainSounds; }
+    ICursorTextWindow* CursorTextWindow() override { return &cursorWindow; }
+    int AddContourCallback() override { ++contourAdds; return nextContour; }
+    void RemoveContourCallback(int handle) override { ++contourRemoves; lastContourRemoved = handle; }
+    bool ProjectPointToViewport(cS3DVector3& point) override {
+        if (projectResult) point = projectedPoint;
+        return projectResult;
+    }
     void ShutdownProgressScreen(cIGZUnknown*) override { ++progressShutdowns; }
     void ShutdownValidationWindow(cIGZUnknown*) override { ++validationShutdowns; }
     void ShutdownLotConfigurationEditors() override { ++lotConfigShutdowns; }
@@ -387,13 +554,21 @@ struct FakeHost final : IView3DWinHost {
 struct ControlLog {
     int inits = 0, shutdowns = 0, activations = 0, deactivations = 0, mouseExits = 0;
     int characters = 0, keysDown = 0, keysUp = 0, wheels = 0;
+    int downL = 0, downR = 0, upL = 0, upR = 0, moves = 0;
     std::vector<std::uint32_t> keys;
     bool handleCharacter = false, handleKeyDown = false, handleKeyUp = false, handleWheel = false;
+    bool handleDownL = false, handleDownR = false, handleUpL = false, handleUpR = false, handleMove = false;
+    bool selfScrolling = false;
     bool initResult = true;
 };
 struct TestControl final : cSC4ViewInputControl {
     explicit TestControl(ControlLog& log) : log_(log) {}
-    bool Init() override { ++log_.inits; return log_.initResult; }
+    bool Init() override {
+        ++log_.inits;
+        if (!log_.initResult) return false;
+        return cSC4ViewInputControl::Init();   // sets winMgr_, which AmCapturing needs
+    }
+    bool IsSelfScrollingView() override { return log_.selfScrolling; }
     bool Shutdown() override { ++log_.shutdowns; return true; }
     void Activate() override { ++log_.activations; }
     void Deactivate() override { ++log_.deactivations; }
@@ -405,6 +580,11 @@ struct TestControl final : cSC4ViewInputControl {
         ++log_.keysUp; log_.keys.push_back(key); return log_.handleKeyUp;
     }
     bool OnMouseWheel(int, int, std::uint32_t, int) override { ++log_.wheels; return log_.handleWheel; }
+    bool OnMouseDownL(int, int, std::uint32_t) override { ++log_.downL; return log_.handleDownL; }
+    bool OnMouseDownR(int, int, std::uint32_t) override { ++log_.downR; return log_.handleDownR; }
+    bool OnMouseUpL(int, int, std::uint32_t) override { ++log_.upL; return log_.handleUpL; }
+    bool OnMouseUpR(int, int, std::uint32_t) override { ++log_.upR; return log_.handleUpR; }
+    bool OnMouseMove(int, int, std::uint32_t) override { ++log_.moves; return log_.handleMove; }
     bool OnMouseExit() override { ++log_.mouseExits; return true; }
     ControlLog& log_;
 };
@@ -419,6 +599,9 @@ int main() {
     mainWindow.SetArea(0, 0, 800, 600);
     mgr.mainWin = &mainWindow;
     FakeRenderer renderer;
+    FakeViewInputHost inputHost;
+    inputHost.manager = &mgr;
+    SetViewInputHost(&inputHost);
 
     // ------------------------------------------------------------------ constructor
     auto* view = new cSC4View3DWin(&mgr);
@@ -953,7 +1136,8 @@ int main() {
         CHECK(View3DWinTestAccess::FocusState(*view) == 0 && host.hoverUpdates == 2);
         View3DWinTestAccess::FocusState(*view) = 0x55;
         message.type = kMsgViewMouseMove;
-        CHECK(!view->DoMessage(message));
+        // The move message is dispatched to GZOnMouseMove by cGZWin::DoMessage, which now handles it.
+        CHECK(view->DoMessage(message));
         CHECK(host.hoverUpdates == 3);
         CHECK(host.uiFilters == 3);
 
@@ -1098,6 +1282,414 @@ int main() {
         View3DWinTestAccess::Stopping(*view) = false;
         View3DWinTestAccess::PaintEnabled(*view) = false;
         View3DWinTestAccess::SimHidden(*view) = false;              // do not carry it into Shutdown
+    }
+
+    // ------------------------------------------------------------------ the mouse handlers
+    {
+        ControlLog stackLog, persistLog;
+        auto* stacked = new TestControl(stackLog);
+        stacked->AddRef();
+        auto* persistent = new TestControl(persistLog);
+        persistent->AddRef();
+        CHECK(view->AddPersistentViewInputControl(persistent));
+        persistent->Release();
+        CHECK(view->SetCurrentViewInputControl(stacked, 0));
+        stacked->Release();
+
+        // The router (SL::spCity vslot 0x290) sees every button first; while it is active and refuses the
+        // point the view consumes the event and the tools never see it.
+        host.router.active = true;
+        host.router.handled = false;
+        host.router.calls = 0;
+        CHECK(view->GZOnMouseDownL(10, 20, 0x5));
+        CHECK(host.router.calls == 1 && host.router.lastFlags == -1);
+        CHECK(persistLog.downL == 0 && stackLog.downL == 0);
+        CHECK(View3DWinTestAccess::LastModifiers(*view) == 0x5);
+        // When the router handles it the persistent tools come first, then the stack.
+        host.router.handled = true;
+        CHECK(view->GZOnMouseDownL(10, 20, 0x6));
+        CHECK(persistLog.downL == 1 && stackLog.downL == 1);
+        CHECK(View3DWinTestAccess::LastModifiers(*view) == 0x6);
+        // The router rewrites the point in place and the tools get the rewritten one.
+        host.router.mapX = 77;
+        host.router.mapY = 88;
+        CHECK(view->GZOnMouseDownL(1, 2, 0));
+        CHECK(persistLog.downL == 2 && stackLog.downL == 2);
+        host.router.mapX = host.router.mapY = 0;
+        // The bottom stacked tool's answer is not looked at (quirk), but it is still called.
+        stackLog.handleDownL = true;
+        CHECK(view->GZOnMouseDownL(3, 4, 0));
+        CHECK(stackLog.downL == 3);
+        stackLog.handleDownL = false;
+
+        // GZOnMouseDownR takes the capture, stores the button position and pushes the city-scroll tool.
+        ControlLog scrollLog;
+        auto* scrollTool = new TestControl(scrollLog);
+        host.toolToCreate = scrollTool;
+        host.cityScrollSets = 0;
+        mgr.capture = nullptr;
+        CHECK(view->GZOnMouseDownR(30, 40, 0x2));
+        CHECK(persistLog.downR == 1 && stackLog.downR == 1);
+        CHECK(mgr.capture == static_cast<cIGZWin*>(static_cast<cGZWin*>(view)));
+        CHECK(host.cityScrollSets == 1 && host.lastScrollX == 30 && host.lastScrollY == 40);
+        CHECK(View3DWinTestAccess::MouseDownX(*view) == 30 && View3DWinTestAccess::MouseDownY(*view) == 40);
+        CHECK(!View3DWinTestAccess::DraggedPastDeadZone(*view));
+        CHECK(view->GetCurrentViewInputControl() == scrollTool);
+        CHECK(scrollLog.inits == 1);
+        host.toolToCreate = nullptr;
+
+        // GZOnMouseUpL recalculates the scroll while the current, non-self-scrolling tool holds the capture.
+        host.preferences[kPrefsEdgeScrollEnabled] = 0;
+        View3DWinTestAccess::Scrolling(*view) = false;
+        View3DWinTestAccess::Stopping(*view) = false;
+        View3DWinTestAccess::KeyboardScrollX(*view) = 1;
+        CHECK(view->GZOnMouseUpL(5, 6, 0));
+        CHECK(scrollLog.upL == 1 && persistLog.upL == 1 && stackLog.upL == 1);
+        CHECK(View3DWinTestAccess::Scrolling(*view));           // the capture + RecalcScrollVelocity ran
+        View3DWinTestAccess::KeyboardScrollX(*view) = 0;
+        View3DWinTestAccess::Scrolling(*view) = false;
+        View3DWinTestAccess::Stopping(*view) = false;
+
+        // GZOnMouseUpR: the picked model's world-bounds centre becomes the camera target, and both terrain
+        // heights are queried and discarded (quirk, 0x100783561 / 0x100783574).
+        View3DWinTestAccess::DraggedPastDeadZone(*view) = false;
+        FakeModelInstance model;
+        model.bounds.min[0] = 0.0f; model.bounds.min[1] = 2.0f; model.bounds.min[2] = 4.0f;
+        model.bounds.max[0] = 10.0f; model.bounds.max[1] = 6.0f; model.bounds.max[2] = 20.0f;
+        renderer.pickResult = &model;
+        host.terrain.heights = host.terrain.heightsAt = 0;
+        CHECK(view->GZOnMouseUpR(50, 60, 0));
+        CHECK(model.worldBounds == 1 && model.releases == 1);
+        CHECK(host.terrain.heights == 1 && host.terrain.heightsAt == 1);
+        CHECK(camera->ViewTarget().x == 5.0f && camera->ViewTarget().y == 4.0f &&
+              camera->ViewTarget().z == 12.0f);
+        CHECK(persistLog.upR == 1 && scrollLog.upR == 1);
+        CHECK(mgr.capture == nullptr);                          // released
+        // Without a model the terrain pick answers the target and the height queries are skipped.
+        renderer.pickResult = nullptr;
+        renderer.pickTerrainResult = true;
+        host.terrain.heights = host.terrain.heightsAt = 0;
+        CHECK(view->GZOnMouseUpR(1, 2, 0));
+        CHECK(host.terrain.heights == 0 && host.terrain.heightsAt == 0);
+        CHECK(camera->ViewTarget().x == 1.5f && camera->ViewTarget().y == 2.5f);
+        renderer.pickTerrainResult = false;
+        // Past the dead zone the camera is left alone (but the tools still see the release).
+        View3DWinTestAccess::DraggedPastDeadZone(*view) = true;
+        camera->SetViewTargetPosition({0.0f, 0.0f, 0.0f});
+        CHECK(view->GZOnMouseUpR(9, 9, 0));
+        CHECK(camera->ViewTarget().x == 0.0f && camera->ViewTarget().y == 0.0f);
+        View3DWinTestAccess::DraggedPastDeadZone(*view) = false;
+
+        // GZOnMouseMove: dead zone, cursor text and the edge-scroll inputs. RecalcScrollVelocity clears the
+        // two edge inputs when the preference at 0xf09 is set, so the direction is observed on the scroll.
+        host.preferences[kPrefsEdgeScrollEnabled] = 1;
+        host.router.active = true;
+        host.router.handled = true;
+        host.router.allowEdgeScroll = true;
+        View3DWinTestAccess::MouseDownX(*view) = 400;
+        View3DWinTestAccess::MouseDownY(*view) = 300;
+        View3DWinTestAccess::DraggedPastDeadZone(*view) = false;
+        host.costUpdates = 0;
+        View3DWinTestAccess::Scrolling(*view) = false;
+        View3DWinTestAccess::Stopping(*view) = false;
+        camera->SetZoom(0.0f);
+        CHECK(view->GZOnMouseMove(400, 300, 0));
+        CHECK(!View3DWinTestAccess::DraggedPastDeadZone(*view));
+        CHECK(View3DWinTestAccess::EdgeScrollX(*view) == 0 && View3DWinTestAccess::EdgeScrollY(*view) == 0);
+        CHECK(View3DWinTestAccess::CursorTextX(*view) == 400 && View3DWinTestAccess::CursorTextY(*view) == 300);
+        CHECK(host.costUpdates == 1);
+        CHECK(view->GZOnMouseMove(799, 300, 0));               // right edge -> east
+        CHECK(View3DWinTestAccess::Scrolling(*view));
+        CHECK(std::fabs(View3DWinTestAccess::ScrollAngle(*view) - 0.0f) < 1e-6f);
+        View3DWinTestAccess::Scrolling(*view) = false;
+        CHECK(view->GZOnMouseMove(0, 300, 0));                 // left edge -> west (pi)
+        CHECK(std::fabs(View3DWinTestAccess::ScrollAngle(*view) - 3.14159274f) < 1e-5f);
+        View3DWinTestAccess::Scrolling(*view) = false;
+        CHECK(view->GZOnMouseMove(400, 599, 0));               // bottom edge -> 90 degrees
+        CHECK(std::fabs(View3DWinTestAccess::ScrollAngle(*view) - 1.57079637f) < 1e-5f);
+        CHECK(View3DWinTestAccess::DraggedPastDeadZone(*view));   // 299 pixels on one axis
+        // With the preference off the edge inputs are cleared and nothing scrolls.
+        host.preferences[kPrefsEdgeScrollEnabled] = 0;
+        View3DWinTestAccess::Scrolling(*view) = false;
+        View3DWinTestAccess::Stopping(*view) = false;
+        CHECK(view->GZOnMouseMove(799, 599, 0));
+        CHECK(View3DWinTestAccess::EdgeScrollX(*view) == 0 && View3DWinTestAccess::EdgeScrollY(*view) == 0);
+        // A self-scrolling current tool leaves the edge inputs alone when the graphics system allows it.
+        ControlLog selfLog;
+        selfLog.selfScrolling = true;
+        auto* selfTool = new TestControl(selfLog);
+        selfTool->AddRef();
+        CHECK(view->SetCurrentViewInputControl(selfTool, 0));
+        selfTool->Release();
+        host.preferences[kPrefsEdgeScrollEnabled] = 1;
+        host.gsSelfScroll = false;
+        View3DWinTestAccess::EdgeScrollX(*view) = 0;
+        View3DWinTestAccess::EdgeScrollY(*view) = 0;
+        View3DWinTestAccess::Scrolling(*view) = false;
+        CHECK(view->GZOnMouseMove(10, 10, 0));                 // both inputs already 0: returns early
+        CHECK(!View3DWinTestAccess::Scrolling(*view));
+        View3DWinTestAccess::EdgeScrollX(*view) = 1;
+        View3DWinTestAccess::Scrolling(*view) = false;
+        CHECK(view->GZOnMouseMove(10, 10, 0));                 // the edge input survives into RecalcScrollVelocity
+        CHECK(View3DWinTestAccess::Scrolling(*view));
+        host.gsSelfScroll = true;
+        View3DWinTestAccess::Scrolling(*view) = false;
+        View3DWinTestAccess::Stopping(*view) = false;
+        View3DWinTestAccess::EdgeScrollX(*view) = 0;
+        CHECK(view->GZOnMouseMove(10, 10, 0));                 // the graphics system paused the scrolling
+        CHECK(!View3DWinTestAccess::Scrolling(*view));
+        host.gsSelfScroll = false;
+        host.preferences[kPrefsEdgeScrollEnabled] = 0;
+        View3DWinTestAccess::Scrolling(*view) = false;
+        View3DWinTestAccess::Stopping(*view) = false;
+
+        CHECK(view->RemoveAllPersistentViewInputControls());
+        CHECK(!view->RemoveAllViewInputControls(true));
+        host.router.active = false;
+        host.router.handled = true;
+    }
+
+    // ------------------------------------------------------------------ cursor text
+    {
+        host.cursorWindow.visible = false;
+        host.cursorWindow.shows = host.cursorWindow.hides = host.cursorWindow.resets = 0;
+        host.cursorWindow.positions = 0;
+        host.cursorWindow.line1Sets = host.cursorWindow.line2Sets = host.cursorWindow.iconSets = 0;
+        View3DWinTestAccess::CursorTextWindow(*view) = &host.cursorWindow;
+        View3DWinTestAccess::CursorTextIcon(*view) = reinterpret_cast<cIGZUnknown*>(0xabc);
+        View3DWinTestAccess::CursorText(*view).clear();
+        cRZString lineA("A"), lineB("B"), lineC("C"), lineD("D");
+
+        view->SetCursorText(1, 10, &lineA, &lineB, 1);
+        CHECK(View3DWinTestAccess::CursorText(*view).size() == 1);
+        CHECK(host.cursorWindow.line1 == "A" && host.cursorWindow.line2 == "B");
+        CHECK(host.cursorWindow.icon == reinterpret_cast<cIGZUnknown*>(0xabc));
+        CHECK(host.cursorWindow.visible && host.cursorWindow.shows == 1);
+        CHECK(host.cursorWindow.positions == 1 && host.cursorWindow.lastX == 0 && host.cursorWindow.lastY == 0);
+        // A second entry is inserted in front of the last node (orders 20 then 10): the window still shows
+        // the *last* node, which is entry 1.
+        view->SetCursorText(2, 20, &lineC, &lineD, 0);
+        CHECK(View3DWinTestAccess::CursorText(*view).size() == 2);
+        CHECK(View3DWinTestAccess::CursorText(*view).front().key == 2);
+        CHECK(host.cursorWindow.line1 == "A" && host.cursorWindow.line2 == "B");
+        CHECK(host.cursorWindow.icon == reinterpret_cast<cIGZUnknown*>(0xabc));   // still the last node
+        // Order 5 is smaller than every stored order, so the original appends it at the end.
+        view->SetCursorText(3, 5, &lineC, &lineD, 0);
+        CHECK(View3DWinTestAccess::CursorText(*view).back().key == 3);
+        CHECK(host.cursorWindow.line1 == "C" && host.cursorWindow.line2 == "D");
+        // Order 40 lands in front of the first node (from the back) whose order is <= 40.
+        view->SetCursorText(4, 40, &lineA, &lineB, 0);
+        CHECK(View3DWinTestAccess::CursorText(*view).size() == 4);
+        CHECK(View3DWinTestAccess::CursorText(*view).back().key == 3);
+        // Updating an entry: a missing second line erases the *first* line (quirk, 0x10079144a).
+        view->SetCursorText(2, 20, &lineC, nullptr, 0);
+        {
+            CursorTextInfo& info = View3DWinTestAccess::CursorText(*view).front();
+            CHECK(info.key == 2 && info.line1.Strlen() == 0);
+            CHECK(std::strcmp(info.line2.ToChar(), "D") == 0);
+        }
+        // Both strings empty: ClearCursorText runs (it calls CursorTextChanged) and SetCursorText calls it
+        // once more, so the window sees two updates (quirk, 0x1007913c6).
+        host.cursorWindow.line1Sets = 0;
+        view->SetCursorText(2, 20, nullptr, nullptr, 0);
+        CHECK(host.cursorWindow.line1Sets == 2);
+        CHECK(View3DWinTestAccess::CursorText(*view).size() == 3);
+        CHECK(View3DWinTestAccess::CursorText(*view).front().key != 2);
+        // ClearCursorText walks the list from the back and erases the first match.
+        view->ClearCursorText(4);
+        CHECK(View3DWinTestAccess::CursorText(*view).size() == 2);
+        view->ClearCursorText(1);
+        view->ClearCursorText(3);
+        CHECK(View3DWinTestAccess::CursorText(*view).empty());
+        host.cursorWindow.hides = host.cursorWindow.resets = 0;
+        view->ClearCursorText(0x99);                            // no entry: only the empty-list update
+        CHECK(host.cursorWindow.hides == 1 && host.cursorWindow.resets == 1);
+
+        // UpdateCursorTextPositions only moves the window while it is visible, then updates the cost
+        // indicator with a zero delta.
+        host.cursorWindow.visible = false;
+        host.cursorWindow.positions = 0;
+        host.costUpdates = 0;
+        view->UpdateCursorTextPositions(12, 34);
+        CHECK(host.cursorWindow.positions == 0);
+        CHECK(View3DWinTestAccess::CursorTextX(*view) == 12 && View3DWinTestAccess::CursorTextY(*view) == 34);
+        CHECK(host.costUpdates == 1 && host.lastCostDt == 0.0f);
+        host.cursorWindow.visible = true;
+        view->UpdateCursorTextPositions(56, 78);
+        CHECK(host.cursorWindow.positions == 1 && host.cursorWindow.lastX == 56 && host.cursorWindow.lastY == 78);
+        View3DWinTestAccess::CursorTextWindow(*view) = nullptr;
+        View3DWinTestAccess::CursorTextIcon(*view) = nullptr;
+    }
+
+    // ------------------------------------------------------------------ panels and the progress screen
+    {
+        // HideMissionStatusPanel ChildDeletes the panel and drops its reference.
+        auto* mission = new cGZWin(&mgr);
+        mission->AddRef();
+        View3DWinTestAccess::MissionPanel(*view) = mission;
+        view->HideMissionStatusPanel();
+        CHECK(View3DWinTestAccess::MissionPanel(*view) == nullptr);
+        view->HideMissionStatusPanel();                         // nothing left
+        // CloseSecondaryMenu hides, ChildDeletes and releases the menu window and clears its state word.
+        auto* menu = new cGZWin(&mgr);
+        menu->AddRef();
+        menu->SetArea(0, 0, 10, 10);
+        View3DWinTestAccess::SecondaryMenu(*view) = menu;
+        View3DWinTestAccess::SecondaryMenuState(*view) = 7;
+        view->CloseSecondaryMenu();
+        CHECK(View3DWinTestAccess::SecondaryMenu(*view) == nullptr);
+        CHECK(View3DWinTestAccess::SecondaryMenuState(*view) == 0);
+        view->CloseSecondaryMenu();
+        // CreateProgressScreen stores one reference and calls Init; UpdateProgressMessage captions id 1
+        // with the empty string the original passes.
+        host.progress.refs = 0;
+        host.progressInits = 0;
+        host.progressCaptions = 0;
+        View3DWinTestAccess::ProgressScreen(*view) = nullptr;
+        view->CreateProgressScreen(true);
+        CHECK(View3DWinTestAccess::ProgressScreen(*view) == &host.progress);
+        CHECK(host.progress.refs == 1 && host.progressInits == 1);
+        view->UpdateProgressMessage();
+        CHECK(host.progressCaptions == 1 && host.lastCaptionId == 1 && host.lastCaption.empty());
+        View3DWinTestAccess::ProgressScreen(*view) = nullptr;
+        host.progress.refs = 0;
+        view->UpdateProgressMessage();                          // no screen: no call
+        CHECK(host.progressCaptions == 1);
+        view->CreateProgressScreen(false);                      // the screen Shutdown will tear down
+        CHECK(View3DWinTestAccess::ProgressScreen(*view) == &host.progress && host.progress.refs == 1);
+    }
+
+    // ------------------------------------------------------------------ the animation recorder
+    {
+        FakeAnimationRecorder recorder(&mgr);
+        host.recorder = &recorder;
+        host.recordingSetups = 0;
+        recorder.refs = 0;
+        view->AddWinAnimationRecorder(true);
+        CHECK(host.recordingSetups == 1);
+        CHECK(host.recordingDirectory == "/Users/test/SimCity 4RecordedAnimations/");
+        CHECK(recorder.GetID() == kView3DAnimationRecorderId);
+        CHECK(recorder.refs == 1);                             // the view released its reference; ChildAdd keeps one
+        CHECK(view->GetChildWindowFromID(kView3DAnimationRecorderId) == &recorder);
+        view->AddWinAnimationRecorder(true);                    // already there: nothing happens
+        CHECK(host.recordingSetups == 1);
+        view->AddWinAnimationRecorder(false);                   // removes the child, does not release it
+        CHECK(view->GetChildWindowFromID(kView3DAnimationRecorderId) == nullptr);
+        host.recorder = nullptr;
+        view->AddWinAnimationRecorder(true);                    // no recorder from the host: no crash
+        CHECK(host.recordingSetups == 1);
+    }
+
+    // ------------------------------------------------------------------ the tool invokers
+    {
+        host.router.active = false;
+        CHECK(!view->RemoveAllViewInputControls(true));
+
+        // InvokeZoningTool asks the city first (vslot 0xb0) and pushes the tool with operation 2.
+        ControlLog zoneLog;
+        auto* zoneTool = new TestControl(zoneLog);
+        host.toolToCreate = zoneTool;
+        host.toolTypes.clear();
+        host.canZone = true;
+        view->InvokeZoningTool(0x1234);
+        CHECK(host.toolTypes.size() == 1 && host.toolTypes[0] == 0x1234);
+        CHECK(view->GetCurrentViewInputControl() == zoneTool);
+        CHECK(zoneLog.inits == 1);
+        host.canZone = false;
+        view->InvokeZoningTool(0x2222);
+        CHECK(host.toolTypes.size() == 1);
+        host.canZone = true;
+        CHECK(!view->RemoveAllViewInputControls(true));
+
+        ControlLog scrubLog;
+        auto* scrub = new TestControl(scrubLog);
+        host.toolToCreate = scrub;
+        host.toolFlags.clear();
+        view->InvokeLandscapeTool(9, true);
+        CHECK(host.toolTypes.size() == 2 && host.toolTypes[1] == 9);
+        CHECK(host.toolFlags.size() == 1 && host.toolFlags[0]);
+        CHECK(view->GetCurrentViewInputControl() == scrub);
+        CHECK(!view->RemoveAllViewInputControls(true));
+
+        // ApplyDefaultTerrainBrush: brush 7 is ignored, otherwise the terrain answers the landscape type.
+        host.terrain.brushCalls = 0;
+        host.terrain.brushResult = true;
+        view->ApplyDefaultTerrainBrush(7, false);
+        CHECK(host.terrain.brushCalls == 0);
+        ControlLog brushLog;
+        auto* brushTool = new TestControl(brushLog);
+        host.toolToCreate = brushTool;
+        view->ApplyDefaultTerrainBrush(3, true);
+        CHECK(host.terrain.brushCalls == 1 && host.terrain.brush == 3);
+        CHECK(host.toolTypes.size() == 3 && host.toolTypes[2] == 0x77);
+        CHECK(host.toolFlags.size() == 2 && host.toolFlags[1]);
+        CHECK(!view->RemoveAllViewInputControls(true));
+
+        // ChangeTerrainType writes the dialog's answer back to the terrain.
+        host.terrain.type = 5;
+        host.terrain.typeSets = 0;
+        host.terrainDialogs = 0;
+        host.dialogResult = {11};
+        view->ChangeTerrainType();
+        CHECK(host.terrainDialogs == 1 && host.terrain.type == 11 && host.terrain.typeSets == 1);
+        host.dialogResult.clear();
+
+        // RunGlobalTerrainTool: the sound first, then the per-case terrain / message / tool work.
+        host.globalTerrainSounds = 0;
+        host.server.posted.clear();
+        view->RunGlobalTerrainTool(5);
+        CHECK(host.globalTerrainSounds == 1);
+        CHECK(host.server.posted.size() == 1 && host.server.posted[0] == kMsgViewTerrainDisplayChanged);
+        CHECK(host.server.lastData1 == 0);
+        view->RunGlobalTerrainTool(6);
+        CHECK(host.server.lastData1 == 1);
+        host.terrain.mode158 = 0;
+        view->RunGlobalTerrainTool(1);
+        CHECK(host.terrain.mode158 == 1);
+        host.terrain.mode160 = 0;
+        view->RunGlobalTerrainTool(2);
+        CHECK(host.terrain.mode160 == 1);
+        host.terrain.cancels = 0;
+        host.terrain.activeFlags = 0;
+        view->RunGlobalTerrainTool(3);
+        CHECK(host.terrain.cancels == 1 && host.terrain.activeFlag);
+        view->RunGlobalTerrainTool(4);
+        CHECK(host.terrain.cancels == 2 && !host.terrain.activeFlag);
+        host.terrainDialogs = 0;
+        view->RunGlobalTerrainTool(0);                          // case 0 is the terrain-type dialog
+        CHECK(host.terrainDialogs == 1);
+        ControlLog levelLog;
+        auto* levelTool = new TestControl(levelLog);
+        host.toolToCreate = levelTool;
+        view->RunGlobalTerrainTool(7);
+        CHECK(view->GetCurrentViewInputControl() == levelTool);
+        host.toolToCreate = nullptr;
+        CHECK(!view->RemoveAllViewInputControls(true));
+
+        // ToggleContourDisplay flips its flag and adds / removes the contour layer's callback.
+        host.contourAdds = host.contourRemoves = 0;
+        host.nextContour = 0x99;
+        CHECK(view->ToggleContourDisplay());
+        CHECK(host.contourAdds == 1);
+        CHECK(view->ToggleContourDisplay() == false);
+        CHECK(host.contourRemoves == 1 && host.lastContourRemoved == 0x99);
+        CHECK(view->ToggleContourDisplay());                    // adds it again
+        CHECK(host.contourAdds == 2);
+        host.projectResult = true;
+        host.projectedPoint = {12.75f, 34.5f, 0.0f};
+        View3DWinTestAccess::CursorTextWindow(*view) = &host.cursorWindow;
+        host.cursorWindow.visible = true;
+        host.cursorWindow.positions = 0;
+        view->SetCursorTextPosition3D(cS3DVector3{1.0f, 2.0f, 3.0f});
+        CHECK(host.cursorWindow.positions == 1);
+        CHECK(View3DWinTestAccess::CursorTextX(*view) == 12 && View3DWinTestAccess::CursorTextY(*view) == 34);
+        host.projectedPoint = {5.0f, 6.0f, 0.0f};
+        host.projectResult = false;
+        host.cursorWindow.positions = 0;
+        view->SetCursorTextPosition3D(cS3DVector3{1.0f, 2.0f, 3.0f});
+        CHECK(host.cursorWindow.positions == 0);
+        CHECK(View3DWinTestAccess::CursorTextX(*view) == 12);   // unchanged
+        View3DWinTestAccess::CursorTextWindow(*view) = nullptr;
     }
 
     // ------------------------------------------------------------------ Shutdown

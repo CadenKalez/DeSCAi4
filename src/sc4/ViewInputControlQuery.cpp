@@ -871,10 +871,29 @@ bool cSC4ViewInputControlQuery::SetPerformanceMeterValue(cIGZWin* win, std::uint
 }
 
 // @ 0x1002daf96
-// PARTIAL: the original is a switch over the control ids 0x1000..0x107e that calls one SetOrGet* row handler per id
-// (EnumFunc* go through the same 0x7f-entry table). None of those row handlers that need an unrecovered simulator is
-// ported, and the id -> handler table was not recovered, so only the dispatcher's shape is kept here.
-bool cSC4ViewInputControlQuery::SetOrGetControlValue(cIGZWin*, std::uint32_t, bool, tCellInfo*) { return false; }
+// PARTIAL: the original is a switch over the cell-based control ids (0x1011..0x1015 airport/seaport traffic, 0x1026 /
+// 0x1027 landfill, 0x1028 the landfill developer's monthly cost, 0x104b..0x104e the neighbour-connection rows and
+// 0x1066..0x107e the neighbour deals / airport / seaport rows). Only the four neighbour-connection rows this port
+// implements are dispatched; every other arm belongs to a row handler that needs an unrecovered developer/simulator
+// (see notes/ledger_pending/cSC4ViewInputControlQuery.txt). The dispatcher always answers false, like the original.
+bool cSC4ViewInputControlQuery::SetOrGetControlValue(cIGZWin* win, std::uint32_t id, bool set, tCellInfo* info) {
+    if (!info) return false;
+    const std::uint32_t rowId = static_cast<std::uint32_t>(info->idOffset);
+    switch (id) {
+    case 0x104b:
+        SetOrGetNeighborConnectionNeighborCityName(win, rowId + 0x104b, set, info->x, info->z, info->connectionType);
+        return false;
+    case 0x104c:
+        SetOrGetNeighborConnectionNeighborCityMayorName(win, rowId + 0x104c, set, info->x, info->z,
+                                                        info->connectionType);
+        return false;
+    case 0x104d:
+        SetOrGetNeighborConnectionCongestion(win, rowId + 0x104d, set, info->x, info->z);
+        return false;
+    default:
+        return false;
+    }
+}
 
 // @ 0x1002d5a0a
 bool cSC4ViewInputControlQuery::SetOrGetName(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
@@ -1017,46 +1036,135 @@ float cSC4ViewInputControlQuery::GetMayorRatingPercent(cISC4Occupant* occupant) 
     return (static_cast<float>(total) / static_cast<float>(count)) * 100.0f / 255.0f;
 }
 
-// @ 0x1002db37e
+// --- dialog row dispatch (the EnumFunc* callbacks) ----------------------------------------------------------
+
+namespace {
+
+// The interface the row enumeration recurses through (EnumChildren argument, not an iid the port needs to know).
+constexpr std::uint32_t kEnumRowIid = 0x22ba0121;
+// cSLString group/instance of the neighbour-city name placeholder (loaded before the city's own name).
+constexpr std::uint32_t kStrNeighborCityGroup = 0x6a231eaa;
+constexpr std::uint32_t kStrNeighborCityInstance = 0x0a8e15f9;
+// Property holding the budget value ids summed by SetOrGetOccupantCost.
+constexpr std::uint32_t kPropBudgetValues = 0xea54d285;
+
+}  // namespace
+
+// @ 0x100a92150, 0x7f entries, index = (id & 0xfff) - 0x1000. Entries this port has not implemented yet are null
+// (the original points them at the SetOrGet* rows listed in notes/ledger_pending/cSC4ViewInputControlQuery.txt).
+cSC4ViewInputControlQuery::tSetOrGetFn const cSC4ViewInputControlQuery::kRowFunctions[0x7f] = {
+    &cSC4ViewInputControlQuery::SetOrGetName, &cSC4ViewInputControlQuery::SetOrGetFireStationEffectiveness, &cSC4ViewInputControlQuery::SetOrGetFireStationLocalFunding, &cSC4ViewInputControlQuery::SetOrGetFireStationEngineCount,   // 0x1000..0x1003
+    &cSC4ViewInputControlQuery::SetOrGetFireStationMaintenanceCost, nullptr, &cSC4ViewInputControlQuery::SetOrGetPoliceStationEffectiveness, &cSC4ViewInputControlQuery::SetOrGetPoliceStationArrestCount,   // 0x1004..0x1007
+    &cSC4ViewInputControlQuery::SetOrGetPoliceStationCrimeCount, &cSC4ViewInputControlQuery::SetOrGetPoliceStationLocalFunding, &cSC4ViewInputControlQuery::SetOrGetPoliceStationPatrolCarCount, &cSC4ViewInputControlQuery::SetOrGetPoliceStationMaintenanceCost,   // 0x1008..0x100b
+    &cSC4ViewInputControlQuery::SetOrGetJailCondition, &cSC4ViewInputControlQuery::SetOrGetJailCellCount, &cSC4ViewInputControlQuery::SetOrGetJailInmateCount, &cSC4ViewInputControlQuery::SetOrGetJailMaintenanceCost,   // 0x100c..0x100f
+    &cSC4ViewInputControlQuery::SetOrGetParkMaintenanceCost, nullptr, nullptr, nullptr,   // 0x1010..0x1013
+    nullptr, nullptr, nullptr, nullptr,   // 0x1014..0x1017
+    nullptr, nullptr, nullptr, nullptr,   // 0x1018..0x101b
+    nullptr, nullptr, nullptr, nullptr,   // 0x101c..0x101f
+    nullptr, nullptr, nullptr, nullptr,   // 0x1020..0x1023
+    nullptr, nullptr, nullptr, nullptr,   // 0x1024..0x1027
+    nullptr, nullptr, nullptr, nullptr,   // 0x1028..0x102b
+    nullptr, nullptr, nullptr, nullptr,   // 0x102c..0x102f
+    nullptr, nullptr, nullptr, nullptr,   // 0x1030..0x1033
+    nullptr, nullptr, nullptr, nullptr,   // 0x1034..0x1037
+    nullptr, nullptr, nullptr, nullptr,   // 0x1038..0x103b
+    nullptr, nullptr, nullptr, nullptr,   // 0x103c..0x103f
+    nullptr, nullptr, nullptr, nullptr,   // 0x1040..0x1043
+    nullptr, nullptr, nullptr, nullptr,   // 0x1044..0x1047
+    nullptr, nullptr, nullptr, nullptr,   // 0x1048..0x104b
+    nullptr, nullptr, nullptr, nullptr,   // 0x104c..0x104f
+    nullptr, nullptr, nullptr, nullptr,   // 0x1050..0x1053
+    nullptr, nullptr, nullptr, nullptr,   // 0x1054..0x1057
+    &cSC4ViewInputControlQuery::SetOrGetResidentialBuildingMayorApproval, nullptr, nullptr, nullptr,   // 0x1058..0x105b
+    nullptr, nullptr, nullptr, nullptr,   // 0x105c..0x105f
+    nullptr, nullptr, nullptr, nullptr,   // 0x1060..0x1063
+    nullptr, nullptr, nullptr, nullptr,   // 0x1064..0x1067
+    nullptr, nullptr, nullptr, nullptr,   // 0x1068..0x106b
+    &cSC4ViewInputControlQuery::SetOrGetOccupantCost, nullptr, nullptr, nullptr,   // 0x106c..0x106f
+    nullptr, nullptr, nullptr, nullptr,   // 0x1070..0x1073
+    nullptr, nullptr, &cSC4ViewInputControlQuery::SetOrGetOccupantIsPowered, &cSC4ViewInputControlQuery::SetOrGetOccupantIsWatered,   // 0x1074..0x1077
+    nullptr, &cSC4ViewInputControlQuery::SetOrGetWhyOccupantAbandoned, &cSC4ViewInputControlQuery::SetOrGetOccupantIsHistorical, nullptr,   // 0x1078..0x107b
+    nullptr, nullptr, nullptr,   // 0x107c..0x107e
+};
+
+// @ 0x1002db37e: apply the message filter to the child, then recurse through the same callback.
 bool cSC4ViewInputControlQuery::EnumFuncSetFilter(cIGZWin*, std::uint32_t, void* child, void* context) {
-    // PARTIAL: the original calls the child's vslot 0x3a0 (a cGZWin method past the cIGZWin interface) with the
-    // context, then EnumChildren(kGZIID_cIGZWin, EnumFuncSetFilter, context).
-    (void)child;
-    (void)context;
+    auto* win = static_cast<cIGZWin*>(child);
+    if (!win) return true;
+    win->AddMessageFilter(static_cast<cIGZWinMessageFilter*>(context));
+    win->EnumChildren(kEnumRowIid, &cSC4ViewInputControlQuery::EnumFuncSetFilter, context);
     return true;
 }
 
-// @ 0x1002db3bc
+// @ 0x1002db3bc: drop the filter and the five slider/filter parameters. Deviation: the original releases each
+// parameter object twice (0x1002db40f/0x1002db419); with this port's counted cRZVariant the window's SetParam(id,
+// nullptr) already drops its reference, so the second release would free the object and then touch it. Only the
+// caller's own reference is released here.
 bool cSC4ViewInputControlQuery::EnumFuncClearFilter(cIGZWin*, std::uint32_t, void* child, void* context) {
-    // PARTIAL: clears the five slider/filter variants (0xea563ab0, 0x8adc29d4, 0x6a8cc9d6, 0x2aa6e8ad, 0xab3f6db)
-    // through vslot 0x3a8 / 0x388 / 0x390 and re-enumerates; needs cGZWin's methods past the cIGZWin interface.
-    (void)child;
-    (void)context;
+    auto* win = static_cast<cIGZWin*>(child);
+    if (!win) return true;
+    win->RemoveMessageFilter(static_cast<cIGZWinMessageFilter*>(context));
+    static const std::uint32_t keys[5] = {0xea563ab0, 0x8adc29d4, 0x6a8cc9d6, 0x2aa6e8ad, 0x0ab3f6db};
+    for (std::uint32_t key : keys) {
+        cIGZVariant* variant = nullptr;
+        if (!win->GetParam(key, &variant)) continue;
+        win->SetParam(key, nullptr);
+        if (variant) variant->Release();
+    }
+    win->EnumChildren(kEnumRowIid, &cSC4ViewInputControlQuery::EnumFuncClearFilter, context);
     return true;
 }
 
-// @ 0x1002db566 / 0x1002db5d8 / 0x1002db69e (all three index the same id -> handler table)
-bool cSC4ViewInputControlQuery::EnumFuncSetValue(cIGZWin*, std::uint32_t, void* child, void* context) {
-    (void)child;
-    (void)context;
+// @ 0x1002db566
+bool cSC4ViewInputControlQuery::EnumFuncSetValue(cIGZWin* win, std::uint32_t id, void* child, void* context) {
+    auto* window = static_cast<cIGZWin*>(child);
+    const std::uint32_t index = id & 0xfff;
+    bool handled = false;
+    if ((id & 0x1000) != 0 && win && context && index <= 0x7e) {
+        tSetOrGetFn fn = kRowFunctions[index];
+        if (fn) handled = fn(win, id, true, static_cast<cISC4Occupant*>(context));
+    }
+    // The original recurses into the child only when the row handler declined (or there is none for the id).
+    if (!handled && window) window->EnumChildren(kEnumRowIid, &cSC4ViewInputControlQuery::EnumFuncSetValue, context);
     return true;
 }
-bool cSC4ViewInputControlQuery::EnumFuncUpdateValue(cIGZWin*, std::uint32_t, void* child, void* context) {
-    (void)child;
-    (void)context;
+
+// @ 0x1002db5d8: sliders and bitmaps (interfaces 0x231a1c57 / 0x8810) are only released, never updated.
+bool cSC4ViewInputControlQuery::EnumFuncUpdateValue(cIGZWin* win, std::uint32_t id, void* child, void* context) {
+    auto* window = static_cast<cIGZWin*>(child);
+    if (window) {
+        void* other = nullptr;
+        if (window->QueryInterface(0x231a1c57, &other) || window->QueryInterface(0x8810, &other)) {
+            static_cast<cIGZUnknown*>(other)->Release();
+            return true;
+        }
+    }
+    const std::uint32_t index = id & 0xfff;
+    bool handled = false;
+    if ((id & 0x1000) != 0 && win && context && index <= 0x7e) {
+        tSetOrGetFn fn = kRowFunctions[index];
+        if (fn) handled = fn(win, id, true, static_cast<cISC4Occupant*>(context));
+    }
+    if (!handled && window) window->EnumChildren(kEnumRowIid, &cSC4ViewInputControlQuery::EnumFuncUpdateValue, context);
     return true;
 }
-bool cSC4ViewInputControlQuery::EnumFuncGetValue(cIGZWin*, std::uint32_t, void* child, void* context) {
-    (void)child;
-    (void)context;
+
+// @ 0x1002db69e
+bool cSC4ViewInputControlQuery::EnumFuncGetValue(cIGZWin* win, std::uint32_t id, void* child, void* context) {
+    auto* window = static_cast<cIGZWin*>(child);
+    const std::uint32_t index = id & 0xfff;
+    bool handled = false;
+    if ((id & 0x1000) != 0 && win && context && index <= 0x7e) {
+        tSetOrGetFn fn = kRowFunctions[index];
+        if (fn) handled = fn(win, id, false, static_cast<cISC4Occupant*>(context));
+    }
+    if (!handled && window) window->EnumChildren(kEnumRowIid, &cSC4ViewInputControlQuery::EnumFuncGetValue, context);
     return true;
 }
 
 // @ 0x1002db70e / 0x1002db748
 bool cSC4ViewInputControlQuery::EnumFuncNeighborDialogSetValue(cIGZWin* win, std::uint32_t id, void* cellInfo,
                                                               void* occupant) {
-    // PARTIAL: the original also re-enumerates the dialog with this same callback; the row dispatcher itself is
-    // partial (see SetOrGetControlValue), so only the call is kept.
     (void)occupant;
     SetOrGetControlValue(win, id, true, static_cast<tCellInfo*>(cellInfo));
     return true;
@@ -1066,6 +1174,285 @@ bool cSC4ViewInputControlQuery::EnumFuncNeighborDialogGetValue(cIGZWin* win, std
     (void)occupant;
     SetOrGetControlValue(win, id, false, static_cast<tCellInfo*>(cellInfo));
     return true;
+}
+
+// --- fire / police / jail / park rows ----------------------------------------------------------------------
+
+// @ 0x1002d5de4
+bool cSC4ViewInputControlQuery::SetOrGetFireStationEffectiveness(cIGZWin* win, std::uint32_t id, bool set,
+                                                                 cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    IQueryFireSim* fire = host ? host->FireSim() : nullptr;
+    if (!fire) return false;
+    return SetPerformanceMeterValue(win, id, fire->StationEffectiveness(occupant));
+}
+
+// @ 0x1002d5e1e
+bool cSC4ViewInputControlQuery::SetOrGetFireStationLocalFunding(cIGZWin* win, std::uint32_t id, bool set,
+                                                                cISC4Occupant* occupant) {
+    IQueryHost* host = QueryHost();
+    IQueryFireSim* fire = host ? host->FireSim() : nullptr;
+    if (!fire) return false;
+    if (set) {
+        int cost = 0;
+        float fraction = 0.0f;
+        fire->StationFunding(occupant, &cost, &fraction);
+        // The original truncates the percentage through the 1.5*2^23 magic constant, i.e. trunc(fraction * 100).
+        SetSliderControlValue(win, id, 1, 0, static_cast<int>(fraction * 100.0f), cost, occupant,
+                              &cSC4ViewInputControlQuery::SetOrGetFireStationLocalFunding, nullptr, 0);
+    } else {
+        int value = 0;
+        GetSliderControlValue(win, id, value);
+        fire->SetStationFunding(occupant, static_cast<float>(value) * 0.01f);
+    }
+    return true;
+}
+
+// @ 0x1002d5f02 (and the police patrol-car twin at 0x1002d617a)
+bool cSC4ViewInputControlQuery::SetOrGetFireStationEngineCount(cIGZWin* win, std::uint32_t id, bool set,
+                                                               cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    IQueryFireSim* fire = host ? host->FireSim() : nullptr;
+    if (!fire) return false;
+    std::uint32_t availability = 0, baseCall = 0, count = 0;
+    if (!fire->DispatchInfo(occupant, &availability, &baseCall, &count)) return false;
+    return SetStaticControlNumeric(win, id, count);
+}
+
+// @ 0x1002d5f82
+bool cSC4ViewInputControlQuery::SetOrGetFireStationMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set,
+                                                                   cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    IQueryFireSim* fire = host ? host->FireSim() : nullptr;
+    if (!fire) return false;
+    int cost = 0;
+    fire->StationFunding(occupant, &cost, nullptr);
+    return SetStaticControlSimoleons(win, id, cost);
+}
+
+// @ 0x1002d5fd8
+bool cSC4ViewInputControlQuery::SetOrGetPoliceStationEffectiveness(cIGZWin* win, std::uint32_t id, bool set,
+                                                                   cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    IQueryPoliceSim* police = host ? host->PoliceSim() : nullptr;
+    if (!police) return false;
+    return SetPerformanceMeterValue(win, id, police->StationEffectiveness(occupant));
+}
+
+// @ 0x1002d6016
+bool cSC4ViewInputControlQuery::SetOrGetPoliceStationArrestCount(cIGZWin* win, std::uint32_t id, bool set,
+                                                                 cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    IQueryPoliceSim* police = host ? host->PoliceSim() : nullptr;
+    if (!police) return false;
+    return SetStaticControlNumeric(win, id, static_cast<std::uint32_t>(police->ArrestCount(occupant)));
+}
+
+// @ 0x1002d6056
+bool cSC4ViewInputControlQuery::SetOrGetPoliceStationCrimeCount(cIGZWin* win, std::uint32_t id, bool set,
+                                                                cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    IQueryPoliceSim* police = host ? host->PoliceSim() : nullptr;
+    if (!police) return false;
+    return SetStaticControlNumeric(win, id, static_cast<std::uint32_t>(police->CrimeCount(occupant)));
+}
+
+// @ 0x1002d6096
+bool cSC4ViewInputControlQuery::SetOrGetPoliceStationLocalFunding(cIGZWin* win, std::uint32_t id, bool set,
+                                                                  cISC4Occupant* occupant) {
+    IQueryHost* host = QueryHost();
+    IQueryPoliceSim* police = host ? host->PoliceSim() : nullptr;
+    if (!police) return false;
+    if (set) {
+        int cost = 0;
+        float fraction = 0.0f;
+        police->StationFunding(occupant, &cost, &fraction);
+        SetSliderControlValue(win, id, 1, 0, static_cast<int>(fraction * 100.0f), cost, occupant,
+                              &cSC4ViewInputControlQuery::SetOrGetPoliceStationLocalFunding, nullptr, 0);
+    } else {
+        int value = 0;
+        GetSliderControlValue(win, id, value);
+        police->SetStationFunding(occupant, static_cast<float>(value) * 0.01f);
+    }
+    return true;
+}
+
+// @ 0x1002d617a
+bool cSC4ViewInputControlQuery::SetOrGetPoliceStationPatrolCarCount(cIGZWin* win, std::uint32_t id, bool set,
+                                                                    cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    IQueryPoliceSim* police = host ? host->PoliceSim() : nullptr;
+    if (!police) return false;
+    std::uint32_t availability = 0, baseCall = 0, count = 0;
+    if (!police->DispatchInfo(occupant, &availability, &baseCall, &count)) return false;
+    return SetStaticControlNumeric(win, id, count);
+}
+
+// @ 0x1002d61fa
+bool cSC4ViewInputControlQuery::SetOrGetPoliceStationMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set,
+                                                                     cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    IQueryPoliceSim* police = host ? host->PoliceSim() : nullptr;
+    if (!police) return false;
+    int cost = 0;
+    police->StationFunding(occupant, &cost, nullptr);
+    return SetStaticControlSimoleons(win, id, cost);
+}
+
+// @ 0x1002d6250: the jail fills from the design capacity (0.8 * capacity) to the absolute one; the meter runs from 1
+// down to 0 across that band.
+bool cSC4ViewInputControlQuery::SetOrGetJailCondition(cIGZWin* win, std::uint32_t id, bool set,
+                                                      cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    IQueryPoliceSim* police = host ? host->PoliceSim() : nullptr;
+    if (!police) return false;
+    float meter = police->JailEfficiency();
+    const int capacity = police->JailCapacity(occupant);
+    if (capacity == 0) {
+        meter = 0.0f;
+    } else {
+        const float capacityF = static_cast<float>(capacity);
+        const std::uint32_t inmates = static_cast<std::uint32_t>(static_cast<std::int64_t>(meter * capacityF));
+        if (static_cast<float>(inmates) <= capacityF * 0.8f) {
+            meter = 1.0f;
+        } else {
+            const std::uint32_t freeCells = static_cast<std::uint32_t>(capacity) - inmates;
+            if (static_cast<std::uint32_t>(capacity) < inmates || freeCells == 0) {
+                meter = 0.0f;
+            } else {
+                meter = static_cast<float>(freeCells);
+            }
+            meter = meter / (capacityF * 0.19999999f);
+        }
+    }
+    return SetPerformanceMeterValue(win, id, meter);
+}
+
+// @ 0x1002d631c
+bool cSC4ViewInputControlQuery::SetOrGetJailCellCount(cIGZWin* win, std::uint32_t id, bool set,
+                                                      cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    IQueryPoliceSim* police = host ? host->PoliceSim() : nullptr;
+    if (!police) return false;
+    const int capacity = police->JailCapacity(occupant);
+    return SetStaticControlNumeric(
+        win, id, static_cast<std::uint32_t>(static_cast<std::int64_t>(static_cast<float>(capacity) * 0.8f)));
+}
+
+// @ 0x1002d636a
+bool cSC4ViewInputControlQuery::SetOrGetJailInmateCount(cIGZWin* win, std::uint32_t id, bool set,
+                                                        cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    IQueryPoliceSim* police = host ? host->PoliceSim() : nullptr;
+    if (!police) return false;
+    const float efficiency = police->JailEfficiency();
+    const int capacity = police->JailCapacity(occupant);
+    return SetStaticControlNumeric(
+        win, id, static_cast<std::uint32_t>(static_cast<std::int64_t>(static_cast<float>(capacity) * efficiency)));
+}
+
+// @ 0x1002d63e6
+bool cSC4ViewInputControlQuery::SetOrGetJailMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set,
+                                                            cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    IQueryPoliceSim* police = host ? host->PoliceSim() : nullptr;
+    if (!police) return false;
+    return SetStaticControlSimoleons(win, id, police->JailMaintenance(occupant));
+}
+
+// @ 0x1002d6426: the park row is the generic occupant-cost row.
+bool cSC4ViewInputControlQuery::SetOrGetParkMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set,
+                                                            cISC4Occupant* occupant) {
+    return SetOrGetOccupantCost(win, id, set, occupant);
+}
+
+// @ 0x1002d6434: sum the monthly cost of every budget value the occupant's property vector names.
+bool cSC4ViewInputControlQuery::SetOrGetOccupantCost(cIGZWin* win, std::uint32_t id, bool set,
+                                                     cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    IQueryBudgetSim* budget = host ? host->BudgetSim() : nullptr;
+    if (!budget || !occupant) return false;
+    cISCPropertyHolder* holder = occupant->AsPropertyHolder();
+    std::vector<std::uint32_t> values;
+    if (!holder || !cSCPropertyHelp::GetPropertyValue(holder, kPropBudgetValues, values)) return false;
+    std::int64_t total = 0;
+    for (std::uint32_t value : values) {
+        std::int64_t cost = 0;
+        if (budget->OccupantValueCost(holder, value, cost)) total += cost;
+    }
+    return SetStaticControlSimoleons(win, id, total);
+}
+
+// --- neighbour-connection rows -----------------------------------------------------------------------------
+
+// @ 0x1002d906e
+IQueryNeighborCity* cSC4ViewInputControlQuery::FindCityOnOtherSideOfConnection(int connectionType, int x, int z) {
+    IQueryHost* host = QueryHost();
+    IQueryNeighborsSim* neighbors = host ? host->NeighborsSim() : nullptr;
+    if (!neighbors || !neighbors->IsValidConnectionCell(x, z)) return nullptr;
+    if (!neighbors->FindConnection(static_cast<std::uint32_t>(connectionType), x, z)) return nullptr;
+    return neighbors->FindCityOnOtherSide(x, z);
+}
+
+// @ 0x1002d90d6
+bool cSC4ViewInputControlQuery::SetOrGetNeighborConnectionNeighborCityName(cIGZWin* win, std::uint32_t id, bool set,
+                                                                          int x, int z, int connectionType) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    if (!host) return false;
+    cRZString text;
+    host->LoadString(kStrNeighborCityGroup, kStrNeighborCityInstance, text);
+    if (IQueryNeighborCity* city = FindCityOnOtherSideOfConnection(connectionType, x, z)) {
+        city->GetCityName(text);
+        city->Release();
+    }
+    return SetStaticControlText(win, id, text);
+}
+
+// @ 0x1002d9184 (quirk: a missing city answers false, not the usual true)
+bool cSC4ViewInputControlQuery::SetOrGetNeighborConnectionNeighborCityMayorName(cIGZWin* win, std::uint32_t id,
+                                                                               bool set, int x, int z,
+                                                                               int connectionType) {
+    if (!set) return true;
+    IQueryNeighborCity* city = FindCityOnOtherSideOfConnection(connectionType, x, z);
+    if (!city) return false;
+    cRZString text;
+    city->GetMayorName(text);
+    city->Release();
+    return SetStaticControlText(win, id, text);
+}
+
+// @ 0x1002d922e: the congestion map byte scaled to a percentage, clamped to the city's cell counts.
+bool cSC4ViewInputControlQuery::SetOrGetNeighborConnectionCongestion(cIGZWin* win, std::uint32_t id, bool set,
+                                                                     int x, int z) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    IQueryCity* city = host ? host->City() : nullptr;
+    IQueryTrafficSim* traffic = host ? host->TrafficSim() : nullptr;
+    if (!city || !traffic) return false;
+    const int cellsX = city->CellCountX();
+    const int cellsZ = city->CellCountZ();
+    if (x < 0) x = 0;
+    if (x > cellsX - 1) x = cellsX - 1;
+    int cellZ = 0;
+    if (z >= 0) cellZ = z;
+    if (cellZ > cellsZ - 1) cellZ = cellsZ - 1;
+    const std::uint8_t congestion = traffic->CongestionCell(x, cellZ);
+    const double percent = (static_cast<double>(congestion) / 255.0) * 100.0;
+    return SetStaticControlNumericPercent(win, id, static_cast<std::uint32_t>(static_cast<std::int64_t>(percent)));
 }
 
 // --- PARTIAL text builders ---------------------------------------------------------------------------------

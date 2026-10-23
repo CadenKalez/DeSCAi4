@@ -1,188 +1,134 @@
 SOURCE src/sc4/View3DWin.cpp|h
-EVIDENCE test scripts/tests/sc4_view3dwin_test.cpp - every function below runs in sc4_view3dwin (lifecycle and refcounts, Init/Shutdown order, zoom/rotation limits and the SetZoomLimits quirk, the scroll direction table / preference / stop speed and the scroll render-property snapshot, the view filter and level messages, the tool stack with its message and reference counts, character/key/wheel/exit dispatch including the persistent-loop bound quirk, both picks and the two-word PickTerrain fallback, the global effect trigger refcounts, GZPaint's frame marker / deferred message / scroll stop, and the DoMessage routing cases)
+EVIDENCE test scripts/tests/sc4_view3dwin_test.cpp - every function below runs in sc4_view3dwin (the five mouse handlers and their thunks: router gating / point rewriting / the persistent-then-stack order / the ignored bottom-tool answer / capture and the city-scroll tool / scroll recalc on the captured tool / the model-bounds camera target with the discarded terrain heights / the terrain-pick fallback / the dead zone / edge scrolling and the self-scrolling-tool preference branch; the cursor-text list and window: insert order, both-empty double update, the null-second-line erase quirk, visible-only repositioning, ClearCursorText; CreateProgressScreen and UpdateProgressMessage; HideMissionStatusPanel; CloseSecondaryMenu; AddWinAnimationRecorder and its output directory; the tool invokers InvokeZoningTool / InvokeLandscapeTool / ApplyDefaultTerrainBrush / ChangeTerrainType / RunGlobalTerrainTool; ToggleContourDisplay; SetCursorTextPosition3D)
 
-The port keeps one IView3DWinHost method per original call (SL::spMS2/spCCM/spSC4/SL::spPreferences and the
-unrecovered cSC4ProgressScreen, cRZAutoMsg2Notification, cSC4CoverageRadiusEffectHelper and cSC4WinAnimationRecorder
-objects); the cRZAutoMsg2Notification at +0x1d0 and the coverage helper at +0x5f8 are seams. The port's base
-layout matches the original up to +0x1d0; afterwards the offsets are lower (the 0x18-byte notification helper became a
-pointer, the GUI blocks at +0x270..+0x4d0 are not modelled and cSC4RenderProperties is 8 bytes shorter), so every
-offset in the header comments is the original's and the port's own layout is documented in the header note. The camera's ScrollByViewportAngle now returns its UpdateCameraPosition result
-(the binary's EAX at 0x10076b662), which this class checks before pausing the simulation.
+The mouse handlers, the cursor-text block, the two menu windows at +0x358, the progress screen and the tool invokers are now modelled. The host keeps one IView3DWinHost method per original call (SL::spCity vslot 0x290/0xb0, SL::spTerrain, SL::spGS vslot 0x60, SL::TerrainView, SL::spViewUtilities, SL::spSS, SL::UserDataDirectory, the cSC4ProgressScreen / cSC4WinAnimationRecorder / cSC4ViewInputControl{Zone,TerrainScrubber,LevelTerrain,CityScroll} / cSTEChangeTerrainUI constructors). The port's offsets are lower than the original's after +0x1d0 (see View3DWin.h); every offset in the new code comments is the original's.
 
 RECOVERED FUNCTIONS (one 0xADDR UniqueName per function):
-0x10077efc2 Construct
-0x10077f6ec ConstructWrapper
-0x10077f6f6 Destruct
-0x10077fb8e DestructWrapper
-0x10077fb98 DestructThunk
-0x10077fba6 DestructAndDelete
-0x10077fbd4 DestructAndDeleteThunk
-0x10078145a QueryInterface
-0x1007814ac QueryInterfaceThunkTarget
-0x1007814ba QueryInterfaceThunkFilter
-0x1007814c8 QueryInterfaceThunkWin
-0x1007814d6 AddRef
-0x1007814e4 AddRefThunkTarget
-0x1007814f2 AddRefThunkFilter
-0x100781500 AddRefThunkWin
-0x10078150a Release
-0x100781518 ReleaseThunkTarget
-0x100781526 ReleaseThunkFilter
-0x100781534 ReleaseThunkWin
-0x10078153e AsIGZWin
-0x100781548 GetRenderer
-0x100781556 GetViewManager
-0x100781454 SetErrorReportString
-0x100793ab0 GetModelMaker
-0x100793ad2 GetCoverageHelper
-0x100793ae0 GetLastSelectedBuilding
-0x100793afa GetLastSelectedLot
-0x100793b14 SetLastSelectedBuilding
-0x100793b28 SetLastSelectedLot
-0x100783d74 DisplayTerrainPickDebugString
-0x100783d7a GetTerrainQueryEnabled
-0x100782b82 GZOnKeyDown
-0x100782b8a GZOnKeyDownThunk
-0x100782b92 GZOnKeyUp
-0x100782b9a GZOnKeyUpThunk
-0x10078abdc GZOnCommand
-0x10078abea GZOnCommandThunk
-0x10077fbe2 Init
-0x100780984 InitThunk
-0x100780992 Shutdown
-0x100781438 ShutdownThunk
-0x100781ab2 GetKeyAccelerator
-0x100781ac0 SetKeyAccelerator
-0x100781b06 SetScrolling
-0x100781b86 DoScrollBegin
-0x100781908 DoScrollEnd
-0x100781cb4 ScrollStop
-0x100781cee KillKeyboardScrolling
-0x100781d04 RecalcScrollVelocity
-0x100781e1a SetZoom
-0x100781e64 SetZoomLimits
-0x100781ef2 CanZoomIn
-0x100781f18 CanZoomOut
-0x100781f3e SetRotation
-0x100781f6e RotateLeft
-0x100781f9e RotateRight
-0x100781fce ZoomIn
-0x100782014 ZoomOut
-0x10078205a SetZoomAndRotation
-0x1007819e0 DoTemporarySimHiddenPause
-0x100781a20 DoTemporarySimHiddenResume
-0x1007820a4 GetCurrentViewFilterInfo
-0x1007820ba SetCurrentViewFilterInfo
-0x100782230 GetCurrentViewLevelInfo
-0x10078223e SetCurrentViewLevelInfo
-0x10078235c GetCurrentViewLevel
-0x100782368 SetCurrentViewLevel
-0x100782390 GetCurrentViewInputControl
-0x1007823ae SetCurrentViewInputControl
-0x100782556 SendViewInputControlChangeMessage
-0x100782660 RemoveCurrentViewInputControl
-0x100782790 RemoveAllViewInputControls
-0x1007827b8 AddPersistentViewInputControl
-0x10078283e RemovePersistentViewInputControl
-0x1007828c6 RemoveAllPersistentViewInputControls
-0x1007829f8 GZOnCharacter
-0x100782b74 GZOnCharacterThunk
-0x100782ba2 ProcessKeyDown
-0x100782d20 ProcessKeyUp
-0x100783ae2 GZOnMouseWheel
-0x100783c68 GZOnMouseWheelThunk
-0x100783c7a GZOnMouseExit
-0x100783d62 GZOnMouseExitThunk
-0x100784ca4 DoMessage
-0x100785a50 DoMessageThunk
-0x10078292c PickTerrain
-0x100782962 PickOccupant
-0x100792974 GetGlobalEffectTriggerState
-0x10079299e AssertGlobalEffectTrigger
-0x100792a6c RetractGlobalEffectTrigger
-0x100781590 GZPaint
-0x100781aa0 GZPaintThunk
+0x100782e9e View3DOnMouseDownL
+0x100783056 View3DOnMouseDownLThunk
+0x100783068 View3DOnMouseDownR
+0x100783256 View3DOnMouseDownRThunk
+0x100783268 View3DOnMouseUpL
+0x100783462 View3DOnMouseUpLThunk
+0x100783474 View3DOnMouseUpR
+0x100783774 View3DOnMouseUpRThunk
+0x100783786 View3DOnMouseMove
+0x100783ad0 View3DOnMouseMoveThunk
+0x100783a60 View3DUpdateCursorTextPositions
+0x100792e7e View3DHideMissionStatusPanel
+0x100780910 View3DCreateProgressScreen
+0x100788d98 View3DUpdateProgressMessage
+0x100791d18 View3DCloseSecondaryMenu
+0x10079132c View3DSetCursorText
+0x10079155e View3DCursorTextChanged
+0x100791772 View3DClearCursorText
+0x100783d86 View3DInvokeZoningTool
+0x10078408e View3DInvokeLandscapeTool
+0x100790b4a View3DApplyDefaultTerrainBrush
+0x1007928da View3DChangeTerrainType
+0x1007849bc View3DRunGlobalTerrainTool
+0x100780d78 View3DAddWinAnimationRecorder
+0x10078fe00 View3DToggleContourDisplay
+0x100791cc4 View3DSetCursorTextPosition3D
 
 PARTIAL:
-- 0x10078af10 DoMessageFilter - the cIGZWinMessageFilter entry point (496 bytes) routes button and menu messages from
-  the GUI windows AddGUI builds (HandleButtonActivated 0x10078afde, the panel commands). The GUI and the panel vectors
-  at +0x2b0..+0x328 are not recovered, so the port answers "not handled" and lets the window tree continue.
-- 0x100785a5e DoMessageMessage2 - the cIGZMessageTarget2 entry point (1657 bytes) drives the advisor, population,
-  budget, mayor rating, mission and 24-hour-clock panels from about 46 message types; every one of those panels is an
-  unrecovered GUI window. The port answers "not handled".
-- 0x100781b86 / 0x100781908 DoScrollBegin / DoScrollEnd - recovered except the 4-byte field at cSC4RenderProperties
-  +0x10 (copied to the window's +0x550 and back at 0x10078195d / 0x100781960); the port models it as an unused
-  renderPropertiesAux_ because the recovered cSC4RenderProperties has no member there.
+0x10078178a View3DUpdateCostIndicator the state machine (fade timer +0x5ac, the chevron/cost words +0x5a4..+0x5a8, the cursor position +0x5b0/+0x5b4 and the text/bitmap window moves at 0x1007817f0..0x100781902) needs the cost-indicator windows +0x5c0 (cGZWinBMP) and +0x5c8 (the money text window), which are not recovered; the port keeps the whole body as the existing host seam (GZPaint and UpdateCursorTextPositions call it as the original calls this method).
+0x10079280e View3DCloseTertiaryMenu the menu window at +0x360 is modelled, but the restore path queries a child of it (0x8a2cad8b, iid 0x49d98264) and calls two getters at vslots 0x88 / 0x48 of an unrecovered cISC4WinCatalogView; the register the decompiler loses for the out-parameter (0x10079280e) is the same interface, so it is left for the catalog-view class.
+0x100793abe View3DSetCostIndicator the one-argument overload is just SetCostIndicator(value, value) (0x100793acf); its two-argument target (0x100791802) still needs the cost-indicator windows, so the port leaves both unimplemented.
+0x10078af10 View3DDoMessageFilter the cIGZWinMessageFilter entry point (496 bytes) routes button and menu messages from the GUI windows AddGUI builds (HandleButtonActivated, the panel commands); the GUI and the panel vectors at +0x2b0..+0x328 are not recovered, so the port answers "not handled" and lets the window tree continue.
+0x10078c682 View3DDoMessageFilterThunk the non-virtual thunk of the above; recovered together with it.
+0x100785a5e View3DDoMessageMessage2 the cIGZMessageTarget2 entry point (1657 bytes) drives the advisor, population, budget, mayor-rating, mission and 24-hour-clock panels from ~46 message types; every one of those panel windows is unrecovered, so the port answers "not handled".
+0x100788d86 View3DDoMessageMessage2Thunk the non-virtual thunk of the above; recovered together with it.
 
 SKIPPED:
-- AddGUI 0x1007892fc and RemoveGUI 0x100780eaa (the whole GUI: 42 windows built through SC4CreateWindowFromScript, the
-  eight panel vectors at +0x298..+0x328 and the window processors cSC4*WinProc, none of them recovered).
-- ProcessCommand 0x10078e2e0 (5.9 KB command table), HandleButtonActivated 0x10078afde (4.6 KB panel buttons),
-  DoPanelCommandGUI 0x10078c2dc, ShowPanel 0x10078ac02, HidePanel 0x10078aade, ShowMayorSubPanel 0x10078ad68,
-  MinimizeUI 0x100792b4e (all GUI panel state).
-- The catalog menus: InvokeCatalogItemCommand 0x10078410a, InvokeTertiaryMenu (both overloads),
-  InvokeSecondaryMenu (both), InvokeTertiaryMenu, CreateBuildingMenu, DoUtilitiesMenu, DoTransportMenu, DoVehicleMenu,
-  DoDisasterCopingMenu, DoLandscapeMenu, DoZoningMenu, DoDayNightMenu, DoLandscapeCatalogView, DoFloraCatalogView,
-  DoZoneCatalogView, DoEarnedVehicleCatalogView, AddBuildingsToItemList, AddAutomataToItemList - they need
-  cISC4WinCatalogView / cSC4WinTertiaryMenuFrame / the catalog item manager.
-- The panel refresh functions: UpdateMayorRatingBar, UpdateBudget, UpdatePopulation, UpdateSimulationClock,
-  Update24HourClock, Update24HourClockHover, UpdateAmbientLightLevel, UpdateAlertBorder, UpdateSpeedButtons,
-  UpdateDayNightButtons, UpdateCityName, UpdateZoomButtons, UpdateProgressMessage, UpdateMissionProgress,
-  ShowMissionStatusPanel, HideMissionStatusPanel, UpdateMissionStatusPanel, DoBudgetFailure - each drives an
-  unrecovered GUI window (the ids are in the export).
-- CloseSecondaryMenu 0x100791d18 / CloseTertiaryMenu 0x10079280e - the tertiary menu's child interface (iid 0x49d98264)
-  and the menu windows at +0x358/+0x360 are not recovered; CloseTertiaryMenu's decompilation also loses the register
-  that initialises its out-parameter.
-- The cursor text and cost indicator: SetCursorText, ClearCursorText, CursorTextChanged, SetCostIndicator (both),
-  ClearCostIndicator, SetCostIndicatorAlpha, RenderCostIndicator, UpdateCostIndicator, SetCursorTextPosition3D,
-  UpdateCursorTextPositions - they need the bitmap / text windows at +0x5c0 / +0x5c8 / +0x5d0 (cGZWinBMP, the text
-  window API and the font renderer), and SetCostIndicatorAlpha's decompilation is garbled (it loses the virtual call
-  receiver at 0x100791c04).
-- The mouse handlers: GZOnMouseDownL 0x100782e9e, GZOnMouseDownR 0x100783068, GZOnMouseUpL 0x100783268,
-  GZOnMouseUpR 0x100783474, GZOnMouseMove 0x100783786 - they route through SL::spCity vslot 0x290 (the simulator's
-  input handler, not recovered), create the cSC4ViewInputControlCityScroll tool and pick through the terrain.
-- The tool invokers: InvokeZoningTool 0x100783d86, InvokeDisaster 0x100783e2a, InvokeLandscapeTool 0x10078408e,
-  RunGlobalTerrainTool 0x1007849bc, ApplyDefaultTerrainBrush 0x100790b4a, ChangeTerrainType 0x1007928da,
-  ToggleContourDisplay 0x10078fe00 - they construct unrecovered tools and drive cSLTERRAIN.
-- The city lifecycle and persistence: DoPreCityInit 0x10078616c, DoPostCityInit 0x1007867d8, DoCityEstablished,
-  DoCityObliterated, DoLoad, DoSave, DoEstablishCityDialog, ObliterateCity - they need cISC4City, the persist DB
-  segment streams and the establish-city dialog.
-- The remaining one-off helpers: ProcessCheatCode 0x10078526a, HandleAdviceLinkMessage 0x100785070,
-  AddWinAnimationRecorder 0x100780d78, AddBackgroundImageToRenderer 0x100787334, ReadTunableValues 0x100788e0e,
-  SetRenderProperties 0x10079064e / SetRenderPropertiesStatic, CreateProgressScreen 0x100780910 (created through the
-  host seam instead), and the two empty setters DisplayTerrainPickDebugString / SetErrorReportString (recovered).
-- Deferred as a to-do: GetViewManager's source window (+0x498) is set by AddGUI, and the camera / renderer /
-  model-maker pointers (+0x180 / +0x188 / +0x190) are set by DoPreCityInit; the port leaves them to the host until
-  those functions are recovered.
+0x100780eaa View3DRemoveGui - the whole GUI teardown (42 windows and the eight cSC4*WinProc objects) is unrecovered; Shutdown keeps the host RemoveGui seam.
+0x1007892fc View3DAddGui - 5411-byte builder of the 42 windows and the eight panel vectors through SC4CreateWindowFromScript and the cSC4*WinProc/cGZWinBMP/cSC4WinCalloutBox constructors, none recovered. Without it the panel refresh functions below cannot run, so they are skipped rather than stubbed.
+0x10078afde View3DHandleButtonActivated - 4659-byte switch over the panel button ids; needs the catalog menus, the secondary/tertiary menus and every cSC4*WinProc.
+0x10078c2dc View3DDoPanelCommandGUI - the panel command dispatcher; needs ShowPanel/HidePanel/DoEstablishCityDialog.
+0x10078aade View3DShowOrHidePanel - the panel vectors at +0x2b0..+0x328 (indexed as param*0x18) and the window processors at +0x450/+0x460/+0x468/+0x488/+0x490/+0x498 are unrecovered; the sub-panel ids (0x49edf9b7, 0x15200002/3, 0xabc54125, 0x99887755, 0x41) belong to those processors.
+0x10078ac02 View3DShowOrHidePanel - the panel vectors at +0x2b0..+0x328 (indexed as param*0x18) and the window processors at +0x450/+0x460/+0x468/+0x488/+0x490/+0x498 are unrecovered; the sub-panel ids (0x49edf9b7, 0x15200002/3, 0xabc54125, 0x99887755, 0x41) belong to those processors.
+0x10078ad68 View3DShowOrHidePanel - the panel vectors at +0x2b0..+0x328 (indexed as param*0x18) and the window processors at +0x450/+0x460/+0x468/+0x488/+0x490/+0x498 are unrecovered; the sub-panel ids (0x49edf9b7, 0x15200002/3, 0xabc54125, 0x99887755, 0x41) belong to those processors.
+0x100792b4e View3DMinimizeUI - needs HidePanel/ShowPanel, nsGZWinUtils::SetWindowVisible and the +0x450/+0x470/+0x290 processors.
+0x10078aa58 View3DPanelRefresh - calls nsGZWinUtils::SetWindowEnabled/SetButtonToggleState/SetWindowCaption on the panel window +0x280 and the text windows +0x4c0/+0x4c8 (interface starting at vslot 0x20); UpdateBudget also needs SC4MakeMoneyString and the cost-indicator state. None is in the registered test link set.
+0x1007872e8 View3DPanelRefresh - calls nsGZWinUtils::SetWindowEnabled/SetButtonToggleState/SetWindowCaption on the panel window +0x280 and the text windows +0x4c0/+0x4c8 (interface starting at vslot 0x20); UpdateBudget also needs SC4MakeMoneyString and the cost-indicator state. None is in the registered test link set.
+0x100786fbe View3DPanelRefresh - calls nsGZWinUtils::SetWindowEnabled/SetButtonToggleState/SetWindowCaption on the panel window +0x280 and the text windows +0x4c0/+0x4c8 (interface starting at vslot 0x20); UpdateBudget also needs SC4MakeMoneyString and the cost-indicator state. None is in the registered test link set.
+0x100786f3e View3DPanelRefresh - calls nsGZWinUtils::SetWindowEnabled/SetButtonToggleState/SetWindowCaption on the panel window +0x280 and the text windows +0x4c0/+0x4c8 (interface starting at vslot 0x20); UpdateBudget also needs SC4MakeMoneyString and the cost-indicator state. None is in the registered test link set.
+0x10078700a View3DPanelRefresh - calls nsGZWinUtils::SetWindowEnabled/SetButtonToggleState/SetWindowCaption on the panel window +0x280 and the text windows +0x4c0/+0x4c8 (interface starting at vslot 0x20); UpdateBudget also needs SC4MakeMoneyString and the cost-indicator state. None is in the registered test link set.
+0x1007887bc View3DPanelRefresh - calls nsGZWinUtils::SetWindowEnabled/SetButtonToggleState/SetWindowCaption on the panel window +0x280 and the text windows +0x4c0/+0x4c8 (interface starting at vslot 0x20); UpdateBudget also needs SC4MakeMoneyString and the cost-indicator state. None is in the registered test link set.
+0x100787896 View3DUpdateSpeedButtons - needs the panel window +0x280 and the speed-button/slider interface of the unrecovered cSC4PanelUIWinProc (vslots 0x28/0x58/0x60/0x80/0x90/0x128).
+0x100787a1c View3DUpdateAlertBorder - needs cSLBuffer and the city's alert objects (spCity vslots 0x240/0x188, spSimulator vslot 0x78, the advisor vslot 0x50).
+0x100788084 View3DUpdateMayorRatingBar - 1743 bytes, needs cSLBuffer and the mayor-rating graph windows.
+0x100787fb6 View3DClockRefresh - formats through RZ::LM() and the 24-hour clock object (sp24HourClock) and captions the text windows +0x4b8/+0x4c8/+0x280; the registered test links neither the language manager nor those windows.
+0x100787e12 View3DClockRefresh - formats through RZ::LM() and the 24-hour clock object (sp24HourClock) and captions the text windows +0x4b8/+0x4c8/+0x280; the registered test links neither the language manager nor those windows.
+0x100788912 View3DClockRefresh - formats through RZ::LM() and the 24-hour clock object (sp24HourClock) and captions the text windows +0x4b8/+0x4c8/+0x280; the registered test links neither the language manager nor those windows.
+0x1007858a2 View3DClockRefresh - formats through RZ::LM() and the 24-hour clock object (sp24HourClock) and captions the text windows +0x4b8/+0x4c8/+0x280; the registered test links neither the language manager nor those windows.
+0x100788bfc View3DUpdateAmbientLightLevel - needs SL::sp24HourClock and the renderer's lighting manager (vslots 0x48/0x30/0xa0).
+0x100787b66 View3DMissionPanel - the mission panel is created by SC4CreateWindowFromScript and captioned through nsGZWinUtils; UpdateMissionStatusPanel also reads the simulator clock through spCity vslot 0x188 and a child text object (vslots 0x18/0x250/0x68).
+0x100792c82 View3DMissionPanel - the mission panel is created by SC4CreateWindowFromScript and captioned through nsGZWinUtils; UpdateMissionStatusPanel also reads the simulator clock through spCity vslot 0x188 and a child text object (vslots 0x18/0x250/0x68).
+0x100792ec8 View3DMissionPanel - the mission panel is created by SC4CreateWindowFromScript and captioned through nsGZWinUtils; UpdateMissionStatusPanel also reads the simulator clock through spCity vslot 0x188 and a child text object (vslots 0x18/0x250/0x68).
+0x100788d0e View3DDoBudgetFailure - needs nSC4UI::DoScriptedModalDialog, cSC4AutoGamePause (SC4GamePause) and the app's vslot 0x60.
+0x10078fe78 View3DObliterateCity - needs DoScriptedModalDialog and the unrecovered cSC4ObliterateCity tool.
+0x10078ff30 View3DDoEstablishCityDialog - needs SC4CreateWindowFromScript, cSC4EstablishCityWinProc and cSC4CtabFilter.
+0x10078616c View3DCityLifecycle - creates cSC43DRender, cSC4ModelMaker, cS3DCamera, the animation tick manager and the window processors, then AddGUI; all unrecovered. Shutdown's host seams stand in.
+0x1007867d8 View3DCityLifecycle - creates cSC43DRender, cSC4ModelMaker, cS3DCamera, the animation tick manager and the window processors, then AddGUI; all unrecovered. Shutdown's host seams stand in.
+0x100787092 View3DLoadSave - needs cSC4AutoLoadStream/cSC4AutoSaveStream and SC4Read/WriteGZSerializable (src/sc4/SimStreamOps.cpp), which the registered test does not link; it also reads the persist DB segment.
+0x1007871e4 View3DLoadSave - needs cSC4AutoLoadStream/cSC4AutoSaveStream and SC4Read/WriteGZSerializable (src/sc4/SimStreamOps.cpp), which the registered test does not link; it also reads the persist DB segment.
+0x10078e2e0 View3DProcessCommand - the 5.9 KB command table; needs the modal preference tools (cSC4AudioPreferencesWinProc, cSC4GamePreferencesWinProc, cSC4VideoPreferencesWinProc), the snapshot album, the demolish/label/sign/query tools and the catalog command invoker.
+0x10078410a View3DInvokeCatalogItemCommand - 1972-byte switch that constructs the zoning/network/intersection/place-lot/flora/disaster tools and runs the global terrain tool; needs cISC4CatalogItem, cISC4WinCatalogView and the tool classes (only the four simple invokers were in reach).
+0x100783e2a View3DInvokeDisaster - needs the property holder (cISCPropertyHolder::GetPropertyValue) and cSC4ViewInputControlEffectDisaster/cSC4ViewInputControlTorch.
+0x100785070 View3DHandleAdviceLinkMessage - needs cSC4GraphsViewWinProc::ShowGraphType and ShowMayorSubPanel.
+0x10078526a View3DProcessCheatCode - the 13-cheat switch: cRZCmdLine, cISC4OccupantFilter, the GameOfLife/PlaceLot/TollBooth tools, cSC4CameraControl::SetCustomMagnification, AddWinAnimationRecorder and SetRenderProperties.
+0x10079064e View3DSetRenderProperties - the cheat's property parser uses cISC4PropertyHolder::GetPropertyValue and the SCProperty ParseBool/ParseFloat/ParseInt helpers, neither in the link set.
+0x100792b3a View3DSetRenderProperties - the cheat's property parser uses cISC4PropertyHolder::GetPropertyValue and the SCProperty ParseBool/ParseFloat/ParseInt helpers, neither in the link set.
+0x100788e0e View3DReadTunableValues - the ini / command-line tunables: cRZIniFile, cRZCmdLine, RZParseDelimitedText and SetRenderProperties.
+0x100787334 View3DAddBackgroundImageToRenderer - 1233-byte background-image scan over the user data directory (cRZFile::DoesAnyEntryExistThatMatchesPattern/FileExists) and the renderer's background-image API.
+0x100791802 View3DCostIndicator - needs the +0x5c0 bitmap window (cGZWinBMP QueryInterface 0x86d72b57 then vslot 0x18), the +0x5c8 money text window (vslots 0x18/0x1b8/0x228/0x230/0x40), SC4MakeMoneyString, GS() and WCM(); SetCostIndicatorAlpha's decompilation also loses its receiver register (0x100791c04).
+0x1007918de View3DCostIndicator - needs the +0x5c0 bitmap window (cGZWinBMP QueryInterface 0x86d72b57 then vslot 0x18), the +0x5c8 money text window (vslots 0x18/0x1b8/0x228/0x230/0x40), SC4MakeMoneyString, GS() and WCM(); SetCostIndicatorAlpha's decompilation also loses its receiver register (0x100791c04).
+0x100791c04 View3DCostIndicator - needs the +0x5c0 bitmap window (cGZWinBMP QueryInterface 0x86d72b57 then vslot 0x18), the +0x5c8 money text window (vslots 0x18/0x1b8/0x228/0x230/0x40), SC4MakeMoneyString, GS() and WCM(); SetCostIndicatorAlpha's decompilation also loses its receiver register (0x100791c04).
+0x100791c5a View3DCostIndicator - needs the +0x5c0 bitmap window (cGZWinBMP QueryInterface 0x86d72b57 then vslot 0x18), the +0x5c8 money text window (vslots 0x18/0x1b8/0x228/0x230/0x40), SC4MakeMoneyString, GS() and WCM(); SetCostIndicatorAlpha's decompilation also loses its receiver register (0x100791c04).
+0x10078d1be View3DInvokeCatalogMenus - build cSC4WinTertiaryMenuFrame and cSC4WinCalloutBox on top of an unrecovered cISC4WinCatalogView.
+0x10078d762 View3DInvokeCatalogMenus - build cSC4WinTertiaryMenuFrame and cSC4WinCalloutBox on top of an unrecovered cISC4WinCatalogView.
+0x10078dfdc View3DInvokeCatalogMenus - build cSC4WinTertiaryMenuFrame and cSC4WinCalloutBox on top of an unrecovered cISC4WinCatalogView.
+0x10078c960 View3DMenuHandlers - SC4CreateWindowFromScript, AlignWindowToWindow, CreateCatalogView/CreateCatalogItemList and the cSC4CatalogItem lists.
+0x10078d074 View3DMenuHandlers - SC4CreateWindowFromScript, AlignWindowToWindow, CreateCatalogView/CreateCatalogItemList and the cSC4CatalogItem lists.
+0x10078c690 View3DMenuHandlers - SC4CreateWindowFromScript, AlignWindowToWindow, CreateCatalogView/CreateCatalogItemList and the cSC4CatalogItem lists.
+0x10078cb24 View3DMenuHandlers - SC4CreateWindowFromScript, AlignWindowToWindow, CreateCatalogView/CreateCatalogItemList and the cSC4CatalogItem lists.
+0x10078cbb4 View3DMenuHandlers - SC4CreateWindowFromScript, AlignWindowToWindow, CreateCatalogView/CreateCatalogItemList and the cSC4CatalogItem lists.
+0x10078dd12 View3DMenuHandlers - SC4CreateWindowFromScript, AlignWindowToWindow, CreateCatalogView/CreateCatalogItemList and the cSC4CatalogItem lists.
+0x10078e108 View3DMenuHandlers - SC4CreateWindowFromScript, AlignWindowToWindow, CreateCatalogView/CreateCatalogItemList and the cSC4CatalogItem lists.
+0x10078dbb0 View3DMenuHandlers - SC4CreateWindowFromScript, AlignWindowToWindow, CreateCatalogView/CreateCatalogItemList and the cSC4CatalogItem lists.
+0x10078ca8c View3DMenuHandlers - SC4CreateWindowFromScript, AlignWindowToWindow, CreateCatalogView/CreateCatalogItemList and the cSC4CatalogItem lists.
+0x100790aa0 View3DCatalogViews - nSC4UI::CreateCatalogView, cSC4CatalogItem, the property holder and the automata manager are unrecovered.
+0x100790b98 View3DCatalogViews - nSC4UI::CreateCatalogView, cSC4CatalogItem, the property holder and the automata manager are unrecovered.
+0x100790c4a View3DCatalogViews - nSC4UI::CreateCatalogView, cSC4CatalogItem, the property holder and the automata manager are unrecovered.
+0x100790cfc View3DCatalogViews - nSC4UI::CreateCatalogView, cSC4CatalogItem, the property holder and the automata manager are unrecovered.
+0x100790e52 View3DCatalogViews - nSC4UI::CreateCatalogView, cSC4CatalogItem, the property holder and the automata manager are unrecovered.
+0x100791d86 View3DCatalogViews - nSC4UI::CreateCatalogView, cSC4CatalogItem, the property holder and the automata manager are unrecovered.
 
 SEAMS (for docs/SEAMS.md, which this agent does not edit):
-- IView3DWinHost (src/sc4/View3DWin.h): SL::spMS2, SL::spCCM, SL::spSC4 (vslots 0xa8 / 0x130 / 0x138 / 0x160),
-  SL::spPreferences (+0xf09), SL::spRenderProperties, the lighting manager (vslots 0x38 / 0x40), SL::OnView3DCreate /
-  OnView3DShutdown, SC4PostMessage2, nsSC4TutorialSystem::FilterUICommandMessage, cSC4HTMLLinkHandler::DoURL,
-  cSC4View3DWin::HandleAdviceLinkMessage / ProcessCheatCode / InvokeCatalogItemCommand / UpdateCostIndicator /
-  Update24HourClockHover / UpdateCursorTextPositions, cSC4ProgressScreen, cSC4WinAnimationRecorder, the two lot
-  configuration editors (+0x270 / +0x278), cSC4ModelMaker, cS3DCamera (+0x178), the simulation clock (+0x170),
-  SC4GetPopupModalDialogs{Safe,Enabled} and the key-accelerator exemplar path (exemplar 0x42e3ea4b + GZCOM 0x42e967be /
-  iid 0xe2c1b3c4).
-- IRenderer3D (src/sc4/View3DWin.h): cSC43DRender (vtable 0x100aebdb0) as this window uses it - Init / Shutdown,
-  GetDrawContext, ForceFullRedraw, Draw, SetZoom / ZoomIn / ZoomOut / SetRotation / RotateLeft / RotateRight /
-  SetZoomAndRotation (vslots 0x118..0x148), PickTerrain (0x1e8) and Pick (0x200). The real class is being recovered in
-  parallel by the cSC43DRender agent; hook it up there.
-- INotificationHelper3D: cRZAutoMsg2Notification (0x18 bytes at +0x1d0; the constructor's AddMessageTypes with the
-  132-entry table at 0x100a2a550).
-- ICoverageHelper3D: cSC4CoverageRadiusEffectHelper (+0x5f8, Init @ 0x100770fc8 / Shutdown @ 0x10077137e).
-- ISimulatorPauseSink: the cISC4Simulator at +0x238 (vslots 0x50 Pause / 0x68 Resume).
-- Reused recovered classes: cSC4CameraControl (+0x180), cSC4RenderProperties (+0x540 and the two globals),
-  cSC4ViewInputControl (the tool stack), cRZTimer, cRZMessage2Standard, cGZWin / cIGZWinMgr.
+- IView3DWinHost new methods, one per original call: CityMouseRouter (SL::spCity vslot 0x290), CanInvokeZoningTool
+  (spCity vslot 0xb0), TerrainEditor (SL::spTerrain), AddContourCallback / RemoveContourCallback (SL::TerrainView()
+  -> Layer(0) vslots 0x40 / 0x78), ProjectPointToViewport (SL::spViewUtilities @ 0x100173a1a),
+  GraphicsSystemAllowsSelfScroll (SL::spGS vslot 0x60), RunChangeTerrainDialog (cSTEChangeTerrainUI @ 0x1007268f2),
+  CreateZoningTool (cSC4ViewInputControlZone @ 0x1003c38fc), CreateTerrainScrubberTool (@ 0x100395cac),
+  CreateLevelTerrainTool (@ 0x1003b74d4), CreateCityScrollTool (cSC4ViewInputControlCityScroll @ 0x1002c13a2),
+  CityScrollSetMouseScroll (@ 0x1002c1930), PlayGlobalTerrainEffectSound (spSS / spViewUtilities / SFX),
+  CursorTextWindow (the window at +0x5d0), InitProgressScreen (@ 0x10032d23e), SetProgressCaption (@ 0x10032d812),
+  UserDataDirectory (@ 0x100040556), CreateWinAnimationRecorder (cSC4WinAnimationRecorder @ 0x1003728a4),
+  RecorderSetAnimationOutputDirectory (@ 0x1003754f2).
+- New plain interfaces: ICityMouseRouter (cISC4City's mouse router object), ICursorTextWindow (the +0x5d0 window,
+  one method per vslot 0x30 / 0x40 / 0x60 / 0x78 and the +8 subobject's 0x228 / 0x230 / 0x238 / 0x2e0),
+  ITerrainEditor (SL::spTerrain vslots 0x60 / 0xf8 / 0x148 / 0x150 / 0x158 / 0x160 / 0x178 / 0x180 / 0x1d0).
+- The progress-screen, recorder and cursor-text seams exist because their classes (cSC4ProgressScreen,
+  cSC4WinAnimationRecorder's window path, the cursor-text window) are not in this test's registered link set; the
+  real classes live in src/sc4/WinAnimationRecorder.cpp and the AddGUI-created windows.
 
-TO-DOs for the lead (todo.py add):
-- VIEW3D-GUI-1: recover AddGUI / RemoveGUI / HandleButtonActivated, which set the panel vectors and the
-  view-manager source at +0x498 that GetViewManager asks.
-- VIEW3D-MSG-1: recover the two message entry points DoMessage(cIGZWin*, cGZMessage&) and DoMessage(cIGZMessage2*)
-  (the panel refresh chain).
-- VIEW3D-DRAW-1: recover the cursor text / cost indicator cluster (+0x5a0..+0x5f0) and hand GZPaint's cost-indicator
-  update back from the host.
-- VIEW3D-MOUSE-1: recover the four mouse handlers and the city input routing (SL::spCity vslot 0x290).
-- VIEW3D-HOST-1: hook IView3DWinHost up to the recovered SL globals once cSC4ProgressScreen / cSC4ModelMaker exist.
-- VIEW3D-CAM-1: cSC4CameraControl::ScrollByViewportAngle now returns bool (verified against 0x10076b662); check no
-  other recovered caller relied on the void signature.
+TO-DOs for the lead (todo.py):
+- VIEW3D-MOUSE-1 can be closed: the five mouse handlers and their thunks are recovered; the city input routing is
+  behind ICityMouseRouter and the city-scroll tool behind the two tool-factory seams.
+- VIEW3D-DRAW-1 stays open: the cost-indicator cluster (+0x5a0..+0x5f0) and the +0x5c0/+0x5c8 windows are still
+  PARTIAL; UpdateCostIndicator is still the host seam.
+- VIEW3D-GUI-1 stays open: AddGUI / RemoveGUI / HandleButtonActivated / the panel refresh functions and the
+  catalog menus need SC4CreateWindowFromScript plus the AddGUI-created windows and the cSC4*WinProc objects
+  (recovered in src/sc4/DialogWinProcs.cpp and src/sc4/SmallWinProcs.cpp but not in this test's link set).
+- VIEW3D-HOST-1 / VIEW3D-CAM-1 unchanged.

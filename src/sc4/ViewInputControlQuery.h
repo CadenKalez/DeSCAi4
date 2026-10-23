@@ -22,10 +22,11 @@
 // PARTIAL (see notes/ledger_pending/cSC4ViewInputControlQuery.txt): the tip/describe text builders
 // (Get*SummaryInfo, GetBuildingOccupantTipInfo, GetBuildingOccupantTrafficInfo, GetNetworkOccupantTrafficInfo,
 // DescribePick/DescribeCell/DescribeBuilding/DescribeDemand/DescribePopulation, WriteDetailedDebugInfo and the
-// headline/trip-volume/path helpers) and the whole per-tool SetOrGet* control family (about 100 functions) are
-// declared here but not implemented yet: they need unrecovered classes (cISC4ZoneManager, cSC4GrowthDeveloper,
-// cSC4TractDeveloper, cISC4BuildingDevelopmentSimulator, cISC4Lot, cSC4PathView, cSC4OccupantFilter and the
-// airport/seaport/neighbour/transit simulators). They are listed in the ledger PARTIAL section.
+// headline/trip-volume/path helpers) and the row handlers for the simulators that are not recovered yet (airport,
+// seaport, school, hospital, water, garbage/recycling, transit, landmark, RCI/growth-developer) are declared but not
+// implemented. The fire, police/jail, park/occupant-cost and neighbour-connection rows — everything whose simulator
+// (cSC4FireProtectionSimulator, cSC4PoliceSimulator, cSC4BudgetSimulator, cSC4NeighborsSimulator) is recovered — are
+// ported, as are the dialog enumeration callbacks (EnumFunc*) and the recovered control-id -> row handler table.
 #pragma once
 #include <cstdint>
 #include <vector>
@@ -95,6 +96,8 @@ public:
     virtual ~IQueryCity() = default;
     // 0x2f8: terrain position -> city cell (the original: (float x, float z, this, int* cellX, int* cellZ)).
     virtual void PositionToCell(float x, float z, int& cellX, int& cellZ) = 0;
+    virtual int CellCountX() = 0;                              // vslot 0x2e8
+    virtual int CellCountZ() = 0;                              // vslot 0x2f0
     virtual void FollowAutomaton(cIGZUnknown* automaton) = 0;   // 0x158 -> automaton manager vslot 0x110
     virtual void SelectStoplightProp(cIGZUnknown* prop) = 0;    // 0x140 -> prop manager vslot 0x128
 };
@@ -156,6 +159,67 @@ public:
     virtual void SetQueryCell(int cellX4, int cellZ4) = 0;                      // vslot 0x1d8
 };
 
+// SL::spFireProtectionSim (cSC4FireProtectionSimulator, recovered: FireProtectionSimulator.h). The row handlers only
+// use these four station queries; the original addresses each through the simulator's own vslot.
+class IQueryFireSim {
+public:
+    virtual ~IQueryFireSim() = default;
+    virtual float StationEffectiveness(cISC4Occupant* station) = 0;                 // vslot 0x50 GetStationEfficiency
+    // vslot 0x40: GetStationFunding(station, int* cost, float* fraction), the share returned through `fraction`.
+    virtual bool StationFunding(cISC4Occupant* station, int* cost, float* fraction) = 0;
+    virtual void SetStationFunding(cISC4Occupant* station, float fraction) = 0;     // vslot 0x48
+    // vslot 0x38 of the QueryInterface(0xc9c00435) view (the dispatch interface): GetDispatchesAtStation.
+    virtual bool DispatchInfo(cISC4Occupant* station, std::uint32_t* availability, std::uint32_t* baseCall,
+                              std::uint32_t* count) = 0;
+};
+
+// SL::spPoliceSim (cSC4PoliceSimulator, recovered: PoliceSimulator.h).
+class IQueryPoliceSim {
+public:
+    virtual ~IQueryPoliceSim() = default;
+    virtual float StationEffectiveness(cISC4Occupant* station) = 0;                 // vslot 0xc8
+    virtual int ArrestCount(cISC4Occupant* station) = 0;                            // vslot 0x158
+    virtual int CrimeCount(cISC4Occupant* station) = 0;                             // vslot 0x160
+    virtual bool StationFunding(cISC4Occupant* station, int* cost, float* fraction) = 0;   // vslot 0x38
+    virtual void SetStationFunding(cISC4Occupant* station, float fraction) = 0;     // vslot 0x40
+    virtual bool DispatchInfo(cISC4Occupant* station, std::uint32_t* availability, std::uint32_t* baseCall,
+                              std::uint32_t* count) = 0;                            // QueryInterface(0xc9c00435) 0x38
+    virtual float JailEfficiency() = 0;                                             // vslot 0x120 (no occupant)
+    virtual int JailCapacity(cISC4Occupant* jail) = 0;                              // vslot 0x118
+    virtual std::int64_t JailMaintenance(cISC4Occupant* jail) = 0;                  // vslot 0x128
+};
+
+// SL::spBudgetSim (cSC4BudgetSimulator, recovered: BudgetSimulator.h): the monthly cost of one budget value.
+class IQueryBudgetSim {
+public:
+    virtual ~IQueryBudgetSim() = default;
+    // vslot 0x198: (property holder, budget value id, out) -> out is a 0x18-byte record; its +0x10 qword is the cost.
+    virtual bool OccupantValueCost(cISCPropertyHolder* holder, std::uint32_t value, std::int64_t& cost) = 0;
+};
+
+// cISC4RegionalCity as the neighbour-connection rows read it (RegionalCity.h: vslots 0x108 / 0x118).
+class IQueryNeighborCity : public cIGZUnknown {
+public:
+    virtual void GetCityName(cIGZString& out) const = 0;    // vslot 0x108
+    virtual void GetMayorName(cIGZString& out) const = 0;   // vslot 0x118
+};
+
+// SL::spNeighborsSim (cSC4NeighborsSimulator, recovered: NeighborsSimulator.h and
+// SL::spTrafficSim (cSC4TrafficSimulator) for the congestion row.
+class IQueryNeighborsSim {
+public:
+    virtual ~IQueryNeighborsSim() = default;
+    virtual bool IsValidConnectionCell(int x, int z) = 0;   // static IsValidConnectionCell(x, z, nullptr)
+    virtual bool FindConnection(std::uint32_t type, int x, int z) = 0;                 // vslot 0x58
+    virtual IQueryNeighborCity* FindCityOnOtherSide(int x, int z) = 0;                 // vslot 0x60
+};
+class IQueryTrafficSim {
+public:
+    virtual ~IQueryTrafficSim() = default;
+    // vslot 0x50 GetCongestionMap(), then the map's 0x38 cell getter (a byte).
+    virtual std::uint8_t CongestionCell(int x, int z) = 0;
+};
+
 // Everything else: one adapter implements this for the game, a fake for the test.
 class IQueryHost {
 public:
@@ -170,6 +234,11 @@ public:
     virtual IQueryAuraSim* AuraSim() = 0;                     // SL::spAuraSim
     virtual IQuerySimulator* Simulator() = 0;                 // SL::spSimulator
     virtual IQueryResidentialSim* ResidentialSim() = 0;       // SL::spResidentialSim
+    virtual IQueryFireSim* FireSim() = 0;                     // SL::spFireProtectionSim
+    virtual IQueryPoliceSim* PoliceSim() = 0;                 // SL::spPoliceSim
+    virtual IQueryBudgetSim* BudgetSim() = 0;                 // SL::spBudgetSim
+    virtual IQueryNeighborsSim* NeighborsSim() = 0;           // SL::spNeighborsSim
+    virtual IQueryTrafficSim* TrafficSim() = 0;               // SL::spTrafficSim
     virtual IQueryPathView* CreatePathView() = 0;             // new cSC4PathView + Init
     virtual cISC4WinCalloutBox* CreateCalloutBox() = 0;       // new cSC4WinCalloutBox (0x1003c5f5c)
     // SC4CreateWindowFromScript(instance, parent, id, iid, out) (@ 0x100039bf7)
@@ -238,32 +307,63 @@ public:
     bool PickAutomaton(int x, int y, cIGZUnknown** out);                                      // @ 0x1002d45fc
     bool PickStoplightProp(int x, int y, cIGZUnknown** out);                                   // @ 0x1002d470a
 
-    // controls of the query dialogs
-    bool SetEditControlText(cIGZWin* win, std::uint32_t id, cIGZString& text);                       // @ 0x1002d4f40
-    bool GetEditControlText(cIGZWin* win, std::uint32_t id, cIGZString& text, std::uint32_t& length);   // @ 0x1002d4fb2
-    bool SetStaticControlText(cIGZWin* win, std::uint32_t id, const cIGZString& text);               // @ 0x1002d5094
-    bool SetStaticControlNumeric(cIGZWin* win, std::uint32_t id, std::uint32_t value);               // @ 0x1002d50dc
-    bool SetStaticControlNumericPercent(cIGZWin* win, std::uint32_t id, std::uint32_t value);        // @ 0x1002d5168
-    bool SetStaticControlSimoleons(cIGZWin* win, std::uint32_t id, std::int64_t value);              // @ 0x1002d51f4
-    bool SetStaticControlSimoleonsFloat(cIGZWin* win, std::uint32_t id, double value);               // @ 0x1002d527a
-    bool SetSliderControlValue(cIGZWin* win, std::uint32_t id, int minimum, int maximum, int value,
-                               std::int64_t money, cISC4Occupant* occupant, tSetOrGetFn callback,
-                               std::uint32_t* array, std::uint32_t arraySize);                       // @ 0x1002d54a0
-    bool GetSliderControlValue(cIGZWin* win, std::uint32_t id, int& value);                           // @ 0x1002d5758
-    bool SetPerformanceMeterValue(cIGZWin* win, std::uint32_t id, float value);                       // @ 0x1002d5926
+    // Controls of the query dialogs. The original compiles all of these (and every row handler below) as functions
+    // that take the dialog window explicitly — no query-tool `this` is passed (0x1002d5094 reads its first argument
+    // as the window's vtable) — so they are static here too and can be used as cIGZWin::EnumChildFn handlers.
+    static bool SetEditControlText(cIGZWin* win, std::uint32_t id, cIGZString& text);                  // @ 0x1002d4f40
+    static bool GetEditControlText(cIGZWin* win, std::uint32_t id, cIGZString& text, std::uint32_t& length);  // @ 0x1002d4fb2
+    static bool SetStaticControlText(cIGZWin* win, std::uint32_t id, const cIGZString& text);          // @ 0x1002d5094
+    static bool SetStaticControlNumeric(cIGZWin* win, std::uint32_t id, std::uint32_t value);          // @ 0x1002d50dc
+    static bool SetStaticControlNumericPercent(cIGZWin* win, std::uint32_t id, std::uint32_t value);   // @ 0x1002d5168
+    static bool SetStaticControlSimoleons(cIGZWin* win, std::uint32_t id, std::int64_t value);         // @ 0x1002d51f4
+    static bool SetStaticControlSimoleonsFloat(cIGZWin* win, std::uint32_t id, double value);          // @ 0x1002d527a
+    static bool SetSliderControlValue(cIGZWin* win, std::uint32_t id, int minimum, int maximum, int value,
+                                      std::int64_t money, cISC4Occupant* occupant, tSetOrGetFn callback,
+                                      std::uint32_t* array, std::uint32_t arraySize);                  // @ 0x1002d54a0
+    static bool GetSliderControlValue(cIGZWin* win, std::uint32_t id, int& value);                      // @ 0x1002d5758
+    static bool SetPerformanceMeterValue(cIGZWin* win, std::uint32_t id, float value);                  // @ 0x1002d5926
 
     // rows of the query dialogs (only the ones that work without an unrecovered neighbour are implemented)
-    bool SetOrGetControlValue(cIGZWin* win, std::uint32_t id, bool set, tCellInfo* info);   // @ 0x1002daf96
-    bool SetOrGetName(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d5a0a
-    bool SetOrGetWhyOccupantAbandoned(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d5bc0
-    bool SetOrGetOccupantIsPowered(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);      // @ 0x1002dacd2
-    bool SetOrGetOccupantIsWatered(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);      // @ 0x1002dadd6
-    bool SetOrGetOccupantIsHistorical(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002daed6
-    bool SetOrGetResidentialBuildingMayorApproval(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002da692
+    static bool SetOrGetControlValue(cIGZWin* win, std::uint32_t id, bool set, tCellInfo* info);   // @ 0x1002daf96
+    // The control-id -> row handler table the EnumFunc* callbacks dispatch through (@ 0x100a92150, 0x7f entries:
+    // index = (id & 0xfff) - 0x1000). Entries the original has but this port does not implement yet are null.
+    static tSetOrGetFn const kRowFunctions[0x7f];
+    static bool SetOrGetName(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d5a0a
+    static bool SetOrGetWhyOccupantAbandoned(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d5bc0
+    static bool SetOrGetOccupantIsPowered(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);      // @ 0x1002dacd2
+    static bool SetOrGetOccupantIsWatered(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);      // @ 0x1002dadd6
+    static bool SetOrGetOccupantIsHistorical(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002daed6
+    static bool SetOrGetResidentialBuildingMayorApproval(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002da692
 
-    void GetOccupantName(cISC4Occupant* occupant, cRZString& out);                  // @ 0x1002d2616
-    float GetMayorRatingPercent(cISC4Occupant* occupant);                          // @ 0x1002da4f0
-    void GetRatingIn3DegreesFromPercent(cRZString& out, float percent);            // @ 0x1002da640
+    // fire / police / jail / park rows
+    static bool SetOrGetFireStationEffectiveness(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);      // @ 0x1002d5de4
+    static bool SetOrGetFireStationLocalFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);      // @ 0x1002d5e1e
+    static bool SetOrGetFireStationEngineCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);       // @ 0x1002d5f02
+    static bool SetOrGetFireStationMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d5f82
+    static bool SetOrGetPoliceStationEffectiveness(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d5fd8
+    static bool SetOrGetPoliceStationArrestCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);     // @ 0x1002d6016
+    static bool SetOrGetPoliceStationCrimeCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);      // @ 0x1002d6056
+    static bool SetOrGetPoliceStationLocalFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);    // @ 0x1002d6096
+    static bool SetOrGetPoliceStationPatrolCarCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);  // @ 0x1002d617a
+    static bool SetOrGetPoliceStationMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant); // @ 0x1002d61fa
+    static bool SetOrGetJailCondition(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);                // @ 0x1002d6250
+    static bool SetOrGetJailCellCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);                // @ 0x1002d631c
+    static bool SetOrGetJailInmateCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);              // @ 0x1002d636a
+    static bool SetOrGetJailMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);          // @ 0x1002d63e6
+    static bool SetOrGetParkMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);          // @ 0x1002d6426
+    static bool SetOrGetOccupantCost(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);                 // @ 0x1002d6434
+
+    // neighbour-connection rows
+    static IQueryNeighborCity* FindCityOnOtherSideOfConnection(int connectionType, int x, int z);   // @ 0x1002d906e
+    static bool SetOrGetNeighborConnectionNeighborCityName(cIGZWin* win, std::uint32_t id, bool set, int x, int z,
+                                                           int connectionType);                     // @ 0x1002d90d6
+    static bool SetOrGetNeighborConnectionNeighborCityMayorName(cIGZWin* win, std::uint32_t id, bool set, int x,
+                                                                int z, int connectionType);              // @ 0x1002d9184
+    static bool SetOrGetNeighborConnectionCongestion(cIGZWin* win, std::uint32_t id, bool set, int x, int z);   // @ 0x1002d922e
+
+    static void GetOccupantName(cISC4Occupant* occupant, cRZString& out);                  // @ 0x1002d2616
+    static float GetMayorRatingPercent(cISC4Occupant* occupant);                           // @ 0x1002da4f0
+    static void GetRatingIn3DegreesFromPercent(cRZString& out, float percent);             // @ 0x1002da640
 
     // static enum callbacks used by the dialog windows
     static bool EnumFuncSetFilter(cIGZWin* win, std::uint32_t id, void* child, void* context);       // @ 0x1002db37e
@@ -271,8 +371,8 @@ public:
     static bool EnumFuncSetValue(cIGZWin* win, std::uint32_t id, void* child, void* context);        // @ 0x1002db566
     static bool EnumFuncUpdateValue(cIGZWin* win, std::uint32_t id, void* child, void* context);     // @ 0x1002db5d8
     static bool EnumFuncGetValue(cIGZWin* win, std::uint32_t id, void* child, void* context);        // @ 0x1002db69e
-    bool EnumFuncNeighborDialogSetValue(cIGZWin* win, std::uint32_t id, void* cellInfo, void* occupant);   // @ 0x1002db70e
-    bool EnumFuncNeighborDialogGetValue(cIGZWin* win, std::uint32_t id, void* cellInfo, void* occupant);   // @ 0x1002db748
+    static bool EnumFuncNeighborDialogSetValue(cIGZWin* win, std::uint32_t id, void* cellInfo, void* occupant);   // @ 0x1002db70e
+    static bool EnumFuncNeighborDialogGetValue(cIGZWin* win, std::uint32_t id, void* cellInfo, void* occupant);   // @ 0x1002db748
 
     // --- PARTIAL: declared, not implemented (see the header comment and the ledger) ---
     void GetBuildingOccupantTrafficInfo(cRZString& text, cRZString& title, std::uint32_t& icon);

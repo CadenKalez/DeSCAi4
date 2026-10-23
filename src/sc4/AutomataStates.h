@@ -87,6 +87,9 @@ public:
     bool Write(cIGZOStream& stream) const override;
     bool Read(cIGZIStream& stream) override;
     float value38 = 0.0f;
+    // Run-time fields the vehicle's DoPullOverTick uses (original +0x3c..+0x50; not serialized).
+    cS3DVector3 orientation3c;   // +0x3c (unit heading)
+    cS3DVector3 direction48;     // +0x48 (unit steering target, flipped when it points away from the occupant)
 };
 // The player-drive record is larger than its saved fields: Write stores only value38 and the 13-entry history, while
 // the run-time tables after it are read by the player-drive code of the vehicle family and of cSC4Watercraft (the
@@ -111,10 +114,26 @@ public:
     std::uint32_t timeout1d8 = 0;          // +0x1d8 (bits of 2000.0f)
     std::uint32_t effectDelay20c = 0;      // +0x20c
     std::uint8_t wakeStarted22b = 0;       // +0x22b
+    // The helicopter's spotlight effect state (cSC4Helicopter::TranslatePlayerDriveCommands / UpdateSpotlight).
+    float effectParam240 = 0.0f;           // +0x240
+    float effectParam244 = 0.0f;           // +0x244
+    cS3DVector3 effectPosition248;         // +0x248
+    std::uint8_t spotlightStarted255 = 0;  // +0x255
+    float steerRate260 = 0.0f;             // +0x260
+    std::int32_t cellX298 = 0;             // +0x298 (occupant manager slot 0x88 result, cSC4Helicopter::DoPlayerDriveTick)
+    std::int32_t cellZ29c = 0;             // +0x29c
     float steerVisual264 = 0.0f;           // +0x264
     float wakeAngle268 = 0.0f;             // +0x268
     float wakeTurn26c = 6.2831855f;        // +0x26c
     float heading270 = 0.0f;               // +0x270
+    // The vehicle player-drive run-time block (original +0x48..+0x70 and +0x254; not serialized, cSC4Watercraft never
+    // reads it). The effect / particle / occupant / accident pointers the original also keeps in this record live on
+    // cSC4Vehicle in the port (see Vehicle.h).
+    cS3DVector3 steer48;                   // +0x48 (second copy of the steering direction)
+    cS3DVector3 drivePos54;                // +0x54 (the driving position, integrated per sub-step)
+    cS3DVector3 driveDir60;                // +0x60 (unit driving direction)
+    std::int32_t damage70 = 0;             // +0x70 (accumulated damage; the params' +0x5c is the crash threshold)
+    std::uint8_t onRoad254 = 0;            // +0x254 (1 = off the network, reported through callback event 10)
     tAutomataStatePlayerDrive() { for (float& v : history) v = -1.0f; }
 };
 class tAutomataStateBumped : public tAutomataState {        // @ Write 0x10010e70a, Read 0x10010e76a

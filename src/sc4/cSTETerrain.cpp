@@ -4,12 +4,17 @@
 #include <cmath>
 #include <cstring>
 
+#include "gz/CommandParameterSet.h"
+#include "gz/CommandServer.h"
 #include "gz/cIGZMessage2.h"
 #include "gz/cIGZPersistRecord.h"
+#include "gz/cIGZPersistResourceManager.h"
 #include "gz/cIGZPersistDBSerialRecord.h"
 #include "gz/cIGZIStream.h"
 #include "gz/cIGZOStream.h"
+#include "rz/cRZVariant.h"
 #include "sc4/DBSegment.h"
+#include "sc4/SCProperty.h"
 
 namespace sc4 {
 
@@ -84,8 +89,7 @@ private:
 };
 }  // namespace
 
-bool cSTETerrain::Init(std::uint32_t cellsX, std::uint32_t cellsZ, const TerrainTuning& tuning) {
-    tuning_ = tuning;
+void cSTETerrain::LayOutGrid(std::uint32_t cellsX, std::uint32_t cellsZ) {
     cellsX_ = cellsX;
     cellsZ_ = cellsZ;
     lastCellX_ = cellsX - 1;
@@ -103,8 +107,15 @@ bool cSTETerrain::Init(std::uint32_t cellsX, std::uint32_t cellsZ, const Terrain
     waterDepth_.assign(totalVerts_, 0.0f);        // cSTESurfaceWater vertex +0x0
     sediment_.assign(totalVerts_, 0.0f);          // cSTESurfaceWater vertex +0x1c
     tempWaterLevels_.assign(totalVerts_, 0.0f);   // +0x100 (allocated in the original's Init)
+    surfaceCover_.assign(vertsZ_, std::vector<std::uint8_t>(vertsX_, 0));   // +0x200
     waterVertexCount_ = 0;                        // +0x108
     initialized_ = true;
+}
+
+// The port's fixture overload: lays the grid out directly instead of asking the city (Init 0x100739cb0).
+bool cSTETerrain::Init(std::uint32_t cellsX, std::uint32_t cellsZ, const TerrainTuning& tuning) {
+    tuning_ = tuning;
+    LayOutGrid(cellsX, cellsZ);
     return true;
 }
 
@@ -212,11 +223,16 @@ void cSTETerrain::SetAltitude(std::int32_t index, float altitude) {
     }
 }
 
-void cSTETerrain::SetAltitude(const TerrainRect& r, float altitude, bool recomputeWater) {
+void cSTETerrain::SetAltitude(const TerrainRect& r, float altitude, bool recomputeWater, std::uint32_t flags) {
+    // 0x10073e1f2: the rectangle's rows, then the water recompute and the redisplay (the original calls
+    // the virtual SetAltitude per vertex, so a locked vertex is skipped).
     for (std::int32_t z = r.top; z <= r.bottom; ++z)
         for (std::int32_t x = r.left; x <= r.right; ++x)
             SetAltitude(static_cast<std::int32_t>(vertsX_) * z + x, altitude);
-    if (recomputeWater) RecomputeWaterLevel(r);
+    if (recomputeWater) {
+        RecomputeWaterLevel(r);
+        RedisplayTerrain(true, true, r, flags);   // vslot 0x228
+    }
 }
 
 void cSTETerrain::LockAltitude(const TerrainRect& r, bool lock) {
@@ -368,15 +384,36 @@ bool cSTETerrain::IsLandVertex(std::uint32_t x, std::uint32_t z) const {
 }
 
 bool cSTETerrain::IsShoreVertex(std::int32_t index) const {
+    // 0x10073751a: a land vertex (strictly above the sea) with a sea neighbour. Only directions 0, 2 and 4
+    // are tested (the original's loop stops at 6), so a sea neighbour to the south (direction 6) is missed.
     const float sea = tuning_.seaLevel;
     if (!(sea < vertices_[static_cast<std::size_t>(index)].altitude)) return false;
     const std::uint32_t z = static_cast<std::uint32_t>(index) / vertsX_, x = static_cast<std::uint32_t>(index) % vertsX_;
     const std::uint8_t mask = GetNeighbors(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
-    for (int dir = 0; dir < 8; dir += 2) {
+    for (int dir = 0; dir < 6; dir += 2) {
         if (!((mask >> dir) & 1)) continue;
         if (vertices_[static_cast<std::size_t>(neighborOffsets_[dir] + index)].altitude < sea) return true;
     }
     return false;
+}
+
+std::int32_t cSTETerrain::GetNeighboringSeaVertex(std::int32_t index) const {
+    // 0x100731a1c. The original walks the west / north-west / north / north-east neighbours (the four
+    // entries of kXIncrement / kZIncrement at 0x100a29c10 / 0x100a29c40) and returns the first one below
+    // the sea level.
+    static const std::int32_t kXIncrement[4] = {-1, -1, 0, 1};
+    static const std::int32_t kZIncrement[4] = {0, -1, -1, -1};
+    const std::uint32_t vertsX = vertsX_, vertsZ = vertsZ_;
+    for (int dir = 0; dir < 4; ++dir) {
+        // (sic) the row coordinate is divided by the *vertex count in Z*, not X: the original reads +0x54.
+        const std::uint32_t x = static_cast<std::uint32_t>(index) % vertsX + static_cast<std::uint32_t>(kXIncrement[dir]);
+        const std::uint32_t z = static_cast<std::uint32_t>(index) / vertsZ + static_cast<std::uint32_t>(kZIncrement[dir]);
+        if (vertsX <= x || vertsZ <= z) continue;
+        const std::uint32_t neighbour = z * vertsX + x;
+        if (tuning_.seaLevel <= vertices_[neighbour].altitude) continue;   // not a sea vertex
+        return static_cast<std::int32_t>(neighbour);
+    }
+    return -1;
 }
 
 bool cSTETerrain::CellHasWater(std::uint32_t cx, std::uint32_t cz) const {
@@ -492,6 +529,12 @@ bool cSTETerrain::LoadMiscTerrainData(cIGZPersistDBSegment* segment) {
     s.GetFieldFloat32(maxNormalHeight_);
     if (in.Version() < 2 && terrainType_ > 0) terrainType_ = 0;
     totalVerts_ = vertsX_ * vertsZ_;
+    // Port guard: the original assumes the saved size equals the one Init took from the city and never
+    // re-sizes the per-vertex blocks. Keep every grid-indexed array consistent with the loaded dimensions.
+    if (surfaceCover_.size() != vertsZ_ || (!surfaceCover_.empty() && surfaceCover_[0].size() != vertsX_))
+        surfaceCover_.assign(vertsZ_, std::vector<std::uint8_t>(vertsX_, 0));
+    if (tempWaterLevels_.size() != totalVerts_) tempWaterLevels_.assign(totalVerts_, 0.0f);
+    if (sediment_.size() != totalVerts_) sediment_.assign(totalVerts_, 0.0f);
     return true;
 }
 
@@ -646,17 +689,696 @@ void cSTETerrain::SetWaterSurfaceDisplayState(bool on) {
 }
 
 void cSTETerrain::StartAccumulatingTextureUpdates() {
-    if (accumulating_) return;
-    accumulating_ = true;
-    accumulateRect_ = {0x7fffffff, 0x7fffffff, -0x7fffffff, -0x7fffffff};   // +0xe4
+    if (accumulating_) return;                                                // 0x10073e90e
+    accumulating_ = true;                                                     // +0xe0
+    accumulateRect_ = {0x7fffffff, 0x7fffffff, -0x7fffffff - 1, -0x7fffffff - 1};   // +0xe4
 }
 
 void cSTETerrain::StopAccumulatingTextureUpdates() {
-    if (!accumulating_) return;
+    if (!accumulating_) return;                                               // 0x10073ea34
     accumulating_ = false;
-    // The original re-textures the accumulated rectangle and redisplays it here; both calls belong
-    // to the surface-texture pipeline (to-do row TERRAIN-3), so the rectangle is only reset here.
-    accumulateRect_ = {0x7fffffff, 0x7fffffff, -0x7fffffff, -0x7fffffff};
+    if (accumulateRect_.left <= accumulateRect_.right && accumulateRect_.top <= accumulateRect_.bottom) {
+        AssignSurfaceTexturesAndColors(accumulateRect_);
+        RedisplayTerrain(false, false, accumulateRect_, 0);                   // vslot 0x228
+        accumulateRect_ = {0x7fffffff, 0x7fffffff, -0x7fffffff - 1, -0x7fffffff - 1};
+    }
+}
+
+// ==================================================================================== statics
+
+TerrainStatics& cSTETerrain::Statics() {
+    static TerrainStatics statics;   // the 0x100b71xxx block (zero filled in the binary)
+    return statics;
+}
+
+void cSTETerrain::UnionRect(TerrainRect& dst, const TerrainRect& a, const TerrainRect& b) {
+    dst.left = std::min(a.left, b.left);
+    dst.top = std::min(a.top, b.top);
+    dst.right = std::max(a.right, b.right);
+    dst.bottom = std::max(a.bottom, b.bottom);
+}
+
+namespace {
+// sbInited: the class-wide "statics read" flag of StaticInit / StaticShutdown.
+bool& StaticInited() {
+    static bool inited = false;
+    return inited;
+}
+// kMaxSurfaceTextureSpread[8] (0x100b71d10), filled by ReadTextureInfos (pending).
+std::int32_t* MaxSurfaceTextureSpread() {
+    static std::int32_t spread[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    return spread;
+}
+}  // namespace
+
+// =============================================================================== life cycle
+
+bool cSTETerrain::StaticInit() {
+    // 0x10073a346: the four data readers fill the statics and the brush/texture tables. They are still
+    // pending (TERRAIN-1 / TERRAIN-3 / TERRAIN-5), so this only does the flag, the shutdown hook and the
+    // resource-manager hold.
+    if (StaticInited()) return true;
+    StaticInited() = true;
+    if (ITerrainHost* host = TerrainHost()) {
+        host->RegisterStaticShutdown();        // SL::spSC4 vslot 0x218 (StaticShutdown, 0)
+        host->AcquireResourceManager();        // spResMan = SL::spRM, one reference held
+    }
+    // ReadTextureInfos(); ReadTerrainIniFile(); ReadTuningParameters(); ReadBrushDescriptions(); -- pending
+    return true;
+}
+
+bool cSTETerrain::StaticShutdown(void* unused) {
+    (void)unused;   // 0x10073e9de (the second argument of the spSC4 shutdown callback, always 0)
+    if (!StaticInited()) return true;
+    StaticInited() = false;
+    if (ITerrainHost* host = TerrainHost()) {
+        host->UnregisterStaticShutdown();      // SL::spSC4 vslot 0x220
+        host->ReleaseResourceManager();        // spResMan release (+0x10)
+    }
+    ReleaseBrushDescriptions();
+    return true;
+}
+
+void cSTETerrain::ReleaseOne(cIGZUnknown*& object) {
+    if (!object) return;
+    object->Release();
+    object = nullptr;
+}
+
+void cSTETerrain::ReleaseServices() {
+    // Shutdown's release chain: +0x138, +0x148, +0x140, then the three overlay managers (+0x130, +0x128,
+    // +0x120), the view (+0x110, shut down first), the surface water (+0x38) and the city (+0x28).
+    ReleaseOne(effectsManager_);
+    ReleaseOne(floraSimulator_);
+    ReleaseOne(landSimulator_);
+    for (int i = 2; i >= 0; --i) ReleaseOne(overlayManagers_[i]);
+    if (view_) {
+        view_->Shutdown();
+        view_ = nullptr;             // the view is host-owned in the port (the original Releases it)
+        displayEnabled_ = false;
+    }
+    ReleaseOne(surfaceWater_);
+    ReleaseOne(city_);
+}
+
+bool cSTETerrain::Init() {
+    // 0x100739cb0: take the city and the surface water, size the grid from the city, grab the simulators,
+    // register the ten messages and the seven script commands, then hook into the simulator / ATM.
+    if (!StaticInit()) return false;                 // the original only calls it when sbInited is clear
+    if (initialized_) Shutdown();                    // vslot 0x20
+    ITerrainHost* host = TerrainHost();
+    if (!host) return false;
+    initialized_ = true;
+    if (!city_) {
+        city_ = host->City();
+        if (city_) city_->AddRef();
+    }
+    if (!surfaceWater_) {
+        surfaceWater_ = host->SurfaceWater();
+        if (surfaceWater_) surfaceWater_->AddRef();
+    }
+    LayOutGrid(host->CityCellCountX(), host->CityCellCountZ());
+    cityTerrainType_ = host->CityTerrainType();      // +0x70 (spCity slot 0x2b8)
+    // +0x98: the terrain type's normal-height limit. (The original indexes the table without a mask.)
+    maxNormalHeight_ = Statics().maxNormalTerrainHeight[cityTerrainType_ & 7];
+    // +0xc4: the water proximity radius, clamped to a byte.
+    const float range = Statics().waterProximityRangeFactor * 64.0f;
+    std::int32_t factor = static_cast<std::int32_t>(range);
+    if (factor < 1) factor = 0;
+    waterProximityMax_ = static_cast<std::uint8_t>(factor < 0x100 ? factor : 0xff);
+    if (!landSimulator_) {
+        landSimulator_ = host->CityLandSimulator();          // spCity 0x230
+        if (landSimulator_) landSimulator_->AddRef();
+    }
+    if (!floraSimulator_) {
+        floraSimulator_ = host->CityFloraSimulator();        // spCity 0x1d8
+        if (floraSimulator_) floraSimulator_->AddRef();
+    }
+    effectsManager_ = host->CityEffectsManager();            // spCity 0x2a8
+    if (effectsManager_) effectsManager_->AddRef();
+    // cSTETriangleGridIterator::Init(0x10) at +0x1a0: the iterator class is not recovered (TERRAIN-1).
+    tuning_.seaLevel = Statics().seaLevel;                   // +0x9c = kSeaLevel
+    minHeight_ = 0.0f;                                       // +0x90 / +0x94
+    maxHeight_ = 0.0f;
+    emptyRect_ = {0, 0, -1, -1};                             // +0xcc
+    InitBrushParameters();
+    if (host->Messages()) {
+        for (std::uint32_t type : kTerrainMessageTypes) host->AddTerrainNotification(this, type);
+    }
+    if (cIGZCommandServer* commands = host->CommandServer()) {
+        // RZGetFramework()->GetSystemService(0xeb903a32, 0xcb90253a): the seven commands of the terrain.
+        for (const TerrainScriptCommand& command : kTerrainScriptCommands)
+            commands->RegisterCommand(command.id, command.name, nullptr);
+    }
+    simulator_ = host->Simulator();                          // SL::spSimulator
+    if (simulator_) {
+        simulator_->AddRef();
+        host->RegisterWithSimulator(this);                   // vslot 0x98
+    }
+    host->AddToAutomataManager(this);                        // SL::ATM() vslot 0x28
+    if (!createdFromImage_) {
+        host->SurfaceWaterInit();                            // spSurfaceWater vslot 0x18
+        // Create() (0x100735cfc) imports the city height image and erodes it: not recovered (TERRAIN-7).
+    }
+    return true;
+}
+
+bool cSTETerrain::Shutdown() {
+    // 0x10073e5c6: the reverse of Init. The original reports success whether or not the model was inited.
+    if (!initialized_) return true;
+    initialized_ = false;
+    if (ITerrainHost* host = TerrainHost()) {
+        host->RemoveFromAutomataManager(this);               // SL::ATM() vslot 0x30
+        if (simulator_) {
+            host->UnregisterFromSimulator(this);             // vslot 0xa8
+            simulator_->Release();
+            simulator_ = nullptr;
+        }
+        // (sic) Shutdown removes 0xc4a6af3, which Init does not add, and leaves 0xc4a6af6 subscribed.
+        for (std::uint32_t type : kTerrainShutdownMessageTypes) host->RemoveTerrainNotification(this, type);
+        if (cIGZCommandServer* commands = host->CommandServer()) {
+            for (const TerrainScriptCommand& command : kTerrainScriptCommands) commands->UnregisterCommand(command.id);
+        }
+    }
+    ReleaseServices();
+    tempWaterLevels_.clear();                                // operator delete[] at +0x100
+    vertices_.clear();                                       // operator delete[] at +0x88
+    return true;
+}
+
+void cSTETerrain::DoPostCityInit() {
+    // 0x10073847e: after the city is up the view is created and initialised, the whole grid is re-lit and
+    // re-textured, and the view's three overlay managers are taken (they are only released in Shutdown).
+    if (postCityInitDone_) return;
+    postCityInitDone_ = true;
+    ITerrainHost* host = TerrainHost();
+    if (host) zoom_ = host->ViewZoomLevel();                 // SL::spViewUtilities +0x14
+    if (!view_ && host) view_ = host->CreateTerrainView();   // GZCOM 0xc9b84e10 / 0x6771477d
+    if (view_) view_->Init(this);                            // cSTETerrainView3D::Init @0x10074607c
+    displayEnabled_ = true;                                  // +0x118
+    if (host && landSimulator_) host->ResetLandSimulator(landSimulator_);   // +0x140 vslot 0x28
+    // CalculateNormalsAndAssignCliffTextures(gridRect_): the two-triangle normal/cliff pass is not
+    // recovered (TERRAIN-4), so the first display starts from the surface pass alone.
+    AssignSurfaceTexturesAndColors(gridRect_);
+    if (view_) {
+        overlayManagers_[0] = view_->OverlayManager(0);      // view +0xa8
+        overlayManagers_[1] = view_->OverlayManager(1);      // view +0xb0
+        overlayManagers_[2] = view_->OverlayManager(2);      // view vslot 0xb0 with 0
+        for (cIGZUnknown*& manager : overlayManagers_)
+            if (manager) manager->AddRef();
+    }
+}
+
+namespace {
+// The message's cIGZMessage2Standard payload interface, released again (the original reads the fields of
+// the object it already holds; the port has to ask for the interface).
+class StandardMessageRef {
+public:
+    explicit StandardMessageRef(cIGZMessage2* message) {
+        void* raw = nullptr;
+        if (message && message->QueryInterface(kGZIID_cIGZMessage2Standard, &raw))
+            standard_ = static_cast<cIGZMessage2Standard*>(raw);
+    }
+    ~StandardMessageRef() {
+        if (standard_) standard_->Release();
+    }
+    StandardMessageRef(const StandardMessageRef&) = delete;
+    StandardMessageRef& operator=(const StandardMessageRef&) = delete;
+    cIGZMessage2Standard* operator->() const { return standard_; }
+    explicit operator bool() const { return standard_ != nullptr; }
+
+private:
+    cIGZMessage2Standard* standard_ = nullptr;
+};
+}  // namespace
+
+bool cSTETerrain::DoMessage(cIGZMessage2* message) {
+    // 0x100737d3e. Every branch returns true: the terrain never fails a message. The script commands
+    // (0xc4a6af0..6) carry the input parameter set in data 1 and the output set in data 2.
+    if (!message) return true;
+    const std::uint32_t type = message->GetType();
+    if (type == 0x86ad10ee) {              // animation tick (elapsed ms in data 2)
+        StandardMessageRef standard(message);
+        if (standard) DoAnimationTick(static_cast<std::uint32_t>(standard->GetData2()));
+        return true;
+    }
+    if (type == 0xa6b79602) {              // zoom changed: data 2 is the new zoom level
+        StandardMessageRef standard(message);
+        const auto* zoom = standard ? static_cast<const std::int32_t*>(standard->GetVoid2()) : nullptr;
+        if (!zoom || *zoom == static_cast<std::int32_t>(zoom_)) return true;
+        zoom_ = static_cast<std::uint32_t>(*zoom);
+        TerrainRect r{0, 0, static_cast<std::int32_t>(cellsX_), static_cast<std::int32_t>(cellsZ_)};
+        AssignSurfaceTexturesAndColors(r);
+        return true;
+    }
+    if (type == 0x26d31ec1) {              // the city is up
+        DoPostCityInit();
+        return true;
+    }
+    if (type == 0x470bd214) {              // erosion (the style is in data 1)
+        StandardMessageRef standard(message);
+        if (standard) DoErosion(static_cast<std::uint32_t>(standard->GetData1()), false);
+        TerrainRect r{0, 0, static_cast<std::int32_t>(cellsX_), static_cast<std::int32_t>(cellsZ_)};
+        RedisplayTerrain(true, true, r, 1);
+        return true;
+    }
+    if (type == 0x66956816 || type == 0x6716a4e6) return true;
+    if (type == 0x2a612643) {
+        // The world manager is busy: the reconcile is retried later. Otherwise the terrain reconciles its
+        // edges with the neighbouring cities -- ReconcileEdgesWithNeighboringCities is still pending
+        // (TERRAIN-8), and the re-post to self needs the port's message-target adapter (TERRAIN-1).
+        return true;
+    }
+    if (type < 0xc4a6af0) return true;
+    StandardMessageRef standard(message);
+    if (!standard) return true;
+    auto* params = static_cast<cIGZCommandParameterSet*>(standard->GetVoid1());
+    auto* result = static_cast<cIGZCommandParameterSet*>(standard->GetVoid2());
+    if (!params || !result) return true;
+    switch (type) {
+    case 0xc4a6af0: {                      // GetAltitude(x, z) -> float
+        const float x = (*params)[0].GetValFloat32();
+        const float z = (*params)[1].GetValFloat32();
+        if (!LocationIsInBounds(x, z)) {
+            result->SetStatusParameterValue(2);
+            return true;
+        }
+        result->SetParameter(0, cRZVariant(GetAltitude(x, z)));
+        break;
+    }
+    case 0xc4a6af1: {                      // SetAltitude(x, z, altitude)
+        const float x = (*params)[0].GetValFloat32();
+        const float z = (*params)[1].GetValFloat32();
+        if (!LocationIsInBounds(x, z)) {
+            result->SetStatusParameterValue(2);
+            return true;
+        }
+        const float altitude = (*params)[2].GetValFloat32();
+        // (sic) the original passes the *x* coordinate as the row too.
+        const auto cell = static_cast<std::int32_t>(x * 0.0625f);
+        SetAltitudeAtVertex(cell, cell, altitude);
+        break;
+    }
+    case 0xc4a6af2: {                      // GetCellAltitude(cellX, cellZ) -> float
+        const std::uint32_t x = (*params)[0].GetValUint32();
+        const std::uint32_t z = (*params)[1].GetValUint32();
+        if (vertsX_ <= x || vertsZ_ <= z) {
+            result->SetStatusParameterValue(2);
+            return true;
+        }
+        result->SetParameter(0, cRZVariant(GetAltitudeAtVertex(static_cast<std::int32_t>(x),
+                                                              static_cast<std::int32_t>(z))));
+        break;
+    }
+    case 0xc4a6af3: {                      // SetCellAltitude(cellX, cellZ[, cellX2, cellZ2], altitude)
+        const std::uint32_t x = (*params)[0].GetValUint32();
+        const std::uint32_t z = (*params)[1].GetValUint32();
+        std::uint32_t x2 = x, z2 = z;
+        std::uint32_t altitudeIndex = 2;
+        if (3 < params->GetParameterCount()) {
+            x2 = (*params)[2].GetValUint32();
+            z2 = (*params)[3].GetValUint32();
+            altitudeIndex = 4;
+        }
+        if (vertsX_ <= x || vertsX_ <= x2 || vertsZ_ <= z || vertsZ_ <= z2) {
+            result->SetStatusParameterValue(2);
+            return true;
+        }
+        const float altitude = (*params)[altitudeIndex].GetValFloat32();
+        TerrainRect r{static_cast<std::int32_t>(x), static_cast<std::int32_t>(z),
+                      static_cast<std::int32_t>(x2), static_cast<std::int32_t>(z2)};
+        SetAltitude(r, altitude, true, 2);
+        break;
+    }
+    case 0xc4a6af4:                        // GetSeaLevel() -> float
+        result->SetParameter(0, cRZVariant(GetSeaLevel()));
+        break;
+    case 0xc4a6af5: {                      // SetSeaLevel(level)
+        const float level = (*params)[0].GetValFloat32();
+        if (!SetSeaLevel(level)) {
+            result->SetStatusParameterValue(2);
+            return true;
+        }
+        break;
+    }
+    case 0xc4a6af6:
+        // ApplyTerrainBrush: the cISTETerrain::tBrushParameters payload is not modelled yet, so the command
+        // reports failure (TERRAIN-5).
+        result->SetStatusParameterValue(2);
+        break;
+    default:
+        break;
+    }
+    return true;
+}
+
+void cSTETerrain::DoAnimationTick(std::uint32_t elapsedMs) {
+    // 0x10073759e: the first two ticks arm the display (via the region-changed message or a re-post of
+    // the reconcile message), then the flood / ash / water-proximity subsystems are stepped.
+    if (view_ && static_cast<std::int32_t>(animationTick_) < 2) {
+        animationTick_ += 1;
+        if (animationTick_ == 2) {
+            ITerrainHost* host = TerrainHost();
+            if (host && !host->PreferencesFlag4ec()) {
+                PostMessageA(0xca63d517, 0, 0, 0, 0);        // kRegionalCityMessageCityChanged
+            }
+            // else: re-post 0x2a612643 to the terrain itself (the message-target adapter, TERRAIN-1).
+        }
+    }
+    // if (floodActive_) DoFloodFlowStep() (TERRAIN-6) and TickVolcanicAshRegions(elapsedMs) (TERRAIN-9) are
+    // pending: the flood flow and the ash regions are not recovered.
+    const std::uint32_t next = elapsedMs + waterProximityTick_;   // +0xc8
+    waterProximityTick_ = next;
+    const bool emptyRect = emptyRect_.left == 0 && emptyRect_.top == 0 && emptyRect_.right == -1 &&
+                           emptyRect_.bottom == -1;
+    if (9999999 < next && !emptyRect) ComputeWaterProximityValues(gridRect_);   // the 10 s sweep
+}
+
+void cSTETerrain::RedisplayTerrain(bool adjustAltitudes, bool redisplayWater, const TerrainPoint& a,
+                                   const TerrainPoint& b, std::uint32_t flags) {
+    // 0x10073de82: sort the corner pair, widen by one cell and clamp to the grid, then the rect variant.
+    const TerrainPoint* low = &a;
+    const TerrainPoint* high = &b;
+    if (b.x < a.x) std::swap(low, high);
+    std::int32_t left = static_cast<std::int32_t>(low->x);
+    std::int32_t top = static_cast<std::int32_t>(a.z);
+    std::int32_t bottom = static_cast<std::int32_t>(b.z);
+    if (b.z < a.z) {
+        top = static_cast<std::int32_t>(b.z);
+        bottom = static_cast<std::int32_t>(a.z);
+    }
+    std::uint32_t right = static_cast<std::uint32_t>(static_cast<std::int32_t>(high->x) + 1);
+    if (cellsX_ < right) right = cellsX_;
+    std::uint32_t bottomCell = static_cast<std::uint32_t>(bottom + 1);
+    if (cellsZ_ < bottomCell) bottomCell = cellsZ_;
+    TerrainRect r{left, top, static_cast<std::int32_t>(right), static_cast<std::int32_t>(bottomCell)};
+    RedisplayTerrain(adjustAltitudes, redisplayWater, r, flags);
+}
+
+void cSTETerrain::RedisplayTerrain(bool adjustAltitudes, bool redisplayWater, const TerrainRect& r,
+                                   std::uint32_t flags) {
+    // 0x10073defa.
+    if (!displayEnabled_) return;
+    TerrainRect surfaceRect = r;
+    if (adjustAltitudes) {
+        FindMinAndMaxHeights();
+        TerrainRect normalsRect{std::max(r.left - 1, 0), std::max(r.top - 1, 0), r.right + 1, r.bottom + 1};
+        if (static_cast<std::int32_t>(cellsX_) <= r.right) normalsRect.right = static_cast<std::int32_t>(cellsX_);
+        if (static_cast<std::int32_t>(cellsZ_) <= r.bottom) normalsRect.bottom = static_cast<std::int32_t>(cellsZ_);
+        // CalculateNormalsAndAssignCliffTextures(normalsRect) is not recovered (TERRAIN-4).
+        const std::uint32_t packed0 = static_cast<std::uint32_t>(r.left) * 0x10000u + static_cast<std::uint32_t>(r.right);
+        const std::uint32_t packed1 = static_cast<std::uint32_t>(r.top) * 0x10000u + static_cast<std::uint32_t>(r.bottom);
+        if (!accumulating_) {
+            AssignSurfaceTexturesAndColors(surfaceRect);
+            UnionRect(surfaceRect, surfaceRect, normalsRect);
+        } else {
+            UnionRect(accumulateRect_, accumulateRect_, r);   // +0xe4
+            surfaceRect = normalsRect;
+        }
+        PostMessageA(0x278e6003, packed0, packed1, 0, flags);
+    }
+    if (redisplayWater) {
+        const std::uint32_t packed0 = static_cast<std::uint32_t>(r.left) * 0x10000u + static_cast<std::uint32_t>(r.right);
+        const std::uint32_t packed1 = static_cast<std::uint32_t>(r.top) * 0x10000u + static_cast<std::uint32_t>(r.bottom);
+        PostMessageA(0x678e6e3a, packed0, packed1, 0, flags);
+    }
+    float lo = 0.0f, hi = 0.0f;
+    ComputeMinAndMaxAltitudeForTerrainRedisplay(surfaceRect, lo, hi);
+    const std::uint32_t range0 = static_cast<std::uint32_t>(surfaceRect.left) * 0x10000u +
+                                 static_cast<std::uint32_t>(surfaceRect.right);
+    const std::uint32_t range1 = static_cast<std::uint32_t>(surfaceRect.top) * 0x10000u +
+                                 static_cast<std::uint32_t>(surfaceRect.bottom);
+    // (sic) the pair is packed like the rectangles: the minimum in the high half, the maximum in the low.
+    const std::uint32_t packed = static_cast<std::uint32_t>(static_cast<std::int32_t>(hi)) +
+                                 static_cast<std::uint32_t>(static_cast<std::int32_t>(lo)) * 0x10000u;
+    PostMessageA(0x870bc918, range0, range1, packed, flags);
+}
+
+void cSTETerrain::ComputeMinAndMaxAltitudeForTerrainRedisplay(const TerrainRect& r, float& lo, float& hi) const {
+    // 0x100735a58: the altitude range the view has to cover. The whole-grid rect answers from the cached
+    // min/max; the city-edge rects additionally force the minimum to sea level when the edge is on screen.
+    if (r.left == gridRect_.left && r.top == gridRect_.top && r.right == gridRect_.right &&
+        r.bottom == gridRect_.bottom) {
+        lo = minHeight_;                                       // +0x90
+        hi = maxHeight_;                                       // +0x94
+    } else {
+        FindMinAndMaxHeights(r, lo, hi);
+    }
+    bool forceMinToZero = false;
+    if (ITerrainHost* host = TerrainHost()) {
+        // edge flags: 0 = north (top), 1 = east (right), 2 = south (bottom), 3 = west (left).
+        std::uint8_t edge[4];
+        edge[0] = r.top < 1 ? 1 : 0;
+        edge[1] = cellsX_ <= static_cast<std::uint32_t>(r.right) ? 1 : 0;
+        edge[2] = cellsZ_ <= static_cast<std::uint32_t>(r.bottom) ? 1 : 0;
+        edge[3] = r.left < 1 ? 1 : 0;
+        std::int32_t horizontal = 0, vertical = 0;
+        host->VisibleEdges(horizontal, vertical);             // cSC4ViewUtilities::GetVisibleEdges
+        if ((edge[horizontal & 3] || edge[vertical & 3])) {
+            lo = 0.0f;
+            forceMinToZero = true;
+        }
+    }
+    // view +0x94 / +0x98. (sic) with no view the original falls back to +FLT_MAX / -FLT_MAX, which makes the
+    // clamps below produce that same garbage range: the function assumes a display exists (quirk kept).
+    const float viewTop = view_ ? view_->MaxDisplayAltitude() : 3.4028235e+38f;      // view +0x94
+    const float viewBottom = view_ ? view_->MinDisplayAltitude() : -3.4028235e+38f;  // view +0x98
+    const bool topSame = viewTop == maxHeight_;
+    const bool topLess = viewTop < maxHeight_;
+    if (!topLess && !topSame) hi = viewTop;
+    if (!forceMinToZero) {
+        if (minHeight_ <= viewBottom) {
+            const float lowered = lo - 20.0f;
+            lo = (viewBottom <= lowered) ? lowered : viewBottom;
+        } else {
+            lo = viewBottom;
+        }
+    }
+    if (topLess || topSame) {
+        const float raised = hi + 20.0f;
+        const float limit = (viewTop <= maxHeight_) ? maxHeight_ : viewTop;
+        hi = (limit < raised) ? limit : raised;
+    }
+    if (lo <= 0.0f && lo != 0.0f) lo = 0.0f;                   // negative clamps to 0 (-0.0 is kept)
+    if (kMaxTerrainHeight < hi) hi = kMaxTerrainHeight;
+    if (hi < tuning_.seaLevel) hi = tuning_.seaLevel;          // never below the sea level (+0x9c)
+}
+
+void cSTETerrain::SetTerrainType(std::int32_t type) {
+    // 0x10073e4e6: announce the new type, re-texture the whole city and redisplay it without a second
+    // water pass.
+    if (terrainType_ == type) return;
+    terrainType_ = type;
+    PostMessageA(0xc922eb91, static_cast<std::uint64_t>(static_cast<std::uint32_t>(type)), 0, 0, 0);
+    TerrainRect r{0, 0, static_cast<std::int32_t>(cellsX_), static_cast<std::int32_t>(cellsZ_)};
+    AssignSurfaceTexturesAndColors(r);
+    RedisplayTerrain(false, false, r, 0);
+}
+
+// ================================================================================ display state
+
+void cSTETerrain::EnsureMinAllowedHeight() {
+    // 0x1007361a0: when the cached minimum dropped below the 5 m floor, raise every vertex to the floor.
+    if (!(minHeight_ <= kMinTerrainHeight) || minHeight_ == kMinTerrainHeight) return;
+    for (Vertex& vertex : vertices_)
+        if (vertex.altitude < kMinTerrainHeight) vertex.altitude = kMinTerrainHeight;
+    minHeight_ = kMinTerrainHeight;                            // +0x90
+}
+
+void cSTETerrain::ChangeTerrainLevel(bool raise, float amount) {
+    // 0x100735746: the whole grid, one vertex at a time through the clamped raise/lower helpers.
+    for (std::uint32_t z = 0; z < vertsZ_; ++z) {
+        for (std::uint32_t x = 0; x < vertsX_; ++x) {
+            const auto index = static_cast<std::uint32_t>(vertsX_ * z + x);
+            if (raise) {
+                RaiseVertex(index, amount);
+            } else {
+                LowerVertex(index, amount);
+            }
+        }
+    }
+    RedisplayTerrain(true, true, gridRect_, 1);                // +0x58, flags 1
+}
+
+void cSTETerrain::DoErosion(std::uint32_t style, bool fromImage) {
+    // 0x100736216. Style 1 is wind only; style 0 runs the water erosion passes (with the "from image"
+    // variants of the iteration counts) and then the wind passes. Both simulation kernels are pending
+    // (TERRAIN-6), so only the wind/water pass counts are modelled here.
+    std::int32_t windIterations = kNumWindErosionIterationsPerUserClick;
+    if (style == 0) {
+        const std::int32_t smoothing =
+            fromImage ? Statics().numSmoothingIterationsAfterWaterErosion : kNumSmoothingIterationsAfterWaterErosion;
+        const std::int32_t flowSteps =
+            fromImage ? Statics().numFlowStepsForGlobalWaterErosion : kNumFlowStepsForGlobalWaterErosion;
+        (void)smoothing;
+        (void)flowSteps;
+        // DoWaterErosion(gridRect_, flowSteps) x kNumWaterErosionIterationsPerPlayerClick: pending.
+    } else if (style != 1) {
+        return;
+    }
+    // DoWindErosion(windIterations): pending.
+    (void)windIterations;
+}
+
+void cSTETerrain::StartFlood() {
+    // 0x10073e932: save the current depths, then flood the 20..40 cell block by 500 m of water and start
+    // stepping the flood. The step itself (DoFloodFlowStep) is pending (TERRAIN-6).
+    SaveWaterLevelsInTempArray(gridRect_);
+    floodStep_ = 0;                                            // +0x228
+    floodRect_ = {20, 20, 40, 40};                             // +0x218
+    const std::int32_t z0 = std::max(floodRect_.top, 0);
+    const std::int32_t z1 = std::min(floodRect_.bottom, static_cast<std::int32_t>(cellsZ_));
+    const std::int32_t x0 = std::max(floodRect_.left, 0);
+    const std::int32_t x1 = std::min(floodRect_.right, static_cast<std::int32_t>(cellsX_));
+    for (std::int32_t z = z0; z < z1; ++z)
+        for (std::int32_t x = x0; x < x1; ++x)
+            waterDepth_[static_cast<std::size_t>(vertsX_) * static_cast<std::uint32_t>(z) +
+                        static_cast<std::uint32_t>(x)] += 500.0f;
+    floodActive_ = true;                                       // +0xf4
+}
+
+// ==================================================================================== surfaces
+
+void cSTETerrain::UpdateMoistureValues(const TerrainRect& r) {
+    // 0x100733d98: `if (+0x140 != null) (+0x140)->vslot(0x80)()`. The city's land/moisture simulator is
+    // reached through the host seam; the rectangle is not passed on (the original ignores it too).
+    (void)r;
+    if (!landSimulator_) return;
+    if (ITerrainHost* host = TerrainHost()) host->UpdateLandSimulator(landSimulator_);
+}
+
+void cSTETerrain::AddLandTypeAtVertex(std::uint32_t index, std::uint16_t textureKey, float weight) {
+    // 0x100731338: three (key, weight) slots per vertex at +0x16/+0x18, +0x1a/+0x1c, +0x1e/+0x20. An empty
+    // slot takes the pair, a matching key keeps the larger weight, otherwise the smallest weight is dropped
+    // when the new one is larger.
+    Vertex& vertex = vertices_[index];
+    std::uint16_t slots[3];
+    std::uint16_t weights[3];
+    for (int slot = 0; slot < 3; ++slot) {
+        std::memcpy(&slots[slot], &vertex.surface[6 + slot * 4], sizeof(std::uint16_t));
+        std::memcpy(&weights[slot], &vertex.surface[8 + slot * 4], sizeof(std::uint16_t));
+    }
+    const auto quantised = static_cast<std::uint16_t>(static_cast<int>(weight * 255.0f + 1.0f));
+    for (int slot = 0; slot < 3; ++slot) {
+        if (slots[slot] == 0) {
+            slots[slot] = textureKey;
+            weights[slot] = quantised;
+            break;
+        }
+        if (slots[slot] == textureKey) {
+            if (weights[slot] < quantised) weights[slot] = quantised;
+            break;
+        }
+        if (slot == 2) {
+            int smallest = 0;
+            for (int candidate = 1; candidate < 3; ++candidate)
+                if (weights[candidate] < weights[smallest]) smallest = candidate;
+            if (weights[smallest] < quantised) {
+                slots[smallest] = textureKey;
+                weights[smallest] = quantised;
+            }
+            break;
+        }
+    }
+    for (int slot = 0; slot < 3; ++slot) {
+        std::memcpy(&vertex.surface[6 + slot * 4], &slots[slot], sizeof(std::uint16_t));
+        std::memcpy(&vertex.surface[8 + slot * 4], &weights[slot], sizeof(std::uint16_t));
+    }
+}
+
+bool cSTETerrain::GetEffectIDProperty(cISCPropertyHolder* holder, std::uint32_t propertyID,
+                                      std::uint32_t out[2]) {
+    // 0x100738dcc: `cSCPropertyHelp::GetPropertyValue(holder, id, vector<u32>&)` and then the check that
+    // the array is exactly two dwords long (the original compares the vector's byte size with 8). The port
+    // reads the variant directly so this file does not add a link dependency on SCPropertyHelp.
+    if (!holder) return false;
+    cISCProperty* property = holder->GetProperty(propertyID);
+    if (!property) return false;
+    bool found = false;
+    if (const cIGZVariant* value = property->GetPropertyValue()) {
+        if (value->GetType() == static_cast<std::uint16_t>(cIGZVariant::kTypeUint32 | cIGZVariant::kTypeArrayFlag) &&
+            value->GetCount() == 2) {
+            if (const std::uint32_t* data = value->RefUint32()) {
+                out[0] = data[0];
+                out[1] = data[1];
+                found = true;
+            }
+        }
+    }
+    // (the holder hands out the property without a reference, so it must not be released here)
+    return found;
+}
+
+void cSTETerrain::ComputeWaterProximityValues(const TerrainRect& r) {
+    // 0x100733c62: accumulate the dirty rect and, once it covers more than 99 cells, refill the
+    // per-vertex water-proximity grid (0 = water, kMaxBeachWidth + 2 = dry) and flood fill it.
+    UnionRect(emptyRect_, emptyRect_, r);
+    const std::int64_t width = static_cast<std::int64_t>(emptyRect_.right) - emptyRect_.left;
+    const std::int64_t height = static_cast<std::int64_t>(emptyRect_.bottom) - emptyRect_.top;
+    if (width * height <= 99) return;
+    emptyRect_ = {0, 0, -1, -1};                            // +0xcc reset to kEmptyRect
+    waterProximityTick_ = 0;                                // +0xc8
+    waterVertexCount_ = 0;                                  // +0x108
+    const std::uint8_t dry = static_cast<std::uint8_t>(kMaxBeachWidth + 2);
+    const std::uint32_t vertsX = vertsX_, vertsZ = vertsZ_;
+    for (std::uint32_t z = 0; z < vertsZ; ++z) {
+        std::vector<std::uint8_t>& row = surfaceCover_[z];
+        const std::size_t base = static_cast<std::size_t>(z) * vertsX;
+        for (std::uint32_t x = 0; x < vertsX; ++x) {
+            if (waterDepth_[base + x] <= 0.0f) {
+                row[x] = dry;
+            } else {
+                row[x] = 0;
+                ++waterVertexCount_;
+            }
+        }
+    }
+    const bool noWater = waterVertexCount_ < 1;
+    if (ITerrainHost* host = TerrainHost()) {
+        // The source kind is -1 when there is no water at all and the threshold is kMaxBeachWidth + 1 + (0/1).
+        host->FloodFillDistance(surfaceCover_, noWater ? -1 : 0,
+                                kMaxBeachWidth + 1 + (noWater ? 1 : 0));
+    }
+}
+
+void cSTETerrain::AdjustLandTypeRatios(const TerrainRect& r) {
+    // 0x10073173a: when the three land-type weights of a vertex add up to more than 250, scale them down to
+    // 250 (integer division), keeping the keys.
+    for (std::int32_t z = r.top; z <= r.bottom; ++z) {
+        for (std::int32_t x = r.left; x <= r.right; ++x) {
+            Vertex& vertex = vertices_[static_cast<std::size_t>(z) * vertsX_ + static_cast<std::size_t>(x)];
+            std::uint16_t slots[3];
+            std::uint16_t weights[3];
+            for (int slot = 0; slot < 3; ++slot) {
+                std::memcpy(&slots[slot], &vertex.surface[6 + slot * 4], sizeof(std::uint16_t));
+                std::memcpy(&weights[slot], &vertex.surface[8 + slot * 4], sizeof(std::uint16_t));
+            }
+            std::uint32_t sum = 0;
+            for (int slot = 0; slot < 3 && slots[slot] != 0; ++slot) sum += weights[slot];
+            if (sum <= 0xfa) continue;
+            for (int slot = 0; slot < 3 && slots[slot] != 0; ++slot)
+                weights[slot] = static_cast<std::uint16_t>(weights[slot] * 0xfa / sum);
+            for (int slot = 0; slot < 3; ++slot)
+                std::memcpy(&vertex.surface[8 + slot * 4], &weights[slot], sizeof(std::uint16_t));
+        }
+    }
+}
+
+void cSTETerrain::AssignSurfaceTexturesAndColors(TerrainRect& r) {
+    // 0x100733bc8: the surface pass. DecideSurfaceCover and the ash spray (TERRAIN-3) and the spread table
+    // (TERRAIN-3) are pending, so the parts that need them are left out and the callers stay partial.
+    ComputeWaterProximityValues(r);
+    PadRectangle(r, MaxSurfaceTextureSpread()[zoom_ & 7]);      // sMaxSurfaceTextureSpread[zoom]
+    UpdateMoistureValues(r);
+    ClearSurfaceTextures(r);
+    if (displayEnabled_ && view_) {
+        const std::int32_t firstRow = r.top < 1 ? 0 : r.top - 1;
+        std::uint32_t lastRow = static_cast<std::uint32_t>(r.bottom) + 1;
+        if (static_cast<std::uint32_t>(lastCellZ_) < lastRow) lastRow = lastCellZ_;
+        view_->MarkTextureSpanInfoDirty(firstRow, static_cast<std::int32_t>(lastRow));   // @0x10074d7d4
+    }
+    // DecideSurfaceCover(r); SprayVolcanicAsh(r); -- pending (TERRAIN-3, TERRAIN-9)
+    AdjustLandTypeRatios(r);
 }
 
 // ==================================================================================== counts
@@ -882,13 +1604,6 @@ void cSTETerrain::ClearSurfaceTextures(const TerrainRect& r) {
             }
         }
     }
-}
-
-void cSTETerrain::UpdateMoistureValues(const TerrainRect& r) {
-    // 0x100733d98: `if (+0x140 != null) (+0x140)->vslot(0x80)()`. +0x140 is the city's land-value /
-    // moisture simulator (spCity slot 0x230, acquired in Init); that simulator is unrecovered, so the
-    // call is a no-op until the seam exists (to-do row TERRAIN-3).
-    (void)r;
 }
 
 // ============================================================================ brushed regions
