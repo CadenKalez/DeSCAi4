@@ -355,6 +355,59 @@ struct BmpWindow final : gz::cGZWinFlatRect {
     }
 };
 
+struct FakeSc3Gen final : gz::cIGZWinGen {
+    std::map<int, bool> flags;
+    std::uint32_t userData = 0;
+    bool userDataSet = false;
+    int gutterX = -1, gutterY = -1;
+    gz::cIGZWinProc* proc = nullptr;
+    std::vector<std::pair<int, int>> dividers;
+    struct Bar { int id, sizeMode, outline; cRZRect area; };
+    std::vector<Bar> bars;
+    int releases = 0, bitmapCalls = 0;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return 1; }
+    std::uint32_t Release() override { ++releases; return 1; }
+    cIGZWin* AsIGZWin() override { return nullptr; }
+    std::uint32_t GetCLSID() const override { return 0; }
+    bool GetWinGenFlag(int flag) const override { auto it = flags.find(flag); return it != flags.end() && it->second; }
+    bool SetWinGenFlag(int flag, bool on) override { flags[flag] = on; return true; }
+    bool SetWinProc(gz::cIGZWinProc* p) override { proc = p; if (p) p->AddRef(); return true; }
+    gz::cIGZWinProc* GetWinProc() const override { return proc; }
+    bool GetWinProcAs(std::uint32_t, void**) const override { return false; }
+    bool GetUserArea(cRZRect&) const override { return false; }
+    bool SetUserArea(const cRZRect&) override { return false; }
+    bool SetBackgroundBitmap(gz::BGBltType, cIGZBuffer*) override { ++bitmapCalls; return true; }
+    bool GetBackgroundBitmap(gz::BGBltType&, cIGZBuffer*&) const override { return false; }
+    bool SetBackgroundBitmap(cIGZBuffer*) override { return false; }
+    bool GetBackgroundBitmap(cIGZBuffer**) const override { return false; }
+    bool SetBackgroundBlitType(gz::BGBltType) override { return false; }
+    bool GetBackgroundBlitType(gz::BGBltType&) const override { return false; }
+    bool SetUserData(std::uint32_t, std::uint32_t) override { return false; }
+    bool GetUserData(std::uint32_t, std::uint32_t&) const override { return false; }
+    bool SetUserData(std::uint32_t value) override { userData = value; userDataSet = true; return true; }
+    std::uint32_t GetUserData() const override { return userData; }
+    void SetUserData(std::uint32_t, cIGZUnknown*) override {}
+    bool GetUserData(std::uint32_t, std::uint32_t, void**) override { return false; }
+    void RemoveUserData(std::uint32_t) override {}
+    bool SetGutters(std::uint8_t x, std::uint8_t y) override { gutterX = x; gutterY = y; return true; }
+    bool GetGutters(int&, int&) override { return false; }
+    void SetGutters(std::int8_t, std::int8_t, std::int8_t, std::int8_t) override {}
+    bool GetGutters(int&, int&, int&, int&) const override { return false; }
+    bool AddColorBar(int id, int sizeMode, int outline, const cRZRect& area) override { bars.push_back({id, sizeMode, outline, area}); return true; }
+    void AddDividerH(int id, int y) override { dividers.emplace_back(id, y); }
+    bool RemoveColorBar(int) override { return false; }
+};
+
+struct Sc3GenWindow final : gz::cGZWinFlatRect {
+    explicit Sc3GenWindow(cIGZWinMgr* mgr) : cGZWinFlatRect(mgr) {}
+    FakeSc3Gen gen;
+    bool QueryInterface(std::uint32_t iid, void** out) override {
+        if (iid == gz::kGZIID_cIGZWinGen) { *out = &gen; return true; }
+        return gz::cGZWinFlatRect::QueryInterface(iid, out);
+    }
+};
+
 struct FakeLegacyBinding final : cIGZLegacyControl {
     cIGZWin* control = nullptr;
     std::uint32_t refs = 1;
@@ -925,6 +978,54 @@ int main() {
     CHECK_EQ(bmpWindow->bmp.flags, 3 | 0x10);
     CHECK_EQ(bmpWindow->bmp.releases, 2);
     bmpWindow->Release();
+
+    // The generic-window interpreter (SC3WinGen): flag keywords (title bar / fill / outline / paint are inverted),
+    // user data, gutters, the image resource params, the dummy window procedure; then the divider / bluebar strings.
+    {
+        auto* genWindow = new Sc3GenWindow(&mgr);
+        genWindow->AddRef();
+        mgr.valid.insert(genWindow);
+        Params genParams;
+        genParams.Uint(0x10004u, 1u);     // moveable -> flag 1 on
+        genParams.Uint(0x10005u, 0u);     // sizeable -> flag 2 off
+        genParams.Uint(0x1000au, 1u);     // closedisabled -> 0x100 on
+        genParams.Uint(0x1000du, 0u);     // titlebar=no -> flag 0x1000 ON (inverted)
+        genParams.Uint(0xf00du, 1u);      // fill=yes -> flag 0x2000 off
+        genParams.Uint(0xf019u, 0u);      // outline=no -> flag 0x4000 on
+        genParams.Uint(0x1000eu, 1u);     // paint=yes -> flag 0x8000 off
+        genParams.Uint(0x1000fu, 1u);     // sidebar -> 0x10000 on
+        genParams.Uint(0x10000u, 77u);    // userdata
+        genParams.Text(0xf004u, "(64,32)");   // gutters
+        genParams.Text(0xf016u, "{46a006b0,ea7f0eae}");
+        cGZLegacyControl::InterpretPropertiesSC3WinGen(genWindow, genParams.list, true);
+        const auto& g = genWindow->gen;
+        CHECK(g.GetWinGenFlag(1) && !g.GetWinGenFlag(2) && g.GetWinGenFlag(0x100));
+        CHECK(g.GetWinGenFlag(0x1000) && !g.GetWinGenFlag(0x2000) && g.GetWinGenFlag(0x4000) && !g.GetWinGenFlag(0x8000) && g.GetWinGenFlag(0x10000));
+        CHECK(g.flags.count(4) == 0);        // keywords that were not written are untouched
+        CHECK(g.userDataSet && g.userData == 77u);
+        CHECK(g.gutterX == 64 && g.gutterY == 32);
+        CHECK(g.proc != nullptr);                                    // the dummy window procedure
+        void* procOut = nullptr;
+        CHECK(g.proc->QueryInterface(0x22e85d8e, &procOut));
+        g.proc->Release();
+        CHECK(g.bitmapCalls == 0);                                   // the fake host loads no image
+        cIGZVariant* genKey = nullptr;
+        CHECK(genWindow->GetParam(0xdaa3b860u, &genKey));
+        genKey->Release();
+        CHECK(genWindow->GetParam(0xab428c5du, &genKey));
+        genKey->Release();
+        CHECK_EQ(g.releases, 1);                                     // the interface reference the query took
+        Params secondPass;
+        secondPass.Text(0x10002u, "(7,120)");                 // divider (id, y)
+        secondPass.Text(0x10003u, "(9,1,2,300,40)");          // bluebar (id, l, t, r, b)
+        secondPass.Text(0x10002u, "(bad)");                   // malformed: ignored
+        cGZLegacyControl::InterpretPropertiesSC3WinGen(genWindow, secondPass.list, false);
+        CHECK(genWindow->gen.dividers.size() == 1 && genWindow->gen.dividers[0].first == 7 && genWindow->gen.dividers[0].second == 120);
+        CHECK(genWindow->gen.bars.size() == 1 && genWindow->gen.bars[0].id == 9 && genWindow->gen.bars[0].area.right == 300 && genWindow->gen.bars[0].area.bottom == 40);
+        CHECK(genWindow->gen.bars[0].sizeMode == 0 && genWindow->gen.bars[0].outline == 0);
+        CHECK_EQ(genWindow->gen.releases, 2);
+        genWindow->Release();
+    }
 
     // -----------------------------------------------------------------------------------------------------
     // 8. The property helpers.

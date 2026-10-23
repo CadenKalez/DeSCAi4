@@ -18,6 +18,7 @@
 #include "gz/WinScrollbar.h"
 #include "gz/WinSlider.h"
 #include "rz/cRZVariant.h"
+#include "sc4/WinProcs.h"
 
 namespace {
 
@@ -1316,6 +1317,82 @@ void cGZLegacyControl::InterpretPropertiesGZWinCustom(cIGZWin* window, tScriptPr
     (void)window; (void)parameters; (void)init;
 }
 
+// InterpretPropertiesSC3WinGen (0x1005432b8): the generic window's script keywords. The decompiler drops the
+// QueryInterface out-parameter of its first call (every later `local_40->vslot` is the cIGZWinGen), so the
+// mapping below was read from the vslot offsets: SetWinGenFlag is [6] (+0x30), SetUserData(value) [20] (+0xa0),
+// SetBackgroundBitmap(type, image) [12] (+0x60), SetGutters(x, y) [25] (+0xc8), SetWinProc [7] (+0x38),
+// AddDividerH [30] (+0xf0), AddColorBar [29] (+0xe8). Init pass: the flag keywords (the title bar, "fill", "paint"
+// and the dialog bit are inverted: the keyword says "has", the flag says "has not"), user data, the background image
+// {group,instance} with its blit type, the gutters, and a dummy window procedure. Second pass: "divider" and
+// "bluebar" strings define the dividers and colour bars.
+void cGZLegacyControl::InterpretPropertiesSC3WinGen(cIGZWin* window, tScriptPropertyArray& parameters, bool init) {
+    if (!window) return;
+    gz::cIGZWinGen* gen = nullptr;
+    if (!window->QueryInterface(gz::kGZIID_cIGZWinGen, reinterpret_cast<void**>(&gen))) return;
+    if (init) {
+        static constexpr struct { std::uint32_t property; int flag; bool inverted; } kFlags[] = {
+            {0x10004, 0x1, false},     // moveable
+            {0x10005, 0x2, false},     // sizeable
+            {0x10006, 0x4, false},     // defaultkeys
+            {0x10007, 0x10, false},    // closevisible
+            {0x10008, 0x20, false},    // gobackvisible
+            {0x10009, 0x40, false},    // minmaxvisible
+            {0x1000a, 0x100, false},   // closedisabled
+            {0x1000b, 0x200, false},   // gobackdisabled
+            {0x1000c, 0x400, false},   // minmaxdisabled
+            {0x1000d, 0x1000, true},   // titlebar
+            {0xf00d, 0x2000, true},    // fill
+            {0xf019, 0x4000, true},    // outline
+            {0x1000e, 0x8000, true},   // paint
+            {0x1000f, 0x10000, false}, // sidebar
+        };
+        std::uint32_t value = 0;
+        for (const auto& entry : kFlags) {
+            if (GetPropertyUint32(parameters, entry.property, value)) gen->SetWinGenFlag(entry.flag, entry.inverted ? value == 0 : value != 0);
+        }
+        std::uint32_t userData = 0;
+        if (GetPropertyUint32(parameters, 0x10000, userData)) gen->SetUserData(userData);   // vslot [20]
+        cRZString text;
+        if (GetPropertyString(parameters, 0xf016, text)) {
+            std::uint32_t group = 0, instance = 0;
+            if (std::sscanf(text.ToChar(), "{%x,%x}", &group, &instance) == 2) {
+                cIGZBuffer* image = LoadBuffer(group, instance);
+                std::uint32_t blit = 0;
+                GetPropertyUint32(parameters, 0x10001, blit);
+                if (image) {
+                    // tiled (0) -> 0, edge (2) -> 2, anything else -> 1 (stretched)
+                    const gz::BGBltType type = blit == 0 ? gz::kBGTiled : (blit == 2 ? gz::kBGEdges : gz::kBGStretched);
+                    gen->SetBackgroundBitmap(type, image);   // vslot [12]
+                }
+                cGZPersistResourceKey key{0x856ddbacu, group, instance};
+                SetResourceKeyParam(window, 0xab428c5du, key);
+                SetGZWinImage(window, group, instance, 0);
+                if (image) image->Release();
+            }
+        }
+        int gx = 0, gy = 0;
+        if (GetPropertyCoords(parameters, 0xf004, gx, gy)) gen->SetGutters(static_cast<std::uint8_t>(gx), static_cast<std::uint8_t>(gy));   // vslot [25]
+        gen->SetWinProc(new sc4::cGZDummyWinProc());   // vslot [7]: takes its own reference on the new object
+    } else {
+        for (const tScriptProperty& property : parameters) {
+            if (!property.value || (property.id != 0x10002 && property.id != 0x10003)) continue;
+            if (property.value->GetType() != (cIGZVariant::kTypeRZChar | cIGZVariant::kTypeArrayFlag)) continue;
+            cRZString text;
+            property.value->GetValString(text);
+            if (property.id == 0x10002) {   // divider "(id,y)"
+                unsigned id = 0; int y = 0;
+                if (std::sscanf(text.ToChar(), "(%u,%d)", &id, &y) == 2) gen->AddDividerH(int(id), y);   // vslot [30]
+            } else {   // bluebar "(id,l,t,r,b)"
+                unsigned id = 0; int l = 0, t = 0, r = 0, b = 0;
+                if (std::sscanf(text.ToChar(), "(%u,%d,%d,%d,%d)", &id, &l, &t, &r, &b) == 5) {
+                    gen->AddColorBar(int(id), 0, 0, cRZRect{l, t, r, b});   // vslot [29]
+                }
+            }
+        }
+    }
+    gen->Release();
+}
+
 // ---------------------------------------------------------------------------------------------------------
 // PARTIAL per-class interpreters (addresses in LegacyControl.h). Their bodies apply the control-specific view
 // interface setters; the decompiler drops the QueryInterface result base in every one of them (the `local_*`
@@ -1339,7 +1416,6 @@ GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinLineInput)
 GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinOptGrp)
 GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinSpinner)
 GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinTextTicker)
-GZLEGACYCTRL_PARTIAL_INTERPRETER(SC3WinGen)
 GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinFileBrowser)
 GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinTreeView)
 GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinFolders)

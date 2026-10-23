@@ -14,6 +14,7 @@
 #include "experimental_host/HostBoot.h"
 #include "experimental_host/HostFonts.h"
 #include "experimental_host/HostGraphics.h"
+#include "experimental_host/HostUi.h"
 #include "dbpf/DBPFReader.h"
 #include "gz/GZFont.h"
 #include "gz/cIGZMessage2.h"
@@ -163,13 +164,8 @@ static NSString* GameData() {
     return [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/GameData"];
 }
 
-// A PNG resource of the game data as a CPU buffer (read with the recovered DBPF reader, decoded by ImageIO).
-static cGZBuffer* LoadPngBuffer(const char* package, std::uint32_t type, std::uint32_t group, std::uint32_t instance) {
-    dbpf::Package pkg;
-    if (!pkg.Open([[GameData() stringByAppendingPathComponent:[NSString stringWithUTF8String:package]] UTF8String])) return nullptr;
-    const dbpf::Entry* e = pkg.Find(type, group, instance);
-    std::vector<uint8_t> png;
-    if (!e || !pkg.Read(*e, png)) return nullptr;
+// PNG bytes as a CPU buffer (ImageIO).
+static cGZBuffer* DecodePngBytes(const std::vector<uint8_t>& png) {
     CGImageSourceRef src = CGImageSourceCreateWithData((__bridge CFDataRef)[NSData dataWithBytes:png.data() length:png.size()], nullptr);
     CGImageRef img = src ? CGImageSourceCreateImageAtIndex(src, 0, nullptr) : nullptr;
     if (!img) return nullptr;
@@ -181,6 +177,16 @@ static cGZBuffer* LoadPngBuffer(const char* package, std::uint32_t type, std::ui
     CGContextDrawImage(cg, CGRectMake(0, 0, CGImageGetWidth(img), CGImageGetHeight(img)), img);
     CGContextRelease(cg); CGColorSpaceRelease(cs); CGImageRelease(img); CFRelease(src);
     return buffer;
+}
+
+// A PNG resource of the game data as a CPU buffer (read with the recovered DBPF reader).
+static cGZBuffer* LoadPngBuffer(const char* package, std::uint32_t type, std::uint32_t group, std::uint32_t instance) {
+    dbpf::Package pkg;
+    if (!pkg.Open([[GameData() stringByAppendingPathComponent:[NSString stringWithUTF8String:package]] UTF8String])) return nullptr;
+    const dbpf::Entry* e = pkg.Find(type, group, instance);
+    std::vector<uint8_t> png;
+    if (!e || !pkg.Read(*e, png)) return nullptr;
+    return DecodePngBytes(png);
 }
 
 // The window the splash script describes: GZWinGen 0xaaa9c9d9, 768 x 600, image {46a006b0, ea7f0eae} (Intro.dat).
@@ -239,6 +245,8 @@ struct SplashHost final : sc4::ISplashScreenHost {
     cIGZWin* CreateWindowFromScript(const cGZPersistResourceKey& key, cIGZWin* parent, std::uint32_t id) override {
         // The script (SimCity_1.dat 0/96a006b0/8aa9aa14) is a 768x600 window with the Intro.dat picture; the script
         // interpreter is not wired to the host yet, so the host builds that one window itself.
+        if (cIGZWin* real = exphost::CreateWindowFromScript(key, parent, id)) { std::printf("splash: window built from the game's UI script\n"); return real; }
+        std::printf("splash: the UI script path failed, using the host's own window\n");
         if (key.group != sc4::kSplashScriptGroup || key.instance != sc4::kSplashScriptInstance) return nullptr;
         gSplashImage = LoadPngBuffer("Intro.dat", 0x856ddbac, 0x46a006b0, 0xea7f0eae);
         auto* w = new ImageWin(gMgr, gSplashImage);
@@ -320,7 +328,7 @@ int main(int argc, char** argv) {
         else if (!std::strcmp(argv[i], "--selftest")) selftest = true;
         else if (!std::strcmp(argv[i], "--boot")) boot = true;
         else if (!std::strcmp(argv[i], "--game")) game = true;
-        else if (!std::strcmp(argv[i], "--splash")) splash = true;
+        else if (!std::strcmp(argv[i], "--splash")) game = true;   // same as --game
         else if (!std::strcmp(argv[i], "--wait") && i + 1 < argc) waitMs = std::atoi(argv[++i]);
         else if (!std::strcmp(argv[i], "--frames") && i + 1 < argc) frames = std::atoi(argv[++i]);
     }
@@ -331,7 +339,11 @@ int main(int argc, char** argv) {
         gMgr = new exphost::HostWinMgr();
         gMgr->AddRef();
         gMgr->Init();
-        if (game && !exphost::RunBoot(false)) std::printf("boot: FAILED (continuing to the UI anyway)\n");
+        if (game) {
+            if (!exphost::RunBoot(false, true)) std::printf("boot: FAILED (continuing to the UI anyway)\n");
+            exphost::SetPngDecoder(&DecodePngBytes);
+            std::printf("ui scripts: %s\n", exphost::InitUiScripts(gMgr) ? "service ready" : "NOT available");
+        }
         if (game || splash) StartSplash(); else BuildMenu();
         std::printf("font: %s\n", InitFont() ? "FreeType + cGZFont ready" : "FAILED to initialise");
         gMgr->GetMainWindow()->InvalidateSelf();

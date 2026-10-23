@@ -11,15 +11,22 @@ src/gz/GZApp.cpp
 src/gz/GZCOMDirector.cpp
 src/gz/GZFont.cpp
 src/gz/GZFramework.cpp
+src/gz/LegacyControl.cpp
 src/gz/MessageQueue.cpp
 src/gz/RZDraw.cpp
 src/gz/RZServices.cpp
+src/gz/ScriptTerp.cpp
+src/gz/ScriptVocab.cpp
+src/gz/ScriptableControlSet.cpp
 src/gz/SmallObjects.cpp
 src/gz/StreamOps.cpp
+src/gz/UIScriptService.cpp
 src/gz/Win.cpp
+src/gz/WinBMP.cpp
 src/gz/WinBtn.cpp
 src/gz/WinCtrlFactory.cpp
 src/gz/WinFlatRect.cpp
+src/gz/WinGen.cpp
 src/gz/WinMgrBase.cpp
 src/gz/WinMsgBox.cpp
 src/gz/WinText.cpp
@@ -84,3 +91,4 @@ src/sc4/ServiceLocator.cpp
 src/sc4/SimStreamOps.cpp
 src/sc4/WinSplashScreen.cpp
 src/sc4/cSC4ResponseCurve.cpp
+src/sc4/WinProcs.cpp

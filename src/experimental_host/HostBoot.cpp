@@ -53,7 +53,10 @@ struct Options final : sc4::IVideoOptionStore {
 
 
 namespace exphost {
-bool RunBoot(bool verbose) {
+static cGZFramework* g_framework = nullptr;
+cGZFramework* BootFramework() { return g_framework; }
+
+bool RunBoot(bool verbose, bool keepAlive) {
     int failures = 0;
     auto Step = [&](const char* name, bool ok) { std::printf("[%s] %s\n", ok ? "OK" : "FAIL", name); std::fflush(stdout); if (!ok) ++failures; };
 
@@ -64,6 +67,7 @@ bool RunBoot(bool verbose) {
     SetDocumentsFolderProvider([&](std::string& out) { out = docs; return true; });
 
     auto* framework = new cGZFramework();
+    g_framework = framework;
     cGZFramework::sSetFrameWork(framework);
     framework->COM().RealInit();
     auto* app = new cSC4App("SimCity 4", framework->AppView());
@@ -94,8 +98,10 @@ bool RunBoot(bool verbose) {
     Step("Init", app->Init());
     Step("PostFrameWorkInit", app->PostFrameWorkInit());
     std::printf("  resource segments: %u\n", static_cast<unsigned>(resources->GetSegmentCount()));
-    Step("PreFrameWorkShutdown", app->PreFrameWorkShutdown());
-    Step("Shutdown", app->Shutdown());
+    if (!keepAlive) {   // the host keeps the application alive when it goes on to build UI from the game data
+        Step("PreFrameWorkShutdown", app->PreFrameWorkShutdown());
+        Step("Shutdown", app->Shutdown());
+    }
     return failures == 0;
 }
 }  // namespace exphost
