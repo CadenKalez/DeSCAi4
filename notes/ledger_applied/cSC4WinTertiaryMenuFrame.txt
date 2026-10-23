@@ -1,0 +1,29 @@
+SOURCE src/sc4/WinTertiaryMenuFrame.cpp|h
+EVIDENCE fresh Ghidra export work/sc4/cSC4WinTertiaryMenuFrame.txt (all 37 symbols) plus otool -arch x86_64 -tV of "Sim City 4 Deluxe Editionsub" for the four functions Ghidra decompiles lossily (GZOnMouseMove 0x1002fed94, GZOnMouseDownL 0x1002fee92 and GZOnMouseUpL 0x1002fefc4 lose the this pointer and the last arguments to register guesses, and EnableScrollArrow 0x1002ff0c2 comes out as an unrecovered indirect jump that the disassembly shows is a tail call to cGZWin::InvalidateSelfAndParents); the primary vtable order was read with scripts/vtable.py cSC4WinTertiaryMenuFrame (0x100a95360 group: [4] SetBackgroundImage, [5] PositionFrame, [6] GetContentRect, [7] EnableScrollArrow, [8]/[9] destructor, [10]..[18] Init..GZOnMouseUpL) and confirms iid 0x8a25ce2c, AsIGZWin at +0x18 and the cGZWin half at +8; object size 0x1e8 from both operator-new sites (0x10078d416 and 0x10078d990); the creation site at 0x10078d421 also supplies the real SetBackgroundImage metrics 53/25, 80/53/4/27/29 and the PositionFrame call; the two auto-repeat constants were read at 0x100b06490/0x100b06494 (300 ms initial, 100 ms repeat); test scripts/tests/sc4_wintertiarymenuframe_test.cpp (built and run with ASan/UBSan) covers COM lifetime through both bases (QueryInterface 0x8a25ce2c on either half, AddRef/Release, AsIGZWin), Init's SetFlag(4,true)/SetFlag(0x10000,false) and absence of an id, SetBackgroundImage's AddRef/replace/re-read reference handling and image-height metric, PositionFrame's minTop / maxBottom / body-anchor clamp chain and the derived content rectangle, the IsPointInWindowWindowCoordinates "arrow column, not window" quirk, IsPointInWindowScreenCoordinates' convert-then-query path, GZPaint's clear pass (Lock 0x8001 / Fill(0) / Unlock 0x8001), its four tiles and their arrow offsets for arrows off / on / hovered / held (top corner 80 -> 133 -> 239 -> 186 source x), the RZDrawBltTiled right edge, the final Blt into cGZWin's draw buffer (source area and draw area), the no-graphics-system compose path, the re-init-on-size-change path, a failing buffer factory, the 300 ms StartPeriodic and 100 ms SetPeriod auto-repeat through the SDL stub with the 0xca35e4ba -1 / +1 message to the notification target, capture on press / release on up, hover clearing on move and exit, rebuild on resize, and both release orders (Shutdown background-then-scratch, destructor scratch-then-background); the port needs one new seam, IWinTertiaryMenuFrameHost (CreateBuffer = RZ::GS() vslot 0x20 returning a cIGZBuffer, WindowBuffer = cGZWin +0x98 as a cIGZBuffer), which has to be added to docs/SEAMS.md and hooked to the graphics system / window manager by the lead (todo CLASS-cSC4WinTertiaryMenuFrame); registry scripts/tests/registry/sc4_wintertiarymenuframe.txt
+0x1002fe310 WinTertiaryMenuFrameConstruct
+0x1002fe3d6 WinTertiaryMenuFrameConstructAlias
+0x1002fe3e0 WinTertiaryMenuFrameDestructor
+0x1002fe4b2 WinTertiaryMenuFrameDestructorComplete
+0x1002fe4ca WinTertiaryMenuFrameDeletingDestructor
+0x1002fe506 WinTertiaryMenuFrameAddRef
+0x1002fe51e WinTertiaryMenuFrameRelease
+0x1002fe536 WinTertiaryMenuFrameQueryInterface
+0x1002fe57e WinTertiaryMenuFrameInit
+0x1002fe5e4 WinTertiaryMenuFrameShutdown
+0x1002fe668 WinTertiaryMenuFramePaint
+0x1002fea92 WinTertiaryMenuFrameSetBackgroundImage
+0x1002feb52 WinTertiaryMenuFramePositionFrame
+0x1002fec82 WinTertiaryMenuFrameIsPointInWindowWindowCoordinates
+0x1002fecfa WinTertiaryMenuFrameIsPointInWindowScreenCoordinates
+0x1002fed94 WinTertiaryMenuFrameMouseMove
+0x1002fee2e WinTertiaryMenuFrameMouseExit
+0x1002fee92 WinTertiaryMenuFrameMouseDownLeft
+0x1002fef52 WinTertiaryMenuFrameScrollContentCallback
+0x1002fefc4 WinTertiaryMenuFrameMouseUpLeft
+0x1002ff09c WinTertiaryMenuFrameAsIGZWin
+0x1002ff0a6 WinTertiaryMenuFrameGetContentRect
+0x1002ff0c2 WinTertiaryMenuFrameEnableScrollArrow
+PARTIAL:
+SKIPPED:
+0x1002fe4bc non-virtual thunk to cSC4WinTertiaryMenuFrame::~cSC4WinTertiaryMenuFrame() (and the other 13 this-adjusting thunks 0x1002fe4f8, 0x1002fe514, 0x1002fe52c, 0x1002fe558, 0x1002fe5d2, 0x1002fe65a, 0x1002fea80, 0x1002fecbe, 0x1002fed44, 0x1002fee1c, 0x1002fee5e, 0x1002fefb2, 0x1002ff018): compiler-generated cGZWin-half thunks of the recovered class layout, not hand-written
+0x1002ff108 std::vector<cISC4CatalogItem*>::__push_back_slow_path (libc++ glue immediately after the class, not a class member): compiler/library-generated, skipped

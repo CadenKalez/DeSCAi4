@@ -1,0 +1,45 @@
+SOURCE src/sc4/WinAnimationRecorder.cpp|h
+EVIDENCE test scripts/tests/sc4_winanimationrecorder_test.cpp - the constructor's defaults (name "Animation", rate "100", time "5", take 0, output type 3 jpg, loop on, the millisecond timer, the application ini path from cISC4App vslot 0xe8) and its ReadPreferences of the "Animation Recorder" section (Name / Rate / Time / Run / Delete bitmaps when finished / Output Directory / GX Directory / Output Type with the 0..3 clamp); Init's whole window tree (five cGZWinText labels each AddRef'd then Released except the status line, three 0x11ff cGZWinTextEdits with the single-line flag and the initial text, the Start / Close / Span buttons from WCM CreateButton 0x50 with the id / caption / area / fit-to-content flag, the bmp / png / jpg cGZWinOptGrp from WCM CreateOptGrp 0x70 with flags 1/2/4/8, value 3 and three OptBtnAdd, the cSC4WinResizableOutline with id 0x6acb1c40, private-buffer and ignore-cursor flags, area 100,100,262,222 and the three MakeFillColor colours, added to the SL::spView3DWin window, the close pull-to-front / clear-0x800 tail, the GetGXDirectory walk and the location-saver size restore), the idempotent second Init, GZPaint's two locks with the fill colour / draw area and the four DrawRectangleOutline edges on the host's cIGZBuffer, the three mouse handlers including the drag-anchor quirk (the anchors are written back, so the same move offsets the window again), GetCurrentCaptureArea's one-pixel inset and 2x2 minimum, FixAnimationName's 128-byte truncation and alnum/space filter, Start's frame target arithmetic (rate 100 ms, time 1 s -> 10 frames), the per-frame buffer creation (ARGB8888, 58x38 from the restored outline), the timer / button caption / Span enable / status text / outline flags / tick-manager pause + step delta rate*1000 / posted 0x8802d2ff, RecordCurrentFrame's CopyColorBuffer rectangle and destination, DoMessage's four ticks per frame with StepAnimationSystem, Stop's Yes/No box and the Gimex write-out through the host seam (the three file-name formats "%s%s %03d_%03d.bmp/png/jpg" with the take number and the frame offset, flags 100, the existing file replaced, the written-name list and the "AnimationFrames written OK." report), the frame-buffer-full path with loop mode off, the millisecond-timer pacing (99 ms no frame, 100 ms one frame), the frame-offset advance across write-outs, the WritePreferences round trip and Shutdown's releases (children, colour-buffer extension, the outline removed from the 3D view window, the <id> / <id+1> / <id> saver entries). Quirks asserted: ANIMREC-1 drag anchors, ANIMREC-2 the never-created "Delete bitmaps when finished" box, ANIMREC-3 the output-directory early returns and the empty string becoming "/", ANIMREC-4 the GX walk building a relative "App/Bin/GX/" from SplitDirectory's second component and the never-read +0x2d4, ANIMREC-5 WriteAnimatedGraphicFile writing nothing, ANIMREC-6 the Span button / caption state machine and the timer path never touching +0x358, ANIMREC-7 the offset advancing inside WriteOutputBitmaps, ANIMREC-8 the ini Output Type not reaching the option group (which always starts at jpg). Seams: IWinAnimationRecorderHost (SL::spSC4 vslots 0xe8 / 0x148 / 0x188, RZ::WCM, RZ::FO vslot 0x48 as gz::IWinFont, RZ::GS vslot 0x20, SL::spGDriver QueryInterface(0xe69bfe2a) as IWinAnimationColorBuffer, the animation tick manager service 0x86ad10ec as IWinAnimationTick, SL::spWinLocationSaver, SL::spView3DWin and the window draw buffer as a cIGZBuffer for gz::DrawRectangleOutline) plus the window manager's GZMsgBox (vslot 0x160, added to cIGZWinMgr with a default body) and cGZWin's own PostMsg for the tick message. Registry scripts/tests/registry/sc4_winanimationrecorder.txt
+0x100371f8a WinAnimationRecorderConstruct
+0x10037232e WinAnimationRecorderReadPreferences
+0x100372aa0 WinAnimationRecorderInit
+0x100373b0e WinAnimationRecorderGetGXDirectory
+0x100373fa2 WinAnimationRecorderUpdateStatusText
+0x1003740c6 WinAnimationRecorderShutdown
+0x1003742fa WinAnimationRecorderStop
+0x1003745bc WinAnimationRecorderDestroyInternalBitmaps
+0x100374632 WinAnimationRecorderWritePreferences
+0x100374bd4 WinAnimationRecorderGZOnMouseDownL
+0x100374c0c WinAnimationRecorderGZOnMouseUpL
+0x100374c30 WinAnimationRecorderGZOnMouseMove
+0x100374c96 WinAnimationRecorderGZPaint
+0x100374d46 WinAnimationRecorderDoMessage
+0x100374e78 WinAnimationRecorderRecordCurrentFrame
+0x100374f90 WinAnimationRecorderGZOnCommand
+0x100375042 WinAnimationRecorderStart
+0x1003754f2 WinAnimationRecorderSetAnimationOutputDirectory
+0x1003755b0 WinAnimationRecorderGetCurrentCaptureArea
+0x100375626 WinAnimationRecorderFixAnimationName
+0x100375796 WinAnimationRecorderCreateInternalBitmaps
+0x1003758da WinAnimationRecorderWriteOutFinalBitmaps
+0x100375a0a WinAnimationRecorderWriteOutputBitmaps
+0x100375de2 WinAnimationRecorderWriteAnimatedGraphicFile
+PARTIAL:
+# none: all 24 hand-written functions are written from their decompilation. The seam the app still has to hook up is
+# IWinAnimationRecorderHost (set with SetWinAnimationRecorderHost): the font (RZ::FO vslot 0x48 over cIGZFontSys::FontAcquire,
+# as a gz::IWinFont), the frame buffers (RZ::GS vslot 0x20, one reference each), the colour-buffer extension
+# (SL::spGDriver QueryInterface(0xe69bfe2a), one reference held at +0x230 and released by Shutdown), the animation tick
+# manager (service 0x86ad10ec / iid 0x86ad10ed, borrowed: vslots 0x60 PauseAnimationSystem, 0x78 SetStepTickTimeDelta,
+# 0x80 StepAnimationSystem), the Gimex factory (SL::spSC4 vslot 0x148, its vslot 0x30 SaveToFile folded into one SaveImage
+# call so a missing factory and a failed save look the same), the application paths (SL::spSC4 vslots 0xe8 / 0x188), the
+# window control manager (RZ::WCM), the location saver (SL::spWinLocationSaver / cSLWinLocationSaver) and the 3D view
+# window (SL::spView3DWin). Without the host the window still builds (no controls) and every recording entry point refuses.
+# Deviations noted in the source: the animation tick manager is borrowed rather than owned (the original holds a
+# cRZSysServPtr for the call); the dialogs / edits / math guards that the original does not have (null controls, a zero
+# capture rectangle, a zero frame interval) keep the port out of undefined behaviour; FixAnimationName uses the C library's
+# isalnum / isspace on the unsigned byte instead of the original's __maskrune table (identical for ASCII); the output type
+# read from the ini (+0x2d0) is never applied to the option group, as in the original.
+SKIPPED:
+0x1003728a4 complete-object constructor twin of 0x100371f8a (the compiler emits the C1/C2 pair from the one constructor)
+0x100372a68 destructor twin of 0x1003728ae (the compiler emits the C1/C2 pair from the one destructor)
+0x100372a72 deleting destructor (the compiler emits the D0 from the same destructor; cGZWin::Release deletes the object)

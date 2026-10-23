@@ -1,0 +1,32 @@
+SOURCE src/sc4/PropOccupantVisualEffect.h|src/sc4/PropOccupantVisualEffect.cpp
+EVIDENCE decompiled in Ghidra (work/sc4/cSC4PropOccupantVisualEffect.txt, disassembly of Init 0x100160950, RestartEffect 0x100160b8e, Write 0x100160ec2, Read 0x100160ffa, UpdateVisualEffectTransform 0x100161236 and SetEffectType 0x1001614c2 / 0x10016162c for the arguments Ghidra dropped, plus the primary vtable 0x100a77228 and the PropOccupant secondary table 0x100a772d8); the effect object is a cSC4VisualEffect (the manager's CreateVisualEffect @ 0x1005e075c / 0x1005e0c08 returns it and AddRefs it), the unrecovered cSC4EffectsManager is the IPropVisualEffectHost seam (slots 0x30 name lookup, 0x38 group 0xaa6dec65 + type); test scripts/tests/sc4_propoccupantvisualeffect_test.cpp covers layout 0xe8 (+0x08 prop, +0xb0 cRZString), Init's default 16 m box and the 0x27812810 box-size property, the 0xc98204b8 / 0x2a6def88 variant reads with the 16-id loops, "off" disabling a variant effect, SetEffectType(char*) / SetEffectType(uint), the effect transform (centre, flags 5, rotY(-orientation*pi/2) with its -0.0 entries, change counter), flag-bit-2 gating of Start/Stop/SetAllFlags, the state switch re-applying the old running flag, the "off"/plain-name difference, Write/Read (version 3, empty name with variant properties, counts re-derived by Init, wrong version rejected), QueryInterface for 0x2977aa49 / 0x09820792 / cISC4Occupant, Shutdown's transition-0 fade keeping "started" and setting "stopping", and the direct state write (cSC4PropOccupant::SetStateRaw added to PropOccupant.h); built and run with ASan/UBSan
+0x1001606f2 PropOccupantVisualEffectConstruct
+0x1001607e6 PropOccupantVisualEffectDestruct
+0x1001608b4 PropOccupantVisualEffectDestructAlias
+0x1001608e8 PropOccupantVisualEffectDeletingDestruct
+0x100160950 PropOccupantVisualEffectInit
+0x100160b8e PropOccupantVisualEffectRestart
+0x100160e40 PropOccupantVisualEffectShutdown
+0x100160ec2 PropOccupantVisualEffectWrite
+0x100160ffa PropOccupantVisualEffectRead
+0x1001610cc PropOccupantVisualEffectAddRef
+0x10016112a PropOccupantVisualEffectRelease
+0x100161188 PropOccupantVisualEffectQueryInterface
+0x100161216 PropOccupantVisualEffectSetPosition
+0x100161236 PropOccupantVisualEffectUpdateTransform
+0x1001613b4 PropOccupantVisualEffectSetOrientation
+0x1001613fe PropOccupantVisualEffectSetAllFlags
+0x100161482 PropOccupantVisualEffectSetState
+0x1001614c2 PropOccupantVisualEffectSetEffectTypeName
+0x10016162c PropOccupantVisualEffectSetEffectTypeId
+0x10016167a PropOccupantVisualEffectStartEffect
+0x1001616cc PropOccupantVisualEffectStopEffect
+0x100163452 PropOccupantVisualEffectAsOccupant
+0x10016345c PropOccupantVisualEffectAsPropOccupant
+0x100163466 PropOccupantVisualEffectGetGZCLSID
+PARTIAL:
+0x100160b8e PropOccupantVisualEffectRestart (looks the effect up through IPropVisualEffectHost, i.e. the unrecovered cSC4EffectsManager slots 0x30/0x38; the headless test installs a fake host, the game still needs an adapter over spEffectsManager - Init and the SetEffectType/SetState/SetAllFlags paths reach the same seam indirectly)
+SKIPPED:
+0x1001608be non-virtual thunks to the recovered class (0x1001608be/0x1001608cc/0x1001608da and 0x100160926/0x100160934/0x100160942 to the destructors, 0x100160e1c/0x100160e2e Init, 0x100160e9e/0x100160eb0 Shutdown, 0x100160fc2/0x100160fd0/0x100160fde/0x100160fec Write, 0x100161094/0x1001610a2/0x1001610b0/0x1001610be Read, 0x1001610da..0x10016111c AddRef, 0x100161138..0x10016117a Release, 0x1001611c2..0x100161208 QueryInterface, 0x100161374/0x100161392 SetPosition, 0x1001613d6 SetOrientation, 0x100161474 SetAllFlags, 0x1001614a0 SetState, 0x100163472 AsOccupant, 0x10016347c/0x100163488/0x100163494 GetGZCLSID): compiler-generated this-adjusting thunks of the recovered multiple-inheritance layout, not hand-written
+0x1001605d4 GZCOM_CreatecSC4PropOccupantVisualEffect (allocation size 0xe8 recorded; the creator is the weak GZCOM stub in src/gz/GZCOM.cpp and is wired up with the other creators, this class is now constructible)
+0x1001607d7 GZCOM_cSC4PropOccupantVisualEffectCLSID (already recovered in src/gz/GZCOM.cpp, returns 0x2977aa49)

@@ -1,0 +1,1 @@
+ "sc4_wintertiarymenuframe:$T/sc4_wintertiarymenuframe_test.cpp $S/sc4/WinTertiaryMenuFrame.cpp $S/gz/Win.cpp $S/gz/RZDraw.cpp $S/rz/cRZCallbackTimer.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp -I$T"
