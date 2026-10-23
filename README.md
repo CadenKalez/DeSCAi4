@@ -58,15 +58,16 @@ with a written reason per class; nothing is excluded silently.
 
 ## What works today
 
-- **The application object.** `cSC4App` is 121 of 121 functions: startup, the video/preference negotiation,
-  the manager tree, resource mounting, city save/load and obliteration. `build/boot_probe` brings it up
-  headless and reports each step.
+- **A full boot against real game data.** `cSC4App` is 121 of 121 functions, and `build/boot_probe` now completes
+  the whole spine — `PreFrameWorkInit` → `Init` (seven managers, **9 resource segments** mounted from the retail
+  `.dat` packages) → `PostFrameWorkInit` → `Shutdown` — printing `[OK]` at every step.
 - **City data.** `cSC4City` (123), the occupant manager (60), the DBPF resource manager (56) and the
   segment/stream classes read the retail `.dat` packages.
-- **A running host.** `src/experimental_host/` opens a Cocoa window, pumps events, provides the two pure-virtual
-  platform methods the recovered window manager needs, and renders through the recovered software span engine.
-  `build/sc4_host --game` boots the app spine against real game data and shows the game's own splash, built from
-  the game's UI script.
+- **A running host that draws the game's own screens.** `src/experimental_host/` opens a Cocoa window, pumps events,
+  provides the two pure-virtual platform methods the recovered window manager needs, and renders through the
+  recovered software span engine. `build/sc4_host --game` boots the app spine against real game data, then shows
+  the **splash window built from the game's UI script** and the **region screen's script toolbar** — both drawn by
+  recovered code, not by the host.
 - **The UI script chain.** `cGZUIScriptService`, `cGZScriptTerp`, `cGZScriptVocab`, `cGZScriptableControlSet` and
   all 21 `cGZLegacyControl::InterpretProperties*` interpreters, so a scripted window applies its image, text,
   colours and flags instead of coming up blank.
@@ -90,8 +91,8 @@ with a written reason per class; nothing is excluded silently.
   factory cannot build them; the tests construct them directly (`GZCOM-1`).
 - **Seams.** 307 `I*Host` interfaces stand in for engine services. Most are implemented only by test fakes. Turning
   them into real adapters is integration work, not decompilation.
-- **Game data on this machine.** `boot_probe` stops at `SetupResources` because the installed bundle's
-  `Contents/GameData` is empty — an environment problem, not a code one.
+- **Loading a city into the running host.** The boot path mounts all 9 segments, but nothing yet drives
+  `cSC4App`'s city-load into the view: that needs the 3D view, the renderer wiring and the panels below.
 
 ## How it works
 
