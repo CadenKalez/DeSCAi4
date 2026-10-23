@@ -178,6 +178,7 @@ WINFB-6,cGZWinFileBrowser,"quirks kept: SetDefaultDirectoryLocation writes the c
 WINFB-7,cGZWinFileBrowser,hook IFileBrowserHost to RZ::GS() (vslots 0x118/0x120) and RZ::WCM() (DefaultText vslot 0x118); the browser does not own the grid/combo/edit seams,,open,src/gz/WinFileBrowser.h
 CLASS-cGZWinFolderRow,cGZWinFolderRow,"recover 21 remaining function(s) (21 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinFolders,cGZWinFolders,"recover 23 remaining function(s) (23 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cGZWinFolders,cGZWinFolders,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cGZWinGenTitleBar,cGZWinGenTitleBar,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZWinGrid,cGZWinGrid,"recover 189 remaining function(s) (189 not started, 0 partial/pending); bases still unfinished: cIGZWinGrid",CLASS-cIGZWinGrid,done,scripts/export_class.py + notes/remaining_functions.csv
 GRID-1,cGZWinGrid,"Recover cGZWinGrid (189 functions, 0x10025086a..0x10025ef00) now that cRZSparseMatrix exists; the 9.4k-line export is in work/gz/cGZWinGrid.txt",,open,src/gz/WinGrid.h
@@ -274,6 +275,7 @@ CLASS-cRZCOMDllGenericClassFactoryT<cGZLua5Thread>,cRZCOMDllGenericClassFactoryT
 CLASS-cRZCOMDllGenericClassFactoryT<cSCLua>,cRZCOMDllGenericClassFactoryT<cSCLua>,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cRZCellMap<bool>,cRZCellMap<bool>,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cRZCookieManager,cRZCookieManager,"recover 23 remaining function(s) (23 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cRZCookieManager,cRZCookieManager,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cRZDate,cRZDate,"recover 2 remaining function(s) (0 not started, 2 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cRZDate,cRZDate,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cRZDiskRadioStation,cRZDiskRadioStation,"recover 29 remaining function(s) (29 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
