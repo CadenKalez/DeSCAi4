@@ -9,7 +9,9 @@
 #include <cstring>
 #include <string>
 
+#include "experimental_host/HostFonts.h"
 #include "experimental_host/HostGraphics.h"
+#include "gz/GZFont.h"
 #include "experimental_host/HostWinMgr.h"
 #include "gz/WinFlatRect.h"
 
@@ -57,6 +59,33 @@ private:
 };
 
 exphost::HostGraphics* gGraphics;
+exphost::FreeTypeFontHost* gFontHost;
+cGZFont* gFont;
+const char* kLabels[] = {"New City", "Load City", "Options", "Quit"};
+
+// Text goes through the recovered cGZFont (glyph atlas, metrics, renderer) onto the primary buffer after the window tree.
+bool InitFont() {
+    gFontHost = new exphost::FreeTypeFontHost();
+    gFont = new cGZFont(gFontHost);
+    gFont->AddRef();
+    cRZString path("/System/Library/Fonts/Supplemental/Arial.ttf");
+    gFont->SetFilePath(path);
+    gFont->SetSize(22);
+    gFont->SetAntialiasing(3);   // coverage bytes blended as alpha
+    return gFont->Init();
+}
+
+void DrawLabels() {
+    if (!gFont) return;
+    cIGZBuffer* surface = gGraphics->Primary()->Buffer();
+    for (int i = 0; i < 4; ++i) {
+        const int len = int(std::strlen(kLabels[i]));
+        const int w = gFont->GetStringWidth(kLabels[i], len);
+        const int x = 312 + 40 + (320 - w) / 2;
+        const int y = 184 + 40 + i * 80 + (60 - gFont->GetLineHeight()) / 2;
+        gFont->DrawTextLine(surface, x, y, kLabels[i], len, 0x00f4f8ff, kFontDefaultColor, nullptr, nullptr);
+    }
+}
 exphost::HostWinMgr* gMgr;
 
 gz::cGZWinFlatRect* AddRect(cIGZWin* parent, int l, int t, int r, int b, std::uint32_t rgb, gz::cGZWinFlatRect* made = nullptr) {
@@ -122,7 +151,7 @@ static CGImageRef MakeImage() {
     return img;
 }
 
-static void Frame() { gMgr->Pump(); gMgr->Plot(); }
+static void Frame() { gMgr->Pump(); gMgr->Plot(); DrawLabels(); }
 
 int main(int argc, char** argv) {
     std::string shot; int frames = -1; bool selftest = false;
@@ -138,6 +167,7 @@ int main(int argc, char** argv) {
         gMgr->AddRef();
         gMgr->Init();
         BuildScene();
+        std::printf("font: %s\n", InitFont() ? "FreeType + cGZFont ready" : "FAILED to initialise");
         gMgr->GetMainWindow()->InvalidateSelf();
         for (cIGZWin* w : {gMgr->GetMainWindow()}) w->SetBufferToDrawToRecursive();
         Frame();

@@ -15,6 +15,7 @@ What it is made of:
 |---|---|
 | `HostWinMgr.{h,cpp}` | concrete window manager: the platform half of `cGZWinMgrBase` (`PostWinMessage`, `RunModalLoop`) |
 | `HostGraphics.{h,cpp}` | `IWinGraphics` / `IDrawContextHost` / `IBufferHost` over a CPU `cGZBuffer` + the recovered software draw engine |
+| `HostFonts.{h,cpp}` | FreeType adapter for the recovered `cGZFont` seams (`IFontHost`/`IFontRasterizer`/`IFontFace`/`IFontGlyph`); needs Homebrew `freetype` |
 | `host_main.mm` | Cocoa window + event pump, builds a test window tree, paints it, presents the buffer |
 
 Build / run: `scripts/build_host.sh && build/sc4_host` (also `--screenshot out.png` for a headless frame).
