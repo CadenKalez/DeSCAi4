@@ -746,6 +746,9 @@ CLASS-cSC4WinRegionScreen,cSC4WinRegionScreen,"recover 43 remaining function(s) 
 LEDGER-cSC4WinRegionScreen,cSC4WinRegionScreen,finish 8 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4WinRegionScroll,cSC4WinRegionScroll,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinRegionView,cSC4WinRegionView,"recover 34 remaining function(s) (34 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4WinRegionView,cSC4WinRegionView,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+WREGIONVIEW-1,cSC4WinRegionView,Hook ITiledScrollingCanvas / ITiledScrollingCanvasSource (they do not match the I*Host naming so list_seams.py skips them) to the real tiled scrolling canvas,,open,src/sc4/WinRegionView.h
+WREGIONVIEW-2,cSC4WinRegionView,"RenderTile: write the city compositing, label windows, icons and grid of the 5.4 KB original (0x10075bb66)",,open,src/sc4/WinRegionView.cpp
 CLASS-cSC4WinResizableOutline,cSC4WinResizableOutline,"recover 10 remaining function(s) (10 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinSnapshotAlbum,cSC4WinSnapshotAlbum,"recover 46 remaining function(s) (46 not started, 0 partial/pending); bases still unfinished: cIGZWinProc",CLASS-cIGZWinProc,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinSnapshotTaker,cSC4WinSnapshotTaker,"recover 21 remaining function(s) (21 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
