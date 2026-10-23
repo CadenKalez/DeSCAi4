@@ -17,6 +17,7 @@
 #include "gz/WinGen.h"
 #include "gz/WinScrollbar.h"
 #include "gz/WinSlider.h"
+#include "gz/WinText.h"
 #include "rz/cRZVariant.h"
 #include "sc4/WinProcs.h"
 
@@ -1393,6 +1394,63 @@ void cGZLegacyControl::InterpretPropertiesSC3WinGen(cIGZWin* window, tScriptProp
     gen->Release();
 }
 
+// InterpretPropertiesGZWinText (0x10053d4f0): the text control's keywords. As in the generic window's interpreter the
+// decompiler drops the QueryInterface out-parameter (the cIGZWinText, iid 0x212cdc1f); the slots read off the vtable
+// offsets are SetWinTextFlag [7] (+0x38), FitWindowToText [5] (+0x28), SetFontStyle [19] (+0x98), SetTextColor(index,
+// native) [11] (+0x58), SetGutters [23] (+0xb8), SetTextOffsets [25] (+0xc8), SetAlignment [21] (+0xa8).
+// Init pass: three flag properties (0xf003 -> flag 1, 0x300 -> 2, 0x301 -> 4; a 0x301 of 0 also makes the window's
+// private buffer transparent), the font (a style id, else a name), the text colour (0xf002) and shadow colour
+// (0xf001) converted by the graphics system, the gutters (default 0,0) and the text offsets. Second pass: the
+// alignment (centre -> 4; any other keyword value is passed on as it is, the left/right ids themselves - kept).
+// Both passes end with the autofit parameter 0xdacf8f9c on the window: true (and a FitWindowToText(false, false))
+// when the script has property 0x304, false otherwise.
+void cGZLegacyControl::InterpretPropertiesGZWinText(cIGZWin* window, tScriptPropertyArray& parameters, bool init) {
+    if (!window) return;
+    gz::cIGZWinText* text = nullptr;
+    if (!window->QueryInterface(gz::kGZIID_cIGZWinText, reinterpret_cast<void**>(&text))) return;
+    if (init) {
+        std::uint32_t value = 0;
+        if (GetPropertyUint32(parameters, 0xf003, value)) text->SetWinTextFlag(1, value != 0);
+        if (GetPropertyUint32(parameters, 0x300, value)) text->SetWinTextFlag(2, value != 0);
+        if (GetPropertyUint32(parameters, 0x301, value)) {
+            text->SetWinTextFlag(4, value != 0);
+            if (value == 0) window->SetFlag(kWinPrivateBufferTransparent, true);   // vslot 0x220 (0x20000, 1)
+        }
+        std::uint32_t styleId = 0;
+        if (GetPropertyUint32(parameters, 0xf000, styleId)) {
+            text->SetFontStyle(styleId);
+            SetGZWinFont(window, styleId, 0);
+        } else {
+            cRZString name;
+            if (GetPropertyString(parameters, 0xf000, name)) SetGZWinFont(window, name, 0);
+        }
+        std::uint8_t r = 0, g = 0, b = 0;
+        if (GetPropertyColor(parameters, 0xf002, r, g, b)) {
+            text->SetTextColor(gz::cIGZWinText::kColorText, WinGraphics() ? WinGraphics()->MakeNativeColor(r, g, b) : 0);
+        }
+        if (GetPropertyColor(parameters, 0xf001, r, g, b)) {
+            text->SetTextColor(gz::cIGZWinText::kColorShadow, WinGraphics() ? WinGraphics()->MakeNativeColor(r, g, b) : 0);
+        }
+        int gx = 0, gy = 0;
+        if (GetPropertyCoords(parameters, 0xf004, gx, gy)) text->SetGutters(static_cast<std::int8_t>(gx), static_cast<std::int8_t>(gy));
+        else text->SetGutters(0, 0);
+        int ox = 0, oy = 0;
+        if (GetPropertyCoords(parameters, 0x305, ox, oy)) text->SetTextOffsets(static_cast<std::int8_t>(ox), static_cast<std::int8_t>(oy));
+    } else {
+        std::uint32_t align = 0;
+        if (GetPropertyUint32(parameters, 0xf015, align)) text->SetAlignment(align == 0xf008u ? 4u : align);
+    }
+    bool autofit = false;
+    for (const tScriptProperty& property : parameters) {
+        if (property.id == 0x304) { autofit = true; break; }
+    }
+    auto* autofitParam = new cRZVariant();
+    autofitParam->SetValBool(autofit);
+    window->SetParam(0xdacf8f9cu, autofitParam);
+    if (autofit) text->FitWindowToText(false, false);
+    text->Release();
+}
+
 // ---------------------------------------------------------------------------------------------------------
 // PARTIAL per-class interpreters (addresses in LegacyControl.h). Their bodies apply the control-specific view
 // interface setters; the decompiler drops the QueryInterface result base in every one of them (the `local_*`
@@ -1407,7 +1465,6 @@ void cGZLegacyControl::InterpretPropertiesSC3WinGen(cIGZWin* window, tScriptProp
         (void)window; (void)parameters; (void)init;                                              \
     }
 
-GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinText)
 GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinTextEdit)
 GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinListBox)
 GZLEGACYCTRL_PARTIAL_INTERPRETER(GZWinCombo)

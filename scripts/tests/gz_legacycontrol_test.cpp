@@ -21,6 +21,7 @@
 #include "gz/WinBMP.h"
 #include "gz/WinScrollbar.h"
 #include "gz/WinSlider.h"
+#include "gz/WinText.h"
 #include "rz/cRZVariant.h"
 
 static int gFailures = 0;
@@ -406,6 +407,59 @@ struct Sc3GenWindow final : gz::cGZWinFlatRect {
         if (iid == gz::kGZIID_cIGZWinGen) { *out = &gen; return true; }
         return gz::cGZWinFlatRect::QueryInterface(iid, out);
     }
+};
+
+struct FakeText final : gz::cIGZWinText {
+    std::map<int, bool> flags;
+    std::vector<std::pair<int, std::uint32_t>> colors;
+    std::uint32_t style = 0xffffffffu, alignment = 0xffffffffu;
+    int gutterX = -9, gutterY = -9, offX = -9, offY = -9;
+    int fits = 0, releases = 0;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return 1; }
+    std::uint32_t Release() override { ++releases; return 1; }
+    cIGZWin* AsIGZWin() override { return nullptr; }
+    void SetCaption(const cIGZString&) override {}
+    bool FitWindowToText(bool, bool) override { ++fits; return true; }
+    bool GetWinTextFlag(int) override { return false; }
+    bool SetWinTextFlag(int flag, bool on) override { flags[flag] = on; return true; }
+    void SetTextColor(std::uint32_t) override {}
+    void GetTextColor(std::uint32_t&) override {}
+    void ClearTextColor() override {}
+    bool SetTextColor(tFontColorIdx index, std::uint32_t native) override { colors.emplace_back(int(index), native); return true; }
+    bool GetTextColor(tFontColorIdx, std::uint32_t&) const override { return false; }
+    bool SetTextColor(tFontColorIdx, gz::cRZColor) override { return false; }
+    bool GetTextColor(tFontColorIdx, gz::cRZColor&) const override { return false; }
+    bool ClearTextColor(tFontColorIdx) override { return false; }
+    void SetBackgroundOpaque(bool) override {}
+    bool IsBackgroundOpaque() override { return false; }
+    bool SetFont(gz::IWinFont*) override { return false; }
+    bool SetFontStyle(std::uint32_t id) override { style = id; return true; }
+    bool GetFontStyle(std::uint32_t&) override { return false; }
+    bool SetAlignment(std::uint32_t a) override { alignment = a; return true; }
+    bool GetAlignment(std::uint32_t&) const override { return false; }
+    bool SetGutters(std::int8_t x, std::int8_t y) override { gutterX = x; gutterY = y; return true; }
+    bool GetGutters(std::int8_t&, std::int8_t&) override { return false; }
+    bool SetTextOffsets(std::int8_t x, std::int8_t y) override { offX = x; offY = y; return true; }
+    bool GetTextOffsets(std::int8_t&, std::int8_t&) override { return false; }
+    void SetOutlineUse(bool, std::uint32_t) override {}
+    void GetOutlineUse(bool&, std::uint32_t&) const override {}
+};
+
+struct TextWindow final : gz::cGZWinFlatRect {
+    explicit TextWindow(cIGZWinMgr* mgr) : cGZWinFlatRect(mgr) {}
+    FakeText text;
+    bool QueryInterface(std::uint32_t iid, void** out) override {
+        if (iid == gz::kGZIID_cIGZWinText) { *out = &text; return true; }
+        return gz::cGZWinFlatRect::QueryInterface(iid, out);
+    }
+};
+
+struct RgbGraphics final : IWinGraphics {
+    std::uint32_t MakeNativeColor(std::uint8_t r, std::uint8_t g, std::uint8_t b) override { return 0xff000000u | (r << 16) | (g << 8) | b; }
+    void NativeToRGB(std::uint32_t, std::uint8_t&, std::uint8_t&, std::uint8_t&) override {}
+    IWinBuffer* PrimaryBuffer() override { return nullptr; }
+    bool DrawSystemActive() override { return false; }
 };
 
 struct FakeLegacyBinding final : cIGZLegacyControl {
@@ -1025,6 +1079,59 @@ int main() {
         CHECK(genWindow->gen.bars[0].sizeMode == 0 && genWindow->gen.bars[0].outline == 0);
         CHECK_EQ(genWindow->gen.releases, 2);
         genWindow->Release();
+    }
+
+    // The text interpreter: three flag properties, the font style, the two colours (through the graphics system), the
+    // gutters and offsets, the autofit parameter; then the second pass' alignment (centre -> 4, others pass through).
+    {
+        RgbGraphics rgb;
+        SetWinGraphics(&rgb);
+        auto* textWindow = new TextWindow(&mgr);
+        textWindow->AddRef();
+        mgr.valid.insert(textWindow);
+        Params textParams;
+        textParams.Uint(0xf003u, 1u);
+        textParams.Uint(0x300u, 0u);
+        textParams.Uint(0x301u, 0u);                 // flag 4 off, and the window's transparent-private-buffer flag on
+        textParams.Uint(0xf000u, 12u);               // font style id
+        textParams.Text(0xf002u, "(255,204,0)");
+        textParams.Text(0xf001u, "(1,2,3)");
+        textParams.Text(0xf004u, "(2,3)");
+        textParams.Text(0x305u, "(-1,4)");
+        cGZLegacyControl::InterpretPropertiesGZWinText(textWindow, textParams.list, true);
+        const auto& t = textWindow->text;
+        CHECK(t.flags.at(1) && !t.flags.at(2) && !t.flags.at(4));
+        CHECK(textWindow->GetFlag(kWinPrivateBufferTransparent));
+        CHECK(t.style == 12u);
+        CHECK(t.colors.size() == 2 && t.colors[0].first == 0 && t.colors[0].second == 0xffffcc00u && t.colors[1].first == 1 && t.colors[1].second == 0xff010203u);
+        CHECK(t.gutterX == 2 && t.gutterY == 3 && t.offX == -1 && t.offY == 4);
+        CHECK(t.fits == 0);
+        cIGZVariant* autofitParam = nullptr;
+        bool autofitValue = true;
+        CHECK(textWindow->GetParam(0xdacf8f9cu, &autofitParam));
+        autofitParam->GetValBool(autofitValue);
+        CHECK(!autofitValue);
+        autofitParam->Release();
+        // second pass with autofit (0x304) and a centre alignment
+        Params second;
+        second.Uint(0xf015u, 0xf008u);
+        second.Uint(0x304u, 1u);
+        cGZLegacyControl::InterpretPropertiesGZWinText(textWindow, second.list, false);
+        CHECK(t.alignment == 4u && t.fits == 1);
+        CHECK(textWindow->GetParam(0xdacf8f9cu, &autofitParam));
+        autofitParam->GetValBool(autofitValue);
+        CHECK(autofitValue);
+        autofitParam->Release();
+        Params right;
+        right.Uint(0xf015u, 0xf007u);                // not centre: the keyword value itself is passed (kept quirk)
+        cGZLegacyControl::InterpretPropertiesGZWinText(textWindow, right.list, false);
+        CHECK(t.alignment == 0xf007u);
+        // no gutter property: (0,0)
+        Params none;
+        cGZLegacyControl::InterpretPropertiesGZWinText(textWindow, none.list, true);
+        CHECK(t.gutterX == 0 && t.gutterY == 0);
+        textWindow->Release();
+        SetWinGraphics(nullptr);
     }
 
     // -----------------------------------------------------------------------------------------------------

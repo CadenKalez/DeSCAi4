@@ -91,9 +91,13 @@ HostBuffer::HostBuffer(int width, int height) {
     context_ = new gz::cGZDrawContext();
     context_->AddRef();   // the window plot code AddRef/Releases around every paint; the buffer owns one reference
     context_->SetTarget(buffer_);
+    asBuffer_ = new gz::cGZDrawContextAsBuffer();
+    asBuffer_->AddRef();
+    asBuffer_->Init(context_, buffer_);
 }
 
 HostBuffer::~HostBuffer() {
+    if (asBuffer_) asBuffer_->Release();
     if (context_) context_->Release();
     if (buffer_) buffer_->Release();
 }

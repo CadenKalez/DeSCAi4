@@ -5,7 +5,9 @@ src/gz/COMLibrary.cpp
 src/gz/CheatCodeManager.cpp
 src/gz/Cursor.cpp
 src/gz/DrawContext.cpp
+src/gz/DrawContextAsBuffer.cpp
 src/gz/DrawContextRenderToBuffer.cpp
+src/gz/DrawFontRenderer.cpp
 src/gz/FileFind.cpp
 src/gz/GZApp.cpp
 src/gz/GZCOMDirector.cpp
@@ -89,6 +91,6 @@ src/sc4/DBSegment.cpp
 src/sc4/RenderProperties.cpp
 src/sc4/ServiceLocator.cpp
 src/sc4/SimStreamOps.cpp
+src/sc4/WinProcs.cpp
 src/sc4/WinSplashScreen.cpp
 src/sc4/cSC4ResponseCurve.cpp
-src/sc4/WinProcs.cpp

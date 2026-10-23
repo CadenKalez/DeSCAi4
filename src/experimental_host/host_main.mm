@@ -16,7 +16,10 @@
 #include "experimental_host/HostGraphics.h"
 #include "experimental_host/HostUi.h"
 #include "dbpf/DBPFReader.h"
+#include "gz/DrawFontRenderer.h"
+#include "gz/BufferFontRenderer.h"
 #include "gz/GZFont.h"
+#include "gz/WinFont.h"
 #include "gz/cIGZMessage2.h"
 #include "rz/cRZMessage2Standard.h"
 #include "sc4/WinSplashScreen.h"
@@ -73,16 +76,58 @@ cGZFont* gFont;
 const char* kLabels[] = {"New City", "Load City", "Options", "Quit"};
 
 // Text goes through the recovered cGZFont (glyph atlas, metrics, renderer) onto the primary buffer after the window tree.
+// The draw-context font renderer's collaborators (it keeps a glyph atlas and an inner buffer renderer).
+struct HostDrawFontHost final : IDrawFontRendererHost {
+    cIGZFontRenderer* CreateBufferFontRenderer() override { auto* r = new cGZBufferFontRenderer(); r->AddRef(); return r; }
+    cIGZBuffer* CreateBuffer() override { auto* b = new cGZBuffer(); b->AddRef(); return b; }
+    void NativeColorToRGB(std::uint32_t n, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b) override { r = n >> 16; g = n >> 8; b = n; }
+} gDrawFontHost;
+
 bool InitFont() {
     gFontHost = new exphost::FreeTypeFontHost();
     gFont = new cGZFont(gFontHost);
     gFont->AddRef();
     cRZString path("/System/Library/Fonts/Supplemental/Arial.ttf");
     gFont->SetFilePath(path);
-    gFont->SetSize(22);
+    gFont->SetSize(16);
     gFont->SetAntialiasing(3);   // coverage bytes blended as alpha
+    gFont->SetCodePage(8);       // the scripts' text is UTF-8
+    gFont->SetRenderer(new cGZDrawFontRenderer(&gDrawFontHost));   // draws through the surface's context, as in the game
     return gFont->Init();
 }
+
+
+// The one font the host has (Arial through the recovered cGZFont) as the window system's font object: every style id
+// maps to it until the game's font style script is wired.
+class HostWinFont final : public gz::IWinFont {
+public:
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return 1; }
+    std::uint32_t Release() override { return 1; }
+    cIGZFont* AsFont() override { return gFont; }
+    std::uint32_t DefaultTextColor() override { return 0xffffffffu; }
+    std::uint32_t DefaultShadowColor() override { return 0xff000000u; }
+    std::int16_t LineHeight(int, int) override { return std::int16_t(gFont->GetLineHeight()); }
+    int CountLines(const char* t, std::uint32_t n, int width) override { return int(gFont->CalculateNumberOfLines(t, n, std::uint32_t(width))); }
+    int WrappedWidth(const char* t, std::uint32_t n, int width) override { return int(gFont->CalculateWidthOfLines(t, n, std::uint32_t(width))); }
+    void MeasureText(const char* t, std::uint32_t n, cRZRect& out) override { gFont->TextArea(t, n, out); }
+    int TextWidth(const char* t, std::uint32_t n) override { return gFont->GetStringWidth(t, n); }
+    void DrawText(IWinBuffer* target, int x, int y, const char* t, std::uint32_t n, std::uint32_t color, std::uint32_t color2,
+                  const cRZRect* clip, int) override {
+        gFont->DrawTextLine(static_cast<exphost::HostBuffer*>(target)->AsBuffer(), x, y, t, n, color & 0xffffffu,
+                            color2 == gz::kWinUnsetTextColor ? kFontDefaultColor : (color2 & 0xffffffu), clip, nullptr);
+    }
+    void DrawTextBox(IWinBuffer* target, const cRZRect& box, const char* t, std::uint32_t n, std::uint32_t alignment,
+                     std::uint32_t color, std::uint32_t color2, const cRZRect* clip, int) override {
+        gFont->DrawTextParagraph(static_cast<exphost::HostBuffer*>(target)->AsBuffer(), box, t, n, int(alignment), color & 0xffffffu,
+                                 color2 == gz::kWinUnsetTextColor ? kFontDefaultColor : (color2 & 0xffffffu), clip, nullptr);
+    }
+};
+struct HostFontSource final : gz::IWinFontSource {
+    HostWinFont font;
+    gz::IWinFont* Font(std::uint32_t) override { return gFont ? &font : nullptr; }
+    bool Available() override { return gFont != nullptr; }
+} gFontSource;
 
 void DrawLabels() {
     if (!gFont) return;
@@ -291,17 +336,6 @@ static void StartSplash() {
     desktop->InvalidateSelf();
 }
 
-static void DrawCopyright() {
-    if (!gFont) return;
-    static const char kText[] = "\xC2\xA9 2003 Electronic Arts Inc.  All rights reserved.";
-    gFont->SetCodePage(8);   // UTF-8
-    cIGZBuffer* surface = gGraphics->Primary()->Buffer();
-    const int len = int(sizeof(kText) - 1);
-    const int w = gFont->GetStringWidth(kText, len);
-    // script child area (5,580,761,600) inside the 768x600 window centred on the screen: (128, 84)
-    gFont->DrawTextLine(surface, 128 + 5 + (756 - w) / 2, 84 + 580 + 2, kText, len, 0x00ffcc00, kFontDefaultColor, nullptr, nullptr);
-}
-
 static void Frame() {
     if (gPhase == Phase::Splash) {
         PumpTimers();
@@ -318,10 +352,11 @@ static void Frame() {
         }
     }
     gMgr->Pump(); gMgr->Plot();
-    if (gPhase == Phase::Splash) DrawCopyright(); else DrawLabels();
+    if (gPhase == Phase::Menu) DrawLabels();   // (the splash text is a window of the game's UI script now)
 }
 
 int main(int argc, char** argv) {
+    std::setvbuf(stdout, nullptr, _IONBF, 0);   // a crash must not swallow the progress lines
     std::string shot; int frames = -1; bool selftest = false, boot = false, game = false, splash = false; int waitMs = 0;
     for (int i = 1; i < argc; ++i) {
         if (!std::strcmp(argv[i], "--screenshot") && i + 1 < argc) shot = argv[++i];
@@ -344,8 +379,9 @@ int main(int argc, char** argv) {
             exphost::SetPngDecoder(&DecodePngBytes);
             std::printf("ui scripts: %s\n", exphost::InitUiScripts(gMgr) ? "service ready" : "NOT available");
         }
-        if (game || splash) StartSplash(); else BuildMenu();
         std::printf("font: %s\n", InitFont() ? "FreeType + cGZFont ready" : "FAILED to initialise");
+        gz::SetWinFontSource(&gFontSource);
+        if (game || splash) StartSplash(); else BuildMenu();
         gMgr->GetMainWindow()->InvalidateSelf();
         for (cIGZWin* w : {gMgr->GetMainWindow()}) w->SetBufferToDrawToRecursive();
         Frame();
