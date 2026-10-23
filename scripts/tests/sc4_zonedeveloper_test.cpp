@@ -171,8 +171,6 @@ struct FakeLotDeveloper : IZoneDeveloperLotDeveloperApi {
     std::vector<cSC4Lot*> emptyTextured;
     std::vector<SC4Rect<int>> levelledAreas;
     std::vector<float> levelledAltitudes;
-    std::vector<cSC4Lot*> locked;
-    std::vector<bool> lockedValues;
     bool forceEmptyTextures = false;
     void RemoveLot(cSC4Lot* lot) override { removed.push_back(lot); }
     void ConstructDefaultLot(cSC4Lot* lot, cSC4LotConfiguration* configuration, std::uint32_t objectId,
@@ -1653,22 +1651,22 @@ void TestParcellizeLayout() {
     SC4CellRegion<int> region = SC4CellRegion<int>::Make({0, 0, 8, 8}, true);
     developer->DoParcellization(region, 1, false);
     CHECK(developer->GetLotCount() > 0);
-    int counted = 0;
+    // Every lot is inside the region and at most the 2x2..3x2 footprints the layout chooses.
+    std::set<cSC4Lot*> distinct;
     for (int x = 0; x <= 8; ++x) {
         for (int z = 0; z <= 8; ++z) {
             cSC4Lot* lot = developer->GetLot(x, z, false);
             if (!lot) continue;
-            int lotX = 0, lotZ = 0;
-            lot->GetLocation(lotX, lotZ);
-            CHECK(lotX >= 0 && lotX <= 8 && lotZ >= 0 && lotZ <= 8);
-            std::uint8_t sizeX = 0, sizeZ = 0;
-            lot->GetSize(sizeX, sizeZ);
-            CHECK(sizeX >= 1 && sizeX <= 2);
-            CHECK(sizeZ >= 1 && sizeZ <= 3);
-            if (lotX == x && lotZ == z) ++counted;
+            distinct.insert(lot);
+            std::int32_t rect[4] = {0, 0, 0, 0};
+            lot->GetBoundingRect(rect);
+            CHECK(rect[0] >= 0 && rect[1] >= 0);
+            CHECK(rect[2] <= 8 && rect[3] <= 8);
+            CHECK(rect[2] - rect[0] + 1 >= 1 && rect[2] - rect[0] + 1 <= 3);
+            CHECK(rect[3] - rect[1] + 1 >= 1 && rect[3] - rect[1] + 1 <= 2);
         }
     }
-    CHECK(counted == developer->GetLotCount());
+    CHECK(static_cast<int>(distinct.size()) == developer->GetLotCount());
     CHECK(!host.lotDeveloper.levelledAreas.empty());
     CHECK(host.lotDeveloper.levelledAltitudes.front() == FLT_MAX);
 
@@ -1721,6 +1719,14 @@ void TestOnDezoneAndRemnants() {
     CHECK(developer->GetLotCount() == 2);
     CHECK(developer->GetLot(4, 4, false) != nullptr);
     CHECK(developer->GetLot(5, 4, false) != nullptr);
+    // Facing south gives 1x2 remnants scanned bottom-up.
+    developer->DeleteLots(0, 0, 15, 15);
+    developer->CreateLotRemnants(4, 4, 2, 2, 2);
+    CHECK(developer->GetLotCount() == 2);
+    // Facing west gives 2x1 remnants.
+    developer->DeleteLots(0, 0, 15, 15);
+    developer->CreateLotRemnants(4, 4, 2, 2, 3);
+    CHECK(developer->GetLotCount() == 2);
 
     SetLotHost(nullptr);
     developer->Shutdown();

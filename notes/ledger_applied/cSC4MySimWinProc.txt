@@ -1,0 +1,56 @@
+SOURCE src/sc4/MySimWinProc.cpp|h
+EVIDENCE test scripts/tests/sc4_mysimwinproc_test.cpp - the three interface views and the shared count, Init (six message subscriptions, the seven page notification targets, the five placeholder portraits and the "mysims_ui" node plus its two model-selection values), SetDialogState (one page visible), GetCurrentSims (two sims in slots 0 and 2, name captions, slot frame flags, the boot button and the tracked location), SetCurrentSim (agent simulator active slot), the main page captions, the stat page (wealth pips, age, home, job, EQ/HQ), the large page advice list (priority header/footer, body font, bad/neutral icons, expired colours and the priority-7 layout), the panel command dispatch (slot selection, false return, CancelMoveIn, unknown sender), the transport dialog dispatch (wealth filter, sorted icon tips and exemplar params, page captions and colours, icon selection, OK ending the modal loop), the full modal dialog (script key, SetWinProc, restore/save location, DestroyWindow and the selected exemplar applied as the sim's car), the advice-added / advice-removed / my-sims-changed / model-chosen messages, the forward-to-body message, BootSim, AddSim's modal pick-sim dialog, AddMessage/RemoveMessage, the two game-data callbacks (post + SetValBool) and Shutdown (unsubscribe, registry node removal, window destruction)
+0x100315330 cSC4MySimWinProc_Construct
+0x100315536 cSC4MySimWinProc_Destruct
+0x10031571e cSC4MySimWinProc_Init
+0x100315b20 cSC4MySimWinProc_SetDialogState
+0x100315eb2 cSC4MySimWinProc_Shutdown
+0x1003160f6 cSC4MySimWinProc_QueryInterface
+0x100316146 cSC4MySimWinProc_AddRef
+0x10031616c cSC4MySimWinProc_Release
+0x100316192 cSC4MySimWinProc_DoWinProcMessage
+0x100316900 cSC4MySimWinProc_DisplayVehicleIcons
+0x100317168 cSC4MySimWinProc_SetMySimMainWindow
+0x100317338 cSC4MySimWinProc_SetMySimModeWindow
+0x1003176de cSC4MySimWinProc_SetMySimLargeWindow
+0x1003177ec cSC4MySimWinProc_SetMySimSmallWindow
+0x1003178f4 cSC4MySimWinProc_BootSim
+0x100317956 cSC4MySimWinProc_SetMySimStatWindow
+0x100317eb8 cSC4MySimWinProc_ShowChooseTransportDialog
+0x1003183e0 cSC4MySimWinProc_SetCurrentSim
+0x1003184ac cSC4MySimWinProc_DoMessage
+0x10031873a cSC4MySimWinProc_GetCurrentSims
+0x100318e14 cSC4MySimWinProc_updateBodyTextCtrl
+0x10031af44 cSC4MySimWinProc_RemoveMessage
+0x10031afda cSC4MySimWinProc_AddMessage
+0x10031b06a cSC4MySimWinProc_AddSim
+0x10031b158 cSC4MySimWinProc_SetTransportButtonImage
+0x10031b22a cSC4MySimWinProc_GetMessageList
+0x10031b4d8 cSC4MySimWinProc_Hide
+0x10031b54a cSC4MySimWinProc_Show
+0x100315dda s_sim_select_car
+0x100315e46 s_sim_select_pedestrian
+PARTIAL: none
+SKIPPED: none of the class's own code: the other twelve exported symbols are compiler-generated - the ctor alias at 0x10031552c, the destructor 0x1003156ca with its deleting form 0x1003156e2 and their two non-virtual thunks 0x1003156d4/0x100315710, and seven non-virtual interface thunks (QueryInterface 0x10031612a/0x100316138, AddRef 0x100316154/0x100316162, Release 0x10031617a/0x100316188, DoMessage 0x10031b058)
+# New seams (MySimWinProc.h) and where the original calls them:
+#   IMySimWinProcHost    every global the panel reaches: SL::spMS2 (six subscriptions), RZGetFramework's game-data registry
+#                        (0xebe0e860 / 0xe898ed03; AddNode + AddValue), SL::spCity vslot 0x238 (cISC4MySimAgentSimulator),
+#                        SL::spVehicleManager / SL::spPedestrianManager vslot 0xe0 (the model icon lists), SL::spSC4 vslot
+#                        0x1d8 (city name for the portrait path), SC4PostMessage2 (0x10003a5ba), RZ::WM() (0x148 RunPopup,
+#                        0xb8 DestroyWindow, 0x128 GZSetFocus, 0x48 EndDialog), SC4CreateWindowFromScript (0x100039bf7),
+#                        SL::spWinLocationSaver 0x48 / 0x28, and the concrete cSC4MySim tool wrappers
+#                        CreateChangeHouseTool (0x1007aaab4) / CreateChangeJobTool (0x1007aab9e).
+#   IWinAdviceList       cSC4WinAdviceList's iid-0xca1492a2 view (the class is unrecovered): 0x18 AsIGZWin, 0x20 AddEntry,
+#                        0x28 RebuildHTML, 0x30 SetbgImage, 0x38 ClearList, 0x40 ScrollToAnchor, 0x48 DisableVerticalScrollbar.
+#   IMySimAgentSimulator cSC4MySimAgentSimulator (unrecovered): 0x28 GetActiveMySims, 0x38 TrackLocation, 0x40
+#                        HideLocation, 0x48 MySimLivesHere, 0x50 CancelMoveIn, 0x58 SetActiveUIPanelSim, 0x60
+#                        GetActiveUIPanelSim.
+#   IPickSimWinProc      cSC4PickSimWinProc (unrecovered; ctor 0x1003549dc, 0xa8 bytes, Init 0x100354b88 is the modal pick
+#                        loop, Shutdown 0x10035735c).
+#   IModelManager        cSC4VehicleManager / cSC4PedestrianManager vslot 0xe0, reduced to the model exemplar pointers the
+#                        list nodes hold at +0x48 (each a counted cISCResExemplar).
+# The static HTML fragments of updateBodyTextCtrl (the six priority headers, three footers, the StocletITC TT header font,
+# the Arial CE body fonts and the sixteen "sc4://HTML/46a006b0/144162xx" icons) were read from the function's guard blocks
+# (updateBodyTextCtrl @ 0x100318e14, BSS 0x100b88bf0..0x100b89120) and live in MySimWinProc.cpp's file scope.
+# Deviations kept on purpose (also in the header): duplicate icon sort keys collapse in std::map, the GetParam reference in
+# ShowChooseTransportDialog is released, and a missing current sim skips the 0x4bba8aa1 caption instead of dereferencing null.

@@ -1,0 +1,48 @@
+SOURCE src/sc4/WatercraftManager.cpp|h
+EVIDENCE test scripts/tests/sc4_watercraftmanager_test.cpp - fake parent/host seams: lifecycle and messages, the four registries, the docking permission state machine, the position/collision/dock queries, the ambient spawner, the random creation point and the version-6 stream round trip (quirks asserted with their addresses)
+0x1004edca0 cSC4WatercraftManager_Construct
+0x1004fe3d4 cSC4WatercraftManager_Destruct
+0x1004eddb6 cSC4WatercraftManager_Init
+0x1004ede32 cSC4WatercraftManager_Shutdown
+0x1004edee6 cSC4WatercraftManager_DoMessage
+0x1004edfb4 cSC4WatercraftManager_HandleOccupantInserted
+0x1004eee5e cSC4WatercraftManager_HandleOccupantRemoved
+0x1004ef14e cSC4WatercraftManager_LookForBoatsAtPosition
+0x1004ef220 cSC4WatercraftManager_AddAutomaton
+0x1004ef274 cSC4WatercraftManager_RemoveAutomaton
+0x1004ef4c2 cSC4WatercraftManager_HandleTuningParametersChanged
+0x1004ef596 cSC4WatercraftManager_QueryInterface
+0x1004ef61a cSC4WatercraftManager_Write
+0x1004ef802 cSC4WatercraftManager_Read
+0x1004f0e16 cSC4WatercraftManager_GetPropPositionAndOrientation
+0x1004f1f2e cSC4WatercraftManager_ClearToLaunchBoat
+0x1004f2054 cSC4WatercraftManager_CreateAutomaton
+0x1004f3802 cSC4WatercraftManager_BoatPriority
+0x1004f3900 cSC4WatercraftManager_PopulateVisibleArea
+0x1004f3d66 cSC4WatercraftManager_GetEdgeCells
+0x1004f3f88 cSC4WatercraftManager_GetLotBodyOfWater
+0x1004f4024 cSC4WatercraftManager_GetRandomCreationPoint
+0x1004f4690 cSC4WatercraftManager_RequestPermissionToDock
+0x1004f472e cSC4WatercraftManager_RequestPermissionToWait
+0x1004f47cc cSC4WatercraftManager_DoneDocking
+0x1004f4864 cSC4WatercraftManager_DoneQueueing
+0x1004f4908 cSC4WatercraftManager_CollisionDetection
+0x1004fdebc cSC4WatercraftManager_GetGZCLSID
+0x1004f0cb2 FerryRouteInformation_Destruct
+0x1004ff2e4 FerryTerminalInformation_CopyConstruct
+PARTIAL:
+0x1004f29a2 cSC4WatercraftManager_DoAnimationTick - the docking-rights sweep, the CreateMarinaBoat sweep and the ferry rebuild after message 0x2c06ba82 all need cISC4TrafficSimulator::GetFerryRoutesInUse, which is unrecovered; only the paused shortcut, the ambient spawner call and the parent tick are ported
+0x1004f1144 cSC4WatercraftManager_CreateFerry - the border check is ported; the boat creation (groups 0x4400/0x4402) and the station wiring need the cSC4CompressedRouteReader conversions of CreateFerryStruct
+0x1004f180e cSC4WatercraftManager_CreateFerryStruct - needs cSC4CompressedRouteReader (SetData/GetNext, unrecovered) to turn a FerryRouteInfo into the two FerryStationInformation routes
+0x1004f212e cSC4WatercraftManager_CreateMarinaBoat - the occupant position and border check are ported; the rest walks cISC4NeighborConnection travel routes (IsNeighborTravelBoat/SetNbrRouteData), unrecovered
+SKIPPED:
+0x1004eddac constructor alias (C1) - compiler-generated alias of the ctor
+0x1004fde84 complete-object destructor alias - compiler-generated alias of the destructor
+0x1004fde8e deleting destructor - compiler-generated operator delete wrapper
+0x1004ef140 non-virtual thunk to DoMessage - compiler-generated thunk
+0x1004ef5b4 non-virtual thunk to QueryInterface - compiler-generated thunk
+0x1004ef5d6 non-virtual thunk to QueryInterface - compiler-generated thunk
+0x1004ef5f8 non-virtual thunk to QueryInterface - compiler-generated thunk
+0x1004ef7f4 non-virtual thunk to Write - compiler-generated thunk
+0x1004f0e08 non-virtual thunk to Read - compiler-generated thunk
+0x1004fdec8 non-virtual thunk to GetGZCLSID - compiler-generated thunk

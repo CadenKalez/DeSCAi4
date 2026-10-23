@@ -1,0 +1,38 @@
+SOURCE src/sc4/LandfillDeveloper.cpp|h
+EVIDENCE test scripts/tests/sc4_landfilldeveloper_test.cpp - sc4_landfilldeveloper ok: a fake ILandfillDeveloperHost (whose ILandfillZoneHost half builds real cSC4LandfillZone objects, with the pollution simulator's garbage accounting behind the zone host) plus real cRZMessage2Standard messages, a real cSCPropertyHolder/cSCProperty/cRZVariant tuning exemplar and the port memory streams drive the three COM views and their single reference count at +0x1c (including the +8 / +0x10 adjustor thunks, the 0x100060940 operator-new size 0x88 and Release deleting below 2 without decrementing), Init (the simulator agent "cSC4LandfillDeveloper" interval 6 flags 2, the five AddRef'd services, the five notifications 0x07699455/0x26d31ec1/0x0772fad4/0x278e6003/0xc6cdbf1a, the once-only ReadTuningParams), ReadTuningParams (all eight properties 0x4a280510/0x4a280513/0x4a677e5b/0x4a677e5c/0x4a677e5e/0x4a677e5f/0x2aa00fe7/0x4a677e5d of the exemplar {0x6534284a, 0x67cd5fa1, 0x6a2806af} with iid 0xa52160f5, and the no-exemplar path), Shutdown (notifications, zones, department and the four services, and the agent removed through the global city), DoZoneChange (the inflated {x0-1,z0-1,x1+1,z1+1} overlap window, a new zone with the mean-altitude level height 121 vs the LevelRect path, merging the second region into the first zone only, the non-landfill path dezoneing with updateZoneManager = false, and the zone removal when nothing is left), the empty-cell texture path (cSC4LotBaseTextureOccupant via PlaceEmptyCellTexture), DezoneArea/HandleZoneOverlap with the terrain 0x228 refresh, GetAltitudeVariance (centre, sea-level clamp, mean/min/max and |max-min|), GetZoningCost (existing zone level 40, flat 0, sloped 320, RoundFloatToEvenInt at 0x100061fdc), the monthly simulation (max(0,supply) clamped to kMaxGarbageToTakePerMonth, the budget/maintenance scaling 150 -> 75, per-heap intake with the 1-per-month decay, SetGarbageCapacity 250/101/27, capacity 400 and garbage 150/299/373, and both history records 0x2a8c4696/0x2a8c4697 with values 400/157, 400/306, 400/455), UpdateBudgetRequirements (line item 30, SetFullExpenses 400, maintenance 400), GetCurrentBudget/GetEfficiency (0, 2.0), GetLandfillUsage (min(garbage,capacity) quirk and the 0xffffffff saturation of UpdateCapacityValues), the funds-changed message (generator SetEnabled), the view-level message (seagull flock Start/Stop and IsRunning), DoTerrainChanged (the reason 1..3 gate, the x1/z1 clamping, the dezone and zone removal), the version-3 Write/Read round trip plus the crafted streams for the +0x20 flag armed before the version check, the leaked zone of a failed zone Read, the saturated capacity sum and the over-full heap, and the remaining queries (GetLandfillTileCount, GetSimulatorType 0x2a398ed6, GetMaintenanceCosts, GetGZCLSID 0xea09d4ae, GetLandfillZoneFromCell with its exclusive upper bounds)
+0x1000609ec LandfillDeveloperUpdateCapacityValues
+0x100060a94 LandfillDeveloperQueryInterface
+0x100060af4 LandfillDeveloperAddRef
+0x100060b1e LandfillDeveloperRelease
+0x100060b3a LandfillDeveloperFinalRelease
+0x100060c6c LandfillDeveloperInit
+0x100060e34 LandfillDeveloperReadTuningParams
+0x100060f4c LandfillDeveloperShutdown
+0x1000610dc LandfillDeveloperWrite
+0x100061146 LandfillDeveloperRead
+0x100061236 LandfillDeveloperDoMessage
+0x1000614e4 LandfillDeveloperDoMonthlySimulation
+0x1000616a2 LandfillDeveloperDoZoneChange
+0x10006197a LandfillDeveloperUpdateBudgetRequirements
+0x100061a2c LandfillDeveloperDoTerrainChanged
+0x100061b22 LandfillDeveloperRemoveZone
+0x100061c12 LandfillDeveloperHandleZoneOverlap
+0x100061cb8 LandfillDeveloperGetAltitudeVariance
+0x100061e70 LandfillDeveloperGetZoningCost
+0x100062012 LandfillDeveloperGetCurrentBudget
+0x100062032 LandfillDeveloperRecordHistoryData
+0x100062120 LandfillDeveloperDezoneArea
+0x1000621d8 LandfillDeveloperGetLandfillZoneFromCell
+0x10006221a LandfillDeveloperGetEfficiency
+0x100062252 LandfillDeveloperGetLandfillTileCount
+0x100062270 LandfillDeveloperGetSimulatorType
+0x10006227c LandfillDeveloperGetMaintenanceCosts
+0x100062286 LandfillDeveloperGetLandfillUsage
+0x1000622a0 LandfillDeveloperGetGZCLSID
+PARTIAL: none - all 29 symbols are recovered; the three documented deviations are the null line-item guard in
+  UpdateBudgetRequirements/GetCurrentBudget (the original dereferences it unchecked) and the uninitialised
+  fourth GetAltitudeVariance argument of GetZoningCost, which the original never reads.
+SKIPPED: none - nothing in the class is Windows/DX7/debug-only. The inlined constructor of 0x100060940
+  (GZCOM_CreatecSC4LandfillDeveloper) is implemented as cSC4LandfillDeveloper::cSC4LandfillDeveloper(); the GZCOM
+  factory body in src/gz/GZCOM.cpp still returns nullptr, so that existing partial row (src/gz/GZCOM.cpp|h) is
+  left for the lead to wire up now that the class exists.

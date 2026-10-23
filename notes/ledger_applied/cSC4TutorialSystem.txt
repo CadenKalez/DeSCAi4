@@ -1,0 +1,55 @@
+SOURCE src/sc4/TutorialSystem.cpp|h
+EVIDENCE test scripts/tests/sc4_tutorialsystem_test.cpp - the object layout and all five QueryInterface views (subobject offsets +8 / +0x10 / +0x18 / +0x20 and the shared reference count), the constructor defaults (task number 0, GUID -1, unknown +0x38 = 3, no window procedure / scripting context) and the destructor (releases the window procedure once and the scripting context, clears the process-wide instance), Init (the three message subscriptions by id and the debug-gated "Tutorial" cheat registration incl. the debug-off path) and Shutdown (cheat removal, the double window-procedure release, the three unsubscriptions), startTutorial / endTutorial (creation with two references and the Init call, reuse on a second start, registry SetActive with the GUID, the two view-menu closes, the quit-without-save latch), the forwarding slots (ShowUIHintsForUsers, HandleCatalogMenu, FilterLeftMouseClick with in/out points, OnTutorialEvent), ResetTutorialNumAndIndex (GUID and registry task number), GetCurrentTask / IsEdgeScrollingAllowed (no task = true), FilterMessage (type 3 and the three command ids, low words of the second / third parameter), DoMessage(cIGZMessage2*) for the finished / city-loaded / city-view-started routes (the one-shot latch and the inactive registry item), DoMessage(cGZMessage&) for all five cheat verbs, the case-insensitive verb, the refused 0 / 0xffffffff saves, the wrong cheat id / type / argument counts, Write / Read (version 2 gate, the 11 bytes, the truncated stream, the GUID conversion through WhichToGUID), the scripting-context cache (one reference, cached), the instance steal / unconditional clear quirk, and the file's nsSC4TutorialSystem::FilterUICommandMessage gate
+0x10005f0d4 cSC4TutorialSystem_Construct
+0x10005f1bc cSC4TutorialSystem_Destruct
+0x10005f2fc cSC4TutorialSystem_StartTutorial
+0x10005f3ae cSC4TutorialSystem_EndTutorial
+0x10005f452 cSC4TutorialSystem_DoMessage2
+0x10005f528 cSC4TutorialSystem_DoMessage
+0x10005fa92 cSC4TutorialSystem_QueryInterface
+0x10005fb22 cSC4TutorialSystem_AddRef
+0x10005fb64 cSC4TutorialSystem_Release
+0x10005fba6 cSC4TutorialSystem_Write
+0x10005fc1a cSC4TutorialSystem_Read
+0x10005fcc8 cSC4TutorialSystem_Init
+0x10005fe5a cSC4TutorialSystem_Shutdown
+0x10005ff0c cSC4TutorialSystem_FilterMessage
+0x10005ff56 cSC4TutorialSystem_ResetTutorialNumAndIndex
+0x10005ff88 cSC4TutorialSystem_ShowUIHintsForUsers
+0x10005ff9e cSC4TutorialSystem_FilterLeftMouseClick
+0x10005ffba cSC4TutorialSystem_HandleCatalogMenu
+0x10005ffd2 cSC4TutorialSystem_GetScriptingContext
+0x100060042 cSC4TutorialSystem_OnTutorialEvent
+0x100060058 cSC4TutorialSystem_IsEdgeScrollingAllowed
+0x1000600e0 cSC4TutorialSystem_IsTutorial
+0x1000600ee cSC4TutorialSystem_GetCurrentTask
+0x100060106 cSC4TutorialSystem_GetTutorialTaskNumber
+0x100060110 cSC4TutorialSystem_GetTutorialGUID
+0x10006011a cSC4TutorialSystem_GetGZCLSID
+0x100060126 cSC4TutorialSystem_ResetTutorialIndex
+0x100060130 cSC4TutorialSystem_IncreaseTutorialNumber
+0x10006008e nsSC4TutorialSystem_FilterUICommandMessage
+PARTIAL: none
+SKIPPED: none of the class's own code: the other 21 exported symbols are compiler-generated (the destructor's complete-object form 0x10005f2a8 and deleting form 0x10005f2c0, plus 19 non-virtual thunks: the destructor 0x10005f2b2 / 0x10005f2ee, DoMessage 0x10005f516 / 0x10005fa80, QueryInterface 0x10005faea / 0x10005faf8 / 0x10005fb06 / 0x10005fb14, AddRef 0x10005fb30 / 0x10005fb3e / 0x10005fb4c / 0x10005fb5a, Release 0x10005fb72 / 0x10005fb80 / 0x10005fb8e / 0x10005fb9c, Write 0x10005fc0c, Read 0x10005fcba and GetGZCLSID 0x10006013a). GZCOM_CreatecSC4TutorialSystem 0x10005f086 / GZCOM_cSC4TutorialSystemCLSID 0x10005f0c8 keep their existing src/gz/GZCOM.cpp rows (the creator is still the generated nullptr stub: hook it up to `new sc4::cSC4TutorialSystem()` with allocation size 0x68), and the TU's static initialiser __GLOBAL__sub_I_SC4TutorialSystem.cpp 0x100060146 only builds cRZString literals (the tutorial task field names already defined in src/sc4/TutorialTask.cpp), so it is not reproduced.
+# New seams (TutorialSystem.h) and where the original calls them:
+#   ITutorialSystemHost  SL::spMS2 (vslots 0x28 AddNotification / 0x30 RemoveNotification), SL::spCCM (the legacy-target
+#                        AddNotification / RemoveNotification 0x28 / 0x30 and RegisterCheatCode / UnregisterCheatCode
+#                        0x18 / 0x20), SL::spSC4 vslots 0xa8 (GetDebugFunctionalityEnabled), 0x178 (GetTutorialRegistry ->
+#                        SetActive 0x1006433ee / GetItem 0x10064307a / WhichToGUID 0x100643874), 0x118 (GetRegion ->
+#                        ResetTutorialCity 0xb0), 0x120 (GetRegionalCity -> SetTutorialGUID 0x210), 0x48 (RequestSaveCity),
+#                        SL::spCity vslot 0x288 -> vslot 0x50 (the cISCLua view), SL::spView3D vslots 0x1e0 / 0x1d8 (the two
+#                        menu closes), and new cSC4TutorialUIWinProc (0xc0 bytes, ctor 0x1000b697c).
+#   ITutorialUIWinProc   cSC4TutorialUIWinProc (55 symbols, unrecovered): AddRef 0x08 / Release 0x10, Init 0x1000b6d8c,
+#                        Shutdown 0x1000b7470, handleButtons 0x48, ShowUIHintsForUsers 0x50, HandleCatalogView 0x58,
+#                        GetCurrentTask 0x60, FilterLeftMouseClick 0x68, ResetTutorialNumAndIndex 0x70, moveToNext
+#                        0x1000b83ee, OnTutorialEvent 0x1000b883e.
+#   ITutorialCheatCodes  SL::spCCM as cGZCheatCodeManager (gz/CheatCodeManager.h), narrowed to the four slots this class
+#                        calls; the host is handed the recovered class in the real build.
+#   SetTutorialFilterSystem / TutorialFilterSystem  SL::spCity vslot 0x290 (cSC4City::GetTutorialSystem) for the file's
+#                        free nsSC4TutorialSystem::FilterUICommandMessage; hook it to what cSC4View3DWin's
+#                        FilterUiCommandMessage seam (View3DWin.h, 0x10006008e) and cSC4BuildingSelectWinProc's
+#                        ITutorialFilter should call.
+# Deviations kept on purpose (also in the header): a missing host / missing city / missing registry item is treated as
+# absent instead of dereferencing null (the original crashes), an empty cheat text is run as an empty command line, and
+# the recovered cRZUnknown block is 0x10 bytes where the original's was 0xc (the documented +0x2c..+0x2f bytes are kept
+# as explicit padding so every later member keeps its original offset in the comments).

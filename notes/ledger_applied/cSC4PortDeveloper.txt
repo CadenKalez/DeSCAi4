@@ -1,0 +1,40 @@
+SOURCE src/sc4/PortDeveloper.cpp|h
+EVIDENCE test scripts/tests/sc4_portdeveloper_test.cpp - sc4_portdeveloper ok: fake IPortDeveloperHost plus real cSC4Lot, cSCPropertyHolder/cSCProperty/cRZVariant, cRZMessage2Standard and port memory streams drive the three COM views and their shared reference count, Init/Shutdown (simulator agent, four services, three notifications, agent removal through the global city), the port type exemplars and their growth stages, DoLotInserted/doLotStateChanged, the placed-building and lot-state messages, the monthly simulation (efficiency, usage/demand, condition and the single advisor upgrade), the stage growth through swapLot (demolish, CreateLot, ConstructDefaultLot, budget), the version-1 stream round trip and the remaining queries
+0x1000cbe6a PortDeveloperConstruct
+0x1000cbf1c PortDeveloperDestruct
+0x1000cbf9e PortDeveloperInit
+0x1000cc128 PortDeveloperReadTunableVars
+0x1000cc26e PortDeveloperShutdown
+0x1000cc44e PortDeveloperAddRef
+0x1000cc478 PortDeveloperRelease
+0x1000cc4d4 PortDeveloperFinalRelease
+0x1000cc4fe PortDeveloperQueryInterface
+0x1000cc564 PortDeveloperWrite
+0x1000cc62a PortDeveloperRead
+0x1000cc7ba PortDeveloperDoMessage
+0x1000cc950 PortDeveloperDoMonthlySimulation
+0x1000ccc0e PortDeveloperDoLotStateChanged
+0x1000ccc72 PortDeveloperDoLotInserted
+0x1000ccddc PortDeveloperGetRequiredBudget
+0x1000cce10 PortDeveloperGetAvgEfficiency
+0x1000cce78 PortDeveloperGetPortUsageValues
+0x1000ccfaa PortDeveloperRecordHistoryData
+0x1000cd04e PortDeveloperGrowPortsToNextStage
+0x1000cd116 PortDeveloperSwapLot
+0x1000cd28a PortDeveloperRemoveLot
+0x1000cd5fc PortDeveloperFindPortLot
+0x1000cd68a PortDeveloperLoadLotConfiguration
+0x1000cdb42 PortDeveloperGetNumPortsBySize
+0x1000cdb62 PortDeveloperGetNumPorts
+0x1000cdb98 PortDeveloperGetLeastEfficientPort
+0x1000cdbf6 PortDeveloperGetAllPortLots
+0x1000cdc74 PortDeveloperGetPortLot
+0x1000cddea PortDeveloperSendAdvisorMessage
+0x1000cde2e PortDeveloperGetGZCLSID
+PARTIAL:
+SKIPPED:
+0x1000cbf92 compiler-emitted abstract-destructor stub: push rbp / mov rbp,rsp / ud2 (6 bytes, no code)
+0x1000cbf98 compiler-emitted deleting-destructor stub: push rbp / mov rbp,rsp / ud2 (6 bytes, no code)
+NOTE: support classes in the same file (separate classes, not ledgered here): cPortLot::GetLot 0x1000cc3e4, cPortLot::IsGrowthTriggered 0x1000ccf24, cPortLot::~cPortLot 0x1000cdcda/0x1000cdd0c, cPortTypeConfig::LoadConfiguration 0x1000cd79e and its destructors 0x1000cdd4e/0x1000cdda4/0x1000cdddae.
+NOTE: cSC4PortDeveloper's 0x1000cbf92/0x1000cbf98 are the two 6-byte abstract-destructor stubs (`ud2`) Ghidra lists next to the real destructor at 0x1000cbf1c.
+NOTE: deviations kept on purpose: GetLeastEfficientPort returns the first port lot instead of the original's `jmp self` at 0x1000cdbc1 (it hangs with more than one port); Read bounds-checks the configuration index the original reads unchecked; stage lookups are clamped where the original reads past the array; null lots/managers and absent services return early instead of faulting.

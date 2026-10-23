@@ -1,0 +1,78 @@
+SOURCE src/sc4/SeaportDeveloper.cpp|h
+EVIDENCE test scripts/tests/sc4_seaportdeveloper_test.cpp - sc4_seaportdeveloper ok: a fake ISeaportHost (also the base's IPortDeveloperHost) plus real cSC4Lot, cSCPropertyHolder/cSCProperty/cRZVariant exemplars, cRZMessage2Standard messages and port memory streams drive the object layout (0xe0 bytes, base at +0x08, the +0xb8..+0xdc members), the identity (0xea29ad92 / zone 12 / 0xea3e904a / 0x4a4155ab / 0x1509) and the four COM views with their shared count, Init/Shutdown (base agent + four services + three notifications, the seaport department 0x4a4155ab/0xaa369059 with name 0x6a3ff01c/0xca493af3, 120% max funding, the hidden line item 1, the two seaport messages, the department reference, the water-map build), the sea-access map (water bit 0x80, the four border marks per connected region, CityHasSea, GetCellSeaAccess, the monthly CalculateWaterAccessible check, SetLotPropsState through cSC4LotPropFilter and the 0x4a490d33 advisor event), the trip feed (GetTripsForPort via the city's traffic simulator, UpdateTripCapacity with the funding ratio, GetNumSeaportTrips), the budget (GetAllocatedFunding, UpdateBudget, GetRequiredBudget, GetSeaportUsageValues, GetMaintenanceCost using the stage budget), OnNewLotCreated's terrain flattening for all four facings incl. the world-position-as-vertex-index quirk and the grid-size gate, the 0x6a3b0afd / 0x8a394dc4 / monthly message routes, the version-2 stream gate and round trip, Release through the cISC4PortDeveloper view (FinalRelease = Shutdown + delete), and cSC4LotPropFilter's type/box/property rules
+0x1000ca01e cSC4SeaportDeveloper_Construct
+0x1000ca0cc cSC4SeaportDeveloper_Destruct
+0x1000ca194 cSC4SeaportDeveloper_Init
+0x1000ca290 cSC4SeaportDeveloper_BuildWaterAccessMap
+0x1000ca624 cSC4SeaportDeveloper_Shutdown
+0x1000ca6a6 cSC4SeaportDeveloper_QueryInterface
+0x1000ca73a cSC4SeaportDeveloper_AddRef
+0x1000ca76e cSC4SeaportDeveloper_Release
+0x1000ca7a2 cSC4SeaportDeveloper_FinalRelease
+0x1000ca7ba cSC4SeaportDeveloper_DoMessage
+0x1000ca82c cSC4SeaportDeveloper_Write
+0x1000ca8b2 cSC4SeaportDeveloper_Read
+0x1000ca986 cSC4SeaportDeveloper_SendAdvisorUpgradeMessage
+0x1000ca9aa cSC4SeaportDeveloper_GetAvgEfficiency
+0x1000ca9c2 cSC4SeaportDeveloper_UpdateTripCapacity
+0x1000caa8e cSC4SeaportDeveloper_OnStageChange
+0x1000caaa6 cSC4SeaportDeveloper_OnNewLotCreated
+0x1000cae76 cSC4SeaportDeveloper_GetTripsForPort
+0x1000caeee cSC4SeaportDeveloper_GetLeastEfficientPort
+0x1000caf06 cSC4SeaportDeveloper_DoMonthlyTick
+0x1000cafdc cSC4SeaportDeveloper_CalculateWaterAccessible
+0x1000cb058 cSC4SeaportDeveloper_SetLotPropsState
+0x1000cb146 cSC4SeaportDeveloper_UpdateBudget
+0x1000cb1be cSC4SeaportDeveloper_GetAllocatedFunding
+0x1000cb1fe cSC4SeaportDeveloper_GetSeaportUsageValues
+0x1000cb29c cSC4SeaportDeveloper_CityHasSea
+0x1000cb2a8 cSC4SeaportDeveloper_GetCellSeaAccess
+0x1000cb2c2 cSC4SeaportDeveloper_GetLotProps
+0x1000cb4ae cSC4SeaportDeveloper_GetNumSeaportTrips
+0x1000cb4f2 cSC4SeaportDeveloper_GetMaintenanceCost
+0x1000cb596 cSC4SeaportDeveloper_GetSimulatorType
+0x1000cb5a2 cSC4SeaportDeveloper_GetAllPortLots
+0x1000cb5b0 cSC4SeaportDeveloper_GetNumPorts
+0x1000cb5be cSC4SeaportDeveloper_AsISC4PortDeveloper
+0x1000cb5c8 cSC4SeaportDeveloper_GetNumSeaports
+0x1000cb5d4 cSC4SeaportDeveloper_GetGZCLSID
+# Support functions recovered in the same file (separate classes; rows so the names are applied too).
+0x1000cb45b AMFillRead
+0x1000cb466 AMFillWrite
+0x1000cb485 AMFillTest
+0x1000cb624 cSC4LotPropFilter_IsOccupantIncluded
+0x1000cb6c6 cSC4LotPropFilter_Destruct
+0x1000cb6d0 cSC4LotPropFilter_DeletingDestruct
+PARTIAL:
+SKIPPED:
+0x1000ca140 compiler-emitted complete-object destructor: a tail call to 0x1000ca0cc (no separate code)
+0x1000ca158 compiler-emitted deleting destructor: 0x1000ca0cc then operator delete (no separate code)
+NOTE: the remaining 36 exported cSC4SeaportDeveloper symbols are non-virtual adjustor thunks for the four views (qtors 0x1000ca14a / 0x1000ca186, Init 0x1000ca616, Shutdown 0x1000ca698, QueryInterface 0x1000ca6c8 / 0x1000ca6ee / 0x1000ca714, AddRef 0x1000ca748 / 0x1000ca752 / 0x1000ca760, Release 0x1000ca77c / 0x1000ca786 / 0x1000ca794, FinalRelease 0x1000ca7b0, DoMessage 0x1000ca810 / 0x1000ca81e, Write 0x1000ca85a / 0x1000ca884, Read 0x1000ca8fa / 0x1000ca93e, SendAdvisorUpgradeMessage 0x1000ca99a, GetAvgEfficiency 0x1000ca9b8, OnStageChange 0x1000caa98, OnNewLotCreated 0x1000cae68, GetTripsForPort 0x1000caee0, GetLeastEfficientPort 0x1000caefc, DoMonthlyTick 0x1000cb138, UpdateBudget 0x1000cb1b0, GetAllocatedFunding 0x1000cb1de, GetAllPortLots 0x1000cb5ec, GetNumPorts 0x1000cb5f6, GetSimulatorType 0x1000cb5e0, GetGZCLSID 0x1000cb600 / 0x1000cb60c); the compiler emits them from the class declaration.
+NOTE: GZCOM_CreatecSC4SeaportDeveloper 0x1000c9fd0 / GZCOM_cSC4SeaportDeveloperCLSID 0x1000ca012 keep their existing src/gz/GZCOM.cpp rows (the creator is still the generated nullptr stub: hook it up to `new sc4::cSC4SeaportDeveloper()`; the original allocates 0xe0 bytes, which is sizeof(cSC4SeaportDeveloper), and the class id 0xea230a28 is already in the table). __GLOBAL__sub_I_SC4SeaportDeveloper.cpp is not exported separately (the file has no static initialisers).
+# New seams (SeaportDeveloper.h) and where the original calls them:
+#   ISeaportHost (derives the base's IPortDeveloperHost): SeaportCity -> base+0x40 cISC4City (vslots 0x228 GetTrafficSimulator,
+#     0x308 CellCenterToPosition), BudgetSimulator -> base+0x48 cISC4BudgetSimulator (vslots 0xc8 CreateDepartmentBudget,
+#     0xd8 GetDepartmentBudget), TrafficSimulator -> SL::spTrafficSim (vslots 0x98 SetMaxTripCapacity(lot->AsPropertyHolder,
+#     3, capacity), 0xa8 GetTrafficArrived(lot->AsPropertyHolder, 3)), Terrain -> SL::spTerrain (cSTETerrain vslots 0x38
+#     CellCountX, 0x40 CellCountZ, 0x110 CellHasWater, 0x190 SetAltitudeAtVertex), OccupantManager -> SL::spOccupantManager
+#     (vslots 0x148 GetOccupantsByStandardCityCells, 0x180 ReleaseOccupantList) and AsPropOccupant(cISC4Occupant) for the
+#     QI 0xe9793a65 + cISC4PropOccupant vslot 0x58 SetState.
+#   Support seams: ISeaportLineItemApi / ISeaportDepartmentBudgetApi / ISeaportBudgetSimApi mirror the cSC4LineItem
+#     (0x50 GetFullExpenses, 0x58 GetCurrentExpenses, 0x60 SetFullExpenses, 0x90 SetDisplayFlag) and cSC4DepartmentBudget
+#     (0x28 SetDepartmentName, 0x68 SetMaxAllowedFundingPercentage, 0x88 CreateLineItem, 0xa0 GetLineItem) calls; the host
+#     is handed the recovered cSC4BudgetSimulator/cSC4DepartmentBudget/cSC4LineItem in the real build.
+#   cSC4LotPropFilter derives the recovered cSC4OccupantFilter (so it pulls OccupantManager.cpp into the test, like the
+#     occupant-filter tests); the original also implements cIGZSerializable, which is left out (transient object) - the
+#     class is one vptr shorter and its four fields start at +0x18 instead of +0x14.
+# Base seam that was not sufficient: the original caches the seaport department budget in the base's never-read +0x50 slot,
+# which the recovered cSC4PortDeveloper keeps private, so every user re-fetches it through ISeaportHost::BudgetSimulator()
+# (Init still AddRefs it and Shutdown releases it, so the reference count matches). Everything else goes through the
+# base's SetIdentity / MutablePortLots / MutableConfigurations / GetRequiredBudget / SendAdvisorMessage /
+# GrowPortsToNextStage / GetPortUsageValues / GetPortLot.
+NOTE: deviations kept on purpose: BuildWaterAccessMap leaves the object untouched without a terrain (0x1000ca2a2), a
+missing department / line item / lot / traffic simulator returns early instead of faulting (0x1000cb1be and friends index
+through them blindly), the sea map and the lot rectangles are bounds-checked where the original reads unchecked, and the
+cSC4MapUtilities::FloodFill scanline fill (0x1000d832c) is replaced by an equivalent four-connected fill using the same
+AMFillRead/AMFillWrite/AMFillTest semantics (test 0x1000cb45b..0x1000cb4ad). The OnNewLotCreated terrain quirk is kept
+bit-for-bit: the cell centre's world position truncated to int is used as the terrain vertex index (0x1000cabe5), so with
+16 m cells the heights land on vertex 16 * cell + 8.

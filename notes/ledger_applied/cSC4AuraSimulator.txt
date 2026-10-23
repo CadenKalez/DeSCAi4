@@ -1,0 +1,60 @@
+SOURCE src/sc4/AuraSimulator.cpp|h
+EVIDENCE test scripts/tests/sc4_aurasimulator_test.cpp - the construction defaults, the three COM views and the shared reference count, Init (nine grids with their instance ids/tract sizes/initial values, five message subscriptions, four simulator agents, the "aura" node and the two commands), ReadSimulatorTunableValues (curves, smoothing/decay, base auras, the four transient radius/magnitude pairs, hotspot settings, riot curve), both AddTransientEffect tools, every DoIdle stage (park map, landmark map walk with the work/published grids, lot pass with the base aura and the timeout, the curve folds, the smoothing pass incl. the round-away-from-zero step and the -128 "no data" rule, the publish, the hotspots, the transient decay and the cycle message), UpdateAuraGrid (aura = smoothed + transient, best/worst tract, population weighted rating, history), ComputeHotspotList (merge by Manhattan distance and prune by count), GetLotBaseAura (table-weighted current aura plus the land value curve), ComputeTaxRateChangeEffect, DoOccupantChanged (park / landmark / vehicle properties, add and remove, the funded landmark key), CheckForStartingRiot (tract centre), BustStrike (all five busters), DoMessage routing (month, day, idle time, ordinance, tunable reload, occupant inserted/removed incl. the no-aura property, lots changed), Write/Read round trip and the two game-data command handlers
+0x10021801e AuraSimulatorConstruct
+0x10021821c AuraSimulatorDestruct
+0x1002182a8 AuraSimulatorDestructBase
+0x1002182b2 AuraSimulatorDestructDeleting
+0x1002182e0 QueryInterface
+0x100218340 AddRef
+0x10021836a Release
+0x100218422 Init
+0x100218c72 ReadSimulatorTunableValues
+0x100219220 sAddTransientEffect
+0x100219316 sEndStrike
+0x100219384 Shutdown
+0x10021997e Write
+0x100219b70 Read
+0x100219f62 DoMessage
+0x10021a1c4 DoIdle
+0x10021acd2 DoOccupantChanged
+0x10021b2d0 DoEndOfSimulationCycle
+0x10021b364 GetAuraValue
+0x10021b376 GetMayorRating
+0x10021b384 AddTransientEffect_float_float_TransientAuraEffect
+0x10021b3ba AddTransientEffect_float_float_float_float
+0x10021b476 ComputeTaxRateChangeEffect
+0x10021b564 GetLotBaseAura
+0x10021cc5c UpdateAuraGrid
+0x10021cfdc ComputeHotspotList
+0x10021d174 CheckForStartingRiot
+0x10021d272 BustStrike
+0x10021d2fe GetMaxMayorRating
+0x10021d316 GetMinMayorRating
+0x10021d32e GetAuraGrid
+0x10021d338 GetTransientAuraGrid
+0x10021d342 GetParkMap
+0x10021d350 GetLandmarkMap
+0x10021d35e GetGZCLSID
+PARTIAL: none
+SKIPPED: the ten non-virtual interface thunks (0x100218324, 0x100218332, 0x10021834e, 0x10021835c, 0x1002183ae, 0x1002183e8, 0x100219b62, 0x100219ebe, 0x10021b2c2, 0x10021d36a) are compiler-generated this-adjusting thunks for the +8 / +0x10 views and carry no logic; the file-scope helpers this class owns (cSC4MapUtilities::AddRadiusEffect's signed-char instantiation @ 0x1000d7292, ReadCurveProperty @ 0x100219ed7, ProcessTwoGridsWithCallback / ProcessTwoGridsForROnly instantiations @ 0x10021b758..0x10021c879) are recovered in AuraSimulator.cpp / SimGridOps.h and belong to those classes' rows
+# New seams (AuraSimulator.h) and where the original calls them:
+#   IAuraHost        every global the class reaches: SL::spMS2 (five AddNotification/RemoveNotification ids), SL::spCity
+#                    (0x2f8 PositionToCell, 0x2d8/0x2e0 cell size, 0x240 disaster layer -> 0x38(0xca380b06) -> 0x38(x,z),
+#                    0x190 -> the developer registry's 0xa8 RemoveMessageTarget), SL::spLotManager (0x28 lot at cell,
+#                    0x78 lot iterator, 0x80 lot count), SL::spBudgetSim (0xd8 department -> 0x50 funding, 0x198
+#                    IsDepartmentFunded, 0x120 tax rate), SL::spResidentialSim (0x138/0x140 float maps, 0xc8 the three
+#                    population grids, 0x40/0x48 EndSchoolStrike/EndHealthStrike), SL::spCrimeSim 0x28, SL::spTrafficSim
+#                    0x68/0x50, SL::spPollutionSim 0x28(type), SL::spOrdinanceSim 0xc0, SL::spLandValueSim 0x28,
+#                    SL::spHistoryWarehouse 0x60, SL::spPoliceSim 0x68 / SL::spFireProtectionSim 0x70 EndStrike,
+#                    SL::spBuildingDevelopmentSim (stored only), SL::spSimulator (0x40 date, 0x98 AddAgent),
+#                    SL::spRM 0x18 exemplar -> 0x30 property holder, RZGetFramework 0x28 game-data registry,
+#                    cSC4Lot::GetBuilding -> building occupant 0x18 AsOccupant, cSC4DynamicLimitTimer, and
+#                    SC4WriteGZSerializable / SC4ReadGZSerializable(0xc9bd939a, ..., false) of one grid.
+#   IAuraLotIterator cSC4SafeListIterator<cISC4Lot*> (unrecovered): the circular {current, end} pair of the lot pass.
+#   cISC4AuraSimulator cISC4AuraSimulator (IID 0xc773e880, vtable 0x100a86fb0): 16 slots; this class is the neighbour
+#                    IGrowthAuraApi (growth developer 0x68/0x70/0x78), IQueryAuraSim (0x28 GetAura) and
+#                    ISituationAuraSim (0x30 AddAura) were waiting for.
+# Deviations kept on purpose (also in the header's quirk list): the original reads an uninitialised stack rectangle for
+# the landmark key when the occupant sits on no lot (the port uses 0), UpdateAuraGrid bounds-checks the three
+# population grids, the grids are released through their COM view (grid slots 0x20/0x10) instead of a raw delete, and
+# Read recreates the landmark maps' grids from the streamed class id (the test host supplies the type).

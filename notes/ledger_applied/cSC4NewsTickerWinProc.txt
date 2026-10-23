@@ -1,0 +1,37 @@
+SOURCE src/sc4/NewsTickerWinProc.cpp|h
+EVIDENCE test scripts/tests/sc4_ui_helpers_test.cpp - the two interface ids and the shared count, Init finding the two advice lists / the three buttons and the resize label, show / hide flags, the ranked advice list (insert by priority, duplicate ignored, RemoveMessage, RemoveInactive), the advice panel markup (header + header font + title + footer  and  body font + message + body footer, expired colours), one flipper ring transition (append, three lines, the empty lines' "<FONT COLOR=... SIZE=3><B> " markup, rebuild flag) and the flipper tick message, the advice-added message routing and Shutdown
+0x10031b896 cSC4NewsTickerWinProc_Construct
+0x10031ba2c cSC4NewsTickerWinProc_ConstructAlias
+0x10031ba36 cSC4NewsTickerWinProc_Destruct
+0x10031bb54 cSC4NewsTickerWinProc_DestructAlias
+0x10031bb5e cSC4NewsTickerWinProc_DestructAndDelete
+0x10031bb8c cSC4NewsTickerWinProc_QueryInterface
+0x10031bbba cSC4NewsTickerWinProc_QueryInterfaceThunk
+0x10031bbec cSC4NewsTickerWinProc_AddRef
+0x10031bbfa cSC4NewsTickerWinProc_AddRefThunk
+0x10031bc08 cSC4NewsTickerWinProc_Release
+0x10031bc24 cSC4NewsTickerWinProc_ReleaseThunk
+0x10031bc44 cSC4NewsTickerWinProc_Init
+0x10031bf54 cSC4NewsTickerWinProc_NewsTickCallback
+0x10031c016 cSC4NewsTickerWinProc_Shutdown
+0x10031c0f0 cSC4NewsTickerWinProc_RegisterMessageNotification
+0x10031c1c0 cSC4NewsTickerWinProc_DoWinProcMessage
+0x10031c2ce cSC4NewsTickerWinProc_DoWinProcMessageThunk
+0x10031c2e0 cSC4NewsTickerWinProc_DoMessage
+0x10031c644 cSC4NewsTickerWinProc_ShowTicker
+0x10031c760 cSC4NewsTickerWinProc_HideTicker
+0x10031c7e0 cSC4NewsTickerWinProc_RemoveMessage
+0x10031c808 cSC4NewsTickerWinProc_AddMessage
+0x10031c9a0 cSC4NewsTickerWinProc_updateBodyTextCtrl
+0x10031d224 cSC4NewsTickerWinProc_DisplayNewsFlipperLine
+0x10031db20 cSC4NewsTickerWinProc_RemoveInactive
+0x10031db66 cSC4NewsTickerWinProc_DoFlipperMessage
+PARTIAL: 0x10031c9a0 cSC4NewsTickerWinProc_updateBodyTextCtrl - the HTML fragments were recovered from the file's static initialiser (0x10031e0f4) and the AddEntry argument layout from the disassembly, but the panel itself is cSC4WinAdviceList, which is unrecovered (NEWS-ADVISELIST-1); the test only sees the markup through the IC4WinAdviceList seam
+PARTIAL: 0x10031d224 cSC4NewsTickerWinProc_DisplayNewsFlipperLine - same cSC4WinAdviceList dependency; the Thai branch (RZ::LM()->GetCurrentLanguage() == 0xf, which selects kHeaderFontJ) is unreachable without a language manager
+PARTIAL: 0x10031db66 cSC4NewsTickerWinProc_DoFlipperMessage - the ring selection was written from the disassembly; the test covers one append transition and the "already shown, single entry" case only, not a full three-entry rotation
+SKIPPED: none
+# New seam (NewsTickerWinProc.h): IC4WinAdviceList is cSC4WinAdviceList's iid-0xca1492a2 view (0x18 AsIGZWin,
+# 0x20 AddEntry, 0x28 RebuildHTML, 0x30 SetBackgroundImage, 0x38 ClearList, 0x40 SetGutters, 0x48 ScrollToAnchor,
+# 0x50 DisableVerticalScrollbar). The class itself (22 functions at 0x1005c79f6..0x1005c8a2a) is unrecovered.
+# The HTML fragments (kPriorityFooter, kBodyFont, the alarm/bad/neutral/good bitmaps ...) live in SC4NewsTickerWinProc.cpp's
+# file scope and were read from __GLOBAL__sub_I_SC4NewsTickerWinProc.cpp @ 0x10031e0f4.

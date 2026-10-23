@@ -1,0 +1,29 @@
+SOURCE src/sc4/SC4UI.cpp|h
+EVIDENCE test scripts/tests/sc4_ui_helpers_test.cpp - the window-set / set-difference / alignment (caption "-tc", "-br", invalid "-xz" quirk, hex id and the three-window overload), focus-flag, cursor-hit-test, palette-ramp (incl. the 0x800080 rounding quirk and the leading / trailing fills), property-token (number / money, float / integer, rejected tokens) and dialog (notification captions, confirmation OK/Cancel, scripted modal result) checks
+0x100309e70 nSC4UI_CreateCatalogItemFromExemplar
+0x10030a156 nSC4UI_PropertyTokenReplacementFunction
+0x10030a37b nSC4UI_CreateCatalogItemList
+0x10030a6f4 nSC4UI_CreateCatalogView
+0x10030a7f0 nSC4UI_InterpolateRampToPalette
+0x10030a98e nSC4UI_GetChildWindowForCursorPos
+0x10030a9cb nSC4UI_GetChildWindowForCursorPosEnumProc
+0x10030aa41 nSC4UI_GetChildWindowForCursorPosRecursive
+0x10030aaaa nSC4UI_AlignWindowToWindowById
+0x10030ac8a nSC4UI_AlignWindowToWindowByWindow
+0x10030ad12 nSC4UI_AlignWindowSetToWindow
+0x10030ad94 nSC4UI_GetWindowChildrenSetEnum
+0x10030ae2d nSC4UI_GetWindowChildrenSet
+0x10030ae83 nSC4UI_GetWindowChildrenNotInSet
+0x10030b220 nSC4UI_ClearAcceptFocusFlagRecursive
+0x10030b25c nSC4UI_SetNoFocusFlagCallback
+0x10030b2da nSC4UI_GenericNotificationDialog
+0x10030b655 nSC4UI_GenericConfirmationDialog
+0x10030ba79 nSC4UI_DoScriptedModalDialog
+PARTIAL: 0x100309e70 nSC4UI_CreateCatalogItemFromExemplar - the exemplar-string loader (SC4LoadExemplarString @ 0x100121132 -> SC4LoadString @ 0x100121184) is unrecovered; the default host answers "no string" so the name/description fall back to the plain properties, and the icon bitmap is only attached when an ISLBufferHost is installed
+PARTIAL: 0x10030a37b nSC4UI_CreateCatalogItemList - the walk over the resource manager's available exemplars is written but the test only reaches the empty-catalog path (SL::spRM null); verifying the walk end to end needs real exemplar data
+SKIPPED: none
+# New seams (SC4UI.h): INSC4UIHost mirrors the engine globals the original reads - SC4GetPopupModalDialogsEnabled
+# (SL::spSC4 +0xb8), SC4LoadExemplarString / SC4LoadString (0x100121132 / 0x100121184), RZ::LM()->GetLanguageUtility(0)
+# +0x90 MakeNumberString, RZ::WM(), SC4CreateWindowFromScript (0x100039a9f / 0x100039bf7), SL::spWinLocationSaver and
+# cSC4AutoGamePause (SC4GamePause). The default host wires all of them to the recovered accessors except the
+# exemplar-string chain, which stays unrecovered (see the PARTIAL row).

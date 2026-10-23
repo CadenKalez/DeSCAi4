@@ -46,9 +46,9 @@
 // used directly (recovered in Lot.h); mapping the calls to its slots is noted in the .cpp.
 //
 // Not recovered here (see the PARTIAL/SKIPPED sections of notes/ledger_pending/cSC4ZoneDeveloper.txt):
-// Parcellize (the nested lot-layout loop), PlopAllBuildingTypes (needs the spiral-position walk), the
-// safe-list iterator, CanCreatePloppedLot/CheckLotTerrainConstraints (need
-// DecodeNetworkConnectionObject and the surface water) and the plop cheat commands' construction.
+// PlopAllBuildingTypes (needs the spiral-position walk that lives in SpiralIterator.cpp), the safe-list
+// iterator and CanCreatePloppedLot/CheckLotTerrainConstraints (need DecodeNetworkConnectionObject and
+// the surface water).
 #pragma once
 
 #include <cstdint>
@@ -551,7 +551,7 @@ public:
     int CanCreateLotOnCell(int x, int z, bool skipZoneCheck, bool allowWater);  // @ 0x1001307bc
     bool DoesCellHaveLot(int x, int z);                                      // @ 0x100130354
     void ExamineCell(int x, int z, BoundaryCondition& boundary, int& cost);  // @ 0x1001303ea
-    // The parcellization pipeline (all recovered except Parcellize, see the ledger).
+    // The parcellization pipeline (OnZone .. UpdateZoneType, see the ledger).
     void OnZone(const SC4CellRegion<int>* region, SC4CellRegion<int>** out);  // @ 0x10012b160
     void OnDezone(const SC4CellRegion<int>* region, bool flag);               // @ 0x10012b976
     void UpdateHighlightTextures(const SC4CellRegion<int>* region);           // @ 0x100130994
@@ -568,7 +568,7 @@ public:
     bool CreateLotToFaceRoad(int x, int z, int sizeX, int sizeZ, std::list<int>& facings,
                              cSC4Lot*& out);                                  // @ 0x10012cbcc
     void SimpleParcellize(int spacing);                                       // @ 0x10012c320
-    void Parcellize();                                                        // @ 0x10012ee06 (PARTIAL)
+    void Parcellize();                                                        // @ 0x10012ee06
     void ExamineBoundaries();                                                 // @ 0x10012ce50
     void CreateLotRemnants(int x, int z, int width, int depth, int facing);   // @ 0x100129956
     void ConnectRoadToAnyAdjacentStreets(cISC4Occupant* occupant);            // @ 0x10012a040

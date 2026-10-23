@@ -1,80 +1,38 @@
 SOURCE src/sc4/ZoneDeveloper.cpp|h
-EVIDENCE test scripts/tests/sc4_zonedeveloper_test.cpp - fake IZoneDeveloperHost and neighbour seams over the recovered cSC4Lot / cISC4Occupant / cSC4SimGrid drive the four COM views and their shared reference count, Init/Shutdown of every service and the two cheat codes, the 47 boundary lot texture rules and their key-0 fallback, lot creation (two references, footprint fill, Init, SetState(1,0,0)), the lot map queries (GetLot, GetLotsInCellRect unique/non-unique, the surrounding ring and its edge mask, vertices, neighbour cells), the altitude helpers (lot flags and terrain fallback), the network occupant queries and ExamineCell costs, the random-lot scan, the save stream (Write version 1 + lot ids, Read round trip and bad version), and DoMessage (channel-scale word, city-init service attach, occupant-removed DeleteLot path, unknown messages)
+EVIDENCE test scripts/tests/sc4_zonedeveloper_test.cpp - the fake IZoneDeveloperHost drives the whole zoning pipeline over the recovered cSC4Lot cSC4SimGrid and lot-configuration filter, the cell-map region helpers (make/set/test/compress/extract), the parcellizable mask (water, street and lot-configuration rejections), region subdivision by connected component, DetermineLotSize (developer selection by desirability then active demand, the growth-list style and the default 2x2 footprint with the density gap), the four boundary sides and both orientation branches, the street layout (ExtendAsStreets, LayInJogStreets with its blocked path, DrawStreet single cell, clip-to-region and extend mode), CreateLotToFaceRoad with an explicit list and with facing -1, the simple industrial parcellizer (100 1x1 lots on a 10x10 region plus its two streets), the general Parcellize layout (a 9x9 residential region builds lots inside the region on the levelled footprints), CreateLotRemnants for all four facings, OnDezone (lot deletion, remnant refill and the orphan-rail demolition region), both connection fix-ups and the plop-lot no-configuration path
 
-0x100128098 ZoneDeveloperConstruct
-0x10012826c ZoneDeveloperDestruct
-0x10012836a ZoneDeveloperDestructComplete
-0x100128374 ZoneDeveloperDestructAndDelete
-0x1001283a2 ZoneDeveloperQueryInterface
-0x10012841e ZoneDeveloperAddRef
-0x100128456 ZoneDeveloperRelease
-0x10012853c ZoneDeveloperInit
-0x100128b94 ZoneDeveloperInitBoundaryRules
-0x1001291fe ZoneDeveloperShutdown
-0x1001294de ZoneDeveloperClearLotMap
-0x10012b0aa ZoneDeveloperClearHighlight
-0x10012bdac ZoneDeveloperDeferOccupantOperations
-0x10012c130 ZoneDeveloperDeleteLots
-0x10012c1d0 ZoneDeveloperGetLotVertexAltitudeAdjustmentRange
-0x100130274 ZoneDeveloperExistsConnectionOfType
-0x100130354 ZoneDeveloperDoesCellHaveLot
-0x1001303ea ZoneDeveloperExamineCell
-0x100130604 ZoneDeveloperGetNetwork
-0x1001307bc ZoneDeveloperCanCreateLotOnCell
-0x1001308ea ZoneDeveloperIsCellWater
-0x100130e66 ZoneDeveloperGetBoundaryLotTexture
-0x100130f02 ZoneDeveloperExistsNetworkOfType
-0x100131040 ZoneDeveloperGetRandomLot
-0x1001310b4 ZoneDeveloperGetOccupantLot
-0x100131192 ZoneDeveloperGetLotAtCell
-0x10013122a ZoneDeveloperGetLotAtPosition
-0x1001312a8 ZoneDeveloperGetLotsInCellRect
-0x100131514 ZoneDeveloperGetLotsSurroundingRect
-0x100131800 ZoneDeveloperGetLotsSurroundingLotObject
-0x100131896 ZoneDeveloperGetLotsSurroundingLotCell
-0x100131946 ZoneDeveloperGetVerticesAtEdgeOfLot
-0x1001319a6 ZoneDeveloperGetNeighborCellsAtEdgeOfLot
-0x100131a5e ZoneDeveloperGetLotSavvyTerrainVertexAltitude
-0x100131c10 ZoneDeveloperGetLotSavvyTerrainAltitude
-0x100131d20 ZoneDeveloperGetLotSavvyCellAltitude
-0x100131de6 ZoneDeveloperCanCreateLot
-0x100132f32 ZoneDeveloperWrite
-0x100132ffc ZoneDeveloperRead
-0x100133440 ZoneDeveloperSetOptions
-0x10013345a ZoneDeveloperGetGZCLSID
-0x100133478 ZoneDeveloperGetLotCount
-0x100133484 ZoneDeveloperGetMaximumCapacityGrid
+0x10012feac ZoneDeveloperUpdateZoneType
+0x10012d184 ZoneDeveloperCreateParcellizableRegion
+0x10012d3ac ZoneDeveloperCompressRegion
+0x10012fa04 ZoneDeveloperExtractConnectedCells
+0x10012ecc2 ZoneDeveloperSubdivideTheZone
+0x10012d606 ZoneDeveloperDetermineLotSize
+0x10012dec2 ZoneDeveloperExtendAsStreets
+0x10012e0e8 ZoneDeveloperLayInJogStreets
+0x10012c61c ZoneDeveloperDrawStreet
+0x10012cbcc ZoneDeveloperCreateLotToFaceRoad
+0x10012c320 ZoneDeveloperSimpleParcellize
+0x10012ee06 ZoneDeveloperParcellize
+0x10012ce50 ZoneDeveloperExamineBoundaries
+0x10012b160 ZoneDeveloperOnZone
+0x10012b976 ZoneDeveloperOnDezone
+0x100129956 ZoneDeveloperCreateLotRemnants
+0x10012a040 ZoneDeveloperConnectRoadToAnyAdjacentStreets
+0x10012a534 ZoneDeveloperConnectStreetsAcrossRail
+0x10012abe4 ZoneDeveloperPlopAllLotTypes
+0x100130994 ZoneDeveloperUpdateHighlightTextures
+0x100132b32 ZoneDeveloperCreateLotIfPossible
+0x10012b046 ZoneDeveloperDoParcellization
+0x100130914 ZoneDeveloperHighlightParcels
+0x10013090a ZoneDeveloperLotFilterDestruct
+0x100133bb6 ZoneDeveloperLotFilterDestructComplete
+0x100133be4 ZoneDeveloperLotFilterIncludesConfiguration
 
 PARTIAL:
-0x10012959a ZoneDeveloperDoMessage - dispatch, the 0xa6b79602 highlight-scale word, the 0x26d31ec1 service attach/reload walk and the 0x99ef1142 -> DeleteLot path are recovered, but the branch ends before CreateLotRemnants (0x100129956), ConnectRoadToAnyAdjacentStreets (0x10012a040) and ConnectStreetsAcrossRail (0x10012a534), and the two plop cheat commands are not executed (0x10012abe4, 0x10012ad80); the occupant cell is bounds-checked (the original indexes the map unchecked)
-0x10012b046 ZoneDeveloperDoParcellization - the zone-validity dispatch and currentZoneType bookkeeping are recovered; both branches call the unrecovered OnZone/OnDezone parcellization pipeline
-0x10012be32 ZoneDeveloperDeleteLot - the lot map, footprint clears, lot-developer/building-unit/occupant-manager calls, lot references and the deferred pending-deletion map are recovered; cSC4SafeList<cISC4Lot*>::Remove (0x10012c0a6) is not recovered, so the live-iterator list at +0xc8 and the safe-list notifications are not updated
-0x100130914 ZoneDeveloperHighlightParcels - the flag/currentZoneType/origin bookkeeping and the zone-validity test are recovered; OnZone and UpdateHighlightTextures are unrecovered
-0x100132b32 ZoneDeveloperCreateLotIfPossible - the CanCreateLot==8 gate, the deferred pending-lot map (+0x178) and the CreateLot path are recovered; facing == -1 calls CreateLotToFaceRoad (0x10012cbcc), which is not recovered
-0x100132cde ZoneDeveloperCreateLot - the two references, cISC4Lot ctor/Init/SetState(1,0,0), footprint fill and building-development notification are recovered; the live-iterator branch of cSC4SafeListIterator<cISC4Lot*>::AddAfter (0x100133cc0's traffic-sim iterator) is approximated with the internal lot list because that class is not recovered
-0x100133466 ZoneDeveloperGetSafeLotIterator - returns null: cSC4SafeList<cISC4Lot*>::GetIterator (0x100133cc0) and the cSC4SafeListIterator class are not recovered
+0x10012959a ZoneDeveloperDoMessage - every branch now executes except the PlopAllBuildings cheat, whose PlopAllBuildingTypes is not recovered
+0x10012ad80 ZoneDeveloperPlopAllBuildingTypes - needs the spiral position walk (cSpiralIterator is recovered in SpiralIterator.h but the zone developer test line does not link SpiralIterator.cpp) and the building-type catalogue
+0x100132cde ZoneDeveloperCreateLot - unchanged, the live cSC4SafeList iterator is not recovered
 
 SKIPPED:
-0x100129956 CreateLotRemnants - 0x100129956 creates the remnant lots of a deleted footprint; needs the lot creation/parcellization helpers and the building development path
-0x10012a040 ConnectRoadToAnyAdjacentStreets - 0x10012a040 rewrites the road network around the removed occupant through the network manager/occupant manager
-0x10012a534 ConnectStreetsAcrossRail - 0x10012a534 rewrites the street network across a rail crossing through the network manager
-0x10012abe4 PlopAllLotTypes - 0x10012abe4 iterates every lot type and plops exemplars through the lot configuration manager and occupant manager
-0x10012ad80 PlopAllBuildingTypes - 0x10012ad80 iterates every building type and plops exemplars through the lot configuration manager and occupant manager
-0x10012b160 OnZone - 0x10012b160 (1987 bytes) is the parcel/lot/street pipeline (CompressRegion, DetermineLotSize, SubdivideTheZone, Parcellize, ExtendAsStreets) over the unrecovered cRZCellMap and SC4CellRegion helpers
-0x10012b976 OnDezone - 0x10012b976 (990 bytes) builds the deletion region, drives the demolition utility (SL::spDemolition) and CreateLotRemnants
-0x10012c320 SimpleParcellize - 0x10012c320 subdivides one region into lots; part of the unrecovered parcellization pipeline
-0x10012c61c DrawStreet - 0x10012c61c draws a street through the network manager, the terrain and the zone grid
-0x10012cbcc CreateLotToFaceRoad - 0x10012cbcc picks the facing of a lot from the adjacent road and calls CreateLotIfPossible
-0x10012ce50 ExamineBoundaries - 0x10012ce50 scans the four region edges with ExamineCell over cRZCellMap
-0x10012d184 CreateParcellizableRegion - 0x10012d184 builds the region mask of unzoned/undeveloped cells with cRZCellMap
-0x10012d3ac CompressRegion - 0x10012d3ac shrinks a cell region around its lot mask
-0x10012d606 DetermineLotSize - 0x10012d606 chooses the lot footprint from the boundary conditions and the parcellization tunables
-0x10012dec2 ExtendAsStreets - 0x10012dec2 extends a rectangle as a street through the network manager
-0x10012e0e8 LayInJogStreets - 0x10012e0e8 lays the jog streets of a parcel through the network manager
-0x10012ecc2 SubdivideTheZone - 0x10012ecc2 splits a zone into parcels
-0x10012ee06 Parcellize - 0x10012ee06 (3138 bytes) is the main parcel/lot/street loop; needs the unrecovered region helpers, DrawStreet and the network manager
-0x10012fa04 ExtractConnectedCells - 0x10012fa04 walks the cRZCellMap connectivity of a region
-0x10012feac ZoneDeveloperUpdateZoneType - 0x10012feac updates the zone grid from a region through the zone manager
-0x100130994 UpdateHighlightTextures - 0x100130994 creates/updates the highlight texture instances through the 3D renderer (cISC4TerrainView/cISC43D)
-0x100131ecc CanCreatePloppedLot - 0x100131ecc (1226 bytes) needs DecodeNetworkConnectionObject (0x100132a04), the lot configuration object list and the network occupant edge flags
-0x100132396 CheckLotTerrainConstraints - 0x100132396 (1597 bytes) walks the lot configuration objects (type 5/6 entries), the city world-to-cell conversion and the surface water query
+0x100133466 ZoneDeveloperGetSafeLotIterator - cSC4SafeList is not recovered
+0x100132396 ZoneDeveloperCheckLotTerrainConstraints - still needs the lot configuration object list, the surface water query and the city world-to-cell conversion (not part of this pass)
