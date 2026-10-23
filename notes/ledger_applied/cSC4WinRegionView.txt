@@ -1,0 +1,44 @@
+SOURCE src/sc4/WinRegionView.cpp|h
+EVIDENCE test scripts/tests/sc4_winregionview_test.cpp - fake IRegionViewHost (tile canvas, tutorial registry, region city list, script-window factory, effects manager, signpost tuning holder, cursor hit test), fake window manager / framework / language formatter / cSLBuffer host and the real cGZBuffer / cRZString / cSCPropertyHolder drive the constructor option bytes and the two-vtable QueryInterface, Init (canvas 640x480 at 256x256, renderer layer, backdrop key 0x856ddbac/0x6a1eed2c/0x4a2805ff, the two icon keys 0xebabb1b0/0xebabb1b1 and the second-call early out), SetArea's in-place canvas re-init, the world-space InvalidateRegion rectangle (floor(mapX), floor(mapY)-height), the scrolled GetRegionScreenRect vs the world GetRegionPlayfieldRect, the packed-span lower_bound hit test (odd index inside, last city first), SelectCity / ClearSelection invalidation, SetScrollPos (signpost x centred, y minus the whole height, canvas ScrollTo, no-op when unchanged), the option setters' InvalidateAllRegions, UpdateCity's airport / seaport icon positions (68,173 from the 2^23 bias bit trick) and effects (transforms, Start, Stop on ClearCities), UpdateSignpost (script key 0x96a006b0/0xca539343 or type/sub, window id 0x0a551c53, focus save / restore, tutorial-ghost key, type-0 skip), InitSignpost (city / mayor captions, the tutorial mayor-name filter, difficulty flags, the negative-budget window swap, formatted population / jobs, the aura bar value rating/200+0.5 and its colour-type-9 image, the tuning-holder default budget 7777), the partial RenderTile backdrop blit at a negative tile offset and its black fill, is_point_transparent's WindowToScreenCoordinates + host hit test, and the Shutdown / destructor release path
+0x10075afc6 WinRegionViewConstruct
+0x10075b066 WinRegionViewDestructor
+0x10075b154 WinRegionViewDestructorAlias
+0x10075b15e WinRegionViewDeletingDestructor
+0x10075b18c WinRegionViewQueryInterface
+0x10075b196 WinRegionViewQueryInterfaceThunk
+0x10075b1a8 WinRegionViewAddRef
+0x10075b1b2 WinRegionViewAddRefThunk
+0x10075b1c4 WinRegionViewRelease
+0x10075b1ce WinRegionViewReleaseThunk
+0x10075b1e0 WinRegionViewInit
+0x10075b4f0 WinRegionViewShutdown
+0x10075b5c6 WinRegionViewClearCities
+0x10075b652 WinRegionViewSetArea
+0x10075b6b0 WinRegionViewInvalidateRegion
+0x10075b7a6 WinRegionViewUpdateSignpost
+0x10075bb02 WinRegionViewInvalidateAllRegions
+0x10075bb5e WinRegionViewPaint
+0x10075bb66 WinRegionViewRenderTile
+0x10075d4fc WinRegionViewFilterTutorialMayorName
+0x10075d57a WinRegionViewRenderTileThunk
+0x10075d58c WinRegionViewAddCity
+0x10075d5e6 WinRegionViewUpdateCity
+0x10075d9dc WinRegionViewSetScrollPos
+0x10075dae2 WinRegionViewGetRegionScreenRect
+0x10075db8a WinRegionViewGetCityAtPoint
+0x10075dce8 WinRegionViewClearSelection
+0x10075dd0a WinRegionViewSetSignpostMode
+0x10075dd1e WinRegionViewEnableLabels
+0x10075dd36 WinRegionViewEnableGrid
+0x10075dd48 WinRegionViewEnableTutorialArrow
+0x10075dd56 WinRegionViewSetMapMode
+0x10075dd66 WinRegionViewSelectCity
+0x10075ddb2 WinRegionViewGetSelectedCity
+0x10075ddc0 WinRegionViewGetRegionPlayfieldRect
+0x10075de92 WinRegionViewSetSignpostType
+0x10075dee0 WinRegionViewInitSignpost
+0x10075e634 WinRegionViewSetupScript
+0x10075e6ac WinRegionViewIsPointTransparent
+PARTIAL:
+0x10075bb66 only the first 0x8a bytes are recovered: the backdrop RZDrawBltTiled at -(scroll + tile) and the black Fill when the view has no backdrop. The remaining 5.4 KB (0x10075bbf0..0x10075d4fc) rebuilds each city's +0x58 transparent-run list from the mask (growing the semi-transparent edge pixels), blits the fully opaque runs and alpha-blends the rest, then creates the two city-name / mayor-name text windows through cIGZWinCtrlMgr and draws the airport / seaport icon effects and the selected-city grid. cIGZWinCtrlMgr and the antialias path are not recovered, so RenderTile stays partial; the test verifies only the backdrop / fill part.
+SKIPPED:

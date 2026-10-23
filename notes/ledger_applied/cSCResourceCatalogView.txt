@@ -1,0 +1,59 @@
+SOURCE src/sc4/ResourceCatalogView.cpp|h
+EVIDENCE test scripts/tests/sc4_resourcecatalogview_test.cpp - covers the interface and reference counting, the Init layout (flat-rect backdrop, four buttons, labels, type combo, instance grid geometry and colours), the Ingred.ini section parsed into type/group rows, the type and group filters, updateKeyList (names, the 0x%08X fallback, sorting, selection), setViewKey, GetSelectedKey, RefreshKeyList, the combo and button commands, DoMessage, GZPaint, dragging, Shutdown and a second Init; registry scripts/tests/registry/sc4_resourcecatalogview.txt
+0x100327af0 ResourceCatalogViewConstruct
+0x100327b9c ResourceCatalogViewCompleteConstruct
+0x100327c30 ResourceCatalogViewDestructor
+0x100327cc6 ResourceCatalogViewCompleteDestructor
+0x100327cd0 ResourceCatalogViewDestructorThunk
+0x100327cde ResourceCatalogViewDeletingDestructor
+0x100327d0c ResourceCatalogViewDeletingDestructorThunk
+0x100327d1a ResourceCatalogViewQueryInterface
+0x100327d3c ResourceCatalogViewQueryInterfaceThunk
+0x100327d62 ResourceCatalogViewAddRef
+0x100327d70 ResourceCatalogViewAddRefThunk
+0x100327d7a ResourceCatalogViewRelease
+0x100327d88 ResourceCatalogViewReleaseThunk
+0x100327d92 ResourceCatalogViewInit
+0x100328bce ResourceCatalogViewCreateButton
+0x100328d66 ResourceCatalogViewCreateLabel
+0x100328e86 ResourceCatalogViewRegisterTypes
+0x1003290b6 ResourceCatalogViewUpdateKeyList
+0x100329412 ResourceCatalogViewInitThunk
+0x100329424 ResourceCatalogViewRegisterTypesFromIni
+0x100329a1e ResourceCatalogViewShutdown
+0x100329aec ResourceCatalogViewShutdownThunk
+0x100329afa ResourceCatalogViewDoMessage
+0x100329be4 ResourceCatalogViewSetViewKey
+0x100329cba ResourceCatalogViewDoMessageThunk
+0x100329cc8 ResourceCatalogViewRefreshKeyList
+0x100329d04 ResourceCatalogViewKeyDown
+0x100329d2e ResourceCatalogViewKeyDownThunk
+0x100329d54 ResourceCatalogViewKeyUp
+0x100329d7e ResourceCatalogViewKeyUpThunk
+0x100329da4 ResourceCatalogViewMouseDownL
+0x100329e1e ResourceCatalogViewMouseDownLThunk
+0x100329e30 ResourceCatalogViewMouseMove
+0x100329ea2 ResourceCatalogViewMouseMoveThunk
+0x100329eb4 ResourceCatalogViewMouseUpL
+0x100329ec6 ResourceCatalogViewMouseUpLThunk
+0x100329ed4 ResourceCatalogViewGetSelectedKey
+0x100329f4a ResourceCatalogViewPaint
+0x100329fa4 ResourceCatalogViewPaintThunk
+0x100329fb2 ResourceCatalogViewOnCommand
+0x10032a0c0 ResourceCatalogViewDoButtonPress
+0x10032a138 ResourceCatalogViewOnCommandThunk
+0x10032a146 ResourceCatalogViewKillSelf
+0x10032a1b8 ResourceCatalogViewAddResource
+0x10032a6c8 ResourceCatalogViewSetStandalone
+0x10032a6d6 ResourceCatalogViewSetReadOnly
+0x10032a6f0 ResourceCatalogViewSetFilterForGroup
+0x10032a864 ResourceCatalogViewTypeNameAssocCopyCtor
+0x10052bff0 ResourceCatalogViewSetFilterForType
+PARTIAL:
+note the 33 catalogue functions above are all written; no row is marked partial
+SKIPPED:
+0x10032a700 tTypeNameAssoc vector_base destructor, a libc++ std::vector instantiation the standard library provides
+0x10032a792 tTypeNameAssoc push_back_slow_path, a libc++ std::vector instantiation the standard library provides
+0x10032a906 tTypeNameAssoc swap_out_circular_buffer, a libc++ std::vector instantiation the standard library provides
+0x10032a988 tTypeNameAssoc split_buffer constructor, a libc++ std::vector instantiation the standard library provides
+0x10032aa3e tTypeNameAssoc split_buffer destructor, a libc++ std::vector instantiation the standard library provides
