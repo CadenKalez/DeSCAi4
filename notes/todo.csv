@@ -1,7 +1,7 @@
 id,class,task,blocked_by,status,where
 CLASS-(anonymous namespace),(anonymous namespace),"recover 287 remaining function(s) (287 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 AUDIT-1,(audit),1378 ledger rows (314 classes) still name no verification. Repair = point each at a registered test or oracle (scripts/ledger_audit.py lists them by class); do not edit evidence to claim a test that does not cover them,,done,notes/ledger_audit.md
-CLASS-(free),(free),"recover 386 remaining function(s) (277 not started, 109 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-(free),(free),"recover 385 remaining function(s) (276 not started, 109 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-(free),(free),finish 188 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-AspyrDXTTools,AspyrDXTTools,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-CQTPlayer,CQTPlayer,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -574,7 +574,7 @@ CLASS-cSC4MyStreetSim,cSC4MyStreetSim,"recover 23 remaining function(s) (23 not 
 CLASS-cSC4MyStreetSimInputControl,cSC4MyStreetSimInputControl,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4Nation,cSC4Nation,"recover 29 remaining function(s) (29 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4NeighborConnection,cSC4NeighborConnection,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
-CLASS-cSC4NeighborsSimulator,cSC4NeighborsSimulator,"recover 55 remaining function(s) (55 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4NeighborsSimulator,cSC4NeighborsSimulator,"recover 55 remaining function(s) (55 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4NetworkBridgeOccupant,cSC4NetworkBridgeOccupant,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4NetworkBridgeTypeInfo,cSC4NetworkBridgeTypeInfo,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4NetworkCellInfo,cSC4NetworkCellInfo,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -703,7 +703,7 @@ SIGNPOST-1,cSC4SignpostOccupant,"RebuildModel's two pick boxes (+0x178/+0x190): 
 CLASS-cSC4SimFireCrew,cSC4SimFireCrew,"recover 26 remaining function(s) (26 not started, 0 partial/pending); bases still unfinished: cSC4Pedestrian",CLASS-cSC4Pedestrian,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4SingletonT<cSC4DisasterManagerFire>,cSC4SingletonT<cSC4DisasterManagerFire>,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4SituationUIImageWinProc,cSC4SituationUIImageWinProc,"recover 8 remaining function(s) (8 not started, 0 partial/pending); bases still unfinished: cSC4AdvisorUIImageWinProc",CLASS-cSC4AdvisorUIImageWinProc,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4SlotArray<cSTEOverlayManager,cSC4SlotArray<cSTEOverlayManager,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4SlotArray<cSTEOverlayManager,cSC4SlotArray<cSTEOverlayManager,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4StaticFloraData,cSC4StaticFloraData,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4StoplightPropOccupantFilter,cSC4StoplightPropOccupantFilter,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4StringSpecificationOccupantFilter,cSC4StringSpecificationOccupantFilter,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -882,7 +882,10 @@ CLASS-cSTEChangeTerrainUI,cSTEChangeTerrainUI,"recover 6 remaining function(s) (
 CLASS-cSTEEdgeReconcileInformDamage,cSTEEdgeReconcileInformDamage,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSTEEdgeReconcileInformMismatch,cSTEEdgeReconcileInformMismatch,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSTEEdgeReconcileInformNoMismatch,cSTEEdgeReconcileInformNoMismatch,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSTEOverlayManager,cSTEOverlayManager,"recover 54 remaining function(s) (54 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2, cSC4ViewObject3D","CLASS-cIGZMessageTarget2,CLASS-cSC4ViewObject3D",open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSTEOverlayManager,cSTEOverlayManager,"recover 54 remaining function(s) (54 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2, cSC4ViewObject3D","CLASS-cIGZMessageTarget2,CLASS-cSC4ViewObject3D",done,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSTEOverlayManager,cSTEOverlayManager,finish 5 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+OVERLAY-1,cSTEOverlayManager,Hook SC4DrawContext -> IOverlayDrawContext (the draw context has no ITerrainDrawContext adapter yet),,open,src/sc4/OverlayManager.cpp
+OVERLAY-2,cSTEOverlayManager,Hook cSTETerrainView3D -> IOverlayHost (GetCullingInfo 0x10074e162 + the six mesh-subset draws) and recover the shadow projector behind spRenderer+0x48,,open,src/sc4/OverlayManager.cpp
 CLASS-cSTESelectedTerrainArea,cSTESelectedTerrainArea,"recover 18 remaining function(s) (18 not started, 0 partial/pending); bases still unfinished: cSC4ViewObject3D",CLASS-cSC4ViewObject3D,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSTESurfaceWater,cSTESurfaceWater,"recover 35 remaining function(s) (35 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSTETerrain,cSTETerrain,"recover 80 remaining function(s) (0 not started, 80 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv

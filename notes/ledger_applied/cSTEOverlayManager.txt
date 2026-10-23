@@ -1,0 +1,87 @@
+SOURCE src/sc4/OverlayManager.cpp|h
+EVIDENCE test scripts/tests/sc4_overlaymanager_test.cpp - the fake IOverlayHost / IOverlayDrawContext / texture factory / shadow layer drive the record layouts and strides (cOverlay 0xc8, cDecal 0x30, cRingDecal 0x24), the cSC4SlotArray free-list pool (append, tail-chain reset, LIFO reuse, Clear), the COM quirks (QueryInterface AddRefs, Release deletes at 0, unknown iid fails), the Init extents / five PackRenderState words (0x020a81b5, 0x020281b5, 0x020401b5, 0x020a8235, 0x010a90bf) / three combiner records / message registration / shadow-texture lookup / spatial-index sizing, the render-properties message refresh, the decal family (factory by instance and by key, cached-string size, the 0.5 aspect and integer rect 0,1,2,3, the texture transform u = x/16-0.5, v = z*0.125-3.5, the 1e-4 MoveDecal threshold, DecalInfo roundtrip, the rotated-AABB flag and the 0.05 alpha redisplay quirk), the ring decal (eight 0x11 overlays, the eight clipped tiles, setter forwarding, the free-list chain on removal), the shadow decals (quality 0 refusal, the 0x7ab50e44 key + factory group, the V mirror m[r][1] = m[r][3]-m[r][1], the swizzled shadow matrix), AddHeightMap (rect 0,0,cellsX,cellsZ and m[5] = 2/cellsX), AddShadow (approximate rect with the light-direction padding, the exact quality-5 path, the UV transform), the spatial index (duplicate insert, per-frame de-duplication, culling-window miss, SDSRemove), UpdateStaticOverlayRect clipping, the whole draw pass (inverse-view transform, the 0x91 / 0x11 flag masks, the decal / shadow render states, SetTexTransform4 for both shadow stages, the water-pass and mixed-mesh choice, the vertex-buffer path, the dynamic-manager smooth-flag skip) and OverlayCofactors' adjugate identity M*adj(M) = det(M)*I
+0x1007273c6 OverlayManagerConstruct
+0x100727554 OverlayManagerConstructC2
+0x10072755e OverlayManagerDestructBody
+0x100727722 OverlayManagerDestructC2
+0x100727748 OverlayManagerDestructAndDelete
+0x100727a22 OverlayManagerInitDrawStates
+0x100727bfe OverlayManagerShutdown
+0x100727d2c OverlayManagerQueryInterface
+0x100727dc0 OverlayManagerAddRef
+0x100727df4 OverlayManagerRelease
+0x100727e28 OverlayManagerDoMessage
+0x100727ed0 OverlayManagerUpdate
+0x100728292 OverlayManagerPick
+0x1007282a2 OverlayManagerAddDecalByKey
+0x10072832c OverlayManagerAddDecalByInstance
+0x1007283b6 OverlayManagerAddDecalByTexture
+0x1007283ce OverlayManagerAddDecalEx
+0x1007285a6 OverlayManagerAddDecalByText
+0x100728dda OverlayManagerAddOverlayToIndex
+0x100728f32 OverlayManagerAddRingDecal
+0x10072924e OverlayManagerAddShadowDecalByInstance
+0x1007292c6 OverlayManagerAddShadowDecalByKey
+0x1007295c8 OverlayManagerAddHeightMap
+0x100729668 OverlayManagerAddOverlayByInstance
+0x1007296f0 OverlayManagerCalcShadowTerrainRect
+0x100729bd6 OverlayManagerAddOverlayTexture
+0x100729d16 OverlayManagerMoveDecal
+0x100729dca OverlayManagerUpdateDecalInfo
+0x100729e30 OverlayManagerDecalInfo
+0x100729e80 OverlayManagerRemoveOverlay
+0x10072a034 OverlayManagerSDSRemove
+0x10072a0cc OverlayManagerRedisplayStaticOverlay
+0x10072a136 OverlayManagerSetOverlayEnabled
+0x10072a1f6 OverlayManagerSetOverlayAlpha
+0x10072a2f2 OverlayManagerSetOverlayColor
+0x10072a3b4 OverlayManagerSetOverlayDrawMode
+0x10072a45c OverlayManagerSetOverlayFlags
+0x10072a4f2 OverlayManagerSetHeightMapParams
+0x10072a62c OverlayManagerOverlayIsEnabled
+0x10072a688 OverlayManagerOverlayAlpha
+0x10072a6e8 OverlayManagerOverlayColor
+0x10072a76a OverlayManagerOverlayDrawMode
+0x10072a7c4 OverlayManagerOverlayFlags
+0x10072a824 OverlayManagerGetStatsString
+0x10072a852 OverlayManagerSDSAdd
+0x10072a90e OverlayManagerSDSFindOverlaysToDraw
+0x10072aa56 OverlayManagerDrawDecals
+0x10072acae OverlayManagerDrawShadowsRough
+0x10072aee0 OverlayManagerDrawShadows
+0x10072b342 OverlayManagerDrawRect
+0x10072b3ee OverlayManagerDrawMixedWaterAndLandRect
+0x10072c246 OverlayManagerUpdateStaticOverlayRect
+0x10072c5fc OverlayCofactors
+0x100727300 OverlayRecordConstruct
+0x10072ccc8 OverlayRecordAssign
+0x10072cf78 OverlayRecordCopyConstruct
+0x1007285fc SlotArrayOverlayAddSlot
+0x100728e24 SlotArrayDecalAddSlot
+0x100729170 SlotArrayRingDecalAddSlot
+0x100727cac SlotArrayOverlayClear
+
+PARTIAL:
+0x100727792 OverlayManagerInit - the texture-binding factory, terrain extents, shadow texture, draw states, spatial index, message registration and render-properties cache are ported in the original order, but the cSTETerrainView3D pointer is stored without taking a reference (every call that reached the view object goes through IOverlayHost because cSTETerrainView3D's draw entries need an ITerrainDrawContext that has no production adapter yet) and SL::spTerrain / SL::spMS2 / SL::spRenderProperties are host calls
+0x100727ede OverlayManagerDrawOverlays - the invert-model-view, the spatial-index / whole-array selection, the decal and shadow passes, ClearTexTransform, the depth-offset restore and the vertex-buffer extension release are ported, but the original composes cofactors() @0x10072c5fc with the homogeneous 1/w divide and this port uses a direct affine inverse, so the texture transform is mathematically equivalent rather than bit-identical, and the draw context is the IOverlayDrawContext seam (the original takes SC4DrawContext*)
+0x1007286ac OverlayManagerUpdateDecal - the integer rect rounding (the 12582912.0f / 0x4b400000 magic-bit trick with the exact-integer fix-up), the U/V scales and translations, the flag-2 update, the ring forwarding and the visible-rect clip are ported, but the Ghidra listing drops one operand of the operator* that applies the turn rotation, so the port uses m * rot, and the rotated bounds (|cos| / |cos|+|sin| half extents) could not be checked against the binary
+0x10072b442 OverlayManagerUpdateRingDecalOverlays - the annulus parameters (outer radius, 0.9 inner radius, the 10 % / 20 % z bands) and the per-row circle intersections are ported, but the sixteen SIMD blocks' eight slot-to-rectangle assignments and the trailing min/max fix-ups do not resolve with certainty, so the port uses a documented eight-tile decomposition
+0x100729916 OverlayManagerAddShadow - the quality gate, the ProjectShadow / CalcShadowRect calls, the AddOverlay with bitset 8 and the UV-bounds transform are ported, but the shadow-projector object behind SL::spRenderer +0x48 is unrecovered (IOverlayShadowService), and how the projected matrix composes with the UV transform is asserted only through the seam's identity output
+
+SKIPPED:
+0x10072772c OverlayManagerDestructThunkViewObject - compiler-emitted vtable-adjustor thunk (this-8) for the cSC4ViewObject3D sub-object; the port has no adjusted sub-object
+0x10072773a OverlayManagerDestructThunkUnknown - compiler-emitted vtable-adjustor thunk (this-0x10); the port has no adjusted sub-object
+0x100727776 OverlayManagerDestructAndDeleteThunkViewObject - compiler-emitted deleting thunk (this-8); the port has no adjusted sub-object
+0x100727784 OverlayManagerDestructAndDeleteThunkUnknown - compiler-emitted deleting thunk (this-0x10); the port has no adjusted sub-object
+0x100727d4e OverlayManagerQueryInterfaceThunk1 - compiler-emitted vtable-adjustor thunk (this-8); the port has no adjusted sub-object
+0x100727d74 OverlayManagerQueryInterfaceThunk2 - compiler-emitted vtable-adjustor thunk (this-0x10); the port has no adjusted sub-object
+0x100727d9a OverlayManagerQueryInterfaceThunk3 - compiler-emitted vtable-adjustor thunk (this-0x20); the port has no adjusted sub-object
+0x100727dce OverlayManagerAddRefThunk1 - compiler-emitted vtable-adjustor thunk (this-8); the port has no adjusted sub-object
+0x100727ddc OverlayManagerAddRefThunk2 - compiler-emitted vtable-adjustor thunk (this-0x10); the port has no adjusted sub-object
+0x100727de6 OverlayManagerAddRefThunk3 - compiler-emitted vtable-adjustor thunk (this-0x20); the port has no adjusted sub-object
+0x100727e02 OverlayManagerReleaseThunk1 - compiler-emitted vtable-adjustor thunk (this-8); the port has no adjusted sub-object
+0x100727e10 OverlayManagerReleaseThunk2 - compiler-emitted vtable-adjustor thunk (this-0x10); the port has no adjusted sub-object
+0x100727e1a OverlayManagerReleaseThunk3 - compiler-emitted vtable-adjustor thunk (this-0x20); the port has no adjusted sub-object
+0x100727e7c OverlayManagerDoMessageThunk - compiler-emitted vtable-adjustor thunk (this-0x10); the port has no adjusted sub-object
+0x100728280 OverlayManagerUpdateThunk - compiler-emitted vtable-adjustor thunk (this-8); the port has no adjusted sub-object
+0x10072829a OverlayManagerPickThunk - compiler-emitted vtable-adjustor thunk (this-8); the port has no adjusted sub-object

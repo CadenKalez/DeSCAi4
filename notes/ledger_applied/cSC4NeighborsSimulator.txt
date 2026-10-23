@@ -1,0 +1,64 @@
+SOURCE src/sc4/NeighborsSimulator.cpp|h
+EVIDENCE test scripts/tests/sc4_neighborssimulator_test.cpp - fake engine services and regional cities drive the constructor/COM defaults, Init and Shutdown (exemplar response curve, three simulator-agent intervals, seven message subscriptions, city/message-server references, connection repair, adjacent-city reloads, local-deal cloning and re-dating), the connection bookkeeping, the four cell conversions (incl. the no-range-check quirk), the version-2 Write/Read framing, DoMessage (established, terrain change with occupant re-placement, day/idle flush, month pass, reset, occupant-removed, re-entrancy guard), the deal pass (propose/activate, cancel, expiry, renewal, frozen removal, lock timing), the deal queries, GetDealCost/GetDealMaxAmount and UpdateCommodityStats (budget/income, power/water/garbage statistics, history series)
+
+0x10006e61e NeighborsSimulatorConstruct
+0x10006e71c NeighborsSimulatorDestructBody
+0x10006e7c4 NeighborsSimulatorDestruct
+0x10006e7ce NeighborsSimulatorDestructAndDelete
+0x10006e7fc NeighborsSimulatorQueryInterface
+0x10006e862 NeighborsSimulatorAddRef
+0x10006e88c NeighborsSimulatorRelease
+0x10006e944 NeighborsSimulatorInit
+0x10006f258 NeighborsSimulatorUpdateDealsInRegionalCities
+0x10006f388 NeighborsSimulatorShutdown
+0x10006f4ac NeighborsSimulatorGetTuningExemplar
+0x10006f4b6 NeighborsSimulatorWrite
+0x10006f528 NeighborsSimulatorRead
+0x10006f6b4 NeighborsSimulatorDoMessage
+0x10006f8fe NeighborsSimulatorDoTerrainChanged
+0x10006fb6a NeighborsSimulatorSimulateDeals
+0x100070670 NeighborsSimulatorIsValidConnectionCell
+0x1000706fa NeighborsSimulatorConvertConnectionCellToNeighboringRegionCell
+0x1000707f4 NeighborsSimulatorConvertConnectionCellToNeighborCell
+0x100070a70 NeighborsSimulatorConvertNeighborCellToConnectionCell
+0x100070ca0 NeighborsSimulatorFindConnection
+0x100070d18 NeighborsSimulatorFindUnvisitedConnection
+0x100070d88 NeighborsSimulatorHasConnection
+0x100070d9a NeighborsSimulatorFindConnectionOnOtherSideByCell
+0x100070dfe NeighborsSimulatorFindConnectionOnOtherSideOfConnection
+0x100070e58 NeighborsSimulatorRequestCreateConnection
+0x100071026 NeighborsSimulatorCreateConnection
+0x100071514 NeighborsSimulatorDeleteConnectionAtCell
+0x100071546 NeighborsSimulatorDeleteConnectionRecord
+0x100071842 NeighborsSimulatorDeleteOccupantConnection
+0x100071b24 NeighborsSimulatorDeleteAllConnectionsOfType
+0x100071d38 NeighborsSimulatorFindCityOnOtherSideOfConnection
+0x100071d94 NeighborsSimulatorGetAllConnections
+0x100071f3c NeighborsSimulatorGetConnectionsOfType
+0x100071fe0 NeighborsSimulatorGetConnectionsOfTypeToCity
+0x100072096 NeighborsSimulatorGetConnectionsToCity
+0x100072144 NeighborsSimulatorGetAdjacentCities
+0x1000726ce NeighborsSimulatorGetAllConnectedCities
+0x100072980 NeighborsSimulatorGetConnectedCities
+0x100072ade NeighborsSimulatorFindConnectionSuitableForDeal
+0x100072d0e NeighborsSimulatorProposeDeal
+0x100072e2e NeighborsSimulatorCreateDealProposition
+0x100073090 NeighborsSimulatorProposeDeals
+0x100073540 NeighborsSimulatorAddDeal
+0x1000735d6 NeighborsSimulatorSetUIDisableFlag
+0x1000735e4 NeighborsSimulatorFindDealsAll
+0x100073606 NeighborsSimulatorFindDealsOfType
+0x1000736aa NeighborsSimulatorFindDealsOfTypeToCity
+0x100073760 NeighborsSimulatorGetTotalMonthlyNeighborDealIncome
+0x1000737e6 NeighborsSimulatorGetTotalMonthlyNeighborDealExpense
+0x10007386c NeighborsSimulatorUpdateCommodityStats
+0x100074040 NeighborsSimulatorGetDealCost
+0x100074434 NeighborsSimulatorGetDealMaxAmount
+0x100075e8c NeighborsSimulatorMarkDealsDirty
+0x100075e9a NeighborsSimulatorGetGZCLSID
+
+PARTIAL:
+(none: every hand-written function above is complete; the only untested path is the nested connection record inside Write/Read, which goes through the recovered SC4WriteGZSerializable/SC4ReadGZSerializable and needs a real DB segment stream instead of the in-memory stream the test uses)
+
+SKIPPED:
+the ten compiler-generated non-virtual thunks (0x10006e846, 0x10006e854, 0x10006e870, 0x10006e87e, 0x10006e8d0, 0x10006e90a, 0x10006f51a, 0x10006f6a4, 0x100070518, 0x100075ea6) are not ledgered, like the thunks of every other recovered class
