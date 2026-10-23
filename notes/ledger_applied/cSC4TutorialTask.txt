@@ -34,15 +34,8 @@ EVIDENCE test scripts/tests/sc4_tutorialtask_test.cpp - fake cISCLua stack (tuto
 0x10011e79e TutorialTaskGetInstructionMsg
 0x10011e7a8 TutorialTaskGetTryAgainMsg
 0x10011e7b2 TutorialTaskGetRegion
-0x10011e7c0 TutorialTaskGetTargetWindow
-0x10011eb7e TutorialTaskExecuteTask
-0x10011ecf2 TutorialTaskJumpToLocation
-0x10011edfe TutorialTaskEndTask
 0x10011eeba TutorialTaskHandleButtons
-0x10011eedc TutorialTaskFindNearestBuilding
-0x10011f04c TutorialTaskTriggerFire
 0x10011f1a4 TutorialTaskShowHintsForUsers
-0x10011f1e2 TutorialTaskDrawDecals
 0x10011f472 TutorialTaskGetWindowOffsetX
 0x10011f47e TutorialTaskGetWindowOffsetY
 0x10011f48a TutorialTaskIsEdgeScrollingAllowed
@@ -53,7 +46,7 @@ EVIDENCE test scripts/tests/sc4_tutorialtask_test.cpp - fake cISCLua stack (tuto
 0x10011f442 TutorialStringDestructAndDelete
 0x10011f468 TutorialStringAssign
 PARTIAL:
-0x10011e7c0 TutorialTaskGetTargetWindow - the view3D root window and the child lookups go through ITutorialTaskHost::View3DMainWindow + the recovered cGZWin (borrowed references); the original walks off a null parent / substitute (0x10011e83e) and the port stops the walk there instead of crashing
+0x10011e7c0 TutorialTaskGetTargetWindow - the view3D root window and the child lookups go through ITutorialTaskHost::View3DMainWindow plus the recovered cGZWin (borrowed references); the original walks off a null parent / substitute (0x10011e83e) and the port stops the walk there instead of crashing
 0x10011eb7e TutorialTaskExecuteTask - HiddenPause and the CSI visibility go through ITutorialTaskHost (cSC4Simulator and cSC4CitySituationManager are not recovered as classes; the original slots are documented in the header)
 0x10011ecf2 TutorialTaskJumpToLocation - city bounds, terrain cell width / altitude and the camera target go through ITutorialTaskHost (SL::spCity / spTerrain / spRenderer vslots 0x318, 0x30, 0x60, 0x80, 0x88)
 0x10011edfe TutorialTaskEndTask - the CSI restore and HiddenResume go through ITutorialTaskHost (cSC4CitySituationManager / cSC4Simulator unrecovered)

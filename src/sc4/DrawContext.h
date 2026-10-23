@@ -250,7 +250,12 @@ public:
     void SetLightingManager(IS4LightingManager* lighting) { lightingManager_ = lighting; }   // +0x68
     void SetCameraControl(sc4::cSC4CameraControl* control) { cameraControl_ = control; } // +0x60
     void SetViewportSize(std::int32_t width, std::int32_t height) { viewportWidth_ = width; viewportHeight_ = height; }
+    // +0x04: the pass the renderer is drawing. cSC4UndergroundOccupant::Draw reads it (0 = trench and walls,
+    // 1 = the piece model); the original sets it from cSC43DRender before each pass.
+    std::int32_t RenderPass() const { return renderPass_; }
+    void SetRenderPass(std::int32_t pass) { renderPass_ = pass; }
     void SetZoomAndRotation(std::int32_t zoom, std::int32_t rotation);                   // +0x10 / +0x14 / +0x18
+    std::int32_t Zoom() const { return zoom_; }                                          // +0x14
     bool IsInitialized() const { return initialized_; }
     std::uint32_t StateWord() const { return stateWord_; }
     const std::vector<cStageInfo>& Stages() const { return stages_; }
@@ -267,7 +272,7 @@ private:
     void UpdateViewTransformFromCamera(); // copy cS3DCamera::ViewXform into viewTransform_ (+0x1e4)
 
     bool initialized_ = false;             // +0x00
-    [[maybe_unused]] std::int32_t reserved04_ = 0;          // +0x04
+    std::int32_t renderPass_ = 0;          // +0x04 (0 trench/walls, 1 pieces; set by the renderer)
     std::int32_t viewportWidth_ = 0;       // +0x08
     std::int32_t viewportHeight_ = 0;      // +0x0c
     float zoomScale_ = 0.0f;               // +0x10

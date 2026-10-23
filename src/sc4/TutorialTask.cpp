@@ -64,9 +64,10 @@ void SetTutorialTaskHost(ITutorialTaskHost* host) { g_host = host; }
 
 // ---- cTutorialString ---------------------------------------------------------------------------------------------
 
+// The original re-dispatches through the vtable slot of the two-argument overload (0x10011e03c) after taking strlen.
 void cTutorialString::FromScriptText(const char* text) {
-    FromScriptText(text, static_cast<unsigned int>(std::strlen(text)));   // the original virtual-dispatches to the
-}                                                                          // two-argument overload (0x10011e03c)
+    FromScriptText(text, static_cast<unsigned int>(std::strlen(text)));
+}
 
 void cTutorialString::FromScriptText(const char* text, unsigned int length) { init(text, static_cast<int>(length)); }
 

@@ -27,9 +27,10 @@
 //  * Init returns true and re-sets the "data is on the stack" flag to 1 even when the whole task was not found, so a
 //    task with whichFunction 0 still reports itself valid (0x10011dcd5).
 //  * GetNumber clears that flag and returns 0 without popping the value it read when the field is not a number
-//    (0x10011e0a8); GetTaskInformation / GetEnableButtonList return early and also leave their table on the stack
-//    (0x10011e2d6, 0x10011e3a4). Init restores the stack with SetTop at the end.
-//  * Init appends to the grid and to the button GUID list instead of clearing them, so a second Init duplicates both.
+//    (0x10011e0fa); GetTaskInformation / GetEnableButtonList return early and also leave their table on the stack
+//    (0x10011e34f, 0x10011e4ec). Init restores the stack with SetTop at the end.
+//  * Init appends to the grid and to the button GUID list instead of clearing them, so a second Init duplicates both
+//    (and a second, smaller region leaves short rows that the original's cell indexing can run past).
 //  * ExecuteTask only jumps the camera when both cameraX and cameraZ are non-zero; when both are zero it computes the
 //    region centre and jumps there only if endX+startX+1 >= 3 (unsigned) and the centre Z is non-zero (0x10011ec16).
 //  * EndTask with whichFunction 0 returns false, stops the decal but leaves the "task is running" flag set, so that

@@ -92,7 +92,7 @@ public:
 INetworkOccupantHost* NetworkOccupantHost();
 void SetNetworkOccupantHost(INetworkOccupantHost* host);
 
-class cSC4NetworkOccupant final : public cSC4Occupant {
+class cSC4NetworkOccupant : public cSC4Occupant {   // not final: cSC4UndergroundOccupant derives from it
 public:
     cSC4NetworkOccupant();
     ~cSC4NetworkOccupant() override;
@@ -115,8 +115,8 @@ public:
     void SetRetrofitFlag(bool on);
     bool HasNetworkFlag(std::uint32_t flags) const { return (networkFlags_ & flags) == flags; }
     bool HasAnyNetworkFlag(std::uint32_t flags) const { return (networkFlags_ & flags) != 0; }
-    void SetNetworkFlag(std::uint32_t flags);
-    void ClearNetworkFlag(std::uint32_t flags);
+    virtual void SetNetworkFlag(std::uint32_t flags);   // cISC4NetworkOccupant vslot 0x50
+    virtual void ClearNetworkFlag(std::uint32_t flags); // cISC4NetworkOccupant vslot 0x58
     std::uint32_t GetNetworkFlag() const { return networkFlags_; }
     bool GetConnectionNodeEdgeTypes(std::uint32_t& a, std::uint32_t& b);
     void SetConnectionNodeEdgeTypes(std::uint32_t a, std::uint32_t b);
@@ -187,9 +187,12 @@ public:
     static std::uint32_t FlagForNetworkType(std::uint32_t networkType);
     static std::uint32_t HasConnectionOnEdge(std::uint32_t config, int edge);
 
-private:
+protected:
     void ReleasePathInfo() {}
     void PostChanged();
+
+    // the +0x170 bounds array (min xyz at +0, max xyz at +0xc); the underground geometry fills it directly
+    float* Bounds() { return bounds_; }
 
     cS3DTransform transform_;                    // +0x9c
     SC4TileCorner corners_[4];                   // +0xd4
