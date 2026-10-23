@@ -62,6 +62,14 @@ public:
     bool GetIsActive() const override { return !((flags_ >> 1) & 1); }
     void SetIsActive(bool active) override { flags_ = active ? (flags_ & 0xfd) : (flags_ | 2); }
     std::list<int>& GetTripDataList() { return tripData_; }   // std::list<cSC4TripData> in the game
+    // The record fields cSC4NeighborsSimulator::CreateConnection writes directly in the original (+0x44..+0x54).
+    void Initialize(std::uint32_t type, int cellX, int cellZ, int otherX, int otherZ) {
+        type_ = type;
+        cellX_ = cellX;
+        cellZ_ = cellZ;
+        otherX_ = otherX;
+        otherZ_ = otherZ;
+    }
 
     bool Write(cIGZOStream& stream) const override;
     bool Read(cIGZIStream& stream) override;

@@ -183,6 +183,25 @@ public:
     const std::vector<std::pair<std::string, cEffectKey>>& EffectBindings() const { return effectBindings_; }  // +0x1d0
     const std::vector<cSC4MessageTriggerDescription>& MessageTriggers() const { return messageTriggers_; }      // +0x1e8
     std::size_t EffectNameCount(const std::string& lowercaseName) const { return effectNames_.count(lowercaseName); }
+    // cSC4EffectsManager::CreateVisualEffect(char const*, ...) reads the +0x008 multimap range by offset (0x1005e075c);
+    // the manager picks the highest description version <= its maximum effect version out of that range.
+    const std::unordered_multimap<std::string, int>& EffectNames() const { return effectNames_; }               // +0x008
+    // @ 0x1005dcd62 (cSC4EffectsManager::Shutdown): the original destroys the effect / particle / dynamic-particle /
+    // decal / shake tables and the component records through their member offsets and deliberately leaves the light
+    // table, the camera parameters, the effect bindings and the message triggers in place.
+    void ClearForEffectManagerShutdown() {
+        effectNames_.clear();
+        effects_.clear();
+        particleNames_.clear();
+        particles_.clear();
+        dynamicParticleNames_.clear();
+        dynamicParticles_.clear();
+        decalNames_.clear();
+        decals_.clear();
+        shakeNames_.clear();
+        shakes_.clear();
+        components_.clear();
+    }
 
 private:
     // The same member at +0x208 used by every lookup (see the quirks): assign the name and lowercase it.

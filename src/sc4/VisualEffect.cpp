@@ -251,7 +251,7 @@ void cSC4VisualEffect::GetSourceTransform(cS3DTransform& out) const {
 void cSC4VisualEffect::SetDescription(const cSC4EffectDescription& description) {
     flags_ = description.id;
     finishMessage_ = 0;
-    reserved188_ = 0;
+    ancilliaryHandle_ = 0;
     for (cS3DTransform* t : {&effect_, &source_, &world_, &combined_}) {
         if (t->flags != 0) {
             SetIdentity(*t);
@@ -268,6 +268,16 @@ void cSC4VisualEffect::SetDescription(const cSC4EffectDescription& description) 
 bool cSC4VisualEffect::CheckEffectFlag(std::uint32_t flag) const {
     if (flag >= 9) throw std::out_of_range("bitset::test argument out of range");
     return (flags_ >> flag) & 1;
+}
+
+void cSC4VisualEffect::ClearForReuse() {
+    for (cComponentRec& rec : components_)
+        if (rec.component) rec.component->Release();
+    components_.clear();
+    name_.clear();
+    group_ = 0;
+    type_ = 0;
+    slot_ = -1;
 }
 
 void cSC4VisualEffect::ApplyParams() {

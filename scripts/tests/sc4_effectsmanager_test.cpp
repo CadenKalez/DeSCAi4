@@ -1,0 +1,849 @@
+// cSC4EffectsManager tests: COM plumbing (the Release-stays-1 quirk, QueryInterface's interface ids, FinalRelease),
+// the effect registry (name -> description version selection, the (group,type) binding table, the redundant lookup),
+// the visual-effect pool with its new / active / free slot lists, the recycle and retarget rules, the description label
+// started by StopAncilliary, the shake / screen-flash / lighting-tint state, the snowline curve, the effects tick, the
+// message dispatch subset, the Init / Shutdown host protocol and the particle pool.
+#include <cmath>
+#include <cstdio>
+#include <cstring>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "rz/cRZMessage2Standard.h"
+#include "sc4/EffectsManager.h"
+
+using namespace sc4;
+
+namespace {
+
+int failures = 0;
+#define CHECK(c) do { if (!(c)) { std::printf("FAIL line %d: %s\n", __LINE__, #c); ++failures; } } while (0)
+
+class FakeUnknown final : public cIGZUnknown {
+public:
+    bool QueryInterface(std::uint32_t iid, void** out) override {
+        if (iid != 1) return false;
+        *out = this;
+        AddRef();
+        return true;
+    }
+    std::uint32_t AddRef() override { return ++refs; }
+    std::uint32_t Release() override {
+        if (refs > 0) --refs;
+        if (refs == 0) deleted = true;
+        return static_cast<std::uint32_t>(refs);
+    }
+    int refs = 0;
+    bool deleted = false;
+};
+
+class FakeVertexBuffer final : public IParticlesVertexBuffer {
+public:
+    void AddRef() override { ++refs; }
+    void Release() override {
+        if (refs > 0) --refs;
+        if (refs == 0) deleted = true;
+    }
+    std::uint32_t VertexCapacity() override { return 64; }
+    void* Lock(std::uint32_t, std::uint32_t) override { return nullptr; }
+    void Unlock(std::uint32_t) override {}
+    void DrawIndexed(std::uint32_t, std::uint32_t, std::uint32_t, const std::uint16_t*, const void*, int) override {}
+    int refs = 0;
+    bool deleted = false;
+};
+
+class FakeHost final : public IEffectsManagerHost {
+public:
+    void SendProgressMessage(int stage, const char* text) override {
+        progress.push_back(stage);
+        (void)text;
+    }
+    std::uint32_t CurrentThreadId() override { return threadId; }
+    float TerrainCellSize() override { return 16.0f; }
+    int TerrainCellsX() override { return 8; }
+    int TerrainCellsZ() override { return 6; }
+    cIGZUnknown* Renderer() override {
+        if (!makeRenderer) return nullptr;
+        auto* renderer = new FakeUnknown();
+        renderer->AddRef();
+        renderers.push_back(renderer);
+        return renderer;
+    }
+    void AttachRenderable(cIGZUnknown*) override { ++attachCalls; }
+    void DetachRenderable(cIGZUnknown*) override { ++detachCalls; }
+    IParticlesVertexBuffer* VertexBufferExtension() override {
+        if (!makeVertexBuffer) return nullptr;
+        vertexBuffer = new FakeVertexBuffer();
+        vertexBuffer->AddRef();
+        return vertexBuffer;
+    }
+    cIGZUnknown* WeatherSim() override {
+        if (!makeWeather) return nullptr;
+        auto* weather = new FakeUnknown();
+        weather->AddRef();
+        weatherSim = weather;
+        return weather;
+    }
+    cSC4EffectMaps* CreateEffectMaps() override {
+        effectMaps = new cSC4EffectMaps();
+        return effectMaps;
+    }
+    cIGZUnknown* CreateEffectsResource() override {
+        resource = new FakeUnknown();
+        resource->AddRef();
+        return resource;
+    }
+    void ShutdownEffectsResource(cIGZUnknown*) override { ++resourceShutdowns; }
+    bool EffectsResourceChanged() override { return resourceChanged; }
+    void EffectsResourceReloaded() override { ++resourceReloads; }
+    cIGZUnknown* CreateEffectsParser() override {
+        parser = new FakeUnknown();
+        parser->AddRef();
+        return parser;
+    }
+    void LoadEffectsFiles() override { ++loadEffects; }
+    void RegisterMessageHandler(std::uint32_t message) override { registeredMessages.push_back(message); }
+    void UnregisterMessageHandler(std::uint32_t message) override { unregisteredMessages.push_back(message); }
+    void AddCheatHandler(cIGZUnknown*) override { ++cheatHandlers; }
+    void RemoveCheatHandler(cIGZUnknown*) override { --cheatHandlers; }
+    void RegisterCheatCode(std::uint32_t id, const char* text) override {
+        cheats.emplace_back(id, text ? text : "");
+    }
+    void UnregisterCheatCode(std::uint32_t id) override { unregisteredCheats.push_back(id); }
+    bool CheatsEnabled() override { return cheatsEnabled; }
+    void AddTickNotification(cIGZUnknown*) override { ++tickNotifications; }
+    void RemoveTickNotification(cIGZUnknown*) override { --tickNotifications; }
+    void RegisterGameDataFunctions() override { ++gameDataRegisters; }
+    void UnregisterGameDataFunctions() override { ++gameDataUnregisters; }
+    void PostEffectsTickMessage() override { ++tickMessages; }
+    int ViewZoom() override { return viewZoom; }
+    float WorldUnitsPerViewportUnit() override { return unitsPerViewport; }
+    float RenderHeightScale() override { return renderHeightScale; }
+    std::uint32_t AddShake(const cSC4ShakeDescription&, const cS3DVector2* position) override {
+        ++shakeAdds;
+        shakeHadPosition = position != nullptr;
+        if (position) lastShakePosition = *position;
+        return shakeHandle;
+    }
+    void RemoveShake(std::uint32_t handle) override {
+        ++shakeRemoves;
+        lastRemovedShake = handle;
+    }
+    void SetLightingTint(float intensity, const cS3DVector3& colour) override {
+        ++tintSets;
+        lastTintIntensity = intensity;
+        lastTintColour = colour;
+    }
+    void ClearLightingTint() override { ++tintClears; }
+    std::int32_t AddSnowlineEffect() override {
+        if (!hasTerrainView) return -1;
+        ++snowlineAdds;
+        return snowlineHandle;
+    }
+    void RemoveSnowlineEffect(std::int32_t handle) override {
+        ++snowlineRemoves;
+        lastSnowlineHandle = handle;
+    }
+    void SetSnowlineAltitude(std::int32_t handle, float altitude, float bias) override {
+        ++snowlineSets;
+        lastSnowlineHandle = handle;
+        lastSnowlineAltitude = altitude;
+        lastSnowlineBias = bias;
+    }
+    int SimulatorDayOfYear() override { return dayOfYear; }
+    int CityHemisphere() override { return hemisphere; }
+    bool WeatherEnabled() override { return true; }
+    void WeatherWind(float& x, float& z) override {
+        x = windX;
+        z = windZ;
+    }
+    bool ViewportPositionToRay(int x, int y, float* origin, float* direction) override {
+        ++rayCalls;
+        lastRayX = x;
+        lastRayY = y;
+        if (!rayValid) return false;
+        for (int i = 0; i < 3; ++i) {
+            origin[i] = static_cast<float>(i + 1);
+            direction[i] = static_cast<float>(i + 4);
+        }
+        return true;
+    }
+    float SimulatorSpeed() override { return simulatorSpeed; }
+
+    std::uint32_t threadId = 1234;
+    bool makeRenderer = false;
+    bool makeVertexBuffer = false;
+    bool makeWeather = false;
+    bool cheatsEnabled = false;
+    bool hasTerrainView = true;
+    bool resourceChanged = false;
+    bool rayValid = true;
+    int viewZoom = 3;
+    float unitsPerViewport = 2.0f;
+    float renderHeightScale = 5.0f;
+    std::uint32_t shakeHandle = 42;
+    std::int32_t snowlineHandle = 77;
+    int dayOfYear = 1;
+    int hemisphere = 1;
+    float windX = 1.5f;
+    float windZ = -2.5f;
+    float simulatorSpeed = 1.0f;
+    int lastRayX = 0, lastRayY = 0;
+
+    int attachCalls = 0, detachCalls = 0, loadEffects = 0, resourceShutdowns = 0, resourceReloads = 0;
+    int cheatHandlers = 0, tickNotifications = 0, gameDataRegisters = 0, gameDataUnregisters = 0, tickMessages = 0;
+    int shakeAdds = 0, shakeRemoves = 0, tintSets = 0, tintClears = 0, snowlineAdds = 0, snowlineRemoves = 0;
+    int snowlineSets = 0, rayCalls = 0;
+    bool shakeHadPosition = false;
+    cS3DVector2 lastShakePosition{};
+    std::uint32_t lastRemovedShake = 0;
+    float lastTintIntensity = 0;
+    cS3DVector3 lastTintColour{};
+    std::int32_t lastSnowlineHandle = 0;
+    float lastSnowlineAltitude = 0;
+    float lastSnowlineBias = 0;
+    std::vector<int> progress;
+    std::vector<std::uint32_t> registeredMessages, unregisteredMessages, unregisteredCheats;
+    std::vector<std::pair<std::uint32_t, std::string>> cheats;
+    ~FakeHost() {
+        for (FakeUnknown* renderer : renderers) delete renderer;
+        delete weatherSim;
+        delete resource;
+        delete parser;
+        delete vertexBuffer;
+        // effectMaps is a real cSC4EffectMaps: the manager owns and deletes it.
+    }
+    std::vector<FakeUnknown*> renderers;
+    FakeUnknown* weatherSim = nullptr;
+    FakeVertexBuffer* vertexBuffer = nullptr;
+    cSC4EffectMaps* effectMaps = nullptr;
+    FakeUnknown* resource = nullptr;
+    FakeUnknown* parser = nullptr;
+};
+
+// One description record, for the LOD-scale test.
+cSC4EffectDescription::cDescriptionRec MakeRecord() {
+    cSC4EffectDescription::cDescriptionRec record;
+    record.flagA = 1;
+    record.flagB = 5;
+    record.floats[0] = 10.0f;
+    record.floats[1] = 20.0f;
+    record.floats[2] = 30.0f;
+    record.floats[3] = 40.0f;
+    return record;
+}
+
+// A component that only records the float parameters the manager pushes.
+class RecordingComponent final : public cISC4VisualEffectComponent {
+public:
+    void Start(int) override {}
+    void Stop(int) override {}
+    bool IsStarted() const override { return started; }
+    void SetTransforms(const cS3DTransform&, const cS3DTransform&) override {}
+    void ApplyEffect(float) override {}
+    bool SetFloatParams(int type, const float* values, int count) override {
+        lastType = type;
+        lastCount = count;
+        for (int i = 0; i < count && i < 2; ++i) lastValues[i] = values[i];
+        return true;
+    }
+    bool SetVoidParams(int, void**, int) override { return false; }
+    bool started = false;
+    int lastType = 0, lastCount = 0;
+    float lastValues[2] = {0, 0};
+};
+
+void TestCom() {
+    FakeHost host;
+    SetEffectsManagerHost(&host);
+    cSC4EffectsManager manager;
+    manager.SetHost(&host);
+    CHECK(!manager.Initialised());
+    CHECK(manager.RefCount() == 0);
+    CHECK(manager.GetEffectMaps() == nullptr);
+    CHECK(manager.GetTallestBuildingAltitude() == 0.0f);
+
+    void* out = nullptr;
+    CHECK(manager.QueryInterface(1, &out));
+    CHECK(out == &manager);
+    CHECK(manager.RefCount() == 1);
+    CHECK(manager.QueryInterface(kGZIID_cISC4EffectsManager, &out));
+    CHECK(out == &manager);
+    CHECK(manager.QueryInterface(kGZIID_cISC4EffectsManagerAlt, &out));
+    CHECK(manager.QueryInterface(kGZIID_cISC4EffectsCollection, &out));
+    CHECK(out == &manager.Collection());
+    CHECK(manager.RefCount() == 4);
+    out = nullptr;
+    CHECK(!manager.QueryInterface(kGZIID_cISC4EffectMaps, &out));   // no maps before Init
+    CHECK(!manager.QueryInterface(0xdeadbeefu, &out));
+    CHECK(!manager.QueryInterface(1, nullptr));
+
+    // The Release quirk: success is reported, the counter does not move.
+    CHECK(manager.Release() == 1);
+    CHECK(manager.RefCount() == 4);
+    CHECK(manager.AddRef() == 5);
+    CHECK(manager.Release() == 1);
+    CHECK(manager.RefCount() == 5);
+
+    // FinalRelease on a heap object: Shutdown + delete (ASan watches the delete).
+    auto* heap = new cSC4EffectsManager();
+    heap->SetHost(&host);
+    CHECK(heap->Init());
+    heap->FinalRelease();
+    CHECK(host.detachCalls == 0);   // Init did not attach a renderer (the host returns none)
+}
+
+void TestRegistry() {
+    FakeHost host;
+    SetEffectsManagerHost(&host);
+    cSC4EffectsManager manager;
+    manager.SetHost(&host);
+
+    manager.BeginCollection();
+    cSC4EffectDescription desc;
+    desc.version = 3;
+    manager.Collection().AddEffectDescription("Smoke", desc);
+    desc.version = 6;                                    // above the manager's maximum (5)
+    manager.Collection().AddEffectDescription("Smoke", desc);
+    desc.version = 2;
+    manager.Collection().AddEffectDescription("smoke", desc);
+    // The binding table maps (group,type) to the effect index; EndCollection resolves it by the effect name.
+    cSC4EffectDescription spark;
+    spark.version = 3;
+    manager.Collection().AddEffectDescription("spark", spark);
+    manager.Collection().AddEffectBinding("spark", 0xaa6dec65u, 0x11u);
+    cSC4MessageTriggerDescription trigger;
+    trigger.message = 0x12345678u;
+    trigger.name = "Smoke";
+    manager.Collection().AddMessageTrigger(trigger);
+    manager.EndCollection();
+
+    CHECK(manager.Collection().EffectNameCount("smoke") == 3);   // Smoke x3 (spark is a different name)
+    CHECK(manager.HasVisualEffect("Smoke"));
+    CHECK(manager.HasVisualEffect("SMOKE"));
+    CHECK(!manager.HasVisualEffect("nope"));
+    CHECK(!manager.HasVisualEffect(""));
+    CHECK(!manager.HasVisualEffect(nullptr));
+
+    // EndCollection registered the trigger and built the binding table.
+    CHECK(host.registeredMessages.size() == 1 && host.registeredMessages[0] == 0x12345678u);
+    CHECK(manager.EffectBindings().size() == 1);
+
+    // Name lookup picks the highest version <= 5 (3, not 6 or 2).
+    cSC4VisualEffect* effect = nullptr;
+    CHECK(manager.CreateVisualEffect("Smoke", &effect));
+    CHECK(effect != nullptr);
+    CHECK(effect->Slot() >= 0);
+    CHECK(manager.Collection().Effects()[static_cast<std::size_t>(effect->Slot())].version == 3);
+    CHECK(effect->Name() == "smoke");
+    CHECK(effect->RefCount() == 2);                       // pool + the returned reference
+    CHECK(manager.VisualEffects().size() == 1);
+    CHECK(manager.ActiveVisualEffectSlots().size() == 1);
+    CHECK(manager.ActiveVisualEffectSlots()[0] == effect->Slot());
+    effect->Release();
+
+    // Unknown / empty / null names and a null out pointer fail.
+    effect = nullptr;
+    CHECK(!manager.CreateVisualEffect("nope", &effect));
+    CHECK(effect == nullptr);
+    CHECK(!manager.CreateVisualEffect("", &effect));
+    CHECK(!manager.CreateVisualEffect(nullptr, &effect));
+    CHECK(!manager.CreateVisualEffect("Smoke", nullptr));
+
+    // (group,type) lookup: known key works, unknown key fails, the effect remembers its key.
+    cSC4VisualEffect* byType = nullptr;
+    CHECK(manager.CreateVisualEffect(0xaa6dec65u, 0x11u, &byType));
+    CHECK(byType->Group() == 0xaa6dec65u && byType->Type() == 0x11u);
+    CHECK(byType->Slot() >= 0);
+    CHECK(manager.Collection().Effects()[static_cast<std::size_t>(byType->Slot())].version == 3);
+    byType->Release();
+    byType = nullptr;
+    CHECK(!manager.CreateVisualEffect(0xaa6dec65u, 0x99u, &byType));
+    CHECK(!manager.CreateVisualEffect(0xaa6dec65u, 0x11u, nullptr));
+    CHECK(manager.EffectBindings().size() == 1);
+
+    // A name that resolves above the maximum version creates a live effect with no description.
+    manager.BeginCollection();
+    cSC4EffectDescription future;
+    future.version = 7;
+    manager.Collection().AddEffectDescription("future", future);
+    manager.EndCollection();
+    cSC4VisualEffect* futureEffect = nullptr;
+    CHECK(manager.CreateVisualEffect("future", &futureEffect));
+    CHECK(futureEffect->Slot() == -1);
+    CHECK(futureEffect->RefCount() == 2);
+    CHECK(manager.NewVisualEffectSlots().size() == 1);    // never activated: no description
+    futureEffect->Release();
+
+    // The manager's maximum version changes the selection (nothing qualifies now).
+    manager.SetMaxEffectVersion(1);
+    cSC4VisualEffect* limited = nullptr;
+    CHECK(manager.CreateVisualEffect("Smoke", &limited));
+    CHECK(limited->Slot() == -1);
+    limited->Release();
+    manager.SetMaxEffectVersion(5);
+
+    // Out-of-range description versions via the binding path still create an effect with slot -1.
+    manager.BeginCollection();
+    CHECK(manager.EffectBindings().empty());              // BeginCollection cleared the registry
+    cSC4EffectDescription tooNew;
+    tooNew.version = 9;
+    manager.Collection().AddEffectDescription("toonew", tooNew);
+    manager.Collection().AddEffectBinding("toonew", 5u, 6u);
+    manager.EndCollection();
+    cSC4VisualEffect* invalid = nullptr;
+    CHECK(manager.CreateVisualEffect(5u, 6u, &invalid));
+    CHECK(invalid->Slot() == -1);
+    invalid->Release();
+
+    // The description's label starts a new effect when the ancilliary stops (StopAncilliary); no label -> nothing.
+    CHECK(manager.Collection().EffectNameCount("smoke") == 3);   // Smoke x3 (spark is a different name)
+}
+
+void TestPoolAndRecycle() {
+    FakeHost host;
+    SetEffectsManagerHost(&host);
+    cSC4EffectsManager manager;
+    manager.SetHost(&host);
+
+    manager.BeginCollection();
+    cSC4EffectDescription smoke;
+    smoke.version = 1;
+    manager.Collection().AddEffectDescription("smoke", smoke);
+    cSC4EffectDescription hold;                            // flag bit 1: never auto-finishes
+    hold.version = 1;
+    hold.id = 2;
+    manager.Collection().AddEffectDescription("hold", hold);
+    manager.EndCollection();
+
+    cSC4VisualEffect* effect = nullptr;
+    CHECK(manager.CreateVisualEffect("smoke", &effect));
+    const int slot = effect->Slot();
+    CHECK(manager.ActiveVisualEffectSlots().size() == 1);
+
+    // A not-started effect counts as stopped; while we hold a reference it is kept but not counted (quirk).
+    manager.DeactivateUnusedVisualEffects();
+    CHECK(manager.ActiveVisualEffectCount() == 0);
+    CHECK(manager.ActiveVisualEffectSlots().size() == 1);
+    effect->Release();
+
+    // Dropping the last outside reference lets the next frame recycle it into the free list.
+    manager.DeactivateUnusedVisualEffects();
+    CHECK(manager.ActiveVisualEffectSlots().empty());
+    CHECK(manager.FreeVisualEffectSlots().size() == 1);
+    CHECK(manager.FreeVisualEffectSlots()[0] == slot);
+    const cSC4VisualEffect* recycled = manager.VisualEffects()[static_cast<std::size_t>(slot)].get();
+    CHECK(recycled->Name().empty());
+    CHECK(recycled->Slot() == -1);
+    CHECK(recycled->RefCount() == 1);
+    CHECK(recycled->Components().empty());
+
+    // The next instance reuses the slot instead of growing the pool.
+    cSC4VisualEffect* reused = nullptr;
+    CHECK(manager.CreateVisualEffect("smoke", &reused));
+    CHECK(reused == recycled);
+    CHECK(manager.VisualEffects().size() == 1);
+    CHECK(manager.NewVisualEffectSlots().empty());
+    CHECK(reused->Name() == "smoke");
+    reused->Release();
+
+    // A running effect with the never-auto-finish flag stays active and is counted.
+    cSC4VisualEffect* held = nullptr;
+    CHECK(manager.CreateVisualEffect("hold", &held));
+    held->Start(0);
+    CHECK(held->CheckEffectFlag(1));
+    manager.DeactivateUnusedVisualEffects();
+    CHECK(manager.ActiveVisualEffectCount() == 1);
+    CHECK(manager.ActiveVisualEffectSlots().size() == 2);
+    held->Release();
+
+    // KillOrphanedEffects stops everything only the manager holds and leaves the killing guard set, so a newly
+    // created effect is not activated until the next DeactivateUnusedVisualEffects.
+    manager.KillOrphanedEffects();
+    CHECK(!manager.KillGuardCleared());
+    cSC4VisualEffect* blocked = nullptr;
+    CHECK(manager.CreateVisualEffect("hold", &blocked));
+    CHECK(manager.ActiveVisualEffectSlots().size() == 2);
+    blocked->Release();
+    manager.DeactivateUnusedVisualEffects();
+    CHECK(manager.KillGuardCleared());
+    CHECK(manager.ActiveVisualEffectSlots().size() >= 1);
+}
+
+void TestAncilliaryAndLights() {
+    FakeHost host;
+    SetEffectsManagerHost(&host);
+    cSC4EffectsManager manager;
+    manager.SetHost(&host);
+
+    cSC4ShakeDescription shake;
+    cSC4LightDescription light;
+    light.colors.push_back(cS3DVector3{1, 0, 0});
+    light.colors.push_back(cS3DVector3{0, 1, 0});
+    light.intensities.push_back(0.0f);
+    light.intensities.push_back(1.0f);
+    light.range = 4.0f;
+
+    manager.BeginCollection();
+    cSC4EffectDescription flare;
+    flare.version = 1;
+    flare.label = "ending";
+    cSC4EffectDescription::cEventRec shakeEvent;
+    shakeEvent.type = 1 | 2;      // shake + position
+    shakeEvent.flags = 0;
+    flare.events.push_back(shakeEvent);
+    cSC4EffectDescription::cEventRec flashEvent;
+    flashEvent.type = 4;          // screen flash
+    flashEvent.flags = 0;
+    flare.events.push_back(flashEvent);
+    cSC4EffectDescription::cEventRec tintEvent;
+    tintEvent.type = 8;           // lighting tint
+    tintEvent.flags = 0;
+    flare.events.push_back(tintEvent);
+    manager.Collection().AddEffectDescription("flare", flare);
+    cSC4EffectDescription ending;
+    ending.version = 1;
+    manager.Collection().AddEffectDescription("ending", ending);
+    manager.Collection().AddShakeDescription("shake", shake);
+    manager.Collection().AddLightDescription("light", light);
+    manager.EndCollection();
+
+    cSC4VisualEffect* effect = nullptr;
+    CHECK(manager.CreateVisualEffect("flare", &effect));
+    effect->SetEffectTransform(cS3DTransform{});   // identity
+    cS3DTransform source;
+    source.translation[0] = 1.0f;
+    source.translation[1] = 2.0f;
+    source.translation[2] = 3.0f;
+    effect->SetSourceTransform(source);
+
+    manager.StartAncilliary(effect);
+    CHECK(host.shakeAdds == 1);
+    CHECK(host.shakeHadPosition);
+    CHECK(host.lastShakePosition.x == 1.0f);    // row 0 of the effect rotation . source translation
+    CHECK(host.lastShakePosition.y == 3.0f);    // column 2 of the effect rotation . source translation
+    CHECK(effect->AncilliaryHandle() == host.shakeHandle);
+    CHECK(manager.ScreenFlashColours().size() == 2);
+    CHECK(manager.ScreenFlashIntensities().size() == 2);
+    CHECK(manager.ScreenFlashInverseDuration() == 0.25f);
+    CHECK(manager.ScreenFlashTime() == 0.0f);
+    CHECK(!manager.ScreenFlashAtPoint());       // the flash event carries no position bit
+    CHECK(manager.LightingTintColours().size() == 2);
+    CHECK(manager.LightingTintTime() == 0.0f);
+
+    // StopAncilliary removes the shake and starts the description's label ("ending") at the same transforms.
+    manager.StopAncilliary(effect);
+    CHECK(host.shakeRemoves == 1);
+    CHECK(host.lastRemovedShake == host.shakeHandle);
+    CHECK(effect->AncilliaryHandle() == 0);
+    const cSC4VisualEffect* endingEffect = manager.VisualEffects().back().get();
+    CHECK(endingEffect->Name() == "ending");
+    CHECK(endingEffect->IsStarted());
+    CHECK(manager.ActiveVisualEffectSlots().size() == 2);
+
+    // The elapsed-time bookkeeping of the flash and the tint.
+    manager.DrawScreenFlashes(nullptr, 2.0f);   // 2 * 0.25 = 0.5
+    CHECK(manager.ScreenFlashTime() == 0.5f);
+    manager.DrawScreenFlashes(nullptr, 2.0f);   // 1.0
+    CHECK(manager.ScreenFlashTime() == 1.0f);
+    manager.DrawScreenFlashes(nullptr, 2.0f);   // 1.5 -> finished
+    CHECK(manager.ScreenFlashInverseDuration() == 0.0f);
+
+    manager.UpdateLightingTint(1.0f);           // t = 0.25 -> interpolation between the two keys
+    CHECK(host.tintSets == 1);
+    CHECK(host.lastTintColour.y > 0.0f);
+    CHECK(std::fabs(host.lastTintIntensity - 0.25f) < 1e-5f);
+    manager.UpdateLightingTint(4.0f);           // t = 1.25 -> clears the tint
+    CHECK(host.tintClears == 1);
+
+    // UpdateLODScale interpolates the two LOD curves at the current level (integer division of the fraction).
+    RecordingComponent component;
+    component.AddRef();
+    cSC4VisualEffect::cComponentRec record;
+    record.component = &component;
+    const cSC4EffectDescription::cDescriptionRec descriptionRecord = MakeRecord();
+    manager.SetLodLevel(2);
+    manager.UpdateLODScale(descriptionRecord, &record);
+    CHECK(component.lastType == 0x102);
+    CHECK(component.lastCount == 2);
+    // The fraction is an integer division quirk: (2 - 1) / (5 - 1 - 1) = 0 -> the first keys.
+    CHECK(component.lastValues[0] == 10.0f);
+    CHECK(component.lastValues[1] == 30.0f);
+    manager.SetLodLevel(4);
+    manager.UpdateLODScale(descriptionRecord, &record);
+    // (4 - 1) / (5 - 1 - 1) = 1 -> the second keys.
+    CHECK(component.lastValues[0] == 20.0f);
+    CHECK(component.lastValues[1] == 40.0f);
+
+    effect->Release();
+}
+
+void TestSnowline() {
+    FakeHost host;
+    SetEffectsManagerHost(&host);
+    cSC4EffectsManager manager;
+    manager.SetHost(&host);
+
+    CHECK(manager.SnowlineEffectId() == -1);
+    CHECK(manager.SnowlineLow() == 300.0f);
+    CHECK(manager.SnowlineHigh() == 600.0f);
+    CHECK(manager.SnowlineBias() == 200.0f);
+    CHECK(manager.SnowlineAltitude() == 512.0f);
+
+    host.dayOfYear = 1;                    // cos(0) = 1 -> the low seasonal altitude (300)
+    manager.SetSnowlineState(true);
+    CHECK(host.snowlineAdds == 1);
+    CHECK(manager.SnowlineEffectId() == host.snowlineHandle);
+    CHECK(host.snowlineSets == 1);
+    CHECK(host.lastSnowlineHandle == host.snowlineHandle);
+    CHECK(host.lastSnowlineAltitude == 300.0f);
+    CHECK(host.lastSnowlineBias == 200.0f);
+    CHECK(manager.SnowlineAltitude() == 300.0f);
+
+    manager.UpdateSnowline();              // same target: no update
+    CHECK(host.snowlineSets == 1);
+
+    host.dayOfYear = 183;                  // half a year: the high altitude (600)
+    manager.UpdateSnowline();
+    CHECK(host.snowlineSets == 2);
+    CHECK(host.lastSnowlineAltitude == 600.0f);
+
+    // The southern hemisphere is mirrored by half a year.
+    host.hemisphere = 2;
+    host.dayOfYear = 1;                    // would be 300 in the north, 600 here
+    manager.UpdateSnowline();
+    CHECK(host.snowlineSets == 3);
+    CHECK(host.lastSnowlineAltitude == 600.0f);
+
+    manager.SetSnowlineState(false);
+    CHECK(host.snowlineRemoves == 1);
+    CHECK(host.lastSnowlineHandle == host.snowlineHandle);
+    CHECK(manager.SnowlineEffectId() == -1);
+
+    // A host without a terrain view cannot allocate a snowline effect.
+    host.hasTerrainView = false;
+    manager.SetSnowlineState(true);
+    CHECK(manager.SnowlineEffectId() == -1);
+    CHECK(host.snowlineSets == 3);
+
+    // The "Snow" cheat (the first argument is the command name): 1-3 arguments set the curve and enable.
+    host.hasTerrainView = true;
+    cRZCmdLine cmdLine("Snow 100 200 50");
+    CHECK(manager.DoSnowCheat(cmdLine));
+    CHECK(manager.SnowlineLow() == 100.0f);
+    CHECK(manager.SnowlineHigh() == 200.0f);
+    CHECK(manager.SnowlineBias() == 50.0f);
+    CHECK(manager.SnowlineEffectId() == host.snowlineHandle);
+    manager.SetSnowlineState(false);
+
+    // With no arguments the cheat toggles: nothing active -> enable.
+    cRZCmdLine toggle("Snow");
+    host.dayOfYear = 1;
+    CHECK(manager.DoSnowCheat(toggle));
+    CHECK(manager.SnowlineEffectId() == host.snowlineHandle);
+    CHECK(manager.DoSnowCheat(toggle));    // now active -> disable
+    CHECK(manager.SnowlineEffectId() == -1);
+}
+
+void TestInitShutdownAndTick() {
+    FakeHost host;
+    host.makeRenderer = true;
+    host.makeVertexBuffer = true;
+    host.makeWeather = true;
+    SetEffectsManagerHost(&host);
+    cSC4EffectsManager manager;
+    manager.SetHost(&host);
+
+    CHECK(manager.Init());
+    CHECK(manager.Initialised());
+    CHECK(manager.ThreadId() == host.threadId);
+    CHECK(manager.GetEffectMaps() != nullptr);
+    CHECK(manager.GetEffectMaps() == host.effectMaps);
+    CHECK(host.attachCalls == 1);
+    CHECK(host.loadEffects == 1);
+    CHECK(host.registeredMessages.size() == 11);
+    CHECK(host.registeredMessages[0] == 0xa6b79620u);
+    CHECK(host.cheats.size() == 1);        // cheats disabled: only the "Effect" code
+    CHECK(host.cheats[0].first == kCheatEffectCode);
+    CHECK(host.cheats[0].second == "Effect");
+    CHECK(host.cheatHandlers == 1);
+    CHECK(host.tickNotifications == 1);
+    CHECK(host.gameDataRegisters == 1);
+    CHECK(host.progress.size() == 4);      // 1, 2, 2, 1
+    CHECK(host.progress[0] == 1 && host.progress[1] == 2 && host.progress[2] == 2 && host.progress[3] == 1);
+    CHECK(manager.VertexBufferExtension() == host.vertexBuffer);
+    CHECK(host.vertexBuffer->refs == 1);
+    CHECK(manager.Renderer() == host.renderers[0]);
+    CHECK(host.renderers[0]->refs == 1);
+    // CreateFlashMaterials packed both states (the lit state sets the blend bit, the dark state differs).
+    CHECK(manager.FlashStateLit().value != 0);
+    CHECK(manager.FlashStateLit().value != manager.FlashStateDark().value);
+
+    // The second Init is a no-op.
+    CHECK(manager.Init());
+    CHECK(host.loadEffects == 1);
+    CHECK(host.attachCalls == 1);
+
+    // QueryInterface(effect maps) now forwards to the maps object.
+    void* mapsOut = nullptr;
+    CHECK(manager.QueryInterface(kGZIID_cISC4EffectMaps, &mapsOut));
+    CHECK(mapsOut == manager.GetEffectMaps());
+
+    // DoEffectsTick: a changed resource re-opens the collection and refreshes the active effects; the weather wind
+    // lands in the global parameters.
+    host.resourceChanged = true;
+    manager.DoEffectsTick();
+    CHECK(host.loadEffects == 2);
+    CHECK(host.resourceReloads == 1);
+    CHECK(!manager.ForceDescriptionUpdate());
+    host.resourceChanged = false;
+    host.windX = 3.0f;
+    host.windZ = -4.0f;
+    manager.DoEffectsTick();
+    CHECK(manager.GlobalParams().velocity.x == 3.0f);
+    CHECK(manager.GlobalParams().velocity.y == 0.0f);
+    CHECK(manager.GlobalParams().velocity.z == -4.0f);
+    CHECK(host.loadEffects == 2);
+
+    // The zoom / rotation notification carries two int pairs through void1 / void2.
+    cRZMessage2Standard zoomMessage;
+    zoomMessage.SetType(0xa6b79620u);
+    int oldView[2] = {1, 0};
+    int newView[2] = {3, 1};
+    zoomMessage.SetVoid1(oldView);
+    zoomMessage.SetVoid2(newView);
+    CHECK(manager.DoMessage(&zoomMessage));
+    CHECK(manager.Zoom() == 3);
+    CHECK(manager.LodLevel() == 4);        // zoom + 1 - lodOffset (1)
+
+    // 0xab96b05f marks the manager active, 0x66956814 refreshes the snowline, 0x697d01ed runs the effects tick.
+    cRZMessage2Standard activeMessage;
+    activeMessage.SetType(0xab96b05fu);
+    CHECK(manager.DoMessage(&activeMessage));
+    CHECK(manager.EffectsActive());
+    cRZMessage2Standard snowMessage;
+    snowMessage.SetType(0x66956814u);
+    CHECK(manager.DoMessage(&snowMessage));
+    cRZMessage2Standard tickMessage;
+    tickMessage.SetType(0x697d01edu);
+    CHECK(manager.DoMessage(&tickMessage));
+    CHECK(host.loadEffects == 2);
+
+    // The cursor-ray broadcast asks the view utilities for the ray and feeds it to every started effect.
+    manager.BeginCollection();
+    cSC4EffectDescription rayEffect;
+    rayEffect.version = 1;
+    manager.Collection().AddEffectDescription("ray", rayEffect);
+    manager.EndCollection();
+    cSC4VisualEffect* ray = nullptr;
+    CHECK(manager.CreateVisualEffect("ray", &ray));
+    ray->Start(0);
+    cRZMessage2Standard rayMessage;
+    rayMessage.SetType(0x2acd2cf3u);
+    rayMessage.SetData1(11);
+    rayMessage.SetData2(22);
+    CHECK(manager.DoMessage(&rayMessage));
+    CHECK(host.rayCalls == 1);
+    CHECK(host.lastRayX == 11 && host.lastRayY == 22);
+    ray->Release();
+
+    // GetStatsString prints the counters; the particle-system columns are the family lists (quirk).
+    cRZString stats;
+    manager.GetStatsString(stats);
+    CHECK(std::strstr(stats.ToChar(), "Active effects: N/") != nullptr);
+    CHECK(std::strstr(stats.ToChar(), "density:") != nullptr);
+
+    // Shutdown releases every service and reference and leaves the manager reusable.
+    CHECK(manager.Shutdown());
+    CHECK(!manager.Initialised());
+    CHECK(manager.GetEffectMaps() == nullptr);
+    CHECK(host.detachCalls == 1);
+    CHECK(host.unregisteredMessages.size() == 11);
+    CHECK(host.cheatHandlers == 0);
+    CHECK(host.tickNotifications == 0);
+    CHECK(host.gameDataUnregisters == 1);
+    CHECK(host.resourceShutdowns == 1);
+    CHECK(host.renderers[0]->deleted);
+    CHECK(host.weatherSim->deleted);
+    CHECK(host.vertexBuffer->deleted);
+    CHECK(host.resource->deleted);
+    CHECK(host.parser->deleted);
+    CHECK(manager.VisualEffects().empty());
+    CHECK(manager.ActiveVisualEffectSlots().empty());
+    CHECK(manager.EffectBindings().empty());
+    CHECK(!manager.HasVisualEffect("ray"));    // the effect descriptions were cleared
+    CHECK(manager.Shutdown());                  // idempotent
+    CHECK(host.resourceShutdowns == 1);
+}
+
+void TestParticlePool() {
+    FakeHost host;
+    SetEffectsManagerHost(&host);
+    cSC4EffectsManager manager;
+    manager.SetHost(&host);
+    CHECK(manager.Init());
+
+    cSC4ParticlesEffect* effect = manager.NewParticlesEffect();
+    CHECK(effect != nullptr);
+    CHECK(manager.ParticleEffects().size() == 1);
+    CHECK(manager.NewParticlesEffectSlots().size() == 1);
+    CHECK(effect->RefCount() == 1);             // the pool only
+    CHECK(effect->Description() == nullptr);
+
+    // The finished particle system (refcount 1, not started) is retired by the visual-effect deactivation.
+    manager.DeactivateUnusedVisualEffects();
+    CHECK(manager.NewParticlesEffectSlots().empty());
+    CHECK(manager.FreeParticlesEffectSlots().size() == 1);
+    const cSC4ParticlesEffect* pooled = manager.ParticleEffects()[0].get();
+    cSC4ParticlesEffect* reused = manager.NewParticlesEffect();
+    CHECK(reused == pooled);
+    CHECK(manager.ParticleEffects().size() == 1);
+    CHECK(manager.NewParticlesEffectSlots().size() == 1);
+
+    // Shutdown shuts the particle systems down and clears the pool (the host has no Init state, so call it directly).
+    manager.Shutdown();
+    CHECK(manager.ParticleEffects().empty());
+}
+
+void TestDuplicateBindings() {
+    FakeHost host;
+    SetEffectsManagerHost(&host);
+    cSC4EffectsManager manager;
+    manager.SetHost(&host);
+
+    manager.BeginCollection();
+    cSC4EffectDescription a;
+    a.version = 1;
+    manager.Collection().AddEffectDescription("a", a);
+    cSC4EffectDescription b;
+    b.version = 2;
+    manager.Collection().AddEffectDescription("b", b);
+    // Two names bound to the same key: EndCollection keeps the first effect index it meets.
+    manager.Collection().AddEffectBinding("a", 9u, 9u);
+    manager.Collection().AddEffectBinding("b", 9u, 9u);
+    manager.EndCollection();
+    CHECK(manager.EffectBindings().size() == 1);
+    const int index = manager.EffectBindings().at(cSC4EffectsCollection::cEffectKey{9u, 9u});
+    CHECK(index >= 0 && index < 2);
+}
+
+}  // namespace
+
+int main() {
+    TestCom();
+    TestRegistry();
+    TestPoolAndRecycle();
+    TestAncilliaryAndLights();
+    TestSnowline();
+    TestInitShutdownAndTick();
+    TestParticlePool();
+    TestDuplicateBindings();
+    SetEffectsManagerHost(nullptr);
+    if (failures == 0) {
+        std::printf("all effects manager tests passed\n");
+        return 0;
+    }
+    std::printf("%d failure(s)\n", failures);
+    return 1;
+}

@@ -115,6 +115,7 @@ public:
     bool Write(cIGZOStream& stream) const;
     bool Read(cIGZIStream& stream);
     std::size_t Count() const { return items_.size(); }
+    std::uint32_t RefCount() const { return refCount_; }   // port addition: automata run Shutdown at the last release
 
 private:
     struct Entry {

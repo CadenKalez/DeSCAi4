@@ -1,0 +1,195 @@
+SOURCE src/sc4/Automaton.cpp|h
+EVIDENCE test scripts/tests/sc4_automaton_test.cpp - construction/QueryInterface/refcounting, the occupant and model plumbing, position/orientation/destination/heading and speed/opacity tweens, MoveTo and FinishMove placement plus the occupant-manager/renderer paths, the controller handshake with the recovered cSC4AutomataController (state stack, enter/exit/tick, removal), the animated step (DoAnimationTick) with the destination walk, callbacks and SFX messages, the Write/Read round trip, the collision/OBB rules and the TweenStruct easing
+0x1000e24f0 cSC4AutomatonGetCallNumber
+0x1000e2500 cSC4AutomatonGetDispatchInfoID
+0x1000e2510 cSC4AutomatonToggleNamedEffects
+0x1000e2540 cSC4AutomatonSetPriority
+0x1000e25b0 cSC4AutomatonGetMarkedForRemove
+0x1000f1728 cSC4AutomatonTweenStructSetDesired
+0x1000f3c10 cSC4AutomatonSetDispatchInfoID
+0x1000f3c80 cSC4AutomatonGetReachedDestination
+0x1000f3ca0 cSC4AutomatonSetSelfControlling
+0x1000fd61c cSC4AutomatonAutomataOBBConstruct
+0x1000fd898 cSC4AutomatonAutomataOBBTestForCollision
+0x100100a94 cSC4AutomatonAddModelResourceKey
+0x1001059ee cSC4AutomatonConstruct
+0x100105d6e cSC4AutomatonDestruct
+0x100105fda cSC4AutomatonDestructcSC4AutomatonThunk_100105fda
+0x100105fec cSC4AutomatonDestructcSC4AutomatonThunk_100105fec
+0x100105ff8 cSC4AutomatonInit
+0x10010604c cSC4AutomatonInitEffectsList
+0x1001060c0 cSC4AutomatonInitThunk_1001060c0
+0x1001060ce cSC4AutomatonShutdown
+0x100106254 cSC4AutomatonShutdownThunk_100106254
+0x100106266 cSC4AutomatonWrite
+0x1001065b2 cSC4AutomatonTweenStructWrite
+0x100106602 cSC4AutomatonWriteThunk_100106602
+0x100106610 cSC4AutomatonWriteThunk_100106610
+0x10010661e cSC4AutomatonWriteThunk_10010661e
+0x10010662c cSC4AutomatonRead
+0x100106aba cSC4AutomatonReadThunk_100106aba
+0x100106ac8 cSC4AutomatonReadThunk_100106ac8
+0x100106ad6 cSC4AutomatonReadThunk_100106ad6
+0x100106ae4 cSC4AutomatonDoMessage
+0x100106b78 cSC4AutomatonDoMessageThunk_100106b78
+0x100106b86 cSC4AutomatonSetLeader
+0x100106bda cSC4AutomatonSetVisible
+0x100106c5e cSC4AutomatonStartAllEffects
+0x100106e62 cSC4AutomatonGetPosition
+0x100106e7a cSC4AutomatonGetPositionThunk_100106e7a
+0x100106e92 cSC4AutomatonSetPosition
+0x100106f16 cSC4AutomatonSetPositionThunk_100106f16
+0x100106f24 cSC4AutomatonSetOrientation
+0x100107006 cSC4AutomatonPositionModelInstance
+0x1001070e6 cSC4AutomatonGetOrientation
+0x100107108 cSC4AutomatonGetDestination
+0x100107128 cSC4AutomatonSetDestination
+0x100107148 cSC4AutomatonGetBoundingBox
+0x100107182 cSC4AutomatonGetBoundingBoxThunk_100107182
+0x1001071bc cSC4AutomatonGetModelResourceKey
+0x100107216 cSC4AutomatonPlaceInOccupantManager
+0x100107370 cSC4AutomatonPlaceInRenderer
+0x100107572 cSC4AutomatonMoveTo
+0x100107b2a cSC4AutomatonFinishMove
+0x100107cd8 cSC4AutomatonFindDrivingAutomaton
+0x100107ce2 cSC4AutomatonDoAnimationTick
+0x100108016 cSC4AutomatonPostInit
+0x100108136 cSC4AutomatonUpdateAnimation
+0x100108230 cSC4AutomatonDoStateTick
+0x1001083dc cSC4AutomatonDoIdleTick
+0x1001089f2 cSC4AutomatonDoPlopJumpTick
+0x1001092f8 cSC4AutomatonDoBumpedTick
+0x10010930e cSC4AutomatonDoCollideTick
+0x1001095a4 cSC4AutomatonDoScriptedTick
+0x1001096e0 cSC4AutomatonHandlePlayerDriveCommand
+0x1001098ae cSC4AutomatonHandleEnterState
+0x10010a0c0 cSC4AutomatonSetSpeedFromBehaviorTemplate
+0x10010a172 cSC4AutomatonHandleExitState
+0x10010a25c cSC4AutomatonRemoveModelInstance
+0x10010a3b2 cSC4AutomatonStopKeyEffects
+0x10010a436 cSC4AutomatonHandleReachedRouteDestination
+0x10010a4ac cSC4AutomatonHandleDispatched
+0x10010a4c4 cSC4AutomatonHandleRemoveController
+0x10010a5a2 cSC4AutomatonRemove
+0x10010a650 cSC4AutomatonSetOpacity
+0x10010a6e6 cSC4AutomatonUpdateOpacity
+0x10010aa34 cSC4AutomatonGetTransform
+0x10010aa68 cSC4AutomatonSetTransform
+0x10010ae6a cSC4AutomatonPlayAnimId
+0x10010aeba cSC4AutomatonPlayAnimByName
+0x10010b052 cSC4AutomatonAddModelInstance
+0x10010b956 cSC4AutomatonUpdateEffects
+0x10010b97e cSC4AutomatonAddRegEffect
+0x10010b9a4 cSC4AutomatonFindRegEffect
+0x10010b9b6 cSC4AutomatonRemoveRegEffect
+0x10010b9c8 cSC4AutomatonShouldCollide
+0x10010ba66 cSC4AutomatonGetCollidePosition
+0x10010bacc cSC4AutomatonGetCollidingAutomaton
+0x10010bad4 cSC4AutomatonRecalculateLeaders
+0x10010bada cSC4AutomatonGetChaseVector
+0x10010bb54 cSC4AutomatonGetSpeedModifier
+0x10010bb88 cSC4AutomatonGetMaxSpeed
+0x10010bba2 cSC4AutomatonSetZoomAndRotation
+0x10010bbfa cSC4AutomatonUpdateAttraction
+0x10010be1c cSC4AutomatonAddCallback
+0x10010beb2 cSC4AutomatonRemoveCallback
+0x10010bf22 cSC4AutomatonSendCallbackMessage
+0x10010cd3e cSC4AutomatonClearStateStack
+0x10010cda2 cSC4AutomatonSetState
+0x10010ce42 cSC4AutomatonPushState
+0x10010cfb2 cSC4AutomatonPopState
+0x10010d088 cSC4AutomatonGetState
+0x10010d0a6 cSC4AutomatonFindState
+0x10010d0d4 cSC4AutomatonPrevState
+0x10010d0f8 cSC4AutomatonGetBehavior
+0x10010d11a cSC4AutomatonSetBehavior
+0x10010d170 cSC4AutomatonPushBehavior
+0x10010d250 cSC4AutomatonStartSFX
+0x10010d336 cSC4AutomatonStopSFX
+0x10010d400 cSC4AutomatonHandleCollision
+0x10010d96a cSC4AutomatonCreateAutomataState
+0x10010dcac cSC4AutomatonSetAutomataGroup
+0x10010de86 cSC4AutomatonGetAutomataGroup
+0x10010ded6 cSC4AutomatonQueryInterface
+0x10010df28 cSC4AutomatonQueryInterfaceThunk_10010df28
+0x10010df36 cSC4AutomatonQueryInterfaceThunk_10010df36
+0x10010df44 cSC4AutomatonQueryInterfaceThunk_10010df44
+0x10010df52 cSC4AutomatonQueryInterfaceThunk_10010df52
+0x10010df60 cSC4AutomatonQueryInterfaceThunk_10010df60
+0x10010df6e cSC4AutomatonAddRef
+0x10010df7c cSC4AutomatonAddRefThunk_10010df7c
+0x10010df8a cSC4AutomatonAddRefThunk_10010df8a
+0x10010df98 cSC4AutomatonAddRefThunk_10010df98
+0x10010dfa6 cSC4AutomatonAddRefThunk_10010dfa6
+0x10010dfb4 cSC4AutomatonAddRefThunk_10010dfb4
+0x10010dfc2 cSC4AutomatonRelease
+0x10010e006 cSC4AutomatonReleaseThunk_10010e006
+0x10010e040 cSC4AutomatonReleaseThunk_10010e040
+0x10010e07a cSC4AutomatonReleaseThunk_10010e07a
+0x10010e0b4 cSC4AutomatonReleaseThunk_10010e0b4
+0x10010e0ee cSC4AutomatonReleaseThunk_10010e0ee
+0x10010ea18 cSC4AutomatonEnableActiveSound
+0x10010ec20 cSC4AutomatonAsOccupantConst
+0x10010ec30 cSC4AutomatonSetCallNumber
+0x10010ec40 cSC4AutomatonReturnToSourceOccupant
+0x10010ec50 cSC4AutomatonStopNamedEffects
+0x10011b6f0 cSC4AutomatonStartNamedEffects
+0x10011b710 cSC4AutomatonGetLeader
+0x1002f8090 cSC4AutomatonGetDisabled
+0x1002f80e0 cSC4AutomatonSetMarkedForRemove
+0x1004fdee0 cSC4AutomatonGetDispatchState
+0x1004fdef0 cSC4AutomatonSetSpeed
+0x100502370 cSC4AutomatonAsOccupant
+0x100502388 cSC4AutomatonGetCurrentSpeed
+0x1005023f0 cSC4AutomatonGetActualSpeed
+0x100502450 cSC4AutomatonGetSelfControlling
+0x100506820 cSC4AutomatonGetModelInstance
+0x100506840 cSC4AutomatonGetSpecialRouteFlag
+0x100506860 cSC4AutomatonSetSpecialRouteFlag
+0x1005070c0 cSC4AutomatonGetRadius
+0x1006d6b20 cSC4AutomatonSetDispatchState
+0x1006d6b30 cSC4AutomatonSetAutomataFlag
+0x1006d6b50 cSC4AutomatonCheckAutomataFlag
+0x1006d6b60 cSC4AutomatonGetOpacity
+0x1006d6bc0 cSC4AutomatonGetPriority
+0x1006f1ee0 cSC4AutomatonGetDefaultSpeed
+0x1006f3050 cSC4AutomatonRecreateNamedEffects
+
+PARTIAL:
+0x10010840c cSC4AutomatonDoRandomWalkTick - DoRandomWalkTick - the random turn/atan2 step and the bounce state need the uncaptured per-frame random path; the state timer bookkeeping and the forward step are kept
+0x100108a8e cSC4AutomatonDoPlayerDriveTick - DoPlayerDriveTick - the occupant-manager vehicle query (slot 0x88) is not in the port occupant-manager seam; the 13 timers and TranslatePlayerDriveCommands are kept
+0x100108b64 cSC4AutomatonInitGhostModel - InitGhostModel - the ghost model is created through the renderer model layer (unrecovered)
+0x100108ee0 cSC4AutomatonShutdownGhostModel - ShutdownGhostModel - the ghost model is created through the renderer model layer (unrecovered)
+0x100108f8c cSC4AutomatonUpdateGhostModel - UpdateGhostModel - the ghost model is created through the renderer model layer (unrecovered)
+0x1001093ce cSC4AutomatonDoMagnetTick - DoMagnetTick - the terrain/network flag argument is dropped by the decompiler (taken as 0x20000) and the network placement is a seam
+0x1001095ba cSC4AutomatonDoAttachAnimTick - DoAttachAnimTick - the attached animated instance layer (frame count / opacity / exit) is unrecovered
+0x10010978e cSC4AutomatonTranslatePlayerDriveCommands - TranslatePlayerDriveCommands - the 0x2a0-byte player-drive record's seven 13-entry tables are not modelled by tAutomataStatePlayerDrive
+0x100109d28 cSC4AutomatonAddToCollisionSystem - AddToCollisionSystem - needs the effects manager (cSC4EffectsManager) and the model layer
+0x10010a858 cSC4AutomatonUpdateLighting - UpdateLighting - needs cISC4LightingManager
+0x10010a9b4 cSC4AutomatonInitLighting - InitLighting - needs cISC4LightingManager
+0x10010ab32 cSC4AutomatonPlayAnimKey - PlayAnim(key) - the model swap is a seam (cSC4ModelInstanceAnimated loading)
+0x10010ab5e cSC4AutomatonReplaceModelInstance - ReplaceModelInstance - folded into PlayAnim: the animated-instance transfer (zoom/rotation, effects model, bounds) is a seam
+0x10010aee2 cSC4AutomatonGetAnimOffsetByName - GetAnimOffsetByName - needs the occupant group templates' animation tables (script system seam)
+0x10010af9c cSC4AutomatonAttachAnim - AttachAnim - needs the adjacent animated-instance layer
+0x10010b4e6 cSC4AutomatonLoadModels - LoadModels - the cS3DModelProcessor load path is a host seam (keys become instances, bounds from the first model)
+0x10010b81a cSC4AutomatonUnloadModels - UnloadModels - the cS3DModelProcessor unload path is a host seam
+0x10010b8b6 cSC4AutomatonLoadAuxiliaryModel - LoadAuxiliaryModel - the ghost/auxiliary model needs the renderer model layer
+0x10010c00a cSC4AutomatonRegisterInGameDataRegistry - RegisterInGameDataRegistry - the game data registry bridge is unrecovered (no-op keeps the lifecycle)
+0x10010c6d8 cSC4AutomatonGameDataFadeOut - sFadeOut - game data registry command callback, part of the unrecovered registry bridge
+0x10010c76e cSC4AutomatonGameDataRemove - sRemove - game data registry command callback, part of the unrecovered registry bridge
+0x10010c806 cSC4AutomatonGameDataAttachAnim - sAttachAnim - game data registry command callback, part of the unrecovered registry bridge
+0x10010c916 cSC4AutomatonGameDataPlayAnim - sPlayAnim - game data registry command callback, part of the unrecovered registry bridge
+0x10010caae cSC4AutomatonGameDataPlaySfx - sPlaySfx - game data registry command callback, part of the unrecovered registry bridge
+0x10010cb64 cSC4AutomatonGameDataPushState - sPushState - game data registry command callback, part of the unrecovered registry bridge
+0x10010cc76 cSC4AutomatonUnregisterInGameDataRegistry - UnregisterInGameDataRegistry - the game data registry bridge is unrecovered (no-op keeps the lifecycle)
+0x10010d408 cSC4AutomatonGetDebugFlagsText - GetDebugFlagsText - the original builds a long flag listing; the seam placeholders answer an empty line
+0x10010d8bc cSC4AutomatonGetDebugExtraText - GetDebugExtraText - the original lists the extra state data; the seam placeholders answer an empty line
+0x10010dd56 cSC4AutomatonInitKeyEffects - InitKeyEffects - the registered-effect creation goes through the cSC4ModelRegEffects seam (the effect names live in the behaviour templates)
+0x10010ea78 cSC4AutomatonUpdateActiveSound - UpdateActiveSound - the active-sound loop (SFX::SoundManager / GenerateNewInstanceId) is not in the port audio layer
+
+SKIPPED:
+0x1000fd88e compiler-generated base-object constructor alias of AutomataOBB
+0x100105fd4 compiler trap stub for the base-object destructor slot
+0x100105fe0 compiler trap stub for a destructor thunk
+0x100105fe6 compiler trap stub for the deleting destructor slot
+0x100105ff2 compiler trap stub for a destructor thunk

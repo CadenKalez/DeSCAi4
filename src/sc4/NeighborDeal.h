@@ -74,7 +74,7 @@ public:
     virtual void Copy(const cISC4NeighborDeal& other) = 0;
     virtual void UpdateState() = 0;
     virtual void Cancel() = 0;
-    virtual void Activate() = 0;
+    virtual bool Activate() = 0;
     virtual std::uint32_t GetFlags() const = 0;
     virtual std::uint32_t SetFlags(std::uint32_t flags, bool on) = 0;
     virtual bool CheckFlagsAnd(std::uint32_t flags) const = 0;
@@ -123,7 +123,7 @@ public:
     void Copy(const cISC4NeighborDeal& other) override;
     void UpdateState() override;
     void Cancel() override;
-    void Activate() override;
+    bool Activate() override;
     std::uint32_t GetFlags() const override { return flags_; }
     std::uint32_t SetFlags(std::uint32_t flags, bool on) override;
     bool CheckFlagsAnd(std::uint32_t flags) const override { return (flags_ & flags) == flags; }

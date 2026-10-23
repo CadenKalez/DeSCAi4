@@ -1,0 +1,141 @@
+SOURCE src/sc4/Render3D.cpp|h
+EVIDENCE test scripts/tests/sc4_3drender_test.cpp - lifecycle and reference counts, QueryInterface, static driver / backing-store plumbing, Init / Shutdown, the eleven render-property highlight colours, clip rect and the three camera views, view-object lists (priority order and reference counts), dirty-rectangle append / clip / merge / invalidation, backing-store and fog / lighting flags, background picture, screen shake, the two stats strings and the serialization round trip, all under ASan/UBSan
+0x10075f3a8 Render3DConstructForward
+0x10075f4fe Render3DConstruct
+0x10075faec Render3DDestruct
+0x10075fdd4 Render3DDestructForward
+0x10075fdde Render3DDestructAndDelete
+0x10075fe0c Render3DAddRef
+0x10075fe36 Render3DRelease
+0x10075feee Render3DQueryInterface
+0x10075ff58 Render3DStaticInit
+0x10075ff8c Render3DStaticShutdown
+0x10075f3e6 Render3DInsertIntoViewObjectList
+0x10075f474 Render3DRemoveFromViewObjectList
+0x10075f4ce Render3DClearViewObjectList
+0x10076002a Render3DInit
+0x1007604c2 Render3DCreateQuadGrid
+0x100760546 Render3DReadProperties
+0x100760dbc Render3DShutdown
+0x1007611e2 Render3DWrite
+0x1007612a2 Render3DRead
+0x10076143c Render3DSetGDriver
+0x1007614c6 Render3DStaticSetGDriver
+0x1007615b6 Render3DGetLightingManager
+0x1007615c4 Render3DGetViewportSize
+0x1007615da Render3DSetViewportSize
+0x1007615f8 Render3DSetSubpixelImageBias
+0x10076160e Render3DSetClipRect
+0x1007616de Render3DUnsetClipRect
+0x100761720 Render3DSetCamera
+0x1007617b0 Render3DSetCameraControl
+0x1007625c0 Render3DDoFullViewUpdate
+0x100763a56 Render3DClearDirtyRectangleQueue
+0x100764062 Render3DTurnOnLighting
+0x1007658ae Render3DForceFullRedraw
+0x100766a22 Render3DSet3DCameraView
+0x100766a6a Render3DSet2DCameraView
+0x100766aa0 Render3DSetUICameraView
+0x100768d5c Render3DGetModelsInVolume
+0x100768d64 Render3DIsModelVisible
+0x100768dca Render3DIsModelVisibleElement
+0x100768e2e Render3DSetZoom
+0x100768e44 Render3DZoomIn
+0x100768e56 Render3DZoomOut
+0x100768e68 Render3DSetRotation
+0x100768e7a Render3DRotateLeft
+0x100768e8c Render3DRotateRight
+0x100768e9e Render3DSetZoomAndRotation
+0x10076937e Render3DGetShakeOffsets
+0x1007693a0 Render3DSetViewportClearColor
+0x1007693d0 Render3DAddViewObject
+0x100769450 Render3DRemoveViewObject
+0x100769508 Render3DFindViewObject
+0x1007697f6 Render3DEnableBackgroundPicture
+0x100769804 Render3DGetBackgroundPicture
+0x10076990a Render3DSetBackgroundPictureTexture
+0x100769996 Render3DEnableTransparentBackground
+0x1007699a4 Render3DGetBackingStoreEnabled
+0x1007699b0 Render3DSetBackingStoreEnabled
+0x1007699d8 Render3DHasBackingStore
+0x100769bce Render3DGetViewFogEnabled
+0x100769bda Render3DSetViewFogEnabled
+0x100769c02 Render3DGetLightingEnabled
+0x100769c0e Render3DSetLightingEnabled
+0x100769c44 Render3DAddDirtyRectangle
+0x100769ff6 Render3DBorrowRenderSystem
+0x10076a006 Render3DReturnRenderSystem
+0x10076a084 Render3DGetStatsString1
+0x10076a0f2 Render3DGetStatsString2
+0x10076a176 Render3DSetMapScaleFactor
+0x10076a182 Render3DGetViewUtilities
+0x10076a190 Render3DGetDrawContext
+0x10076a19e Render3DGetCamera
+0x10076a1ac Render3DGetCameraControl
+0x10076a1ba Render3DGetProjectionMatrixEntries
+0x10076a1c2 Render3DGetViewMatrixEntries
+0x10076a1ca Render3DGetGZCLSID
+
+PARTIAL:
+0x10076113a Render3DClearModelChangeQueue -- the queue is emptied and its model flags are cleared, but the per-item grid-element release needs ProcessModelChangeQueue
+0x10076180e Render3DIsModelInserted -- the flag/queue test is kept but the queue can never be filled because InsertModel is not ported
+0x100761392 Render3DSetGraphicSystem -- reference protocol and the two graphic ports are kept; the original also fills two embedded graphic-port sub-objects and two name strings
+0x100764096 Render3DUpdateViewportRect -- frustum rebuild, clip rect and redraw invalidation are kept; the static-view redraw at the end needs DrawStaticView
+0x1007658be Render3DAttemptTranslatedViewUpdate -- the go/no-go decision and the full-update fallback are kept; the blit in DoTranslatedViewUpdate is not ported
+0x100768eb0 Render3DStartScreenShakeSimple -- the synthetic description is built as decompiled but the frequency stack slot is uninitialised in the decompile, so the two arguments are passed through
+0x100769064 Render3DStartScreenShake -- the list bookkeeping is kept; cSC4ShakeDescription +0/+4 are treated as a time window by StopScreenShake and as amplitude/frequency by the stream reader
+0x10076929a Render3DStopScreenShake -- same description-field ambiguity as StartScreenShake
+0x10076981e Render3DSetBackgroundPictureBuffer -- the buffer swap and texture release are kept; nsTexUtil::SetupTexture is not ported
+0x100769cca Render3DAddDirtyRectangleInternal -- the merge arithmetic is decompiled, but only the append and one-item merge paths are exercised by the test (the 40000-area overflow and the kind-6 requeue are not)
+
+SKIPPED:
+0x10075fe1a compiler-emitted non-virtual thunk; the port generates it from the multiple inheritance
+0x10075fe28 compiler-emitted non-virtual thunk; the port generates it from the multiple inheritance
+0x10075fe7a compiler-emitted non-virtual thunk; the port generates it from the multiple inheritance
+0x10075feb4 compiler-emitted non-virtual thunk; the port generates it from the multiple inheritance
+0x10075ff3c compiler-emitted non-virtual thunk; the port generates it from the multiple inheritance
+0x10075ff4a compiler-emitted non-virtual thunk; the port generates it from the multiple inheritance
+0x100761294 compiler-emitted non-virtual thunk; the port generates it from the multiple inheritance
+0x100761384 compiler-emitted non-virtual thunk; the port generates it from the multiple inheritance
+0x100763a44 compiler-emitted non-virtual thunk; the port generates it from the multiple inheritance
+0x10076a1d6 compiler-emitted non-virtual thunk; the port generates it from the multiple inheritance
+0x100761896 needs the model change queue / quad-grid bookkeeping (ProcessModelChangeQueue, SC43DGridElement lifetime, RebuildQuadGrid); the public model entry points are declared and return false
+0x100761e58 needs the model change queue / quad-grid bookkeeping (ProcessModelChangeQueue, SC43DGridElement lifetime, RebuildQuadGrid); the public model entry points are declared and return false
+0x1007620c4 needs the model change queue / quad-grid bookkeeping (ProcessModelChangeQueue, SC43DGridElement lifetime, RebuildQuadGrid); the public model entry points are declared and return false
+0x100762458 needs the model change queue / quad-grid bookkeeping (ProcessModelChangeQueue, SC43DGridElement lifetime, RebuildQuadGrid); the public model entry points are declared and return false
+0x100762538 needs the model change queue / quad-grid bookkeeping (ProcessModelChangeQueue, SC43DGridElement lifetime, RebuildQuadGrid); the public model entry points are declared and return false
+0x100762628 needs the model change queue / quad-grid bookkeeping (ProcessModelChangeQueue, SC43DGridElement lifetime, RebuildQuadGrid); the public model entry points are declared and return false
+0x10076279c needs the model change queue / quad-grid bookkeeping (ProcessModelChangeQueue, SC43DGridElement lifetime, RebuildQuadGrid); the public model entry points are declared and return false
+0x1007628d6 needs the model change queue / quad-grid bookkeeping (ProcessModelChangeQueue, SC43DGridElement lifetime, RebuildQuadGrid); the public model entry points are declared and return false
+0x100762968 needs the model change queue / quad-grid bookkeeping (ProcessModelChangeQueue, SC43DGridElement lifetime, RebuildQuadGrid); the public model entry points are declared and return false
+0x10076385e needs the model change queue / quad-grid bookkeeping (ProcessModelChangeQueue, SC43DGridElement lifetime, RebuildQuadGrid); the public model entry points are declared and return false
+0x100763936 needs the model change queue / quad-grid bookkeeping (ProcessModelChangeQueue, SC43DGridElement lifetime, RebuildQuadGrid); the public model entry points are declared and return false
+0x100765592 needs the model change queue / quad-grid bookkeeping (ProcessModelChangeQueue, SC43DGridElement lifetime, RebuildQuadGrid); the public model entry points are declared and return false
+0x1007657c6 needs the model change queue / quad-grid bookkeeping (ProcessModelChangeQueue, SC43DGridElement lifetime, RebuildQuadGrid); the public model entry points are declared and return false
+0x100762b36 needs the terrain (SL::spTerrain) / city (SL::spCity) seams and the camera-control message pipeline
+0x1007630ca needs the terrain (SL::spTerrain) / city (SL::spCity) seams and the camera-control message pipeline
+0x100766b22 needs the terrain (SL::spTerrain) / city (SL::spCity) seams and the camera-control message pipeline
+0x100766c30 needs the terrain (SL::spTerrain) / city (SL::spCity) seams and the camera-control message pipeline
+0x1007679b4 needs the terrain (SL::spTerrain) / city (SL::spCity) seams and the camera-control message pipeline
+0x100763ac6 per-frame draw pass (the largest slice): needs the driver draw path, the backing-store blit and the static-view redraw; deliberately left for a dedicated pass
+0x100764240 per-frame draw pass (the largest slice): needs the driver draw path, the backing-store blit and the static-view redraw; deliberately left for a dedicated pass
+0x100764a6c per-frame draw pass (the largest slice): needs the driver draw path, the backing-store blit and the static-view redraw; deliberately left for a dedicated pass
+0x100764c54 per-frame draw pass (the largest slice): needs the driver draw path, the backing-store blit and the static-view redraw; deliberately left for a dedicated pass
+0x1007650d0 per-frame draw pass (the largest slice): needs the driver draw path, the backing-store blit and the static-view redraw; deliberately left for a dedicated pass
+0x100765194 per-frame draw pass (the largest slice): needs the driver draw path, the backing-store blit and the static-view redraw; deliberately left for a dedicated pass
+0x1007659f6 per-frame draw pass (the largest slice): needs the driver draw path, the backing-store blit and the static-view redraw; deliberately left for a dedicated pass
+0x1007660ee per-frame draw pass (the largest slice): needs the driver draw path, the backing-store blit and the static-view redraw; deliberately left for a dedicated pass
+0x1007661ba per-frame draw pass (the largest slice): needs the driver draw path, the backing-store blit and the static-view redraw; deliberately left for a dedicated pass
+0x100766d5e per-frame draw pass (the largest slice): needs the driver draw path, the backing-store blit and the static-view redraw; deliberately left for a dedicated pass
+0x100767716 per-frame draw pass (the largest slice): needs the driver draw path, the backing-store blit and the static-view redraw; deliberately left for a dedicated pass
+0x1007677da per-frame draw pass (the largest slice): needs the driver draw path, the backing-store blit and the static-view redraw; deliberately left for a dedicated pass
+0x1007695a2 per-frame draw pass (the largest slice): needs the driver draw path, the backing-store blit and the static-view redraw; deliberately left for a dedicated pass
+0x100767b12 picking needs the model mesh/triangle path (cIS3DResModel / cS3DMeshAndTriangle) and the occupant filter, none of which is ported
+0x100767d26 picking needs the model mesh/triangle path (cIS3DResModel / cS3DMeshAndTriangle) and the occupant filter, none of which is ported
+0x100767e2a picking needs the model mesh/triangle path (cIS3DResModel / cS3DMeshAndTriangle) and the occupant filter, none of which is ported
+0x1007687de picking needs the model mesh/triangle path (cIS3DResModel / cS3DMeshAndTriangle) and the occupant filter, none of which is ported
+0x1007688d6 picking needs the model mesh/triangle path (cIS3DResModel / cS3DMeshAndTriangle) and the occupant filter, none of which is ported
+0x100768972 picking needs the model mesh/triangle path (cIS3DResModel / cS3DMeshAndTriangle) and the occupant filter, none of which is ported
+0x100769718 the driver snapshot extension (0xe69bfe2a) and cGZGimexFactory are not ported
+0x100769760 the driver snapshot extension (0xe69bfe2a) and cGZGimexFactory are not ported
+0x1007663a8 per-frame screen-shake curve evaluation (2.9 KB of curve sampling) is not ported; only the shake list and GetShakeOffsets are

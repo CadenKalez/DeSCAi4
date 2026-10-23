@@ -43,8 +43,9 @@ public:
     virtual bool Write(cIGZOStream& stream) const;          // @ 0x10010e164 (vslot 0x08)
     virtual bool Read(cIGZIStream& stream);                 // @ 0x10010e214 (vslot 0x10)
 
+    std::uint32_t stateType = 0;                    // +0x08: the behaviour state id the automaton dispatches on
     cSC4AutomataController* controller = nullptr;   // +0x10
-    std::uint32_t stateId = 0;                      // +0x18
+    std::uint32_t stateId = 0;                      // +0x18: index of this record in the automaton's state stack
     float timer = 0.0f;                             // +0x1c
     bool flag = false;                              // +0x20
     std::uint32_t soundHandle = 0;                  // +0x24

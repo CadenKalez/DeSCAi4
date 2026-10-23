@@ -96,11 +96,32 @@ public:
     const cS3DTransform& WorldTransform() const { return world_; }
     const cS3DTransform& CombinedSource() const { return combined_; }
 
+    // ---- the fields cSC4EffectsManager reads and writes by offset -------------------------------------------------
+    // cSC4EffectsManager::CreateVisualEffect(unsigned,unsigned,...) keys the effect with the (group, type) pair it was
+    // created from (0x1005e0c08 stores them at +0x30 / +0x34); UpdateVisualEffect re-resolves the description through
+    // that pair, and DeactivateUnusedVisualEffects zeroes the pair and the slot when it recycles the object.
+    void SetGroup(std::uint32_t group) { group_ = group; }             // +0x30
+    std::uint32_t Group() const { return group_; }
+    void SetType(std::uint32_t type) { type_ = type; }                 // +0x34
+    std::uint32_t Type() const { return type_; }
+    void SetName(const std::string& name) { name_ = name; }            // +0x18
+    const std::string& Name() const { return name_; }
+    std::uint32_t RefCount() const { return refCount_; }               // +0x10
+    // +0x188: the renderer handle of a shake started by cSC4EffectsManager::StartAncilliary (0 = none). SetDescription
+    // clears it.
+    void SetAncilliaryHandle(std::uint32_t handle) { ancilliaryHandle_ = handle; }
+    std::uint32_t AncilliaryHandle() const { return ancilliaryHandle_; }
+    // @ 0x1005e0642 (the recycle path of DeactivateUnusedVisualEffects): release the components, clear the name and
+    // zero group / type / slot. The manager gets the slot index back from FreeVisualEffectSlots().
+    void ClearForReuse();
+
 private:
     void PostMessage(std::uint32_t type, std::uint32_t data1, std::uint32_t data2, bool withData2);
 
     std::uint32_t refCount_ = 0;                // +0x10
     std::string name_;                          // +0x18
+    std::uint32_t group_ = 0;                   // +0x30 description lookup key (CreateVisualEffect by group/type)
+    std::uint32_t type_ = 0;                    // +0x34
     std::int32_t slot_ = -1;                    // +0x38
     bool started_ = false;                      // +0x3c
     bool stopping_ = false;                     // +0x3d
@@ -111,7 +132,7 @@ private:
     std::uint32_t startMessage_[3] = {};        // +0x148
     std::vector<cParamRec> paramRecs_;          // +0x158
     std::vector<float> params_;                 // +0x170
-    std::uint32_t reserved188_ = 0;
+    std::uint32_t ancilliaryHandle_ = 0;        // +0x188 (the original's reserved188_)
     IEffectsManagerLink* manager_ = nullptr;    // +0x190
 };
 

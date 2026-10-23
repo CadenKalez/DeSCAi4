@@ -1,0 +1,188 @@
+SOURCE src/sc4/View3DWin.cpp|h
+EVIDENCE test scripts/tests/sc4_view3dwin_test.cpp - every function below runs in sc4_view3dwin (lifecycle and refcounts, Init/Shutdown order, zoom/rotation limits and the SetZoomLimits quirk, the scroll direction table / preference / stop speed and the scroll render-property snapshot, the view filter and level messages, the tool stack with its message and reference counts, character/key/wheel/exit dispatch including the persistent-loop bound quirk, both picks and the two-word PickTerrain fallback, the global effect trigger refcounts, GZPaint's frame marker / deferred message / scroll stop, and the DoMessage routing cases)
+
+The port keeps one IView3DWinHost method per original call (SL::spMS2/spCCM/spSC4/SL::spPreferences and the
+unrecovered cSC4ProgressScreen, cRZAutoMsg2Notification, cSC4CoverageRadiusEffectHelper and cSC4WinAnimationRecorder
+objects); the cRZAutoMsg2Notification at +0x1d0 and the coverage helper at +0x5f8 are seams. The port's base
+layout matches the original up to +0x1d0; afterwards the offsets are lower (the 0x18-byte notification helper became a
+pointer, the GUI blocks at +0x270..+0x4d0 are not modelled and cSC4RenderProperties is 8 bytes shorter), so every
+offset in the header comments is the original's and the port's own layout is documented in the header note. The camera's ScrollByViewportAngle now returns its UpdateCameraPosition result
+(the binary's EAX at 0x10076b662), which this class checks before pausing the simulation.
+
+RECOVERED FUNCTIONS (one 0xADDR UniqueName per function):
+0x10077efc2 Construct
+0x10077f6ec ConstructWrapper
+0x10077f6f6 Destruct
+0x10077fb8e DestructWrapper
+0x10077fb98 DestructThunk
+0x10077fba6 DestructAndDelete
+0x10077fbd4 DestructAndDeleteThunk
+0x10078145a QueryInterface
+0x1007814ac QueryInterfaceThunkTarget
+0x1007814ba QueryInterfaceThunkFilter
+0x1007814c8 QueryInterfaceThunkWin
+0x1007814d6 AddRef
+0x1007814e4 AddRefThunkTarget
+0x1007814f2 AddRefThunkFilter
+0x100781500 AddRefThunkWin
+0x10078150a Release
+0x100781518 ReleaseThunkTarget
+0x100781526 ReleaseThunkFilter
+0x100781534 ReleaseThunkWin
+0x10078153e AsIGZWin
+0x100781548 GetRenderer
+0x100781556 GetViewManager
+0x100781454 SetErrorReportString
+0x100793ab0 GetModelMaker
+0x100793ad2 GetCoverageHelper
+0x100793ae0 GetLastSelectedBuilding
+0x100793afa GetLastSelectedLot
+0x100793b14 SetLastSelectedBuilding
+0x100793b28 SetLastSelectedLot
+0x100783d74 DisplayTerrainPickDebugString
+0x100783d7a GetTerrainQueryEnabled
+0x100782b82 GZOnKeyDown
+0x100782b8a GZOnKeyDownThunk
+0x100782b92 GZOnKeyUp
+0x100782b9a GZOnKeyUpThunk
+0x10078abdc GZOnCommand
+0x10078abea GZOnCommandThunk
+0x10077fbe2 Init
+0x100780984 InitThunk
+0x100780992 Shutdown
+0x100781438 ShutdownThunk
+0x100781ab2 GetKeyAccelerator
+0x100781ac0 SetKeyAccelerator
+0x100781b06 SetScrolling
+0x100781b86 DoScrollBegin
+0x100781908 DoScrollEnd
+0x100781cb4 ScrollStop
+0x100781cee KillKeyboardScrolling
+0x100781d04 RecalcScrollVelocity
+0x100781e1a SetZoom
+0x100781e64 SetZoomLimits
+0x100781ef2 CanZoomIn
+0x100781f18 CanZoomOut
+0x100781f3e SetRotation
+0x100781f6e RotateLeft
+0x100781f9e RotateRight
+0x100781fce ZoomIn
+0x100782014 ZoomOut
+0x10078205a SetZoomAndRotation
+0x1007819e0 DoTemporarySimHiddenPause
+0x100781a20 DoTemporarySimHiddenResume
+0x1007820a4 GetCurrentViewFilterInfo
+0x1007820ba SetCurrentViewFilterInfo
+0x100782230 GetCurrentViewLevelInfo
+0x10078223e SetCurrentViewLevelInfo
+0x10078235c GetCurrentViewLevel
+0x100782368 SetCurrentViewLevel
+0x100782390 GetCurrentViewInputControl
+0x1007823ae SetCurrentViewInputControl
+0x100782556 SendViewInputControlChangeMessage
+0x100782660 RemoveCurrentViewInputControl
+0x100782790 RemoveAllViewInputControls
+0x1007827b8 AddPersistentViewInputControl
+0x10078283e RemovePersistentViewInputControl
+0x1007828c6 RemoveAllPersistentViewInputControls
+0x1007829f8 GZOnCharacter
+0x100782b74 GZOnCharacterThunk
+0x100782ba2 ProcessKeyDown
+0x100782d20 ProcessKeyUp
+0x100783ae2 GZOnMouseWheel
+0x100783c68 GZOnMouseWheelThunk
+0x100783c7a GZOnMouseExit
+0x100783d62 GZOnMouseExitThunk
+0x100784ca4 DoMessage
+0x100785a50 DoMessageThunk
+0x10078292c PickTerrain
+0x100782962 PickOccupant
+0x100792974 GetGlobalEffectTriggerState
+0x10079299e AssertGlobalEffectTrigger
+0x100792a6c RetractGlobalEffectTrigger
+0x100781590 GZPaint
+0x100781aa0 GZPaintThunk
+
+PARTIAL:
+- 0x10078af10 DoMessageFilter - the cIGZWinMessageFilter entry point (496 bytes) routes button and menu messages from
+  the GUI windows AddGUI builds (HandleButtonActivated 0x10078afde, the panel commands). The GUI and the panel vectors
+  at +0x2b0..+0x328 are not recovered, so the port answers "not handled" and lets the window tree continue.
+- 0x100785a5e DoMessageMessage2 - the cIGZMessageTarget2 entry point (1657 bytes) drives the advisor, population,
+  budget, mayor rating, mission and 24-hour-clock panels from about 46 message types; every one of those panels is an
+  unrecovered GUI window. The port answers "not handled".
+- 0x100781b86 / 0x100781908 DoScrollBegin / DoScrollEnd - recovered except the 4-byte field at cSC4RenderProperties
+  +0x10 (copied to the window's +0x550 and back at 0x10078195d / 0x100781960); the port models it as an unused
+  renderPropertiesAux_ because the recovered cSC4RenderProperties has no member there.
+
+SKIPPED:
+- AddGUI 0x1007892fc and RemoveGUI 0x100780eaa (the whole GUI: 42 windows built through SC4CreateWindowFromScript, the
+  eight panel vectors at +0x298..+0x328 and the window processors cSC4*WinProc, none of them recovered).
+- ProcessCommand 0x10078e2e0 (5.9 KB command table), HandleButtonActivated 0x10078afde (4.6 KB panel buttons),
+  DoPanelCommandGUI 0x10078c2dc, ShowPanel 0x10078ac02, HidePanel 0x10078aade, ShowMayorSubPanel 0x10078ad68,
+  MinimizeUI 0x100792b4e (all GUI panel state).
+- The catalog menus: InvokeCatalogItemCommand 0x10078410a, InvokeTertiaryMenu (both overloads),
+  InvokeSecondaryMenu (both), InvokeTertiaryMenu, CreateBuildingMenu, DoUtilitiesMenu, DoTransportMenu, DoVehicleMenu,
+  DoDisasterCopingMenu, DoLandscapeMenu, DoZoningMenu, DoDayNightMenu, DoLandscapeCatalogView, DoFloraCatalogView,
+  DoZoneCatalogView, DoEarnedVehicleCatalogView, AddBuildingsToItemList, AddAutomataToItemList - they need
+  cISC4WinCatalogView / cSC4WinTertiaryMenuFrame / the catalog item manager.
+- The panel refresh functions: UpdateMayorRatingBar, UpdateBudget, UpdatePopulation, UpdateSimulationClock,
+  Update24HourClock, Update24HourClockHover, UpdateAmbientLightLevel, UpdateAlertBorder, UpdateSpeedButtons,
+  UpdateDayNightButtons, UpdateCityName, UpdateZoomButtons, UpdateProgressMessage, UpdateMissionProgress,
+  ShowMissionStatusPanel, HideMissionStatusPanel, UpdateMissionStatusPanel, DoBudgetFailure - each drives an
+  unrecovered GUI window (the ids are in the export).
+- CloseSecondaryMenu 0x100791d18 / CloseTertiaryMenu 0x10079280e - the tertiary menu's child interface (iid 0x49d98264)
+  and the menu windows at +0x358/+0x360 are not recovered; CloseTertiaryMenu's decompilation also loses the register
+  that initialises its out-parameter.
+- The cursor text and cost indicator: SetCursorText, ClearCursorText, CursorTextChanged, SetCostIndicator (both),
+  ClearCostIndicator, SetCostIndicatorAlpha, RenderCostIndicator, UpdateCostIndicator, SetCursorTextPosition3D,
+  UpdateCursorTextPositions - they need the bitmap / text windows at +0x5c0 / +0x5c8 / +0x5d0 (cGZWinBMP, the text
+  window API and the font renderer), and SetCostIndicatorAlpha's decompilation is garbled (it loses the virtual call
+  receiver at 0x100791c04).
+- The mouse handlers: GZOnMouseDownL 0x100782e9e, GZOnMouseDownR 0x100783068, GZOnMouseUpL 0x100783268,
+  GZOnMouseUpR 0x100783474, GZOnMouseMove 0x100783786 - they route through SL::spCity vslot 0x290 (the simulator's
+  input handler, not recovered), create the cSC4ViewInputControlCityScroll tool and pick through the terrain.
+- The tool invokers: InvokeZoningTool 0x100783d86, InvokeDisaster 0x100783e2a, InvokeLandscapeTool 0x10078408e,
+  RunGlobalTerrainTool 0x1007849bc, ApplyDefaultTerrainBrush 0x100790b4a, ChangeTerrainType 0x1007928da,
+  ToggleContourDisplay 0x10078fe00 - they construct unrecovered tools and drive cSLTERRAIN.
+- The city lifecycle and persistence: DoPreCityInit 0x10078616c, DoPostCityInit 0x1007867d8, DoCityEstablished,
+  DoCityObliterated, DoLoad, DoSave, DoEstablishCityDialog, ObliterateCity - they need cISC4City, the persist DB
+  segment streams and the establish-city dialog.
+- The remaining one-off helpers: ProcessCheatCode 0x10078526a, HandleAdviceLinkMessage 0x100785070,
+  AddWinAnimationRecorder 0x100780d78, AddBackgroundImageToRenderer 0x100787334, ReadTunableValues 0x100788e0e,
+  SetRenderProperties 0x10079064e / SetRenderPropertiesStatic, CreateProgressScreen 0x100780910 (created through the
+  host seam instead), and the two empty setters DisplayTerrainPickDebugString / SetErrorReportString (recovered).
+- Deferred as a to-do: GetViewManager's source window (+0x498) is set by AddGUI, and the camera / renderer /
+  model-maker pointers (+0x180 / +0x188 / +0x190) are set by DoPreCityInit; the port leaves them to the host until
+  those functions are recovered.
+
+SEAMS (for docs/SEAMS.md, which this agent does not edit):
+- IView3DWinHost (src/sc4/View3DWin.h): SL::spMS2, SL::spCCM, SL::spSC4 (vslots 0xa8 / 0x130 / 0x138 / 0x160),
+  SL::spPreferences (+0xf09), SL::spRenderProperties, the lighting manager (vslots 0x38 / 0x40), SL::OnView3DCreate /
+  OnView3DShutdown, SC4PostMessage2, nsSC4TutorialSystem::FilterUICommandMessage, cSC4HTMLLinkHandler::DoURL,
+  cSC4View3DWin::HandleAdviceLinkMessage / ProcessCheatCode / InvokeCatalogItemCommand / UpdateCostIndicator /
+  Update24HourClockHover / UpdateCursorTextPositions, cSC4ProgressScreen, cSC4WinAnimationRecorder, the two lot
+  configuration editors (+0x270 / +0x278), cSC4ModelMaker, cS3DCamera (+0x178), the simulation clock (+0x170),
+  SC4GetPopupModalDialogs{Safe,Enabled} and the key-accelerator exemplar path (exemplar 0x42e3ea4b + GZCOM 0x42e967be /
+  iid 0xe2c1b3c4).
+- IRenderer3D (src/sc4/View3DWin.h): cSC43DRender (vtable 0x100aebdb0) as this window uses it - Init / Shutdown,
+  GetDrawContext, ForceFullRedraw, Draw, SetZoom / ZoomIn / ZoomOut / SetRotation / RotateLeft / RotateRight /
+  SetZoomAndRotation (vslots 0x118..0x148), PickTerrain (0x1e8) and Pick (0x200). The real class is being recovered in
+  parallel by the cSC43DRender agent; hook it up there.
+- INotificationHelper3D: cRZAutoMsg2Notification (0x18 bytes at +0x1d0; the constructor's AddMessageTypes with the
+  132-entry table at 0x100a2a550).
+- ICoverageHelper3D: cSC4CoverageRadiusEffectHelper (+0x5f8, Init @ 0x100770fc8 / Shutdown @ 0x10077137e).
+- ISimulatorPauseSink: the cISC4Simulator at +0x238 (vslots 0x50 Pause / 0x68 Resume).
+- Reused recovered classes: cSC4CameraControl (+0x180), cSC4RenderProperties (+0x540 and the two globals),
+  cSC4ViewInputControl (the tool stack), cRZTimer, cRZMessage2Standard, cGZWin / cIGZWinMgr.
+
+TO-DOs for the lead (todo.py add):
+- VIEW3D-GUI-1: recover AddGUI / RemoveGUI / HandleButtonActivated, which set the panel vectors and the
+  view-manager source at +0x498 that GetViewManager asks.
+- VIEW3D-MSG-1: recover the two message entry points DoMessage(cIGZWin*, cGZMessage&) and DoMessage(cIGZMessage2*)
+  (the panel refresh chain).
+- VIEW3D-DRAW-1: recover the cursor text / cost indicator cluster (+0x5a0..+0x5f0) and hand GZPaint's cost-indicator
+  update back from the host.
+- VIEW3D-MOUSE-1: recover the four mouse handlers and the city input routing (SL::spCity vslot 0x290).
+- VIEW3D-HOST-1: hook IView3DWinHost up to the recovered SL globals once cSC4ProgressScreen / cSC4ModelMaker exist.
+- VIEW3D-CAM-1: cSC4CameraControl::ScrollByViewportAngle now returns bool (verified against 0x10076b662); check no
+  other recovered caller relied on the void signature.

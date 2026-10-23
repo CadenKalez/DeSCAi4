@@ -116,7 +116,7 @@ public:
     bool UpdateCameraPosition(std::uint32_t kind);                   // 0x10076b30e
     void Shutdown();                                                 // 0x10076b3be
 
-    void ScrollByViewportAngle(float angle, float distance);         // 0x10076b540
+    bool ScrollByViewportAngle(float angle, float distance);         // 0x10076b540 (returns UpdateCameraPosition's result)
     void ConvertWorldPointToCameraPlanePoint(const cS3DVector3& world, cS3DVector2& out);   // 0x10076b670
     void ClampScrollToBounds(const cS3DVector2& from, const cS3DVector2& to, cS3DVector2& out);   // 0x10076b71a
     void ConvertCameraPlanePointToWorldPoint(const cS3DVector2& plane, cS3DVector3& out);   // 0x10076ba0c

@@ -74,12 +74,14 @@ void cSC4NeighborDeal::Cancel() {
     SetAmount(0);
 }
 
-void cSC4NeighborDeal::Activate() {
+bool cSC4NeighborDeal::Activate() {
     if (CheckFlagsOr(kDealFlagProposed) && !CheckFlagsOr(kDealStateMask)) {
         SetFlags(kDealFlagActive, true);
         SetFlags(kDealFlagProposed, false);
         SetFlags(kDealFlagCancelled, false);
+        return true;
     }
+    return false;
 }
 
 void cSC4NeighborDeal::Copy(const cISC4NeighborDeal& other) {

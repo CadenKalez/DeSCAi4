@@ -71,9 +71,14 @@ struct tBehaviorTemplate {
     float kphMultiply[2] = {1.0f, 1.0f};        // +0x48
     std::int32_t kph[2] = {-1, -1};             // +0x50
     float acceleration = 0.5f;                  // +0x58
-    float pathOffset = 0.0f;                    // +0x5c
-    bool avoidLots = false, avoidRoads = false; // +0x60, +0x61
-    bool ignorePaths = false, ignoreRoads = false, ignoreTerrain = false, ignoreAttractors = false;   // +0x64..+0x67
+    // +0x5c..+0x61: six option bytes. The automaton reads them in this order (HandleEnterState): the four ignore
+    // flags first, then avoid lots / avoid roads (MoveTo checks the lot / network at the target cell for those two).
+    bool ignorePaths = false;                   // +0x5c -> automata flag 0x2000
+    bool ignoreRoads = false;                   // +0x5d -> 0x20000
+    bool ignoreTerrain = false;                 // +0x5e -> 0x40000
+    bool ignoreAttractors = false;              // +0x5f -> 0x4000
+    bool avoidLots = false, avoidRoads = false; // +0x60, +0x61 -> 0x400000, 0x800000
+    float pathOffset = 0.0f;                    // +0x64
     float delay[2] = {10.0f, 15.0f};            // +0x68 (random walk)
     float turn[2] = {0.1f, 0.2f};               // +0x70
     float strength[2] = {1.0f, 1.0f};           // +0x78

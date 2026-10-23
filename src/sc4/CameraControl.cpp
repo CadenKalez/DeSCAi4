@@ -153,7 +153,7 @@ bool cSC4CameraControl::Read(cIGZIStream& stream) {
     return !stream.GetError();
 }
 
-void cSC4CameraControl::ScrollByViewportAngle(float angle, float distance) {
+bool cSC4CameraControl::ScrollByViewportAngle(float angle, float distance) {
     const float s = std::sin(angle), c = std::cos(angle);
     const float scale = unitsPerPixel_[zoom_];
     const float dx = c * distance * scale;
@@ -170,7 +170,7 @@ void cSC4CameraControl::ScrollByViewportAngle(float angle, float distance) {
     if (host) found = host->PickTerrain(target_, viewDir_, hit);   // SL::TerrainView() vslot 0x18
     if (!found) found = IntersectWithGroundPlane(target_, viewDir_, hit);
     if (found) target_ = hit;
-    UpdateCameraPosition(kCameraUpdateTarget);
+    return UpdateCameraPosition(kCameraUpdateTarget);
 }
 
 void cSC4CameraControl::ConvertWorldPointToCameraPlanePoint(const cS3DVector3& world, cS3DVector2& out) {

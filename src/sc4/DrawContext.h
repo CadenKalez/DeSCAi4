@@ -245,6 +245,8 @@ public:
     // ---- port wiring / inspection -----------------------------------------------------------------
     // The original sets these fields directly from cSC43DRender::Init (0x100760354..0x1007603f0).
     void SetDriver(gd::cIGZGDriver* driver) { driver_ = driver; }                       // +0x40
+    gd::cIGZGDriver* Driver() const { return driver_; }
+    s3d::cS3DCamera* Camera() const { return camera_; }
     void SetRenderProperties(sc4::cSC4RenderProperties* properties) { renderProperties_ = properties; }   // +0x50
     void SetViewUtilities(IS4ViewUtilities* utilities) { viewUtilities_ = utilities; }   // +0x28
     void SetLightingManager(IS4LightingManager* lighting) { lightingManager_ = lighting; }   // +0x68
