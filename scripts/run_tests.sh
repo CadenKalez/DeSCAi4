@@ -373,6 +373,7 @@ declare -a TESTS=(
  "gz_spanrender:$T/gz_spanrender_test.cpp"
  "rz_smallfunctions:$T/rz_smallfunctions_test.cpp $S/gz/GZCOMDirector.cpp $S/rz/RZConvert.cpp $S/rz/Threading.cpp $S/rz/cRZCriticalSection.cpp $S/sc4/AppPlatform.cpp $S/platform/MacTools.cpp $S/rz/cRZCOMDllDirector.cpp $S/rz/cRZString.cpp $S/sc4/ServiceLocator.cpp"
  "audio_freshnessdirector:$T/audio_freshnessdirector_test.cpp $S/audio/FreshCell.cpp $S/audio/FreshCellPlayer.cpp $S/audio/FreshDimensionPlayer.cpp $S/audio/FreshPlayer.cpp $S/audio/FreshScore.cpp $S/rz/cRZString.cpp $S/audio/FreshHost.cpp $S/rz/RZConvert.cpp $S/rz/cRZCallbackTimer.cpp $S/rz/cRZCriticalSection.cpp $S/rz/cRZRandom.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp"
+ "sc4_trafficnetworkmap:$T/sc4_trafficnetworkmap_test.cpp $S/sc4/TrafficNetworkMap.cpp $S/rz/cRZRandomSuper.cpp $S/rz/cRZTimer.cpp $S/platform/MacTools.cpp -I$T"
 )
 fail=0
 for entry in "${TESTS[@]}"; do
