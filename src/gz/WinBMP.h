@@ -71,7 +71,7 @@ public:
 
     void SetSourceBufferAreaFromWindowArea(const cRZRect& area);
 
-private:
+protected:
     cIGZBuffer* bmp_ = nullptr;          // +0x158
     bool alphaBlend_ = false;            // +0x160
     float alpha_ = 0.5f;                 // +0x164

@@ -108,7 +108,7 @@ CLASS-cGZGraphicCOMDirector,cGZGraphicCOMDirector,"recover 1 remaining function(
 LEDGER-cGZGraphicCOMDirector,cGZGraphicCOMDirector,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZGraphicSystem,cGZGraphicSystem,"recover 4 remaining function(s) (4 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZGraphicSystem,cGZGraphicSystem,finish 201 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
-CLASS-cGZGraphicSystemW32,cGZGraphicSystemW32,"recover 35 remaining function(s) (35 not started, 0 partial/pending); bases still unfinished: cGZGraphicSystem",CLASS-cGZGraphicSystem,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cGZGraphicSystemW32,cGZGraphicSystemW32,"recover 35 remaining function(s) (35 not started, 0 partial/pending); bases still unfinished: cGZGraphicSystem",CLASS-cGZGraphicSystem,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZGraphicWin32COMDirector,cGZGraphicWin32COMDirector,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZLegacyControl,cGZLegacyControl,"recover 44 remaining function(s) (44 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZLegacyControl,cGZLegacyControl,finish 15 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv

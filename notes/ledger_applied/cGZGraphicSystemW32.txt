@@ -1,0 +1,52 @@
+SOURCE src/gz/GraphicSystemW32.cpp|h
+EVIDENCE test scripts/tests/gz_graphicsystemw32_test.cpp - fake IGraphicSystemHost (driver list/current driver, canvas, screen buffer, display/full-screen/cursor state, framework window, draw system) plus a fake MacDisplay platform, fake SDL mouse state, fake cGZCanvasW32 view and fake cGZGDriver over cGDriverBase; asserts the six iid groups and refcounts, screen metrics/video-memory mapping/cursor, driver signatures and the IsModeAvailable driver-index-only quirk, the SwitchToMode null-then-driver sequence with the 0,0,1024,768 canvas reset and the IsInitialized answer, OnCanvasInit's window handle + full-screen/flip branch + driver mode bytes/pixel format + ARGB4444/ARGB8888 screen-buffer type, the no-canvas/no-handle/no-driver/screen-buffer-disabled paths, OnCanvasShutdown and the shutdown-then-init OnCanvasReInit order, and every DirectDraw/GDI constant
+0x1006178a2 ConstructGraphicSystemW32
+0x100617960 DestructGraphicSystemW32
+0x100617a9c DeleteGraphicSystemW32
+0x100617b6a GraphicSystemW32QueryInterface
+0x100617cd6 GraphicSystemW32AddRef
+0x100617d58 GraphicSystemW32Release
+0x100617dda GraphicSystemW32GetScreenMetrics
+0x100617e76 GraphicSystemW32PauseDraw
+0x100617e98 GraphicSystemW32MessageBoxA
+0x100617ea8 GraphicSystemW32VideoMemory
+0x100617f08 GraphicSystemW32GetCursorPosition
+0x100617f30 GraphicSystemW32OnCanvasInit
+0x10061813a GraphicSystemW32OnCanvasShutdown
+0x100618220 GraphicSystemW32OnCanvasReInit
+0x100618270 GraphicSystemW32GetDriverCount
+0x100618288 GraphicSystemW32GetDriverSignature
+0x1006182fc GraphicSystemW32IsModeAvailable
+0x10061837e GraphicSystemW32SwitchToMode
+0x100619012 GraphicSystemW32DoesSystemHaveCursorSupport
+0x100619070 GraphicSystemW32SetDefaultDriverClassID
+0x10061907c GraphicSystemW32SetDriverSettingsIniFilePath
+0x100619112 GraphicSystemW32AsIGZGraphicSystem
+0x10061911c GraphicSystemW32IsHardware2DAccellerated
+0x100619124 GraphicSystemW32IsHardware3DAccellerated
+0x10061912c GraphicSystemW32DirectDraw
+0x100619134 GraphicSystemW32DirectDrawCaps
+0x10061913c GraphicSystemW32SetCooperativeLevel
+0x100619142 GraphicSystemW32SetCooperativeLevelExclusive
+0x100619148 GraphicSystemW32IsGraphicSystemUsingPrimaryDisplay
+0x100619150 GraphicSystemW32IsVideo3Dfx
+0x100619158 GraphicSystemW32ForceFullSystemRedraw
+0x10061915e GraphicSystemW32SetWindowHandle
+0x100619164 GraphicSystemW32GetWindowHandle
+0x10061916c GraphicSystemW32GetDriverInformationList
+0x100619174 GraphicSystemW32GetDriverInformationCurrent
+PARTIAL:
+0x1006178a2 ConstructGraphicSystemW32 the cGZGraphicSystem base constructor (0x10061c100) is not recovered; the service id/priority and the fields W32 touches are initialised here, the rest of the base state comes through IGraphicSystemHost
+0x100617960 DestructGraphicSystemW32 the cGZGraphicSystem base destructor (0x10061c3fc) is not recovered; it releases the base canvas (+0x178), screen buffer (+0x168) and timers, which the host owns in the port
+0x100617a9c DeleteGraphicSystemW32 same as DestructGraphicSystemW32 (the deleting destructor only adds operator delete)
+0x100617b6a GraphicSystemW32QueryInterface the five interface groups are mapped exactly as in the original, but the +0x38 frame-work-hook and +0x40 message-target views are identity-only: their cGZGraphicSystem base methods (PreFrameWorkInit ... OnInstall, DoMessage) are not recovered
+0x100617f30 GraphicSystemW32OnCanvasInit base state (current driver, canvas, screen buffer, full-screen request, mbDesiredPreferFlipping) comes through IGraphicSystemHost because cGZGraphicSystem::Init is not recovered; the window-handle store/hand-off, mode bytes, pixel format, screen-buffer colour selection (ARGB4444/ARGB8888) and state +0x54 are exact
+0x10061813a GraphicSystemW32OnCanvasShutdown base SetFullScreenMode (vslot 0x140) is not recovered and comes through the host; the window detach, display state 2 and draw-system FlushBufferCaches call are exact
+0x100618220 GraphicSystemW32OnCanvasReInit drives the two partial canvas transitions (shutdown then init, the original's 0x410 then 0x408)
+0x100618270 GraphicSystemW32GetDriverCount reads the base driver count (+0xc8) through the host
+0x100618288 GraphicSystemW32GetDriverSignature the base driver list (vslot 0x2e0) comes through the host; the driver's GetDriverInfo (vslot 0x268) and cIGZString::AssignFromCString are exact
+0x1006182fc GraphicSystemW32IsModeAvailable the base driver list comes through the host; the quirk that only the driver index is examined is kept
+0x10061837e GraphicSystemW32SwitchToMode the base driver list and SetGDriver (vslot 0x2f0) come through the host; the null-then-driver sequence, the 0,0,1024,768 canvas reset and the IsInitialized answer are exact, but SetGDriver's own side effects (+0x108 clear, canvas restore calls) are not modelled
+0x100619012 GraphicSystemW32DoesSystemHaveCursorSupport reads the base cursor-support byte (+0x164) through the host
+SKIPPED:
+none of the 35 symbols. The 58 non-virtual thunks are compiler-generated from the interface inheritance (no separate rows). The cGZGraphicSystem base class (ctor 0x10061c100, 213 symbols) is out of scope and reached through IGraphicSystemHost. NOTE: the existing ledger rows for cGZGraphicSystem point at src/gz/ColorConversion.cpp|h, but that file contains only the colour-space conversions, not that class; those rows look stale.

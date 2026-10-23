@@ -1,0 +1,1 @@
+"gz_graphicsystemw32:$T/gz_graphicsystemw32_test.cpp $S/gz/GraphicSystemW32.cpp $S/gz/ScreenBuffer.cpp $S/gz/Buffer.cpp $S/render/MacDisplay.cpp $S/render/MacPreferences.cpp $S/render/gd/GDriverBase.cpp $S/rz/cRZString.cpp"

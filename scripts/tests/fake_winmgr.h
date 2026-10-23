@@ -36,6 +36,8 @@ struct FakeMgr final : cIGZWinMgr {
     bool DestroyWindow(cIGZWin* w) override { if (w->GetParentWin()) return w->GetParentWin()->ChildRemove(w); return true; }
     bool IsWindowValid(cIGZWin* w) override { return valid.count(w) != 0; }
     cIGZWin* GetWindowFromPoint(int, int) override { return nullptr; }
+    int cursorX = 0, cursorY = 0;
+    void GetCursorPos(cIGZWin*, int& x, int& y) override { x = cursorX; y = cursorY; }
     void SetCurrentMouseWin(cIGZWin* w) override { mouseWin = w; }
     cIGZWin* GZGetCapture() override { return capture; }
     void GZSetCapture(cIGZWin* w) override { capture = w; }
