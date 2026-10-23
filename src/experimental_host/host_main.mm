@@ -6,11 +6,15 @@
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #include <cstdio>
+#include <algorithm>
 #include <cstring>
+#include <vector>
 #include <string>
 
+#include "experimental_host/HostBoot.h"
 #include "experimental_host/HostFonts.h"
 #include "experimental_host/HostGraphics.h"
+#include "dbpf/DBPFReader.h"
 #include "gz/GZFont.h"
 #include "experimental_host/HostWinMgr.h"
 #include "gz/WinFlatRect.h"
@@ -151,21 +155,58 @@ static CGImageRef MakeImage() {
     return img;
 }
 
-static void Frame() { gMgr->Pump(); gMgr->Plot(); DrawLabels(); }
+// The real splash art: SimCity_1.dat, PNG 856ddbac/46a006b0/362b8543 (800x600), read with the recovered DBPF reader.
+// (The game shows it through cSC4WinSplashScreen, which is not recovered yet, so the host just paints the picture.)
+static NSString* GameData() {
+    return [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/GameData"];
+}
+static bool gSplashReady = false;
+static int gSplashFrames = 0;   // >0: still showing the splash
+static bool LoadSplash() {
+    dbpf::Package pkg;
+    if (!pkg.Open([[GameData() stringByAppendingPathComponent:@"SimCity_1.dat"] UTF8String])) return false;
+    const dbpf::Entry* e = pkg.Find(0x856ddbac, 0x46a006b0, 0x362b8543);
+    std::vector<uint8_t> png;
+    if (!e || !pkg.Read(*e, png)) return false;
+    CGImageSourceRef src = CGImageSourceCreateWithData((__bridge CFDataRef)[NSData dataWithBytes:png.data() length:png.size()], nullptr);
+    CGImageRef img = src ? CGImageSourceCreateImageAtIndex(src, 0, nullptr) : nullptr;
+    if (!img) return false;
+    auto* buf = gGraphics->Primary();
+    CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
+    CGContextRef cg = CGBitmapContextCreate((void*)buf->Pixels(), kW, kH, 8, buf->Stride(), cs, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
+    CGContextSetRGBFillColor(cg, 0, 0, 0, 1); CGContextFillRect(cg, CGRectMake(0, 0, kW, kH));
+    const double sc = std::min(double(kW) / CGImageGetWidth(img), double(kH) / CGImageGetHeight(img));
+    const double w = CGImageGetWidth(img) * sc, h = CGImageGetHeight(img) * sc;
+    CGContextSetInterpolationQuality(cg, kCGInterpolationHigh);
+    CGContextDrawImage(cg, CGRectMake((kW - w) / 2, (kH - h) / 2, w, h), img);
+    CGContextRelease(cg); CGColorSpaceRelease(cs); CGImageRelease(img); CFRelease(src);
+    gSplashReady = true;
+    return true;
+}
+
+static void Frame() {
+    if (gSplashFrames > 0) { --gSplashFrames; return; }   // splash picture stays in the buffer
+    gMgr->Pump(); gMgr->Plot(); DrawLabels();
+}
 
 int main(int argc, char** argv) {
-    std::string shot; int frames = -1; bool selftest = false;
+    std::string shot; int frames = -1; bool selftest = false, boot = false, game = false, splash = false;
     for (int i = 1; i < argc; ++i) {
         if (!std::strcmp(argv[i], "--screenshot") && i + 1 < argc) shot = argv[++i];
         else if (!std::strcmp(argv[i], "--selftest")) selftest = true;
+        else if (!std::strcmp(argv[i], "--boot")) boot = true;
+        else if (!std::strcmp(argv[i], "--game")) game = true;
+        else if (!std::strcmp(argv[i], "--splash")) splash = true;
         else if (!std::strcmp(argv[i], "--frames") && i + 1 < argc) frames = std::atoi(argv[++i]);
     }
+    if (boot) return exphost::RunBoot(true) ? 0 : 1;
     @autoreleasepool {
         gGraphics = new exphost::HostGraphics(kW, kH);
         gGraphics->Install();
         gMgr = new exphost::HostWinMgr();
         gMgr->AddRef();
         gMgr->Init();
+        if (game && !exphost::RunBoot(false)) std::printf("boot: FAILED (continuing to the UI anyway)\n");
         BuildScene();
         std::printf("font: %s\n", InitFont() ? "FreeType + cGZFont ready" : "FAILED to initialise");
         gMgr->GetMainWindow()->InvalidateSelf();
@@ -188,6 +229,10 @@ int main(int argc, char** argv) {
             auto* b = gMgr->GetMainWindow()->GetChildWindowFromIDRecursive(101);
             std::printf("selftest: window under pointer id=%u\n", b ? b->GetID() : 0);
             return 0;
+        }
+        if (game || splash) {
+            std::printf(LoadSplash() ? "splash: loaded SimCity_1.dat 856ddbac/46a006b0/362b8543\n" : "splash: FAILED to load\n");
+            gSplashFrames = 150;   // ~2.5 s at the loop's pace, then the menu
         }
         if (!shot.empty()) {
             CGImageRef img = MakeImage();
