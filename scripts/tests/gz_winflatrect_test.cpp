@@ -90,12 +90,12 @@ int main() {
     CHECK(ctx.log.size() == 2 && ctx.log[1].rfind("line", 0) == 0);
 
     // bevels
-    rect->SetOutlineFlags(kOutlineRaised);
+    rect->SetOutlineFlags(kFlatRectRaised);
     std::uint8_t r, g, b;
     rect->GetOutlineColor(0, r, g, b); CHECK(r == 0xe0);       // raised: light top / left
     rect->GetOutlineColor(3, r, g, b); CHECK(r == 0x20);
-    CHECK(rect->GetOutlineFlags() == (kOutlineRaised | 0xf));
-    rect->SetOutlineFlags(kOutlineSunken);
+    CHECK(rect->GetOutlineFlags() == (kFlatRectRaised | 0xf));
+    rect->SetOutlineFlags(kFlatRectSunken);
     rect->GetOutlineColor(0, r, g, b); CHECK(r == 0x20);
     std::uint32_t l, t, rr, bb;
     rect->SetOutlineColors(0xff112233, 0xff445566, 0xff778899, 0xffaabbcc);

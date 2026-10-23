@@ -154,7 +154,10 @@ struct cSC4NetworkSupportStructInfo {
 // copies to +0x500 in Init, then hands back in GetPlacementParams (0x1002ed4e8).
 struct cSC4NetworkPlacementParams {
     std::uint32_t unknown00[4];             // +0x00
-    std::uint32_t unknown10[2];             // +0x10
+    union {
+        std::uint32_t unknown10[2];         // +0x10 (the base tool only ever copies these words)
+        float float10[2];                   // +0x14 is read as a float by the underground tool (cSC4NetworkCellInfo +0x70)
+    };
     float maxSlope = 0.0f;                  // +0x18: Init stores tan(maxSlope) * cellSize at +0x4a8
     std::uint32_t unknown1c = 0;            // +0x1c
     std::uint32_t unknown20 = 0;            // +0x20
@@ -164,7 +167,10 @@ struct cSC4NetworkPlacementParams {
     std::uint8_t straightOrDiagonalOnly = 0;
     std::uint8_t unknown26[2] = {0, 0};     // +0x26
     std::vector<std::uint32_t> list28;      // +0x28
-    std::uint32_t unknown40[8];             // +0x40
+    union {
+        std::uint32_t unknown40[8];         // +0x40 (the base tool only ever copies these words)
+        float float40[8];                   // +0x40 is read as a float by the underground tool (cSC4NetworkCellInfo +0x70)
+    };
     std::vector<std::uint32_t> list60;      // +0x60
     std::vector<std::uint32_t> list78;      // +0x78
     std::vector<float> list90;              // +0x90

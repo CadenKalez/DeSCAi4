@@ -177,6 +177,11 @@ bool cSC4NetworkTool::Init() {
     if (host == nullptr) return false;
 
     if (worldCache_ == nullptr) worldCache_ = host->CreateWorldCache();  // cSC4NetworkWorldCache ctor 0x10079d6fe
+    // +0x228 / +0x328: the original constructs its two cSC4VertexHtConstraintSatisfier members inline (ctor
+    // 0x1001bca8c). That class is unrecovered, so the port asks the host for them; the underground tool drives
+    // the first one on every cell of a drag.
+    if (constraintA_ == nullptr) constraintA_ = host->CreateConstraintSatisfier();
+    if (constraintB_ == nullptr) constraintB_ = host->CreateConstraintSatisfier();
     typeInfo_ = host->NetworkTypeInfo(networkType_);
     if (!sbInited_) StaticInit();
 

@@ -178,6 +178,23 @@ void cSC4NetworkOccupant::PostChanged() {
     if (g_host) g_host->PostMessage(kMessageOccupantChanged, this, 1);
 }
 
+void cSC4NetworkOccupant::ReleasePathInfo() {   // 0x10019f722
+    if (persistRef_) {
+        persistRef_->Release();
+        persistRef_ = nullptr;
+    }
+}
+
+void cSC4NetworkOccupant::AddPathConnection(std::uint32_t pathType, std::uint8_t entry, std::uint8_t exit) {
+    // 0x10019f830: the entry byte of the type's mask plus the entry byte of the shared row (type 0), then flag 0x2000.
+    if (entry != 0xff) {
+        const std::uint8_t bit = static_cast<std::uint8_t>(1u << (exit & 0x1f));
+        pathConnections_[pathType * 4 + entry] |= bit;
+        pathConnections_[entry] |= bit;
+    }
+    SetNetworkFlag(0x2000);
+}
+
 // ------------------------------------------------------------------------------------- flags / props
 
 void cSC4NetworkOccupant::SetNetworkFlag(std::uint32_t flags) {
@@ -363,6 +380,20 @@ void cSC4NetworkOccupant::AddPart(const float (*positions)[3], const float (*uvs
 // ------------------------------------------------------------------------------------- geometry
 
 void cSC4NetworkOccupant::GetPosition(float* xyz) {
+    xyz[0] = xyz[2] = 0.0f;
+    xyz[1] = -FLT_MAX;
+    float sumX = 0.0f, sumZ = 0.0f, top = -FLT_MAX;
+    for (const auto& corner : corners_) {
+        sumX += corner.x;
+        sumZ += corner.z;
+        if (top < corner.y) top = corner.y;
+    }
+    xyz[0] = sumX * 0.25f;
+    xyz[1] = top;
+    xyz[2] = sumZ * 0.25f;
+}
+
+void cSC4NetworkOccupant::GetPosition(float* xyz) const {   // 0x10019ecba (vslot 0x298)
     xyz[0] = xyz[2] = 0.0f;
     xyz[1] = -FLT_MAX;
     float sumX = 0.0f, sumZ = 0.0f, top = -FLT_MAX;

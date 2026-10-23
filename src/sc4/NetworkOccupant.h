@@ -102,6 +102,7 @@ public:
     bool Init(const float (*corners)[3]);                // positions of the 4 tile corners (12 floats)
     bool Shutdown() override { return cSC4Occupant::Shutdown(); }
     void GetPosition(float* xyz) override;
+    void GetPosition(float* xyz) const;                  // 0x10019ecba (vslot 0x298): same values, const overload
     void SetPosition(const float*) override {}
     void GetBoundingBox(float* minXyz, float* maxXyz) override;
     bool Write(cIGZOStream& stream) const override;
@@ -122,11 +123,27 @@ public:
     void SetConnectionNodeEdgeTypes(std::uint32_t a, std::uint32_t b);
     std::uint32_t GetConnectionPathIDOverride();
     void SetConnectionPathIDOverride(std::uint32_t id);
+    std::uint32_t GetPathIDOverride() const { return pathOverride_; }   // 0x10019f884 (vslot 0x1a0)
     bool IsImmovable() const { return HasNetworkFlag(kNetworkFlagImmovable); }
     void SetImmovable(bool on) { on ? SetNetworkFlag(kNetworkFlagImmovable) : ClearNetworkFlag(kNetworkFlagImmovable); }
     bool IsUsable() const { return HasNetworkFlag(kNetworkFlagUsable); }
     void SetUsable(bool on) { on ? SetNetworkFlag(kNetworkFlagUsable) : ClearNetworkFlag(kNetworkFlagUsable); }
     bool IsPlaced() { return (GetFlags() & 1) != 0; }
+    // +0x198: one byte per network type, an eight-byte-per-type block of entry-edge masks (AddPathConnection).
+    void AddPathConnection(std::uint32_t pathType, std::uint8_t entry, std::uint8_t exit);   // 0x10019f830 (vslot 0x1b0)
+    std::uint8_t PathConnections(std::uint32_t pathType, std::uint8_t entry) const {
+        return pathConnections_[pathType * 4 + entry];
+    }
+    void ClearPathConnections() { for (auto& word : pathConnections_) word = 0; }
+    // +0x1bc / +0x1c0: the path-origin offset used when a piece has a connection path id override. No recovered
+    // cSC4NetworkOccupant function writes them; the derived occupants that create the offset do (the network tool
+    // calls the setter), so the port keeps them on the base where the original stores them.
+    float PathOffsetX() const { return pathOffsetX_; }
+    float PathOffsetZ() const { return pathOffsetZ_; }
+    void SetPathOffset(float x, float z) { pathOffsetX_ = x; pathOffsetZ_ = z; }
+    // +0x84 (the cS3DModelInstanceBasic word at +0x1c): the pre-built-model init turns 0x50 off and 0x40 on.
+    std::uint32_t ModelStateFlags() const { return modelStateFlags_; }
+    void SetModelStateFlags(std::uint32_t clear, std::uint32_t set) { modelStateFlags_ = (modelStateFlags_ & ~clear) | set; }
     bool IsOfType(std::uint32_t networkType) const;
     std::uint32_t PieceId() const { return pieceId_; }
     std::uint8_t GetRotation() const { return rotationFlip_ & 0x7f; }
@@ -147,7 +164,7 @@ public:
     float GetAltitude(float x, float z) const;
     void GetNormal(float x, float z, float out[3]) const;
     void GetOccupiedCell(std::uint32_t& x, std::uint32_t& z) const;
-    void SetTranslucency(bool on, std::uint8_t alpha);
+    virtual void SetTranslucency(bool on, std::uint8_t alpha);
     void MarkLightingUpdateNeeded() { SetNetworkFlag(kNetworkFlagLightingDirty); }
     bool IsLit() const { return HasNetworkFlag(kNetworkFlagLit); }
     bool CanBeLit() const { return false; }
@@ -188,8 +205,11 @@ public:
     static std::uint32_t HasConnectionOnEdge(std::uint32_t config, int edge);
 
 protected:
-    void ReleasePathInfo() {}
+    virtual void ReleasePathInfo();                              // 0x10019f722 (vslot 0x190)
     void PostChanged();
+    // +0x190 also holds the path info the pre-built-model occupant resolves; its Write persists it.
+    cIGZUnknown* PathInfoRef() const { return persistRef_; }
+    void SetPathInfoRef(cIGZUnknown* ref) { persistRef_ = ref; }
 
     // the +0x170 bounds array (min xyz at +0, max xyz at +0xc); the underground geometry fills it directly
     float* Bounds() { return bounds_; }
@@ -204,10 +224,14 @@ protected:
     std::vector<SC4AddOnPart> parts_;            // +0x158
     float bounds_[6] = {};                       // +0x170 min xyz, +0x17c max xyz
     std::uint32_t networkFlags_ = 0x06000000;    // +0x188
-    cIGZUnknown* persistRef_ = nullptr;          // +0x190
+    cIGZUnknown* persistRef_ = nullptr;          // +0x190 the path info (persisted), released by the destructor
+    std::uint8_t pathConnections_[0x20] = {};    // +0x198 eight network types x four entry bytes
+    float pathOffsetX_ = 0.0f;                   // +0x1bc
+    float pathOffsetZ_ = 0.0f;                   // +0x1c0
     std::uint32_t pathOverride_ = 0;             // +0x1b8
     std::int64_t costOfDemolition_ = 0;          // +0x1c8
-    std::uint8_t modelFlags_ = 0;                // model instance flags (bit 1 = translucent)
+    std::uint32_t modelStateFlags_ = 0;          // +0x84 (inside the +0x68 cS3DModelInstanceBasic)
+    std::uint8_t modelFlags_ = 0;                // +0x88 model instance flags (bit 1 = translucent)
 };
 
 }  // namespace sc4

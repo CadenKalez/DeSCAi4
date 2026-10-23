@@ -18,7 +18,6 @@ EVIDENCE test scripts/tests/sc4_winregionview_test.cpp - fake IRegionViewHost (t
 0x10075b7a6 WinRegionViewUpdateSignpost
 0x10075bb02 WinRegionViewInvalidateAllRegions
 0x10075bb5e WinRegionViewPaint
-0x10075bb66 WinRegionViewRenderTile
 0x10075d4fc WinRegionViewFilterTutorialMayorName
 0x10075d57a WinRegionViewRenderTileThunk
 0x10075d58c WinRegionViewAddCity

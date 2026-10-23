@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <fstream>
 
-#include "fake_filebrowser.h"
+#include "fake_filebrowser_buffers.h"
 #include "fake_winmgr.h"
 #include "gz/WinFileBrowser.h"
 

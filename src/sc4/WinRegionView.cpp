@@ -254,7 +254,7 @@ void cSC4WinRegionView::UpdateCity(cSC4RegionViewCity* city) {   // @ 0x10075d5e
     ClearCityEffectList(*city);
     InvalidateAllRegions();
     IRegionViewHost* host = RegionViewHost();
-    IRegionalCity* regional = host ? host->FindRegionalCity(regionIndex_, city->x, city->z) : nullptr;
+    IRegionCityView* regional = host ? host->FindRegionalCity(regionIndex_, city->x, city->z) : nullptr;
     if (!regional) return;
     const float baseX = static_cast<float>(city->x << 10);
     const float baseY = static_cast<float>(city->z << 10);
@@ -445,7 +445,7 @@ bool cSC4WinRegionView::is_point_transparent(int x, int y) const {   // @ 0x1007
 // Signposts
 // ===================================================================================================================
 
-void cSC4WinRegionView::filter_tutorial_mayor_name(IRegionalCity* city, cIGZString* name) const {   // @ 0x10075d4fc
+void cSC4WinRegionView::filter_tutorial_mayor_name(IRegionCityView* city, cIGZString* name) const {   // @ 0x10075d4fc
     if (!city || !name) return;
     if (!city->IsTutorial()) return;
     IRegionViewHost* host = RegionViewHost();
@@ -477,7 +477,7 @@ void cSC4WinRegionView::UpdateSignpost(cSC4RegionViewCity& city) {   // @ 0x1007
     if (host) {
         const int item = host->NextActiveTutorialCity();
         if (item >= 0) {
-            if (IRegionalCity* tutorialCity = host->TutorialCity(item)) tutorialCity->GetPosition(tutorialX, tutorialZ);
+            if (IRegionCityView* tutorialCity = host->TutorialCity(item)) tutorialCity->GetPosition(tutorialX, tutorialZ);
         }
     }
     // The decompiled condition, including the `bVar3 = true` set inside the comma expression (0x10075b884..0x10075b8d4).
@@ -491,7 +491,7 @@ void cSC4WinRegionView::UpdateSignpost(cSC4RegionViewCity& city) {   // @ 0x1007
     } else {
         tutorialGhost = true;
     }
-    IRegionalCity* regional = host ? host->FindRegionalCity(regionIndex_, city.x, city.z) : nullptr;
+    IRegionCityView* regional = host ? host->FindRegionalCity(regionIndex_, city.x, city.z) : nullptr;
     if (!((regional && (tutorialGhost || regional->GetEstablished())) || forcedSignposts_)) return;
     cGZPersistResourceKey key{kRegionViewSignpostKeyType, 0, kRegionViewSignpostKeyInstance};
     std::uint32_t windowId = kRegionViewSignpostWindowId;
@@ -533,7 +533,7 @@ void cSC4WinRegionView::UpdateSignpost(cSC4RegionViewCity& city) {   // @ 0x1007
     if (manager && oldFocus && manager->IsWindowValid(oldFocus)) manager->GZSetFocus(oldFocus);
 }
 
-void cSC4WinRegionView::InitSignpost(cSC4RegionViewCity* city, IRegionalCity* regional) {   // @ 0x10075dee0
+void cSC4WinRegionView::InitSignpost(cSC4RegionViewCity* city, IRegionCityView* regional) {   // @ 0x10075dee0
     if (!city || !city->signpost) return;
     cIGZWin* signpost = city->signpost;
     PositionSignpost(*city);

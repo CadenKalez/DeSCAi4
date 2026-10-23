@@ -116,7 +116,7 @@ struct FakeEffect final : IRegionViewEffect {
 int FakeEffect::created = 0;
 int FakeEffect::stopped = 0;
 
-struct FakeRegionalCity final : IRegionalCity {
+struct FakeRegionalCity final : IRegionCityView {
     int refs = 1;
     int x = 0, z = 0;
     int population = 0, commercial = 0, industrial = 0, rating = 0, difficulty = 0, tutorialGuid = 0;
@@ -146,9 +146,9 @@ struct FakeHost final : IRegionViewHost {
     FakeCanvas* canvas = new FakeCanvas();
     int addLayer = 0, removeLayer = 0, invalidations = 0;
     int tutorialItem = -1;
-    IRegionalCity* tutorialCity = nullptr;
+    IRegionCityView* tutorialCity = nullptr;
     std::map<int, bool> hidesMayorName;
-    std::map<std::pair<int, int>, IRegionalCity*> cities;
+    std::map<std::pair<int, int>, IRegionCityView*> cities;
     std::vector<std::tuple<int, int, int>> cityLookups;
     std::vector<std::tuple<std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t>> scriptRequests;
     std::function<cIGZWin*(const cGZPersistResourceKey&, cIGZWin*, std::uint32_t)> scriptFactory;
@@ -164,12 +164,12 @@ struct FakeHost final : IRegionViewHost {
     void RemoveRenderLayer(ITiledScrollingCanvas* c) override { (void)c; ++removeLayer; }
     void InvalidateRenderer() override { ++invalidations; }
     int NextActiveTutorialCity() override { return tutorialItem; }
-    IRegionalCity* TutorialCity(int item) override { (void)item; return tutorialCity; }
+    IRegionCityView* TutorialCity(int item) override { (void)item; return tutorialCity; }
     bool TutorialItemHidesMayorName(int guid) override {
         auto it = hidesMayorName.find(guid);
         return it != hidesMayorName.end() && it->second;
     }
-    IRegionalCity* FindRegionalCity(int regionIndex, int x, int z) override {
+    IRegionCityView* FindRegionalCity(int regionIndex, int x, int z) override {
         cityLookups.emplace_back(regionIndex, x, z);
         auto it = cities.find({x, z});
         return it == cities.end() ? nullptr : it->second;

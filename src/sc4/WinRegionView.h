@@ -95,13 +95,15 @@ constexpr std::uint32_t kSignpostDifficultyHighId = 0xcc06f4cf;
 
 // ---------------------------------------------------------------------------------------------------------------
 // cISC4RegionalCity (not recovered) as this view uses it; the slot numbers are the original vtable offsets.
+// (WinRegionScreen.h has its own narrower IRegionalCity for the screen; this interface is the view's wider view of the
+// same original class, hence the distinct name.)
 // ---------------------------------------------------------------------------------------------------------------
 struct RegionalCityPointOfInterest {
     float x = 0, y = 0, z = 0;                      // 12-byte cISC4RegionalCity::PointOfInterest
 };
 static_assert(sizeof(RegionalCityPointOfInterest) == 12);
 
-class IRegionalCity : public cIGZUnknown {
+class IRegionCityView : public cIGZUnknown {
 public:
     virtual void GetPosition(int& x, int& z) const = 0;                            // 0x28
     virtual int GetPopulation() const = 0;                                        // 0x48
@@ -206,11 +208,11 @@ public:
 
     // --- cSC4TutorialRegistry (SL::spSC4 vslot 0x178; not recovered)
     virtual int NextActiveTutorialCity() = 0;      // GetNextActive(region) -> *item, -1 when the answer was null
-    virtual IRegionalCity* TutorialCity(int item) = 0;            // GetRegionalCity(item), borrowed
+    virtual IRegionCityView* TutorialCity(int item) = 0;            // GetRegionalCity(item), borrowed
     virtual bool TutorialItemHidesMayorName(int guid) = 0;        // GetItem(guid) != null && item[0x10] != 0
 
     // --- region city list (SL::spSC4 vslot 0x110 -> vslot 0x58 -> vslot 0x58; not recovered)
-    virtual IRegionalCity* FindRegionalCity(int regionIndex, int x, int z) = 0;   // borrowed
+    virtual IRegionCityView* FindRegionalCity(int regionIndex, int x, int z) = 0;   // borrowed
 
     // --- window scripts (SC4CreateWindowFromScript @ 0x100039a9f; needs the UI script service)
     virtual cIGZWin* CreateWindowFromScript(const cGZPersistResourceKey& key, cIGZWin* parent, std::uint32_t id) = 0;
@@ -252,7 +254,7 @@ public:
     void InvalidateRegion(cSC4RegionViewCity& city);               // @ 0x10075b6b0
     void UpdateSignpost(cSC4RegionViewCity& city);                 // @ 0x10075b7a6
     void InvalidateAllRegions();                                   // @ 0x10075bb02
-    void filter_tutorial_mayor_name(IRegionalCity* city, cIGZString* name) const;   // @ 0x10075d4fc
+    void filter_tutorial_mayor_name(IRegionCityView* city, cIGZString* name) const;   // @ 0x10075d4fc
     void AddCity(cSC4RegionViewCity* city);                        // @ 0x10075d58c
     void UpdateCity(cSC4RegionViewCity* city);                     // @ 0x10075d5e6
     void SetScrollPos(int x, int y);                               // @ 0x10075d9dc
@@ -269,7 +271,7 @@ public:
     void GetRegionPlayfieldRect(const cSC4RegionViewCity& city, cRZRect& out) const;   // @ 0x10075ddc0
     void SetSignpostType(std::uint32_t type, std::uint32_t sub);   // @ 0x10075de92
     // The original takes cRZAutoRefCount<cISC4RegionalCity>*; the port takes the borrowed city pointer.
-    void InitSignpost(cSC4RegionViewCity* city, IRegionalCity* regionalCity);   // @ 0x10075dee0
+    void InitSignpost(cSC4RegionViewCity* city, IRegionCityView* regionalCity);   // @ 0x10075dee0
 
     // --- test / hook-up access
     cIGZBuffer* Backdrop() const { return backdrop_; }
