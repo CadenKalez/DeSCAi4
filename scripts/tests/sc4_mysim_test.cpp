@@ -958,9 +958,12 @@ int main() {
     CHECK(sim->Init(1));
     CHECK(sim->TableRow() == 1);
     CHECK(sim->GetID() == 42);
-    // The caption/name go through the SLString resource seam (not the fake here), so only the row/id are checked.
-    CHECK(sim->GetPersonalName().Strlen() == 0);
+    // No SL string resource loads here (the advisor host has no resource manager), so LoadScriptString keeps the raw
+    // script text: the "name" column of the advisors row ("Bob") is the generation-1 personal name.
+    CHECK(std::strcmp(sim->GetPersonalName().ToChar(), "Bob") == 0);
     CHECK(host.winProc != nullptr);
+    // The inactive sim created near the end of the test gets its own balloon window proc; keep this sim's.
+    FakeWinProc* const simWinProc = host.winProc;
     CHECK(host.winProc->inits == 1);
     CHECK(host.winProc->hidden == 300);
     CHECK(host.winProc->shown == 0x5dc);
@@ -1000,7 +1003,8 @@ int main() {
         cRZString text;
         CHECK(sim->GetEQAsText(text));
         CHECK(std::strcmp(text.ToChar(), "0") == 0);
-        CHECK(!sim->GetHQAsText(text));                                  // not in the city yet
+        sim->SetStateForTest(0);
+        CHECK(!sim->GetHQAsText(text));                                  // no health text while the sim is out of the city
         sim->SetStateForTest(2);
         CHECK(sim->GetHQAsText(text));
         CHECK(std::strcmp(text.ToChar(), "str:0a5fe2df") == 0);          // hq 0 -> the low text
@@ -1068,12 +1072,14 @@ int main() {
         CHECK(advice->flags & 1);                                        // shown
         CHECK(sim->GetCurrentBalloonAdvice() == advice);
         CHECK(sim->GetNextBalloonAdvice() == advice);
-        CHECK(sim->BalloonQueue().empty());                              // popped by get_next's initial pop(4)
+        // get_next's initial pop_balloon_queue(4) only drops a balloon with status bit 4 (blocked), not a shown one.
+        CHECK(sim->BalloonQueue().size() == 1);
         sim->simulate_balloons(true);
-        CHECK(sim->BalloonQueue().size() == 1);                          // trigger true -> queued again
+        // Still queued (its "shown" bit 0 is set), so simulate_balloons does not queue it a second time.
+        CHECK(sim->BalloonQueue().size() == 1);
         sim->empty_all_balloon_queues();
         CHECK(sim->BalloonQueue().empty());
-        sim->EventQueue().push_back(0);
+        sim->push_balloon_queue(1, 0);       // queue it the way the sim does; pop needs a status bit set
         CHECK(sim->GetCurrentBalloonEventAdvice() == advice);
         sim->empty_all_balloon_queues();
         CHECK(sim->EventQueue().empty());
@@ -1143,8 +1149,9 @@ int main() {
         host.dispatchLog.modelOffsets.clear();
         notify(kDispatchNotifyIdleOffset, 0, 0);
         CHECK(host.dispatchLog.modelOffsets.size() == 1);
-        // The sim is at its default destination -> state 2.
+        // The sim is at its default destination (the residence the fake dispatch stored) -> state 2.
         sim->SetStateForTest(5);
+        host.dispatchLog.current = host.dispatchLog.defaultDestination;
         notify(kDispatchNotifyLocation, 0, 0);
         CHECK(sim->State() == 2);
         // Trip ended at the commute destination -> state 4.
@@ -1174,6 +1181,18 @@ int main() {
         notify(kDispatchNotifyArrived, 0, 0);
     }
 
+    // ---- AnnounceMoveIn: the moved-in message and the "moved in" event the tail call pushes ----
+    {
+        sim->SetLastSoundTimeForTest(-1000);                             // let RequestToPlaySound pass
+        const std::size_t sent = host.bus.sent.size();
+        const std::size_t events = sim->Events().size();
+        sim->AnnounceMoveIn();
+        CHECK(host.bus.sent.size() == sent + 1);
+        CHECK(host.bus.sent.back().type == kMessageMySimMovedIn);
+        CHECK(sim->Events().size() == events + 1);
+        CHECK(sim->Events().back().first == static_cast<int>(kEventMySimMovedIn));
+    }
+
     // ---- dispatch tool ----
     {
         sim->SetStateForTest(2);
@@ -1199,6 +1218,13 @@ int main() {
         host.dispatchLog.state = 2;
         host.dispatchLog.destination = MySimLocation();
         host.dispatchLog.destination.hasOccupant = false;
+        // The pylon is locked, so ending the tool keeps it (the drop only happens for an unlocked pylon).
+        CHECK(sim->DispatchToolEnd());
+        CHECK(host.pylonLog.shutdowns == 0);
+        CHECK(sim->DispatchToolGetPylon() != nullptr);
+        // Unlock, start the tool again (it reuses the pylon) and end it at the empty destination: now it drops it.
+        CHECK(sim->DispatchToolBegin() != nullptr);
+        CHECK(sim->DispatchToolLockPylon(false));
         CHECK(sim->DispatchToolEnd());
         CHECK(host.pylonLog.shutdowns >= 1);
         CHECK(sim->DispatchToolGetPylon() == nullptr);
@@ -1336,7 +1362,7 @@ int main() {
     CHECK(sim->Shutdown());
     CHECK(host.registryRemoves == 1);
     CHECK(host.atmUnregisters == 1);
-    CHECK(host.winProc->shutdowns == 1);
+    CHECK(simWinProc->shutdowns == 1);
     CHECK(sim->State() == 0);
     sim->Release();
 

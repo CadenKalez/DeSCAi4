@@ -1411,7 +1411,9 @@ void cSC4MySim::ReturnHome() {
     trackHandle_ = dispatch_ ? dispatch_->TrackHandle() : 0;
 }
 
-// 0x1007a928e AnnounceMoveIn(): posts the "the sim moved in" message and refreshes the script variables.
+// 0x1007a928e AnnounceMoveIn(): posts the "the sim moved in" message, refreshes the script variables and pushes the
+// "the sim took over its residence" event (the tail call Ghidra lost at 0x1007a9363 is PushEvent(0xca3e87a8, 0) with
+// the id loaded into esi at 0x1007a934f and edx zeroed at 0x1007a9354).
 void cSC4MySim::AnnounceMoveIn() {
     if (!RequestToPlaySound()) return;
     IMySimHost* host = Host();
@@ -1425,8 +1427,7 @@ void cSC4MySim::AnnounceMoveIn() {
     if (cIGZMessageServer2* bus = host->Messages()) bus->MessageSend(message);
     message->Release();
     UpdateVariables();
-    // The original ends with a PushEvent whose arguments Ghidra could not recover (indirect jump at 0x1007a9363);
-    // it is not reproduced. see the ledger PARTIAL entry.
+    cSC4Advisor::PushEvent(kEventMySimMovedIn, nullptr);                 // 0xb0
 }
 
 // 0x1007a8ebe QuitJob()

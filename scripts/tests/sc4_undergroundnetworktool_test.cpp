@@ -662,6 +662,24 @@ void TestCreateNewOccupant() {
     out->Release();
 }
 
+void TestCreateNetworkOccupantWrapper() {
+    Fixture f;
+    cSC4NetworkCellInfo cell;
+    cell.x = 8;
+    cell.z = 9;
+    float heights[4][3] = {};
+    // 0x1001a71e6: the non-virtual wrapper only guards the output slot and forwards to the concrete tool.
+    cSC4NetworkOccupant* out = nullptr;
+    f.tool->cSC4UndergroundNetworkTool::CreateNetworkOccupant(&cell, &out, heights, kNetworkPipe);
+    CHECK(f.tool->createCalls == 1);
+    CHECK(out != nullptr);
+    CHECK(out == static_cast<cSC4NetworkOccupant*>(f.tool->created.back()));
+    out->Release();
+    // A null out slot does not build anything.
+    f.tool->cSC4UndergroundNetworkTool::CreateNetworkOccupant(&cell, nullptr, heights, kNetworkPipe);
+    CHECK(f.tool->createCalls == 1);
+}
+
 void TestInsertOccupantsForSolvedCells() {
     Fixture f;
     f.tool->Init();
@@ -764,16 +782,15 @@ void TestCellPreviews() {
     CHECK(f.tool->PreviewList().size() == 1);
     CHECK(f.tool->HighlightList().size() == 1);
 
-    // 0x1001a80ec: both lists are unhighlighted, the managed ones removed and shut down.
+    // 0x1001a80ec: both lists are unhighlighted; only the preview occupants are shut down and removed from the
+    // manager (the original's highlight loop is just SetHighlight(0, 0) + Release -- checked against Ghidra).
     static_cast<cISC4Occupant*>(created)->SetFlag(1);
     static_cast<cISC4Occupant*>(old)->SetFlag(1);
-    std::printf("DEBUG flags created=%u old=%u\n", static_cast<cISC4Occupant*>(created)->GetFlags(),
-                static_cast<cISC4Occupant*>(old)->GetFlags());
     f.tool->ClearCellPreviews();
-    std::printf("DEBUG removeCalls=%d shutdown=%d\n", f.host.removeCalls, created->shutdownCalls);
     CHECK(f.tool->PreviewList().empty());
     CHECK(f.tool->HighlightList().empty());
-    CHECK(f.host.removeCalls == 2);   // one preview + one highlight
+    CHECK(f.host.removeCalls == 1);   // the preview occupant; a highlighted one stays registered
+    CHECK((static_cast<cISC4Occupant*>(old)->GetFlags() & 1u) != 0);
     CHECK(f.host.lastRemoveKeep == false);
     CHECK(f.host.lastRemoveParam == NetworkToolTestAccess::Unknown458(*f.tool));
     CHECK(created->highlightState == 0);
@@ -899,6 +916,19 @@ void TestConstraints() {
     CHECK(f.host.lastRangeBaseKey == Key(1, 1));
     CHECK(f.satisfier.solved.size() == 4);   // unchanged
     cell.buildable = false;
+
+    // A solved/immovable cell (+0x5b) only gets four fixed vertices: no AddVertexToSolve, no ranges.
+    const std::size_t solvedBefore = f.satisfier.solved.size();
+    const std::size_t rangesBefore = f.satisfier.ranges.size();
+    const std::size_t fixedBefore = f.satisfier.fixed.size();
+    cell.solvedOrImmovable = true;
+    f.tool->InsertRangeConstraintsForCell(Key(1, 1));
+    CHECK(f.satisfier.solved.size() == solvedBefore);
+    CHECK(f.satisfier.ranges.size() == rangesBefore);
+    CHECK(f.satisfier.fixed.size() == fixedBefore + 4);
+    CHECK(f.satisfier.fixed.back().first == 4);
+    CHECK_NEAR(f.satisfier.fixed.back().second, 4.0f);
+    cell.solvedOrImmovable = false;
 
     // 0x1001a779a: solvedOrImmovable returns immediately.
     cell.solvedOrImmovable = true;
@@ -1149,6 +1179,7 @@ int main() {
     TestInitAndShutdown();
     TestOccupantLookups();
     TestCreateNewOccupant();
+    TestCreateNetworkOccupantWrapper();
     TestInsertOccupantsForSolvedCells();
     TestCellPreviews();
     TestCreateCellInfos();

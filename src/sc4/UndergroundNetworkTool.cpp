@@ -430,6 +430,14 @@ void cSC4UndergroundNetworkTool::InsertRangeConstraintsForCell(std::uint32_t cel
     }
     INetworkConstraintSatisfier* satisfier = constraintA_;   // this + 0x228
     if (satisfier == nullptr) return;
+    if (cell->solvedOrImmovable) {
+        // 0x1001a766d (the +0x5b branch): a cell that already belongs to a solved/immovable step has no free
+        // corner heights: the original only pins the four vertices, without AddVertexToSolve or the ranges.
+        for (int v = 0; v < 4; ++v) {
+            satisfier->InsertFixedVertex(cell->vertexBaseHeights[v], cell->vertexHeights[v]);
+        }
+        return;
+    }
     IUndergroundNetworkToolHost* host = g_undergroundNetworkToolHost;
     for (int v = 0; v < 4; ++v) {
         const int vertexId = cell->vertexBaseHeights[v];

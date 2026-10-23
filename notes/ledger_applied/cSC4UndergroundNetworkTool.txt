@@ -1,0 +1,44 @@
+SOURCE src/sc4/UndergroundNetworkTool.cpp|h
+EVIDENCE test scripts/tests/sc4_undergroundnetworktool_test.cpp (registry scripts/tests/registry/sc4_undergroundnetworktool.txt) - the 37 cSC4UndergroundNetworkTool symbols: the trivial network-type answers, ReloadNetworkSpecificInfo tuning load/release, Init/Shutdown preview-highlight cleanup, the pipe-iid and connection-iid occupant lookups, new/existing occupant creation plus the cISC4NetworkOccupant** CreateNetworkOccupant wrapper, InsertOccupantsForSolvedCells, AddCellPreview/ClearCellPreviews (the highlight list is only unhighlighted and released, not removed from the manager - checked against Ghidra 0x1001a80ec), CreateCellInfosForCurrentPlacementTiles, the ranged constraints and the +0x5b solved/immovable fixed-vertex branch (Ghidra 0x1001a766d), the equality constraints with the 100000 shift and sign check, GetNetworkVertexHt, StartPlacing, SetQuadTrianglesToDraw inverted triangle polarity, PropagateFromCell/PropagateSolvedCellsForSmoothing and TestForAutoConnectOccupant. Port note: the constructor zeroes the four tuning fields (+0x63c..+0x648) that the original leaves unset until ReloadNetworkSpecificInfo; the two destructors are the original's ud2 traps (the port aborts the same way).
+0x100192f96 cSC4UndergroundNetworkTool_ClearOccupantHighlights
+0x100192f9e cSC4UndergroundNetworkTool_StopPickAtWater
+0x100193078 cSC4UndergroundNetworkTool_AllowBridges
+0x100193080 cSC4UndergroundNetworkTool_AllowTunnels
+0x100193088 cSC4UndergroundNetworkTool_IsStoppedByWater
+0x100193090 cSC4UndergroundNetworkTool_ShouldAutoConnect
+0x100193098 cSC4UndergroundNetworkTool_CheckForGoodTerrain
+0x1001930a0 cSC4UndergroundNetworkTool_GetNetworkHeightForTerrainHeight
+0x1001937b8 cSC4UndergroundNetworkTool_CanTilesBeSupportedOnTerrain
+0x1001937c0 cSC4UndergroundNetworkTool_UpdateTerrainHeights
+0x1001a71e0 cSC4UndergroundNetworkTool_CheckForReservedTiles
+0x1001a71e6 cSC4UndergroundNetworkTool_CreateNetworkOccupant
+0x1001a7218 cSC4UndergroundNetworkTool_InsertOccupantsForSolvedCells
+0x1001a7362 cSC4UndergroundNetworkTool_CreateNewUndergroundOccupant
+0x1001a74c8 cSC4UndergroundNetworkTool_Construct
+0x1001a754c cSC4UndergroundNetworkTool_Init
+0x1001a756a cSC4UndergroundNetworkTool_Shutdown
+0x1001a7616 cSC4UndergroundNetworkTool_InsertRangeConstraintsForCell
+0x1001a779a cSC4UndergroundNetworkTool_InsertNetworkSpecificConstraintsForCell
+0x1001a78e8 cSC4UndergroundNetworkTool_ApplyPlaneConstraintToRegularCells
+0x1001a78ee cSC4UndergroundNetworkTool_CreateCellInfosForCurrentPlacementTiles
+0x1001a7c30 cSC4UndergroundNetworkTool_GetNetworkVertexHt
+0x1001a7c7e cSC4UndergroundNetworkTool_ReloadNetworkSpecificInfo
+0x1001a7d3e cSC4UndergroundNetworkTool_FindUndergroundOccupant
+0x1001a7e56 cSC4UndergroundNetworkTool_AddCellPreview
+0x1001a80ec cSC4UndergroundNetworkTool_ClearCellPreviews
+0x1001a81d6 cSC4UndergroundNetworkTool_FindUndergroundConnectionOccupant
+0x1001a8310 cSC4UndergroundNetworkTool_StartPlacing
+0x1001a8500 cSC4UndergroundNetworkTool_SetQuadTrianglesToDraw
+0x1001a913c cSC4UndergroundNetworkTool_PropagateFromCell
+0x1001a932a cSC4UndergroundNetworkTool_PropagateSolvedCellsForSmoothing
+0x1001a93a6 cSC4UndergroundNetworkTool_TestForAutoConnectOccupant
+0x1001a9ab2 cSC4UndergroundNetworkTool_CompleteDestructor
+0x1001a9ab8 cSC4UndergroundNetworkTool_DeletingDestructor
+0x1001a9ac4 cSC4UndergroundNetworkTool_UpdateOccupantHighlights
+0x1001a9acc cSC4UndergroundNetworkTool_DestroyHilightedOccupants
+
+PARTIAL:
+0x1001a85e2 cSC4UndergroundNetworkTool_UpdateUndergroundOccupantTerrainHeights - only the three cache/set resets at the top are ported (world cache Clear, +0x128 set clear, solved-cell vector clear). The rest of the 2788-byte body needs cSC4NetworkTool::SmoothenNetwork 0x1001b14a0, SL::NetworkManager 0x100041188 slot +0x30 and an occupant-manager batch move/remove (slot +0x180), none of which has a seam yet; the inlined libc++ hash-table rehash is the solved-cell dedupe.
+
+SKIPPED:
+nothing in cSC4UndergroundNetworkTool is Windows/DX7-only; cSC4PipeTool (vtable 0x100a7b050) and cSC4SubwayTool (vtable 0x100a7ac80) are separate classes that fill the two pure virtuals and are not part of these 37 symbols.

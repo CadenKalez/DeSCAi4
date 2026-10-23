@@ -145,6 +145,7 @@ constexpr std::uint32_t kDispatchNotifyTripLeg = 0x4bb2cfc0;
 constexpr std::uint32_t kDispatchNotifyNeighbor = 0x4bb71a7e;
 constexpr std::uint32_t kEventMySimNoResidence = 0x6a57dd94;         // no free residence found
 constexpr std::uint32_t kEventMySimMoved = 0xaa3edbb1;               // moved into/out of a building
+constexpr std::uint32_t kEventMySimMovedIn = 0xca3e87a8;             // AnnounceMoveIn's PushEvent (0x1007a934f)
 constexpr std::uint32_t kEventMySimCommuteFailed = 0xca4553b7;       // no route to work
 constexpr std::uint32_t kEventMySimLeftWork = 0xec107df9;            // left a neighbour job
 constexpr std::uint32_t kEventMySimBuildingAdded = 0xca4e8986;       // a building appeared nearby

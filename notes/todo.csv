@@ -530,7 +530,8 @@ CLASS-cSC4ModelBasedParticlesEffect,cSC4ModelBasedParticlesEffect,"recover 20 re
 CLASS-cSC4ModelMaker,cSC4ModelMaker,"recover 63 remaining function(s) (63 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4ModelMakerUtility,cSC4ModelMakerUtility,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4ModelRegEffects,cSC4ModelRegEffects,"recover 18 remaining function(s) (18 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4MySim,cSC4MySim,"recover 125 remaining function(s) (125 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4MySim,cSC4MySim,"recover 125 remaining function(s) (125 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4MySim,cSC4MySim,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 ADVICE-9,cSC4MySimAdvice,"Hook IMySimAdviceHost::NotifySimOfLink to SL::spCity vslot 0x288 -> vslot 0x38 -> sim vslot 0x2d8; original crashes on a missing sim, we skip",,open,src/sc4/MySimAdvice.h
 CLASS-cSC4MySimAdvice,cSC4MySimAdvice,"recover 4 remaining function(s) (4 not started, 0 partial/pending); bases still unfinished: cSC4Advice",CLASS-cSC4Advice,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4MySimAgentSimulator,cSC4MySimAgentSimulator,"recover 30 remaining function(s) (30 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -544,7 +545,7 @@ CLASS-cSC4MySimInputControlDispatch,cSC4MySimInputControlDispatch,"recover 20 re
 CLASS-cSC4MySimInputControlMoveIn,cSC4MySimInputControlMoveIn,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4MySimPool,cSC4MySimPool,"recover 8 remaining function(s) (8 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4MySimWinProc,cSC4MySimWinProc,"recover 31 remaining function(s) (31 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2, cIGZWinProc","CLASS-cIGZMessageTarget2,CLASS-cIGZWinProc",open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4MyStreetSim,cSC4MyStreetSim,"recover 23 remaining function(s) (23 not started, 0 partial/pending); bases still unfinished: cSC4MySim",CLASS-cSC4MySim,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4MyStreetSim,cSC4MyStreetSim,"recover 23 remaining function(s) (23 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4MyStreetSimInputControl,cSC4MyStreetSimInputControl,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4Nation,cSC4Nation,"recover 29 remaining function(s) (29 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4NeighborConnection,cSC4NeighborConnection,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
@@ -607,7 +608,7 @@ CLASS-cSC4PickSimWinProc,cSC4PickSimWinProc,"recover 21 remaining function(s) (2
 CLASS-cSC4PipeConnectionOccupant,cSC4PipeConnectionOccupant,"recover 12 remaining function(s) (12 not started, 0 partial/pending); bases still unfinished: cSC4UndergroundConnectionOccupant",CLASS-cSC4UndergroundConnectionOccupant,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4PipeCustomView,cSC4PipeCustomView,"recover 2 remaining function(s) (2 not started, 0 partial/pending); bases still unfinished: cSC4UndergroundCustomView",CLASS-cSC4UndergroundCustomView,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4PipeOccupant,cSC4PipeOccupant,"recover 17 remaining function(s) (17 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4PipeTool,cSC4PipeTool,"recover 7 remaining function(s) (7 not started, 0 partial/pending); bases still unfinished: cSC4UndergroundNetworkTool",CLASS-cSC4UndergroundNetworkTool,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4PipeTool,cSC4PipeTool,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4PlumbingSimulator,cSC4PlumbingSimulator,"recover 6 remaining function(s) (0 not started, 6 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4PlumbingSimulator,cSC4PlumbingSimulator,finish 10 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 PLUMBING-1,cSC4PlumbingSimulator,"Recover DoIdle (0x10009d7a6, 7 KB flood fill over the pipe/producer cells, supply grid, neighbour import/export, monthly stats) and wire it to the DoIdle hook",,open,src/sc4/PlumbingSimulator.h
@@ -680,7 +681,7 @@ CLASS-cSC4SubwayConnectionOccupant,cSC4SubwayConnectionOccupant,"recover 12 rema
 CLASS-cSC4SubwayCustomView,cSC4SubwayCustomView,"recover 2 remaining function(s) (2 not started, 0 partial/pending); bases still unfinished: cSC4UndergroundCustomView",CLASS-cSC4UndergroundCustomView,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4SubwayOccupant,cSC4SubwayOccupant,"recover 18 remaining function(s) (18 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4SubwayOccupantFilter,cSC4SubwayOccupantFilter,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4SubwayTool,cSC4SubwayTool,"recover 5 remaining function(s) (5 not started, 0 partial/pending); bases still unfinished: cSC4UndergroundNetworkTool",CLASS-cSC4UndergroundNetworkTool,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4SubwayTool,cSC4SubwayTool,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4Tank,cSC4Tank,"recover 25 remaining function(s) (25 not started, 0 partial/pending); bases still unfinished: cSC4Vehicle",CLASS-cSC4Vehicle,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4TileEvaluator,cSC4TileEvaluator,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4TileInfo,cSC4TileInfo,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -712,7 +713,8 @@ CLASS-cSC4UIHTMLHook,cSC4UIHTMLHook,"recover 10 remaining function(s) (10 not st
 UIHTMLHOOK-1,cSC4UIHTMLHook,"Hook up: IHTMLURL over the real cRZURL (GetFullURL / GetScheme), Init fetching the resource manager from the framework (iid 0x656b8efc), and the HTML viewer registering this hook",,open,src/sc4/UIHTMLHook.h
 CLASS-cSC4UndergroundConnectionOccupant,cSC4UndergroundConnectionOccupant,"recover 42 remaining function(s) (42 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4UndergroundCustomView,cSC4UndergroundCustomView,"recover 11 remaining function(s) (11 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4UndergroundNetworkTool,cSC4UndergroundNetworkTool,"recover 33 remaining function(s) (33 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4UndergroundNetworkTool,cSC4UndergroundNetworkTool,"recover 33 remaining function(s) (33 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4UndergroundNetworkTool,cSC4UndergroundNetworkTool,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4UndergroundOccupant,cSC4UndergroundOccupant,"recover 52 remaining function(s) (52 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4UndergroundOccupant,cSC4UndergroundOccupant,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 UNDERGROUND-1,cSC4UndergroundOccupant,Recover cSC4PipeOccupant/cSC4SubwayOccupant sCustomGeometryInfo tables (0x100b01b58 / 0x100b02748) and the six piece texture bindings so CreateUndergroundModel can build the piece model,,open,src/sc4/UndergroundOccupant.cpp
