@@ -1,0 +1,99 @@
+SOURCE src/gz/LegacyControl.cpp|h
+EVIDENCE test scripts/tests/gz_legacycontrol_test.cpp - three vtables and the shared reference count, the 21 keyword tables (368 registrations, the duplicate "center" rejected by the case-insensitive vocabulary), SetParameters with the GZCOM class fallbacks, the common/flat-rect/outline/slider/scrollbar/bitmap property interpreters, the window-proc exception path, script fragments and the property helpers; built and run with ASan/UBSan
+0x100530b9c LegacyControlConstruct
+0x100530c8e LegacyControlVocabularyGZWinCommon
+0x10053227c LegacyControlVocabularyGZWinFlatRect
+0x10053277e LegacyControlVocabularyGZWinText
+0x100532ed0 LegacyControlVocabularyGZWinTextEdit
+0x100533a42 LegacyControlVocabularyGZWinListBox
+0x100533ee4 LegacyControlVocabularyGZWinCombo
+0x100534272 LegacyControlVocabularyGZWinBtn
+0x100534e42 LegacyControlVocabularyGZWinBMP
+0x100535156 LegacyControlVocabularyGZWinSlider
+0x1005354d0 LegacyControlVocabularyGZWinScrollbar
+0x1005357f4 LegacyControlVocabularyGZWinLineInput
+0x100535e5c LegacyControlVocabularyGZWinOptGrp
+0x10053675c LegacyControlVocabularyGZWinSpinner
+0x100536d5e LegacyControlVocabularyGZWinOutline
+0x100537080 LegacyControlVocabularyGZWinTextTicker
+0x10053739e LegacyControlVocabularyGZWinFileBrowser
+0x10053907e LegacyControlVocabularyGZWinTreeView
+0x100539972 LegacyControlVocabularyGZWinFolders
+0x100539b88 LegacyControlVocabularyGZWinGrid
+0x10053ab60 LegacyControlVocabularyGZWinCustom
+0x10053ad6a LegacyControlVocabularySC3WinGen
+0x10053b620 LegacyControlConstructWrapper
+0x10053b62a LegacyControlDestruct
+0x10053b6f8 LegacyControlDestructWrapper
+0x10053b702 LegacyControlDestructAndDelete
+0x10053b730 LegacyControlSetParent
+0x10053b7b2 LegacyControlUseWinProc
+0x10053b7ee LegacyControlUseWinProcThunk_7ee
+0x10053b82a LegacyControlForceControl
+0x10053b866 LegacyControlForceControlThunk_866
+0x10053b8a2 LegacyControlGetID
+0x10053b8be LegacyControlSetID
+0x10053b8da LegacyControlSetParameters
+0x10053cc5c LegacyControlDoExceptions
+0x10053cce6 LegacyControlRender
+0x10053ccee LegacyControlRenderThunk_cee
+0x10053ccf6 LegacyControlSetArea
+0x10053cd14 LegacyControlSetAreaThunk_d14
+0x10053cd32 LegacyControlGetArea
+0x10053cd50 LegacyControlGetAreaThunk_d50
+0x10053cd6e LegacyControlControlEvent
+0x10053cd76 LegacyControlControlEventThunk_d76
+0x10053cd8c LegacyControlQueryInterface
+0x10053cdd6 LegacyControlQueryInterfaceThunk_dd6
+0x10053cde4 LegacyControlQueryInterfaceThunk_de4
+0x10053cdf2 LegacyControlAddRef
+0x10053ce00 LegacyControlAddRefThunk_e00
+0x10053ce0e LegacyControlAddRefThunk_e0e
+0x10053ce1c LegacyControlRelease
+0x10053ce38 LegacyControlReleaseThunk_e38
+0x10053ce58 LegacyControlReleaseThunk_e58
+0x10053d25c LegacyControlInterpretPropertiesGZWinFlatRect
+0x1005402d0 LegacyControlInterpretPropertiesGZWinBMP
+0x1005405c2 LegacyControlInterpretPropertiesGZWinSlider
+0x1005408be LegacyControlInterpretPropertiesGZWinScrollbar
+0x100542a9a LegacyControlInterpretPropertiesGZWinOutline
+0x10054a2fc LegacyControlInterpretPropertiesGZWinCustom
+0x10054a302 LegacyControlVocabularyary
+0x10054a310 LegacyControlSetOwnControl
+0x10054a31a LegacyControlImplementInterface
+0x10054a322 LegacyControlGetControl
+0x10054a32c LegacyControlGetControlThunk_32c
+0x10054a336 LegacyControlSetOwnControlThunk_336
+0x1005522e8 LegacyControlGetScriptFragment
+0x10055e6ac LegacyControlGetScriptFragmentThunk_6ac
+0x10053bbf8 ReadScriptPropertyUint32
+0x10053ce78 ReadScriptPropertyString
+0x10053cf2a ReadScriptPropertyCoords
+0x10053cfcd ReadScriptPropertyColor
+0x100540829 ReadScriptPropertySint32
+0x10053e3fb ReadScriptPropertyRect
+0x10053d8ad SetControlFontById
+0x10053d90d SetControlFontByName
+0x10053d1f3 SetControlResourceKeyParam
+0x10053e4a0 SetControlImageParam
+
+PARTIAL:
+0x10053bc8e LegacyControlInterpretPropertiesGZWinCommon the seven comment strings (properties 0x108..0x10f) are packed into the unrecovered cRZStringArray variant (vtbl 0x100b0ecb8); flags, id, area/pos/size, fill colour, caption, captionres + native resolution and transparent are written
+0x10053d4f0 LegacyControlInterpretPropertiesGZWinText needs the WCM font lookup (RZ::WCM vslot 0x28/0x130) and the cIGZWinText setters
+0x10053d96e LegacyControlInterpretPropertiesGZWinTextEdit needs the cIGZWinTextEdit setters and the WCM font lookup
+0x10053e53e LegacyControlInterpretPropertiesGZWinListBox needs the cIGZWinListBox setters and the WCM font lookup
+0x10053ec98 LegacyControlInterpretPropertiesGZWinCombo needs the cIGZWinCombo setters and the WCM font lookup
+0x10053f238 LegacyControlInterpretPropertiesGZWinBtn needs the cIGZWinBtn setters, WCM fonts and LoadBuffer image resources (3.8 KB)
+0x100540bb4 LegacyControlInterpretPropertiesGZWinLineInput needs the cIGZWinLineInput setters and the WCM font lookup
+0x10054130e LegacyControlInterpretPropertiesGZWinOptGrp needs the cIGZWinOptGrp setters and the WCM font lookup
+0x1005422b8 LegacyControlInterpretPropertiesGZWinSpinner needs the cIGZWinSpinner setters and the WCM font lookup
+0x100542e1c LegacyControlInterpretPropertiesGZWinTextTicker needs the cIGZWinTextTicker setters, WCM font lookup and RZ::GS native colours
+0x1005432b8 LegacyControlInterpretPropertiesSC3WinGen needs the cIGZWinGen setters, WCM font lookup and LoadBuffer
+0x100543942 LegacyControlInterpretPropertiesGZWinFileBrowser needs the cIGZWinFileBrowser setters and the resource manager (7.2 KB)
+0x100544dd8 LegacyControlInterpretPropertiesGZWinTreeView needs the cIGZWinTreeView setters, WCM fonts and load-buffer resources
+0x100547684 LegacyControlInterpretPropertiesGZWinFolders needs the cIGZWinFolders setters and the WCM font lookup
+0x1005479ca LegacyControlInterpretPropertiesGZWinGrid needs the cIGZWinGrid setters and the WCM font/colour lookups
+0x10053d08f LoadScriptLocalizedString only the seam path is written: the original first asks cIGZUIScriptService (slot 0x48/0x28) and then the resource manager (type 0x89b7dc8); both are unrecovered
+0x10053e2a1 LoadScriptImageBuffer only the seam path is written: the original first asks cIGZUIScriptService (slot 0x48/0x18) and then the resource manager (type 0x6f1568e)
+
+SKIPPED: none (no DX7 / Windows-only code in this class)

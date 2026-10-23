@@ -1,0 +1,69 @@
+SOURCE src/sc4/PropertyView.cpp|h
+EVIDENCE test scripts/tests/sc4_propertyview_test.cpp - INI registry and parser quirks (space separated filters, quoted defaults, array element counts, stale maps), value formatting (custom formats, uint8/uint32 maps, string/debug-name/file-name resources, property customizer, ??? and sint64 quirks), window layout/controls, combo+editor selection, Done/Cancel/KillSelf/key forwarding, helper factories
+0x1002679c6 PropertyViewConstruct
+0x100267b0e PropertyViewConstructThunk
+0x100267b18 PropertyViewDestructor
+0x100267bcc PropertyViewDestructorThunk
+0x100267bd6 PropertyViewDeletingDestructor
+0x100267c04 PropertyViewQueryInterface
+0x100267c0e PropertyViewAddRef
+0x100267c18 PropertyViewRelease
+0x100267c22 PropertyViewInit
+0x1002686a2 PropertyViewProcessINI
+0x100268bba PropertyViewCreateButton
+0x100268d64 PropertyViewCreateLabel
+0x100268ea0 PropertyViewMapPropertiesToViews
+0x1002693e4 PropertyViewShutdown
+0x10026945a PropertyViewDoMessage
+0x100269464 PropertyViewOnKeyDown
+0x10026948a PropertyViewOnKeyUp
+0x1002694b0 PropertyViewOnMouseDownL
+0x1002694b8 PropertyViewAliasesSectionCallback
+0x1002695a6 PropertyViewParseVariantType
+0x100269cbf PropertyViewParseBoolArray
+0x100269e4e PropertyViewParseDefaultValue
+0x10026abb8 PropertyViewParseUint8Array
+0x10026ad19 PropertyViewParseUint16Array
+0x10026ae7d PropertyViewParseUint32Array
+0x10026afde PropertyViewParseSint8Array
+0x10026b13f PropertyViewParseSint16Array
+0x10026b2a3 PropertyViewParseSint32Array
+0x10026b404 PropertyViewParseSint64Array
+0x10026b569 PropertyViewParseFloatArray
+0x10026b6d6 PropertyViewConvertStringToFilter
+0x10026b746 PropertyViewGetFilter
+0x10026b8d4 PropertyViewUnquoteToken
+0x10026bb10 PropertyViewPropertiesSectionCallback
+0x10026c286 PropertyViewExemplarFiltersSectionCallback
+0x10026c346 PropertyViewUint8ValueMapCallback
+0x10026c690 PropertyViewUint32ValueMapCallback
+0x10026c9ea PropertyViewResKeyTableDefaultCallback
+0x10026cb0c PropertyViewGetValueEditor
+0x10026cea8 PropertyViewGetPropertyNameStr
+0x10026cf26 PropertyViewGetPropertyValueStr
+0x10026e5a4 PropertyViewGetStringResource
+0x10026e64e PropertyViewGetDebugNameResource
+0x10026e754 PropertyViewGetFilenameFromKey
+0x10026e97a PropertyViewGetPropertyValueMapUint8
+0x10026eb56 PropertyViewGetPropertyValueMapUint32
+0x10026ed32 PropertyViewGetHelpText
+0x10026eda4 PropertyViewIsVariableLengthArray
+0x10026ee04 PropertyViewGetResource
+0x10026ee9a PropertyViewCreateLineInput
+0x10026f0fe PropertyViewCreateSpinner
+0x10026f20e PropertyViewPaint
+0x10026f266 PropertyViewOnCommand
+0x10026f412 PropertyViewDoButtonPress
+0x10026f528 PropertyViewAssignValuesToProperty
+0x10026f5c6 PropertyViewKillSelf
+SKIPPED:
+0x10026799c std::map<tPropertyInfo> destructor - standard-library instantiation behind the static registry
+0x1002679b6 std::map<sResKeyTableInfo> destructor - standard-library instantiation behind the static registry
+0x10026901a std::map<tPropertyInfo>::operator[] - standard-library instantiation
+0x10026f62e std::map<sResKeyTableInfo>::operator[] - standard-library instantiation
+0x10026f7d6 __tree destroy<tPropertyInfo> - standard-library instantiation
+0x10026f826 __tree destroy<sResKeyTableInfo> - standard-library instantiation
+0x10026f8b6 tPropertyInfo::~tPropertyInfo - implicit member destruction of the clean struct
+0x10026f988 __construct_node_with_key<tPropertyInfo> - standard-library instantiation
+0x10026fa96 __insert_node_at<tPropertyInfo> - standard-library instantiation
+0x10026ff82 __insert_node_at<sResKeyTableInfo> - standard-library instantiation

@@ -1,5 +1,5 @@
 SOURCE src/sc4/WinCatalogView.cpp|h
-EVIDENCE test scripts/tests/sc4_wincatalogview_test.cpp - items, scroll clamping and buttons, highlight + callout, click command, wheel, paint frames, flash timer
+EVIDENCE test scripts/tests/sc4_wincatalogview_test.cpp - the 1bb2e22 implementation re-verified against a fresh Ghidra export of all 52 entries; covers items, scroll clamping and buttons, highlight + callout, click command, wheel, paint frames, flash timer; registry scripts/tests/registry/sc4_wincatalogview.txt
 0x1002fcf76 WinCatalogViewConstruct
 0x1002fd092 WinCatalogViewConstructThunk
 0x1002fd09c WinCatalogViewDestructor

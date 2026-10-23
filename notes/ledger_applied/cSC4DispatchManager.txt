@@ -1,0 +1,48 @@
+SOURCE src/sc4/DispatchManager.cpp|h
+EVIDENCE test scripts/tests/sc4_dispatchmanager_test.cpp - fake message server/city/dispatch source/pylon/automaton/vehicle view: interface ids and shared refcount, Init/Shutdown notification + renderer layer + city registration, source registry, call-box placement geometry, full Dispatch/automaton-tracking/EndDispatch/RevokeDispatchByPylon/ReturnPylonToStation lifecycle with return-to-station positions, occupant-removed and automaton-event messages, Write/Read record layout and additive Read, restored-Init re-tracking, and the kept quirks (ignored RevokeAllDispatches type, lost pylon in InitDispatch, track id not persisted, EndDispatch without a source)
+0x1002157bc DispatchManager_Destruct
+0x100215848 DispatchManager_DestructBase
+0x100215852 DispatchManager_DestructAndDelete
+0x100215880 DispatchManager_AddRef
+0x1002158aa DispatchManager_Release
+0x100215962 DispatchManager_QueryInterface
+0x1002159c8 DispatchManager_Init
+0x100215b80 DispatchManager_ClearAvailablePylonList
+0x100215bca DispatchManager_Shutdown
+0x100215de8 DispatchManager_Write
+0x100215ed6 DispatchManager_Read
+0x100216066 DispatchManager_DoMessage
+0x10021628e DispatchManager_HandleAutomataEventMessage
+0x100216352 DispatchManager_UpdateDispatchState
+0x100216454 DispatchManager_RegisterDispatchSource
+0x1002164f0 DispatchManager_UnregisterDispatchSource
+0x1002165ba DispatchManager_GetDispatchSource
+0x10021660c DispatchManager_RevokeDispatchByPylon
+0x10021667c DispatchManager_ReturnPylonToStation
+0x10021695a DispatchManager_RevokeDispatchByID
+0x1002169c2 DispatchManager_EndDispatch
+0x100216b58 DispatchManager_RevokeAllDispatches
+0x100216b84 DispatchManager_GetDispatchInfo
+0x100216be0 DispatchManager_GetDispatchCount
+0x100216c06 DispatchManager_GetDispatchIDArray
+0x100216c38 DispatchManager_SetActivePylon
+0x100216c96 DispatchManager_GetAvailablePylonCount
+0x100216da8 DispatchManager_GetAutomatonFromPylon
+0x100216dd0 DispatchManager_BeginDispatchTool
+0x1002171dc DispatchManager_EndDispatchTool
+0x10021720c DispatchManager_CanDispatch
+0x10021724e DispatchManager_Dispatch
+0x100217430 DispatchManager_InitDispatch
+0x100217684 DispatchManager_BeginDispatch
+0x100217a90 DispatchManager_GetActivePylon
+0x100217a9a DispatchManager_GetDispatchVehicleView
+0x100217aa4 DispatchManager_GetGZCLSID
+PARTIAL:
+SKIPPED:
+# Seam notes (not left-out functions; every one of the 37 is implemented and tested):
+# - IDispatchCity::ReleaseStationList stands for spCity vslot 0x110 -> 0x180. That it must drop the references
+#   GetStations added is confirmed by cSC4FirePlaneDispatchSource::CopyOccupantList (0x1007235a6), which AddRefs
+#   every station it copies.
+# - IAutomataDispatchManager's two tDispatchLocation arguments follow the call site (zeroed location first, clicked
+#   world position second); the binary's cSC4AutomataManager::Dispatch at 0x100100d86/0x100100d8e are 8-byte stubs.
+# - tDispatchType 2..4 and the name of message 0xaa1b2002 were not recovered; their handling is implemented.

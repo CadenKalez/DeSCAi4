@@ -1,0 +1,111 @@
+SOURCE src/sc4/WinLotConfigurationEditor.cpp|h
+EVIDENCE test scripts/tests/sc4_winlotconfigurationeditor_test.cpp - fake host (cursors, resource manager, lot manager read/write, message boxes, family selectors, menus, grid, terrain/camera) + fake window manager; asserts QI/refcounts, caption/dirty marker, identity lookup, hit test codes and overlap popup, bounds clamps and the -0.0 quirk, move/rotate/mirror/duplicate/delete, fence segments, foundation replacement, object creation through the manager footprints, key tools, DoMessage routing, save/close/verify flows, family names and the texture sort; registry scripts/tests/registry/sc4_winlotconfigurationeditor.txt
+0x1003d6634 Release
+0x1003d6678 ReleaseThunk
+0x1003d668c ReleaseThunkMessageFilter
+0x1004176a4 GetIdentityInfoForLotConfigurationType
+0x100417880 IsEditingExemplar
+0x100417890 Construct
+0x100417a08 ConstructWrapper
+0x100417a12 Destruct
+0x100417cf2 DestructWrapper
+0x100417cfc DestructAndDelete
+0x100417d30 QueryInterface
+0x100417d54 QueryInterfaceThunk
+0x100417d80 QueryInterfaceThunkMessageFilter
+0x100417dac Init
+0x100417f5e StaticInit
+0x100418198 LoadCursors
+0x10041849a AddPropFamilyName
+0x1004184da AddBuildingFamilyName
+0x10041851a AddFloraFamilyName
+0x100418776 Shutdown
+0x10041891c GetIdentityInfoForLotConfigurationExemplarKey
+0x1004189d6 SetTitle
+0x100418d7e RemoveOutOfBoundsLotConfigurationObjects
+0x100419406 GoTo3DView
+0x1004194ca Close
+0x10041963e MessageBoxA
+0x1004196f2 Save
+0x1004198f8 VerifyObjectsAreWithinLotBounds
+0x100419a1e SetDataHasChanged
+0x100419a30 WriteLotData
+0x100419a66 GetDefaultPath
+0x10041a5b4 DoMessage
+0x10041a5fe DoMessageFilter
+0x10041a934 DoMessageFilterThunk
+0x10041ac52 DoAddNewBuilding
+0x10041acca DoAddNewLotBaseTexture
+0x10041ad42 DoAddNewProp
+0x10041adc6 DoAddNewFlora
+0x10041ae3e DoShowHelpUI
+0x10041af7e MoveObjectByKey
+0x10041b130 RotateObject
+0x10041b1c2 MirrorObject
+0x10041b208 DuplicateObject
+0x10041b462 DeleteLotConfigurationObject
+0x10041b97a GZOnKeyUp
+0x10041b982 GZOnMouseDownL
+0x10041ba60 DoEditMouseDownL
+0x10041bbf8 GZOnMouseDownR
+0x10041bcd2 DoEditMouseDownR
+0x10041c3c4 GZOnMouseUpL
+0x10041c4e8 GZOnMouseMove
+0x10041c5ec DoEditMouseMove
+0x10041c728 DoHitTest
+0x10041ccbe SetSelectedLotConfigurationObject
+0x10041cd80 AddNewLotConfigurationObject
+0x10041d3bc LotFoundationIsPresent
+0x10041d826 ToggleFenceAtPixel
+0x1004243d8 MoveObjectTo
+0x10042b9d4 AddLotFoundation
+0x10042bc2e GetFoundationNameAndImplementationType
+0x10042bdc6 GetRetainingWallName
+0x10042bee6 GetBuildingFamilyName
+0x10042c0b8 GetBuildingName
+0x10042c17a GetFloraFamilyName
+0x10042c230 GetPropFamilyName
+0x10042c40a GetPropName
+0x10042cbe4 LotTextureSort
+0x10042d9be CreateNewLotConfiguration
+0x10042db5a ReadLotConfigurationExemplar
+0x10042dd7e GetLotConfigurationObjectName
+0x10042e12e ToggleFenceSegment
+0x10042e1fc MoveObjectToWithinLotBounds
+0x10042e7c4 IsObjectWithinLotBounds
+0x10042ee84 AddRef
+0x10042ee98 AddRefThunk
+0x10042eeac AddRefThunkMessageFilter
+PARTIAL:
+0x100417602 Open - the recovered part covers the frame init, the new/exemplar choice, the identity lookup, RemoveOutOfBounds, GoTo3DView and Refresh3DView; SetLotSize/Prepare3DView (3D view setup) are not recovered
+0x10041855e PostInit - children, view bitmap, status text and the two network objects are set up through seams; InitAlphaSystem (0x10038fd68) is not recovered and the graphics buffer comes from the host seam
+0x100419aba SaveAs - the cGZWinFileBrowser dialog (0x1002a6b00) and GetIdentityInfoForLotConfigurationExemplarPath (0x10041a1fe) are not recovered; the stub returns false
+0x10041a68a DoDialogBoxGridSort - the command classification is in DoMessage(cIGZWin*,...); the grid lookup (child 0x97cefb1, iid 0xdaa6b9be) and sort go through IWinLotConfigurationEditorHost::DialogGridSort because cIGZWinGrid is not recovered
+0x10041a814 DoDialogBoxScrollToLetter - the key dispatch is in DoMessage(cIGZWin*,...); the grid scan goes through IWinLotConfigurationEditorHost::DialogGridScrollToLetter because cIGZWinGrid is not recovered
+0x10041a946 GZOnKeyDown - all tool / save / move / rotate / mirror / duplicate / delete / help keys are wired; the N key (CycleSelectedObject 0x10041b684) does nothing because that function needs the lot, building-development and flora managers
+0x100424af8 DoEditAreaMenu - the two-parameter virtual is wired to the IWinLotConfigurationEditorHost::EditAreaMenu seam; the 1687-byte menu script is not recovered
+0x10042cc4e DrawCurrentLotConfiguration - called at the original call sites but performs no rasterisation: DrawLotConfigurationObject (0x10042d1c0) and the draw-context preview are not recovered
+0x10042e836 Refresh3DView - only the redraw (InvalidateSelfAndParents) is kept; the occupant-filter rebuild written into the 3D view (cSC4OccupantFilter + cISC4View3DWin) is not recovered
+0x10041bd84 DoOutsideAreaMenu - the two-parameter virtual forwards to IWinLotConfigurationEditorHost::OutsideAreaMenu; the 1520-byte popup menu (help / save / save as / cancel, SC4DoPopupStringListMenu 0x100039cb4) is not recovered
+SKIPPED:
+0x100418b44 SetLotSize - needs the view bitmap and flat-rect frame layout and the 3D viewport rescale (0x100418b44 is 570 bytes of control geometry); the recovered slice sets the configuration size through the test hook instead
+0x100418faa Prepare3DView - builds a terrain cell map, the zone/demolition passes and a cSC4OccupantFilter, then pushes the lot slope into the terrain (terrain slots 0x228/0x70, zone manager 0x58, demolition 0x30); none of those classes are recovered
+0x10041a1fe GetIdentityInfoForLotConfigurationExemplarPath - builds an identity from a file path through the resource manager and the exemplar property holder
+0x10041b684 CycleSelectedObject - walks the lot manager, the building development simulator and the flora simulator to cycle the selected object
+0x10041d404 DoSetFoundationUI - 976-byte foundation dialog built by a window script (SC4CreateWindowFromScript)
+0x10041d92a DoLotFoundationMenu - 1396-byte foundation context menu
+0x10041dedc DoFenceMenu - 185-byte fence context menu
+0x10041e2a4 DoLotConfigurationObjectMenu - 3283-byte per-object context menu
+0x100424466 DoSet3DViewSlopeUI - 932-byte slope entry dialog (SC4CreateWindowFromScript, Prepare3DView)
+0x100424844 DoSetNetworkNodePathUI - network node path dialog
+0x100426a6c DoSetLotNameUI - lot name dialog built by a window script
+0x100426cae DoSetLotSizeUI - lot size dialog built by a window script
+0x100426ea4 DoSetRetainingWallUI - retaining wall dialog built by a window script
+0x10042746a DoSetLotCompatibilitiesUI - 1652-byte zone / wealth / purpose compatibility dialog
+0x10042a0ca DoSelectBuildingFamiliesUI - 317-byte building family selector dialog (grid + preview)
+0x10042a948 DoSelectFloraFamiliesUI - 262-byte flora family selector dialog
+0x10042b0be DoSelectPropFamiliesUI - 303-byte prop family selector dialog
+0x10042b954 DoSelectLotBaseTexturesUI - lot base texture selector dialog
+0x10042c4c0 GetAllLotBaseTextureTypes - enumerates the texture resources through GZCOM/GZBuffer (TextureResourceToGZBuffer 0x1002ff5f6)
+0x10042c78e DoSelectTexturesUI - 1164-byte texture grid dialog and its preview
+0x10042d1c0 DrawLotConfigurationObject - 239-byte software rasteriser of one object into the view buffer

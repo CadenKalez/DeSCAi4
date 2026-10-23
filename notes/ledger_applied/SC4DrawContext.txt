@@ -1,0 +1,65 @@
+SOURCE src/sc4/DrawContext.cpp|h
+EVIDENCE test scripts/tests/sc4_drawcontext_test.cpp - every function driven through a recording cIGZGDriver: render-state diffing, texture stages, model-view matrices, mesh submission, material states, RenderModelInstance (normal/highlight/cull/debug-box) and DrawBoundingBox; scripts/tests/registry/sc4_drawcontext.txt
+0x100771f04 DrawContextConstruct
+0x1007722a6 DrawContextConstructWrapper
+0x1007722b0 DrawContextDestruct
+0x100772356 DrawContextDestructWrapper
+0x100772360 DrawContextInit
+0x1007725c0 DrawContextSetHighlightColor
+0x1007725ee DrawContextShutdown
+0x100772604 SetCamera
+0x1007726ee ResetModelViewTransform
+0x100772908 GetModelViewMatrix
+0x100772966 SetModelViewTransformChanged
+0x100772974 EnableColorMaskFlag
+0x1007729c2 EnableAlphaTestFlag
+0x100772a28 EnableDepthTestFlag
+0x100772a80 EnableDepthMaskFlag
+0x100772ad4 EnableTextureStateFlag
+0x100772c4a EnableBlendStateFlag
+0x100772cb6 EnableCullFaceFlag
+0x100772d0e DrawContextSetTexture
+0x100772d64 SetDepthFunc
+0x100772da8 SetBlendFunc
+0x100772e20 SetAlphaFunc
+0x100772eca SetTexEnvMode
+0x100772fa4 SetTexCoord
+0x10077302a SetTexWrapModes
+0x100773108 SetTexFiltering
+0x100773212 SetTexCombiner
+0x100773296 SetTexColor
+0x1007732be SetTexTransform4
+0x1007733c6 ClearTexTransform
+0x100773440 SetVertexBuffer
+0x100773454 SetIndexBuffer
+0x100773462 DrawPrims
+0x1007734a8 DrawPrimsRange
+0x1007734ba DrawPrimsIndexedRange
+0x1007734e8 DrawPrimsIndexed
+0x100773582 GetLighting
+0x10077358e SetShade
+0x1007735d8 SetSelfLitShade
+0x1007736be ResetShade
+0x100773704 DrawContextSetTransparency
+0x10077371a ResetTransparency
+0x100773738 SetFog
+0x1007738da SetDefaultRenderState
+0x100773906 DrawContextSetRenderState
+0x100773c08 SetDefaultRenderStateUnilaterally
+0x100773d50 SetRenderStateMaterial
+0x1007740a4 SetRenderStateHighlightMaterial
+0x100774130 SetRenderStateHighlight
+0x1007741b8 DrawContextSetDepthOffset
+0x10077428a SetEmulatedSecondStageRenderState
+0x10077441a RenderMesh
+0x100774512 SetModelTransform
+0x1007747fa SetModelTransformMatrix
+0x100771e8a StageInfoConstruct
+0x1007749c0 MultiplyMatrix4
+PARTIAL:
+0x100773502 SetLighting seam IS4LightingManager (cSC4LightingManager 0x100775628 is unrecovered); the global light is faked in the test
+0x10077360a SetModelShade seam IS4LightingManager (GetModelLight vslot 0x58); the model light is faked in the test
+0x100774ad0 RenderModelInstance seams IS4ViewUtilities (+0x28 pixels per world), IS4LightingManager (+0x68) and IS3DMeshBuilder (debug boxes); fakes in the test
+0x100774e5c DrawBoundingBox seam IS3DMeshBuilder / IMeshBuilderHost (cS3DMeshBuilder 0x1001c5c4c..0x1001c6139 is unrecovered); a fake builder records Clear/SetDirLight/SetColor/AddBoxMesh/Mesh
+SKIPPED:
+# none: every symbol in this class is hand-written; the two ctor/dtor aliases are the C2 wrappers of the C1 bodies.

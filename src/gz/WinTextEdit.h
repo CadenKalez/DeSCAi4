@@ -301,6 +301,8 @@ public:
     void DoCursorScroll();
     static void CaretTimerCallback(void* self);
     static void ScrollTimerCallback(void* self);
+    // Writes the caret-visible byte directly (the IME composition window's Init sets it before base Init).
+    void SetCaretVisible(bool visible) { caretVisible_ = visible; }
 
     const TextEditPosition& Position() const { return pos_; }
     const std::vector<std::uint32_t>& LineStarts() const { return lineStarts_; }

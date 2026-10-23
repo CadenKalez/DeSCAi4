@@ -1,0 +1,66 @@
+SOURCE src/sc4/ParticlesEffect.cpp|h
+EVIDENCE test scripts/tests/sc4_particleseffect_test.cpp - fake terrain map / city cells / occupant manager / effects manager / texture factory / vertex buffer / draw context: ctor layout (0x280, description 0x278, particle 0x44, static asserts), Init/Shutdown host refcounts, description retain/release hooks, Start delays + city-side walk + random-walk determinism, particle creation + physics + death, bounding box, maintain/inject/rate-curve emission and the particle-cap delayed stop, ProcessParticle geometry + PackedColorByte quirk (0.5 -> 128, 2.0 -> 254) + max-width stretch, float/void params, effect/source transforms (aligned mode), timed effects and triggers, description effect lookups, height-based emission (bounds/height band/lake flags), extra physics + building-collision bit, tractor force, terrain-force water kill, full Update draw through the pool (vertex/texcoord/state bits) and through the vertex-buffer extension, draw modes, suppression
+0x1005e87ac ParticlesEffect_Destruct
+0x1005ecaa0 ParticlesEffect_AddRef
+0x1005ecaf4 ParticlesEffect_AddRef_Thunk
+0x1005ecb4c ParticlesEffect_IsStarted_Thunk
+0x1005f27e2 ParticlesEffect_Ctor
+0x1005f2a9c ParticlesEffect_CtorComplete
+0x1005f2aa6 ParticlesEffect_Init
+0x1005f2b86 ParticlesEffect_Init_Thunk
+0x1005f2b94 ParticlesEffect_Shutdown
+0x1005f2c04 ParticlesEffect_Shutdown_Thunk
+0x1005f2c12 ParticlesEffect_Start
+0x1005f3060 ParticlesEffect_UpdateRandomWalk
+0x1005f33ac ParticlesEffect_Stop
+0x1005f33cc ParticlesEffect_SetTransforms
+0x1005f3732 ParticlesEffect_ApplyEffect
+0x1005f3738 ParticlesEffect_SetFloatParams
+0x1005f38da ParticlesEffect_SetVoidParams
+0x1005f38f4 ParticlesEffect_Update
+0x1005f3c10 ParticlesEffect_SetCitySideEmissionVolume
+0x1005f413c ParticlesEffect_LaunchTimedEffects
+0x1005f4602 ParticlesEffect_SetDrawMode
+0x1005f4808 ParticlesEffect_SetTexture
+0x1005f48da ParticlesEffect_SetModel
+0x1005f4922 ParticlesEffect_SetTarget
+0x1005f4c9e ParticlesEffect_SetGlobalParams
+0x1005f4cac ParticlesEffect_SuppressEmission
+0x1005f4cba ParticlesEffect_SetVertexBufferExtension
+0x1005f4d0e ParticlesEffect_BoundingBox
+0x1005f4d34 ParticlesEffect_PrepareForRendering
+0x1005f4ea0 ParticlesEffect_GenerateNewParticles
+0x1005f4f2c ParticlesEffect_MaintainParticles
+0x1005f5000 ParticlesEffect_InjectParticles
+0x1005f5288 ParticlesEffect_AddRateCurveParticles
+0x1005f564e ParticlesEffect_LaunchTimeZeroEffects
+0x1005f56f8 ParticlesEffect_RenderActiveParticles
+0x1005f5976 ParticlesEffect_ProcessParticleARGB8
+0x1005f6ab2 ParticlesEffect_ProcessParticleARGB32
+0x1005f7630 ParticlesEffect_UpdateActiveParticles
+0x1005f78ba ParticlesEffect_UpdateParticlePhysics
+0x1005f79bc ParticlesEffect_UpdateParticlePhysicsExtra
+0x1005f91a4 ParticlesEffect_SetPrimitivePoolFormat
+0x1005f9224 ParticlesEffect_CreateParticle
+0x1005f9288 ParticlesEffect_InitEffectsParticle
+0x1005f9ab4 ParticlesEffect_CreateParticle_Thunk
+0x1005f9ac2 ParticlesEffect_DoHeightBasedEmit
+0x1005f9d98 ParticlesEffect_DestroyParticle
+0x1005f9dac ParticlesEffect_DestroyParticle_Thunk
+0x1005f9dc0 ParticlesEffect_IsStarted
+0x1005f9ddc ParticlesEffect_Release
+0x1005f9dea ParticlesEffect_DestructBase
+0x1005f9df4 ParticlesEffect_DestructAndDelete
+0x1005f9e2c ParticlesEffect_Release_Thunk
+0x1005f9e36 ParticlesEffect_Destruct_Thunk
+0x1005f9e44 ParticlesEffect_DestructAndDelete_Thunk
+PARTIAL:
+0x1005f3d08 occupant-mode ground query goes through the IParticlesOccupants seam (city +0x178 -> +0xb0); its exact output convention is inferred
+0x1005f4226 cSC4ParticlesDescription is unrecovered: the field layout is inferred from the accesses (asserted offsets) and the effect-name lookups go through the IParticlesEffects seam
+0x1005f6548 vertex-buffer extension seam (slots 0x28/0x30/0x40/0x50); the fast-ATI ARGB32 vertex path is dead in this build (MacOpenGL::IsFastATICard() always false) and is not written
+0x1005f7de6 tractor record array (+0x248 end pointer, 0x20-byte records) inferred from the disassembly; the begin pointer at +0x250 is assumed to bound the backwards walk; no oracle for the Hermite result
+0x1005f83da effect-maps / terrain seams (cISC4EffectMaps 0x0a5eaa1a, terrain slots 0x60/0x98/0xd8); the description flag 0x400 vertical bounce branch is not recovered
+0x1005f8d84 occupant enumeration goes through the IParticlesOccupants seam (occupant manager slots 0x128/0x180); the original grid walk over the cell map is not reproduced
+0x1005f9018 effects-manager trigger seam (vslot 0x30) and the inline legacy transform (0x1005f9074..) is only partially recovered (translation only)
+SKIPPED:
+(none: the only dead path, the fast-ATI ARGB32 vertex stream inside RenderActiveParticlesVB, is listed under PARTIAL)
