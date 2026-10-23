@@ -1,4 +1,8 @@
-# SC4-Decomp
+<p align="center">
+  <img src="docs/images/descai4-logo.jpg" alt="DeSCAi4 - Decompilation Project" width="900">
+</p>
+
+# DeSCAi4
 
 <!-- progress:start -->
 ![decompiled](https://img.shields.io/badge/decompiled-80.9%25-green)
