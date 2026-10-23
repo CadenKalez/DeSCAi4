@@ -31,7 +31,7 @@ EVIDENCE test scripts/tests/gz_drawcontextrendertohardware_test.cpp - a recordin
 0x100656e8a cGZDrawContextRenderToHardware_UnlockTarget
 0x1007b4f4c cGZDrawContextRenderToHardware_Flush
 PARTIAL:
-# none: every one of the 30 hand-written functions is complete; the ten hardware calls go through IHardwareRenderHost, whose test fake records them and whose real implementation is the unrecovered cGZDrawContextRenderToSimGL (0x1007b38ec..0x1007b4e58, hook-up = derive a Metal backend from IHardwareRenderHost)
+# none: all 30 hand-written functions are complete; the ten hardware calls go through IHardwareRenderHost, whose test fake records them (the real implementation, cGZDrawContextRenderToSimGL 0x1007b38ec..0x1007b4e58, is unrecovered; hook-up = provide a Metal backend for the seam)
 SKIPPED:
 0x100654fd2 compiler-emitted __cxa_deleted_virtual stub (ud2) in the abstract base's vtable; the port's engine is concrete (the backend is a seam), so its vtable carries the compiler's real deleting destructor instead - there is no source body to write
 0x100654fd8 second compiler-emitted __cxa_deleted_virtual stub (ud2) of the abstract base's vtable; same reason as 0x100654fd2

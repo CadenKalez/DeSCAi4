@@ -1,0 +1,32 @@
+SOURCE src/sc4/EffectsCollection.cpp|h
+EVIDENCE decompile of cSC4EffectsCollection (27 symbols at 0x100576350..0x100578cb5; class vtable 0x100ace700, vptr 0x100ace710, slots +0x18 BeginCollection, +0x20 EndCollection, +0x28..+0x90 Add*/Get*, +0x98 SetCameraParams, +0xa0 AddEffectBinding, +0xa8 AddMessageTrigger, +0xb0 UpdateEffectPriority; the three head slots are the cIGZUnknown pure virtuals the manager / resource fill in, which is why the class is abstract and its +0xb8/+0xc0 destructor entries are deleted virtuals); scripts/tests/sc4_effectscollection_test.cpp (case-insensitive name tables for all six description kinds; the (name, version) keyed effect table and its record / event index resolution for kinds 0/1/2/3..15/16/unknown; component buckets with reference counting, unnamed appends, in-place replacement and the refused out-of-range types; camera parameters, bindings and message triggers; BeginCollection / EndCollection; effect priority and its alias rules including the mutation that survives a refused alias; the three merges (swap with the camera-params flag quirk, by name through the cISC4EffectsCollection seam, by renumbering with the destination-shifted record indices, the unmerged non-effect name maps, the unshifted kind 16 and the in-place renumbering of the merged collection)); registry scripts/tests/registry/sc4_effectscollection.txt
+0x100576350 EffectsCollectionConstruct
+0x1005765bc EffectsCollectionDestruct
+0x1005767d8 EffectsCollectionBeginCollection
+0x100576862 EffectsCollectionEndCollection
+0x100576868 EffectsCollectionAddParticleDescription
+0x100576a42 EffectsCollectionGetParticleDescription
+0x100576af2 EffectsCollectionAddDynamicParticleDescription
+0x100576c54 EffectsCollectionGetDynamicParticleDescription
+0x100576d0a EffectsCollectionAddDecalDescription
+0x100576f8e EffectsCollectionGetDecalDescription
+0x100577106 EffectsCollectionAddShakeDescription
+0x1005772a6 EffectsCollectionGetShakeDescription
+0x100577392 EffectsCollectionAddLightDescription
+0x1005774b2 EffectsCollectionGetLightDescription
+0x100577594 EffectsCollectionAddEffectDescription
+0x1005779fe EffectsCollectionGetEffectDescription
+0x100577b04 EffectsCollectionAddComponentDescription
+0x100577d24 EffectsCollectionGetComponentDescription
+0x100577df6 EffectsCollectionSetCameraParams
+0x100577e3e EffectsCollectionAddEffectBinding
+0x100577f9e EffectsCollectionAddMessageTrigger
+0x100577fec EffectsCollectionUpdateEffectPriority
+0x10057825c EffectsCollectionAddToCollection
+0x100578608 EffectsCollectionAddToCollectionWithNames
+0x100578826 EffectsCollectionAddToCollectionWithRenumbering
+PARTIAL:
+# none: all 25 hand-written functions are complete. Two modelling notes: (1) the particle / dynamic-particle descriptions are held by value because their reference-counted classes are unrecovered (cSC4ParticlesDescription refcount +0x2bc, cSC4DynamicParticleDescription cRZRefCount); Add* copies in and Get* copies out exactly like the original's operator= (0x1005b5432 / 0x1006fd016), and nothing else ever mutates a stored record, so the API behaviour is the original's. (2) AddToCollectionWithNames sends the descriptions through IEffectsCollectionHost, the seam over the unrecovered cISC4EffectsCollection (slots +0x28/+0x38/+0x48/+0x58/+0x68/+0x78/+0x88); its test fake records the calls. The constructor leaves +0x1a0 indeterminate in the original and the port starts it false (documented in the header).
+SKIPPED:
+0x1005767cc compiler-emitted __cxa_deleted_virtual stub (6 bytes, ud2) in the complete-object destructor slot: the class is abstract (the cIGZUnknown slots are pure at this level and are only filled in by cSC4EffectsManager / cSC4EffectsResource), so the ABI emits no complete-object destructor; there is no source body to write (the real teardown is the D2 at 0x1005765bc)
+0x1005767d2 the same ud2 stub in the deleting-destructor slot, for the same reason
