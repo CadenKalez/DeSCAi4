@@ -1,0 +1,1 @@
+"gz_logservice:$T/gz_logservice_test.cpp $S/gz/LogService.cpp $S/rz/cRZString.cpp $S/rz/cRZCriticalSection.cpp -I$T"

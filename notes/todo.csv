@@ -888,7 +888,8 @@ CLASS-cWinSC4App,cWinSC4App,"recover 24 remaining function(s) (24 not started, 0
 CLASS-cZoneDeveloperLotFilter,cZoneDeveloperLotFilter,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-iTunesPlayer,iTunesPlayer,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-ibasic_string<char>,ibasic_string<char>,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-nGZLog,nGZLog,"recover 49 remaining function(s) (49 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-nGZLog,nGZLog,"recover 20 remaining function(s) (20 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-nGZLog,nGZLog,finish 14 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-nRZSimGL,nRZSimGL,finish 6 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-nS3D,nS3D,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-nS3D,nS3D,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv

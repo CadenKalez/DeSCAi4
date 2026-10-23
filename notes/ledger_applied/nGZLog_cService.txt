@@ -1,0 +1,36 @@
+SOURCE src/gz/LogService.cpp|h
+EVIDENCE decompile of nGZLog::cService (Ghidra export work/gz/nGZLog_cService.txt: 28 non-thunk function symbols 0x10068fe2c..0x10069283e + the nested DeferredOutputData ctor 0x100692bac; the other 23 exported sections are non-virtual thunks emitted by the cRZSystemService + cIService base order), plus disassembly of OutputLowLevel 0x1006924aa (the +0x30 drain copies the front element, recurses, then pops; 4-deep guard), Init 0x100691b8a (CommandLine vslot 0xa8 then IsSwitchPresent vslot 0x58 for filterLevel/logLevel; AddToTick vslot 0x48), FilterLevelFromString 0x100690c36 and LogLevelFromString 0x100690d80 (strcasecmp/atoi offsets, the inverted none/all mapping), cOutputBackEnd::ShouldOutputLevel 0x10068f44a (CMP EAX,EBX/SETG = filter > level), kLogLevelNames at 0x100ade480 (errors..debug + null), cOutputBackEnd/cDefaultOutputBackEnd 0x10068f370..0x10068fbea/0x10068eea0..0x10068f06e for the backend seam, and the vtables/RTTI 0x100ade290/0x100ade398/0x100ade3e0; test scripts/tests/gz_logservice_test.cpp runs the real cService over fake ILogOutputBackEndHost backends, a fake ILogServiceHost (command line, tick, factories) and a recording cIGZOStream: the +0x28 cIService subobject and QueryInterface for 0x9b69c46/0x287fb697/1, the four level string maps incl. the inverted none/all quirk and the 1/2 name offsets, AddOutputBackEnd replaying groups and the case-sensitive name set vs strcasecmp list search, RemoveAllOutputBackEnds leaving names taken, the default backend bypassing the name set, AddOutputStream reference flow, level propagation and the backend-local form, Output/OutputLevel formatting, the 0x400/0x401 truncation path, the re-entrant +0x30 queue double-delivery quirk, the cross-thread +0x48 queue drained by OnTick, Init's filterLevel/logLevel parsing and tick registration, Shutdown's map deletion/null getters and second call, DumpOutputLevels printing filter values through StringFromLogLevel (>=> invalid filter level) with the backend dump; seam names ILogOutputBackEndHost and ILogServiceHost are declared in src/gz/LogService.h and need rows in docs/SEAMS.md (not edited here); registry scripts/tests/registry/gz_logservice.txt; built and run with ASan/UBSan; the PARTIAL rows are exactly the functions that dispatch through the unrecovered cOutputBackEnd/cDefaultOutputBackEnd (ILogOutputBackEndHost) or the framework/tick/default-backend factory (ILogServiceHost); the recovered rows are the self-contained identity/lifecycle and level-conversion/list-getter functions
+0x10068fe2c cServiceConstruct
+0x10068fe42 cServiceConstructBody
+0x10068ffdc cServiceDestruct
+0x10069009a cServiceDestructComplete
+0x1006900b2 cServiceDestructAndDelete
+0x100691188 GroupList
+0x100692792 QueryInterface
+0x100692800 AddRef
+0x100692826 Release
+0x100690c36 FilterLevelFromString
+0x100690cfc StringFromFilterLevel
+0x100690d80 LogLevelFromString
+0x100690e48 StringFromLogLevel
+0x100690876 OutputBackEndList
+0x100692bac DeferredOutputDataConstruct
+PARTIAL:
+0x1006900ee AddOutputBackEnd
+0x100690414 RemoveOutputBackEnd
+0x1006905f8 AddOutputStream
+0x1006906c8 RemoveAllOutputBackEnds
+0x100690738 GetOutputBackEnd
+0x10069088e SetOutputLevel
+0x100690ed0 DumpOutputLevels
+0x1006911a0 Output
+0x1006913c4 OutputVaList
+0x100691748 OutputLevel
+0x100691b8a Init
+0x1006921e2 Shutdown
+0x1006922fc OnTick
+0x1006924aa OutputLowLevel
+SKIPPED:
+0x10069245a libc++ std::list<nGZLog::cService::DeferredOutputData>::pop_front instantiation, emitted by the port's std::list, not hand-written
+0x10069284c libc++ std::list<nGZLog::cService::DeferredOutputData>::push_back instantiation, emitted by the port's std::list, not hand-written
+0x1006929ea libc++ std::__list_imp<nGZLog::cService::DeferredOutputData>::clear instantiation, emitted by the port's std::list, not hand-written

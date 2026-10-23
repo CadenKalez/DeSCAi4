@@ -358,6 +358,7 @@ declare -a TESTS=(
  "sc4_effectscollection:$T/sc4_effectscollection_test.cpp $S/sc4/EffectsCollection.cpp -I$T"
  "rz_diskradiostation:$T/rz_diskradiostation_test.cpp $S/rz/DiskRadioStation.cpp $S/rz/cRZString.cpp $S/rz/cRZDirectory.cpp $S/gz/FileFind.cpp $S/rz/cRZFile.cpp $S/rz/cRZTimer.cpp $S/gz/PlayList.cpp $S/rz/RZStringUtils.cpp $S/rz/StringConversion.cpp $S/rz/TextEncoding.cpp $S/rz/CharLength.cpp $S/rz/RZConvert.cpp $S/platform/MacTools.cpp -I$T"
  "gz_uiscriptservice:$T/gz_uiscriptservice_test.cpp $S/gz/UIScriptService.cpp $S/gz/ScriptTerp.cpp $S/gz/GZCOMDirector.cpp $S/gz/Win.cpp $S/rz/cRZCOMDllDirector.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/RZConvert.cpp $S/rz/RZStringUtils.cpp $S/rz/cRZFile.cpp $S/rz/cRZSysServPtr.cpp -I$T"
+ "gz_logservice:$T/gz_logservice_test.cpp $S/gz/LogService.cpp $S/rz/cRZString.cpp $S/rz/cRZCriticalSection.cpp -I$T"
 )
 fail=0
 for entry in "${TESTS[@]}"; do
