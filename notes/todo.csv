@@ -725,7 +725,8 @@ LEDGER-cSC4UndergroundOccupant,cSC4UndergroundOccupant,finish 1 partial/pending 
 UNDERGROUND-1,cSC4UndergroundOccupant,Recover cSC4PipeOccupant/cSC4SubwayOccupant sCustomGeometryInfo tables (0x100b01b58 / 0x100b02748) and the six piece texture bindings so CreateUndergroundModel can build the piece model,,open,src/sc4/UndergroundOccupant.cpp
 CLASS-cSC4Vehicle,cSC4Vehicle,"recover 54 remaining function(s) (54 not started, 0 partial/pending); bases still unfinished: cSC4TrafficAutomaton",CLASS-cSC4TrafficAutomaton,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4VehicleManager,cSC4VehicleManager,"recover 18 remaining function(s) (18 not started, 0 partial/pending); bases still unfinished: cSC4TrafficAutomataManager",CLASS-cSC4TrafficAutomataManager,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4VertexHtConstraintSatisfier,cSC4VertexHtConstraintSatisfier,"recover 30 remaining function(s) (30 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4VertexHtConstraintSatisfier,cSC4VertexHtConstraintSatisfier,"recover 2 remaining function(s) (0 not started, 2 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4VertexHtConstraintSatisfier,cSC4VertexHtConstraintSatisfier,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4VideoPreferencesWinProc,cSC4VideoPreferencesWinProc,"recover 13 remaining function(s) (13 not started, 0 partial/pending); bases still unfinished: cIGZWinProc",CLASS-cIGZWinProc,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4View3DWin,cSC4View3DWin,"recover 157 remaining function(s) (157 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4ViewInputControlAutomataDebug,cSC4ViewInputControlAutomataDebug,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -757,7 +758,7 @@ CLASS-cSC4WatercraftManager,cSC4WatercraftManager,"recover 33 remaining function
 CLASS-cSC4WeatherSimulator,cSC4WeatherSimulator,"recover 42 remaining function(s) (42 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinAdviceList,cSC4WinAdviceList,"recover 19 remaining function(s) (19 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinAnimationRecorder,cSC4WinAnimationRecorder,"recover 28 remaining function(s) (28 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4WinCalloutBox,cSC4WinCalloutBox,"recover 29 remaining function(s) (29 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4WinCalloutBox,cSC4WinCalloutBox,"recover 29 remaining function(s) (29 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinCatalogView,cSC4WinCatalogView,"recover 38 remaining function(s) (38 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 T-WCV-1,cSC4WinCatalogView,hook ICatalogViewHost: SC4MakeMoneyString (0x1000392b0) and SL::spSS vslot 0x50 sound player; font comes from gz::WinFontSource (RZ::WCM() vslot 0x28),,open,src/sc4/WinCatalogView.h
 T-WCV-2,cSC4WinCatalogView,"recover cSC4WinCalloutBox (37 functions) behind the new cISC4WinCalloutBox interface (src/sc4/ISC4WinCalloutBox.h, slot order from the vtable)",,open,src/sc4/ISC4WinCalloutBox.h
@@ -922,5 +923,5 @@ CLASS-tControllerQInfo,tControllerQInfo,"recover 4 remaining function(s) (4 not 
 MGR-6,tControllerQInfo,Hook automaton vslot 0x188 (SetLeader) and vslot 0x180 (GetLeader) to the real cISC4Automaton,CLASS-cSC4AutomataManager,open,src/sc4/AutomataController.h
 CLASS-tControllerTemplate,tControllerTemplate,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-tControllerTime,tControllerTime,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-tHtRange,tHtRange,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-tHtRange,tHtRange,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-tKeyEffect,tKeyEffect,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv

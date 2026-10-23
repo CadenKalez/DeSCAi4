@@ -1,0 +1,70 @@
+SOURCE src/sc4/VertexHtConstraintSatisfier.cpp|h
+EVIDENCE test scripts/tests/sc4_vertexhtconstraintsatisfier_test.cpp (built and run with -fsanitize=address,undefined) - tHtRange::Intersect bounds/0.01-fold/NaN semantics; Init writes 0x0101 and refuses a second call; Shutdown clears the solved map and returns true; fixed-vertex and initial-window clamping; slope projection through a solved point ([h-slope, h+slope]) and through a solved range ([low-slope, high+slope]); duplicate slope/smoothness inserts keep the smaller limit for either vertex order; preferred value and preferred range (including the reversed-by-0.01 collapse and the >0.01 ignore); InsertRangeConstraint's max/min narrowing and 0.01 fold; an inverted window fails the solve with the failed vertex recorded; transitive equality-set merge and application, equality conflict, equality for vertices never added; smoothness end-fixed projection through a fixed middle ((h-high)*-0.5/(h-low)*-0.5 then [low+2h, high+2h]), mid-fixed projection through two point ends ([2*hMid-limit, 2*hMid+limit]) and the conservative range projections (projected once through a range and consumed, so the final second difference can exceed the limit); Rewind/GetNext replay the solved map in bucket-chain order; DumpConstraints asks the terrain twice per equality-set member and Solve's cleanup-then-dump ordering makes the failure dump see empty lists; inserts for unknown vertices are ignored (InsertFixedVertex adds first); the solver's only engine global is SL::spTerrain slot +0x50 (cSTETerrain::GetVertex 0x100740e5e) behind IVertexHtConstraintHost; registry scripts/tests/registry/sc4_vertexhtconstraintsatisfier.txt
+0x1001bc840 VertexHtSatisfierAddEndFixedSmoothnessConstraint
+0x1001bc8fc VertexHtSatisfierAddMidFixedSmoothnessConstraint
+0x1001bc9c2 VertexHtSatisfierAddVertexToSolve
+0x1001bca8c VertexHtSatisfierConstruct
+0x1001bcb6a VertexHtSatisfierDestruct
+0x1001bcc74 VertexHtSatisfierShutdown
+0x1001bccdc VertexHtSatisfierDeleteConstraintsAndOtherTemporaryData
+0x1001bcdac VertexHtSatisfierDoInitialConstraintPropagation
+0x1001bcece VertexHtSatisfierPropagateRangeConstraintsOfVerts
+0x1001bd09a VertexHtSatisfierFindEqualitySet
+0x1001bd0ea VertexHtSatisfierGetHeight
+0x1001bd11c VertexHtSatisfierGetNextSolvedVertexAndItsHeight
+0x1001bd156 VertexHtSatisfierInit
+0x1001bd178 VertexHtSatisfierInsertEqualityConstraint
+0x1001bd4be VertexHtSatisfierMergeIntoSet
+0x1001bd67c VertexHtSatisfierInsertFixedVertex
+0x1001bd6b2 VertexHtSatisfierInsertRangeConstraint
+0x1001bd78a VertexHtSatisfierInsertPreferredValueConstraint
+0x1001bd7c2 VertexHtSatisfierInsertPreferredRangeConstraint
+0x1001bd80a VertexHtSatisfierInsertSlopeConstraint
+0x1001bd8fc VertexHtSatisfierInsertSmoothnessConstraint
+0x1001bda28 VertexHtSatisfierIntersectVertexRange
+0x1001bdad4 VertexHtSatisfierMarkPotentiallySolved
+0x1001bdb1e VertexHtSatisfierMarkSolution
+0x1001bdbd8 VertexHtSatisfierPickASolution
+0x1001bdd50 VertexHtSatisfierUpdateConstraintsFloat
+0x1001bde06 VertexHtSatisfierUpdateConstraintsRange
+0x1001bdeac VertexHtSatisfierRewindSolvedVertexList
+0x1001bdebe VertexHtSatisfierSolve
+0x1001be298 VertexHtSatisfierUpdateEqualityConstraintsFloat
+0x1001be488 VertexHtSatisfierUpdateSlopeConstraintsFloat
+0x1001be60c VertexHtSatisfierUpdateSmoothnessConstraintsFloat
+0x1001be734 VertexHtSatisfierUpdateMidFixedSmoothnessConstraintsFloat
+0x1001be8ba VertexHtSatisfierUpdateEndFixedSmoothnessConstraintsFloat
+0x1001beb14 VertexHtSatisfierUpdateEqualityConstraintsRange
+0x1001bec70 VertexHtSatisfierUpdateSlopeConstraintsRange
+0x1001bedbe VertexHtSatisfierUpdateSmoothnessConstraintsRange
+0x1001beeb8 VertexHtSatisfierUpdateMidFixedSmoothnessConstraintsRange
+0x1001bf006 VertexHtSatisfierUpdateEndFixedSmoothnessConstraintsRange
+0x1001bda76 HtRangeIntersect
+PARTIAL:
+0x1001be05e VertexHtSatisfierDumpConstraints - the debug dump reaches SL::spTerrain slot +0x50 (cSTETerrain::GetVertex 0x100740e5e) through IVertexHtConstraintHost, whose real adapter (cSTETerrain, already recovered) is not wired into this class; the formatted cRZString text itself is discarded (the original's print sink was compiled out) and Solve calls DeleteConstraintsAndOtherTemporaryData (0x1001be001) before the dump (0x1001be015), so the failure path always dumps empty lists - the two GetVertex calls per equality-set member are only reachable by calling DumpConstraints directly
+SKIPPED:
+0x1001bcca4 compiler-emitted base-object destructor alias: it just calls the D1 body at 0x1001bcb6a; the port's virtual destructor makes clang emit the same three variants (D1/D2/D0), so there is no separate source body to write
+0x1001bccae compiler-emitted deleting destructor: calls D1 at 0x1001bcb6a and then operator delete; compiler-emitted for the port's virtual destructor, so there is no separate source body to write
+0x1001b5df4 std::__hash_table<...tToSolveVertInfo...>::find<int> const - libc++ instantiation for the to-solve map (library code, not hand-written)
+0x1001bca1c std::unordered_map<int,tToSolveVertInfo>::operator[] - libc++ instantiation (library code, not hand-written)
+0x1001bf23a std::__list_imp<tSmoothConstrEndFixed>::clear - libc++ instantiation (library code, not hand-written)
+0x1001bf28a std::__list_imp<tSmoothConstrMidFixed>::clear - libc++ instantiation (library code, not hand-written)
+0x1001bf2da std::__list_imp<tSmoothnessConstraint>::clear - libc++ instantiation (library code, not hand-written)
+0x1001bf32a std::__list_imp<tSlopeConstraint>::clear - libc++ instantiation (library code, not hand-written)
+0x1001bf3ca std::__hash_table<...tToSolveVertInfo...>::~__hash_table - libc++ instantiation (library code, not hand-written)
+0x1001bf450 std::__hash_table<...tToSolveVertInfo...>::find<int> - libc++ instantiation (library code, not hand-written)
+0x1001bf4d0 std::__hash_table<...tToSolveVertInfo...>::__node_insert_unique - libc++ instantiation (library code, not hand-written)
+0x1001bf6b8 std::__hash_table<...tToSolveVertInfo...>::rehash - libc++ instantiation (library code, not hand-written)
+0x1001bf7c6 std::__hash_table<...tToSolveVertInfo...>::__rehash - libc++ instantiation (library code, not hand-written)
+0x1001bf950 std::__hash_table<...tToSolveVertInfo...>::clear - libc++ instantiation (library code, not hand-written)
+0x1001bfbb4 std::__split_buffer<tSolvedVert>::__split_buffer - libc++ instantiation (library code, not hand-written)
+0x1001c0162 std::__hash_table<...tToSolveVertInfo...>::erase - libc++ instantiation (library code, not hand-written)
+0x1001c01a6 std::__hash_table<...tToSolveVertInfo...>::remove - libc++ instantiation (library code, not hand-written)
+0x1001bf37a std::__list_imp<std::set<int>*>::clear - libc++ instantiation (library code, not hand-written)
+0x1001bd5c4 std::list<std::set<int>*>::remove - libc++ instantiation (library code, not hand-written)
+0x1001bf408 std::__hash_table<int,float>::~__hash_table - libc++ instantiation (library code, not hand-written)
+0x1001bf9b6 std::__hash_table<int,float>::find<int> const - libc++ instantiation (library code, not hand-written)
+0x1001bfe4a std::__hash_table<int,float>::__find_or_allocate - libc++ instantiation (library code, not hand-written)
+0x1001bfc62 std::__hash_table<int,float>::__node_insert_unique (the map's operator[]) - libc++ instantiation (library code, not hand-written)
+0x1001c0298 std::__hash_table<int,float>::clear - libc++ instantiation (library code, not hand-written)
+0x1001bfa8c std::vector<tSolvedVert>::__push_back_slow_path - libc++ instantiation (library code, not hand-written)

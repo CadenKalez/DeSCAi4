@@ -1,0 +1,46 @@
+SOURCE src/sc4/WinCalloutBox.cpp|h
+EVIDENCE test scripts/tests/sc4_wincalloutbox_test.cpp - COM lifetime through both bases (interface iid 0xc9b432cf, AsIGZWin = the cGZWin at +8, one reference count for both), Init's id/flags/fonts and its constraint-rectangle quirk (only an equal left/right counts as empty; the main window's area minus the parent's absolute origin, inset by 16), every setter's equality test / clamping / reference counting (background and icon magenta transparency key, the margins' 8 / 3 defaults, the meter's [0,1] clamp), Shutdown's release order and its quirk of leaving the meter image to the destructor, and GZPaint's three stages observed on recording buffers, fonts and draw context: title + wrapped text measurement (cIGZFont::CalculateTextArea), the content/box sizes, the placement side selection and box/dirty/beak rectangles for the above/left/right/below quadrants, the 5x5 skin composition (title band, body band, four corner blits, two tiled edges, the side's beak cell), the title/text buffer composition, the icon and two-half meter blits and the final dirty-rectangle blit in parent coordinates. Quirks asserted: the text buffer is locked with 0x8010 and never unlocked; its size test compares the box size but Init takes the content size, so any re-measure rebuilds it; Shutdown skips the meter image; the constructor ORs the ignore-cursor flag bit directly instead of calling SetFlag. Recording fakes: FakeMgr/FakeWinGraphics (scripts/tests/fake_winmgr.h), a counted cIGZBuffer whose draw-target interface routes RZDrawBltTiled through a recording cIGZDrawContext, a gz::IWinFont over a recording cIGZFont, and IWinCalloutBoxServices (RZ::GS() vslot 0x20). Registry scripts/tests/registry/sc4_wincalloutbox.txt
+0x1003c5e30 WinCalloutBoxConstruct
+0x1003c5f5c WinCalloutBoxConstructComplete
+0x1003c5f66 WinCalloutBoxDestructor
+0x1003c6142 WinCalloutBoxDestructorBaseObject
+0x1003c615a WinCalloutBoxDeletingDestructor
+0x1003c6196 WinCalloutBoxAddRef
+0x1003c61ae WinCalloutBoxRelease
+0x1003c61c6 WinCalloutBoxQueryInterface
+0x1003c620e WinCalloutBoxAsIGZWin
+0x1003c6218 WinCalloutBoxInit
+0x1003c6396 WinCalloutBoxShutdown
+0x1003c6484 WinCalloutBoxSetBackgroundImage
+0x1003c655e WinCalloutBoxGetBackgroundImage
+0x1003c656c WinCalloutBoxSetTitle
+0x1003c65cc WinCalloutBoxGetTitle
+0x1003c65da WinCalloutBoxSetText
+0x1003c663a WinCalloutBoxGetText
+0x1003c6648 WinCalloutBoxSetTitleFontStyle
+0x1003c66be WinCalloutBoxSetTextFontStyle
+0x1003c6734 WinCalloutBoxSetIcon
+0x1003c67e2 WinCalloutBoxGetIcon
+0x1003c67f0 WinCalloutBoxSetIconMeter
+0x1003c691e WinCalloutBoxSetPointOfInterest
+0x1003c695a WinCalloutBoxGetPointOfInterest
+0x1003c6968 WinCalloutBoxSetAvoidanceRect
+0x1003c69c4 WinCalloutBoxGetAvoidanceRect
+0x1003c69d2 WinCalloutBoxSetConstraintRect
+0x1003c6a2e WinCalloutBoxGetConstraintRect
+0x1003c6a3c WinCalloutBoxGZPaint
+PARTIAL:
+# none: all 29 functions are hand-written. GZPaint makes its two private buffers through IWinCalloutBoxServices::CreateBuffer
+# (RZ::GS() vslot 0x20, a counted cIGZBuffer) and asks gz::WinFontSource() (WCM vslot 0x28) for the fonts, so the app has to
+# hook those two seams up before the callout draws in game (todo: seam hook-up for cSC4WinCalloutBox); without them GZPaint
+# still lays the box out and skips the drawing. The fonts go through IWinFont::AsFont() because the original calls the
+# cIGZFont slots 0x170 CalculateTextArea / 0x1a0 DrawTextParagraph / 0x1b8+0x1c0 Lock+UnlockSurfaceForFontUse.
+SKIPPED:
+0x1003c614c non-virtual thunk to ~cSC4WinCalloutBox (this - 8); the C++ multiple-inheritance layout (interface at +0, cGZWin at +8) makes the compiler emit it, so there is no body to hand-write
+0x1003c6188 non-virtual thunk to the deleting ~cSC4WinCalloutBox (this - 8); compiler-emitted from the same base layout
+0x1003c61a4 non-virtual thunk to AddRef (the cGZWin's own AddRef); compiler-emitted
+0x1003c61bc non-virtual thunk to Release (the cGZWin's own Release); compiler-emitted
+0x1003c61e8 non-virtual thunk to QueryInterface (this - 8, then the primary object's QueryInterface); compiler-emitted
+0x1003c6384 non-virtual thunk to Init (this - 8); compiler-emitted
+0x1003c6476 non-virtual thunk to Shutdown (this - 8); compiler-emitted
+0x1003c8210 non-virtual thunk to GZPaint (this - 8); compiler-emitted

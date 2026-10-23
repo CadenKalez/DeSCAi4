@@ -1,6 +1,6 @@
 // cISC4WinCalloutBox: the interface of the tool-tip style callout window (cSC4WinCalloutBox, 37 functions at 0x1003c5e30..0x1003c8210,
-// interface iid not needed here). Slots in the original vtable order; the catalog view is the first user. cSC4WinCalloutBox itself
-// is not recovered yet.
+// interface iid 0xc9b432cf). Slots in the original vtable order; the catalog view is the first user. The implementation is
+// cSC4WinCalloutBox (sc4/WinCalloutBox.h), an object with this interface at +0 and its cGZWin at +8.
 #pragma once
 #include "gz/Win.h"
 #include "rz/cRZPoint.h"
