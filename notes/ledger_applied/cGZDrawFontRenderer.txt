@@ -1,0 +1,18 @@
+SOURCE src/gz/DrawFontRenderer.cpp|h
+EVIDENCE test scripts/tests/gz_drawfontrenderer_test.cpp: direct mode (origin shift, inner renderer), context mode atlas (coverage table, spots, row wrap, flush, Blt rects), per-font maps
+0x1006572ce cGZDrawFontRenderer_Construct
+0x1006573fc cGZDrawFontRenderer_DestructcGZDrawFontRenderer
+0x10065749c cGZDrawFontRenderer_DestructcGZDrawFontRenderer2
+0x1006574a6 cGZDrawFontRenderer_DestructcGZDrawFontRenderer3
+0x1006574d4 cGZDrawFontRenderer_QueryInterface
+0x1006574f6 cGZDrawFontRenderer_AddRef
+0x100657504 cGZDrawFontRenderer_Release
+0x10065751e cGZDrawFontRenderer_Init
+0x100657526 cGZDrawFontRenderer_Shutdown
+0x10065754a cGZDrawFontRenderer_DrawBegin
+0x10065791e cGZDrawFontRenderer_CreateTexturePages
+0x100657b0c cGZDrawFontRenderer_DrawEnd
+0x100657b92 cGZDrawFontRenderer_DrawChars
+0x100658052 cGZDrawFontRenderer_CreateCachedGlyphImg
+0x1006585a0 cGZDrawFontRenderer_PrepChar
+0x1006585a8 cGZDrawFontRenderer_SetGlyphCacheDimensionsHint

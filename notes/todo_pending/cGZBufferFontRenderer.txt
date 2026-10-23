@@ -1,0 +1,1 @@
+BUFFONT-1 | cGZBufferFontRenderer | Quirks kept in DrawChar (0x1002ba4a0): ARGB1555 alpha blend writes the result without the alpha bit; ARGB4444 indexes the 5-bit blend table with 4-bit levels and forces alpha 0xf; 24 bit surfaces are written as 32 bit pixels | - | src/gz/BufferFontRenderer.cpp

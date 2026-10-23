@@ -1,0 +1,2 @@
+PATHINFOFACTORY-1 | cSC4PathInfoFactory | Run SerialRead against a real SC4 path record (exemplar-like DB segment) to confirm cIGZPersistDBSerialRecord slot 0x1a0 is GetSize = bytes left and the stop-flag bit 29 quirk | - | src/sc4/PathInfoFactory.cpp
+PATHINFOFACTORY-2 | cSC4PathInfoFactory | Register the factory with the persist resource manager for type 0x296678f7 and pass the right-hand-traffic provider (RZ::LM() slot 0x128 -> 0xc8) to the constructor; GZCOM_CreatecSC4PathInfoFactory (0x1004581e0) can now build it | - | src/sc4/PathInfoFactory.h

@@ -1,0 +1,2 @@
+SPANLIST-1 | cRZSpanList | Recover SetEllipse 0x1002b3f86 and Draw 0x1002b4122 | - | src/rz/SpanList.cpp
+SPANLIST-2 | cRZSpanList | Quirk kept (0x1002b44aa): the left walker follows the vertices forwards from the topmost one, so a polygon wound clockwise on screen yields x0 > x1; the rasterizer returns when an edge runs out of vertices (bounded here instead of reading past the array) | - | src/rz/SpanList.cpp

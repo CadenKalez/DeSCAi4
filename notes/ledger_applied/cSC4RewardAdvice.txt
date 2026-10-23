@@ -1,0 +1,10 @@
+SOURCE src/sc4/RewardAdvice.cpp|h
+EVIDENCE test scripts/tests/sc4_advice_subclasses_test.cpp: condition function results (1 fires+subject, 0 reset, string reason text, other, failing call), stored state, no-text mask
+0x10046ce4e cSC4RewardAdvice_Init
+0x10046ce7c cSC4RewardAdvice_GetTrigger
+0x10046d28c cSC4RewardAdvice_Destruct
+0x10046d296 cSC4RewardAdvice_Destruct2
+0x10046d2c4 cSC4RewardAdvice_GetGZCLSID
+0x10046d2d0 cSC4RewardAdvice_DestructThunk
+0x10046d2de cSC4RewardAdvice_DestructThunk2
+0x10046d314 cSC4RewardAdvice_GetGZCLSIDThunk

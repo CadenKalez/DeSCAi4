@@ -1,0 +1,5 @@
+SOURCE src/sc4/AutomataTuningParams.cpp|h
+EVIDENCE test scripts/tests/sc4_automatatuningparams_test.cpp: every default (ints, floats bit-exact, bytes, curves) after construction
+0x1000fd18a cSC4AutomataTuningParams_Destruct
+0x1000fd1d8 cSC4AutomataTuningParams_Construct
+0x10010ec78 cSC4AutomataTuningParams_Destruct2

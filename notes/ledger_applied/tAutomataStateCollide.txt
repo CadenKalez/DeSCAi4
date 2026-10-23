@@ -1,0 +1,5 @@
+SOURCE src/sc4/AutomataStates.cpp|h
+EVIDENCE test scripts/tests/sc4_automatastates_test.cpp: base record layout/version handling and per-state stream round trips, shutdown behaviour (controller release, sound stop, collide detach)
+0x10010e7ca tAutomataStateCollide_Write
+0x10010e7f6 tAutomataStateCollide_Read
+0x10010e822 tAutomataStateCollide_Shutdown

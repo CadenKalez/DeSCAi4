@@ -1,0 +1,7 @@
+SOURCE src/rz/TileSetup.cpp|h
+EVIDENCE test scripts/tests/rz_tilesetup_test.cpp: tiling invariants (exact cover, power-of-two tiles, no overlap) over ~400 image sizes plus hand-worked layouts
+0x1004ec1ba cRZTileSetup_Init
+0x1004ecb7e cRZTileSetup_GetTile
+0x1004ecba2 cRZTileSetup_GetTileCount
+0x1004ecbac cRZTileSetup_GetMaxFragmentsPerTile
+0x1004ecad3 TileSetup_MergeRectangle

@@ -1,0 +1,9 @@
+SOURCE src/sc4/MySimAdvice.cpp|h
+EVIDENCE test scripts/tests/sc4_advice_subclasses_test.cpp: DoLink notifies sim then base runs link only when current
+0x10079eb12 cSC4MySimAdvice_DoLink
+0x1007aad50 cSC4MySimAdvice_Destruct
+0x1007aad5a cSC4MySimAdvice_Destruct2
+0x1007aad88 cSC4MySimAdvice_GetGZCLSID
+0x1007aad94 cSC4MySimAdvice_DestructThunk
+0x1007aada2 cSC4MySimAdvice_DestructThunk2
+0x1007aadd8 cSC4MySimAdvice_GetGZCLSIDThunk

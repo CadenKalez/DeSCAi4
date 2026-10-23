@@ -1,0 +1,2 @@
+BUFRESFAC-1 | cGZBufferResourceFactory | LoadFromResourceId(void*, uint, cIGZBuffer**) 0x1006167de is the constant false here; the original builds and destroys a cGZDBRecordBitmapRes (Windows resource loading, never succeeds) | - | src/gz/BufferResourceFactory.cpp
+BUFRESFAC-2 | cGZBufferResourceFactory | The factory is not yet registered with the resource manager / COM (clsid unknown here); the secondary cIGZBufferResourceFactory (0xa2c72982) is an embedded adapter object, not a second vtable | - | src/gz/BufferResourceFactory.h

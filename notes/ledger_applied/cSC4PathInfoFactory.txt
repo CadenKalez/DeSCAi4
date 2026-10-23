@@ -1,0 +1,12 @@
+SOURCE src/sc4/PathInfoFactory.cpp|h
+EVIDENCE test scripts/tests/sc4_pathinfofactory_test.cpp: CreateInstance iids, comment/CR line reader, x,-z,y vectors, versions 1.0-1.2 file with stop points, reject cases
+0x10045cdd8 PathInfoFactoryDestructor
+0x10045cdec PathInfoFactoryDeletingDestructor
+0x10045ce24 PathInfoFactoryCreateInstance
+0x10045cf06 PathInfoFactoryReadString
+0x10045d00e PathInfoFactoryReadUint32
+0x10045d096 PathInfoFactoryReadVector3
+0x10045d23e PathInfoFactorySerialRead
+0x10045d96a PathInfoFactorySerialWrite
+PARTIAL:
+0x10045d23e SerialRead dispatches through cIGZPersistDBSerialRecord GetFieldUint8/GetSize (slots 0x28 / 0x1a0, assumed byte-remaining semantics) - the wrapper is not run against a real record in the test; the parser behind it is

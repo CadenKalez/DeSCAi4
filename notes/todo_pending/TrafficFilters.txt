@@ -1,0 +1,1 @@
+TRAFFICFILTER-1 | cTrafficNetworkFilter_NetworkMap | Make cSC4NetworkOccupant's QueryInterface(0xa821ef94) hand out an ITrafficNetworkOccupant adapter (HasAnyNetworkFlag slot 0x48, IsOfType slot 0xb0); the three filters cast the QI result to it | - | src/sc4/TrafficFilters.h

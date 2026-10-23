@@ -1,0 +1,1 @@
+"gz_drawfontrenderer:$T/gz_drawfontrenderer_test.cpp $S/gz/DrawFontRenderer.cpp $S/gz/Buffer.cpp -I$T"

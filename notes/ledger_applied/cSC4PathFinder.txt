@@ -1,0 +1,60 @@
+SOURCE src/sc4/PathFinder.cpp|h
+EVIDENCE test scripts/tests/sc4_pathfinder_test.cpp: hash map blocks, heap order, distance tables, node relaxation, trip bookkeeping, setters, capacity
+0x1000d0c62 PathFinderConstructor
+0x1000d0d80 PathFinderConstructor2
+0x1000d0d8a PathFinderDestructor
+0x1000d0e4e PathFinderDestructor2
+0x1000d0e58 PathFinderDestructor3
+0x1000d0e86 PathFinderQueryInterface
+0x1000d0ea8 PathFinderAddRef
+0x1000d0eb6 PathFinderRelease
+0x1000d0ef2 PathFinderInit
+0x1000d10ca PathFinderShutdown
+0x1000d1606 PathFinderCheckDestinationCapacity
+0x1000d1664 PathFinderReleasePathNodes
+0x1000d3556 PathFinderSetupDistanceTables
+0x1000d364c PathFinderRecalculateNodeScores
+0x1000d382c PathFinderDoSuccessfulTrip
+0x1000d3976 PathFinderEdgeTo
+0x1000d3994 PathFinderAddTripNode
+0x1000d3b32 PathFinderDistanceToRectangle
+0x1000d3ccc PathFinderParseTripLocation
+0x1000d4326 PathFinderGetTripLengthScaledForDisplay
+0x1000d511a PathFinderSetFlag
+0x1000d5124 PathFinderClearFlag
+0x1000d5130 PathFinderClearAllFlags
+0x1000d513e PathFinderSetRouteInfo
+0x1000d514c PathFinderSetTripDestinationFilter
+0x1000d5158 PathFinderSetDestinationFlag
+0x1000d516c PathFinderClearDestinationFlag
+0x1000d5182 PathFinderClearAllDestinationFlags
+0x1000d5190 PathFinderSetTravelTypeFlag
+0x1000d51ae PathFinderClearTravelTypeFlag
+0x1000d51ca PathFinderClearAllTravelTypeFlags
+0x1000d51d8 PathFinderSetStartingCostArray
+0x1000d51e6 PathFinderSetMaxTripLength
+0x1000d51f2 PathFinderSetTrafficDensity
+0x1000d51fc PathFinderSetStartRect
+0x1000d520a PathFinderSetEndRect
+0x1000d5218 PathFinderSetMaxWorkTime
+0x1000d5224 PathFinderReset
+0x1000d5232 PathFinderGetTrafficArrived
+0x1000d523c PathFinderGetTripLength
+0x1000d5248 PathFinderGetEndCell
+0x1000d5258 PathFinderGetLastTravelType
+0x1000d169c PathFinderTripNodeHashMapClear
+0x1000d2468 PathFinderTripNodeHashMapGetNode
+0x1000d4dd4 PathFinderTripNodeHashMapConstructor
+0x1000d4e86 PathFinderTripNodeHashMapDestructor
+0x1000d25bc PathFinderTripNodePriorityQueuePush
+0x1000d375c PathFinderTripNodePriorityQueuePop
+0x1000d3c72 PathFinderTripNodePriorityQueueUpdateNode
+0x1000d4d44 PathFinderTripNodePriorityQueueConstructor
+SKIPPED:
+0x1000d1106 PathFinderAtGoal needs traffic simulator tables (+0x98 connections, tunnel/ferry maps, lot/occupant managers) not recovered
+0x1000d171c PathFinderFindNearestStandardDest needs traffic simulator tables (+0x98 connections, tunnel/ferry maps, lot/occupant managers) not recovered
+0x1000d1e8c PathFinderCreateStartNodes needs traffic simulator tables (+0x98 connections, tunnel/ferry maps, lot/occupant managers) not recovered
+0x1000d2644 PathFinderFindPath needs traffic simulator tables (+0x98 connections, tunnel/ferry maps, lot/occupant managers) not recovered
+0x1000d3dc0 PathFinderWasTripReversible needs traffic simulator tables (+0x98 connections, tunnel/ferry maps, lot/occupant managers) not recovered
+0x1000d3f60 PathFinderApplyTraffic needs traffic simulator tables (+0x98 connections, tunnel/ferry maps, lot/occupant managers) not recovered
+0x1000d434e PathFinderGetCompressedRoute needs traffic simulator tables (+0x98 connections, tunnel/ferry maps, lot/occupant managers) not recovered

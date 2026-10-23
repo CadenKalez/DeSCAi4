@@ -1,0 +1,3 @@
+PATHING-1 | cSC4CompressedRouteReader | Recover GetNext 0x1000d4f52 together with cSC4PathFinder::GetCompressedRoute (PATHFINDER-2): the byte stream format (6-bit travel type + 0x40 run flag, 2-bit direction codes) is only visible from the writer | PATHFINDER-2 | src/sc4/PathFinder.h
+PATHING-2 | cSC4AutomataFrequencyMarkedCellView | Blocked on SC4MarkedCellView base (not in src): recover Shutdown 0x1001ea140 and cSC4AutomataMarkedCellView::ReleaseAutomaton 0x1001ea082 after it | - | src/sc4/PathFinder.h
+PATHING-3 | cSC4AutomataTuningParams | Constructor 0x1000fd1d8 is a table of 0x25c bytes of defaults with unnamed fields (6 response curves + tuning scalars); name the fields from their readers in cSC4AutomataManager before recovering | - | src/sc4/AutomataGenerator.h

@@ -1,0 +1,16 @@
+SOURCE src/sc4/TrafficEffectManager.cpp|h
+EVIDENCE test scripts/tests/sc4_trafficeffectmanager_test.cpp: accident/effect rectangles, populate flags, 500 ms update with vehicle following and expiry, refcounts, stream round trip
+0x100111eaa TrafficEffectManagerShutdown
+0x100112e0e TrafficEffectManagerUpdate
+0x100113ab4 TrafficEffectManagerGetPopulateFlags
+0x100113baa TrafficEffectManagerCreateAccident
+0x100113d40 TrafficEffectManagerCreateEffect
+0x100113e6a TrafficEffectManagerStopEffect
+0x1001160f2 TrafficEffectManagerWrite
+0x10011627c TrafficEffectManagerRead
+0x10011b568 TrafficEffectManagerShutdownEffect
+0x10011b6b6 TrafficEffectManagerGetMostRecentAccidentLocation
+0x10011b768 TrafficEffectManagerConstructor
+PARTIAL:
+0x1001160f2 vehicle occupant (class 0x26bb767e) is written through SC4WriteGZSerializable, which needs a DB segment stream; only the plain-stream path (no nested object) is tested
+0x10011627c same for Read

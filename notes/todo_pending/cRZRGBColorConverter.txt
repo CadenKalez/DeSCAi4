@@ -1,0 +1,1 @@
+RGBCONV-1 | cRZRGBColorConverter | Convert handles only 2/3/4 byte formats (8 bit sources do nothing, as in the original); the converter lives in gz/ here though the class name suggests rz/ | - | src/gz/RGBColorConverter.cpp

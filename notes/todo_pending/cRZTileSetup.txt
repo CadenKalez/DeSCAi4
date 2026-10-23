@@ -1,0 +1,2 @@
+TILESETUP-1 | cRZTileSetup | Exact tile layout was verified by invariants only (coverage, sizes), not against the binary's output for a given size; compare a few sizes with a run of the original | - | src/rz/TileSetup.cpp
+TILESETUP-2 | cRZTileSetup | Quirk kept (0x1004ec1ba): in the full-tile phase a width overhang is subtracted from the subtile height (only matters when align > 1); the struct is named cRZTileSize here because cRZSize already exists in gz/WinScrollbar2.h | - | src/rz/TileSetup.cpp

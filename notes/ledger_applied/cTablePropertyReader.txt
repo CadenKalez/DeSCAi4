@@ -1,0 +1,8 @@
+SOURCE src/sc4/TablePropertyReader.cpp|h
+EVIDENCE test scripts/tests/sc4_advice_test.cpp: fake Lua tables: validity by row id/length, number/string/index reads, HasField, stack restore on destruction, invalid-reader stack leak
+0x100298108 TablePropertyReader_Construct
+0x1007aaec0 TablePropertyReader_Destruct
+0x100441360 TablePropertyReader_GetNumberByKey
+0x10044310a TablePropertyReader_GetNumberByIndex
+0x10043daea TablePropertyReader_GetString
+0x1006aa80c TablePropertyReader_HasField

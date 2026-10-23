@@ -1,0 +1,1 @@
+AUTOMATASTATE-1 | tAutomataState | Name the fields (stateId +0x18, progress +0x1c, flag +0x20, counters +0x24..0x2c) once cSC4AutomataController users are recovered; hook IAutomataStateController (slot 0x70) / IAutomataStateAutomaton (cISC4Automaton slot 0x1f0) to the real classes | - | src/sc4/AutomataState.h

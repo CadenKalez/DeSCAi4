@@ -1,0 +1,1 @@
+ "gz_winfilebrowser:$T/gz_winfilebrowser_test.cpp $S/gz/WinFileBrowser.cpp $S/gz/Win.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/cRZDirectory.cpp $S/gz/FileFind.cpp $S/rz/RZConvert.cpp $S/rz/CharLength.cpp $S/rz/nRZHash.cpp $S/platform/MacTools.cpp $S/rz/cRZUnknownList.cpp $S/rz/cRZFile.cpp -I$T"

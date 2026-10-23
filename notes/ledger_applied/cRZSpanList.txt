@@ -1,0 +1,9 @@
+SOURCE src/rz/SpanList.cpp|h
+EVIDENCE test scripts/tests/rz_spanlist_test.cpp: rows and extents of triangles/quads/rectangle against an analytic edge reference (+-1 pixel), winding behaviour, <3 points
+0x1002b3f72 cRZSpanList_Construct
+0x1002b41ec cRZSpanList_Destruct
+0x1002b42c0 cRZSpanList_SetPolygonSimple
+0x1002b44aa cRZSpanList_RasterizeSimplePolygon
+SKIPPED:
+0x1002b3f86 SetEllipse not recovered yet (not needed by cGZDrawContextRenderToBuffer)
+0x1002b4122 Draw(cIGZBuffer*, uint) not recovered yet

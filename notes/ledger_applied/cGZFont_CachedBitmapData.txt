@@ -1,0 +1,3 @@
+SOURCE src/gz/GZFont.cpp|h
+EVIDENCE test scripts/tests/gz_gzfont_test.cpp: atlas Clear via SetScaling/SetAdvanceScaling
+0x1002bab66 CachedBitmapData_Clear

@@ -1,0 +1,4 @@
+DRAWFONT-1 | cGZDrawFontRenderer | Hook IDrawFontRendererHost to GZCOM() (clsid 0x08cda30b / 0xc470d325) and RZ::GS() colour conversion | - | src/gz/DrawFontRenderer.h
+DRAWFONT-2 | cGZDrawFontRenderer | The original initialises the atlas as cGZBufferColorType {7, 1} (second dword 1); this repo's cGZBuffer::Init needs the bit count, so {7, 16} is passed. Check how the real cGZBuffer::Init treats the second dword | - | src/gz/DrawFontRenderer.cpp
+DRAWFONT-3 | cGZDrawFontRenderer | Quirk kept (0x10065754a): in context mode the target's draw context stays locked (LockContext) until DrawEnd; in direct mode a successful context Lock is never unlocked; CreateTexturePages divides by zero for atlas types without alpha bits (guarded here) | - | src/gz/DrawFontRenderer.cpp
+DRAWFONT-4 | cGZDrawFontRenderer | Shutdown(font) clears currentMap_ when it pointed at the erased font map (original leaves it dangling) | - | src/gz/DrawFontRenderer.cpp

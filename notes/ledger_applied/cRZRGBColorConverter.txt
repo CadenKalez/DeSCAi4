@@ -1,0 +1,7 @@
+SOURCE src/gz/RGBColorConverter.cpp|h
+EVIDENCE test scripts/tests/gz_rgbcolorconverter_test.cpp: format masks, truncating channel rescale, absent channels filled to maximum, 2/3/4 byte pixels, negative pitch
+0x1002b4784 cRZRGBColorConverter_Format_Construct
+0x1002b4820 cRZRGBColorConverter_Format_ConstructAlias
+0x1002b4838 cRZRGBColorConverter_SetFormats
+0x1002b4b20 cRZRGBColorConverter_Construct
+0x1002b4b2a cRZRGBColorConverter_Convert

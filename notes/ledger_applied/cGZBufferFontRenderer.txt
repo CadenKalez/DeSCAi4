@@ -1,0 +1,13 @@
+SOURCE src/gz/BufferFontRenderer.cpp|h
+EVIDENCE test scripts/tests/gz_gzfont_test.cpp: blend table vs formula, 32/565/555/1555/4444 alpha, mono, palette, clipping, DrawChars skip control chars, Lock/Unlock 0x8080
+0x1002ba254 cGZBufferFontRenderer_PrepAlpha
+0x1002ba3ea cGZBufferFontRenderer_Construct
+0x1002ba418 cGZBufferFontRenderer_AddRef
+0x1002ba426 cGZBufferFontRenderer_Release
+0x1002ba442 cGZBufferFontRenderer_QueryInterface
+0x1002ba464 cGZBufferFontRenderer_Init
+0x1002ba46c cGZBufferFontRenderer_Shutdown
+0x1002ba474 cGZBufferFontRenderer_DrawBegin
+0x1002ba48a cGZBufferFontRenderer_DrawEnd
+0x1002ba4a0 cGZBufferFontRenderer_DrawChar
+0x1002baadc cGZBufferFontRenderer_DrawChars
