@@ -1,0 +1,7 @@
+SOURCE src/sc4/WinSmallViews.cpp|h
+EVIDENCE test scripts/tests/sc4_winsmallviews_test.cpp - delay by paints/ms, EndDialog code, transparent hit test over children, renderer refcount
+0x10003aa12 WinGameDelayConstruct
+0x10003aa80 WinGameDelayInit
+0x10003aac0 WinGameDelayPaint
+0x10003ab18 WinGameDelayDestructor
+0x10003ab60 WinGameDelayDeletingDestructor

@@ -1,0 +1,4 @@
+T-WCV-1 | cSC4WinCatalogView | hook ICatalogViewHost: SC4MakeMoneyString (0x1000392b0) and SL::spSS vslot 0x50 sound player; font comes from gz::WinFontSource (RZ::WCM() vslot 0x28) | - | src/sc4/WinCatalogView.h
+T-WCV-2 | cSC4WinCatalogView | recover cSC4WinCalloutBox (37 functions) behind the new cISC4WinCalloutBox interface (src/sc4/ISC4WinCalloutBox.h, slot order from the vtable) | - | src/sc4/ISC4WinCalloutBox.h
+T-WCV-3 | cSC4WinCatalogView | quirks kept: GetItem(int) always returns null (0x1002fd574); the +0x1a0 member is released but nothing recovered sets it; Paint ignores the RZ::LM() vslot 0x128 / RZ::GS() calls whose results are unused (0x1002fe15c); item icon is cast to IWinBuffer for Blt | - | src/sc4/WinCatalogView.cpp
+T-WCV-4 | cSC4WinCatalogView | parent scroll-button interface iid 0x8a25ce2c (vslot 0x38 = SetScrollButtonsEnabled(up, down)) belongs to whichever window hosts the catalog; find and recover it | - | src/sc4/WinCatalogView.h

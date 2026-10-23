@@ -1,0 +1,9 @@
+SOURCE src/sc4/AutomataControllerGrid.cpp|h
+EVIDENCE test scripts/tests/sc4_automatacontrollermanager_test.cpp: fake city/script/clock/message server: Init/Shutdown registration, controller creation with lot and radius de-duplication, group add/remove, removal variants, grid tracts, queue points and leaders, ticks and expiry, view/scroll gating, attraction queries, cheat code, QueryInterface and release
+0x1000f4322 cSC4ControllerGrid_Init
+0x1000f47ca cSC4ControllerGrid_AddController
+0x1000f5f7c cSC4ControllerGrid_RemoveController
+0x1000f64f6 cSC4ControllerGrid_MoveController
+0x1000f6e10 cSC4ControllerGrid_GetGridBounds
+0x1000f74a2 cSC4ControllerGrid_GetTractByWorldPos
+0x1000f8452 cSC4ControllerGrid_GetGridBounds2

@@ -64,13 +64,13 @@ bool cSC4AutomataAttractor::HandleExitState(IControllerAutomaton* automaton, std
 
 void cSC4AutomataAttractor::SetAutomataGroups(const std::vector<std::uint32_t>& groups) {
     if (!template_ || template_->controllerType != kControllerTypeAttractor) return;
-    auto* tmpl = static_cast<tAttractorTemplate*>(template_);
+    tControllerTemplate* tmpl = template_;
     if (&tmpl->groups != &groups) tmpl->groups.assign(groups.begin(), groups.end());
 }
 
 bool cSC4AutomataAttractor::TestAutomataFilter(cISC4Occupant* occupant) const {
     if (occupant_ == occupant) return false;
-    auto* tmpl = static_cast<tAttractorTemplate*>(template_);
+    tControllerTemplate* tmpl = template_;
     bool matches = false;
     for (std::uint32_t group : tmpl->groups) {
         if (occupant->IsOccupantGroup(group)) {
@@ -78,10 +78,10 @@ bool cSC4AutomataAttractor::TestAutomataFilter(cISC4Occupant* occupant) const {
             break;
         }
     }
-    if (matches && !tmpl->excludedTypes.empty() && g_host) {
+    if (matches && !tmpl->ignoreStates.empty() && g_host) {
         std::int32_t typeId = 0;
-        if (g_host->GetAutomatonTypeId(occupant, typeId)) {
-            for (std::uint32_t excluded : tmpl->excludedTypes) {
+        if (g_host->GetAutomatonStateId(occupant, typeId)) {
+            for (std::uint32_t excluded : tmpl->ignoreStates) {
                 if (typeId == static_cast<std::int32_t>(excluded)) return false;
             }
         }

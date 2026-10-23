@@ -1,0 +1,10 @@
+SOURCE src/sc4/OccupantGroupTemplate.cpp|h
+EVIDENCE test scripts/tests/sc4_occupantgrouptemplate_test.cpp: group filter (ids, zero id, vectors), template hierarchy (group chain, class id, depth, id variant), anim offsets, key effects, inclusion by the occupant group property with spawn chance, manager seam
+0x1000a8cf8 cSC4OccupantGroupOccupantFilter_Construct
+0x1000a8d9e cSC4OccupantGroupOccupantFilter_Construct2
+0x1000a8e42 cSC4OccupantGroupOccupantFilter_Construct3
+0x1000a8e4c cSC4OccupantGroupOccupantFilter_IsOccupantIncluded
+0x1000a8e94 cSC4OccupantGroupOccupantFilter_AddGroupId
+0x1000a8eca cSC4OccupantGroupOccupantFilter_SetGroupIdVector
+0x1000a932c cSC4OccupantGroupOccupantFilter_Destruct
+0x1000a938e cSC4OccupantGroupOccupantFilter_Destruct2

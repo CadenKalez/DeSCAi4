@@ -7,6 +7,7 @@
 #include "gz/StreamOps.h"
 #include "rz/cRZCmdLine.h"
 #include "rz/cRZMessage2Standard.h"
+#include "sc4/AutomataStates.h"
 #include "sc4/DBSegment.h"
 #include "sc4/GeometryUtilities.h"
 #include "sc4/SCPropertyHelp.h"
@@ -584,8 +585,9 @@ bool cSC4AutomataControllerManager::DoMessage(cGZMessage& message) {
     return true;
 }
 
-bool cSC4AutomataControllerManager::DoMessage(cIGZMessage2* message) {
+bool cSC4AutomataControllerManager::DoMessage(cIGZMessage2* base) {
     IControllerManagerHost* host = g_host;
+    auto* message = static_cast<cIGZMessage2Standard*>(base);   // payload accessors live on the standard message
     switch (message->GetType()) {
         case kCtrlMsgTick:
             DoAnimationTick(static_cast<std::uint32_t>(message->GetData2()), static_cast<float>(message->GetData3()));

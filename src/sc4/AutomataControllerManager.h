@@ -32,12 +32,12 @@
 #include "gz/cIGZSerializable.h"
 #include "sc4/AutomataAttractor.h"
 #include "sc4/AutomataControllerGrid.h"
+#include "sc4/OccupantManager.h"   // kGZIID_cIGZMessageTarget2
 
 namespace sc4 {
 
 constexpr std::uint32_t kGZCLSID_cSC4AutomataControllerManager = 0xca14ca03;
 constexpr std::uint32_t kGZIID_cISC4AutomataControllerManager = 0xca14c9fc;
-constexpr std::uint32_t kGZIID_cIGZMessageTarget2 = 0x452294aa;
 constexpr std::uint32_t kAutomataCheatControllers = 0xaba2b5bb;      // cheat code "Controllers"
 constexpr std::uint32_t kMessageCheatCode = 0x230e27ac;
 constexpr std::uint32_t kPropertyNoControllers = 0x29244db;           // an occupant with this property gets no automatic controllers

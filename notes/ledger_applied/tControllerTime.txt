@@ -1,0 +1,3 @@
+SOURCE src/sc4/AutomataControllerGrid.cpp|h
+EVIDENCE test scripts/tests/sc4_automatacontrollermanager_test.cpp: NormalizeControllerTime on negative, wrapped, NaN and negative-day inputs
+0x1000f5d7c ControllerTimeNormalize

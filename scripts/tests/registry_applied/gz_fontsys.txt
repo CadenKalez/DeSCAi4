@@ -1,0 +1,1 @@
+"gz_fontsys:$T/gz_fontsys_test.cpp $S/gz/FontSys.cpp $S/gz/GZFont.cpp $S/gz/BufferFontRenderer.cpp $S/gz/Buffer.cpp $S/rz/cRZString.cpp $S/rz/TextEncoding.cpp $S/rz/UTF16Text.cpp $S/rz/CharLength.cpp $S/rz/StringConversion.cpp $S/rz/RZStringUtils.cpp $S/rz/RZConvert.cpp"

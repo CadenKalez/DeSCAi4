@@ -61,7 +61,7 @@ struct CtrlHost final : IAutomataControllerHost {
 };
 struct AttHost final : IAutomataAttractorHost {
     std::map<cISC4Occupant*, std::int32_t> types;
-    bool GetAutomatonTypeId(cISC4Occupant* o, std::int32_t& id) override {
+    bool GetAutomatonStateId(cISC4Occupant* o, std::int32_t& id) override {
         auto it = types.find(o);
         if (it == types.end()) return false;
         id = it->second;
@@ -81,7 +81,7 @@ int main() {
     tmpl->radius = 100.0f;
     tmpl->maxAutomata = 4;
     tmpl->groups = {7, 8};
-    tmpl->excludedTypes = {5};
+    tmpl->ignoreStates = {5};
     tmpl->strengthCurve.SetResponseCurveData(std::vector<SC4Point>{{0.0f, 1.0f}, {100.0f, 0.5f}});
     tmpl->curve.SetResponseCurveData(std::vector<SC4Point>{{0.0f, 0.0f}, {24.0f, 1.0f}});
     CHECK(cSC4AutomataController::CreateTemplateInstance(cRZString("x"), kControllerTypeAttractor) == nullptr);   // no factory
@@ -131,7 +131,7 @@ int main() {
     CHECK(!a->TestAutomataFilter(shopper));   // excluded type
     attHost.types[shopper] = 6;
     CHECK(a->TestAutomataFilter(shopper));
-    tmpl->excludedTypes.clear();
+    tmpl->ignoreStates.clear();
     attHost.types[shopper] = 5;
     CHECK(a->TestAutomataFilter(shopper));
     a->SetOccupant(self);

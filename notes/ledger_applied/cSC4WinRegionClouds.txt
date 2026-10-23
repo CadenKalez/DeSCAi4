@@ -1,0 +1,15 @@
+SOURCE src/sc4/WinRegionClouds.cpp|h
+EVIDENCE test scripts/tests/sc4_winregionclouds_test.cpp - cloud init/area count/drift normalisation, paint vertices/colour/dt cap/removal, texture refs
+0x1003b4380 WinRegionCloudsConstruct
+0x1003b44bc WinRegionCloudsConstructThunk
+0x1003b44c6 WinRegionCloudsDestructor
+0x1003b45a8 WinRegionCloudsDestructorThunk
+0x1003b45b2 WinRegionCloudsDeletingDestructor
+0x1003b45e0 WinRegionCloudsInit
+0x1003b476a WinRegionCloudsShutdown
+0x1003b4798 WinRegionCloudsSetOffset
+0x1003b47a8 WinRegionCloudsSetCloudArea
+0x1003b48ec WinRegionCloudsInitCloud
+0x1003b49dc WinRegionCloudsSetDriftVector
+0x1003b4a20 WinRegionCloudsSetOpacityRange
+0x1003b4a34 WinRegionCloudsPaint

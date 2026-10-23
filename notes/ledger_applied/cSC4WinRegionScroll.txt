@@ -1,0 +1,14 @@
+SOURCE src/sc4/WinRegionScroll.cpp|h
+EVIDENCE test scripts/tests/sc4_winregionscroll_test.cpp - scroll vector from pointer distance/edges, coasting, messages, marker window, cursor map
+0x100234e56 WinRegionScrollConstruct
+0x100234f16 WinRegionScrollDestructor
+0x100234f74 WinRegionScrollDestructorThunk
+0x100234f7e WinRegionScrollDeletingDestructor
+0x100234fac WinRegionScrollInit
+0x100235000 WinRegionScrollShutdown
+0x100235040 WinRegionScrollMouseDownR
+0x1002350b4 WinRegionScrollSetMouseScroll
+0x100235306 WinRegionScrollMouseUpR
+0x100235372 WinRegionScrollSetCursorByID
+0x1002353c4 WinRegionScrollMouseMove
+0x1002354de WinRegionScrollPaint

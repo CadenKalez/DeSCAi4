@@ -1,0 +1,12 @@
+SOURCE src/sc4/WinResizableOutline.cpp|h
+EVIDENCE test scripts/tests/sc4_winresizableoutline_test.cpp - zone detection and cursors, resize/move drags with min size, paint lines and size text, allowed-action quirk
+0x100371628 WinResizableOutlineDestructor
+0x10037163c WinResizableOutlineDeletingDestructor
+0x100371674 WinResizableOutlineInit
+0x100371832 WinResizableOutlineShutdown
+0x100371866 WinResizableOutlineMouseDownL
+0x1003718d0 WinResizableOutlineGetResizeTypeAndCursorForPosition
+0x100371a22 WinResizableOutlineMouseUpL
+0x100371a62 WinResizableOutlineMouseMove
+0x100371c98 WinResizableOutlinePaint
+0x100371ef8 WinResizableOutlineSetResizingAndMoving

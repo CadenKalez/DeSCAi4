@@ -1,0 +1,5 @@
+SOURCE src/sc4/MySimFilters.cpp|h
+EVIDENCE test scripts/tests/sc4_mysimfilters_test.cpp: building filter (type, interface, lot stage, completion, kind flag) and pylon filter (type, interface, kind, blocked flag, linked object interface, references returned)
+0x1007aaf18 cMySimBuildingFilter_IsOccupantIncluded
+0x1007ab008 cMySimBuildingFilter_Destruct
+0x1007ab012 cMySimBuildingFilter_Destruct2

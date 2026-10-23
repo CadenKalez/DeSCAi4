@@ -52,18 +52,39 @@ constexpr std::uint32_t kControllerTypeAttractor = 0x6a1628ba;
 constexpr std::uint32_t kCtrlFlagActive = 0x1, kCtrlFlagReady = 0x2, kCtrlFlagInView = 0x4, kCtrlFlagLotFacing = 0x10,
                         kCtrlFlagFixedPosition = 0x20, kCtrlFlagBoxFromPosition = 0x40, kCtrlFlagDetachOnShutdown = 0x100,
                         kCtrlFlagAlwaysVisible = 0x200, kCtrlFlagDelayed = 0x400, kCtrlFlagTerrainBound = 0x1000;
-constexpr std::uint32_t kBehaviorTypeQueue = 4;   // behaviour entries / automaton state 4 = wait in the controller's queue
+constexpr std::uint32_t kBehaviorTypeQueue = 4;   // behaviour state / automaton state 4 = wait in the controller's queue
 
 // Sound messages posted by PlaySFX (cSC4SoundSystem message ids).
 constexpr std::uint32_t kSoundMsgStartLoop = 0xea451903, kSoundMsgSetPosition = 0xca45190f, kSoundMsgStopLoop = 0x6a451908;
 
-// One entry of a template's behaviour list (stride 0x98): the type and the distance limit are the fields the base reads.
-struct tControllerBehavior {
-    std::int32_t type = 0;          // +0
-    float threshold = 0.0f;         // +4: the entry applies up to this distance (queue entries: from the queue point)
-    std::uint8_t rest[0x90] = {};   // other behaviour data, owned by the automata classes
+// One entry of a template's behaviour list (tBehaviorTemplate, size 0x98: ctor 0x10ee00, dtor 0xfd1aa, GetTimeoutMilliseconds 0xf3ed0): what an
+// automaton does in `state`, up to `radius` metres from the controller. The sort order of a template's behaviours is operator< below.
+struct tBehaviorTemplate {
+    std::uint32_t state = 0;                    // +0x00 (4 = wait in the controller's queue)
+    float radius = 0.0f;                        // +0x04
+    float percentage = 1.0f;                    // +0x08
+    std::uint32_t priority = 1;                 // +0x0c
+    std::vector<cRZString> anims;               // +0x10
+    std::vector<std::uint32_t> sfx;             // +0x28 (sound ids)
+    float timeout = 0.0f;                       // +0x40 (s)
+    bool final = false;                         // +0x44
+    float kphMultiply[2] = {1.0f, 1.0f};        // +0x48
+    std::int32_t kph[2] = {-1, -1};             // +0x50
+    float acceleration = 0.5f;                  // +0x58
+    float pathOffset = 0.0f;                    // +0x5c
+    bool avoidLots = false, avoidRoads = false; // +0x60, +0x61
+    bool ignorePaths = false, ignoreRoads = false, ignoreTerrain = false, ignoreAttractors = false;   // +0x64..+0x67
+    float delay[2] = {10.0f, 15.0f};            // +0x68 (random walk)
+    float turn[2] = {0.1f, 0.2f};               // +0x70
+    float strength[2] = {1.0f, 1.0f};           // +0x78
+    float idleDelay[2] = {0.0f, 0.0f};          // +0x80
+    float idleTime[2] = {5.0f, 10.0f};          // +0x88
+    float deceleration = 0.5f;                  // +0x90
+
+    std::uint32_t GetTimeoutMilliseconds() const;   // @ 0x1000f3ed0 (a timeout of 0 or less answers the bits of -1.0f, 0xbf800000 - kept)
+    // The comparison the script importer sorts with (the inlined std::__less): nearer first, then the higher priority.
+    friend bool operator<(const tBehaviorTemplate& a, const tBehaviorTemplate& b) { return a.radius < b.radius || a.priority > b.priority; }
 };
-static_assert(sizeof(tControllerBehavior) == 0x98);
 
 // tControllerTemplate (size 0x158 for the generator type, 0x148 for the attractor): the base fields at their offsets.
 struct tControllerTemplate {
@@ -75,7 +96,7 @@ struct tControllerTemplate {
     float radius = 0.0f;                             // +0x38
     cSC4ResponseCurve curve;                         // +0x40 (time of day -> weight)
     std::int32_t field60 = -1;                       // +0x60 (day mask for generators)
-    std::vector<tControllerBehavior> behaviors;      // +0x68
+    std::vector<tBehaviorTemplate> behaviors;        // +0x68
     std::list<std::uint32_t> effectsOn;              // +0x80 (+0x90 size): effects that must all be on
     std::list<std::uint32_t> effectsOff;             // +0x98 (+0xa8 size): effects that must all be off
     float lifetime = 0.0f;                           // +0xb0 (s)
@@ -83,19 +104,22 @@ struct tControllerTemplate {
     std::uint32_t maxAutomata = 0;                   // +0xb8 (0 = unlimited)
     std::uint32_t flags = 0;                         // +0xbc
     float uniqueRadius = 0.0f;                       // +0xc0: no second controller of this template within this radius (< 1 = off)
-    std::vector<std::uint32_t> sounds;               // +0xc8: sound ids, one picked at random on activation
+    std::vector<std::uint32_t> sounds;               // +0xc8: sound ids, one picked at random on activation ("sfx")
+    std::vector<std::uint32_t> ignoreStates;         // +0xe0 ("ignore_states")
+    std::vector<std::uint32_t> groups;               // +0xf8: automata group ids, resolved from groupNames by LinkControllerTemplates
+    std::list<cRZString> groupNames;                 // +0x110 ("automata")
 };
 // Generator flavour (type 0x4a1628c5): the extra fields from +0xf8 (see GeneratorTemplate in AutomataGenerator.h).
 struct tGeneratorTemplate : tControllerTemplate {
-    std::vector<std::uint32_t> groups;               // +0xf8
     float countScale = 0.0f;                         // +0x128
     std::int32_t countMode = 0;                      // +0x12c
     std::int32_t groupSizeMin = 0, groupSizeMax = 0; // +0x130, +0x134
     float rate = 1.0f;                               // +0x138
     std::int32_t periodUnit = 0;                     // +0x13c
-    float probability = 0.0f;                        // +0x144
-    float radius2 = 0.0f;                            // +0x148
-    std::uint32_t lifetimeAutomataLimit = 0;         // +0x14c
+    std::uint32_t eventId = 0;                       // +0x140 ("event")
+    float probability = 1.0f;                        // +0x144 ("random_chance")
+    float radius2 = 0.0f;                            // +0x148 (second value of "radius")
+    std::uint32_t lifetimeAutomataLimit = 0;         // +0x14c ("lifetime_count")
     std::uint8_t spawnArgument = 0;                  // +0x150
 };
 
@@ -203,7 +227,7 @@ public:
     virtual bool HandleEnterState(IControllerAutomaton* automaton, std::uint32_t state);            // @ 0x1000f9016
     virtual bool HandleExitState(IControllerAutomaton* automaton, std::uint32_t state);             // @ 0x1000f90fa
     virtual bool HandleRemoveAutomaton(IControllerAutomaton* automaton);      // @ 0x1000f91e2
-    virtual const tControllerBehavior* GetBehaviorTemplate(float distance, const float* position) const;   // @ 0x1000f8dce
+    virtual const tBehaviorTemplate* GetBehaviorTemplate(float distance, const float* position) const;   // @ 0x1000f8dce
     virtual bool IsFull() const;                                              // @ 0x1000fb9ca
     virtual std::uint8_t* TractRect() { return tractRect_; }                  // @ 0x1000fb9f0
     virtual bool IsExpired() const { return lifetime_ > 0.0f && lifetime_ <= age_; }   // @ 0x1000fb9fa

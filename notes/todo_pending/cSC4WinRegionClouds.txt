@@ -1,0 +1,3 @@
+T-WRC-1 | cSC4WinRegionClouds | hook IRegionCloudsHost: SL::spGS2 vslot 0x18 draw device, texture binding factory service (0x1ac0e11a/0xfac0e219) vslot 0x28 | - | src/sc4/WinRegionClouds.h
+T-WRC-2 | cSC4WinRegionClouds | the device state calls (vslots 0x168/0x160/0xa8/0x198/0x1a0/0x1a8/0xe8/0xd8) keep slot names; decode their meaning (render/texture states) when SC4DrawContext is recovered | - | src/sc4/WinRegionClouds.h
+T-WRC-3 | cSC4WinRegionClouds | cloud vertex layout (x,y,z,colour,u,v), quad strip draw (1,0,4) and 128.0 size read from the disassembly; constant 128.0 at 0x100a16200 assumed | - | src/sc4/WinRegionClouds.cpp

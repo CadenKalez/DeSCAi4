@@ -1,0 +1,5 @@
+CAMCTL-1 | cSC4CameraControl | hook ICameraControlHost to the real SC4ViewUtilities (UpdateCameraPosition 0x1001745da, GetCityCornerPosition 0x10017708a), SL::TerrainView() vslot 0x18 ray pick and the framework message server | - | src/sc4/CameraControl.h
+CAMCTL-2 | cSC4CameraControl | unmodelled fields: +0xd4..+0xdc (zeroed) and +0xe0..+0xf7 (six FLT_MAX floats, never read by the recovered code); check the other view classes for readers | - | src/sc4/CameraControl.h
+CAMCTL-3 | cSC4CameraControl | _g_MacJustZoomed is kept as cSC4CameraControl::sMacJustZoomed; find the reader (view input) and clear it there | - | src/sc4/CameraControl.h
+CAMCTL-4 | cSC4CameraControl | quirk kept: the original dereferences the message server and the new camera without null checks; the port skips the send / the SetViewport call | - | src/sc4/CameraControl.cpp
+CAMCTL-5 | cSC4CameraControl | SC4ViewUtilities::GetCityWidthFromOrthoView is implemented here as CityWidthFromOrthoView with the table kSC4YViewAngle collapsed to -pi/8 (all five entries read from 0x100a19640 are equal); move it into the SC4ViewUtilities class when that is recovered | - | src/sc4/CameraControl.cpp

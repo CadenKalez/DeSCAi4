@@ -1,0 +1,8 @@
+SOURCE src/sc4/WinSmallViews.cpp|h
+EVIDENCE test scripts/tests/sc4_winsmallviews_test.cpp - delay by paints/ms, EndDialog code, transparent hit test over children, renderer refcount
+0x10023d4d2 WinRegion3DViewInit
+0x10023d52a WinRegion3DViewShutdown
+0x10023d55e WinRegion3DViewPaint
+0x10023d5a0 WinRegion3DViewDestructorThunk
+0x10023d5aa WinRegion3DViewDeletingDestructor
+0x10023d5d8 WinRegion3DViewDestructor

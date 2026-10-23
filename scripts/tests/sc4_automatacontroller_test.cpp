@@ -282,9 +282,9 @@ int main() {
     host.queue.valid = true;
 
     tmpl->behaviors.resize(3);
-    tmpl->behaviors[0].type = 1; tmpl->behaviors[0].threshold = 5.0f;
-    tmpl->behaviors[1].type = static_cast<int>(kBehaviorTypeQueue); tmpl->behaviors[1].threshold = 20.0f;
-    tmpl->behaviors[2].type = 2; tmpl->behaviors[2].threshold = 1000.0f;
+    tmpl->behaviors[0].state = 1; tmpl->behaviors[0].radius = 5.0f;
+    tmpl->behaviors[1].state = kBehaviorTypeQueue; tmpl->behaviors[1].radius = 20.0f;
+    tmpl->behaviors[2].state = 2; tmpl->behaviors[2].radius = 1000.0f;
     const float nearQueue[3] = {105, 0, 200};
     CHECK(c->GetBehaviorTemplate(3.0f, nearQueue) == &tmpl->behaviors[0]);
     CHECK(c->GetBehaviorTemplate(10.0f, nearQueue) == &tmpl->behaviors[1]);   // within 20 of the queue point

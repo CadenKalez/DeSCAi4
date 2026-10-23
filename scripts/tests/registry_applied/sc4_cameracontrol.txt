@@ -1,0 +1,1 @@
+"sc4_cameracontrol:$T/sc4_cameracontrol_test.cpp $S/sc4/CameraControl.cpp $S/s3d/Camera.cpp $S/s3d/S3DMath.cpp $S/rz/cRZRandom.cpp $S/sc4/GeometryUtilities.cpp $S/gz/StreamOps.cpp $S/rz/cRZDate.cpp $S/rz/cRZTimer.cpp $S/rz/cRZStream.cpp $S/rz/cRZString.cpp $S/platform/MacTools.cpp $S/rz/cRZMessage2Standard.cpp"

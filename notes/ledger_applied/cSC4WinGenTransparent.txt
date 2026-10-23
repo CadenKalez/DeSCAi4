@@ -1,0 +1,6 @@
+SOURCE src/sc4/WinSmallViews.cpp|h
+EVIDENCE test scripts/tests/sc4_winsmallviews_test.cpp - delay by paints/ms, EndDialog code, transparent hit test over children, renderer refcount
+0x1004640a6 WinGenTransparentConstruct
+0x1004640d4 WinGenTransparentDestructor
+0x1004640f6 WinGenTransparentDeletingDestructor
+0x10046413c WinGenTransparentIsPointInWindowWindowCoordinates

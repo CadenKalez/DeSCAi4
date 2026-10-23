@@ -1,0 +1,14 @@
+SOURCE src/sc4/WinLoadHeightField.cpp|h
+EVIDENCE test scripts/tests/sc4_winloadheightfield_test.cpp - dialog init builds the browser with 6 filters, ends with 1/0 on choose/OK/Cancel/Escape, directory round trip
+0x1003d1e8e WinLoadHeightFieldConstruct
+0x1003d1eee WinLoadHeightFieldDestructor
+0x1003d1f24 WinLoadHeightFieldDestructorThunk
+0x1003d1f2e WinLoadHeightFieldDeletingDestructor
+0x1003d1f5c WinLoadHeightFieldDoMessage
+0x1003d2052 WinLoadHeightFieldGetSelection
+0x1003d2074 WinLoadHeightFieldGetInitialDirectory
+0x1003d20b8 WinLoadHeightFieldSetInitialDirectory
+0x1003d20f8 WinLoadHeightFieldInit
+0x1003d24d0 WinLoadHeightFieldShutdown
+0x1003d2516 WinLoadHeightFieldPaint
+0x1003d2584 WinLoadHeightFieldKeyDown

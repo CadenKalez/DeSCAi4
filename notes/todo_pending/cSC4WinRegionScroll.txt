@@ -1,0 +1,3 @@
+T-WRS-1 | cSC4WinRegionScroll | hook IRegionScrollHost: SL::spPreferences+0xf09 edge-scroll flag, graphic system service vslot 0x60 ("cursor in game window"), cSLBuffer(0x856ddbac,0x46a006b0,0x094ac89a) loader, WCM vslot 0x78 image-window creator | - | src/sc4/WinRegionScroll.h
+T-WRS-2 | cSC4WinRegionScroll | edge vector at +0x174 is never written by any recovered function; check xrefs in the binary for writers | - | src/sc4/WinRegionScroll.h
+T-WRS-3 | cSC4WinRegionScroll | SetCursorByID reads RZ::WM() cursor manager; recovered code uses the window's own manager (assumed identical) | - | src/sc4/WinRegionScroll.cpp

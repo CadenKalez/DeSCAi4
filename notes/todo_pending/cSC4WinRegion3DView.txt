@@ -1,0 +1,1 @@
+T-WRV-1 | cSC4WinRegion3DView | hook IRegion3DRenderer (SL::spRenderer slot 0xa8) to the real city renderer, GZPaint is untested against a real draw context | - | src/sc4/WinSmallViews.h

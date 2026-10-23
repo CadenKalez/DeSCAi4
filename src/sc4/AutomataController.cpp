@@ -8,6 +8,10 @@
 
 namespace sc4 {
 
+std::uint32_t tBehaviorTemplate::GetTimeoutMilliseconds() const {
+    return timeout > 0.0f ? static_cast<std::uint32_t>(timeout * 1000.0f) : 0xbf800000u;
+}
+
 namespace {
 IAutomataControllerHost* g_host = nullptr;
 constexpr std::uint16_t kControllerStreamVersion = 5;
@@ -212,17 +216,17 @@ void cSC4AutomataController::NotifySourceDataChanged() {
     animTimer_ = 0.0f;
 }
 
-const tControllerBehavior* cSC4AutomataController::GetBehaviorTemplate(float distance, const float* position) const {
-    for (const tControllerBehavior& entry : template_->behaviors) {
-        if (distance > entry.threshold) continue;
-        if (static_cast<std::uint32_t>(entry.type) != kBehaviorTypeQueue) return &entry;
+const tBehaviorTemplate* cSC4AutomataController::GetBehaviorTemplate(float distance, const float* position) const {
+    for (const tBehaviorTemplate& entry : template_->behaviors) {
+        if (distance > entry.radius) continue;
+        if (entry.state != kBehaviorTypeQueue) return &entry;
         IControllerQueue* queue = QueueOf(true);
         queue->InitQueuePoint(occupant_);
         if (queue->IsValid()) {
             const float* q = queue->QueuePoint();
             const float dx = position[0] - q[0], dz = position[2] - q[2];
             const float length = std::sqrt(dx * dx + 0.0f + dz * dz);
-            if (length <= entry.threshold) return &entry;
+            if (length <= entry.radius) return &entry;
         }
     }
     return nullptr;

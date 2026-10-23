@@ -21,9 +21,6 @@ constexpr std::uint32_t kGZCLSID_cSC4AutomataAttractor = 0x6a1628ba;
 constexpr std::uint32_t kAutomatonIidForFilter = 0xa9b40f05;
 
 struct tAttractorTemplate : tControllerTemplate {
-    std::vector<std::uint32_t> excludedTypes;     // +0xe0
-    std::vector<std::uint32_t> groups;            // +0xf8
-    std::list<cRZString> names;                   // +0x110
     cSC4ResponseCurve strengthCurve;              // +0x128
 };
 // Creates the attractor template (cSC4AutomataAttractor::tTemplate::tTemplate @ 0x1000fbe8e; destructors 0x1000fc0a6 / 0x1000fc104).
@@ -33,8 +30,8 @@ class IAutomataAttractorHost {
 public:
     virtual ~IAutomataAttractorHost() = default;
     // The occupant answers QueryInterface(0xa9b40f05) (it is an automaton) and that interface's vslot 0x1c0 answers a record
-    // whose int at +8 is the automaton's type id. False when the occupant is not an automaton / has no record.
-    virtual bool GetAutomatonTypeId(cISC4Occupant* occupant, std::int32_t& typeId) = 0;
+    // whose int at +8 is the automaton's current state id. False when the occupant is not an automaton / has no record.
+    virtual bool GetAutomatonStateId(cISC4Occupant* occupant, std::int32_t& stateId) = 0;
 };
 IAutomataAttractorHost* AutomataAttractorHost();
 void SetAutomataAttractorHost(IAutomataAttractorHost* host);

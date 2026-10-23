@@ -1,0 +1,3 @@
+T-WRO-1 | cSC4WinResizableOutline | constructor not found in the export (class factory?): defaults of +0x150..0x170 are inferred from Init's sentinel tests; find the creator and verify | - | src/sc4/WinResizableOutline.h
+T-WRO-2 | cSC4WinResizableOutline | hook IResizableOutlineHost (RZ::FO() font create vslot 0x48, buffer line vslot 0xf0) and IOutlineFont (font vslots 0x78/0x80/0x198) to the font/buffer classes | - | src/sc4/WinResizableOutline.h
+T-WRO-3 | cSC4WinResizableOutline | quirk kept at 0x100371ef8: while capturing, zone 0 tests the resizing flag and a zone tests the moving flag (looks swapped); destructor does not release the font (0x100371628) | - | src/sc4/WinResizableOutline.cpp
