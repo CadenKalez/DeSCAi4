@@ -1,0 +1,95 @@
+SOURCE src/sc4/ConstructionOccupant.cpp|h
+EVIDENCE test scripts/tests/sc4_constructionoccupant_test.cpp - sc4_constructionoccupant ok: a fake IConstructionOccupantHost (message server, tick channel, seeded cRZRandom, real cSCPropertyHolder tuning exemplar, fake crane models, texture bindings, props, effects, lot base-texture occupant, automata, terrain/city/simulator, renderer and view filter) drives the identity (0xa97f909e / 0x096e763c / 0x496e7636 / group 0x5007 / properties 5), Init's four notifications + tick channel + 5x5 bindings + render state + occupant group, the once-only StaticInit (the inverted texture/growth/removal rates, the eight-entry prop table, the three crane models' arm lengths, the wall-clock random seed), SetLot's whole build-up (RebuildModel's 4 side quads / 4 plank strips with texture coordinates / girder quad / 80 corner-post vertices, the building and roof boxes, DivideLot's eight lot rectangles, the inner crane, the ground and roof props, the crew automata, the dust cloud and the welding sparks, the lot texture specs, the two construction messages and the stage timing), the complete stage machine over six days (0->1->2->1->2->3->4, the per-stage day delays, the segment counter, the roof-prop removal, the scaffold height over the animation ticks, the 100% completion, the lot state 3 and the shutdown), the transform / bounds queries (translation, rotation-transpose and inverted scale), DoRotationChange's per-face post shading, Draw's per-rotation side order / texture rows / seven primitives, AddToRenderer with and without a view filter, the no-op SetPosition, the inner crane's yaw pairs, the version-5 stream round trip and the version-3 rejection
+0x100177328 cSC4ConstructionOccupant_Construct
+0x100177626 cSC4ConstructionOccupant_AddRef
+0x10017768a cSC4ConstructionOccupant_Release
+0x1001776ee cSC4ConstructionOccupant_QueryInterface
+0x1001777fe cSC4ConstructionOccupant_Init
+0x100177a46 cSC4ConstructionOccupant_StaticInit
+0x100177fee cSC4ConstructionOccupant_Shutdown
+0x1001783d6 cSC4ConstructionOccupant_SendConstructionMessage
+0x1001785ac cSC4ConstructionOccupant_Write
+0x100178918 cSC4ConstructionOccupant_Read
+0x100178ea2 cSC4ConstructionOccupant_DoMessage
+0x10017909a cSC4ConstructionOccupant_DoDailySim
+0x100179308 cSC4ConstructionOccupant_DoAnimationTick
+0x1001794e4 cSC4ConstructionOccupant_RebuildModel
+0x10017a218 cSC4ConstructionOccupant_AddToRenderer
+0x10017a342 cSC4ConstructionOccupant_RepositionSparks
+0x10017a63c cSC4ConstructionOccupant_SetBuildingCompletion
+0x10017a710 cSC4ConstructionOccupant_SetScaffoldHeight
+0x10017aa36 cSC4ConstructionOccupant_AnimateCrane
+0x10017abe0 cSC4ConstructionOccupant_SetCraneYaw
+0x10017ad78 cSC4ConstructionOccupant_SetLot
+0x10017b102 cSC4ConstructionOccupant_DivideLot
+0x10017b33c cSC4ConstructionOccupant_AttemptAddCrane
+0x10017b3c2 cSC4ConstructionOccupant_AddGroundProps
+0x10017b708 cSC4ConstructionOccupant_CreateConstructionCrew
+0x10017b964 cSC4ConstructionOccupant_AddRoofProps
+0x10017bb84 cSC4ConstructionOccupant_CreateDustClouds
+0x10017bcee cSC4ConstructionOccupant_CreateSparks
+0x10017be96 cSC4ConstructionOccupant_CreateLotTexture
+0x10017c0e2 cSC4ConstructionOccupant_GetBounds
+0x10017c2ce cSC4ConstructionOccupant_GetWorldBounds
+0x10017c34e cSC4ConstructionOccupant_GetTransform
+0x10017c3e4 cSC4ConstructionOccupant_SetTransform
+0x10017c47e cSC4ConstructionOccupant_GetSortValue
+0x10017c4d2 cSC4ConstructionOccupant_Draw
+0x10017c93e cSC4ConstructionOccupant_DoRotationChange
+0x10017cb4e cSC4ConstructionOccupant_GetPosition
+0x10017cbfe cSC4ConstructionOccupant_SetPosition
+0x10017cc0a cSC4ConstructionOccupant_GetBoundingBox
+0x10017d204 cSC4ConstructionOccupant_AttemptAddInnerCrane
+0x10017d4e4 cSC4ConstructionOccupant_RemoveRectangle
+0x10017d63a cSC4ConstructionOccupant_CreateAndPlaceProp
+0x10017d9f6 cSC4ConstructionOccupant_CreateAutomata
+0x10017dd04 cSC4ConstructionOccupant_AsOccupant
+0x10017dd0e cSC4ConstructionOccupant_GetGZCLSID
+0x10017dd1a cSC4ConstructionOccupant_GetOwner
+0x10017dd24 cSC4ConstructionOccupant_SetOwner
+0x10017df2c cSC4ConstructionOccupant_Destruct
+# New seams (ConstructionOccupant.h) and the original calls they replace:
+#   IConstructionOccupantHost: SL::spMS2 + SL::ATM        -> MessageServer / AddTickNotification (ATM 0x28) / RemoveTickNotification (ATM 0x30)
+#                              ::sRandom                  -> Random (the seed and every draw)
+#                              SL::spRM 0x18 + resource 0x30 -> ConstructionSettings (exemplar 0x6534284a/0x2989fd57/0x8989dbe3)
+#                              SL::spRM 0x18 + cIS3DResModel 0x20 -> CreateModelInstance (the crane models)
+#                              framework 0x1ac0e11a/0xfac0e219 0x20 -> CreateTextureBinding
+#                              SL::spPropManager 0x70/0x78/0xd0/0xe8 -> PropProfile / CreateProp / AddLotProp / RemoveProp
+#                              new cSC4PropOccupantVisualEffect + Init -> CreatePropEffect
+#                              building development sim 0x120 -> 0x148 / 0x198 -> CreateLotBaseTextureOccupant / LotBuilding
+#                              automata manager 0x78 and 0x40 -> CreateAutomaton / RemoveAutomaton
+#                              SL::spOccupantManager 0xa0/0xa8/0xc0 -> InsertOccupant / RemoveOccupant / MoveOccupant
+#                              SL::spTerrain 0x60/0x38/0x40/0x110 and SL::spCity 0x300 -> the terrain / cell conversions
+#                              SL::spSimulator 0x40 -> SimulatorDay
+#                              SL::spView3D 0x90 -> ViewFilter, SL::spRenderProperties+0x30+0x230 -> RenderDetailLevel
+#                              SL::spViewUtilities 0x10017383c / 0x100176ae6 -> ProjectToViewCoordinates / TransformBoundingBox
+#                              SL::spLightingManager 0xb8 -> LightColourForDirection, SL::spRenderer 0xd8/0xe0/0xe8 -> Renderer
+#   IConstructionLot (cISC4Lot 0x70/0x110/0x180), IConstructionProp (cISC4PropOccupant 0x18/0x50),
+#   IConstructionEffect (cSC4PropOccupantVisualEffect 0x18/0x28/0x38/0x40/0x58/0x80),
+#   IConstructionAutomaton (cISC4Automaton 0x08/0x18/0x70/0xf0), IConstructionTexture (cS3DTextureBinding),
+#   IConstructionRenderer (cISC43DRender 0xd8/0xe0/0xe8). The real build hands the recovered classes to these
+#   methods; the narrow views exist because the repo's cSC4Lot is a plain class and cSC4PropOccupant has no
+#   cISC4PropOccupant view.
+# Deviations kept on purpose: the texture-binding service, the lighting manager and the view filter are optional
+# (the original dereferences them without a check, 0x1001779f3), GetBounds guards a zero scale where the original
+# divides by it (0x10017c72x), AnimateCrane guards a zero rotation duration, and Draw skips the girder quad when its
+# texture row is empty (see the Init quirk below).
+PARTIAL:
+0x100179e50 cSC4ConstructionOccupant_CreateCrane - the model instance, its reference, position, initial yaw and owner are ported; the 16-vertex base plate (+0x188) is built from the documented intent (a 0.1 m thick square of side sfCranePostWidth) because the eight-entry corner table it reads lives in .bss and the original's guard only initialises part of it (0x100179f4a..0x100179f9e)
+0x10017cc7e cSC4ConstructionOccupant_AttemptAddOuterCrane - the model search, the four side-availability tests, the strip-depth filter, the yaw ranges and the CreateCrane call are ported; the final strip rectangle the crane's footprint is clipped to (0x10017d0c0..0x10017d15b) is reconstructed from the stack slots Ghidra split into separate locals, so the port clips the crane's square to the strip box
+SKIPPED:
+0x10017dd2a compiler-emitted complete-object destructor: a tail call to 0x10017df2c (no separate code)
+0x10017dd3c compiler-emitted deleting destructor: 0x10017df2c then operator free (no separate code)
+NOTE: the remaining 46 exported cSC4ConstructionOccupant symbols are the non-virtual adjustor thunks for the six base views (AddRef 0x100177634 / 0x100177642 / 0x10017764c / 0x10017765a / 0x100177668 / 0x10017767c, Release 0x100177698 / 0x1001776a6 / 0x1001776b0 / 0x1001776be / 0x1001776cc / 0x1001776e0, QueryInterface 0x100177710 / 0x100177736 / 0x10017775c / 0x100177782 / 0x1001777a8 / 0x1001777d8, Init 0x100177fdc, Shutdown 0x10017849a, Write 0x1001788ee / 0x1001788fc / 0x10017890a, Read 0x100178e78 / 0x100178e86 / 0x100178e94, DoMessage 0x10017a330, GetBounds 0x10017c2c0, GetWorldBounds 0x10017c312, GetTransform 0x10017c3d6, SetTransform 0x10017c470, GetSortValue 0x10017c4aa, Draw 0x10017cb36, GetPosition 0x10017cba6, SetPosition 0x10017cc04, GetBoundingBox 0x10017cc44, GetGZCLSID 0x10017dde0 / 0x10017ddec, GetOwner 0x10017de5a, SetOwner 0x10017de64 and the six destructor thunks 0x10017dd8e / 0x10017dda4 / 0x10017ddf8 / 0x10017de0e / 0x10017de6a / 0x10017de80); the compiler emits them from the class declaration.
+NOTE: the class's own std::vector<ConstructionPropEntry> / std::list<CrewData> helpers (0x100177f2e, 0x100177fb0, 0x10017debc, 0x10017e0a0, 0x10017e51e, 0x10017e746, 0x10017e870 ...) are libc++ instantiations and are not ledgered. GZCOM_CreatecSC4ConstructionOccupant 0x1001772db / GZCOM_cSC4ConstructionOccupantCLSID 0x10017761b keep their existing src/gz/GZCOM.cpp rows (the creator is still the generated nullptr stub: hook it up to `new sc4::cSC4ConstructionOccupant()`, which is what the original's 0x270-byte allocation builds); operator new / delete keep their src/sc4/ClassAllocators.cpp rows.
+# Port-only change outside the class: src/sc4/DrawContext.h gained an inline ViewRotation() accessor (next to Zoom())
+# because Draw reads the context's +0x18 rotation for the side draw order; it is additive and rebuilds cleanly.
+# Quirks kept (asserted in the test): Init creates bindings for the five rows 0..4 only (0x1001779fd) so the girders'
+# row 5 (drawn at 0x10017c7a1) is empty - the port guards that draw instead of dereferencing a null row; SetPosition is a
+# no-op (0x10017cbfe) and SetOwner too (0x10017dd24); GetPosition returns the box centre including Y (0x10017cb4e); the
+# has-crane flag +0x120 is only ever set by Read (CreateCrane never writes it, 0x100179e50), so Write serialises
+# "crane_ != nullptr" instead; SetLot with a lot that has no building detaches and releases the lot and returns without
+# AddToRenderer; DoDailySim clears the roof props after the walk and both stage 0 and stage 2 bump the segment counter;
+# CreateCrane starts the crane at yaw -yawMin/2 + yawMax + yawMin; the scaffold height is stored in the roof box's max Y
+# (+0x118), which AttemptAddOuterCrane reads as the building height before SetLot lowers the scaffold; StaticInit seeds
+# the process-wide random generator from the wall clock and the reference julian day 249522.

@@ -265,6 +265,7 @@ public:
     void SetViewPass(std::int32_t pass) { pass_ = pass; }
     void SetZoomAndRotation(std::int32_t zoom, std::int32_t rotation);                   // +0x10 / +0x14 / +0x18
     std::int32_t Zoom() const { return zoom_; }                                          // +0x14
+    std::int32_t ViewRotation() const { return rotation_; }                              // +0x18
     bool IsInitialized() const { return initialized_; }
     std::uint32_t StateWord() const { return stateWord_; }
     const std::vector<cStageInfo>& Stages() const { return stages_; }

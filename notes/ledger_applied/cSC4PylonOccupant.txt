@@ -1,0 +1,55 @@
+SOURCE src/sc4/PylonOccupant.cpp|h
+EVIDENCE test scripts/tests/sc4_pylonoccupant_test.cpp - sc4_pylonoccupant ok: a fake IPylonOccupantHost (message server, animation-tick channel, real occupant manager, renderer insert/remove/move/change, view utilities with a settable pitch / view direction / viewport-unit scale, the draw-suppression flag, the texture-binding factory, nsTexUtil release/upload, RZ::GS buffer creation, the WCM default font, the GZCOM file decoder) plus real cGZBuffer / cSLBuffer pictures and a recording gd driver drive the object identity (type 0xa9b6d7de, class 0x49b6d69b, iids 0xc9b6d7d6 / 0x452294aa / 0x26a68449, properties 3, the ctor's empty bounds and identity transform, the GetSortValue texture-handle quirk), Init's three notifications + tick channel 0x80 + renderer draw-context call + two packed render states, the camera-facing billboard (44/150 viewport units, the u/v table and the state factor, the transform's rotate-flag composition and unit-scale forcing), the two-corner world box, the UI/dispatch state dirty+blink rules, the 500-second shared flash timer, the police/fire/MySim resource tables, SetPosition's take-out / rebuild / put-back placement, the transform copy bumping the destination counter, Pick's 50-unit slab, SetVisibility and the view-set message adding/removing the renderer model, Draw's pass-1 (billboard + call-number quad) and pass-0 (transparent, result 2), the call-number texture (font size save/restore, the "%d" measure, the power-of-two size, the release of the previous texture, the quad geometry), the MySim texture (base {0x856ddbac,0xab7e5421,state} + bitmap {0x856ddbac,0x46a006b0,id} buffers, the three 0x34-tile blits with the alpha and magenta colour-key rules, the text path through the file decoder, the pixels checked in the uploaded buffer), the version-5 record round trip and the version-2 rejection, SetOwner/GetOwner, the source-occupant and pylon-owner references, and Shutdown releasing the textures, the references, the notifications and the manager/renderer placement
+0x10022def8 cSC4PylonOccupant_Construct
+0x10022e0ec cSC4PylonOccupant_Destruct
+0x10022e2e0 cSC4PylonOccupant_AddRef
+0x10022e344 cSC4PylonOccupant_Release
+0x10022e3a8 cSC4PylonOccupant_QueryInterface
+0x10022e476 cSC4PylonOccupant_Init
+0x10022e5d6 cSC4PylonOccupant_Shutdown
+0x10022e6da cSC4PylonOccupant_PlaceInOccupantManager
+0x10022e79c cSC4PylonOccupant_ReleaseCurrentTexture
+0x10022e7fc cSC4PylonOccupant_Write
+0x10022e92a cSC4PylonOccupant_Read
+0x10022eaf6 cSC4PylonOccupant_DoMessage
+0x10022ec28 cSC4PylonOccupant_DoAnimationTick
+0x10022ec78 cSC4PylonOccupant_RebuildModel
+0x10022f24c cSC4PylonOccupant_SetUIState
+0x10022f26e cSC4PylonOccupant_GetUIState
+0x10022f27a cSC4PylonOccupant_SetDispatchState
+0x10022f29c cSC4PylonOccupant_GetDispatchState
+0x10022f2a8 cSC4PylonOccupant_SetDispatchType
+0x10022f2ca cSC4PylonOccupant_GetDispatchType
+0x10022f2d6 cSC4PylonOccupant_SetSourceOccupant
+0x10022f32a cSC4PylonOccupant_GetBounds
+0x10022f3aa cSC4PylonOccupant_GetWorldBounds
+0x10022f42a cSC4PylonOccupant_GetTransform
+0x10022f4c0 cSC4PylonOccupant_SetTransform
+0x10022f55a cSC4PylonOccupant_GetSortValue
+0x10022f580 cSC4PylonOccupant_Draw
+0x10022f744 cSC4PylonOccupant_RebuildCurrentTexture
+0x10022fc98 cSC4PylonOccupant_PlaceInRenderer
+0x10022fd60 cSC4PylonOccupant_GetPosition
+0x10022fd9c cSC4PylonOccupant_SetPosition
+0x10022fe1a cSC4PylonOccupant_GetBoundingBox
+0x10022fe8e cSC4PylonOccupant_SetVisibility
+0x10022fed8 cSC4PylonOccupant_Pick
+0x10022ffe8 cSC4PylonOccupant_SetPylonOwner
+0x10023003c cSC4PylonOccupant_GetPylonOwner
+0x10023004a cSC4PylonOccupant_SetBitmapInfo
+0x1002304b4 cSC4PylonOccupant_AsOccupant
+0x1002304be cSC4PylonOccupant_SetCallNumber
+0x1002304d2 cSC4PylonOccupant_GetCallNumber
+0x1002304e0 cSC4PylonOccupant_SetDragState
+0x1002304ee cSC4PylonOccupant_GetDragState
+0x1002304fa cSC4PylonOccupant_GetSourceOccupant
+0x100230508 cSC4PylonOccupant_GetGZCLSID
+0x100230514 cSC4PylonOccupant_GetOwner
+0x10023051e cSC4PylonOccupant_SetOwner
+PARTIAL:
+0x10022f858 cSC4PylonOccupant_BuildCallNumberTexture - the digit rasterisation and upload are behind IPylonOccupantHost / IPylonFont (the RZ::WCM default-font object, RZ::GS buffer creation and nsTexUtil::SetupTexture are unrecovered); the "%d" text, the measured size, the power-of-two rule, the previous-texture release and the whole quad geometry are recovered and asserted
+0x100230076 cSC4PylonOccupant_BuildMySimTexture - the two source pictures are cSLBuffer bitmaps and, for the text case, an image from RZ::GZCOM()'s decoder (class 0xa2ffb5d3 / iid 0x02ffbb60, not recovered), and the final upload is nsTexUtil::SetupTexture; the three 0x34-tile blits, the alpha test, the magenta colour key, the row/column addressing and the upload call are recovered and the pixel results are asserted
+SKIPPED:
+0x10022e22c compiler-emitted complete-object destructor: a tail call to 0x10022e0ec (no separate code)
+0x10022e280 compiler-emitted deleting destructor: 0x10022e0ec then operator delete (no separate code)
+NOTE: the remaining 48 exported cSC4PylonOccupant symbols are the compiler's non-virtual adjustor thunks for the six base views and the model/message views: Destruct: 0x10022e23e / 0x10022e254 / 0x10022e26a / 0x10022e2b6 / 0x10022e2c4 / 0x10022e2d2; AddRef: 0x10022e2ee / 0x10022e2fc / 0x10022e306 / 0x10022e314 / 0x10022e322 / 0x10022e336; Release: 0x10022e352 / 0x10022e360 / 0x10022e36a / 0x10022e378 / 0x10022e386 / 0x10022e39a; QueryInterface: 0x10022e420 / 0x10022e42e / 0x10022e43c / 0x10022e44a / 0x10022e458 / 0x10022e468; Init: 0x10022e5c4; Shutdown: 0x10022e7ea; Write: 0x10022e900 / 0x10022e90e / 0x10022e91c; Read: 0x10022eacc / 0x10022eada / 0x10022eae8; DoMessage: 0x10022f236; GetBounds: 0x10022f36e; GetWorldBounds: 0x10022f3ee; GetTransform: 0x10022f4b2; SetTransform: 0x10022f54c; GetSortValue: 0x10022f572; Draw: 0x10022f732; GetPosition: 0x10022fd7e; SetPosition: 0x10022fe0c; GetBoundingBox: 0x10022fe54; SetVisibility: 0x10022fec2; Pick: 0x10022ffda; GetGZCLSID: 0x100230532 / 0x10023053e; GetOwner: 0x10023054a; SetOwner: 0x100230554; the compiler emits them from the class declaration.

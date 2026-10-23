@@ -1,0 +1,54 @@
+SOURCE src/sc4/TrafficAutomataManager.cpp|h
+EVIDENCE test scripts/tests/sc4_trafficautomatamanager_test.cpp - fake ITrafficAutomataManagerHost/ITrafficNetworkManagerApi/ITrafficSimulatorApi neighbours plus real cSC4TrafficEffectManager, cRZTimer, cRZMessage2Standard and port memory streams drive the lifecycle and the vehicle-manager defaults, the layer/path-type/automata-group tables (0x100a18b20/0x100a18b40 and the 0x100a75280/0x100a752d0 pointer tables), the 4x4 float edge-density table (positive, mirrored and the transposed/negated trip variant) and the double density multiplier, IsTrainGroup's 0x4f80000700085 mask, IsTrafficAutomaton's two occupant types, IsLayerVisible's 0x7be zoom split, IsAutomatonOnscreen's +-48 rect, GetCommotionMultiplier's [0,0.5] clamp, the response list (AddRef, retire-after-six, 1000 ms refresh), HandleRemoveNetworkOccupant's two removal rules, RecallAutomatonFromNetwork, IsOffscreenEntryEdge's jump-table bumps, RecalculateLeaders/RemoveAutomaton, GetDefaultPathType's group chain, Dispatch's exemplar/creation/failure-cleanup path, the effect manager at +0xb60 (CreateAccident, Update through the +0xb78 timer), the version-3 stream round trip (the default path type is written and dropped on read) and the per-tick layer rotation
+0x100111b96 cSC4TrafficAutomataManager_Construct
+0x100111c96 cSC4TrafficAutomataManager_Destruct
+0x100111db4 cSC4TrafficAutomataManager_Init
+0x100111e24 cSC4TrafficAutomataManager_Shutdown
+0x100111ee2 cSC4TrafficAutomataManager_HandleRemoveNetworkOccupant
+0x10011206a cSC4TrafficAutomataManager_HandleNewBuilding
+0x100112074 cSC4TrafficAutomataManager_HandleRemoveOccupant
+0x100112114 cSC4TrafficAutomataManager_DispatchResponseAutomata
+0x100112812 cSC4TrafficAutomataManager_IsTrainGroup
+0x100112d36 cSC4TrafficAutomataManager_IsTrafficAutomaton
+0x100112d88 cSC4TrafficAutomataManager_DoAnimationTick
+0x100113438 cSC4TrafficAutomataManager_IsLayerVisible
+0x100113b98 cSC4TrafficAutomataManager_CreateAccident
+0x100114162 cSC4TrafficAutomataManager_IsOffscreenEntryEdge
+0x10011471a cSC4TrafficAutomataManager_ChooseRandomModel
+0x100114c6e cSC4TrafficAutomataManager_RecallAutomatonFromNetwork
+0x100114de4 cSC4TrafficAutomataManager_ChooseNetworkTypeForPathType
+0x100114f92 cSC4TrafficAutomataManager_GetPathTypeForLayer
+0x100114fbe cSC4TrafficAutomataManager_GetAutomataGroupForLayer
+0x100115196 cSC4TrafficAutomataManager_GetEdgeDensity
+0x100115310 cSC4TrafficAutomataManager_GetOccupantTripEdgeDensity
+0x1001153c6 cSC4TrafficAutomataManager_GetEdgeDensityMultiplier
+0x100115462 cSC4TrafficAutomataManager_GetEdgeDensityCurve
+0x10011548c cSC4TrafficAutomataManager_GetMaxAutosPerSecond
+0x10011596c cSC4TrafficAutomataManager_GetCommotionMultiplier
+0x1001159c4 cSC4TrafficAutomataManager_RemoveAutomaton
+0x1001159fc cSC4TrafficAutomataManager_IsAutomatonOnscreen
+0x100115ac0 cSC4TrafficAutomataManager_RecalculateLeaders
+0x100115fa0 cSC4TrafficAutomataManager_GetDefaultPathType
+0x10011606e cSC4TrafficAutomataManager_ScanExemplars
+0x100116078 cSC4TrafficAutomataManager_Write
+0x1001161b4 cSC4TrafficAutomataManager_Read
+PARTIAL:
+0x10011220c cSC4TrafficAutomataManager_UpdateResponseList - the timeLeft decrement, the six-retry retirement, the 1000 ms refresh and the per-target random pick are ported, but the two calls that consume a target land in the PARTIAL Dispatch/SpawnOccupantAutomaton (the traffic simulator trip object)
+0x100112566 cSC4TrafficAutomataManager_GetRandomCreationPoint - the flags & 0x22000 base path is ported; the network path needs cISC4NetworkManager vslot 0xd0 (exemplars in a cell rect) and SL::spLotManager vslot 0x28, neither recovered
+0x100112842 cSC4TrafficAutomataManager_Dispatch_group - exemplar lookup (ChooseRandomExemplar), CreateAutomatonInternal, AddAutomaton and the failure RemoveAutomaton(force) are ported; the success path is the PARTIAL Dispatch(automaton) overload
+0x10011298e cSC4TrafficAutomataManager_Dispatch_automaton - needs the traffic simulator's trip object (city vslot 0x228 -> vslot 0x30, then slots 0x98/0x68/0x90/0x28/0x48/0x40/0xa0/0xb8), unrecovered
+0x100112f76 cSC4TrafficAutomataManager_PopulateVisibleArea - the layer rotation, visible-rect sweep, clock gate and 5 s timeout are ported; the population entry points it drives are the PARTIAL density/spawn paths
+0x10011347e cSC4TrafficAutomataManager_PopulateNetworkOccupant5 - only the effect-manager populate gate is ported; the body needs cISC4NetworkManager vslots 0xa8/0xc0/0x110 and the spawn-recall response curves at 0x100b21ab0
+0x100113eae cSC4TrafficAutomataManager_PopulateNetworkOccupant7 - the rolling edge-density refresh and the maybe-spawn sweep are ported; the spawn itself is the PARTIAL MaybeSpawnAutomaton (vslots 0x98/0xb8)
+0x100114214 cSC4TrafficAutomataManager_MaybeSpawnAutomaton - needs the path-info wildcard path (ITrafficNetworkMapPathInfo slots 0x20/0x60), the network manager spawn accumulator (vslot 0x98) and edge counter (0xb8), and the automaton StartTrip
+0x100114840 cSC4TrafficAutomataManager_SpawnAutomaton - same unrecovered neighbours as MaybeSpawnAutomaton, plus CreateAutomaton/StartTrip
+0x100114e88 cSC4TrafficAutomataManager_HandlePostCityInit - the base work runs; the per-automaton refresh of +0x310/+0x318/+0x328/+0xf0 needs setters the recovered cSC4TrafficAutomaton does not expose
+0x100114fea cSC4TrafficAutomataManager_SpawnOccupantAutomaton - needs ITrafficNetworkMapPathInfo slot 0x48 (a random path for the occupant) and the automaton StartTrip; the exemplar lookup and creation calls are ready
+0x1001154ba cSC4TrafficAutomataManager_PopulateCrimeLayer - needs SL::spCrimeSim (the crime records and their cell rectangles), unrecovered
+0x10011574e cSC4TrafficAutomataManager_PopulateNetworkOccupantForCrimeLayer - needs the crime record list and the automaton path API; only the effect-manager gate is ported
+0x100115ea6 cSC4TrafficAutomataManager_GetDispatchDestinationPoint - needs the automaton's route deque (+0x388/+0x390/+0x370) and cISC4PathInfo slot 0xa8, which the recovered cSC4TrafficAutomaton keeps private
+SKIPPED:
+0x100111d7c complete-object destructor alias - compiler-generated alias of 0x100111c96 (no separate code)
+0x100111d86 deleting destructor - compiler-generated operator delete wrapper of 0x100111c96
+0x1001161a6 non-virtual thunk to Write - compiler-generated adjustor thunk from the class declaration
+0x100116432 non-virtual thunk to Read - compiler-generated adjustor thunk from the class declaration
