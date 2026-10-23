@@ -1,7 +1,9 @@
 #include "sc4/cSTETerrain.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
 
 #include "gz/CommandParameterSet.h"
@@ -724,26 +726,129 @@ bool& StaticInited() {
     static bool inited = false;
     return inited;
 }
-// kMaxSurfaceTextureSpread[8] (0x100b71d10), filled by ReadTextureInfos (pending).
-std::int32_t* MaxSurfaceTextureSpread() {
-    static std::int32_t spread[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-    return spread;
+
+// sSurfaceCoverTextures (0x100b71cd8): texture id -> tSurfaceCoverInfo, filled by ReadTextureInfo.
+std::map<std::uint32_t, TerrainSurfaceCoverInfo>& SurfaceCoverTexturesSlot() {
+    static std::map<std::uint32_t, TerrainSurfaceCoverInfo> textures;
+    return textures;
+}
+// sTexturesUsedInTerrainType (0x100b71cb0): one sorted, duplicate-free id list per terrain type. The
+// original keeps five std::lists; the sorted vector is observationally the same for the view's setup.
+std::array<std::vector<std::uint32_t>, 5>& TexturesUsedSlot() {
+    static std::array<std::vector<std::uint32_t>, 5> lists;
+    return lists;
+}
+// sHighCliffTexResIds / sLowCliffTexResIds / sBeachTexResIds (0x100b71cc8 / ccc / cd0). The original
+// indexes these *four-byte* globals by terrain type; only terrain type 0 is in range, which is the quirk the
+// port keeps (see the ledger note).
+std::uint32_t& HighCliffTextureId() { static std::uint32_t id = 0; return id; }
+std::uint32_t& LowCliffTextureId() { static std::uint32_t id = 0; return id; }
+std::uint32_t& BeachTextureId() { static std::uint32_t id = 0; return id; }
+// sSurfaceCoverMap (0x100b714b0): [terrain type][temperature 0..31][moisture 0..15] -> texture id. The
+// binary allocates one 0x800-byte block; the port allocates four so a non-tropical city cannot read past
+// the end (quirk noted in notes/ledger_pending).
+std::array<std::array<std::uint32_t, 512>, 4>& SurfaceCoverMapSlot() {
+    static std::array<std::array<std::uint32_t, 512>, 4> map{};
+    return map;
+}
+// sTextureFamilyMemberForGrid (0x100b71410): five vectors of random 16-bit family members, indexed by the
+// grid cell (x / randomization size, z / randomization size). sTextureGridCellCountX is their row stride.
+std::array<std::vector<std::uint16_t>, 5>& TextureFamilyMemberSlot() {
+    static std::array<std::vector<std::uint16_t>, 5> grids;
+    return grids;
+}
+std::int32_t* TextureGridCellCountX() {
+    static std::int32_t counts[5] = {0, 0, 0, 0, 0};
+    return counts;
+}
+
+// ---- the property readers the exemplar parse needs (SCPropertyHelp is not in this test's link set) ----------
+cIGZVariant* PropertyValue(const cISCPropertyHolder* holder, std::uint32_t id) {
+    if (!holder) return nullptr;
+    cISCProperty* property = holder->GetProperty(id);
+    return property ? property->GetPropertyValue() : nullptr;
+}
+bool ReadPropertyFloat(const cISCPropertyHolder* holder, std::uint32_t id, float& out) {
+    cIGZVariant* value = PropertyValue(holder, id);
+    return value && value->GetValFloat32(out);
+}
+bool ReadPropertyUint32(const cISCPropertyHolder* holder, std::uint32_t id, std::uint32_t& out) {
+    cIGZVariant* value = PropertyValue(holder, id);
+    return value && value->GetValUint32(out);
+}
+bool ReadPropertyInt32(const cISCPropertyHolder* holder, std::uint32_t id, std::int32_t& out) {
+    std::uint32_t word = 0;
+    if (!ReadPropertyUint32(holder, id, word)) return false;
+    out = static_cast<std::int32_t>(word);
+    return true;
+}
+bool ReadPropertyUint8(const cISCPropertyHolder* holder, std::uint32_t id, std::uint8_t& out) {
+    cIGZVariant* value = PropertyValue(holder, id);
+    if (!value) return false;
+    if (value->GetType() == cIGZVariant::kTypeUint8) return value->GetValUint8(out);
+    std::uint32_t word = 0;
+    if (!value->GetValUint32(word)) return false;
+    out = static_cast<std::uint8_t>(word);
+    return true;
+}
+bool ReadPropertyFloatVector(const cISCPropertyHolder* holder, std::uint32_t id, std::vector<float>& out) {
+    cIGZVariant* value = PropertyValue(holder, id);
+    if (!value) return false;
+    const float* data = value->RefFloat32();
+    const std::uint32_t count = value->GetCount();
+    out.assign(data, data + count);
+    return true;
+}
+bool ReadPropertyUintVector(const cISCPropertyHolder* holder, std::uint32_t id, std::vector<std::uint32_t>& out) {
+    cIGZVariant* value = PropertyValue(holder, id);
+    if (!value) return false;
+    const std::uint32_t* data = value->RefUint32();
+    const std::uint32_t count = value->GetCount();
+    out.assign(data, data + count);
+    return true;
+}
+
+// The response-curve evaluation cSC4ResponseCurve::GetOutputValue @ 0x1000ac4f6 provides for the
+// tSurfaceCoverInfo curves. The port keeps the points directly (the curve class is not linked here) and
+// mirrors its segment search and clamp exactly.
+void BuildCurvePoints(const float* interleaved, std::uint32_t valueCount, std::vector<TerrainPoint>& out) {
+    out.clear();
+    for (std::uint32_t i = 0; i + 1 < valueCount; i += 2) out.push_back({interleaved[i], interleaved[i + 1]});
+}
+float EvaluateCurve(const std::vector<TerrainPoint>& points, float input) {
+    const std::size_t count = points.size();
+    if (count == 0) return 0.0f;                       // the original dereferences a null array here
+    if (count == 1) return points[0].z;
+    const std::size_t last = count - 1;
+    std::size_t lo = 0, hi = last;
+    do {
+        const std::size_t mid = (lo + hi) >> 1;
+        if (input < points[mid].x) hi = mid; else lo = mid + 1;
+    } while (lo < hi);
+    if (lo == 0) return points[0].z;
+    if (lo >= last && points[last].x <= input) return points[last].z;
+    const TerrainPoint& a = points[lo - 1];
+    const TerrainPoint& b = points[lo];
+    const float dx = b.x - a.x;
+    if (dx == 0.0f) return a.z;
+    return (input - a.x) * ((b.z - a.z) / dx) + a.z;
 }
 }  // namespace
 
 // =============================================================================== life cycle
 
 bool cSTETerrain::StaticInit() {
-    // 0x10073a346: the four data readers fill the statics and the brush/texture tables. They are still
-    // pending (TERRAIN-1 / TERRAIN-3 / TERRAIN-5), so this only does the flag, the shutdown hook and the
-    // resource-manager hold.
+    // 0x10073a346: the flag, the shutdown hook, the resource-manager hold, then the four data readers.
     if (StaticInited()) return true;
     StaticInited() = true;
     if (ITerrainHost* host = TerrainHost()) {
         host->RegisterStaticShutdown();        // SL::spSC4 vslot 0x218 (StaticShutdown, 0)
         host->AcquireResourceManager();        // spResMan = SL::spRM, one reference held
     }
-    // ReadTextureInfos(); ReadTerrainIniFile(); ReadTuningParameters(); ReadBrushDescriptions(); -- pending
+    ReadTextureInfos();                        // 0x10073d8a4
+    ReadTerrainIniFile();                      // 0x10073bb96
+    ReadTuningParameters();                    // 0x10073d95e
+    // ReadBrushDescriptions() is still pending (TERRAIN-5): the brush path needs it.
     return true;
 }
 
@@ -757,6 +862,318 @@ bool cSTETerrain::StaticShutdown(void* unused) {
     }
     ReleaseBrushDescriptions();
     return true;
+}
+
+// =============================================================================== data readers
+
+namespace {
+// sMaxTextureId (0x100b71d00): the highest texture-resource instance seen, plus one after the enumeration.
+std::uint32_t& MaxTextureId() {
+    static std::uint32_t id = 0;
+    return id;
+}
+
+// RZ::ConvertToUint @ 0x10001a307 (a decimal parse unless the text starts with 0x or contains a hex digit).
+std::uint32_t ParseTerrainUint(const char* text) {
+    if (!text) return 0;
+    int base = 10;
+    if (text[0] == '0' && (static_cast<unsigned char>(text[1]) | 0x20) == 'x') {
+        base = 16;
+    } else {
+        for (const char* p = text;; ++p) {
+            const unsigned char c = static_cast<unsigned char>(*p);
+            if ((c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')) { base = 16; break; }
+            if (c == '\0' || c < '0' || c > '9') break;
+        }
+    }
+    return static_cast<std::uint32_t>(std::strtoul(text, nullptr, base));
+}
+
+// RZAtofEnglishA @ 0x100019b4c (the process is in the C locale, so strtod is the same parse).
+double ParseTerrainFloat(const char* text) { return text ? std::strtod(text, nullptr) : 0.0; }
+
+// The ini entries all live in one of three sections (the first is kTerrainTypeNames[0] + "TextureMapTable").
+constexpr const char* kTerrainTextureMapSection = "TropicalTextureMapTable";
+constexpr const char* kMiscTunablesSection = "MiscTerrainTunables";
+constexpr const char* kWindErosionSection = "WindErosion";
+constexpr const char* kHydrologySection = "Hydrology";
+}  // namespace
+
+std::map<std::uint32_t, TerrainSurfaceCoverInfo>& cSTETerrain::SurfaceCoverTextures() {
+    return SurfaceCoverTexturesSlot();
+}
+
+std::vector<std::uint32_t>& cSTETerrain::TexturesUsedInTerrainType(std::int32_t terrainType) {
+    static std::vector<std::uint32_t> emptyList;
+    if (terrainType < 0 || 5 <= terrainType) return emptyList;
+    return TexturesUsedSlot()[static_cast<std::size_t>(terrainType)];
+}
+
+void cSTETerrain::ReadTextureInfos() {
+    // 0x10073d8a4: enumerate every resource of group 0x6534284a / type 0x89c2a517 through
+    // cSCResFilterFixedGroupAndTypeId, read each one's property holder, then bump the highest instance.
+    ITerrainHost* host = TerrainHost();
+    if (!host) return;
+    MaxTextureId() = 0;
+    std::vector<cGZPersistResourceKey> keys;
+    host->ListTerrainTextureResources(keys);
+    for (const cGZPersistResourceKey& key : keys) ReadTextureInfo(key, nullptr);
+    MaxTextureId() += 1;
+}
+
+void cSTETerrain::ReadTextureInfo(const cGZPersistResourceKey& key, void* unused) {
+    // 0x10073d22a: the resource's property 0x9c2aef0 is the cover weight and 0x9c2aef3..0x9c2aef7 are five
+    // interleaved (input, output) float pairs, one response curve per zoom. The last input of each curve is
+    // also its "max spread" in cells (ceil(last * 0.0625)), which raises sMaxSurfaceTextureSpread.
+    (void)unused;
+    if (MaxTextureId() < key.instance) MaxTextureId() = key.instance;
+    auto& textures = SurfaceCoverTexturesSlot();
+    auto found = textures.find(key.instance);
+    if (found == textures.end()) found = textures.emplace(key.instance, TerrainSurfaceCoverInfo{}).first;
+    TerrainSurfaceCoverInfo& info = found->second;
+    ITerrainHost* host = TerrainHost();
+    if (!host) return;
+    cISCPropertyHolder* holder = host->GetPropertyHolder(key);
+    if (!holder) return;
+    ReadPropertyFloat(holder, 0x9c2aef0, info.weight);
+    for (std::uint32_t layer = 0; layer < 5; ++layer) {
+        cIGZVariant* value = PropertyValue(holder, 0x9c2aef3 + layer);
+        if (!value) continue;
+        const float* data = value->RefFloat32();
+        const std::uint32_t count = value->GetCount();
+        if (count < 2) continue;
+        const float maxInput = data[count - 2];
+        const auto spread = static_cast<std::int32_t>(std::ceil(maxInput * 0.0625f));   // ROUNDSS mode 10
+        info.maxSpread[layer] = spread;
+        if (Statics().maxSurfaceTextureSpread[layer] < spread) Statics().maxSurfaceTextureSpread[layer] = spread;
+        BuildCurvePoints(data, count, info.curves[layer]);
+        info.curveMaxInput[layer] = maxInput;
+    }
+    holder->Release();
+}
+
+void cSTETerrain::AddToTerrainTypeTextureList(std::int32_t terrainType, std::uint32_t textureId) {
+    // 0x10073159e: insert into the terrain type's std::list in ascending order, ignoring duplicates.
+    if (terrainType < 0 || 5 <= terrainType) return;
+    std::vector<std::uint32_t>& list = TexturesUsedSlot()[static_cast<std::size_t>(terrainType)];
+    const auto position = std::lower_bound(list.begin(), list.end(), textureId);
+    if (position == list.end() || *position != textureId) list.insert(position, textureId);
+}
+
+void cSTETerrain::AddTemperatureAndMoistureToSurfaceCoverEntry(const cRZString& key, const cRZString& value,
+                                                               void* terrainTypePointer) {
+    // 0x100731418: the key is the temperature row (0..31); the value is up to 15 whitespace-separated
+    // texture ids for moisture columns 1..15 (column 0 stays 0). The context selects the terrain type.
+    const std::uint32_t temperature = ParseTerrainUint(key.ToChar()) & 0xfffffff;
+    const std::uint32_t terrainType =
+        static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(terrainTypePointer)) & 0x7fffff;
+    std::array<std::uint32_t, 512>& table = SurfaceCoverMapSlot()[terrainType < 4 ? terrainType : 0];
+    const char* cursor = value.ToChar();
+    for (std::uint32_t token = 0; token < 15; ++token) {
+        while (*cursor != '\0' && std::isspace(static_cast<unsigned char>(*cursor))) ++cursor;
+        if (*cursor == '\0') break;
+        char text[64];
+        std::size_t length = 0;
+        while (*cursor != '\0' && !std::isspace(static_cast<unsigned char>(*cursor)) && length + 1 < sizeof(text))
+            text[length++] = *cursor++;
+        text[length] = '\0';
+        const std::uint32_t textureId = ParseTerrainUint(text);
+        table[(temperature & 31) * 16 + token + 1] = textureId;
+        AddToTerrainTypeTextureList(static_cast<std::int32_t>(terrainType), textureId);
+    }
+}
+
+void cSTETerrain::DetermineTextureFamilyMembersForGridCells() {
+    // 0x100737430: per zoom, a (randGrid+1) x (0x101/randGrid + 1) table of random 16-bit family members.
+    ITerrainHost* host = TerrainHost();
+    const std::vector<std::uint32_t>& gridSizes = Statics().textureRandomizationGridSize;
+    if (!host || gridSizes.empty()) return;      // no exemplar: the original would divide by zero
+    for (std::size_t zoom = 0; zoom < 5; ++zoom) {
+        const std::uint32_t gridSize = zoom < gridSizes.size() ? gridSizes[zoom] : gridSizes.front();
+        if (gridSize == 0) continue;
+        const std::int32_t rows = static_cast<std::int32_t>(0x101 / gridSize);
+        const std::int32_t columns = rows + 1;
+        TextureGridCellCountX()[zoom] = columns;
+        std::vector<std::uint16_t>& family = TextureFamilyMemberSlot()[zoom];
+        family.resize(static_cast<std::size_t>((rows + 1) * columns));
+        for (std::int32_t row = 0; row < rows; ++row) {
+            for (std::int32_t column = 0; column < columns; ++column) {
+                const auto member = static_cast<std::uint16_t>(host->RandomDoubleRangeUniform(0.0, 0xffff));
+                family[static_cast<std::size_t>(row * columns + column)] = member;
+            }
+        }
+    }
+}
+
+void cSTETerrain::ReadMiscTexturesForTerrainTypes(ITerrainIniFile& ini) {
+    // 0x10073b602: the cliff and beach texture ids of terrain type 0, plus the fixed deep-water ids.
+    const cRZString section(kTerrainTextureMapSection);
+    cRZString value;
+    if (ini.ReadEntry(section, cRZString("HighCliff"), value)) {
+        HighCliffTextureId() = ParseTerrainUint(value.ToChar());
+        AddToTerrainTypeTextureList(0, HighCliffTextureId());
+    }
+    if (ini.ReadEntry(section, cRZString("LowCliff"), value)) {
+        LowCliffTextureId() = ParseTerrainUint(value.ToChar());
+        AddToTerrainTypeTextureList(0, LowCliffTextureId());
+    }
+    if (ini.ReadEntry(section, cRZString("Beach"), value)) {
+        BeachTextureId() = ParseTerrainUint(value.ToChar());
+        AddToTerrainTypeTextureList(0, BeachTextureId());
+    }
+    AddToTerrainTypeTextureList(0, 0x13);      // deep sea bed (below kMinWaterDepthForDeepSeaBedTexture)
+    AddToTerrainTypeTextureList(0, 0x14);      // shallow sea bed
+    AddToTerrainTypeTextureList(0, 0xe0);
+    AddToTerrainTypeTextureList(0, 0x11);
+    AddToTerrainTypeTextureList(0, 0x10);
+    AddToTerrainTypeTextureList(0, 0x15);
+}
+
+void cSTETerrain::ReadTerrainIniFile() {
+    // 0x10073bb96: the resource {0x8a5971c5, 0, 0xaa597172} as an ini. The temperature/moisture table of the
+    // first terrain type, then the texture ids, then the wind-erosion and hydrology tunables. Every entry is
+    // optional (a missing key leaves the __data default alone).
+    ITerrainHost* host = TerrainHost();
+    if (!host) return;
+    ITerrainIniFile* ini = host->OpenTerrainIni();
+    if (!ini) return;
+    ini->EnumEntries(cRZString(kTerrainTextureMapSection), &AddTemperatureAndMoistureToSurfaceCoverEntry, nullptr);
+    ReadMiscTexturesForTerrainTypes(*ini);
+
+    auto readFloat = [ini](const char* section, const char* key, float& target) {
+        cRZString value;
+        if (ini->ReadEntry(cRZString(section), cRZString(key), value))
+            target = static_cast<float>(ParseTerrainFloat(value.ToChar()));
+    };
+    auto readInt = [ini](const char* section, const char* key, std::int32_t& target) {
+        cRZString value;
+        if (ini->ReadEntry(cRZString(section), cRZString(key), value))
+            target = static_cast<std::int32_t>(ParseTerrainUint(value.ToChar()));
+    };
+    auto readByte = [ini](const char* section, const char* key, std::uint8_t& target) {
+        cRZString value;
+        if (ini->ReadEntry(cRZString(section), cRZString(key), value))
+            target = static_cast<std::uint8_t>(ParseTerrainUint(value.ToChar()));
+    };
+
+    TerrainStatics& statics = Statics();
+    readFloat(kMiscTunablesSection, "RaiseLowerAmount", statics.vertexHeightRaiseLowerAmount);
+    {
+        cRZString value;
+        if (ini->ReadEntry(cRZString(kMiscTunablesSection), cRZString("EnableSimulation"), value))
+            statics.simulationEnabled = ParseTerrainUint(value.ToChar()) != 0;
+    }
+    readInt(kWindErosionSection, "NumIterationsPerUserClick", statics.numWindErosionIterationsPerUserClick);
+    readInt(kWindErosionSection, "NumIterationsPerSimMonth", statics.numWindErosionIterationsPerSimMonth);
+    {
+        cRZString value;
+        if (ini->ReadEntry(cRZString(kWindErosionSection), cRZString("TalusAngle"), value)) {
+            statics.talusAngle = static_cast<float>(ParseTerrainUint(value.ToChar())) * 0.017453292f;
+        }
+    }
+    // The two thresholds are recomputed from the talus angle whether or not the entry was present.
+    const float tangent = std::tan(statics.talusAngle);
+    statics.crossHeightDifferenceThreshold = tangent * 16.0f;
+    statics.diagonalHeightDifferenceThreshold = statics.crossHeightDifferenceThreshold * 1.4142135f;
+    readFloat(kWindErosionSection, "ErosionFactor", statics.windErosionFactor);
+    readInt(kHydrologySection, "NumWaterErosionIterationsPerPlayerClick",
+            statics.numWaterErosionIterationsPerPlayerClick);
+    readInt(kHydrologySection, "NumFlowStepsForGlobalWaterErosion", statics.numFlowStepsForGlobalWaterErosion);
+    readFloat(kHydrologySection, "SurfaceWaterThreshold", statics.surfaceWaterThreshold);
+    readFloat(kHydrologySection, "RainFallFactor", statics.rainFallFactor);
+    readFloat(kHydrologySection, "WaterSourceCapacity", statics.waterSourceCapacity);
+    readFloat(kHydrologySection, "WaterSinkCapacity", statics.waterSinkCapacity);
+    readFloat(kHydrologySection, "MaxSedimentPerUnitWater", statics.maxSedimentPerUnitWater);
+    readFloat(kHydrologySection, "MinErosionRate", statics.minHydraulicErosionRate);
+    readFloat(kHydrologySection, "MaxErosionRate", statics.maxHydraulicErosionRate);
+    {
+        cRZString value;   // the ramp endpoints are read as degrees and converted here
+        if (ini->ReadEntry(cRZString(kHydrologySection), cRZString("HydrErosionRateRampBegin"), value))
+            statics.hydraulicErosionRateRampBegin =
+                static_cast<float>(std::tan(ParseTerrainFloat(value.ToChar()) * 0.017453292)) * 16.0f;
+        if (ini->ReadEntry(cRZString(kHydrologySection), cRZString("HydrErosionRateRampEnd"), value))
+            statics.hydraulicErosionRateRampEnd =
+                static_cast<float>(std::tan(ParseTerrainFloat(value.ToChar()) * 0.017453292)) * 16.0f;
+    }
+    readFloat(kHydrologySection, "DepositRate", statics.hydraulicDepositRate);
+    readFloat(kHydrologySection, "SedimentSpreadRateUnderSea", statics.sedimentSpreadRateUnderSea);
+    if (1.0f < statics.sedimentSpreadRateUnderSea) statics.sedimentSpreadRateUnderSea = 1.0f;
+    readFloat(kHydrologySection, "DepositRateUnderSea", statics.hydraulicDepositRateUnderSea);
+    readFloat(kHydrologySection, "SedimentInfluenceOnWaterColor", statics.sedimentInfluenceOnWaterColor);
+    readFloat(kHydrologySection, "MaxSedimentAlpha", statics.maxSedimentAlpha);
+    if (1.0f < statics.maxSedimentAlpha) statics.maxSedimentAlpha = 1.0f;
+    readByte(kHydrologySection, "SedimentColorRed", statics.sedimentColorRed);
+    readByte(kHydrologySection, "SedimentColorGreen", statics.sedimentColorGreen);
+    readByte(kHydrologySection, "SedimentColorBlue", statics.sedimentColorBlue);
+    delete ini;
+}
+
+void cSTETerrain::ReadTuningParameters() {
+    // 0x10073d95e: the terrain-tuning exemplar {0x6534284a, 0x88cd66e9, 1}'s property holder. Every value is
+    // optional. The response curve 0x48cd7c00 (kEdgeReconcilliationSmoothingRadiusVsHeightDiff) belongs to the
+    // edge reconcile (TERRAIN-8) and is not stored yet.
+    ITerrainHost* host = TerrainHost();
+    if (!host) return;
+    const cGZPersistResourceKey key{0x6534284a, 0x88cd66e9, 1};
+    cISCPropertyHolder* holder = host->GetPropertyHolder(key);
+    if (!holder) return;
+    TerrainStatics& statics = Statics();
+    const cISCPropertyHolder* h = holder;
+    ReadPropertyUintVector(h, 0x89a312c2, statics.textureRandomizationGridSize);
+    DetermineTextureFamilyMembersForGridCells();
+    ReadPropertyFloatVector(h, 0x48cd7b20, statics.maxNormalTerrainHeight);
+    ReadPropertyFloat(h, 0x48cd7b26, statics.maxTerrainHeight);
+    ReadPropertyFloat(h, 0x48cd7b27, statics.minTerrainHeight);
+    ReadPropertyFloat(h, 0x48cd7b21, statics.seaLevel);
+    if (statics.seaLevel < statics.minTerrainHeight) statics.seaLevel = statics.minTerrainHeight;
+    ReadPropertyFloat(h, 0x48cd7b2a, statics.defaultTerrainHeight);
+    if (statics.defaultTerrainHeight < statics.minTerrainHeight)
+        statics.defaultTerrainHeight = statics.minTerrainHeight;
+    ReadPropertyFloatVector(h, 0x48cd7b22, statics.minRegularHeightFactor);
+    ReadPropertyFloatVector(h, 0x48cd7b23, statics.maxRegularHeightFactor);
+    ReadPropertyFloatVector(h, 0x48cd7b24, statics.minMountainHeightFactor);
+    ReadPropertyFloatVector(h, 0x48cd7b25, statics.maxMountainHeightFactor);
+    ReadPropertyFloat(h, 0x48cd7b28, statics.imageImportScaleFactor);
+    ReadPropertyFloat(h, 0x48cd7b30, statics.temperatureRangeFactor);
+    ReadPropertyFloat(h, 0x48cd7b31, statics.waterProximityRangeFactor);
+    ReadPropertyInt32(h, 0x48cd7b40, statics.numInitialErosionPasses);
+    ReadPropertyInt32(h, 0x48cd7b41, statics.numHydraulicIterationsPerInitialErosionPass);
+    ReadPropertyInt32(h, 0x48cd7b42, statics.numWindIterationsPerInitialErosionPass);
+    ReadPropertyFloatVector(h, 0x48cd7b43, statics.seaLevelChangeDueToWaterSlider);
+    ReadPropertyInt32(h, 0x48cd7b50, statics.minCellsInUsefulFlatArea);
+    ReadPropertyFloat(h, 0x48cd7b51, statics.maxHeightChangeToFlattenFactor);
+    ReadPropertyFloat(h, 0x48cd7b52, statics.maxTerraceAltitudeFactor);
+    ReadPropertyFloat(h, 0x48cd7b53, statics.minTerraceAltitudeFactor);
+    ReadPropertyInt32(h, 0x48cd7b54, statics.autoFlatAreaEdgeSmootheningRadius);
+    ReadPropertyFloat(h, 0x69ac5640, statics.minWaterDepthForDeepSeaBedTexture);
+    ReadPropertyFloat(h, 0x69ac5641, statics.maxWaterDepthForDeepSeaBedTexture);
+    ReadPropertyFloat(h, 0x48cd7b60, statics.minShoreCliffSize);
+    ReadPropertyFloat(h, 0x48cd7b64, statics.maxShoreCliffSize);
+    ReadPropertyFloat(h, 0x48cd7b65, statics.maxNormalYForCliff);
+    ReadPropertyFloat(h, 0x48cd7b61, statics.minShoreCliffCandidateHeightSum);
+    statics.minShoreCliffCandidateHeightSum *= 6.0f;
+    ReadPropertyFloat(h, 0x48cd7b62, statics.minShoreCliffHeight);
+    ReadPropertyFloat(h, 0x48cd7b63, statics.maxShoreCliffHeight);
+    ReadPropertyFloat(h, 0x48cd7b70, statics.minSeaLevel);
+    ReadPropertyFloat(h, 0x48cd7b71, statics.maxSeaLevel);
+    ReadPropertyFloat(h, 0x48cd7b72, statics.seaRaiseLowerAmount);
+    ReadPropertyFloat(h, 0x48cd7b73, statics.terrainRaiseLowerAmount);
+    ReadPropertyUint8(h, 0xa9c283d0, statics.maxBeachWidth);
+    ReadPropertyFloat(h, 0xa9c283d1, statics.maxBeachAltitude);
+    {
+        std::uint8_t flag = 0;
+        if (ReadPropertyUint8(h, 0x48cd7b80, flag)) statics.autoFlattenUponCreation = flag != 0;
+        if (ReadPropertyUint8(h, 0x48cd7b81, flag)) statics.shoreCliffsUponCreation = flag != 0;
+    }
+    if (ReadPropertyFloatVector(h, 0x48cd7ba0, statics.typicalBrushAngleIncrement))
+        for (float& angle : statics.typicalBrushAngleIncrement) angle *= 0.017453292f;
+    ReadPropertyFloat(h, 0x89861864, statics.volcanicAshLifeTime);
+    statics.volcanicAshUpdateInterval = statics.volcanicAshLifeTime / 20.0f;
+    ReadPropertyUintVector(h, 0x48cd7bf1, statics.numFlowStepsPerWaterErosionBrushApplication);
+    ReadPropertyInt32(h, 0x48cd7bf3, statics.numSmoothingIterationsAfterWaterErosion);
+    ReadPropertyInt32(h, 0x48cd7c01, statics.edgeReconciliationSmoothingIterations);
+    ReadPropertyFloat(h, 0x48cd7c02, statics.edgeReconciliationHeightDifferenceThreshold);
+    holder->Release();
 }
 
 void cSTETerrain::ReleaseOne(cIGZUnknown*& object) {
@@ -800,7 +1217,10 @@ bool cSTETerrain::Init() {
     LayOutGrid(host->CityCellCountX(), host->CityCellCountZ());
     cityTerrainType_ = host->CityTerrainType();      // +0x70 (spCity slot 0x2b8)
     // +0x98: the terrain type's normal-height limit. (The original indexes the table without a mask.)
-    maxNormalHeight_ = Statics().maxNormalTerrainHeight[cityTerrainType_ & 7];
+    maxNormalHeight_ = Statics().maxNormalTerrainHeight.empty()
+                           ? Statics().maxTerrainHeight
+                           : Statics().maxNormalTerrainHeight[static_cast<std::size_t>(cityTerrainType_) &
+                                                              (Statics().maxNormalTerrainHeight.size() - 1)];
     // +0xc4: the water proximity radius, clamped to a byte.
     const float range = Statics().waterProximityRangeFactor * 64.0f;
     std::int32_t factor = static_cast<std::int32_t>(range);
@@ -877,9 +1297,8 @@ void cSTETerrain::DoPostCityInit() {
     if (view_) view_->Init(this);                            // cSTETerrainView3D::Init @0x10074607c
     displayEnabled_ = true;                                  // +0x118
     if (host && landSimulator_) host->ResetLandSimulator(landSimulator_);   // +0x140 vslot 0x28
-    // CalculateNormalsAndAssignCliffTextures(gridRect_): the two-triangle normal/cliff pass is not
-    // recovered (TERRAIN-4), so the first display starts from the surface pass alone.
-    AssignSurfaceTexturesAndColors(gridRect_);
+    CalculateNormalsAndAssignCliffTextures(gridRect_);      // 0x100734dc8
+    AssignSurfaceTexturesAndColors(gridRect_);              // 0x100733bc8
     if (view_) {
         overlayManagers_[0] = view_->OverlayManager(0);      // view +0xa8
         overlayManagers_[1] = view_->OverlayManager(1);      // view +0xb0
@@ -1085,7 +1504,8 @@ void cSTETerrain::RedisplayTerrain(bool adjustAltitudes, bool redisplayWater, co
         TerrainRect normalsRect{std::max(r.left - 1, 0), std::max(r.top - 1, 0), r.right + 1, r.bottom + 1};
         if (static_cast<std::int32_t>(cellsX_) <= r.right) normalsRect.right = static_cast<std::int32_t>(cellsX_);
         if (static_cast<std::int32_t>(cellsZ_) <= r.bottom) normalsRect.bottom = static_cast<std::int32_t>(cellsZ_);
-        // CalculateNormalsAndAssignCliffTextures(normalsRect) is not recovered (TERRAIN-4).
+        CalculateNormalsAndAssignCliffTextures(normalsRect);   // 0x100734dc8
+        if (view_) view_->SetLightingUpdateRect(&r);           // view vslot 0x88
         const std::uint32_t packed0 = static_cast<std::uint32_t>(r.left) * 0x10000u + static_cast<std::uint32_t>(r.right);
         const std::uint32_t packed1 = static_cast<std::uint32_t>(r.top) * 0x10000u + static_cast<std::uint32_t>(r.bottom);
         if (!accumulating_) {
@@ -1160,7 +1580,7 @@ void cSTETerrain::ComputeMinAndMaxAltitudeForTerrainRedisplay(const TerrainRect&
         hi = (limit < raised) ? limit : raised;
     }
     if (lo <= 0.0f && lo != 0.0f) lo = 0.0f;                   // negative clamps to 0 (-0.0 is kept)
-    if (kMaxTerrainHeight < hi) hi = kMaxTerrainHeight;
+    if (Statics().maxTerrainHeight < hi) hi = Statics().maxTerrainHeight;
     if (hi < tuning_.seaLevel) hi = tuning_.seaLevel;          // never below the sea level (+0x9c)
 }
 
@@ -1179,10 +1599,10 @@ void cSTETerrain::SetTerrainType(std::int32_t type) {
 
 void cSTETerrain::EnsureMinAllowedHeight() {
     // 0x1007361a0: when the cached minimum dropped below the 5 m floor, raise every vertex to the floor.
-    if (!(minHeight_ <= kMinTerrainHeight) || minHeight_ == kMinTerrainHeight) return;
+    if (!(minHeight_ <= Statics().minTerrainHeight) || minHeight_ == Statics().minTerrainHeight) return;
     for (Vertex& vertex : vertices_)
-        if (vertex.altitude < kMinTerrainHeight) vertex.altitude = kMinTerrainHeight;
-    minHeight_ = kMinTerrainHeight;                            // +0x90
+        if (vertex.altitude < Statics().minTerrainHeight) vertex.altitude = Statics().minTerrainHeight;
+    minHeight_ = Statics().minTerrainHeight;                            // +0x90
 }
 
 void cSTETerrain::ChangeTerrainLevel(bool raise, float amount) {
@@ -1204,12 +1624,13 @@ void cSTETerrain::DoErosion(std::uint32_t style, bool fromImage) {
     // 0x100736216. Style 1 is wind only; style 0 runs the water erosion passes (with the "from image"
     // variants of the iteration counts) and then the wind passes. Both simulation kernels are pending
     // (TERRAIN-6), so only the wind/water pass counts are modelled here.
-    std::int32_t windIterations = kNumWindErosionIterationsPerUserClick;
+    std::int32_t windIterations = Statics().numWindErosionIterationsPerUserClick;
     if (style == 0) {
         const std::int32_t smoothing =
-            fromImage ? Statics().numSmoothingIterationsAfterWaterErosion : kNumSmoothingIterationsAfterWaterErosion;
+            fromImage ? Statics().numSmoothingIterationsAfterWaterErosion
+                             : Statics().numSmoothingIterationsAfterWaterErosion;
         const std::int32_t flowSteps =
-            fromImage ? Statics().numFlowStepsForGlobalWaterErosion : kNumFlowStepsForGlobalWaterErosion;
+            Statics().numFlowStepsForGlobalWaterErosion;
         (void)smoothing;
         (void)flowSteps;
         // DoWaterErosion(gridRect_, flowSteps) x kNumWaterErosionIterationsPerPlayerClick: pending.
@@ -1319,7 +1740,7 @@ void cSTETerrain::ComputeWaterProximityValues(const TerrainRect& r) {
     emptyRect_ = {0, 0, -1, -1};                            // +0xcc reset to kEmptyRect
     waterProximityTick_ = 0;                                // +0xc8
     waterVertexCount_ = 0;                                  // +0x108
-    const std::uint8_t dry = static_cast<std::uint8_t>(kMaxBeachWidth + 2);
+    const std::uint8_t dry = static_cast<std::uint8_t>(Statics().maxBeachWidth + 2);
     const std::uint32_t vertsX = vertsX_, vertsZ = vertsZ_;
     for (std::uint32_t z = 0; z < vertsZ; ++z) {
         std::vector<std::uint8_t>& row = surfaceCover_[z];
@@ -1337,7 +1758,7 @@ void cSTETerrain::ComputeWaterProximityValues(const TerrainRect& r) {
     if (ITerrainHost* host = TerrainHost()) {
         // The source kind is -1 when there is no water at all and the threshold is kMaxBeachWidth + 1 + (0/1).
         host->FloodFillDistance(surfaceCover_, noWater ? -1 : 0,
-                                kMaxBeachWidth + 1 + (noWater ? 1 : 0));
+                                Statics().maxBeachWidth + 1 + (noWater ? 1 : 0));
     }
 }
 
@@ -1365,20 +1786,307 @@ void cSTETerrain::AdjustLandTypeRatios(const TerrainRect& r) {
 }
 
 void cSTETerrain::AssignSurfaceTexturesAndColors(TerrainRect& r) {
-    // 0x100733bc8: the surface pass. DecideSurfaceCover and the ash spray (TERRAIN-3) and the spread table
-    // (TERRAIN-3) are pending, so the parts that need them are left out and the callers stay partial.
+    // 0x100733bc8: water proximity, pad by the zoom's texture spread, moisture, clear the three layers, mark
+    // the view's dirty rows, decide the cover, spray the volcanic ash (pending, TERRAIN-9) and scale the
+    // land-type ratios down to 250.
     ComputeWaterProximityValues(r);
-    PadRectangle(r, MaxSurfaceTextureSpread()[zoom_ & 7]);      // sMaxSurfaceTextureSpread[zoom]
+    PadRectangle(r, Statics().maxSurfaceTextureSpread[zoom_ & 7]);
     UpdateMoistureValues(r);
     ClearSurfaceTextures(r);
     if (displayEnabled_ && view_) {
         const std::int32_t firstRow = r.top < 1 ? 0 : r.top - 1;
         std::uint32_t lastRow = static_cast<std::uint32_t>(r.bottom) + 1;
-        if (static_cast<std::uint32_t>(lastCellZ_) < lastRow) lastRow = lastCellZ_;
+        if (static_cast<std::uint32_t>(lastCellZ_) < lastRow) lastRow = static_cast<std::uint32_t>(lastCellZ_);
         view_->MarkTextureSpanInfoDirty(firstRow, static_cast<std::int32_t>(lastRow));   // @0x10074d7d4
     }
-    // DecideSurfaceCover(r); SprayVolcanicAsh(r); -- pending (TERRAIN-3, TERRAIN-9)
+    DecideSurfaceCover(r);
+    // SprayVolcanicAsh(r) is still pending (TERRAIN-9).
     AdjustLandTypeRatios(r);
+}
+
+void cSTETerrain::DecideSurfaceCover(const TerrainRect& r) {
+    // 0x100733e48. Every vertex inside the padded rect picks a texture id from
+    //   - the altitude's temperature row and the land simulator's moisture column (sSurfaceCoverMap),
+    //   - the beach id when it is inside the beach band (water proximity <= kMaxBeachWidth and altitude below
+    //     sea level + kMaxBeachAltitude),
+    //   - the deep/shallow sea bed ids when it is under water,
+    //   - the low-cliff id when MarkCliff flagged it.
+    // The texture's family member jitters the id by a 0x1000 stride, and the texture's own response curve is
+    // spread over its neighbourhood, adding a weighted land type to every vertex in range.
+    ITerrainHost* host = TerrainHost();
+    if (!host) return;                                                       // the view statics need the host
+    TerrainStatics& statics = Statics();
+    host->ChangeTerrainType(terrainType_);                                  // view 0x1007467ca
+    host->SetUpTexturesForCurrentTerrainTypeAndZoom(static_cast<std::int32_t>(zoom_));   // 0x10074688c
+
+    const std::int32_t spread = statics.maxSurfaceTextureSpread[zoom_ & 7];
+    const std::int32_t rowStart = std::max(r.top - spread, 0);
+    const std::int32_t rowEnd = std::min(r.bottom + spread, static_cast<std::int32_t>(cellsZ_));
+    const std::int32_t colStart = std::max(r.left - spread, 0);
+    const std::int32_t colEnd = std::min(r.right + spread, static_cast<std::int32_t>(cellsX_));
+    if (rowEnd < rowStart || colEnd < colStart) return;
+
+    const float maxBeachAltitude = tuning_.seaLevel + statics.maxBeachAltitude;
+    const float heightRange = (statics.maxTerrainHeight - maxBeachAltitude) * statics.temperatureRangeFactor;
+    const std::int32_t terrainType = terrainType_;
+    const std::uint32_t cliffTexture = LowCliffTextureId() & 0xffff;    // (&sLowCliffTexResIds)[terrainType]
+    const std::uint32_t beachTexture = BeachTextureId();                // (&sBeachTexResIds)[terrainType]
+    const std::uint32_t spreadZoom = zoom_ & 7;                 // snMaxSurfaceTextureSpread has eight entries
+    const std::uint32_t zoom = spreadZoom < 5 ? spreadZoom : 4; // the curve/family tables have five
+    const std::uint32_t gridSize =
+        statics.textureRandomizationGridSize.empty()
+            ? 1u
+            : statics.textureRandomizationGridSize[zoom < statics.textureRandomizationGridSize.size()
+                                                       ? zoom
+                                                       : statics.textureRandomizationGridSize.size() - 1];
+    const std::int32_t familyColumns = TextureGridCellCountX()[zoom];
+    std::vector<std::uint16_t>& familyGrid = TextureFamilyMemberSlot()[zoom];
+    const std::int32_t vertsX = static_cast<std::int32_t>(vertsX_);
+
+    auto familyMemberFor = [&](std::uint32_t index) -> std::uint16_t {
+        if (gridSize == 0 || familyColumns <= 0 || familyGrid.empty()) return 0;
+        const std::int32_t row = static_cast<std::int32_t>(index) / vertsX;
+        const std::int32_t column = static_cast<std::int32_t>(index) % vertsX;
+        const std::size_t cell = static_cast<std::size_t>((row / static_cast<std::int32_t>(gridSize)) * familyColumns +
+                                                          (column / static_cast<std::int32_t>(gridSize)));
+        return cell < familyGrid.size() ? familyGrid[cell] : 0;
+    };
+    auto textureKeyFor = [&](std::uint32_t textureId, std::uint32_t index) -> std::uint16_t {
+        const std::uint32_t count = host->TerrainTextureSubTextureCount(static_cast<std::int32_t>(zoom), textureId);
+        if (count == 0) return static_cast<std::uint16_t>(textureId);
+        const std::uint32_t family = familyMemberFor(index);
+        return static_cast<std::uint16_t>((family % count) * 0x1000u + textureId);
+    };
+
+    for (std::int32_t z = rowStart; z <= rowEnd; ++z) {
+        for (std::int32_t x = colStart; x <= colEnd; ++x) {
+            const auto index = static_cast<std::uint32_t>(z) * vertsX_ + static_cast<std::uint32_t>(x);
+            const auto vertexIndex = static_cast<std::int32_t>(index);
+            const float depth = waterDepth_[index];                          // cSTESurfaceWater +0x0
+            if (statics.maxWaterDepthForDeepSeaBedTexture < depth) continue; // too deep: no sea bed texture
+            if ((Flags(vertexIndex) & kVertexCliffMark) != 0) {
+                AddLandTypeAtVertex(index, static_cast<std::uint16_t>(cliffTexture), 50.0f);
+                continue;
+            }
+            std::uint32_t textureId = 0;
+            std::int32_t temperature = 0x1f, moisture = 0;
+            bool selectLand = true, selectWater = false;
+            if (depth <= 0.0f) {                                             // land
+                const float altitude = vertices_[index].altitude;
+                if (statics.maxBeachWidth < surfaceCover_[static_cast<std::size_t>(z)][static_cast<std::size_t>(x)] ||
+                    maxBeachAltitude < altitude) {
+                    // Not beach: the temperature row comes from the altitude, the column from the land simulator.
+                    if (maxBeachAltitude < altitude && heightRange != 0.0f) {
+                        const float ratio = ((altitude - tuning_.seaLevel) / heightRange) * 30.0f;
+                        const auto rounded = static_cast<std::int32_t>(std::nearbyint(ratio - 0.5f));
+                        temperature = 0x1f - rounded;
+                        if (temperature < 0) temperature = 0;
+                        if (0x1f < temperature) temperature = 0x1f;
+                    }
+                    moisture = landSimulator_ ? host->MoistureIndexAtX(static_cast<float>(x) * 16.0f) : 0;
+                    std::uint32_t column = static_cast<std::uint32_t>(temperature * 16 + (moisture & 15));
+                    if (column < 512)
+                        textureId = SurfaceCoverMapSlot()[0 <= terrainType && terrainType < 4 ? terrainType : 0][column];
+                } else {
+                    textureId = beachTexture;
+                    selectWater = true;                                       // the beach spreads over water too
+                    if (r.left <= x && r.top <= z && x <= r.right && z <= r.bottom)
+                        AddLandTypeAtVertex(index, textureKeyFor(textureId, index), 1.0f);
+                }
+            } else {                                                          // water
+                textureId = (depth < statics.minWaterDepthForDeepSeaBedTexture) ? 0x14u : 0x13u;
+                selectLand = false;
+            }
+            const std::uint16_t textureKey = textureKeyFor(textureId, index);
+
+            auto info = SurfaceCoverTexturesSlot().find(textureId);
+            if (info == SurfaceCoverTexturesSlot().end()) continue;
+            TerrainSurfaceCoverInfo& cover = info->second;
+            const std::int32_t radius = cover.maxSpread[zoom];
+            TerrainRect area{std::max(x - radius, 0), std::max(z - radius, 0),
+                             std::min(x + radius, static_cast<std::int32_t>(cellsX_)),
+                             std::min(z + radius, static_cast<std::int32_t>(cellsZ_))};
+            TerrainRect clipped{std::max(area.left, r.left), std::max(area.top, r.top),
+                                std::min(area.right, r.right), std::min(area.bottom, r.bottom)};
+            if (clipped.right < clipped.left || clipped.bottom < clipped.top) continue;
+
+            const float maxInput = cover.curveMaxInput[zoom];
+            const float maxDistanceSquared = maxInput * maxInput * 0.00390625f;   // / 256
+            const std::int32_t dx = clipped.left - x;
+            const std::int32_t dz = clipped.top - z;
+            const float firstStepX = static_cast<float>(dx + dx + 1);   // the x step resets every row
+            float stepZ = static_cast<float>(dz + dz + 1);
+            float distanceSquared = static_cast<float>(dz * dz + dx * dx);
+            auto target = static_cast<std::uint32_t>(clipped.top) * vertsX_ + static_cast<std::uint32_t>(clipped.left);
+            for (std::int32_t row = clipped.top; row <= clipped.bottom; ++row) {
+                float rowDistance = distanceSquared;
+                float stepX = firstStepX;
+                for (std::int32_t column = clipped.left; column <= clipped.right; ++column) {
+                    const float water = waterDepth_[target];
+                    const float altitude = vertices_[target].altitude;
+                    const bool kindOk = (water <= 0.0f || selectWater) && (selectLand || 0.0f < water);
+                    const bool nearOk = rowDistance < maxDistanceSquared;
+                    const bool shallowOk = altitude <= maxBeachAltitude
+                                               ? (rowDistance < maxDistanceSquared &&
+                                                  (statics.maxBeachWidth <
+                                                       surfaceCover_[static_cast<std::size_t>(row)]
+                                                                   [static_cast<std::size_t>(column)] ||
+                                                   0.0f < water))
+                                               : nearOk;
+                    if (kindOk && shallowOk) {
+                        const float distance = rowDistance <= 0.0f ? 0.0f : std::sqrt(rowDistance);
+                        float weight = EvaluateCurve(cover.curves[zoom], distance * 16.0f) * cover.weight;
+                        if (0.0f < weight) AddLandTypeAtVertex(target, textureKey, weight);
+                    }
+                    rowDistance += stepX;
+                    stepX += 2.0f;
+                    ++target;
+                }
+                distanceSquared += stepZ;
+                stepZ += 2.0f;
+                target += vertsX_ - static_cast<std::uint32_t>(clipped.right - clipped.left + 1);
+            }
+        }
+    }
+}
+
+void cSTETerrain::MarkCliff(std::int32_t index, bool evenIsCliff, bool oddIsCliff) {
+    // 0x100735398: mark the vertices of the cliff triangle(s) with kVertexCliffMark. When both triangles are
+    // cliffs the two diagonals decide the internal triangulation flip; the flip is applied with
+    // FlipInternalTriangulation (vslot 0x2f0) and the vertex gets kVertexCliffFlip as well.
+    const float maxNormalY = Statics().maxNormalYForCliff;
+    const auto setMark = [this](std::uint32_t vertex, std::uint16_t mark) {
+        if (vertex < vertices_.size()) vertices_[vertex].flags |= mark;
+    };
+    if (evenIsCliff && oddIsCliff) {
+        const std::uint32_t vertsX = vertsX_;
+        const auto base = static_cast<std::uint32_t>(index);
+        const float a = vertices_[base].altitude;
+        const float b = vertices_[base + 1].altitude;
+        const float c = vertices_[base + vertsX].altitude;
+        const float d = vertices_[base + vertsX + 1].altitude;
+        // The two diagonal normals: A/B/C = (x,z), (x+1,z), (x,z+1); the first uses the (C-A, C-B) edges
+        // and the second the (D-A, D-B) edges (MOVSLDUP/INSERTPS in the packed original).
+        const float firstLengthSquared =
+            65536.0f + 256.0f * ((c - a) * (c - a) + (c - b) * (c - b));
+        const float secondLengthSquared =
+            65536.0f + 256.0f * ((d - a) * (d - a) + (d - b) * (d - b));
+        const float y1 = 256.0f / std::sqrt(firstLengthSquared);
+        const float y2 = 256.0f / std::sqrt(secondLengthSquared);
+        if (maxNormalY <= y1 || maxNormalY <= y2) {
+            FlipInternalTriangulation(static_cast<std::uint32_t>(index) % vertsX,
+                                      static_cast<std::uint32_t>(index) / vertsX, true);
+            setMark(base, kVertexCliffFlip);
+            if (y1 < maxNormalY) {
+                setMark(base, kVertexCliffMark);
+                setMark(base + vertsX, kVertexCliffMark);
+                setMark(base + 1, kVertexCliffMark);
+            }
+            if (y2 < maxNormalY) {
+                setMark(base + 1, kVertexCliffMark);
+                setMark(base + vertsX, kVertexCliffMark);
+                setMark(base + vertsX + 1, kVertexCliffMark);
+            }
+            return;
+        }
+    }
+    if (evenIsCliff) {
+        setMark(static_cast<std::uint32_t>(index), kVertexCliffMark);
+        setMark(static_cast<std::uint32_t>(index) + vertsX_, kVertexCliffMark);
+        setMark(static_cast<std::uint32_t>(index) + 1 + vertsX_, kVertexCliffMark);
+    }
+    if (oddIsCliff) {
+        setMark(static_cast<std::uint32_t>(index), kVertexCliffMark);
+        setMark(static_cast<std::uint32_t>(index) + 1 + vertsX_, kVertexCliffMark);
+        setMark(static_cast<std::uint32_t>(index) + 1, kVertexCliffMark);
+    }
+}
+
+void cSTETerrain::CalculateNormalsAndAssignCliffTextures(const TerrainRect& r) {
+    // 0x100734dc8: two passes. The first computes the even/odd triangle normal of every cell in the rect
+    // (minus one on the top/left, clamped to the grid) into a per-row scratch buffer; the second averages the
+    // six triangles around each vertex (three from the row above, three from its own row) into the vertex
+    // normal. A triangle whose normal's y falls below kMaxNormalYForCliff makes MarkCliff flag the vertices and
+    // flip the cell's internal triangulation. The original's packed SSE sequence reduces to the scalar form
+    // below: the normals are (16*(C-D), 256, 16*(D-C)) and (16*(D-B), 256, 16*(B-D)).
+    TerrainStatics& statics = Statics();
+    ClearVertexPropertyFlags(r, kVertexCliffMark);
+    const std::int32_t xStart = std::max(r.left - 1, 0);
+    const std::int32_t zStart = std::max(r.top - 1, 0);
+    TerrainRect flagsRect{xStart, zStart, std::min(r.right, static_cast<std::int32_t>(lastCellX_)),
+                          std::min(r.bottom, static_cast<std::int32_t>(lastCellZ_))};
+    ClearVertexCliffFlipTriangulationFlags(flagsRect);
+
+    const std::int32_t xEnd = std::min(r.right, static_cast<std::int32_t>(lastCellX_));
+    const std::int32_t zEnd = std::min(r.bottom, static_cast<std::int32_t>(lastCellZ_));
+    const std::int32_t vertsX = static_cast<std::int32_t>(vertsX_);
+    const std::size_t bufferSize = static_cast<std::size_t>(cellsX_) * 2 * 3;
+    for (std::vector<float>& buffer : triangleNormals_)
+        if (buffer.size() < bufferSize) buffer.assign(bufferSize, 0.0f);
+    if (zEnd < zStart) return;
+
+    std::vector<float>* previous = &triangleNormals_[0];
+    std::vector<float>* current = &triangleNormals_[1];
+    for (std::int32_t z = zStart; z <= zEnd; ++z) {
+        if (xEnd >= xStart) {
+            for (std::int32_t x = xStart; x <= xEnd; ++x) {
+                auto base = static_cast<std::uint32_t>(z) * vertsX_ + static_cast<std::uint32_t>(x);
+                const float b = vertices_[base + 1].altitude;
+                const float c = vertices_[base + static_cast<std::uint32_t>(vertsX)].altitude;
+                const float d = vertices_[base + static_cast<std::uint32_t>(vertsX) + 1].altitude;
+                // even triangle normal: only the (C-D) edge difference enters
+                float evenX = (c - d) * 16.0f;
+                float evenZ = -evenX;
+                float evenInv = 1.0f / std::sqrt(evenX * evenX + 65536.0f + evenZ * evenZ);
+                // odd triangle normal: only the (D-B) edge difference enters
+                float oddX = (d - b) * 16.0f;
+                float oddZ = -oddX;
+                float oddInv = 1.0f / std::sqrt(oddX * oddX + 65536.0f + oddZ * oddZ);
+                const std::size_t slot = static_cast<std::size_t>(x) * 6;
+                (*current)[slot + 0] = evenX * evenInv;
+                (*current)[slot + 1] = 256.0f * evenInv;
+                (*current)[slot + 2] = evenZ * evenInv;
+                (*current)[slot + 3] = oddX * oddInv;
+                (*current)[slot + 4] = 256.0f * oddInv;
+                (*current)[slot + 5] = oddZ * oddInv;
+                const bool evenIsCliff = std::fabs((*current)[slot + 1]) < statics.maxNormalYForCliff;
+                const bool oddIsCliff = std::fabs((*current)[slot + 4]) < statics.maxNormalYForCliff;
+                if (evenIsCliff || oddIsCliff) MarkCliff(static_cast<std::int32_t>(base), evenIsCliff, oddIsCliff);
+            }
+        }
+        // The vertex normals of this row use the row's own cells and the row above.
+        if (r.top <= z && z <= zEnd && r.left <= r.right) {
+            for (std::int32_t x = r.left; x <= r.right; ++x) {
+                float nx = 0.0f, ny = 0.0f, nz = 0.0f;
+                auto add = [&](const std::vector<float>& buffer, std::size_t cell) {
+                    const std::size_t at = cell * 3;
+                    if (at + 2 < buffer.size()) { nx += buffer[at]; ny += buffer[at + 1]; nz += buffer[at + 2]; }
+                };
+                if (1 <= x) {
+                    if (z < static_cast<std::int32_t>(cellsZ_)) add(*current, static_cast<std::size_t>(2 * x - 1));
+                    if (z != 0) {
+                        add(*previous, static_cast<std::size_t>(2 * x - 1));
+                        add(*previous, static_cast<std::size_t>(2 * x - 2));
+                    }
+                }
+                if (x < static_cast<std::int32_t>(cellsX_)) {
+                    if (z < static_cast<std::int32_t>(cellsZ_)) {
+                        add(*current, static_cast<std::size_t>(2 * x));
+                        add(*current, static_cast<std::size_t>(2 * x + 1));
+                    }
+                    if (z != 0) add(*previous, static_cast<std::size_t>(2 * x));
+                }
+                float length = std::sqrt(nx * nx + ny * ny + nz * nz);
+                if (length == 0.0f) { nx = 1.0f; ny = 1.0f; nz = 1.0f; length = std::sqrt(3.0f); }
+                const float inverse = 1.0f / length;
+                Vertex& vertex = vertices_[static_cast<std::uint32_t>(z) * vertsX_ + static_cast<std::uint32_t>(x)];
+                vertex.normal[0] = nx * inverse;
+                vertex.normal[1] = ny * inverse;
+                vertex.normal[2] = nz * inverse;
+            }
+        }
+        std::swap(current, previous);
+    }
 }
 
 // ==================================================================================== counts
@@ -1430,9 +2138,9 @@ void cSTETerrain::LowerVertex(std::uint32_t index, float amount) {
     if (v.flags & kVertexLocked) return;
     float altitude = v.altitude - amount;
     v.altitude = altitude;
-    if (altitude < kMinTerrainHeight) {
-        v.altitude = kMinTerrainHeight;
-        altitude = kMinTerrainHeight;
+    if (altitude < Statics().minTerrainHeight) {
+        v.altitude = Statics().minTerrainHeight;
+        altitude = Statics().minTerrainHeight;
     }
     // The original rewrites the surface-water depth unconditionally, so a vertex raised above the sea
     // keeps a negative depth instead of drying out (kept on purpose).
@@ -1444,9 +2152,9 @@ void cSTETerrain::RaiseVertex(std::uint32_t index, float amount) {
     if (v.flags & kVertexLocked) return;
     float altitude = amount + v.altitude;
     v.altitude = altitude;
-    if (kMaxTerrainHeight < altitude) {
-        v.altitude = kMaxTerrainHeight;
-        altitude = kMaxTerrainHeight;
+    if (Statics().maxTerrainHeight < altitude) {
+        v.altitude = Statics().maxTerrainHeight;
+        altitude = Statics().maxTerrainHeight;
     }
     waterDepth_[index] = tuning_.seaLevel - altitude;   // negative above the sea (see LowerVertex)
 }

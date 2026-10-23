@@ -65,20 +65,21 @@ for f in sorted(pending.glob("*.txt")) if pending.exists() else []:
                 if evidence: r[5] = evidence
                 # a row upgraded out of "skipped" still carries the Skipped_xxxxxxxx placeholder as its
                 # unique_name; take the agent's real name so the ledger reads properly.
-                name_ok = unique(rest.split()[0]) if rest else ""
+                name_ok = unique(rest.split()[0].rstrip(":.,;")) if rest else ""
                 if name_ok and r[2].startswith("Skipped_"):
                     r[2] = name_ok
                     rename(addr, name_ok)
                 upgraded += 1
             elif section == "partial" and r[4] != "recovered-partial":
                 if rest and r[2].startswith("Skipped_"):
-                    r[2] = unique(rest.split()[0])
+                    r[2] = unique(rest.split()[0].rstrip(":.,;"))
                     rename(addr, r[2])
                 r[3], r[4] = source or r[3], "recovered-partial"
                 if evidence: r[5] = evidence + " [partial: " + rest[:120] + "]"
                 upgraded += 1
             continue
-        uname = unique(rest.split()[0]) if section != "skipped" else unique("Skipped_" + addr[2:])
+        # a pending line is "0xADDR Name" but agents sometimes write "Name:" - strip punctuation
+        uname = unique(rest.split()[0].rstrip(":.,;")) if section != "skipped" else unique("Skipped_" + addr[2:])
         body.append([addr, sym.get(addr, uname), uname, source if section != "skipped" else "", status,
                      evidence if section != "skipped" else "not needed on macOS: " + rest])
         index[addr] = len(body) - 1

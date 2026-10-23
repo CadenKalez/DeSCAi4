@@ -5,14 +5,17 @@
 // then the COM identity (QueryInterface/AddRef/Release plus the three thunks), the message posts,
 // the display/accumulation state, the vertex editing helpers, the mark/rect/span helpers, the
 // temporary water-level copies, the brush tuning queries and the lighting row walk.
-// Part 3 (this session) adds the first-boot path through the host seams (Init/Shutdown/StaticInit/
-// StaticShutdown/DoPostCityInit/DoMessage/RedisplayTerrain/SetTerrainType/SetAltitude), the water
-// proximity / land-type-ratio surface helpers, the shoreline helpers and the display altitude range.
+// Part 3 adds the first-boot path through the host seams (Init/Shutdown/StaticInit/StaticShutdown/
+// DoPostCityInit/DoMessage/RedisplayTerrain/SetTerrainType/SetAltitude), the water proximity /
+// land-type-ratio surface helpers, the shoreline helpers and the display altitude range.
+// Part 4 adds the exemplar/texture pipeline: the four data readers (ReadTextureInfos/ReadTextureInfo/
+// ReadTerrainIniFile/ReadTuningParameters plus the ini callbacks), DetermineTextureFamilyMembersForGridCells,
+// DecideSurfaceCover, the completed AssignSurfaceTexturesAndColors, and the two-triangle normal pass
+// CalculateNormalsAndAssignCliffTextures with MarkCliff.
 // Still pending in notes/ledger.csv: the brush application functions (they need the
-// cISTETerrain::tBrushParameters / tBrushContext layouts), the surface-texture/exemplar pipeline
-// (ReadTextureInfos/ReadTerrainIniFile/ReadTuningParameters/DecideSurfaceCover/CalculateNormals-
-// AndAssignCliffTextures), the erosion and flood kernels (DoWaterErosion/DoWindErosion/DoFloodFlowStep),
-// the volcanic ash and wave producers, Create and the neighbour-city edge reconcile.
+// cISTETerrain::tBrushParameters / tBrushContext layouts and ReadBrushDescriptions), the erosion and flood
+// kernels (DoWaterErosion/DoWindErosion/DoFloodFlowStep), the volcanic ash and wave producers, Create and the
+// shoreline shaping functions, and the neighbour-city edge reconcile.
 //
 // Vertex (36 bytes): +0 altitude, +4/+8/+0xc normal, +0x10..0x21 texture/colour data, +0x22 u16
 // property flags:
@@ -30,12 +33,15 @@
 // f32 minHeight, f32 maxHeight, f32 maxNormalHeight} (version 2), 0xa9dd6ff4/1 {f32 altitude per
 // vertex, row-major} (version 2), 0x8a91e7e0/2 {u16 flags per vertex} (version 1).
 #pragma once
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <string>
 #include <vector>
 
 #include "gz/cIGZPersistDBSegment.h"
+#include "rz/cRZString.h"
 
 class cIGZMessageServer2;
 class cIGZMessage2;
@@ -72,32 +78,104 @@ constexpr std::uint16_t kVertexHiddenEven = 0x0020, kVertexHiddenOdd = 0x0040, k
 constexpr std::uint16_t kVertexFlipInternal = 0x1000, kVertexFlipExternal = 0x2000, kVertexLocked = 0x4000;
 constexpr std::uint16_t kVertexMark1 = 0x0001, kVertexMark3 = 0x0004;      // scratch marks of MarkRegion
 constexpr std::uint16_t kVertexCliffFlip = 0x0800;                        // cliff flip-triangulation mark
-
-// Statics of the binary (read from .rodata / the data segment):
-constexpr float kMinTerrainHeight = 5.0f;        // 0x100b17640 (MinAllowedHeight)
-constexpr float kMaxTerrainHeight = 200.0f;      // 0x100b1763c (MaxAllowedHeight)
-constexpr float kTerrainRaiseLowerAmount = 20.0f;  // 0x100b175e0 (GetDefaultTerrainRaiseLowerAmount)
-// The erosion / flood / redisplay constants (all in the initialised data segment, read with macho_read):
-constexpr std::int32_t kNumWindErosionIterationsPerUserClick = 5;      // 0x100b175ec
-constexpr std::int32_t kNumWindErosionIterationsPerSimMonth = 1;       // 0x100b175f0
-constexpr std::int32_t kNumWaterErosionIterationsPerPlayerClick = 1;   // 0x100b17600
-constexpr std::int32_t kNumFlowStepsForGlobalWaterErosion = 1;         // 0x100b17604
-constexpr std::int32_t kNumSmoothingIterationsAfterWaterErosion = 1;   // 0x100b1764c
-constexpr std::int32_t kMaxBeachWidth = 4;       // 0x100b175e4
-constexpr float kMaxBeachAltitude = 7.0f;        // 0x100b175e8
-constexpr float kMaxWaterDepthForDeepSeaBedTexture = 30.0f;   // 0x100b17638
-constexpr float kMaxNormalYForCliff = 0.3f;      // 0x100b17680
+constexpr std::uint16_t kVertexCliffMark = 0x0008;                        // MarkCliff: vertex touches a cliff
 constexpr std::uint32_t kGZCLSID_cSTETerrain = 0xe98f9525;
 
-// The class statics that live in the zero-filled data segment (0x100b71xxx) and are filled at startup by
-// ReadTuningParameters (pending, TERRAIN-1). The port keeps them in one struct so the readers and the users
-// agree on the storage; the defaults are the ones the demo needs and are marked where they are a guess.
+// The class's mutable globals. The original keeps them as individual symbols:
+//  * the initialised ones live in __data (0x100b175c0..0x100b17698) and are read by ReadTerrainIniFile /
+//    ReadTuningParameters; the defaults below are the bytes in the binary (scripts/macho_read.py on the
+//    __data section), not guesses.
+//  * the zero-filled ones live in __common (0x100b713d0..0x100b71e30) and are filled when the terrain
+//    exemplar / ini resources exist (the two demo defaults that keep the un-tuned port usable are marked).
+// All of them belong to the class in the original; the struct is this port's storage for them.
 struct TerrainStatics {
-    float seaLevel = 250.0f;                 // 0x100b71d48 (copied into +0x9c by Init)
-    float waterProximityRangeFactor = 10.0f; // 0x100b71db4 (guess: the ini's default is not known)
-    float maxNormalTerrainHeight[8] = {200, 200, 200, 200, 200, 200, 200, 200};   // 0x100b71d30
-    std::int32_t numSmoothingIterationsAfterWaterErosion = 1;   // 0x100b71dc0-class "from image" counts
-    std::int32_t numFlowStepsForGlobalWaterErosion = 1;         // (assumed equal to the .data defaults)
+    // ---- __data: the state the terrain-ini reader fills (defaults = the binary's initialised bytes) ----------
+    bool simulationEnabled = true;                              // 0x100b175c0
+    float waterSourceCapacity = 5.5f;                           // 0x100b175c4
+    float waterSinkCapacity = 5.5f;                             // 0x100b175c8
+    float surfaceWaterThreshold = 10.0f;                        // 0x100b175cc
+    float vertexHeightRaiseLowerAmount = 10.5f;                 // 0x100b175d0
+    float minSeaLevel = -10.1f;                                 // 0x100b175d4
+    float maxSeaLevel = 200.1f;                                 // 0x100b175d8
+    float seaRaiseLowerAmount = 20.0f;                          // 0x100b175dc
+    float terrainRaiseLowerAmount = 20.0f;                      // 0x100b175e0
+    std::uint8_t maxBeachWidth = 4;                             // 0x100b175e4
+    float maxBeachAltitude = 7.0f;                              // 0x100b175e8
+    std::int32_t numWindErosionIterationsPerUserClick = 5;      // 0x100b175ec
+    std::int32_t numWindErosionIterationsPerSimMonth = 1;       // 0x100b175f0
+    float talusAngle = 0.79f;                                   // 0x100b175f4 (radians; the ini's degrees * pi/180)
+    float diagonalHeightDifferenceThreshold = 22.624f;          // 0x100b175f8 (= tan(talusAngle) * 16 * sqrt 2)
+    float crossHeightDifferenceThreshold = 16.0f;               // 0x100b175fc (= tan(talusAngle) * 16)
+    std::int32_t numWaterErosionIterationsPerPlayerClick = 1;   // 0x100b17600
+    std::int32_t numFlowStepsForGlobalWaterErosion = 35;        // 0x100b17604
+    float rainFallFactor = 0.01f;                               // 0x100b17608
+    float maxSedimentPerUnitWater = 5.0f;                       // 0x100b1760c
+    float hydraulicDepositRate = 0.2f;                          // 0x100b17610
+    float hydraulicDepositRateUnderSea = 0.02f;                 // 0x100b17614
+    float minHydraulicErosionRate = 0.02f;                      // 0x100b17618
+    float maxHydraulicErosionRate = 0.06f;                      // 0x100b1761c
+    float hydraulicErosionRateRampBegin = 5.128f;               // 0x100b17620
+    float hydraulicErosionRateRampEnd = 38.14f;                 // 0x100b17624
+    float sedimentInfluenceOnWaterColor = 0.1f;                 // 0x100b17628
+    float maxSedimentAlpha = 0.5f;                              // 0x100b1762c
+    std::uint8_t sedimentColorRed = 118;                        // 0x100b17630
+    std::uint8_t sedimentColorGreen = 113;                      // 0x100b17631
+    std::uint8_t sedimentColorBlue = 104;                       // 0x100b17632
+    float minWaterDepthForDeepSeaBedTexture = 15.0f;            // 0x100b17634
+    float maxWaterDepthForDeepSeaBedTexture = 30.0f;            // 0x100b17638
+    float maxTerrainHeight = 200.0f;                            // 0x100b1763c
+    float minTerrainHeight = 5.0f;                              // 0x100b17640
+    float defaultTerrainHeight = 50.0f;                         // 0x100b17644
+    float imageImportScaleFactor = 1.5f;                        // 0x100b17648
+    std::int32_t numSmoothingIterationsAfterWaterErosion = 1;   // 0x100b1764c
+    std::int32_t minCellsInUsefulFlatArea = 0;                  // 0x100b17650 (tuning exemplar only)
+    float maxHeightChangeToFlattenFactor = 0.0f;                // 0x100b17654
+    float minTerraceAltitudeFactor = 0.0f;                      // 0x100b17658
+    float maxTerraceAltitudeFactor = 0.0f;                      // 0x100b1765c
+    std::int32_t numSmoothingPassesAfterAutoFlattening = 0;     // 0x100b17660
+    std::int32_t autoFlatAreaEdgeSmootheningRadius = 0;         // 0x100b17664
+    bool shoreCliffsUponCreation = false;                       // 0x100b17668
+    float minShoreCliffSize = 0.0f;                             // 0x100b1766c
+    float maxShoreCliffSize = 0.0f;                             // 0x100b17670
+    float minShoreCliffCandidateHeightSum = 0.0f;               // 0x100b17674 (x6 after the exemplar read)
+    float minShoreCliffHeight = 0.0f;                           // 0x100b17678
+    float maxShoreCliffHeight = 0.0f;                           // 0x100b1767c
+    float maxNormalYForCliff = 0.3f;                            // 0x100b17680
+    float volcanicAshLifeTime = 0.0f;                           // 0x100b17684
+    float volcanicAshUpdateInterval = 0.0f;                     // 0x100b17688
+    std::int32_t edgeReconciliationSmoothingIterations = 0;     // 0x100b17694
+    float edgeReconciliationHeightDifferenceThreshold = 0.0f;   // 0x100b17698
+
+    // ---- __common: the terrain-tuning exemplar's statics (zero until the exemplar is read) -------------------
+    float seaLevel = 250.0f;                                    // 0x100b71d48 (the port's demo default)
+    std::vector<float> maxNormalTerrainHeight;                  // 0x100b71d30 (indexed by terrain type)
+    std::vector<float> minRegularHeightFactor, maxRegularHeightFactor;      // 0x100b71d50 / d68
+    std::vector<float> minMountainHeightFactor, maxMountainHeightFactor;    // 0x100b71d80 / d98
+    float temperatureRangeFactor = 0.0f;                        // 0x100b71db0
+    float waterProximityRangeFactor = 10.0f;                    // 0x100b71db4 (the port's demo default)
+    std::int32_t numInitialErosionPasses = 0;                   // 0x100b71db8
+    std::int32_t numHydraulicIterationsPerInitialErosionPass = 0;   // 0x100b71dbc
+    std::int32_t numWindIterationsPerInitialErosionPass = 0;        // 0x100b71dc0
+    std::vector<float> seaLevelChangeDueToWaterSlider;          // 0x100b71dc8
+    bool autoFlattenUponCreation = false;                       // 0x100b71de0
+    std::vector<float> typicalBrushAngleIncrement;              // 0x100b71de8 (radians after the read)
+    std::vector<std::uint32_t> numFlowStepsPerWaterErosionBrushApplication;   // 0x100b71e00
+    float windErosionFactor = 0.0f;                             // 0x100b71d28
+    float sedimentSpreadRateUnderSea = 0.0f;                    // 0x100b71d2c
+    std::int32_t maxSurfaceTextureSpread[8] = {0, 0, 0, 0, 0, 0, 0, 0};   // 0x100b71d10 (snMaxSurfaceTextureSpread)
+    std::vector<std::uint32_t> textureRandomizationGridSize;    // 0x100b713f0 (one entry per zoom)
+};
+
+// cSTETerrain::tSurfaceCoverInfo: the per-texture surface-cover tuning, keyed by texture id in
+// sSurfaceCoverTextures. The original's layout (0xd8-byte map value): +0x08 weight, +0x10+zoom*0x20 five
+// cSC4ResponseCurve objects, +0xa8 five int spread limits, +0xbc five float curve maxima. The port keeps the
+// curve points directly (EvaluateCurve in cSTETerrain.cpp) because cSC4ResponseCurve is not part of this
+// test's link set; the evaluation mirrors its GetOutputValue.
+struct TerrainSurfaceCoverInfo {
+    float weight = 0.0f;                                   // +0x08 (the value base is the pair's second half)
+    std::vector<TerrainPoint> curves[5];                   // +0x10 .. +0xb8 (one curve per zoom)
+    std::int32_t maxSpread[5] = {0, 0, 0, 0, 0};           // +0xb8
+    float curveMaxInput[5] = {0, 0, 0, 0, 0};              // +0xcc
 };
 
 // The ten message types Init subscribes the terrain to (0x26d31ec1 .. 0xc4a6af6).
@@ -134,6 +212,19 @@ struct TerrainBrushDescription {
 
 class cSTETerrain;
 class ITerrainView;
+
+// cRZIniFile as cSTETerrain uses it (ReadEntry / EnumEntries). The real class is recovered in
+// src/rz/cRZIniFile.cpp; the seam exists so a test (and a host adapter) can supply the terrain ini without
+// pulling the whole reader into every link set. The callback signature mirrors cRZIniFile::EnumCallback.
+class ITerrainIniFile {
+public:
+    using EnumCallback = void (*)(const cRZString& key, const cRZString& value, void* context);
+    virtual ~ITerrainIniFile() = default;
+    // cRZIniFile::ReadEntry (vslot 0x18): false when the section/key is absent.
+    virtual bool ReadEntry(const cRZString& section, const cRZString& key, cRZString& value) = 0;
+    // cRZIniFile::EnumEntries (vslot 0x38).
+    virtual bool EnumEntries(const cRZString& section, EnumCallback callback, void* context) = 0;
+};
 
 // The engine services the model reaches for (seams; see docs/SEAMS.md). One method per original call.
 class ITerrainHost {
@@ -201,6 +292,30 @@ public:
     // cSC4MapUtilities::FloodFillDistance @ 0x1000d82b4 (ComputeWaterProximityValues).
     virtual void FloodFillDistance(std::vector<std::vector<std::uint8_t>>& grid, std::int32_t source,
                                    std::int32_t threshold) = 0;
+
+    // ---- the exemplar / texture readers (ReadTextureInfos / ReadTextureInfo / ReadTuningParameters) ----
+    // SL::spRM vslot 0x18 GetResource({0x6534284a, 0x88cd66e9, 1} or a texture key, 0xa52160f5, &out, 0, 0)
+    // followed by resource vslot 0x30 (the object's cISCPropertyHolder). The returned holder is AddRef'd and
+    // the caller releases it. Null when the resource is absent.
+    virtual cISCPropertyHolder* GetPropertyHolder(const cGZPersistResourceKey& key) = 0;
+    // SL::spRM vslot 0x88 GetAvailableResourceList(list, filter) where the filter is
+    // cSCResFilterFixedGroupAndTypeId(0x6534284a, 0x89c2a517): every texture-info resource key.
+    virtual void ListTerrainTextureResources(std::vector<cGZPersistResourceKey>& out) = 0;
+    // SC4GetResourceAsFile({0x8a5971c5, 0, 0xaa597172}) opened as a cRZIniFile (ReadTerrainIniFile). The
+    // caller deletes it. Null when the resource is absent (the original skips the whole read).
+    virtual ITerrainIniFile* OpenTerrainIni() = 0;
+
+    // ---- the surface-cover pass (DecideSurfaceCover) --------------------------------------------------
+    // cSTETerrainView3D::ChangeTerrainType @ 0x1007467ca / SetUpTexturesForCurrentTerrainTypeAndZoom
+    // @ 0x10074688c: the original calls the two view statics unconditionally from DecideSurfaceCover.
+    virtual void ChangeTerrainType(std::int32_t terrainType) = 0;
+    virtual void SetUpTexturesForCurrentTerrainTypeAndZoom(std::int32_t zoom) = 0;
+    // cSTETerrainView3D::sTerrainTextureBinding[zoom][texture] + 8: the number of sub-textures the loaded
+    // texture has (the original divides the family index by it). 0 when the texture is not loaded.
+    virtual std::uint32_t TerrainTextureSubTextureCount(std::int32_t zoom, std::uint32_t textureId) = 0;
+    // The land simulator's climate/moisture query: +0x140 vslot 0x98, called with (cellX * 16.0f). The
+    // returned 0..15-ish index is the surface-cover map's moisture column.
+    virtual std::int32_t MoistureIndexAtX(float worldX) = 0;
 };
 ITerrainHost* TerrainHost();
 void SetTerrainHost(ITerrainHost* host);
@@ -214,6 +329,7 @@ public:
     virtual bool Init(cSTETerrain* terrain) = 0;                                    // cSTETerrainView3D::Init @0x10074607c
     virtual void Shutdown() = 0;                                                    // @0x1007484de
     virtual void MarkTextureSpanInfoDirty(std::int32_t firstRow, std::int32_t lastRow) = 0;   // @0x10074d7d4
+    virtual void SetLightingUpdateRect(const TerrainRect* r) = 0;                   // vslot 0x88 (RedisplayTerrain)
     virtual void ChangeTerrainType(std::int32_t terrainType) = 0;                   // @0x1007467ca
     virtual void SetUpTexturesForCurrentTerrainTypeAndZoom(std::int32_t zoom) = 0;  // @0x10074688c
     // The view's current altitude range: +0x94 is the top and +0x98 the bottom of what it displays.
@@ -305,9 +421,9 @@ public:
     std::uint32_t ZoomLevel() const { return zoom_; }
 
     // ---- limits / counts --------------------------------------------------------------------
-    static float MinAllowedHeight() { return kMinTerrainHeight; }             // 0x100740ec0
-    static float MaxAllowedHeight() { return kMaxTerrainHeight; }             // 0x100740ece
-    static float GetDefaultTerrainRaiseLowerAmount() { return kTerrainRaiseLowerAmount; }  // 0x100740f0a
+    static float MinAllowedHeight() { return Statics().minTerrainHeight; }             // 0x100740ec0
+    static float MaxAllowedHeight() { return Statics().maxTerrainHeight; }             // 0x100740ece
+    static float GetDefaultTerrainRaiseLowerAmount() { return Statics().terrainRaiseLowerAmount; }  // 0x100740f0a
     std::uint32_t NumberOfWaterVertices() const { return waterVertexCount_; }  // 0x100740f18 (+0x108)
     int NumberOfWaterVertices(const TerrainRect& r) const;                    // 0x10073aa02
     bool AreSeaVertices(const TerrainRect& r) const;                          // 0x100733b16
@@ -333,7 +449,7 @@ public:
     void SaveWaterLevelsInTempArray(TerrainRect& r);                 // 0x10073e122
     void RestoreWaterLevelsFromTempArray(TerrainRect& r);            // 0x100737ada
 
-    // ---- surface textures (the part that needs no exemplar data) ----------------------------
+    // ---- surface textures (the exemplar / texture pipeline) ---------------------------------
     void ClearSurfaceTextures(const TerrainRect& r);                 // 0x100733dd4 (three layer keys -> 0)
     void UpdateMoistureValues(const TerrainRect& r);                 // 0x100733d98 (land simulator +0x140 slot 0x80)
     // 0x100731338: keeps the three (texture key, weight) pairs of a vertex sorted by weight.
@@ -342,6 +458,29 @@ public:
     void AssignSurfaceTexturesAndColors(TerrainRect& r);
     static bool GetEffectIDProperty(cISCPropertyHolder* holder, std::uint32_t propertyID,
                                     std::uint32_t out[2]);            // 0x100738dcc
+    // 0x100733e48: picks one surface texture per vertex (altitude -> temperature, x -> moisture), spreads
+    // each texture's response curve over the neighbourhood and adds the land-type weights.
+    void DecideSurfaceCover(const TerrainRect& r);
+
+    // ---- the data readers (StaticInit) -------------------------------------------------------
+    static void ReadTextureInfos();                                  // 0x10073d8a4
+    static void ReadTextureInfo(const cGZPersistResourceKey& key, void* unused);   // 0x10073d22a
+    static void ReadTuningParameters();                              // 0x10073d95e
+    static void ReadTerrainIniFile();                                // 0x10073bb96
+    static void ReadMiscTexturesForTerrainTypes(ITerrainIniFile& ini);   // 0x10073b602
+    // 0x100731418: the EnumEntries callback that fills sSurfaceCoverMap[terrainType][temperature][moisture].
+    static void AddTemperatureAndMoistureToSurfaceCoverEntry(const cRZString& key, const cRZString& value,
+                                                             void* terrainType);
+    static void AddToTerrainTypeTextureList(std::int32_t terrainType, std::uint32_t textureId);   // 0x10073159e
+    static void DetermineTextureFamilyMembersForGridCells();         // 0x100737430
+    // The per-texture tuning map (sSurfaceCoverTextures). Tests read it to verify the exemplar parse.
+    static std::map<std::uint32_t, TerrainSurfaceCoverInfo>& SurfaceCoverTextures();
+    static std::vector<std::uint32_t>& TexturesUsedInTerrainType(std::int32_t terrainType);   // sTexturesUsedInTerrainType
+
+    // ---- normals / cliffs --------------------------------------------------------------------
+    // 0x100734dc8: the two-triangle normal pass over the rect; marks cliffs and flips the triangulation.
+    void CalculateNormalsAndAssignCliffTextures(const TerrainRect& r);
+    void MarkCliff(std::int32_t index, bool evenIsCliff, bool oddIsCliff);   // 0x100735398
 
     // ---- erosion / flood --------------------------------------------------------------------
     void DoErosion(std::uint32_t style, bool fromImage);             // 0x100736216 (style 0 = water, 1 = wind)
@@ -547,6 +686,10 @@ private:
     std::uint32_t animationTick_ = 0;             // +0xf8
     std::uint32_t waterProximityTick_ = 0;        // +0xc8
     float brushPhase_[8] = {};                    // +0x248..+0x264
+    // +0x170 / +0x188: the two per-row triangle-normal scratch buffers CalculateNormals... swaps. Each holds
+    // two 12-byte normals per cell column. The original allocates them in Create (not recovered); the port
+    // sizes them lazily on the first normal pass.
+    std::vector<float> triangleNormals_[2];
     ITerrainView* view_ = nullptr;                // +0x110 (the port keeps the +0x18 interface)
     std::function<void(std::uint32_t, std::uint32_t)> onCellChanged_;
 };

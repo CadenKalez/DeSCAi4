@@ -1,11 +1,15 @@
-// cSTETerrain parts 2 and 3: COM identity, the message posts, the display/accumulation state, the vertex
+// cSTETerrain parts 2, 3 and 4: COM identity, the message posts, the display/accumulation state, the vertex
 // editing helpers, the mark/rect/span helpers, the temporary water-level copies, the brush tuning
 // queries, the lighting row walk, the edge-altitude subfiles and the stream Read/Write wrapper; then the
 // first-boot path (Init/Shutdown/StaticInit/StaticShutdown/DoPostCityInit/DoMessage/DoAnimationTick), the
 // redisplay + altitude range, the water-proximity/land-type surface helpers, the shoreline helpers and the
-// effect-id property. The engine services (message server, lighting manager, view, city, surface water,
-// simulator, command registry, flood fill) are fakes here; the scripting payloads use the small
+// effect-id property; finally the exemplar/texture pipeline (ReadTuningParameters/ReadTextureInfos/
+// ReadTextureInfo/ReadTerrainIniFile/ReadMiscTexturesForTerrainTypes/DetermineTextureFamilyMembersForGridCells),
+// DecideSurfaceCover and the two-triangle normal/cliff pass (CalculateNormalsAndAssignCliffTextures/MarkCliff).
+// The engine services (message server, lighting manager, view, city, surface water, simulator, command
+// registry, flood fill, texture resources, terrain ini) are fakes here; the scripting payloads use the small
 // parameter-set / property-holder fakes below so the test keeps the registered link set.
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -140,6 +144,10 @@ public:
     void MarkTextureSpanInfoDirty(std::int32_t firstRow, std::int32_t lastRow) override {
         dirtyRows.emplace_back(firstRow, lastRow);
     }
+    void SetLightingUpdateRect(const TerrainRect* r) override {
+        ++lightingRectUpdates;
+        if (r) lastLightingRect = *r;
+    }
     void ChangeTerrainType(std::int32_t type) override { changedTypes.push_back(type); }
     void SetUpTexturesForCurrentTerrainTypeAndZoom(std::int32_t zoom) override { textureZooms.push_back(zoom); }
     float MaxDisplayAltitude() const override { return maxAltitude; }
@@ -149,7 +157,8 @@ public:
         return which < 3 ? &overlays[which] : nullptr;
     }
 
-    int inits = 0, shutdowns = 0;
+    int inits = 0, shutdowns = 0, lightingRectUpdates = 0;
+    TerrainRect lastLightingRect;
     cSTETerrain* initTerrain = nullptr;
     float minAltitude = 0.0f, maxAltitude = 50.0f;
     std::vector<std::pair<std::int32_t, std::int32_t>> dirtyRows;
@@ -238,6 +247,79 @@ public:
     std::map<std::uint32_t, sc4::cISCProperty*> properties;
 };
 
+// A property holder builder for the exemplar / texture-info fixtures (owns its properties).
+class PropertyBag {
+public:
+    explicit PropertyBag(FakePropertyHolder& holder) : holder_(holder) {}
+    ~PropertyBag() {
+        for (FakeProperty* property : properties_) delete property;
+    }
+    PropertyBag(const PropertyBag&) = delete;
+    PropertyBag& operator=(const PropertyBag&) = delete;
+
+    void Float(std::uint32_t id, float value) {
+        cRZVariant variant;
+        variant.SetValFloat32(value);
+        Add(id, variant);
+    }
+    void Uint(std::uint32_t id, std::uint32_t value) {
+        cRZVariant variant;
+        variant.SetValUint32(value);
+        Add(id, variant);
+    }
+    void Uint8(std::uint32_t id, std::uint8_t value) {
+        cRZVariant variant;
+        variant.SetValUint8(value);
+        Add(id, variant);
+    }
+    void Floats(std::uint32_t id, std::initializer_list<float> values) {
+        std::vector<float> data(values);
+        cRZVariant variant;
+        variant.RefFloat32(data.data(), static_cast<std::uint32_t>(data.size()));
+        Add(id, variant);
+    }
+    void Uints(std::uint32_t id, std::initializer_list<std::uint32_t> values) {
+        std::vector<std::uint32_t> data(values);
+        cRZVariant variant;
+        variant.RefUint32(data.data(), static_cast<std::uint32_t>(data.size()));
+        Add(id, variant);
+    }
+
+private:
+    void Add(std::uint32_t id, const cRZVariant& value) {
+        auto* property = new FakeProperty(value);
+        properties_.push_back(property);
+        holder_.properties[id] = property;
+    }
+    FakePropertyHolder& holder_;
+    std::vector<FakeProperty*> properties_;
+};
+
+// The ini reader the terrain reads: sections -> keys -> values, in insertion order (std::map sorts the keys,
+// which is all the temperature-table enumeration needs).
+class FakeIni final : public ITerrainIniFile {
+public:
+    bool ReadEntry(const cRZString& section, const cRZString& key, cRZString& value) override {
+        auto sectionIt = sections.find(section.ToChar());
+        if (sectionIt == sections.end()) return false;
+        auto entry = sectionIt->second.find(key.ToChar());
+        if (entry == sectionIt->second.end()) return false;
+        value = cRZString(entry->second.c_str());
+        return true;
+    }
+    bool EnumEntries(const cRZString& section, EnumCallback callback, void* context) override {
+        auto sectionIt = sections.find(section.ToChar());
+        if (sectionIt == sections.end()) return false;
+        for (const auto& entry : sectionIt->second) {
+            cRZString key(entry.first.c_str());
+            cRZString value(entry.second.c_str());
+            callback(key, value, context);
+        }
+        return true;
+    }
+    std::map<std::string, std::map<std::string, std::string>> sections;
+};
+
 // ---------------------------------------------------------------------------- fake terrain host
 class FakeHost final : public ITerrainHost {
 public:
@@ -316,6 +398,26 @@ public:
         lastFloodThreshold = threshold;
         lastFloodGrid = grid;
     }
+    cISCPropertyHolder* GetPropertyHolder(const cGZPersistResourceKey& key) override {
+        ++propertyHolderRequests;
+        lastPropertyKey = key;
+        auto it = propertyHolders.find(key.instance);
+        if (it == propertyHolders.end()) return nullptr;
+        it->second->AddRef();
+        return it->second;
+    }
+    void ListTerrainTextureResources(std::vector<cGZPersistResourceKey>& out) override {
+        ++textureResourceLists;
+        out = textureResourceKeys;
+    }
+    ITerrainIniFile* OpenTerrainIni() override { return terrainIni; }
+    void ChangeTerrainType(std::int32_t terrainType) override { changedTerrainTypes.push_back(terrainType); }
+    void SetUpTexturesForCurrentTerrainTypeAndZoom(std::int32_t zoom) override { textureZooms.push_back(zoom); }
+    std::uint32_t TerrainTextureSubTextureCount(std::int32_t, std::uint32_t) override { return textureSubTextureCount; }
+    std::int32_t MoistureIndexAtX(float worldX) override {
+        lastMoistureX = worldX;
+        return moistureIndex;
+    }
 
     FakeMessageServer messages;
     std::vector<LightRow> rows;
@@ -334,6 +436,15 @@ public:
     int floodFills = 0;
     std::int32_t lastFloodSource = 0, lastFloodThreshold = 0;
     std::vector<std::vector<std::uint8_t>> lastFloodGrid;
+    std::map<std::uint32_t, sc4::cISCPropertyHolder*> propertyHolders;
+    std::vector<cGZPersistResourceKey> textureResourceKeys;
+    ITerrainIniFile* terrainIni = nullptr;
+    std::vector<std::int32_t> changedTerrainTypes, textureZooms;
+    std::uint32_t textureSubTextureCount = 1;
+    std::int32_t moistureIndex = 3;
+    float lastMoistureX = 0.0f;
+    int propertyHolderRequests = 0, textureResourceLists = 0;
+    cGZPersistResourceKey lastPropertyKey{};
     bool worldBusy = false, preferencesFlag = false;
 };
 
@@ -759,6 +870,7 @@ int main() {
     }
     // =================================================================================== life cycle
     cSTETerrain::Statics().seaLevel = 100.0f;      // the runtime statics are otherwise the demo defaults
+    cSTETerrain::Statics().maxNormalTerrainHeight.assign(8, 200.0f);   // the exemplar's per-terrain-type vector
     cSTETerrain::Statics().maxNormalTerrainHeight[3] = 175.0f;
     {
         // ---- StaticInit / StaticShutdown: the flag, the shutdown hook, the resource manager hold
@@ -1230,6 +1342,268 @@ int main() {
         CHECK(cityView.dirtyRows.empty());
         CHECK(city.Shutdown());
         host.view = nullptr;
+    }
+
+    {
+        // ---- ReadTuningParameters: the terrain-tuning exemplar's property holder
+        FakePropertyHolder exemplar;
+        {
+            PropertyBag bag(exemplar);
+            bag.Uints(0x89a312c2, {8, 16, 32, 64, 128});
+            bag.Floats(0x48cd7b20, {150.0f, 160.0f, 170.0f});
+            bag.Float(0x48cd7b26, 300.0f);
+            bag.Float(0x48cd7b27, 4.0f);
+            bag.Float(0x48cd7b21, 2.0f);                    // below the minimum -> clamped to 4
+            bag.Float(0x48cd7b2a, 1.0f);                    // below the minimum -> clamped to 4
+            bag.Floats(0x48cd7b22, {0.25f, 0.5f});
+            bag.Floats(0x48cd7b23, {0.75f, 1.0f});
+            bag.Floats(0x48cd7b24, {1.5f, 2.0f});
+            bag.Floats(0x48cd7b25, {2.5f, 3.0f});
+            bag.Float(0x48cd7b28, 2.5f);
+            bag.Float(0x48cd7b30, 0.5f);
+            bag.Float(0x48cd7b31, 3.0f);
+            bag.Uint(0x48cd7b40, 7);
+            bag.Uint(0x48cd7b41, 8);
+            bag.Uint(0x48cd7b42, 9);
+            bag.Floats(0x48cd7b43, {1.0f, 2.0f, 3.0f});
+            bag.Uint(0x48cd7b50, 25);
+            bag.Float(0x48cd7b51, 0.125f);
+            bag.Float(0x48cd7b52, 0.25f);
+            bag.Float(0x48cd7b53, 0.375f);
+            bag.Uint(0x48cd7b54, 5);
+            bag.Float(0x69ac5640, 12.0f);
+            bag.Float(0x69ac5641, 40.0f);
+            bag.Float(0x48cd7b60, 3.0f);
+            bag.Float(0x48cd7b64, 9.0f);
+            bag.Float(0x48cd7b65, 0.25f);
+            bag.Float(0x48cd7b61, 4.0f);                    // x6 after the read -> 24
+            bag.Float(0x48cd7b62, 2.0f);
+            bag.Float(0x48cd7b63, 12.0f);
+            bag.Float(0x48cd7b70, -9.0f);
+            bag.Float(0x48cd7b71, 180.0f);
+            bag.Float(0x48cd7b72, 15.0f);
+            bag.Float(0x48cd7b73, 18.0f);
+            bag.Uint8(0xa9c283d0, 6);                       // maxBeachWidth
+            bag.Float(0xa9c283d1, 7.0f);                    // maxBeachAltitude
+            bag.Uint8(0x48cd7b80, 1);
+            bag.Uint8(0x48cd7b81, 1);
+            bag.Floats(0x48cd7ba0, {10.0f, 20.0f, 30.0f, 40.0f, 50.0f});
+            bag.Float(0x89861864, 100.0f);                  // + kVolcanicAshUpdateInterval = / 20
+            bag.Uints(0x48cd7bf1, {1, 2, 3});
+            bag.Uint(0x48cd7bf3, 4);
+            bag.Uint(0x48cd7c01, 6);
+            bag.Float(0x48cd7c02, 0.75f);
+            host.propertyHolders[1] = &exemplar;
+            cSTETerrain::ReadTuningParameters();
+            host.propertyHolders.erase(1);
+        }
+        CHECK(host.propertyHolderRequests >= 1);
+        CHECK(host.lastPropertyKey.type == 0x6534284a && host.lastPropertyKey.group == 0x88cd66e9 &&
+              host.lastPropertyKey.instance == 1);
+        TerrainStatics& statics = cSTETerrain::Statics();
+        CHECK(statics.maxTerrainHeight == 300.0f && statics.minTerrainHeight == 4.0f);
+        CHECK(statics.seaLevel == 4.0f);                    // 2 clamped up to the minimum
+        CHECK(statics.defaultTerrainHeight == 4.0f);        // 1 clamped up to the minimum
+        CHECK(statics.maxNormalTerrainHeight.size() == 3 && statics.maxNormalTerrainHeight[2] == 170.0f);
+        CHECK(statics.textureRandomizationGridSize.size() == 5 &&
+              statics.textureRandomizationGridSize[4] == 128);
+        CHECK(statics.imageImportScaleFactor == 2.5f && statics.temperatureRangeFactor == 0.5f);
+        CHECK(statics.waterProximityRangeFactor == 3.0f);
+        CHECK(statics.numInitialErosionPasses == 7 && statics.numHydraulicIterationsPerInitialErosionPass == 8 &&
+              statics.numWindIterationsPerInitialErosionPass == 9);
+        CHECK(statics.minCellsInUsefulFlatArea == 25 && statics.autoFlatAreaEdgeSmootheningRadius == 5);
+        CHECK(statics.minWaterDepthForDeepSeaBedTexture == 12.0f &&
+              statics.maxWaterDepthForDeepSeaBedTexture == 40.0f);
+        CHECK(statics.minShoreCliffSize == 3.0f && statics.maxShoreCliffSize == 9.0f);
+        CHECK(statics.minShoreCliffCandidateHeightSum == 24.0f);   // read as 4, multiplied by 6
+        CHECK(statics.maxNormalYForCliff == 0.25f);
+        CHECK(statics.minSeaLevel == -9.0f && statics.maxSeaLevel == 180.0f);
+        CHECK(statics.maxBeachWidth == 6 && statics.maxBeachAltitude == 7.0f);
+        CHECK(statics.autoFlattenUponCreation && statics.shoreCliffsUponCreation);
+        CHECK(statics.typicalBrushAngleIncrement.size() == 5 &&
+              Near(statics.typicalBrushAngleIncrement[0], 10.0f * 0.017453292f, 1e-5f));
+        CHECK(statics.volcanicAshLifeTime == 100.0f && statics.volcanicAshUpdateInterval == 5.0f);
+        CHECK(statics.numFlowStepsPerWaterErosionBrushApplication.size() == 3);
+        CHECK(statics.numSmoothingIterationsAfterWaterErosion == 4);
+        CHECK(statics.edgeReconciliationSmoothingIterations == 6 &&
+              statics.edgeReconciliationHeightDifferenceThreshold == 0.75f);
+    }
+    {
+        // ---- ReadTextureInfos / ReadTextureInfo: the per-texture cover curves
+        FakePropertyHolder texture;
+        {
+            PropertyBag bag(texture);
+            bag.Float(0x9c2aef0, 0.75f);                                   // the cover weight
+            for (std::uint32_t layer = 0; layer < 5; ++layer) {
+                // three points: (0,1), (16,0.5), (32,0) -> max input 32, spread ceil(32/16) = 2
+                bag.Floats(0x9c2aef3 + layer, {0.0f, 1.0f, 16.0f, 0.5f, 32.0f, 0.0f});
+            }
+            host.propertyHolders[7] = &texture;
+            host.textureResourceKeys = {cGZPersistResourceKey{0x6534284a, 0x89c2a517, 7}};
+            cSTETerrain::ReadTextureInfos();
+            host.textureResourceKeys.clear();
+            host.propertyHolders.erase(7);
+        }
+        CHECK(host.textureResourceLists >= 1);   // StaticInit's read plus this one
+        auto found = cSTETerrain::SurfaceCoverTextures().find(7);
+        CHECK(found != cSTETerrain::SurfaceCoverTextures().end());
+        if (found != cSTETerrain::SurfaceCoverTextures().end()) {
+            CHECK(found->second.weight == 0.75f);
+            CHECK(found->second.maxSpread[0] == 2);
+            CHECK(found->second.curves[0].size() == 3);
+            CHECK(found->second.curveMaxInput[0] == 32.0f);
+            CHECK(Near(found->second.curves[4][1].z, 0.5f));
+        }
+        CHECK(cSTETerrain::Statics().maxSurfaceTextureSpread[0] == 2);
+        // a key without a resource is a no-op
+        host.textureResourceKeys = {cGZPersistResourceKey{0x6534284a, 0x89c2a517, 9}};
+        cSTETerrain::ReadTextureInfos();
+        host.textureResourceKeys.clear();
+        CHECK(cSTETerrain::SurfaceCoverTextures().count(9) == 1);   // the map entry exists, the properties did not
+    }
+    {
+        // ---- ReadTerrainIniFile: the texture map table and the wind-erosion / hydrology tunables
+        auto* ini = new FakeIni();      // ReadTerrainIniFile deletes the ini the host opened
+        auto& table = ini->sections["TropicalTextureMapTable"];
+        table["HighCliff"] = "0x21";
+        table["LowCliff"] = "0x22";
+        table["Beach"] = "0x23";
+        table["24"] = "10 17 18";                     // temperature 24: moisture 1..3
+        table["31"] = "0x40 0x41";
+        ini->sections["MiscTerrainTunables"]["RaiseLowerAmount"] = "12.5";
+        ini->sections["MiscTerrainTunables"]["EnableSimulation"] = "0";
+        ini->sections["WindErosion"]["NumIterationsPerUserClick"] = "7";
+        ini->sections["WindErosion"]["NumIterationsPerSimMonth"] = "2";
+        ini->sections["WindErosion"]["TalusAngle"] = "45";
+        ini->sections["WindErosion"]["ErosionFactor"] = "0.125";
+        ini->sections["Hydrology"]["NumWaterErosionIterationsPerPlayerClick"] = "3";
+        ini->sections["Hydrology"]["NumFlowStepsForGlobalWaterErosion"] = "11";
+        ini->sections["Hydrology"]["SurfaceWaterThreshold"] = "9.5";
+        ini->sections["Hydrology"]["RainFallFactor"] = "0.02";
+        ini->sections["Hydrology"]["WaterSourceCapacity"] = "6.5";
+        ini->sections["Hydrology"]["WaterSinkCapacity"] = "7.5";
+        ini->sections["Hydrology"]["MaxSedimentPerUnitWater"] = "8";
+        ini->sections["Hydrology"]["MinErosionRate"] = "0.03";
+        ini->sections["Hydrology"]["MaxErosionRate"] = "0.09";
+        ini->sections["Hydrology"]["HydrErosionRateRampBegin"] = "30";
+        ini->sections["Hydrology"]["HydrErosionRateRampEnd"] = "60";
+        ini->sections["Hydrology"]["DepositRate"] = "0.4";
+        ini->sections["Hydrology"]["SedimentSpreadRateUnderSea"] = "2.0";   // clamped to 1
+        ini->sections["Hydrology"]["DepositRateUnderSea"] = "0.04";
+        ini->sections["Hydrology"]["SedimentInfluenceOnWaterColor"] = "0.2";
+        ini->sections["Hydrology"]["MaxSedimentAlpha"] = "3.0";             // clamped to 1
+        ini->sections["Hydrology"]["SedimentColorRed"] = "1";
+        ini->sections["Hydrology"]["SedimentColorGreen"] = "2";
+        ini->sections["Hydrology"]["SedimentColorBlue"] = "3";
+        host.terrainIni = ini;
+        cSTETerrain::ReadTerrainIniFile();
+        host.terrainIni = nullptr;
+        TerrainStatics& s = cSTETerrain::Statics();
+        CHECK(s.vertexHeightRaiseLowerAmount == 12.5f);
+        CHECK(!s.simulationEnabled);
+        CHECK(s.numWindErosionIterationsPerUserClick == 7 && s.numWindErosionIterationsPerSimMonth == 2);
+        CHECK(Near(s.talusAngle, 45.0f * 0.017453292f, 1e-5f));
+        CHECK(Near(s.crossHeightDifferenceThreshold, std::tan(45.0f * 0.017453292f) * 16.0f, 1e-4f));
+        CHECK(Near(s.diagonalHeightDifferenceThreshold, s.crossHeightDifferenceThreshold * 1.4142135f, 1e-3f));
+        CHECK(s.windErosionFactor == 0.125f);
+        CHECK(s.numWaterErosionIterationsPerPlayerClick == 3 && s.numFlowStepsForGlobalWaterErosion == 11);
+        CHECK(s.surfaceWaterThreshold == 9.5f && s.rainFallFactor == 0.02f);
+        CHECK(s.waterSourceCapacity == 6.5f && s.waterSinkCapacity == 7.5f);
+        CHECK(s.sedimentSpreadRateUnderSea == 1.0f);        // clamped
+        CHECK(s.maxSedimentAlpha == 1.0f);                  // clamped
+        CHECK(s.sedimentColorRed == 1 && s.sedimentColorGreen == 2 && s.sedimentColorBlue == 3);
+        CHECK(Near(s.hydraulicErosionRateRampBegin, std::tan(30.0f * 0.017453292f) * 16.0f, 1e-3f));
+        const std::vector<std::uint32_t>& used = cSTETerrain::TexturesUsedInTerrainType(0);
+        // the fixed ids, the cliff/beach ids, and the ini's temperature tokens 10, 17, 18, 0x40, 0x41
+        const std::vector<std::uint32_t> expected = {10, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x21, 0x22, 0x23,
+                                                      0x40, 0x41, 0xe0};
+        CHECK(used == expected);                             // ascending and without duplicates
+        CHECK(cSTETerrain::TexturesUsedInTerrainType(3).empty());
+    }
+    {
+        // ---- DecideSurfaceCover: the map selects a texture, the beach band and the cliff mark override it
+        TerrainTuning surfaceTuning;
+        surfaceTuning.seaLevel = 4.0f;      // the reader's kSeaLevel, so the altitude -> temperature row is 24
+        host.cellCountX = 4;
+        host.cellCountZ = 4;
+        host.terrainType = 0;
+        cSTETerrain surface;
+        CHECK(surface.Init());              // the full path: the land simulator is needed for the moisture column
+        for (cSTETerrain::Vertex& vertex : surface.Vertices()) vertex.altitude = 40.0f;
+        // One vertex in the beach band (<= sea level + kMaxBeachAltitude = 11) and one flagged as a cliff.
+        const std::int32_t beachIndex = surface.GetVertIndex(0, 0);
+        surface.Vertices()[static_cast<std::size_t>(beachIndex)].altitude = 10.0f;
+        const std::int32_t cliffIndex = surface.GetVertIndex(4, 4);
+        surface.Vertices()[static_cast<std::size_t>(cliffIndex)].flags |= kVertexCliffMark;
+        // The texture-info entry for the map's id (17), with a curve that is 1 at distance 0.
+        TerrainSurfaceCoverInfo cover;
+        cover.weight = 1.0f;
+        cover.curves[0] = {{0.0f, 1.0f}, {16.0f, 0.0f}};
+        cover.curveMaxInput[0] = 16.0f;
+        cover.maxSpread[0] = 1;
+        cSTETerrain::SurfaceCoverTextures()[17] = cover;
+        host.textureSubTextureCount = 1;
+        host.moistureIndex = 2;
+        surface.DecideSurfaceCover(TerrainRect{0, 0, 4, 4});
+        auto keysOf = [](const cSTETerrain::Vertex& vertex) {
+            std::vector<std::uint16_t> keys;
+            for (int slot = 0; slot < 3; ++slot) {
+                std::uint16_t key = 0;
+                std::memcpy(&key, &vertex.surface[6 + slot * 4], sizeof(key));
+                if (key != 0) keys.push_back(key);
+            }
+            return keys;
+        };
+        auto hasKey = [&](const cSTETerrain::Vertex& vertex, std::uint16_t key) {
+            const std::vector<std::uint16_t> keys = keysOf(vertex);
+            return std::find(keys.begin(), keys.end(), key) != keys.end();
+        };
+        // altitude 40: temperature 31 - round(((40-4)/((300-11)*0.5))*30 - 0.5) = 24, moisture 2 -> id 17
+        CHECK(hasKey(surface.Vertices()[static_cast<std::size_t>(surface.GetVertIndex(1, 1))], 17));
+        CHECK(hasKey(surface.Vertices()[static_cast<std::size_t>(beachIndex)], 0x23));
+        CHECK(hasKey(surface.Vertices()[static_cast<std::size_t>(cliffIndex)], 0x22));
+        CHECK(host.lastMoistureX > 0.0f && std::fmod(host.lastMoistureX, 16.0f) == 0.0f);   // x * 16 m
+        CHECK(!host.changedTerrainTypes.empty() && host.changedTerrainTypes.back() == 0);
+        // a water vertex gets the shallow sea-bed id (0x14), which has no info: nothing is added
+        surface.WaterDepth()[static_cast<std::size_t>(surface.GetVertIndex(3, 3))] = 5.0f;
+        cSTETerrain::SurfaceCoverTextures().erase(17);
+        surface.DecideSurfaceCover(TerrainRect{3, 3, 3, 3});
+        CHECK(!hasKey(surface.Vertices()[static_cast<std::size_t>(surface.GetVertIndex(3, 3))], 0x14));
+        CHECK(hasKey(surface.Vertices()[static_cast<std::size_t>(surface.GetVertIndex(3, 3))], 17));
+    }
+    {
+        // ---- CalculateNormalsAndAssignCliffTextures: flat normals, then a step becomes a cliff
+        TerrainTuning normalTuning;
+        normalTuning.seaLevel = 20.0f;
+        cSTETerrain flat;
+        flat.Init(3, 3, normalTuning);
+        for (cSTETerrain::Vertex& vertex : flat.Vertices()) vertex.altitude = 10.0f;
+        flat.CalculateNormalsAndAssignCliffTextures(TerrainRect{0, 0, 3, 3});
+        for (std::uint32_t z = 0; z <= 2; ++z) {          // the last vertex row is not part of the pass
+            for (std::uint32_t x = 0; x <= 3; ++x) {
+                const cSTETerrain::Vertex& vertex =
+                    flat.Vertices()[static_cast<std::size_t>(flat.GetVertIndex(static_cast<std::int32_t>(x),
+                                                                               static_cast<std::int32_t>(z)))];
+                CHECK(Near(vertex.normal[0], 0.0f) && Near(vertex.normal[1], 1.0f) && Near(vertex.normal[2], 0.0f));
+                CHECK((vertex.flags & (kVertexCliffMark | kVertexCliffFlip)) == 0);
+            }
+        }
+        cSTETerrain step;
+        step.Init(3, 3, normalTuning);
+        for (cSTETerrain::Vertex& vertex : step.Vertices()) vertex.altitude = 10.0f;
+        // a single raised vertex makes the cell to its north-west have both triangles steep (the flip case)
+        step.Vertices()[static_cast<std::size_t>(step.GetVertIndex(2, 1))].altitude = 90.0f;
+        step.CalculateNormalsAndAssignCliffTextures(TerrainRect{0, 0, 3, 3});
+        int cliffMarks = 0, flips = 0;
+        for (const cSTETerrain::Vertex& vertex : step.Vertices()) {
+            if ((vertex.flags & kVertexCliffMark) != 0) ++cliffMarks;
+            if ((vertex.flags & kVertexCliffFlip) != 0) ++flips;
+        }
+        CHECK(cliffMarks > 0);
+        CHECK(flips > 0);
+        // the flat part of the step keeps a unit y normal
+        const cSTETerrain::Vertex& west = step.Vertices()[static_cast<std::size_t>(step.GetVertIndex(0, 1))];
+        CHECK(Near(west.normal[1], 1.0f, 1e-3f));
     }
 
     std::filesystem::remove_all(dir);
