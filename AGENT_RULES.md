@@ -7,7 +7,9 @@ and native Apple Metal rendering (no OpenGL). The user's standing instruction is
 going, and give a progress report whenever you stop.
 
 ## Hard rules
-- Hand-write every function. Names must be unique and descriptive (never `sub_XXXX`); record each in `notes/ledger.csv`.
+- Hand-write every function. Names must be unique **within their class** and descriptive (never `sub_XXXX`); record each in
+  `notes/ledger.csv`. `scripts/check_unique_names.py` enforces the per-class rule; new rows conventionally prefix the class
+  name (`cGZWinGridPaint`) so a name also reads unambiguously across the ledger.
 - Commit locally and automatically; **never push**. End commit messages with
   `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
 - The Steam folder is read-only. Game binaries, assets and Ghidra databases are never committed.
@@ -29,7 +31,13 @@ going, and give a progress report whenever you stop.
 ## Definition of done (every class, no exceptions)
 A class is not done when its functions compile. It is done when the registries say so, and this is checked by a script:
 1. **Honest ledger**: functions that depend on an unrecovered neighbour are `recovered-partial` (`ledger_class.py --partial 0xADDR,...`),
-   never `recovered`. Every ledger row names its test in the evidence column and the test is registered in `scripts/run_tests.sh`.
+   never `recovered`. Every ledger row's evidence column names how it was verified, and that evidence must resolve:
+   - a unit test in `scripts/tests/` that `scripts/run_tests.sh` runs (matched **by file**, whatever the entry is called), or
+   - an oracle / real-data script under `scripts/` (`run_bit1_oracle.sh`, `run_simgl_oracle.sh`, the `s3d_realdata_test` tool…),
+     in which case the evidence says so ("oracle", "real-data tool").
+   `verify_class_done.py` accepts either and fails when a named file does not exist or a named unit test is unregistered.
+   The `source` column is always `src/<name>.cpp|h` (or just one of them); `scripts/normalize_ledger_sources.py` rewrites the
+   historical free-text variants, and `scripts/list_unledgered_sources.py` reports any `src/` file no row cites.
 2. **Seams**: every place the original reached an unrecovered class goes through an `I*Host` / `I*Services` / `I*Api` interface that
    mirrors one original call (put the vtable slot or address in a comment). Never read an engine global directly. Run
    `python3 scripts/list_seams.py`; add a row for new seams to the hook-up table in `docs/SEAMS.md` (original call, real class to hook up).
