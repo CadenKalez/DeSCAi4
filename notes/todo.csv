@@ -830,6 +830,7 @@ WATERCRAFT-1,cSC4Watercraft,"Port the SSE movement/crash paths left partial: Eng
 CLASS-cSC4WatercraftManager,cSC4WatercraftManager,"recover 33 remaining function(s) (33 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WeatherSimulator,cSC4WeatherSimulator,"recover 42 remaining function(s) (42 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4WeatherSimulator,cSC4WeatherSimulator,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+WEATHER-1,cSC4WeatherSimulator,"Verify SimulateMoisture's two separable blurs against disassembly (the decompiler collapsed the edge memmoves; the port clamps/mirrors, so cells within 2 of a partial border can differ) and recover MakeWaterAreaList (0x1000e629a, 1,484-byte 256x256 scanner)",,open,src/sc4/WeatherSimulator.cpp
 CLASS-cSC4WinAdviceList,cSC4WinAdviceList,"recover 19 remaining function(s) (19 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinAnimationRecorder,cSC4WinAnimationRecorder,"recover 3 remaining function(s) (0 not started, 3 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinCalloutBox,cSC4WinCalloutBox,"recover 29 remaining function(s) (29 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
