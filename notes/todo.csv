@@ -216,7 +216,7 @@ CLASS-cGZWinSpyFinder,cGZWinSpyFinder,"recover 6 remaining function(s) (6 not st
 CLASS-cGZWinSpyHotKeyFilter,cGZWinSpyHotKeyFilter,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinSpyMessageFilterBreak,cGZWinSpyMessageFilterBreak,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinTestService,cGZWinTestService,"recover 15 remaining function(s) (15 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cGZWinTextTicker,cGZWinTextTicker,"recover 30 remaining function(s) (30 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cGZWinTextTicker,cGZWinTextTicker,"recover 30 remaining function(s) (30 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinToolTip,cGZWinToolTip,"recover 18 remaining function(s) (18 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinToolTipMgr,cGZWinToolTipMgr,"recover 16 remaining function(s) (16 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinTreeView,cGZWinTreeView,"recover 1 remaining function(s) (1 not started, 0 partial/pending); bases still unfinished: cIGZWinTreeView",CLASS-cIGZWinTreeView,open,scripts/export_class.py + notes/remaining_functions.csv

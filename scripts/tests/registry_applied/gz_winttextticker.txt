@@ -1,0 +1,1 @@
+"gz_winttextticker:$T/gz_winttextticker_test.cpp $S/gz/WinTextTicker.cpp $S/gz/Win.cpp $S/rz/cRZString.cpp $S/rz/cRZVariant.cpp $S/rz/cRZTimer.cpp $S/rz/TextEncoding.cpp $S/rz/CharLength.cpp $S/sc4/TickerMessage.cpp $S/platform/MacTools.cpp -I$T"

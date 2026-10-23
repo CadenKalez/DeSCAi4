@@ -1,0 +1,48 @@
+SOURCE src/gz/WinTextTicker.cpp|h
+EVIDENCE test scripts/tests/gz_winttextticker_test.cpp - the cIGZWinTextTicker iid and the thunked QueryInterface / AddRef / Release, the strip created in the constructor (RZ::GS() vslot 0x20), Init (font height, 100x10 strip, colour type {3,1}, transparent key from RZ::WCM() vslot 0xf8 for 0x08963f6c, fill with the window colour, cursor 0x12, framework code page), the queue -> active FIFO and the message ids, the scroll blit / fill rectangles and the span shift per tick, text drawn through cIGZFont::DrawTextLine at width - scroll, the click callback and the posted cGZMessage, RemoveMessage only searching the queue, the guarded empty-list and dangling-current paths, the lone-message restart quirk, key forwarding to the notification target and Shutdown releasing the font and the strip; built and run with ASan/UBSan
+0x100513f60 Construct
+0x1005140bc ConstructWrapper
+0x1005140c6 Destruct
+0x10051417c DestructWrapper
+0x100514186 DestructThunk
+0x100514194 DestructAndDelete
+0x1005141c2 DestructAndDeleteThunk
+0x1005141d0 QueryInterface
+0x1005141fc QueryInterfaceThunk
+0x10051422c AddRef
+0x10051423a AddRefThunk
+0x100514244 Release
+0x100514252 ReleaseThunk
+0x10051425c Init
+0x1005143cc InitThunk
+0x1005143da Shutdown
+0x100514482 ShutdownThunk
+0x100514490 ClearQueue
+0x10051459a DoDraw
+0x1005148fe shiftSpans
+0x10051499a advanceMessage
+0x100514aaa GZPaint
+0x100514b2a GZPaintThunk
+0x100514b3c GZOnMouseDownL
+0x100514bb8 GZOnMouseDownLThunk
+0x100514bca AddMessage_text_color_background_flags_callback_context
+0x100514cb8 AddMessage_text_color_background_flags_message
+0x100514d9a AddMessageInternal
+0x100514e98 GetNextMessage
+0x100514ef4 RemoveMessage
+0x100514f62 SetFont
+0x100514f9e AsIGZWin
+0x100514fa8 GZOnKeyDown
+0x100514fd2 GZOnKeyDownThunk
+0x100514ff8 GZOnKeyUp
+0x100515022 GZOnKeyUpThunk
+0x100515048 SetSpeed
+0x100515054 SetFrequency
+0x100515060 GetSpeed
+0x10051506c GetFrequency
+0x100515078 SetCaption
+0x10051507e SetCaptionThunk
+PARTIAL:
+(none - all 42 symbols of the class are written: the 30 primary functions plus the 12 compiler thunks they imply)
+SKIPPED:
+(none - the control has no platform-specific variant in the macOS build)
