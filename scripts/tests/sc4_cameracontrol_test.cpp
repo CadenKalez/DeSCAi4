@@ -1,11 +1,13 @@
-// cSC4CameraControl: construction, zoom / rotation state machine and messages, the orthographic camera set-up,
-// scroll bounds clamping, stream round trip and the ground-plane helper.
+// cSC4CameraControl: the 0x178-byte layout and construction, zoom / rotation state machine and every message it
+// sends, the orthographic camera set-up, camera attach, scroll bounds polygon and clamping, scrolling, view-target
+// clamping, stream round trip (target and the prev / sent zoom-rotation copies) and the ground-plane helper.
 #include <cmath>
 #include <cstdio>
 #include <vector>
 
 #include "rz/PortMemoryStreams.h"
 #include "rz/cRZMessage2Standard.h"
+#include "sc4/BackingStore.h"
 #include "sc4/CameraControl.h"
 
 static int failures = 0;
@@ -89,6 +91,9 @@ int main() {
         CHECK(!IntersectWithGroundPlane({0, 10, 0}, {1, 1, 2}, hit));          // plane behind the origin
         CHECK(!IntersectWithGroundPlane({0, 10, 0}, {1, 0.00005f, 2}, hit));   // nearly horizontal
         CHECK(IntersectWithGroundPlane({3, 0, 4}, {1, -1, 0}, hit) && hit.x == 3 && hit.z == 4);   // already on the plane
+        // the original accepts a direction whose |y| is exactly 0.0001 (0x10076baeb: 0.0001 <= |dy|)
+        CHECK(IntersectWithGroundPlane({0, 1, 0}, {0, -0.0001f, 0}, hit) && Near(hit.y, 0.0f));
+        CHECK(!IntersectWithGroundPlane({0, 1, 0}, {0, -0.0000999f, 0}, hit));
         CHECK(Near(CityWidthFromOrthoView(16.0f, 0), 16.0f * (std::cos(0.3926991f) + std::sin(0.3926991f))));
     }
 
@@ -121,6 +126,8 @@ int main() {
         d.GetBaseTargetPositionForRotation(base, 7);       // default: x / z untouched, y cleared
         CHECK(base[0] == 9 && base[1] == 0 && base[2] == 9);
         CHECK(d.UpdateCameraPosition(0) == false);        // without a camera nothing happens
+        // the original object is 0x178 bytes (GZCOM_CreatecSC4CameraControl); the unread tail fields are modelled
+        CHECK(sizeof(cSC4CameraControl) == 0x178);
     }
 
     // ---- state machine with a camera and a recording host ----
@@ -177,7 +184,7 @@ int main() {
     host.server.sent.clear();
     CHECK(c.SetZoom(2.0f));
     CHECK(c.Zoom() == 2 && c.GetVirtualZoom() == 2);
-    CHECK(cSC4CameraControl::sMacJustZoomed);
+    CHECK(cSC43DBackingStore::justZoomed);
     {
         // kind 2 sends: pre (type 0xa6b79600), then "changed by" + changed + done
         const auto& s = host.server.sent;
@@ -256,6 +263,12 @@ int main() {
         CHECK(host.updates == before + 1);
         // the tweak lands in the sub-pixel screen offset: x + 3, y - (-4) relative to the untweaked offset
         CHECK(Near(c.ScreenOffset().x, o0.x + 3.0f * c.WorldPerPixel() * 0 + (c.ScreenOffset().x - o0.x)));
+        // NaN never compares equal, so the original updates every time (0x10076c0d6)
+        const int beforeNaN = host.updates;
+        c.SetCameraPositionTweakAdd(NAN, 0.0f);
+        CHECK(host.updates == beforeNaN + 1);
+        c.SetCameraPositionTweakAdd(NAN, 0.0f);
+        CHECK(host.updates == beforeNaN + 2);
         c.SetCameraPositionTweakAdd(0, 0);
     }
     c.SetViewportSize(800, 600);
@@ -367,18 +380,124 @@ int main() {
         auto* cam2 = new s3d::cS3DCamera();
         loaded.Init({5, 0, 5}, cam2);
         CHECK(loaded.ViewTarget().x == c.ViewTarget().x);
-        // a wrong version fails
+        // a wrong version fails, but the original flags the controller as "loaded" before reading the version
         std::vector<unsigned char> bad = bytes;
         bad[0] = 2;
         PortMemoryIStream in2(bad.data(), bad.size());
         cSC4CameraControl other;
         CHECK(!other.Read(in2));
+        auto* camOther = new s3d::cS3DCamera();
+        CHECK(other.Init({5, 0, 5}, camOther));       // the loaded flag keeps the (default) target
+        CHECK(other.ViewTarget().x == 0.0f && other.ViewTarget().z == 0.0f);
+        other.Shutdown();
         // a truncated stream fails
         PortMemoryIStream in3(bytes.data(), 10);
         cSC4CameraControl shortRead;
         CHECK(!shortRead.Read(in3));
         loaded.Shutdown();
         CHECK(loaded.Camera() == nullptr);
+    }
+
+    // ---- message shapes: kind 1 sends nothing, kind 4 one message, kind 0 the view-changed message ----
+    {
+        host.server.sent.clear();
+        c.SetCitySize(1500.0f, 1500.0f);              // kind 1: SendPostViewChangeMessage skips it
+        CHECK(host.server.sent.empty());
+        host.server.sent.clear();
+        c.SetCustomMagnification(1.25f);              // kind 4: magnification changed, no "changed by" message
+        CHECK(host.server.sent.size() == 1);
+        CHECK(host.server.sent[0].type == kMsgCameraMagnificationChanged);
+        CHECK(host.server.sent[0].zoom == c.Zoom() && host.server.sent[0].rot == c.Rotation());
+        host.server.sent.clear();
+        c.SendViewChangeMessage();                    // kind 0
+        CHECK(host.server.sent.size() == 1 && host.server.sent[0].type == kMsgCameraViewChanged);
+        host.server.sent.clear();
+        c.SendPostViewChangeMessage(5);               // kinds >= 5 are not sent
+        c.SendPreViewChangeMessage(kCameraUpdateTarget);   // the pre message is only sent for kind 2
+        CHECK(host.server.sent.empty());
+    }
+
+    // ---- clamping the view target: a target far outside the bounds comes back onto the ground inside them ----
+    {
+        CHECK(c.ScrollBounds().size() == 6);
+        CHECK(c.SetViewTargetPosition({8000, 0, 8000}));
+        c.ClampTargetToScrollBounds();
+        CHECK(Near(c.ViewTarget().y, 0.0f, 0.05f));
+        cS3DVector2 q;
+        c.ConvertWorldPointToCameraPlanePoint(c.ViewTarget(), q);
+        CHECK(Inside(c.ScrollBounds(), q.x, q.y, 2.0f));
+    }
+
+    // ---- the stream keeps the previous / sent zoom-rotation copies (they travel in the kind 0 message) ----
+    {
+        cSC4CameraControl source;
+        auto* camSource = new s3d::cS3DCamera();
+        CHECK(source.Init({10, 0, 20}, camSource));
+        CHECK(source.SetZoom(2.0f));
+        CHECK(source.SetZoom(3.0f));                  // previous = (2, 0), current = (3, 0)
+        PortMemoryOStream out;
+        CHECK(source.Write(out));
+        const auto& bytes = out.bytes();
+        PortMemoryIStream in(bytes.data(), bytes.size());
+        cSC4CameraControl reloaded;
+        CHECK(reloaded.Read(in));
+        CHECK(reloaded.Zoom() == 3 && reloaded.Rotation() == 0);
+        host.server.sent.clear();
+        reloaded.SendViewChangeMessage();             // kind 0 carries &prev and &sent, no camera needed
+        CHECK(host.server.sent.size() == 1);
+        CHECK(host.server.sent[0].prevZoom == 2 && host.server.sent[0].prevRot == 0);
+        CHECK(host.server.sent[0].zoom == 3 && host.server.sent[0].rot == 0);
+        source.Shutdown();
+    }
+
+    // ---- attaching a camera: releases the old one, sets the viewport and repositions ----
+    {
+        const int before = host.updates;
+        auto* camB = new s3d::cS3DCamera();
+        c.AttachToCamera(camB);
+        CHECK(c.Camera() == camB);
+        CHECK(host.updates == before + 1);            // the controller is initialised
+        int vw2 = 0, vh2 = 0;
+        c.GetViewportSize(vw2, vh2);
+        CHECK(camB->ViewportWidth() == float(vw2) && camB->ViewportHeight() == float(vh2));
+        c.AttachToCamera(camB);                       // the same camera: nothing happens
+        CHECK(host.updates == before + 1);
+        // Init a second time leaves the state alone
+        const cS3DVector3 beforeTarget = c.ViewTarget();
+        CHECK(c.Init({9, 0, 9}, camB));
+        CHECK(c.ViewTarget().x == beforeTarget.x && c.ViewTarget().z == beforeTarget.z);
+    }
+
+    // ---- the magnification limits: 1000 (and 0) freeze the magnification, the zoom still moves ----
+    {
+        cSC4CameraControl frozen;
+        frozen.SetCustomMagnification(1000.0f);       // no camera: nothing to update, the value is stored
+        CHECK(frozen.GetCustomMagnification() == 1000.0f);
+        frozen.SetCustomMagnification(2.0f);
+        CHECK(frozen.GetCustomMagnification() == 1000.0f);
+        frozen.SetZoom(1.0f);
+        CHECK(frozen.Zoom() == 1 && frozen.GetCustomMagnification() == 1000.0f);   // only the magnification is frozen
+        cSC4CameraControl zero;
+        zero.SetCustomMagnification(0.0f);
+        CHECK(zero.GetCustomMagnification() == 0.0f);
+        zero.SetCustomMagnification(1.0f);
+        CHECK(zero.GetCustomMagnification() == 0.0f);
+    }
+
+    // ---- a zoom beyond the real range becomes a magnification ----
+    {
+        cSC4CameraControl m;
+        auto* camM = new s3d::cS3DCamera();
+        CHECK(m.Init({100, 0, 200}, camM));
+        CHECK(m.SetZoom(4.5f));
+        CHECK(m.Zoom() == 4 && m.GetVirtualZoom() == 4);
+        CHECK(Near(m.GetCustomMagnification(), std::exp2(0.5f), 1e-5f));
+        CHECK(m.SetZoom(5.0f));
+        CHECK(m.Zoom() == 4 && m.GetVirtualZoom() == 5);
+        CHECK(Near(m.GetCustomMagnification(), 2.0f));
+        CHECK(m.SetZoom(4.0f));                        // back to the real range
+        CHECK(m.Zoom() == 4 && m.GetCustomMagnification() == 1.0f && m.GetVirtualZoom() == 4);
+        m.Shutdown();
     }
 
     // ---- no view utilities: kinds 1 and 2 clamp without rebuilding ----
@@ -393,6 +512,7 @@ int main() {
     // ---- shutdown releases the camera ----
     c.Shutdown();
     CHECK(c.Camera() == nullptr);
+    CHECK(!c.UpdateCameraPosition(0));               // no camera: nothing to update
     SetCameraControlHost(nullptr);
 
     if (failures == 0) std::printf("sc4_cameracontrol OK\n");

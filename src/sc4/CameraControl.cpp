@@ -7,14 +7,20 @@
 
 #include "gz/cIGZIStream.h"
 #include "gz/cIGZOStream.h"
+#include "sc4/BackingStore.h"
 #include "sc4/GeometryUtilities.h"
 
 namespace sc4 {
 
 const int kViewportCellPixelWidth[5] = {8, 16, 32, 73, 146};
-const float kPitchViewAngle[5] = {0.5235988f, 0.61086524f, 0.6981317f, 0.7853982f, 0.7853982f};
+const float kPitchViewAngle[5] = {0.5235988f, 0.61086524f, 0.6981317f, 0.7853982f, 0.7853982f};   // 0x100a2a2a0
 static const float kYViewAngle = -0.3926991f;    // kSC4YViewAngle[0..4] (0x100a19640), all -pi / 8
 static const float kHalfPi = 1.5707964f;
+
+// The original allocates 0x178 bytes for this class (GZCOM_CreatecSC4CameraControl); the layout is asserted here
+// so the unread tail fields cannot drift.
+static_assert(sizeof(cSC4CameraControl) == 0x178,
+              "cSC4CameraControl must match the original 0x178-byte object");
 
 static ICameraControlHost* g_cameraHost = nullptr;
 ICameraControlHost* CameraControlHost() { return g_cameraHost; }
@@ -38,6 +44,7 @@ bool IntersectWithGroundPlane(const cS3DVector3& origin, const cS3DVector3& dire
     return false;
 }
 
+// Mirrors SC4ViewUtilities::GetCityWidthFromOrthoView (0x100177278) so this class links without ViewUtilities.cpp.
 float CityWidthFromOrthoView(float width, int zoom) {
     (void)zoom;   // every table entry is the same angle
     const float s = std::sin(kYViewAngle), c = std::cos(kYViewAngle);
@@ -52,7 +59,7 @@ cSC4CameraControl::cSC4CameraControl() {
 cSC4CameraControl::~cSC4CameraControl() = default;
 
 bool cSC4CameraControl::QueryInterface(std::uint32_t iid, void** out) {
-    if (iid == kGZCLSID_cSC4CameraControl || iid == kGZIID_cSC4CameraControl2 || iid == 1) {
+    if (iid == kGZCLSID_cSC4CameraControl || iid == kGZIID_cSC4CameraControlSerializable || iid == 1) {
         *out = this;
         AddRef();
         return true;
@@ -86,7 +93,8 @@ void cSC4CameraControl::AttachToCamera(s3d::cS3DCamera* camera) {
     if (camera) camera->AddRef();
     if (camera_ && camera_->Release() == 0) delete camera_;
     camera_ = camera;
-    // The original dereferences the new camera without a null check.
+    // The original calls SetViewport on the new camera without a null check (0x10076b2a6); the port leaves a null
+    // camera detached instead of dereferencing it.
     if (camera_) camera_->SetViewport(float(viewportW_), float(viewportH_));
     if (initialised_) UpdateCameraPosition(kCameraUpdateGeneral);
 }
@@ -257,7 +265,7 @@ bool cSC4CameraControl::ZoomIn() {
 int cSC4CameraControl::GetVirtualZoom() const { return int(1.5f < magnification_) + zoom_; }
 
 bool cSC4CameraControl::SetZoom(float zoom) {
-    sMacJustZoomed = true;   // _g_MacJustZoomed
+    cSC43DBackingStore::justZoomed = true;   // _g_MacJustZoomed, read by cSC43DBackingStore::SaveBackingStore
     float magnification = 1.0f;
     if (minZoom_ <= zoom && zoom <= maxVirtualZoom_ && maxRealZoom_ < zoom) {
         // beyond the real zoom range the rest becomes a magnification
@@ -442,11 +450,12 @@ void cSC4CameraControl::UpdateCameraPositionParams() {
     baseTarget_ = cS3DVector3{base[0], base[1], base[2]};     // +0x28 is zeroed by the call as well
     const float ox = offset_.x, oy = offset_.y, oz = offset_.z;
     anchor_ = cS3DVector3{baseTarget_.x + ox, baseTarget_.y + oy, oz + baseTarget_.z};
-    const float lenSq = oz * oz + ox * ox + oy * oy;
+    // the original squares x and y together and adds z last (packed mulps at 0x10076c52e)
+    const float lenSq = ox * ox + oy * oy + oz * oz;
     float factor = 0.0f;
     if (0.0f < lenSq) {
-        factor = 1.0f - ((target_.z - baseTarget_.z) * oz + (target_.y - baseTarget_.y) * oy +
-                         (target_.x - baseTarget_.x) * ox) / lenSq;
+        factor = 1.0f - ((target_.y - baseTarget_.y) * oy + (target_.x - baseTarget_.x) * ox +
+                         (target_.z - baseTarget_.z) * oz) / lenSq;
     }
     cameraPos_ = cS3DVector3{target_.x + ox * factor, target_.y + oy * factor, target_.z + factor * oz};
     camera_->SetPosition(cameraPos_);

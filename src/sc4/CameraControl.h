@@ -5,24 +5,32 @@
 // Class id 0xc9c628ec (also answers 0xe4fda3d4 and 1); it is a cIGZSerializable (Write / Read the target and the
 // zoom / rotation pairs).
 //
-// Original layout: +8 initialised, +9 loaded from a stream, +0xc refcount, +0x10 camera (referenced), +0x18 anchor
-// point (base + offset), +0x24 base target for the rotation, +0x40 camera position, +0x4c view target,
-// +0x58 target velocity, +0x64 view direction, +0x70 camera up row, +0x7c camera right row, +0x88 ground-plane
-// equation through the camera position, +0x98 / +0xa0 camera-plane point and its screen offset (+0xa8 / +0xb0 the
-// previous ones), +0xb8 / +0xbc position tweak, +0xc0 world units per pixel per zoom level, +0xf8 custom
-// magnification, +0xfc / +0x100 / +0x104 min / max real / max virtual zoom, +0x108 / +0x10c previous zoom /
-// rotation, +0x110 / +0x114 zoom / rotation, +0x118 / +0x11c copy sent with the messages, +0x120 yaw, +0x124 pitch,
-// +0x128 camera distance, +0x12c / +0x130 clip planes, +0x134 / +0x138 viewport size, +0x13c / +0x140 world units
-// per pixel and back, +0x144 camera offset from the base target, +0x150 bounds enabled, +0x158 scroll bounds,
-// +0x170 / +0x174 city size in world units.
+// Original layout (0x178 bytes, the size GZCOM_CreatecSC4CameraControl allocates): +8 initialised, +9 loaded from a
+// stream, +0xc refcount, +0x10 camera (referenced), +0x18 anchor point (base + offset), +0x24 base target for the
+// rotation, +0x30..+0x3f four floats the recovered methods never read (zeroed by the constructor), +0x40 camera
+// position, +0x4c view target, +0x58 target velocity, +0x64 view direction, +0x70 camera up row, +0x7c camera
+// right row, +0x88 ground-plane equation through the camera position, +0x98 / +0xa0 camera-plane point and its
+// screen offset (+0xa8 / +0xb0 the previous ones), +0xb8 / +0xbc position tweak, +0xc0 world units per pixel per
+// zoom level, +0xd4..+0xdc three floats and +0xe0..+0xf7 six FLT_MAX floats (never read by the recovered methods,
+// zeroed / set by the constructor), +0xf8 custom magnification, +0xfc / +0x100 / +0x104 min / max real / max
+// virtual zoom, +0x108 / +0x10c previous zoom / rotation, +0x110 / +0x114 zoom / rotation, +0x118 / +0x11c copy
+// sent with the messages, +0x120 yaw, +0x124 pitch, +0x128 camera distance, +0x12c / +0x130 clip planes,
+// +0x134 / +0x138 viewport size, +0x13c / +0x140 world units per pixel and back, +0x144 camera offset from the
+// base target, +0x150 bounds enabled, +0x158 scroll bounds (std::vector), +0x170 / +0x174 city size in world
+// units.
+//
+// Every SetZoom sets the Mac port's shared _g_MacJustZoomed flag, cSC43DBackingStore::justZoomed (the backing
+// store reads it and clears it in SaveBackingStore(), 0x1007641b4).
 //
 // Quirks kept: SetRotation returns true when the rotation is out of range or unchanged (0x10076bd7a); the "virtual
 // zoom" is zoom + 1 while the magnification is above 1.5; ClampScrollToBounds returns the
 // start point when its slide loop runs out of iterations (0x10076b71a); SendPreViewChangeMessage /
 // SendPostViewChangeMessage dereference the message server without a null check in the original (the port skips
-// the send when the host supplies none).
+// the send when the host supplies none); AttachToCamera dereferences the new camera without a null check
+// (0x10076b2a6, the port keeps a null camera detached).
 // Compile without FMA contraction.
 #pragma once
+#include <cfloat>
 #include <cstdint>
 #include <vector>
 
@@ -34,7 +42,7 @@
 namespace sc4 {
 
 constexpr std::uint32_t kGZCLSID_cSC4CameraControl = 0xc9c628ec;
-constexpr std::uint32_t kGZIID_cSC4CameraControl2 = 0xe4fda3d4;
+constexpr std::uint32_t kGZIID_cSC4CameraControlSerializable = 0xe4fda3d4;   // cIGZSerializable's IID
 
 // Message types the controller sends (0x10076c1b0, 0x10076cb0c).
 constexpr std::uint32_t kMsgCameraViewAboutToChange = 0xa6b79600;   // pre change, zoom / rotation
@@ -81,10 +89,13 @@ void SetCameraControlHost(ICameraControlHost* host);
 // 0x10076baeb: intersects the ray (origin, direction) with the plane y = 0. Fails for a (nearly) horizontal ray or
 // when the plane lies behind the origin.
 bool IntersectWithGroundPlane(const cS3DVector3& origin, const cS3DVector3& direction, cS3DVector3& out);
-// SC4ViewUtilities::GetCityWidthFromOrthoView @ 0x100177278: cos(a) * w - sin(a) * w with a = kSC4YViewAngle[zoom] = -pi / 8.
+// SC4ViewUtilities::GetCityWidthFromOrthoView @ 0x100177278: cos(a) * w - sin(a) * w with a = kSC4YViewAngle[zoom].
+// Kept here as a local mirror (all five table entries are the same angle) so the camera control links without
+// sc4/ViewUtilities.cpp; it is behaviourally identical to the recovered static method.
 float CityWidthFromOrthoView(float width, int zoom);
 
-// kSC4ViewportCellPixelWidth (0x100a2a2c0) and kSC4PitchViewAngle (0x100a2a2a0), indexed by zoom level 0..4.
+// kSC4ViewportCellPixelWidth (0x100a2a2c0) and kSC4PitchViewAngle (0x100a2a2a0), indexed by zoom level 0..4. The
+// pitch table is a local copy of SC4ViewUtilities' kSC4PitchViewAngle (same address, same five values).
 extern const int kViewportCellPixelWidth[5];
 extern const float kPitchViewAngle[5];
 
@@ -155,9 +166,6 @@ public:
     float YawAngle() const { return yaw_; }
     float PitchAngle() const { return pitch_; }
 
-    // Mac port global _g_MacJustZoomed: set by every SetZoom call (read by the view input code).
-    static inline bool sMacJustZoomed = false;
-
 private:
     bool initialised_ = false;                 // +8
     bool loadedFromStream_ = false;            // +9
@@ -165,6 +173,7 @@ private:
     s3d::cS3DCamera* camera_ = nullptr;        // +0x10
     cS3DVector3 anchor_;                       // +0x18
     cS3DVector3 baseTarget_;                   // +0x24
+    [[maybe_unused]] float reserved30_[4] = {0, 0, 0, 0};       // +0x30: never read, the constructor zeroes it
     cS3DVector3 cameraPos_;                    // +0x40
     cS3DVector3 target_;                       // +0x4c
     cS3DVector3 velocity_;                     // +0x58
@@ -178,6 +187,8 @@ private:
     cS3DVector2 prevScreenOffset_;             // +0xb0
     float tweakX_ = 0, tweakY_ = 0;            // +0xb8 / +0xbc
     float unitsPerPixel_[5] = {};              // +0xc0: 100 / (1 << zoom)
+    [[maybe_unused]] float reservedD4_[3] = {0, 0, 0};          // +0xd4: never read, the constructor zeroes it
+    [[maybe_unused]] float reservedE0_[6] = {FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX};   // +0xe0: never read
     float magnification_ = 1.0f;               // +0xf8
     float minZoom_ = 0.0f;                     // +0xfc
     float maxRealZoom_ = 4.0f;                 // +0x100
