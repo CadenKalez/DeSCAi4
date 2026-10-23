@@ -46,15 +46,16 @@
 // used directly (recovered in Lot.h); mapping the calls to its slots is noted in the .cpp.
 //
 // Not recovered here (see the PARTIAL/SKIPPED sections of notes/ledger_pending/cSC4ZoneDeveloper.txt):
-// the parcellization pipeline (OnZone, Parcellize, SubdivideTheZone, ...), the street drawing helpers,
-// CanCreatePloppedLot/CheckLotTerrainConstraints (need DecodeNetworkConnectionObject and the surface
-// water), the highlight texture update (needs the 3D renderer) and the plop cheat commands.
+// Parcellize (the nested lot-layout loop), PlopAllBuildingTypes (needs the spiral-position walk), the
+// safe-list iterator, CanCreatePloppedLot/CheckLotTerrainConstraints (need
+// DecodeNetworkConnectionObject and the surface water) and the plop cheat commands' construction.
 #pragma once
 
 #include <cstdint>
 #include <list>
 #include <map>
 #include <set>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -74,7 +75,11 @@ class cSC4LotConfiguration;
 
 // The three cell types the original uses (SC4Point<int>, SC4Rect<int>, SC4CellRegion<int>). They are
 // re-declared here because the class is the first recovered code that needs the int cell variants;
-// SC4CellRegion carries the same bounds + cRZCellMap bit map layout as cSC4LandfillZone's region.
+// SC4CellRegion carries the bounds + cRZCellMap<bool> bit map the parcellization pipeline builds and
+// walks (cRZCellMap<bool> itself is not recovered: its constructor is 0x1001341f8 and its layout is
+// +0x08 rowCount, +0x0c bitCount, +0x10 wordCount = ((bitCount >> 5) + 1) - (bitCount & 0x1f == 0),
+// +0x18 one wordCount-word array per row; the region puts the map at +0x10, so rowCount is +0x18 and
+// the rows are +0x28 - the same layout cSC4LandfillZone's region uses).
 template <typename T>
 struct SC4Point {
     T x = 0;
@@ -92,11 +97,50 @@ public:
     std::uint32_t rowCount = 0, bitCount = 0, wordCount = 0;
     std::vector<std::vector<std::uint32_t>> rows;
 
+    // cRZCellMap<bool>(rows, bits, fill): fill sets every bit (0xffffffff per word), exactly like the
+    // original constructor. A negative row/bit extent (an empty region) becomes an empty map.
+    void Reset(std::uint32_t rowsN, std::uint32_t bitsN, bool fill) {
+        rowCount = rowsN;
+        bitCount = bitsN;
+        wordCount = (bitsN >> 5) + 1 - ((bitsN & 0x1f) == 0 ? 1u : 0u);
+        rows.assign(rowsN, std::vector<std::uint32_t>(wordCount, fill ? 0xffffffffu : 0u));
+    }
+    static SC4CellRegion Make(const SC4Rect<T>& r, bool fill) {
+        SC4CellRegion region;
+        region.bounds = r;
+        const std::int64_t w = static_cast<std::int64_t>(r.x1) + 1 - r.x0;
+        const std::int64_t h = static_cast<std::int64_t>(r.z1) + 1 - r.z0;
+        region.Reset(w > 0 ? static_cast<std::uint32_t>(w) : 0u,
+                      h > 0 ? static_cast<std::uint32_t>(h) : 0u, fill);
+        return region;
+    }
     bool Test(T x, T z) const {
         const std::uint32_t dx = static_cast<std::uint32_t>(x - bounds.x0);
         const std::uint32_t dz = static_cast<std::uint32_t>(z - bounds.z0);
         if (dx >= rowCount || dz >= bitCount || dx >= rows.size()) return false;
+        if ((dz >> 5) >= rows[dx].size()) return false;
         return ((rows[dx][dz >> 5] >> (dz & 0x1f)) & 1u) != 0;
+    }
+    void SetBit(T x, T z) {
+        const std::uint32_t dx = static_cast<std::uint32_t>(x - bounds.x0);
+        const std::uint32_t dz = static_cast<std::uint32_t>(z - bounds.z0);
+        if (dx >= rowCount || dz >= bitCount || dx >= rows.size()) return;
+        if ((dz >> 5) >= rows[dx].size()) return;
+        rows[dx][dz >> 5] |= 1u << (dz & 0x1f);
+    }
+    void ClearBit(T x, T z) {
+        const std::uint32_t dx = static_cast<std::uint32_t>(x - bounds.x0);
+        const std::uint32_t dz = static_cast<std::uint32_t>(z - bounds.z0);
+        if (dx >= rowCount || dz >= bitCount || dx >= rows.size()) return;
+        if ((dz >> 5) >= rows[dx].size()) return;
+        rows[dx][dz >> 5] &= ~(1u << (dz & 0x1f));
+    }
+    void ToggleBit(T x, T z) {
+        const std::uint32_t dx = static_cast<std::uint32_t>(x - bounds.x0);
+        const std::uint32_t dz = static_cast<std::uint32_t>(z - bounds.z0);
+        if (dx >= rowCount || dz >= bitCount || dx >= rows.size()) return;
+        if ((dz >> 5) >= rows[dx].size()) return;
+        rows[dx][dz >> 5] ^= 1u << (dz & 0x1f);
     }
 };
 
@@ -132,46 +176,122 @@ class IZoneDeveloperZoneManagerApi : public IZoneDeveloperService {
 public:
     virtual int ZoneTypeAt(int x, int z) = 0;                // zone manager vslot 0x60
     virtual bool IsZoneTypeValid(int zoneType) = 0;          // zone manager vslot 0x68
+    // vslot 0x78 GetZoneDragColor(zoneType); the highlight texture key's instance word.
+    virtual std::uint32_t ZoneDragColor(int zoneType) = 0;
+    // vslot 0x58 PlaceZone(region, zoneType, arg2..arg6, null, null, null): the original's three
+    // trailing pointer arguments (long long*, int*, set*) are always null from this class.
+    virtual void PlaceZone(const SC4CellRegion<int>& region, int zoneType, bool arg2, bool arg3,
+                           bool arg4, bool arg5, bool arg6) = 0;
 };
 
-// One of the three network sub-managers the zone developer keeps (street type 0, road type 3,
-// rail/neighbour type 0xb).
+// One of the three network tools the zone developer keeps (street type 3, dirt road type 0xb, road
+// type 0). The original stores SL::spNetworkManager->vslot 0x28(type, 1) at +0x78/+0x80/+0x88; that
+// call returns the per-type cSC4NetworkTool, not the manager.
 class IZoneDeveloperNetworkApi : public IZoneDeveloperService {
 public:
-    virtual bool HasFlag(std::uint32_t flag) = 0;                                   // vslot 0x40
+    virtual bool HasFlag(std::uint32_t flag) = 0;                                   // tool vslot 0x40
     virtual bool GetCellFlags(int x, int z, std::uint32_t flag, std::uint32_t& out) = 0;  // vslot 0x48
     virtual std::uint32_t GetTypeFlags() = 0;                                       // vslot 0x60
     virtual std::uint32_t GetConnectionFlags() = 0;                                 // vslot 0x130
     virtual bool IsConnected(std::uint32_t direction, int networkType) = 0;         // vslot 0x178
     virtual void ClearHighlight() = 0;                                              // vslot 0x28
+    // vslot 0x38 PlaceNetworkOccupants(x0, z0, x1, z1, flags, tool, arg7, arg8). The sixth argument is
+    // the tool pointer: DrawStreet passes the tool itself, the two connection fix-ups pass null.
+    virtual bool PlaceNetworkOccupants(int x0, int z0, int x1, int z1, std::uint32_t flags,
+                                       bool nullToolArgument, bool arg7, int arg8) = 0;
+};
+
+// The 0x10-byte record the terrain view's highlight call reads: a resource key {0x7ab50e44,
+// 0x0986135e, zone drag colour} plus the highlight texture index (highlight scale + rule texture).
+struct ZoneHighlightTexture {
+    std::uint32_t type = 0x7ab50e44;      // +0
+    std::uint32_t group = 0x0986135e;     // +4
+    std::uint32_t instance = 0;           // +8  the zone's drag colour (zone manager vslot 0x78)
+    int texture = 0;                      // +0xc highlightScale + GetBoundaryLotTexture's texture
 };
 
 class IZoneDeveloperTerrainViewApi : public IZoneDeveloperService {
 public:
     virtual void ClearHighlight() = 0;                       // terrain view vslot 0x48
+    // vslot 0x40: one zone highlight overlay instance. The original passes the cell, a 0x10-byte
+    // record {type, group, instance, texture}, the shape byte, the rule's flag, the zone colour
+    // (again), the layer (3) and a trailing 0.
+    virtual void PlaceHighlightTexture(const SC4Point<int>& cell, const ZoneHighlightTexture& texture,
+                                       std::uint8_t shape, bool flag, std::uint32_t zoneColor,
+                                       int layer) = 0;
 };
 
 class IZoneDeveloperLotDeveloperApi : public IZoneDeveloperService {
 public:
     virtual void RemoveLot(cSC4Lot* lot) = 0;                // lot developer vslot 0x58
+    // vslot 0x38 ConstructDefaultLot(lot, configuration, objectId, arg4); the plop cheat commands use it.
+    virtual void ConstructDefaultLot(cSC4Lot* lot, cSC4LotConfiguration* configuration,
+                                     std::uint32_t objectId, bool arg4) = 0;
+    virtual void SetEmptyLotBaseTexture(cSC4Lot* lot) = 0;                    // vslot 0x158
+    virtual bool GetForceEmptyLotBaseTextures() = 0;                          // vslot 0x170
+    // vslot 0xa8 AttemptAreaLevelling(rect, altitude, arg3, arg4, arg5, lot): Parcellize levels the
+    // footprint of every new lot to FLT_MAX before unlocking its vertices.
+    virtual void AttemptAreaLevelling(const SC4Rect<int>& rect, float altitude, bool arg3, bool arg4,
+                                      float arg5, cSC4Lot* lot) = 0;
 };
 
-// The object returned by cSC4BuildingDevelopmentSimulator vslot 0x120; the three calls the zone
+// cISC4GrowthDeveloper, the slots DetermineLotSize reads (the interface is recovered in
+// GrowthDeveloper.h, so this only mirrors the calls; the class itself is not included here).
+struct ZoneDeveloperGrowthItem {   // cISC4GrowthDeveloper::GrowthItem, 0xc bytes
+    std::int32_t x = 0;
+    std::int32_t z = 0;
+    std::int32_t style = 1;
+};
+class IZoneDeveloperGridApi {
+public:
+    virtual ~IZoneDeveloperGridApi() = default;
+    virtual int TractSize() const = 0;                                    // cSC4SimGrid vslot 0x58
+    virtual std::int16_t TractValue(int x, int z) const = 0;              // cSC4SimGrid vslot 0xb0
+};
+class IZoneDeveloperDemandApi {
+public:
+    virtual ~IZoneDeveloperDemandApi() = default;
+    virtual float ActiveDemandValue() const = 0;                          // cSC4Demand vslot 0x60
+};
+class IZoneDeveloperGrowthApi {
+public:
+    virtual ~IZoneDeveloperGrowthApi() = default;
+    virtual int Purpose() const = 0;                                      // vslot 0x38
+    virtual int Wealth() const = 0;                                       // vslot 0x40
+    virtual bool GrowthAndDeclineListsAreValid() const = 0;               // vslot 0x50
+    virtual const std::vector<ZoneDeveloperGrowthItem>& GrowthList() const = 0;  // vslot 0x58
+    virtual IZoneDeveloperGridApi* DesirabilityMap() const = 0;           // vslot 0x68
+    virtual IZoneDeveloperDemandApi* SourceDemand() const = 0;            // vslot 0x90
+    virtual std::int32_t EstimateDesirability(int x, int z) const = 0;    // vslot 0xe8
+};
+
+// The object returned by cSC4BuildingDevelopmentSimulator vslot 0x120; the calls the zone
 // developer makes on it.
 class IZoneDeveloperBuildingDevelopmentApi : public IZoneDeveloperService {
 public:
     virtual void ForgetLot(cSC4Lot* lot) = 0;                          // vslot 0x108
     virtual bool GetLotUnitId(cSC4Lot* lot, std::uint32_t& unitId) = 0;  // vslot 0x148 + unit vslot 0x18
     virtual void AddLot(cSC4Lot* lot) = 0;                             // vslot 0x158
+    virtual IZoneDeveloperGrowthApi* GetGrowthDeveloper(std::uint32_t developerType) = 0;  // vslot 0x108
+    virtual void GetAllBuildingTypes(std::vector<std::uint32_t>& out) = 0;                // vslot 0x58
+    virtual IZoneDeveloperLotDeveloperApi* GetLotDeveloper() = 0;                          // vslot 0x120
+    // vslot 0x88: every building type of one family (the unordered_set the original fills).
+    virtual void GetBuildingTypesByFamily(std::unordered_set<std::uint32_t>& out,
+                                          std::uint32_t family) = 0;
+    virtual const BuildingProfile& GetBuildingProfile(std::uint32_t buildingType) = 0;     // vslot 0x138
 };
 
-// cISC4NetworkOccupant, as far as this class uses it (QI iid 0xa821ef94).
+// cISC4NetworkOccupant (iid 0xa821ef94), as far as this class uses it. The slot offsets are the
+// interface's (concrete table 0x100a7bd08).
 class IZoneDeveloperNetworkOccupant : public cIGZUnknown {
 public:
-    virtual bool HasNetworkFlags(std::uint32_t flags) = 0;                 // vslot 0x48
-    virtual std::uint32_t GetNetworkFlags() = 0;                           // vslot 0x60
-    virtual std::uint32_t GetConnectionFlags() = 0;                        // vslot 0x130
-    virtual bool IsConnected(std::uint32_t direction, int networkType) = 0;  // vslot 0x178
+    virtual bool HasNetworkFlag(std::uint32_t flags) const = 0;            // vslot 0x40
+    virtual bool HasAnyNetworkFlag(std::uint32_t flags) const = 0;         // vslot 0x48
+    virtual std::uint32_t GetNetworkFlag() = 0;                           // vslot 0x60
+    virtual bool IsImmovable() const = 0;                                 // vslot 0x88
+    virtual bool IsOfType(std::uint32_t networkType) const = 0;           // vslot 0xb0
+    virtual std::uint32_t GetEdgeTypesFlag(std::uint32_t networkType) = 0;  // vslot 0x130
+    virtual bool ConnectsToNeighbor(int edge, std::uint32_t networkType) const = 0;  // vslot 0x178
 };
 
 class IZoneDeveloperOccupantManagerApi : public IZoneDeveloperService {
@@ -191,6 +311,25 @@ public:
 };
 
 class IZoneDeveloperLotIterator;   // cSC4SafeListIterator<cISC4Lot*>, not recovered
+
+// cISC4LotConfigurationFilter (the base whose vtable 0x100b002f0 the zone developer patches) and
+// cZoneDeveloperLotFilter, the private derived filter DetermineLotSize builds: purpose at +0xc, wealth
+// at +0x10 and growth stage at +0x14.
+class IZoneDeveloperLotFilter {
+public:
+    virtual ~IZoneDeveloperLotFilter() = default;
+    virtual bool IsLotConfigurationIncluded(cSC4LotConfiguration* configuration) = 0;  // vslot 0x28
+};
+class cZoneDeveloperLotFilter final : public IZoneDeveloperLotFilter {
+public:
+    cZoneDeveloperLotFilter(int purpose, int wealth, int growthStage)
+        : purpose_(purpose), wealth_(wealth), growthStage_(growthStage) {}
+    bool IsLotConfigurationIncluded(cSC4LotConfiguration* configuration) override;   // @ 0x100133be4
+
+    int purpose_ = 0;       // +0x0c
+    int wealth_ = 0;        // +0x10
+    int growthStage_ = 0;   // +0x14
+};
 
 // Everything outside the object. One method per original call; the global/slot is in the comment.
 class IZoneDeveloperHost {
@@ -213,6 +352,23 @@ public:
     virtual IZoneDeveloperNetworkApi* NetworkSubnet(int index) = 0;
     // SL::spTrafficSim->vslot 0xb0: the live lot-list iterator, or null.
     virtual IZoneDeveloperSafeListApi* SafeListIterator() = 0;
+    // SL::spLotConfigurationManager->vslot 0x48: the configurations the filter accepts. The manager's
+    // own cISC4LotConfigurationFilter (LotConfigurationManager.h) is a different declaration of the same
+    // name as UIFilters.h's, so the port passes the zone developer's filter through this seam.
+    virtual void LotConfigurationsByFilter(std::vector<cSC4LotConfiguration*>& out,
+                                           IZoneDeveloperLotFilter* filter) = 0;
+    // SL::spLotConfigurationManager->vslot 0xa0 GetLotConfigurationMap(), in the map's link order.
+    virtual void AllLotConfigurations(std::vector<cSC4LotConfiguration*>& out) = 0;
+    // SL::spLotConfigurationManager->vslot 0xb0 CreateGenericLotConfiguration(out, buildingType).
+    virtual void LotConfigurationForBuildingType(cSC4LotConfiguration*& out,
+                                                 std::uint32_t buildingType) = 0;
+    // cSC4Lot::GetLotConfiguration (vslot 0x48) -> cISC4LotConfiguration::IsCompatibleWithZoneType
+    // (vslot 0x78). The port's cISC4LotConfigurationRef only recovers GetID, so the predicate is a seam.
+    virtual bool LotConfigurationCompatibleWithZone(cISC4LotConfigurationRef* configuration,
+                                                    int zoneType) = 0;
+    // SL::spDemolition->vslot 0x30 DemolishRegion(true, region, privilege 1, flags 1, false, null
+    // filter, null cost, null set, null occupant, 0, 0): only the arguments this class varies are exposed.
+    virtual void DemolishRegion(const SC4CellRegion<int>& region, int privilege, std::uint32_t flags) = 0;
 
     // SL::spCCM (cheat code manager) and SL::spSC4->vslot 0xa8.
     virtual bool CheatCodesEnabled() = 0;                                 // CCM != null && app 0xa8
@@ -220,6 +376,7 @@ public:
     virtual void UnregisterCheatCode(std::uint32_t id) = 0;
 
     virtual std::uint32_t RandomBelow(std::uint32_t range) = 0;           // cRZRandom::RandomUint32UniformBelow(sRandom, range)
+    virtual void GameDelay(int milliseconds, bool yield) = 0;             // SC4GameDelay @ 0x100038fac
     virtual void WriteLot(cIGZOStream& stream, cSC4Lot* lot) = 0;         // SC4WriteGZSerializable
     virtual cSC4Lot* ReadLot(cIGZIStream& stream) = 0;                    // SC4ReadGZSerializable(0xe818fced), referenced
 };
@@ -394,9 +551,30 @@ public:
     int CanCreateLotOnCell(int x, int z, bool skipZoneCheck, bool allowWater);  // @ 0x1001307bc
     bool DoesCellHaveLot(int x, int z);                                      // @ 0x100130354
     void ExamineCell(int x, int z, BoundaryCondition& boundary, int& cost);  // @ 0x1001303ea
-    void OnZone(const SC4CellRegion<int>* region, SC4CellRegion<int>** out);  // @ 0x10012b160 (SKIPPED)
-    void OnDezone(const SC4CellRegion<int>* region, bool arg);                // @ 0x10012b976 (SKIPPED)
-    void UpdateHighlightTextures(const SC4CellRegion<int>* region);           // @ 0x100130994 (SKIPPED)
+    // The parcellization pipeline (all recovered except Parcellize, see the ledger).
+    void OnZone(const SC4CellRegion<int>* region, SC4CellRegion<int>** out);  // @ 0x10012b160
+    void OnDezone(const SC4CellRegion<int>* region, bool flag);               // @ 0x10012b976
+    void UpdateHighlightTextures(const SC4CellRegion<int>* region);           // @ 0x100130994
+    void UpdateZoneType(const SC4CellRegion<int>* region);                    // @ 0x10012feac
+    SC4CellRegion<int>* CreateParcellizableRegion(const SC4CellRegion<int>* region);  // @ 0x10012d184
+    void CompressRegion(SC4CellRegion<int>*& region);                         // @ 0x10012d3ac
+    void SubdivideTheZone(const SC4CellRegion<int>* region,
+                          std::list<SC4CellRegion<int>*>& out);               // @ 0x10012ecc2
+    SC4CellRegion<int>* ExtractConnectedCells(SC4CellRegion<int>* region, int row, int bit);  // @ 0x10012fa04
+    void DetermineLotSize(const SC4Rect<int>& rect);                          // @ 0x10012d606
+    void ExtendAsStreets(const SC4Rect<int>& rect, std::uint32_t networkType);  // @ 0x10012dec2
+    void LayInJogStreets(const SC4Rect<int>& rect, std::uint32_t networkType);  // @ 0x10012e0e8
+    void DrawStreet(int x0, int z0, int x1, int z1, bool extend);             // @ 0x10012c61c
+    bool CreateLotToFaceRoad(int x, int z, int sizeX, int sizeZ, std::list<int>& facings,
+                             cSC4Lot*& out);                                  // @ 0x10012cbcc
+    void SimpleParcellize(int spacing);                                       // @ 0x10012c320
+    void Parcellize();                                                        // @ 0x10012ee06 (PARTIAL)
+    void ExamineBoundaries();                                                 // @ 0x10012ce50
+    void CreateLotRemnants(int x, int z, int width, int depth, int facing);   // @ 0x100129956
+    void ConnectRoadToAnyAdjacentStreets(cISC4Occupant* occupant);            // @ 0x10012a040
+    void ConnectStreetsAcrossRail(cISC4Occupant* occupant);                   // @ 0x10012a534
+    void PlopAllLotTypes();                                                   // @ 0x10012abe4
+    void PlopAllBuildingTypes();                                              // @ 0x10012ad80 (PARTIAL)
     void ClearLotMap();                                                      // @ 0x1001294de
     void ClearHighlight();                                                   // @ 0x10012b0aa
     void DeferOccupantOperations(bool defer);                                // @ 0x10012bdac
@@ -406,9 +584,15 @@ public:
     bool CheatCodesWereRegistered() const;
     int RendererHighlightScale() const { return highlightScale_; }
     void* MessageServerForTest() const { return messageServer_; }
+    // Accessors the test and a host hook-up need for the parcellization state the original keeps private.
+    void SetCurrentRegion(SC4CellRegion<int>* region) { currentRegion_ = region; }
+    SC4CellRegion<int>* CurrentRegion() const { return currentRegion_; }
+    int ParcellizationSize(int index) const { return parcellizationSizes_[index]; }
+    int LotOrientation() const { return lotOrientation_; }
+    int LotOrientationAlt() const { return lotOrientationAlt_; }
     bool ExtendAsStreets() const { return extendAsStreets_; }
     bool SwapOrientation() const { return swapOrientation_; }
-    bool ExamineBoundaries() const { return examineBoundaries_; }
+    bool ExamineBoundariesEnabled() const { return examineBoundaries_; }
 
     // Original field offsets, asserted by the test.
     static constexpr std::uint32_t kOffsetLotMap = 0x98;
@@ -449,9 +633,9 @@ private:
     IZoneDeveloperTerrainViewApi* terrainView_ = nullptr;           // +0x60
     IZoneDeveloperService* trafficSim_ = nullptr;                   // +0x68
     IZoneDeveloperZoneManagerApi* zoneManager_ = nullptr;           // +0x70
-    IZoneDeveloperNetworkApi* railNetwork_ = nullptr;               // +0x78
-    IZoneDeveloperNetworkApi* roadNetwork_ = nullptr;               // +0x80
-    IZoneDeveloperNetworkApi* streetNetwork_ = nullptr;             // +0x88
+    IZoneDeveloperNetworkApi* dirtRoadTool_ = nullptr;              // +0x78 network type 0xb
+    IZoneDeveloperNetworkApi* streetTool_ = nullptr;                // +0x80 network type 3
+    IZoneDeveloperNetworkApi* roadTool_ = nullptr;                  // +0x88 network type 0
     IZoneDeveloperLotDeveloperApi* lotDeveloper_ = nullptr;         // +0x90
     std::vector<std::vector<cSC4Lot*>> lotMap_;                     // +0x98
     std::list<cSC4Lot*> lots_;                                      // +0xb0
@@ -461,8 +645,8 @@ private:
     [[maybe_unused]] std::uint64_t reservedF0_ = 0;                                  // +0xf0
     cSC4SimGrid<std::uint16_t>* capacityGrid_ = nullptr;            // +0xf8
     DemandMap demandMap_;                                           // +0x100
-    [[maybe_unused]] int parcellizationSizes_[5] = {2, 2, 1, 3, 6};                  // +0x118
-    [[maybe_unused]] std::uint8_t scratch12c_ = 0;                                   // +0x12c
+    int parcellizationSizes_[5] = {2, 2, 1, 3, 6};                  // +0x118 lot size X, Z, min Z, max Z, density gap
+    std::uint8_t scratch12c_ = 0;                                   // +0x12c written by ExamineBoundaries
     std::uint8_t lotChangesEnabled_ = 1;                            // +0x12d
     std::uint8_t extendAsStreets_ = 1;                              // +0x12e
     std::uint8_t swapOrientation_ = 0;                              // +0x12f
@@ -471,10 +655,11 @@ private:
     SC4CellRegion<int>* currentRegion_ = nullptr;                   // +0x138
     SC4Point<int>* highlightOrigin_ = nullptr;                      // +0x140
     [[maybe_unused]] int unknown144_ = 0;                                            // +0x144
-    [[maybe_unused]] int boundaryCost_[4] = {0, 0, 0, 0};                            // +0x148
-    [[maybe_unused]] int boundary_[4] = {0, 0, 0, 0};                                // +0x158
-    [[maybe_unused]] int lotOrientation_ = 0;                                        // +0x168
-    [[maybe_unused]] int lotOrientationAlt_ = 0;                                     // +0x16c
+    int boundaryCost_[4] = {0, 0, 0, 0};                            // +0x148 north, east, south, west
+    BoundaryCondition boundary_[4] = {kBoundaryNone, kBoundaryNone, kBoundaryNone,
+                                      kBoundaryNone};               // +0x158
+    int lotOrientation_ = 0;                                        // +0x168
+    int lotOrientationAlt_ = 0;                                     // +0x16c
     int highlightScale_ = 0;                                        // +0x170
     std::map<SC4Point<int>, PendingLot, SC4PointSintCompare> pendingLots_;      // +0x178
     std::map<SC4Point<int>, PendingDelete, SC4PointSintCompare> pendingDeletes_;  // +0x190

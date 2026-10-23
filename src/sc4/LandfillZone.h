@@ -57,12 +57,16 @@ public:
     void Inflate(int neighborType);                                // @ 0x1000ae73c; 1 also grows diagonally
 };
 
-struct LandfillTunables {   // cSC4LandfillDeveloper statics
-    float decayRate = 0.0f;                          // kLandfillDecayRate
-    std::uint32_t maxGarbageToDecayPerMonthPerZone = 0;
-    std::int32_t maxGarbageToTakePerMonthPerTile = 0;
-    std::int64_t defaultLandfillTileCost = 0;
-    bool moveWithTerrain = false;                    // kbMoveWithTerrain
+struct LandfillTunables {   // cSC4LandfillDeveloper statics (0x100afdff0..0x100afe00b)
+    float decayRate = 0.0f;                          // 0x100afdff0 kLandfillDecayRate        property 0x4a280510
+    float levelToleranceThreshold = 0.0f;            // 0x100afdff4 kLevelToleranceThreshold  property 0x4a280513
+    std::uint32_t maxGarbageToTakePerMonth = 0;      // 0x100afdff8 kMaxGarbageToTakePerMonth property 0x4a677e5b
+    std::uint32_t maxGarbageToDecayPerMonthPerZone = 0;   // 0x100afe000 (property 0x4a677e5e)
+    std::int32_t maxGarbageToTakePerMonthPerTile = 0;     // 0x100afdffc (read as a uint32; property 0x4a677e5c)
+    std::int64_t defaultLandfillTileCost = 0;        // 0x100b214f8 kDefaultLandfillTileCost   property 0x4a677e5f
+    float costPerCellHeightChange = 0.0f;            // 0x100afe008 kCostPerCellHeightChange  property 0x2aa00fe7
+    bool moveWithTerrain = false;                    // 0x100afe004 kbMoveWithTerrain        property 0x4a677e5d
+    // Not developer statics: the two effect names the zone asks the effect manager for.
     const char* garbageTruckGeneratorName = "";
     const char* garbageTruckAttractorName = "";
 };
@@ -101,6 +105,8 @@ public:
     virtual void SetTransform(const float matrix[13]) = 0;   // vslot 0x40: 3x3 rotation, position, scale
     virtual void Start(int mode) = 0;                        // vslot 0x18
     virtual void Stop(bool immediate) = 0;                   // vslot 0x20
+    // vslot 0x28: the landfill developer polls it before starting / stopping the seagull flock.
+    virtual bool IsRunning() { return false; }
 };
 
 class ILandfillZoneHost {
@@ -220,10 +226,15 @@ public:
     ILandfillEffect* Seagulls() const { return seagulls_; }
     ILandfillEffect* TruckGenerator() const { return generator_; }
     ILandfillEffect* TruckAttractor() const { return attractor_; }
-
-private:
+    // +0x40 "the zone is known to be completely dezoned" cache. cSC4LandfillDeveloper::DezoneArea raises it
+    // directly (0x1000620f6) once the zone has no valid garbage heap left.
+    bool KnownDezoned() const { return dezonedCache_; }
+    void SetKnownDezoned(bool value) { dezonedCache_ = value; }
+    // The landfill developer calls these two directly from DoZoneChange (0x1000617fa / 0x100061852).
     void InitZoneEffects();                                  // @ 0x1000ad096
     void ShutdownZoneEffects();                              // @ 0x1000ad442
+
+private:
     void RemoveLandfillTile(int x, int z);                   // @ 0x1000aef82
     bool CreateLandfillOccupant(int x, int z, std::uint32_t tileId, int orientation);   // @ 0x1000af00c
     void SetEmptyCellTexture(int x, int z);                  // @ 0x1000af28e

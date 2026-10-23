@@ -13,12 +13,14 @@
 #include <cstring>
 #include <map>
 #include <set>
+#include <unordered_set>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "gz/StreamOps.h"
 #include "rz/cRZMessage2Standard.h"
+#include "sc4/LotConfiguration.h"
 #include "sc4/cSC4SimGrid.h"
 
 namespace {
@@ -78,11 +80,30 @@ struct FakeTerrain : IZoneDeveloperTerrainApi {
 struct FakeZoneManager : IZoneDeveloperZoneManagerApi {
     FAKE_SERVICE_BOILERPLATE
     std::map<std::pair<int, int>, int> zones;
+    int placeZoneCalls = 0;
+    SC4CellRegion<int> lastPlaced;
+    std::vector<int> placedZoneTypes;
     int ZoneTypeAt(int x, int z) override {
         auto it = zones.find({x, z});
         return it != zones.end() ? it->second : 0;
     }
     bool IsZoneTypeValid(int zoneType) override { return zoneType >= 1 && zoneType <= 9; }
+    std::uint32_t ZoneDragColor(int zoneType) override {
+        return 0xff000000u | static_cast<std::uint32_t>(zoneType);
+    }
+    void PlaceZone(const SC4CellRegion<int>& region, int zoneType, bool, bool, bool, bool, bool) override {
+        ++placeZoneCalls;
+        lastPlaced = region;
+        placedZoneTypes.push_back(zoneType);
+    }
+};
+
+struct NetworkPlacement {
+    int x0, z0, x1, z1;
+    std::uint32_t flags;
+    bool nullTool;
+    bool arg7;
+    int arg8;
 };
 
 struct FakeNetwork : IZoneDeveloperNetworkApi {
@@ -92,6 +113,12 @@ struct FakeNetwork : IZoneDeveloperNetworkApi {
     std::uint32_t typeFlags = 0;
     std::uint32_t connectionFlags = 0;
     int clearHighlightCalls = 0;
+    std::vector<NetworkPlacement> placements;
+    bool PlaceNetworkOccupants(int x0, int z0, int x1, int z1, std::uint32_t flags, bool nullTool,
+                               bool arg7, int arg8) override {
+        placements.push_back({x0, z0, x1, z1, flags, nullTool, arg7, arg8});
+        return false;
+    }
     bool HasFlag(std::uint32_t flag) override { return (typeFlags & flag) != 0; }
     bool GetCellFlags(int x, int z, std::uint32_t flag, std::uint32_t& out) override {
         auto it = cells.find({x, z});
@@ -108,16 +135,88 @@ struct FakeNetwork : IZoneDeveloperNetworkApi {
     void ClearHighlight() override { ++clearHighlightCalls; }
 };
 
+struct HighlightCall {
+    int x, z;
+    std::uint32_t type, group, instance;
+    int texture;
+    std::uint8_t shape;
+    bool flag;
+    std::uint32_t color;
+    int layer;
+};
+
 struct FakeTerrainView : IZoneDeveloperTerrainViewApi {
     FAKE_SERVICE_BOILERPLATE
     int clearHighlightCalls = 0;
+    std::vector<HighlightCall> highlights;
     void ClearHighlight() override { ++clearHighlightCalls; }
+    void PlaceHighlightTexture(const SC4Point<int>& cell, const ZoneHighlightTexture& texture,
+                               std::uint8_t shape, bool flag, std::uint32_t zoneColor,
+                               int layer) override {
+        highlights.push_back({cell.x, cell.z, texture.type, texture.group, texture.instance,
+                              texture.texture, shape, flag, zoneColor, layer});
+    }
+};
+
+struct ConstructedLot {
+    cSC4Lot* lot;
+    cSC4LotConfiguration* configuration;
+    std::uint32_t objectId;
 };
 
 struct FakeLotDeveloper : IZoneDeveloperLotDeveloperApi {
     FAKE_SERVICE_BOILERPLATE
     std::vector<cSC4Lot*> removed;
+    std::vector<ConstructedLot> constructed;
+    std::vector<cSC4Lot*> emptyTextured;
+    std::vector<SC4Rect<int>> levelledAreas;
+    std::vector<float> levelledAltitudes;
+    std::vector<cSC4Lot*> locked;
+    std::vector<bool> lockedValues;
+    bool forceEmptyTextures = false;
     void RemoveLot(cSC4Lot* lot) override { removed.push_back(lot); }
+    void ConstructDefaultLot(cSC4Lot* lot, cSC4LotConfiguration* configuration, std::uint32_t objectId,
+                             bool) override {
+        constructed.push_back({lot, configuration, objectId});
+    }
+    void SetEmptyLotBaseTexture(cSC4Lot* lot) override { emptyTextured.push_back(lot); }
+    bool GetForceEmptyLotBaseTextures() override { return forceEmptyTextures; }
+    void AttemptAreaLevelling(const SC4Rect<int>& rect, float altitude, bool, bool, float,
+                              cSC4Lot*) override {
+        levelledAreas.push_back(rect);
+        levelledAltitudes.push_back(altitude);
+    }
+};
+
+struct FakeGrid : IZoneDeveloperGridApi {
+    int tractSize = 2;
+    std::map<std::pair<int, int>, std::int16_t> values;
+    int TractSize() const override { return tractSize; }
+    std::int16_t TractValue(int x, int z) const override {
+        auto it = values.find({x, z});
+        return it != values.end() ? it->second : 0;
+    }
+};
+
+struct FakeDemand : IZoneDeveloperDemandApi {
+    float value = 0.0f;
+    float ActiveDemandValue() const override { return value; }
+};
+
+struct FakeGrowthDeveloper : IZoneDeveloperGrowthApi {
+    int purpose = 1, wealth = 1;
+    bool listsValid = false;
+    std::vector<ZoneDeveloperGrowthItem> growthList;
+    FakeGrid grid;
+    FakeDemand demand;
+    std::int32_t estimate = 0;
+    int Purpose() const override { return purpose; }
+    int Wealth() const override { return wealth; }
+    bool GrowthAndDeclineListsAreValid() const override { return listsValid; }
+    const std::vector<ZoneDeveloperGrowthItem>& GrowthList() const override { return growthList; }
+    IZoneDeveloperGridApi* DesirabilityMap() const override { return const_cast<FakeGrid*>(&grid); }
+    IZoneDeveloperDemandApi* SourceDemand() const override { return const_cast<FakeDemand*>(&demand); }
+    std::int32_t EstimateDesirability(int, int) const override { return estimate; }
 };
 
 struct FakeBuildingDevelopment : IZoneDeveloperBuildingDevelopmentApi {
@@ -125,6 +224,11 @@ struct FakeBuildingDevelopment : IZoneDeveloperBuildingDevelopmentApi {
     std::map<cSC4Lot*, std::uint32_t> units;
     std::vector<cSC4Lot*> added;
     std::vector<cSC4Lot*> forgotten;
+    std::map<std::uint32_t, FakeGrowthDeveloper*> developers;
+    std::vector<std::uint32_t> buildingTypes;
+    std::map<std::uint32_t, std::vector<std::uint32_t>> families;
+    std::map<std::uint32_t, BuildingProfile> profiles;
+    FakeLotDeveloper* lotDeveloper = nullptr;
     void ForgetLot(cSC4Lot* lot) override { forgotten.push_back(lot); }
     bool GetLotUnitId(cSC4Lot* lot, std::uint32_t& unitId) override {
         auto it = units.find(lot);
@@ -133,6 +237,22 @@ struct FakeBuildingDevelopment : IZoneDeveloperBuildingDevelopmentApi {
         return true;
     }
     void AddLot(cSC4Lot* lot) override { added.push_back(lot); }
+    IZoneDeveloperGrowthApi* GetGrowthDeveloper(std::uint32_t developerType) override {
+        auto it = developers.find(developerType);
+        return it == developers.end() ? nullptr : it->second;
+    }
+    void GetAllBuildingTypes(std::vector<std::uint32_t>& out) override { out = buildingTypes; }
+    IZoneDeveloperLotDeveloperApi* GetLotDeveloper() override { return lotDeveloper; }
+    void GetBuildingTypesByFamily(std::unordered_set<std::uint32_t>& out, std::uint32_t family) override {
+        auto it = families.find(family);
+        if (it != families.end()) out.insert(it->second.begin(), it->second.end());
+    }
+    const BuildingProfile& GetBuildingProfile(std::uint32_t buildingType) override {
+        auto it = profiles.find(buildingType);
+        if (it != profiles.end()) return it->second;
+        static const BuildingProfile empty;
+        return empty;
+    }
 };
 
 struct FakeRenderer : IZoneDeveloperService {
@@ -151,8 +271,10 @@ struct FakeNetworkOccupant : IZoneDeveloperNetworkOccupant {
     int refs = 0;
     std::uint32_t flags = 0;
     std::uint32_t networkFlags = 0;
-    std::uint32_t connectionFlags = 0;
-    std::map<std::pair<std::uint32_t, int>, bool> connections;
+    std::uint32_t edgeFlags = 0;
+    bool immovable = false;
+    std::set<std::uint32_t> types;
+    std::map<std::pair<int, std::uint32_t>, bool> connections;
     bool QueryInterface(std::uint32_t iid, void** out) override {
         if (iid == 1 || iid == 0xa821ef94) {
             *out = static_cast<IZoneDeveloperNetworkOccupant*>(this);
@@ -163,11 +285,14 @@ struct FakeNetworkOccupant : IZoneDeveloperNetworkOccupant {
     }
     std::uint32_t AddRef() override { return static_cast<std::uint32_t>(++refs); }
     std::uint32_t Release() override { return refs > 0 ? static_cast<std::uint32_t>(--refs) : 0u; }
-    bool HasNetworkFlags(std::uint32_t value) override { return (flags & value) != 0; }
-    std::uint32_t GetNetworkFlags() override { return networkFlags; }
-    std::uint32_t GetConnectionFlags() override { return connectionFlags; }
-    bool IsConnected(std::uint32_t direction, int networkType) override {
-        auto it = connections.find({direction, networkType});
+    bool HasNetworkFlag(std::uint32_t value) const override { return (flags & value) == value; }
+    bool HasAnyNetworkFlag(std::uint32_t value) const override { return (flags & value) != 0; }
+    std::uint32_t GetNetworkFlag() override { return networkFlags; }
+    bool IsImmovable() const override { return immovable; }
+    bool IsOfType(std::uint32_t networkType) const override { return types.count(networkType) != 0; }
+    std::uint32_t GetEdgeTypesFlag(std::uint32_t) override { return edgeFlags; }
+    bool ConnectsToNeighbor(int edge, std::uint32_t networkType) const override {
+        auto it = connections.find({edge, networkType});
         return it != connections.end() && it->second;
     }
 };
@@ -245,6 +370,50 @@ struct FakeOccupantManager : IZoneDeveloperOccupantManagerApi {
     void RemoveOccupant(std::uint32_t occupantId, int, int) override { removed.push_back(occupantId); }
 };
 
+// cISC4Lot's host, as far as the zone developer needs it: the zone grid lookup that gives a lot its
+// zone type (cSC4Lot::UpdateZoneType). Every other query is inert.
+struct FakeLotHost : ILotHost {
+    LotBuildingProfile profile;
+    std::uint8_t zoneType = 2;
+    std::uint8_t ZoneTypeAt(int, int) override { return zoneType; }
+    std::int32_t SimulatorDay() override { return 100; }
+    float TerrainAltitude(float, float) override { return 0.0f; }
+    const LotBuildingProfile* BuildingProfile(std::uint32_t type) override { return type ? &profile : nullptr; }
+    float SlopeOf(const cSC4Lot&) override { return 0.0f; }
+    std::uint32_t DeveloperType(std::uint32_t purpose, std::int32_t wealth) override {
+        return purpose * 0x100 + static_cast<std::uint32_t>(wealth);
+    }
+    void OnDeveloperLotAbandoned(std::uint16_t) override {}
+    std::uint8_t LandValueAt(int, int) override { return 0; }
+    std::uint32_t RandomPercent() override { return 0; }
+    cISC4LotConfigurationRef* LotConfigurationById(std::uint32_t) override { return nullptr; }
+    void PostLotMessage(std::uint32_t, const cSC4Lot&, std::uint32_t, std::uint32_t, std::uint32_t,
+                        std::int32_t) override {}
+    void SetLotHighlight(int, int, bool, float) override {}
+    std::int32_t TrafficJobs(const cSC4Lot&, int) override { return 0; }
+    void SetTrafficJobs(const cSC4Lot&, int, std::int32_t) override {}
+    float ResidentialTravelFactor(int, int) override { return 1.0f; }
+    float TravelVolumeFactor() override { return 1.0f; }
+    void TravelDistribution(int, float out[3]) override { out[0] = out[1] = out[2] = 0; }
+    void JobsPerOccupant(float out[4], int) override { for (int i = 0; i < 4; ++i) out[i] = 0; }
+    void ExemplarJobs(const cSC4Lot&, float*) override {}
+    bool ExemplarProperty(const cSC4Lot&, std::uint32_t, std::int32_t&) override { return false; }
+    bool PowerRequirementExceeded(const cSC4Lot&, const LotBuildingProfile&, bool& available) override {
+        available = false;
+        return false;
+    }
+    bool TrafficHasJobAccess(const cSC4Lot&, int) override { return false; }
+    void UnitLotShutdown(cIGZUnknown*, const cSC4Lot&) override {}
+    void NeighborLots(const cSC4Lot&, int, std::vector<cSC4Lot*>&) override {}
+    void GetLotOccupants(const cSC4Lot&, std::vector<cIGZUnknown*>&) override {}
+    bool RoadAccessCells(const cSC4Lot&, int) override { return false; }
+    bool IsFerryTerminal(const cSC4Lot&) override { return false; }
+    bool FerryTerminalRoadAccess(const cSC4Lot&) override { return false; }
+    cIGZUnknown* FindBuildingOccupant(const cSC4Lot&) override { return nullptr; }
+    void WriteSerializable(cIGZOStream&, cIGZUnknown*) override {}
+    cIGZUnknown* ReadSerializable(cIGZIStream&, std::uint32_t) override { return nullptr; }
+};
+
 //----------------------------------------------------------------------------------------------- framework
 
 struct FakeMessageServer : cIGZMessageServer2 {
@@ -300,6 +469,8 @@ struct FakeSimGridCity : ISimGridCity {
 };
 
 struct FakeHost : IZoneDeveloperHost {
+    FakeHost() { buildingDevelopment.lotDeveloper = &lotDeveloper; }
+
     FakeMessageServer server;
     FakeRenderer renderer;
     FakeLotDeveloper lotDeveloper;
@@ -337,11 +508,48 @@ struct FakeHost : IZoneDeveloperHost {
     IZoneDeveloperService* TrafficSim() override { return &renderer; }   // any service placeholder
     IZoneDeveloperZoneManagerApi* ZoneManager() override { return &zoneManager; }
     IZoneDeveloperNetworkApi* NetworkSubnet(int index) override {
-        if (index == 0) return &street;
-        if (index == 1) return &road;
-        return &rail;
+        if (index == 0) return &road;      // network type 0
+        if (index == 1) return &street;    // network type 3
+        return &rail;                      // network type 0xb
     }
     IZoneDeveloperSafeListApi* SafeListIterator() override { return useSafeList ? &safeList : nullptr; }
+    std::vector<cSC4LotConfiguration*> lotConfigurations;
+    bool applyLotConfigurationFilter = false;
+    bool configurationCompatibleWithZone = true;
+    int demolishedRegionCalls = 0;
+    SC4CellRegion<int> lastDemolishedRegion;
+    int gameDelayCalls = 0;
+    int lotConfigurationQueries = 0;
+    int lastFilterPurpose = -1, lastFilterWealth = -1, lastFilterStage = -1;
+
+    void LotConfigurationsByFilter(std::vector<cSC4LotConfiguration*>& out,
+                                   IZoneDeveloperLotFilter* filter) override {
+        if (auto* zoneFilter = dynamic_cast<cZoneDeveloperLotFilter*>(filter)) {
+            lastFilterPurpose = zoneFilter->purpose_;
+            lastFilterWealth = zoneFilter->wealth_;
+            lastFilterStage = zoneFilter->growthStage_;
+        }
+        for (cSC4LotConfiguration* configuration : lotConfigurations) {
+            if (applyLotConfigurationFilter && filter && !filter->IsLotConfigurationIncluded(configuration))
+                continue;
+            out.push_back(configuration);   // borrowed: the host keeps the manager's references
+        }
+    }
+    void AllLotConfigurations(std::vector<cSC4LotConfiguration*>& out) override { out = lotConfigurations; }
+    void LotConfigurationForBuildingType(cSC4LotConfiguration*& out, std::uint32_t) override {
+        ++lotConfigurationQueries;
+        out = lotConfigurations.empty() ? nullptr : lotConfigurations.front();
+    }
+    bool LotConfigurationCompatibleWithZone(cISC4LotConfigurationRef*, int) override {
+        return configurationCompatibleWithZone;
+    }
+    void DemolishRegion(const SC4CellRegion<int>& region, int privilege, std::uint32_t flags) override {
+        (void)privilege;
+        (void)flags;
+        ++demolishedRegionCalls;
+        lastDemolishedRegion = region;
+    }
+    void GameDelay(int, bool) override { ++gameDelayCalls; }
     bool CheatCodesEnabled() override { return cheatCodesEnabled; }
     void RegisterCheatCode(const char* text, std::uint32_t id, cIGZMessageTarget2*) override {
         registeredCheats.emplace_back(text, id);
@@ -767,7 +975,7 @@ void TestNetworkAndOccupantSeams() {
 
     FakeNetworkOccupant networkOccupant;
     networkOccupant.flags = (0x1f4f & ~0x104u) | 0x808;
-    networkOccupant.connections[{2, 3}] = true;
+    networkOccupant.connections[{2, 3}] = true;   // direction flag for direction 1
 
     FakeOccupant occupant;
     occupant.occupantType = 0xc772bf98;
@@ -866,11 +1074,11 @@ void TestNetworkAndOccupantSeams() {
     developer->SetOptions(true, false, true);
     CHECK(developer->SwapOrientation());
     CHECK(!developer->ExtendAsStreets());
-    CHECK(developer->ExamineBoundaries());
+    CHECK(developer->ExamineBoundariesEnabled());
     developer->SetOptions(false, true, false);
     CHECK(!developer->SwapOrientation());
     CHECK(developer->ExtendAsStreets());
-    CHECK(!developer->ExamineBoundaries());
+    CHECK(!developer->ExamineBoundariesEnabled());
 
     // The safe-list iterator reports "not recovered" as a null iterator.
     CHECK(developer->GetSafeLotIterator() == nullptr);
@@ -1009,6 +1217,605 @@ void TestSerialization() {
     SetZoneDeveloperHost(nullptr);
 }
 
+
+void TestParcellizableRegionAndCompression() {
+    FakeHost host;
+    SetZoneDeveloperHost(&host);
+    auto* developer = new cSC4ZoneDeveloper();
+    developer->AddRef();
+    CHECK(developer->Init());
+
+    // A 5x5 region with one water cell: the water cell drops out of the parcellizable mask.
+    const SC4Rect<int> bounds{1, 1, 5, 5};
+    SC4CellRegion<int> region = SC4CellRegion<int>::Make(bounds, true);
+    host.terrain.water.insert({2, 2});
+    SC4CellRegion<int>* parcellizable = developer->CreateParcellizableRegion(&region);
+    CHECK(parcellizable != nullptr);
+    CHECK(parcellizable->bounds.x0 == 1 && parcellizable->bounds.z0 == 1);
+    CHECK(parcellizable->rowCount == 5 && parcellizable->bitCount == 5);
+    CHECK(!parcellizable->Test(2, 2));   // water
+    CHECK(parcellizable->Test(1, 1));
+    CHECK(parcellizable->Test(5, 5));
+    delete parcellizable;
+
+    // A lot that the host's configuration check rejects is deleted, its cell becomes parcellizable.
+    cSC4Lot* lot = nullptr;
+    CHECK(developer->CreateLot(3, 3, 1, 1, 0, lot));
+    host.configurationCompatibleWithZone = false;
+    parcellizable = developer->CreateParcellizableRegion(&region);
+    CHECK(parcellizable->Test(3, 3));
+    CHECK(developer->GetLot(3, 3, false) == nullptr);
+    delete parcellizable;
+
+    // A lot without a configuration object only survives when both zone types are in 1..6: with
+    // currentZoneType_ 0 the fallback deletes it and its cell becomes parcellizable.
+    CHECK(developer->CreateLot(3, 3, 1, 1, 0, lot));
+    host.configurationCompatibleWithZone = true;
+    parcellizable = developer->CreateParcellizableRegion(&region);
+    CHECK(parcellizable->Test(3, 3));
+    CHECK(developer->GetLot(3, 3, false) == nullptr);
+    delete parcellizable;
+
+    // CreateLotIfPossible with facing -1 delegates to CreateLotToFaceRoad with an empty list, so the
+    // facing comes from the random start (the host returns 2 modulo 4).
+    host.randomValues = {2};
+    cSC4Lot* randomFacing = nullptr;
+    CHECK(developer->CreateLotIfPossible(6, 6, 1, 1, -1, randomFacing, false, false, nullptr));
+    CHECK(randomFacing != nullptr);
+    if (randomFacing) CHECK(randomFacing->GetFacing() == 2);
+    host.randomValues.clear();
+
+    // CompressRegion shrinks to the bounding box of the set bits.
+    SC4CellRegion<int>* compressed =
+        new SC4CellRegion<int>(SC4CellRegion<int>::Make({0, 0, 9, 9}, false));
+    compressed->SetBit(3, 4);
+    compressed->SetBit(5, 6);
+    developer->CompressRegion(compressed);
+    CHECK(compressed->bounds.x0 == 3 && compressed->bounds.z0 == 4);
+    CHECK(compressed->bounds.x1 == 5 && compressed->bounds.z1 == 6);
+    CHECK(compressed->rowCount == 3 && compressed->bitCount == 3);
+    CHECK(compressed->Test(3, 4) && compressed->Test(5, 6));
+    CHECK(!compressed->Test(4, 4));
+    delete compressed;
+
+    // A region that is already tight is not replaced.
+    SC4CellRegion<int>* tight =
+        new SC4CellRegion<int>(SC4CellRegion<int>::Make({-2, -2, -1, -1}, true));
+    developer->CompressRegion(tight);
+    CHECK(tight->bounds.x0 == -2 && tight->bounds.z1 == -1);
+    delete tight;
+
+    // An empty region is left as an empty region at its own bounds.
+    SC4CellRegion<int>* empty =
+        new SC4CellRegion<int>(SC4CellRegion<int>::Make({4, 4, 8, 8}, false));
+    developer->CompressRegion(empty);
+    CHECK(empty->bounds.x0 == 4 && empty->bounds.z0 == 4);
+    delete empty;
+
+    developer->Shutdown();
+    developer->Release();
+    SetZoneDeveloperHost(nullptr);
+}
+
+void TestExtractAndSubdivide() {
+    FakeHost host;
+    SetZoneDeveloperHost(&host);
+    auto* developer = new cSC4ZoneDeveloper();
+    developer->AddRef();
+    CHECK(developer->Init());
+
+    // Two blobs: a 5x5 region split by a water column becomes two pieces.
+    SC4CellRegion<int> region = SC4CellRegion<int>::Make({0, 0, 4, 4}, true);
+    for (int z = 0; z <= 4; ++z) host.terrain.water.insert({2, z});
+    std::list<SC4CellRegion<int>*> pieces;
+    developer->SubdivideTheZone(&region, pieces);
+    CHECK(pieces.size() == 2);
+    if (pieces.size() == 2) {
+        SC4CellRegion<int>* first = pieces.front();
+        SC4CellRegion<int>* second = pieces.back();
+        CHECK(first->bounds.x0 == 0 && first->bounds.x1 == 1);
+        CHECK(second->bounds.x0 == 3 && second->bounds.x1 == 4);
+        CHECK(first->rowCount == 2 && first->bitCount == 5);
+        CHECK(first->Test(0, 0) && first->Test(1, 4));
+        CHECK(!first->Test(3, 0));
+    }
+    for (SC4CellRegion<int>* piece : pieces) delete piece;
+
+    // A region with nothing parcellizable yields the whole (compressed) empty region.
+    SC4CellRegion<int> wet = SC4CellRegion<int>::Make({0, 0, 2, 2}, true);
+    for (int x = 0; x <= 2; ++x)
+        for (int z = 0; z <= 2; ++z) host.terrain.water.insert({x, z});
+    std::list<SC4CellRegion<int>*> none;
+    developer->SubdivideTheZone(&wet, none);
+    CHECK(none.size() == 1);
+    for (SC4CellRegion<int>* piece : none) delete piece;
+
+    // ExtractConnectedCells removes the component from the source and returns it.
+    auto* source = new SC4CellRegion<int>(SC4CellRegion<int>::Make({0, 0, 3, 3}, false));
+    source->SetBit(0, 0);
+    source->SetBit(1, 0);
+    source->SetBit(3, 3);
+    SC4CellRegion<int>* component = developer->ExtractConnectedCells(source, 0, 0);
+    CHECK(component != nullptr);
+    CHECK(component->Test(0, 0) && component->Test(1, 0));
+    CHECK(!component->Test(3, 3));
+    CHECK(!source->Test(0, 0) && !source->Test(1, 0));
+    CHECK(source->Test(3, 3));
+    SC4CellRegion<int>* next = developer->ExtractConnectedCells(source, 3, 3);
+    CHECK(next->Test(3, 3));
+    CHECK(!source->Test(3, 3));
+    delete component;
+    delete next;
+    delete source;
+
+    developer->Shutdown();
+    developer->Release();
+    SetZoneDeveloperHost(nullptr);
+}
+
+void TestUpdateZoneTypeAndHighlightTextures() {
+    FakeHost host;
+    SetZoneDeveloperHost(&host);
+    auto* developer = new cSC4ZoneDeveloper();
+    developer->AddRef();
+    CHECK(developer->Init());
+
+    cRZMessage2Standard cityInit;
+    cityInit.SetType(0x26d31ec1);
+    CHECK(developer->DoMessage(&cityInit));
+
+    SC4CellRegion<int> region = SC4CellRegion<int>::Make({1, 1, 3, 3}, true);
+    cSC4Lot* lot = nullptr;
+    CHECK(developer->CreateLot(1, 1, 1, 1, 0, lot));
+
+    // UpdateZoneType marks the cells that hold no lot for the zone manager and leaves the lot's cell.
+    developer->UpdateZoneType(&region);
+    CHECK(host.zoneManager.placeZoneCalls == 1);
+    CHECK(host.zoneManager.lastPlaced.Test(2, 2));
+    CHECK(host.zoneManager.lastPlaced.Test(3, 3));
+    CHECK(!host.zoneManager.lastPlaced.Test(1, 1));
+    CHECK(host.zoneManager.placedZoneTypes.size() == 1 && host.zoneManager.placedZoneTypes[0] == 0);
+
+    // UpdateHighlightTextures: one overlay for the lot, in the region, keyed by the zone colour.
+    developer->UpdateHighlightTextures(&region);
+    CHECK(host.terrainView.highlights.size() == 1);
+    if (!host.terrainView.highlights.empty()) {
+        const HighlightCall& call = host.terrainView.highlights[0];
+        CHECK(call.x == 1 && call.z == 1);
+        CHECK(call.type == 0x7ab50e44 && call.group == 0x0986135e);
+        CHECK(call.instance == 0xff000000u);        // zone drag colour of zone type 0
+        CHECK(call.texture == 64 + 0x2300);         // renderer highlight scale + rule {2,1,1,1}
+        CHECK(call.color == 0xff000000u);
+        CHECK(call.layer == 3);
+    }
+
+    // A zone mismatch keeps the lot out of the highlight pass.
+    host.terrainView.highlights.clear();
+    developer->UpdateHighlightTextures(&region);   // currentZoneType_ is still 0, the lot's is 0
+    CHECK(host.terrainView.highlights.size() == 1);
+
+    developer->Shutdown();
+    developer->Release();
+    SetZoneDeveloperHost(nullptr);
+}
+
+void TestStreetDrawingAndJogStreets() {
+    FakeHost host;
+    SetZoneDeveloperHost(&host);
+    auto* developer = new cSC4ZoneDeveloper();
+    developer->AddRef();
+    CHECK(developer->Init());
+
+    // The network tools are only attached by the city-init message.
+    cRZMessage2Standard cityInit;
+    cityInit.SetType(0x26d31ec1);
+    CHECK(developer->DoMessage(&cityInit));
+
+    const SC4Rect<int> bounds{2, 2, 5, 5};
+    SC4CellRegion<int> region = SC4CellRegion<int>::Make(bounds, true);
+    developer->SetCurrentRegion(&region);
+
+    // A lone street on the top row of the rectangle: ExtendAsStreets draws down to the bottom edge.
+    FakeNetworkOccupant lone;
+    lone.flags = 8;
+    lone.connections[{1, 3}] = true;   // direction 0 -> direction flag 1, network type 3 (street)
+    FakeOccupant loneOccupant;
+    loneOccupant.occupantType = 0xc772bf98;
+    loneOccupant.network = &lone;
+    host.occupantManager.occupants[{3, 2}].push_back(&loneOccupant);
+
+    developer->ExtendAsStreets(bounds, 3);
+    CHECK(host.street.placements.size() == 4);
+    if (!host.street.placements.empty()) {
+        const NetworkPlacement& first = host.street.placements[0];
+        CHECK(first.x0 == 3 && first.z0 == 2 && first.x1 == 3 && first.z1 == 5);
+        CHECK(first.flags == 0xc49);
+        CHECK(!first.nullTool);
+        CHECK(first.arg7);
+        CHECK(first.arg8 == -1);
+    }
+    host.street.placements.clear();
+
+    // A lone street one row above the rectangle: LayInJogStreets draws along the top edge.
+    FakeNetworkOccupant above;
+    above.flags = 8;
+    above.connections[{1, 3}] = true;
+    FakeOccupant aboveOccupant;
+    aboveOccupant.occupantType = 0xc772bf98;
+    aboveOccupant.network = &above;
+    host.occupantManager.occupants[{3, 1}].push_back(&aboveOccupant);
+
+    developer->LayInJogStreets(bounds, 3);
+    // Extend mode places the whole run and then every cell of the top edge: four + four calls.
+    CHECK(host.street.placements.size() == 8);
+    if (!host.street.placements.empty()) {
+        CHECK(host.street.placements.front().x0 == 2 && host.street.placements.front().z0 == 2);
+        CHECK(host.street.placements.front().x1 == 5 && host.street.placements.front().z1 == 2);
+        CHECK(host.street.placements.back().x0 == 5 && host.street.placements.back().z0 == 2);
+        CHECK(host.street.placements.back().x1 == 5 && host.street.placements.back().z1 == 2);
+    }
+    host.street.placements.clear();
+
+    // A perpendicular network on the same cell blocks the jog street entirely.
+    FakeNetworkOccupant perpendicular;
+    perpendicular.flags = 0x40;   // avenue
+    perpendicular.types = {6};
+    perpendicular.connections[{0, 6}] = true;   // direction 3 -> direction flag 0
+    FakeOccupant perpendicularOccupant;
+    perpendicularOccupant.occupantType = 0xc772bf98;
+    perpendicularOccupant.network = &perpendicular;
+    host.occupantManager.occupants[{3, 1}].push_back(&perpendicularOccupant);
+    developer->LayInJogStreets(bounds, 3);
+    CHECK(host.street.placements.empty());
+    host.occupantManager.occupants[{3, 1}].pop_back();
+    host.street.placements.clear();
+
+    // DrawStreet on a single cell places one occupant; a cell outside the region is ignored.
+    developer->DrawStreet(3, 3, 3, 3, false);
+    CHECK(host.street.placements.size() == 1);
+    developer->DrawStreet(9, 9, 9, 9, false);
+    CHECK(host.street.placements.size() == 1);
+
+    developer->SetCurrentRegion(nullptr);
+    developer->Shutdown();
+    developer->Release();
+    SetZoneDeveloperHost(nullptr);
+}
+
+void TestExamineBoundariesAndOnZone() {
+    FakeHost host;
+    SetZoneDeveloperHost(&host);
+    auto* developer = new cSC4ZoneDeveloper();
+    developer->AddRef();
+    CHECK(developer->Init());
+
+    // Streets on the north side only; the lot then faces north.
+    std::vector<FakeNetworkOccupant> northViews(4);
+    std::vector<FakeOccupant> northOccupants(4);
+    for (int i = 0; i < 4; ++i) {
+        northViews[i].flags = 0x10c;   // street-like: 0x104 for ExamineCell, 0x8 for the facing test
+        northOccupants[i].occupantType = 0xc772bf98;
+        northOccupants[i].network = &northViews[i];
+        host.occupantManager.occupants[{1 + i, 0}].push_back(&northOccupants[i]);
+    }
+    cRZMessage2Standard cityInit;
+    cityInit.SetType(0x26d31ec1);
+    CHECK(developer->DoMessage(&cityInit));
+    developer->SetOptions(false, true, true);   // extend as streets, examine boundaries first
+    SC4CellRegion<int> first = SC4CellRegion<int>::Make({1, 1, 4, 4}, true);
+    developer->DoParcellization(first, 7, false);
+    // Industrial zone: the normal orientation branch (strongest side 0, alternate 3).
+    CHECK(developer->LotOrientation() == 3);
+    CHECK(developer->LotOrientationAlt() == 0);
+    cSC4Lot* lot = developer->GetLot(1, 1, false);
+    CHECK(lot != nullptr);
+    CHECK(developer->GetLotCount() == 1);
+    if (lot) {
+        CHECK(lot->GetFacing() == 0);
+        std::uint8_t sizeX = 0, sizeZ = 0;
+        lot->GetSize(sizeX, sizeZ);
+        CHECK(sizeX == 4 && sizeZ == 4);
+        CHECK(developer->GetLot(4, 4, false) == lot);
+    }
+    developer->Shutdown();
+    developer->Release();
+
+    // The full pipeline for an industrial zone: every cell of an 8x8 region becomes a 1x1 lot and the
+    // simple parcellizer lays a street every six cells.
+    FakeHost industrialHost;
+    SetZoneDeveloperHost(&industrialHost);
+    auto* industrial = new cSC4ZoneDeveloper();
+    industrial->AddRef();
+    CHECK(industrial->Init());
+    cRZMessage2Standard industrialInit;
+    industrialInit.SetType(0x26d31ec1);
+    CHECK(industrial->DoMessage(&industrialInit));
+    SC4CellRegion<int> second = SC4CellRegion<int>::Make({0, 0, 9, 9}, true);
+    industrial->DoParcellization(second, 8, false);
+    CHECK(industrial->GetLotCount() == 100);
+    CHECK(industrial->GetLot(0, 0, false) != nullptr);
+    CHECK(industrial->GetLot(9, 9, false) != nullptr);
+    CHECK(!industrialHost.street.placements.empty());   // the two parcellizer streets were drawn
+    // No growth developer: the default footprint {2,2}, depth range 1..3 and the density gap 8-3.
+    CHECK(industrial->ParcellizationSize(0) == 2);
+    CHECK(industrial->ParcellizationSize(1) == 2);
+    CHECK(industrial->ParcellizationSize(2) == 1);
+    CHECK(industrial->ParcellizationSize(3) == 3);
+    CHECK(industrial->ParcellizationSize(4) == 5);
+    industrial->Shutdown();
+    industrial->Release();
+
+    SetZoneDeveloperHost(nullptr);
+}
+
+void TestExamineBoundariesOrientations() {
+    FakeHost host;
+    SetZoneDeveloperHost(&host);
+    auto* developer = new cSC4ZoneDeveloper();
+    developer->AddRef();
+    CHECK(developer->Init());
+    // Residential zone 2 with all boundary costs equal: the special branch swaps the strongest side
+    // and its alternate, so the first facing tried is the alternate (3, west).
+    developer->SetOptions(false, true, true);
+    SC4CellRegion<int> region = SC4CellRegion<int>::Make({1, 1, 4, 4}, true);
+    developer->DoParcellization(region, 2, false);
+    CHECK(developer->LotOrientation() == 0);
+    CHECK(developer->LotOrientationAlt() == 3);
+    cSC4Lot* lot = developer->GetLot(1, 1, false);
+    CHECK(lot != nullptr);
+    if (lot) CHECK(lot->GetFacing() == 3);   // no street anywhere: the first candidate wins
+    developer->Shutdown();
+    developer->Release();
+
+    // The swap-orientation option exchanges the two again.
+    auto* swapped = new cSC4ZoneDeveloper();
+    swapped->AddRef();
+    CHECK(swapped->Init());
+    swapped->SetOptions(true, true, true);
+    SC4CellRegion<int> second = SC4CellRegion<int>::Make({1, 1, 4, 4}, true);
+    swapped->DoParcellization(second, 2, false);
+    CHECK(swapped->LotOrientation() == 3);
+    CHECK(swapped->LotOrientationAlt() == 0);
+    cSC4Lot* secondLot = swapped->GetLot(1, 1, false);
+    CHECK(secondLot != nullptr);
+    if (secondLot) CHECK(secondLot->GetFacing() == 0);
+    swapped->Shutdown();
+    swapped->Release();
+    SetZoneDeveloperHost(nullptr);
+}
+
+void TestDetermineLotSizeWithDeveloper() {
+    FakeHost host;
+    SetZoneDeveloperHost(&host);
+    auto* developer = new cSC4ZoneDeveloper();
+    developer->AddRef();
+    CHECK(developer->Init());
+
+    // Residential low: 0x1010 and 0x1020 both answer, 0x1020 wins on its estimate. Its valid growth
+    // list selects style 5 (the first item whose desirability is above the estimate).
+    FakeGrowthDeveloper low, medium;
+    low.purpose = 1;
+    low.wealth = 1;
+    low.estimate = 10;
+    low.demand.value = 3.0f;
+    medium.purpose = 1;
+    medium.wealth = 1;
+    medium.estimate = 20;
+    medium.demand.value = 7.0f;
+    medium.listsValid = true;
+    medium.growthList.push_back({0, 0, 5});
+    medium.grid.tractSize = 2;
+    medium.grid.values[{0, 0}] = 30;
+    host.buildingDevelopment.developers[0x1010] = &low;
+    host.buildingDevelopment.developers[0x1020] = &medium;
+
+    SC4CellRegion<int> region = SC4CellRegion<int>::Make({0, 0, 3, 3}, true);
+    developer->SetOptions(false, false, false);
+    developer->DoParcellization(region, 1, false);
+    CHECK(host.lastFilterPurpose == 1);
+    CHECK(host.lastFilterWealth == 1);
+    CHECK(host.lastFilterStage == 5);
+    // No configuration matches, so the footprint falls back to 2x2, the depth range to 1..3 and the
+    // residential density gap to three times the lot depth.
+    CHECK(developer->ParcellizationSize(0) == 2);
+    CHECK(developer->ParcellizationSize(1) == 2);
+    CHECK(developer->ParcellizationSize(2) == 1);
+    CHECK(developer->ParcellizationSize(3) == 3);
+    CHECK(developer->ParcellizationSize(4) == 6);
+
+    // Same region as an industrial zone: no developer is registered for it, so the density gap is 8-3.
+    auto* industrial = new cSC4ZoneDeveloper();
+    industrial->AddRef();
+    CHECK(industrial->Init());
+    SC4CellRegion<int> industrialRegion = SC4CellRegion<int>::Make({0, 0, 3, 3}, true);
+    industrial->DoParcellization(industrialRegion, 9, false);
+    CHECK(industrial->ParcellizationSize(4) == 5);
+    industrial->Shutdown();
+    industrial->Release();
+
+    developer->Shutdown();
+    developer->Release();
+    SetZoneDeveloperHost(nullptr);
+}
+
+void TestParcellizeLayout() {
+    FakeHost host;
+    SetZoneDeveloperHost(&host);
+    auto* developer = new cSC4ZoneDeveloper();
+    developer->AddRef();
+    CHECK(developer->Init());
+    cRZMessage2Standard cityInit;
+    cityInit.SetType(0x26d31ec1);
+    CHECK(developer->DoMessage(&cityInit));
+
+    // Residential zoning with no developers and no streets: Parcellize lays the 2x2 default footprint
+    // out over the region, levels each footprint through the lot developer and locks the lot vertices.
+    SC4CellRegion<int> region = SC4CellRegion<int>::Make({0, 0, 8, 8}, true);
+    developer->DoParcellization(region, 1, false);
+    CHECK(developer->GetLotCount() > 0);
+    int counted = 0;
+    for (int x = 0; x <= 8; ++x) {
+        for (int z = 0; z <= 8; ++z) {
+            cSC4Lot* lot = developer->GetLot(x, z, false);
+            if (!lot) continue;
+            int lotX = 0, lotZ = 0;
+            lot->GetLocation(lotX, lotZ);
+            CHECK(lotX >= 0 && lotX <= 8 && lotZ >= 0 && lotZ <= 8);
+            std::uint8_t sizeX = 0, sizeZ = 0;
+            lot->GetSize(sizeX, sizeZ);
+            CHECK(sizeX >= 1 && sizeX <= 2);
+            CHECK(sizeZ >= 1 && sizeZ <= 3);
+            if (lotX == x && lotZ == z) ++counted;
+        }
+    }
+    CHECK(counted == developer->GetLotCount());
+    CHECK(!host.lotDeveloper.levelledAreas.empty());
+    CHECK(host.lotDeveloper.levelledAltitudes.front() == FLT_MAX);
+
+    developer->Shutdown();
+    developer->Release();
+    SetZoneDeveloperHost(nullptr);
+}
+
+void TestOnDezoneAndRemnants() {
+    FakeHost host;
+    SetZoneDeveloperHost(&host);
+    auto* developer = new cSC4ZoneDeveloper();
+    developer->AddRef();
+    CHECK(developer->Init());
+
+    FakeLotHost lotHost;
+    SetLotHost(&lotHost);
+    cSC4Lot* lot = nullptr;
+    CHECK(developer->CreateLot(2, 2, 2, 2, 0, lot));
+    lot->UpdateZoneType();   // zone type 2 from the lot host
+    CHECK(developer->GetLotCount() == 1);
+    // An orphaned rail piece inside the region is handed to the demolition service.
+    FakeNetworkOccupant rail;
+    rail.flags = 0x808;
+    FakeOccupant railOccupant;
+    railOccupant.occupantType = 0xc772bf98;
+    railOccupant.network = &rail;
+    host.occupantManager.occupants[{6, 6}].push_back(&railOccupant);
+    SC4CellRegion<int> wide = SC4CellRegion<int>::Make({2, 2, 6, 6}, true);
+    developer->OnDezone(&wide, true);
+    // The 2x2 lot is deleted and its footprint immediately filled by two 1x2 remnant lots.
+    CHECK(developer->GetLotCount() == 2);
+    CHECK(developer->GetLot(2, 2, false) != nullptr);
+    CHECK(developer->GetLot(2, 2, false) != lot);
+    CHECK(developer->GetLot(3, 2, false) != nullptr);
+    CHECK(host.demolishedRegionCalls == 1);
+    CHECK(host.lastDemolishedRegion.Test(6, 6));
+    CHECK(!host.lastDemolishedRegion.Test(2, 2));
+
+    // A cleared footprint is filled by remnant runs; facing east gives 2x1 remnants.
+    developer->DeleteLots(0, 0, 15, 15);
+    CHECK(developer->GetLotCount() == 0);
+    developer->CreateLotRemnants(4, 4, 2, 2, 1);
+    CHECK(developer->GetLotCount() == 2);
+    CHECK(developer->GetLot(4, 4, false) != nullptr);
+    CHECK(developer->GetLot(4, 5, false) != nullptr);
+    // Facing north gives 1x2 remnants.
+    developer->DeleteLots(0, 0, 15, 15);
+    developer->CreateLotRemnants(4, 4, 2, 2, 0);
+    CHECK(developer->GetLotCount() == 2);
+    CHECK(developer->GetLot(4, 4, false) != nullptr);
+    CHECK(developer->GetLot(5, 4, false) != nullptr);
+
+    SetLotHost(nullptr);
+    developer->Shutdown();
+    developer->Release();
+    SetZoneDeveloperHost(nullptr);
+}
+
+void TestConnectionFixups() {
+    FakeHost host;
+    SetZoneDeveloperHost(&host);
+    auto* developer = new cSC4ZoneDeveloper();
+    developer->AddRef();
+    CHECK(developer->Init());
+    cRZMessage2Standard cityInit;
+    cityInit.SetType(0x26d31ec1);
+    CHECK(developer->DoMessage(&cityInit));
+
+    // A removed street piece at cell (0,0): the street piece to its east has a single connection
+    // pointing back west, so a street is placed between the two cells.
+    FakeNetworkOccupant removedView;
+    removedView.types = {3};
+    FakeOccupant removed;
+    removed.occupantType = 0xc772bf98;
+    removed.network = &removedView;
+    FakeNetworkOccupant eastView;
+    eastView.types = {3};
+    eastView.flags = 0xc09;
+    eastView.connections[{2, 3}] = true;   // edge 2, street
+    FakeOccupant east;
+    east.occupantType = 0xc772bf98;
+    east.network = &eastView;
+    host.occupantManager.occupants[{1, 0}].push_back(&east);
+    developer->ConnectRoadToAnyAdjacentStreets(&removed);
+    CHECK(host.street.placements.size() == 1);
+    if (!host.street.placements.empty()) {
+        const NetworkPlacement& placement = host.street.placements[0];
+        CHECK(placement.x0 == 0 && placement.z0 == 0 && placement.x1 == 1 && placement.z1 == 0);
+        CHECK(placement.flags == 0);
+        CHECK(placement.nullTool);
+    }
+    host.street.placements.clear();
+
+    // A removed rail piece: a straight rail to the west and a street two cells further out.
+    FakeNetworkOccupant railRemovedView;
+    railRemovedView.types = {1};
+    FakeOccupant railRemoved;
+    railRemoved.occupantType = 0xc772bf98;
+    railRemoved.network = &railRemovedView;
+    FakeNetworkOccupant railView;
+    railView.flags = 0x80a;
+    railView.networkFlags = 2;
+    railView.connections[{1, 1}] = true;
+    railView.connections[{3, 1}] = true;
+    FakeOccupant railNeighbour;
+    railNeighbour.occupantType = 0xc772bf98;
+    railNeighbour.network = &railView;
+    host.occupantManager.occupants[{-1, 0}].push_back(&railNeighbour);
+    FakeNetworkOccupant streetView;
+    streetView.types = {3};
+    streetView.flags = 8;
+    FakeOccupant street;
+    street.occupantType = 0xc772bf98;
+    street.network = &streetView;
+    host.occupantManager.occupants[{-2, 0}].push_back(&street);
+    developer->ConnectStreetsAcrossRail(&railRemoved);
+    CHECK(host.street.placements.size() == 1);
+    if (!host.street.placements.empty()) {
+        const NetworkPlacement& placement = host.street.placements[0];
+        CHECK(placement.x1 == -2 && placement.z1 == 0);
+    }
+
+    developer->Shutdown();
+    developer->Release();
+    SetZoneDeveloperHost(nullptr);
+}
+
+void TestPlopAllLotTypes() {
+    FakeHost host;
+    SetZoneDeveloperHost(&host);
+    auto* developer = new cSC4ZoneDeveloper();
+    developer->AddRef();
+    CHECK(developer->Init());
+
+    // Without a lot-configuration catalogue (the manager's map is empty) the cheat command has nothing
+    // to plop and must not touch the city.
+    developer->PlopAllLotTypes();
+    CHECK(host.lotDeveloper.constructed.empty());
+    CHECK(developer->GetLotCount() == 0);
+    CHECK(host.gameDelayCalls == 0);
+
+    developer->Shutdown();
+    developer->Release();
+    SetZoneDeveloperHost(nullptr);
+}
+
 }  // namespace
 
 int main() {
@@ -1022,6 +1829,17 @@ int main() {
     TestNetworkAndOccupantSeams();
     TestDeferAndMessages();
     TestSerialization();
+    TestParcellizableRegionAndCompression();
+    TestExtractAndSubdivide();
+    TestUpdateZoneTypeAndHighlightTextures();
+    TestStreetDrawingAndJogStreets();
+    TestExamineBoundariesAndOnZone();
+    TestExamineBoundariesOrientations();
+    TestDetermineLotSizeWithDeveloper();
+    TestParcellizeLayout();
+    TestOnDezoneAndRemnants();
+    TestConnectionFixups();
+    TestPlopAllLotTypes();
 
     if (g_failures != 0) {
         std::fprintf(stderr, "%d check(s) failed\n", g_failures);
