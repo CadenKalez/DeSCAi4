@@ -49,16 +49,20 @@ for cls in args:
     if not rows: problems.append(f"{cls}: no ledger rows (run scripts/ledger_class.py)"); continue
     if any(not r["evidence"].strip() for r in rows): problems.append(f"{cls}: ledger rows without evidence")
     sources = {r["source"] for r in rows if r["source"]}
-    # Verification evidence is either a registered unit test in scripts/tests/ or an oracle/real-data
-    # script (AGENT_RULES workflow step 3 allows "a decompiled-code oracle ... or real game data").
-    tests = {re.findall(r"scripts/tests/(\S+?)(?:[ ,;):]|$)", r["evidence"])[0].rstrip(":.,;") for r in rows if "scripts/tests" in r["evidence"]}
-    oracles = {m for r in rows for m in re.findall(r"scripts/(?:run_[A-Za-z0-9_]+\.sh|check_[A-Za-z0-9_]+\.py)", r["evidence"]) if (ROOT / m).exists()}
-    tool_evidence = any(re.search(r"\b(oracle|tool|real data|real-data)\b", r["evidence"], re.I) for r in rows)
-    if not tests and not oracles:
-        problems.append(f"{cls}: no test or oracle script named in the evidence column")
-    for t in tests:
-        if f"$T/{t}" in run_tests:
-            continue
+    # Verification evidence is one of: a registered unit test (named by file or by entry name, in any of the
+    # forms the ledger uses - "scripts/tests/x_test.cpp", "tests/x_test", "x_test", or the entry name), or an
+    # oracle / real-data script under scripts/ (AGENT_RULES workflow step 3 allows both).
+    entries = {m.group(1) for m in re.finditer(r'^ "([a-z0-9_]+):', run_tests, re.M)}
+    test_files = {m.group(1) for m in re.finditer(r'\$T/([A-Za-z0-9_]+\.cpp)', run_tests)}
+    evidence = " ".join(r["evidence"] for r in rows)
+    cited_files = set(re.findall(r'([A-Za-z0-9_]+_test\.cpp)', evidence))
+    oracles = {m for m in re.findall(r"scripts/(?:run_[A-Za-z0-9_]+\.sh|check_[A-Za-z0-9_]+\.py)", evidence) if (ROOT / m).exists()}
+    tool_evidence = re.search(r"\b(oracle|tool|real data|real-data)\b", evidence, re.I) is not None
+    entry_named = any(re.search(r'\b' + re.escape(e) + r'(?:_test)?\b', evidence) for e in entries)
+    file_named = bool(cited_files & test_files)
+    if not (oracles or file_named or entry_named):
+        problems.append(f"{cls}: no registered test or oracle script named in the evidence column")
+    for t in cited_files - test_files:
         if not (ROOT / "scripts/tests" / t).exists():
             problems.append(f"{cls}: evidence names scripts/tests/{t}, which does not exist")
         elif not tool_evidence:
