@@ -1,8 +1,8 @@
 // cSC4AudioAEMSEventSystem — the game-side wrapper of the AEMS audio event system (28 functions at
-// 0x1007b56a0..0x1007b6aa0, service id 0xac1fae31, priority INT32_MIN). AEMS is the Mix-style
-// "audio event" engine: the game starts and stops numbered events (fire, disaster, UI, ambient
-// triggers, vehicle loops), loads sound banks and drives three global event parameters
-// (velocity/throttle/wobble). Everything below the Wrapper is the engine's C API
+// 0x1007b56a0..0x1007b6aa0, service id 0xac1fae31, priority INT32_MIN). AEMS (Audio Event Management
+// System) is the Miles audio-event engine: the game starts and stops numbered events (fire, disaster,
+// UI, ambient triggers, vehicle loops), loads sound banks and drives three global event parameters
+// (velocity/throttle/wobble). Everything below the wrapper is the engine's C API
 // (_SNDSYS_* / _SNDAEMS_*, recovered here as the IAemsEngineHost seam).
 //
 // The system owns:
@@ -17,14 +17,20 @@
 //
 // Bases / original vtable groups: cIGZSndEventHandler +0 (iid 0xbb523bb2), cISC4AEMSEvents +8 (iid
 // 0x8c1faeb7), cIGZMessageTarget2 +0x10 (iid 0x452294aa), cRZSystemService +0x18 (iid 1 lands on its
-// cRZUnknown subobject at +0x20). Object size 0x1f0.
+// cRZUnknown subobject at +0x20). Original object size 0x1f0; the port's is 0x1e8 because its
+// cSC4ResponseCurve is 0x18 bytes instead of the original's 0x20 (all later members sit 8 lower).
 //
-// Member offsets (original; the port's cSC4ResponseCurve is 0x18 bytes instead of the original's
-// 0x20, so the members from +0x1a0 on sit 8 bytes lower here): +0x40 eventStates, +0x58 soundSystemMemory, +0x70 the engine options
-// block (0x100 bytes, never initialised by the constructor - _SNDSYS_getopts fills it), +0x170
+// Member offsets (original): +0x40 eventStates, +0x58 soundSystemMemory, +0x70 the engine options
+// block (0x100 bytes - the size is inferred from the tuning values at +0x170, which are read after
+// _SNDSYS_getopts; the original never initialises it, the port zero-fills it), +0x170
 // tuning volume (float), +0x174 bus volume (float), +0x178 bus flags (uint32, default 0x25), +0x180
 // response curve, +0x1a0 system blob, +0x1b8 bank list, +0x1d0 master volume scale, +0x1d4 zoom
 // volume scale, +0x1d8 zoom-level volumes (vector<float>, 5 defaults from kAEMSZoomLevelVolumes).
+//
+// Port deviations: the SNDSYS/AEMS C API sits behind the IAemsEngineHost seam (no host = Init fails
+// like a SNDSYSI_init error), the unrecovered cSC4ResponseCurve::SetResponseCurveData(key, property)
+// @ 0x1000ac47e is inlined as a property read, and a null holder/viewport, an out-of-range zoom
+// level or an out-of-range event index is ignored instead of dereferenced.
 //
 // Quirks kept: Init/Shutdown guard the whole object with one process-wide flag (a second instance's
 // Init does nothing and reports success); DoEvent always returns false even when it handled the
