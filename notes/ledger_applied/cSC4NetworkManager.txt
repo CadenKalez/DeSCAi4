@@ -1,0 +1,46 @@
+SOURCE src/sc4/NetworkManager.cpp|h
+EVIDENCE test scripts/tests/sc4_networkmanager_test.cpp - object layout (0x170 bytes, every member at its original offset) and refcount/QueryInterface, the four ini remap tables read from a real temporary file through cRZIniFile, the texture/shadow/path mapping quirks, Init/Shutdown with and without a message server, the thirteen tool slots, DestroyNetworkOccupants and the QueueRemovals sort/dedupe path, construction crews, the tractable DoMessage branches (tracking, lights, view rotation, bridge models, region reset), Read/Write over PortMemoryStreams and the partial entry points (registry scripts/tests/registry/sc4_networkmanager.txt)
+0x10016dffe NetworkManagerConstruct
+0x10016e1ec NetworkManagerReload
+0x10016e486 NetworkManagerDestructBody
+0x10016e690 NetworkManagerDestruct
+0x10016e69a NetworkManagerDestructAndDelete
+0x10016e6c8 NetworkManagerGetNetworkTool
+0x10016e8d8 NetworkManagerDestroyNetworkOccupants
+0x10016eaee NetworkManagerQueueRemovals
+0x10016ec20 NetworkManagerMapPreviewTexture
+0x10016ec7e NetworkManagerAddTextureMapping
+0x10016ece4 NetworkManagerMapShadowTexture
+0x10016edc8 NetworkManagerAddShadowMapping
+0x10016ee44 NetworkManagerMapPath
+0x10016f1dc NetworkManagerRegisterConstructionCrew
+0x10016f226 NetworkManagerUnregisterConstructionCrew
+0x10016f2a8 NetworkManagerIsOccupantSubwayStation
+0x10016f2b6 NetworkManagerFindPipeOccupant
+0x10016f2c8 NetworkManagerFindPipeConnectionOccupant
+0x10016f2da NetworkManagerGetWaterOccupantFilter
+0x10016f332 NetworkManagerGetSubwayOccupantFilter
+0x10016f38a NetworkManagerAddRef
+0x1001700d8 NetworkManagerDoViewRotationChange
+0x100170886 NetworkManagerRefreshBridgeModelsGo
+0x100170928 NetworkManagerInit
+0x100170e1e NetworkManagerQueryInterface
+0x100170e7e NetworkManagerRelease
+0x100170ee6 NetworkManagerShutdown
+0x100171c3c NetworkManagerGetEnglishNetworkName
+0x100171c50 NetworkManagerAddToRetrofitList
+0x100171cb2 NetworkManagerRead
+0x100171d8c NetworkManagerWrite
+0x100171e08 NetworkManagerGetGZCLSID
+
+PARTIAL:
+0x10016f3b4 NetworkManagerDoMessage - the 0x278e6003 (city size) and 0x6a3b0afd branches are left out: they rebuild the pipe/subway occupant terrain heights through cSC4NetworkORFilter (0x1002eee4c, not recovered), the occupant manager's filtered city-cell query and cSC4UndergroundNetworkTool::UpdateUndergroundOccupantTerrainHeights (0x1001a85e2, itself PARTIAL); the implemented branches are tracking, lights, view rotation, bridge models, crew reset and region reset
+0x100170230 NetworkManagerRetrofit - needs the intersection-piece walk above, the network occupant slots 0x238 (connection-node edge pair), 0x1a0 and 0xd0, and the 10-entry kOldIntxPieceToNewIntxPiece table at 0x100a19570, whose loop reads an 11th pair past the table; none of those meanings is recovered yet
+0x100171064 NetworkManagerRemoveOrReplaceOccupant - needs cSC4NetworkTool::GetCellInfo (0x1001b4bc0), the network tool's cell-info write (vslot 0x250) and the occupant removal path (occupant slot 0x108/0x60 and occupant manager +0xa8); only the CanRemove test is understood
+0x1001711c2 NetworkManagerGetAllIntersectionPieces - needs cSC4NetworkORFilter (0x1002eee4c) and the network occupant's intersection-owner accessor (vslot 0x180), whose meaning is only inferred from the call sites
+0x1001712aa NetworkManagerGetAllIntersectionPieces2 - the recursive visited-set walk needs the same 0x180 accessor plus the same-intersection test at 0x210 (inferred); the cell accessor 0x1d8 is identified as GetCell(x, z) but not enough on its own
+0x100171494 NetworkManagerCreateConnectionNode - needs the network tool placement pass (slots 0x18/0x40/0x20/0x260), the occupant manager's city-cell query (+0x108), the lot -> buildable-property chain (cSC4Lot 0x180/0x18/0x40) and the new occupant's initialisation slots 0x120/0x80/0xf0/0xb8/0xa0/0x70; the pipe/subway tools are not recovered either
+0x100171780 NetworkManagerAutoconnectLotNodes - needs cSC4NetworkORFilter, the 0xb0 OR-filter mask, the lot's cell rectangle (lot vslot 0x70), the occupant manager's +0x108 query, the occupant cell/edge-mask slots 0x1d8/0x68/0x140 and the tool placement call at 0x38
+
+SKIPPED:
+none of the 39 cSC4NetworkManager symbols is Windows/DX7-only. The two GZCOM factory entries next to the class (GZCOM_CreatecSC4NetworkManager 0x10016dfb0, GZCOM_cSC4NetworkManagerCLSID 0x10016dff2) are generated bookkeeping in src/gz/GZCOM.cpp and already have ledger rows; the create entry stays null until the app hooks the recovered class into the GZCOM factory table.
