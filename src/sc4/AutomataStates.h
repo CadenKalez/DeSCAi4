@@ -88,13 +88,33 @@ public:
     bool Read(cIGZIStream& stream) override;
     float value38 = 0.0f;
 };
+// The player-drive record is larger than its saved fields: Write stores only value38 and the 13-entry history, while
+// the run-time tables after it are read by the player-drive code of the vehicle family and of cSC4Watercraft (the
+// original offsets are in the comments; the port does not keep byte-compatible padding). cSC4Watercraft's
+// HandleEnterState / TranslatePlayerDriveCommands are the users recovered so far.
 class tAutomataStatePlayerDrive : public tAutomataState {   // @ Shutdown 0x10010e63c, Write 0x10010e678, Read 0x10010e6b4
 public:
     void Shutdown(IStateAutomaton* automaton) override;
     bool Write(cIGZOStream& stream) const override;
     bool Read(cIGZIStream& stream) override;
-    float value38 = 0.0f;
-    float history[13];   // +0xa8: refilled with -1.0f by Read
+    float value38 = 0.0f;                  // +0x38
+    float value3c = 0.0f;                  // +0x3c
+    std::uint32_t value40 = 0;             // +0x40
+    float groupSpeed = 1.0f;               // +0x44: the automata group's speed (HandleEnterState)
+    float steering6c = 0.0f;               // +0x6c: the watercraft's rudder command
+    float history[13];                     // +0xa8: refilled with -1.0f by Read
+    float effectTimerC4 = 0.0f;            // +0xc4
+    std::uint8_t hint117 = 0;              // +0x117
+    std::uint8_t hint119 = 0;              // +0x119
+    std::uint32_t value170 = 0;            // +0x170
+    std::int32_t animStage1a4 = 0;         // +0x1a4
+    std::uint32_t timeout1d8 = 0;          // +0x1d8 (bits of 2000.0f)
+    std::uint32_t effectDelay20c = 0;      // +0x20c
+    std::uint8_t wakeStarted22b = 0;       // +0x22b
+    float steerVisual264 = 0.0f;           // +0x264
+    float wakeAngle268 = 0.0f;             // +0x268
+    float wakeTurn26c = 6.2831855f;        // +0x26c
+    float heading270 = 0.0f;               // +0x270
     tAutomataStatePlayerDrive() { for (float& v : history) v = -1.0f; }
 };
 class tAutomataStateBumped : public tAutomataState {        // @ Write 0x10010e70a, Read 0x10010e76a

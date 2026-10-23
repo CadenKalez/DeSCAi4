@@ -116,8 +116,8 @@ struct FakeAutomaton : ITrafficNetworkMapAutomaton {
     bool removed = false;
     std::uint32_t lane = 0;
     std::uint32_t pathType = 0;
-    void AddRef() override { ++refs; }
-    void Release() override { --refs; }
+    std::uint32_t AddRef() override { return static_cast<std::uint32_t>(++refs); }
+    std::uint32_t Release() override { return static_cast<std::uint32_t>(--refs); }
     bool IsRemoved() override { return removed; }
     std::uint32_t GetLane() override { return lane; }
     std::uint32_t PathTypeWord() const override { return pathType; }

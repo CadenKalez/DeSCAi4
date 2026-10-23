@@ -36,6 +36,11 @@ public:
     virtual void* CurrentCity() = 0;                                          // SL::spSC4 vslot 0x120
     virtual double CurrentCityFunds() = 0;                                    // city vslot 0x190
     virtual void ReportDealStatus(bool changed, cSC4NeighborDeal* deal) = 0; // sReportDealStatus<cSC4NeighborDeal>
+    // SL::spSC4 vslot 0x120 then cISC4RegionalCity vslot 0x190 (GetBudget), used by UpdateState. Defaulted so the
+    // existing fakes keep compiling; the real host overrides it.
+    virtual double CurrentRegionalCityBudget() { return 0.0; }
+    // SL::spNeighborsSim vslot 0xb8 FindConnectionSuitableForDeal(type, city) != null (UpdateState). Default false.
+    virtual bool HasSuitableConnection(std::uint32_t, void*) { return false; }
 };
 INeighborDealHost* NeighborDealHost();
 void SetNeighborDealHost(INeighborDealHost* host);

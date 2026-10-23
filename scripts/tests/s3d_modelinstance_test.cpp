@@ -21,6 +21,7 @@ struct Model final : cIS3DResModel {
     std::uint32_t AddRef() override { return ++refs; }
     std::uint32_t Release() override { return --refs; }
     void ComputeBounds(cS3DBoundingBox& out) override { ++computed; out = {{-1, -2, -3}, {4, 5, 6}}; }
+    bool CreateModelInstance(std::uint32_t, cIS3DModelInstance** out) override { *out = nullptr; return false; }
 };
 struct Host final : IModelInstanceHost {
     std::vector<const char*> calls;

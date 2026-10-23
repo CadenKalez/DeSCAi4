@@ -284,7 +284,7 @@ public:
     void GetPosition(float* xyz) override;                            // 0x38  @ 0x100106e62
     void SetPosition(const float* xyz) override;                      // 0x40  @ 0x100106e92
     void SetVisible(bool visible);                                    // 0x48  @ 0x100106bda
-    void SetDestination(const float* xyz);                            // 0x50  @ 0x100107128
+    virtual void SetDestination(const float* xyz);                            // 0x50  @ 0x100107128
     void GetDestination(float* xyz) const;                            // 0x58  @ 0x100107108
     bool GetTransform(cS3DTransform& transform) const;                // 0x60  @ 0x10010aa34
     void Remove(bool fade);                                           // 0x68  @0x10010a5a2
@@ -351,7 +351,7 @@ public:
     bool DoMessage(cIGZMessage2* message) override;                   // 0x260 @ 0x100106ae4
     bool PlaceInOccupantManager(bool add);                            // 0x268 @ 0x100107216
     bool PlaceInRenderer(bool add);                                   // 0x270 @ 0x100107370
-    bool DoAnimationTick(std::uint32_t unknown, float milliseconds);   // 0x278 @ 0x100107ce2
+    virtual bool DoAnimationTick(std::uint32_t unknown, float milliseconds);   // 0x278 @ 0x100107ce2
     bool ShouldCollide(cSC4Automaton* other) const;                   // 0x280 @ 0x10010b9c8
     void SetZoomAndRotation(int zoom, int rotation);                  // 0x288 @ 0x10010bba2
     void SetTransform(const cS3DTransform& transform);                // 0x290 @ 0x10010aa68
@@ -372,7 +372,7 @@ public:
     void SetSpecialRouteFlag(bool on);                                // 0x308 @ 0x100506860
     void SetSelfControlling(bool on);                                 // 0x310 @ 0x1000f3ca0
     const char* GetDebugFlagsText() const;                            // 0x318 @ 0x10010d408
-    const char* GetDebugExtraText() const;                            // 0x320 @ 0x10010d8bc
+    virtual const char* GetDebugExtraText() const;                            // 0x320 @ 0x10010d8bc
     tAutomataState* CreateAutomataState(std::uint32_t state);         // 0x328 @ 0x10010d96a
     void SetAutomataGroup(IAutomataGroupTemplate* group);             // 0x330 @ 0x10010dcac
     cGZPersistResourceKey GetModelResourceKey(int index) const;       // 0x338 @ 0x1001071bc
@@ -388,9 +388,9 @@ public:
     void InitLighting();                                              // 0x388 @ 0x10010a9b4
     void UpdateLighting();                                            // 0x390 @ 0x10010a858
     void ClearStateStack();                                           // 0x398 @ 0x10010cd3e
-    bool DoStateTick(float milliseconds);                             // 0x3a0 @ 0x100108230
-    bool HandleEnterState(tAutomataState* state);                     // 0x3a8 @ 0x1001098ae
-    bool HandleExitState(const tAutomataState* state);                // 0x3b0 @ 0x10010a172
+    virtual bool DoStateTick(float milliseconds);                             // 0x3a0 @ 0x100108230
+    virtual bool HandleEnterState(tAutomataState* state);                     // 0x3a8 @ 0x1001098ae
+    virtual bool HandleExitState(const tAutomataState* state);                // 0x3b0 @ 0x10010a172
     bool DoIdleTick(float milliseconds);                              // 0x3b8 @ 0x1001083dc
     bool DoRandomWalkTick(float milliseconds);                        // 0x3c0 @ 0x10010840c
     bool DoPlopJumpTick(float milliseconds);                          // 0x3c8 @ 0x1001089f2

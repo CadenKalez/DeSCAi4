@@ -17,6 +17,10 @@
 #include "rz/cRZString.h"
 #include "rz/cRZSystemService.h"
 
+// cIGZCommandParameterSet lives at global scope (gz/CommandParameterSet.h); the declaration has to be made there, not inside
+// namespace sc4, or every unqualified use in this namespace would name a different, incomplete type.
+class cIGZCommandParameterSet;
+
 namespace sc4 {
 
 constexpr std::uint32_t kGZIID_cISC4GameDataRegistry = 0xe898ed03, kGZSID_cSC4GameDataRegistry = 0xebe0e860;
@@ -24,7 +28,6 @@ constexpr std::uint32_t kMessageGameDataRegistryEntry = 0x2bdfe414;
 constexpr std::int32_t kGameDataRegistryPriority = -1000000;
 enum GameDataRegistryEvent : int { kRegistryShutdown = 1, kRegistryEntryRemoved = 2, kRegistryEntryAdded = 3 };
 
-class cIGZCommandParameterSet;
 class cISC4GameDataRegistry;
 
 using EntryId = std::uintptr_t;

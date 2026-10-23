@@ -16,24 +16,6 @@ namespace {
 
 INeighborsHost* g_host = nullptr;
 
-// The deal types are grouped by commodity: 1 power, 2 water, 3 garbage.
-int CommodityOfDealType(std::uint32_t type) {
-    switch (type) {
-        case kDealTypePowerBuy:
-        case kDealTypePowerSell: return 1;
-        case kDealTypeWaterBuy:
-        case kDealTypeWaterSell: return 2;
-        case kDealTypeGarbageBuy:
-        case kDealTypeGarbageSell: return 3;
-        default: return 1;
-    }
-}
-
-// The odd member of a pair is the sale (the other city's point of view).
-bool DealTypeIsSell(std::uint32_t type) {
-    return (type & 1u) != 0;
-}
-
 // cISC4RegionalCity::FindConnection / GetAllConnections reached through the host (the partial interface does
 // not declare them). `City` is never null here.
 cISC4RegionalCity* OtherCity(cISC4NeighborConnection* connection) {
@@ -457,6 +439,7 @@ void cSC4NeighborsSimulator::simulate_deals() {
         pendingRemovals_.clear();
         const cISCPropertyHolder* properties = GetTuningExemplar();
         if (!properties) {
+            // The original dereferences the exemplar unchecked; a simulator without one just flushes the flags.
             update_deals_in_regional_cities(dealsDirty_, connectionsDirty_);
             inSimulateDeals_ = false;
             return;
@@ -903,7 +886,7 @@ void cSC4NeighborsSimulator::GetConnectionsToCity(const cISC4RegionalCity* city,
 
 // @ 0x100072144. Every city that owns a region cell bordering this city's rectangle.
 void cSC4NeighborsSimulator::GetAdjacentCities(std::list<cRZAutoRefCount<cISC4RegionalCity>>& out,
-                                              bool establishedOnly) const {
+                                              bool includeUnestablished) const {
     out.clear();
     INeighborsHost* h = Host();
     if (!h) return;
@@ -916,7 +899,7 @@ void cSC4NeighborsSimulator::GetAdjacentCities(std::list<cRZAutoRefCount<cISC4Re
     const auto consider = [&](int x, int z) {
         cISC4RegionalCity* city = h->RegionCityAt(x, z);
         if (!city) return;
-        if (!establishedOnly && !h->CityEstablished(city)) return;
+        if (!includeUnestablished && !h->CityEstablished(city)) return;
         unique.insert(city);
     };
     for (int i = 0; i < width; ++i) {
@@ -932,7 +915,7 @@ void cSC4NeighborsSimulator::GetAdjacentCities(std::list<cRZAutoRefCount<cISC4Re
 
 // @ 0x100072980. The cities directly reachable from this city's connections.
 void cSC4NeighborsSimulator::GetConnectedCities(std::list<cRZAutoRefCount<cISC4RegionalCity>>& out,
-                                               bool establishedOnly) const {
+                                               bool includeUnestablished) const {
     out.clear();
     INeighborsHost* h = Host();
     if (!h) return;
@@ -945,15 +928,15 @@ void cSC4NeighborsSimulator::GetConnectedCities(std::list<cRZAutoRefCount<cISC4R
         if (type >= 0xd || ((kConnectedCityTypeMask >> (type & 0x1f)) & 1u) == 0) continue;
         cISC4RegionalCity* city = OtherCity(connection);
         if (!city) continue;
-        if (!establishedOnly && !h->CityEstablished(city)) continue;
+        if (!includeUnestablished && !h->CityEstablished(city)) continue;
         AppendUnique(out, city);
     }
 }
 
 // @ 0x1000726ce. Breadth-first walk of the connection graph, then the current city is dropped from the front
-// and (unless `establishedOnly`) unestablished cities are removed.
+// and (unless `includeUnestablished`) unestablished cities are removed.
 void cSC4NeighborsSimulator::GetAllConnectedCities(std::list<cRZAutoRefCount<cISC4RegionalCity>>& out,
-                                                  bool establishedOnly) const {
+                                                  bool includeUnestablished) const {
     out.clear();
     INeighborsHost* h = Host();
     if (!h) return;
@@ -978,7 +961,7 @@ void cSC4NeighborsSimulator::GetAllConnectedCities(std::list<cRZAutoRefCount<cIS
         }
     }
     if (!out.empty()) out.pop_front();
-    if (!establishedOnly) {
+    if (!includeUnestablished) {
         out.remove_if([h](const cRZAutoRefCount<cISC4RegionalCity>& ref) {
             return !ref.get() || !h->CityEstablished(ref.get());
         });
@@ -998,7 +981,8 @@ bool cSC4NeighborsSimulator::RequestCreateConnection(std::uint32_t type, int x, 
     cRZString cityName;
     cISC4RegionalCity* city = FindCityOnOtherSideOfConnection(x, z);
     if (city && h->CityEstablished(city)) h->CityName(city, cityName);
-    return h->ConfirmationDialog(0x6a231eaa, 0xaa8e151b, 0x0a8e15f9, cityName);
+    // cSLString 0x6a231eaa / {0xaa8e151b title, 0x0a8e152d format, 0x0a8e15f9 OK}; the format is Sprintf'd with the name.
+    return h->ConfirmationDialog(0xaa8e151b, 0x0a8e152d, 0x0a8e15f9, cityName);
 }
 
 // @ 0x100071026. Creates the connection record, tells the city on the other side and, unless the type has no
@@ -1460,6 +1444,8 @@ double cSC4NeighborsSimulator::GetDealCost(std::uint32_t dealType, double amount
             commodity = 3;
             break;
         default:
+            // The original's default path keeps the commodity variable holding a city pointer, so it would index
+            // out of range; unknown deal types are not produced by the game, so this port uses power.
             sell = true;
             commodity = 1;
             break;
@@ -1581,18 +1567,18 @@ double cSC4NeighborsSimulator::GetDealMaxAmount(std::uint32_t dealType, const cI
 void cSC4NeighborsSimulator::UpdateCommodityStats(cISC4City* city) {
     INeighborsHost* h = Host();
     if (!h || !city || h->City() != city) return;
-    const cISC4RegionalCity* current = h->CurrentRegionalCity();
+    cISC4RegionalCity* current = h->CurrentRegionalCity();
     if (!current) return;
 
-    h->CitySetBudget(const_cast<cISC4RegionalCity*>(current), h->BudgetTotal());       // 0x198
-    h->CitySetIncome(const_cast<cISC4RegionalCity*>(current), h->BudgetIncome());      // 0x1a8
+    h->CitySetBudget(current, h->BudgetTotal());       // 0x198
+    h->CitySetIncome(current, h->BudgetIncome());      // 0x1a8
 
     const cISCPropertyHolder* properties = GetTuningExemplar();
     if (!properties) return;
     float dealYears = 0.0f;
     cSCPropertyHelp::GetPropertyValue(properties, kNeighborsPropertyDealYears, dealYears);
     const float dealMonths = static_cast<float>(static_cast<double>(dealYears) * 12.0);
-    (void)dealMonths;   // read (and the -91 day date the original builds) but unused
+    // (The original also builds a "sim date - 91 days" temporary here; it is never read.)
 
     // Sum of the deal costs per commodity; the loop widens each cost through a float.
     double costSum[3] = {0.0, 0.0, 0.0};
@@ -1621,11 +1607,11 @@ void cSC4NeighborsSimulator::UpdateCommodityStats(cISC4City* city) {
         if (hasLine) {
             price = (costSum[0] + lineAmount) / (imported + static_cast<double>(capacity) + 1.0);
         }
-        h->CitySetProduced(const_cast<cISC4RegionalCity*>(current), 1, static_cast<double>(capacity));
-        h->CitySetDemanded(const_cast<cISC4RegionalCity*>(current), 1, static_cast<double>(demand));
-        h->CitySetExported(const_cast<cISC4RegionalCity*>(current), 1, exported);
-        h->CitySetImported(const_cast<cISC4RegionalCity*>(current), 1, imported);
-        h->CitySetCostPerUnit(const_cast<cISC4RegionalCity*>(current), 1, price);
+        h->CitySetProduced(current, 1, static_cast<double>(capacity));
+        h->CitySetDemanded(current, 1, static_cast<double>(demand));
+        h->CitySetExported(current, 1, exported);
+        h->CitySetImported(current, 1, imported);
+        h->CitySetCostPerUnit(current, 1, price);
         h->RecordHistory(kNeighborsHistoryPowerImported, static_cast<int>(imported));
         h->RecordHistory(kNeighborsHistoryPowerExported, static_cast<int>(exported));
     }
@@ -1644,11 +1630,11 @@ void cSC4NeighborsSimulator::UpdateCommodityStats(cISC4City* city) {
         if (hasLine) {
             price = (costSum[1] + lineAmount) / (imported + static_cast<double>(capacity) + 1.0);
         }
-        h->CitySetProduced(const_cast<cISC4RegionalCity*>(current), 2, static_cast<double>(capacity));
-        h->CitySetDemanded(const_cast<cISC4RegionalCity*>(current), 2, static_cast<double>(demand));
-        h->CitySetExported(const_cast<cISC4RegionalCity*>(current), 2, exported);
-        h->CitySetImported(const_cast<cISC4RegionalCity*>(current), 2, imported);
-        h->CitySetCostPerUnit(const_cast<cISC4RegionalCity*>(current), 2, price);
+        h->CitySetProduced(current, 2, static_cast<double>(capacity));
+        h->CitySetDemanded(current, 2, static_cast<double>(demand));
+        h->CitySetExported(current, 2, exported);
+        h->CitySetImported(current, 2, imported);
+        h->CitySetCostPerUnit(current, 2, price);
         h->RecordHistory(kNeighborsHistoryWaterImported, static_cast<int>(imported));
         h->RecordHistory(kNeighborsHistoryWaterExported, static_cast<int>(exported));
     }
@@ -1681,11 +1667,11 @@ void cSC4NeighborsSimulator::UpdateCommodityStats(cISC4City* city) {
                                                    (imported + static_cast<double>(produced) + 1.0));
             price = static_cast<double>(curve_.GetOutputValue(input));
         }
-        h->CitySetProduced(const_cast<cISC4RegionalCity*>(current), 3, static_cast<double>(produced));
-        h->CitySetDemanded(const_cast<cISC4RegionalCity*>(current), 3, static_cast<double>(pollution4));
-        h->CitySetExported(const_cast<cISC4RegionalCity*>(current), 3, exported);
-        h->CitySetImported(const_cast<cISC4RegionalCity*>(current), 3, imported);
-        h->CitySetCostPerUnit(const_cast<cISC4RegionalCity*>(current), 3, price);
+        h->CitySetProduced(current, 3, static_cast<double>(produced));
+        h->CitySetDemanded(current, 3, static_cast<double>(pollution4));
+        h->CitySetExported(current, 3, exported);
+        h->CitySetImported(current, 3, imported);
+        h->CitySetCostPerUnit(current, 3, price);
         h->RecordHistory(kNeighborsHistoryGarbageExported, static_cast<int>(exported));
         h->RecordHistory(kNeighborsHistoryGarbageImported, static_cast<int>(imported));
         h->RecordHistory(kNeighborsHistoryGarbageDemanded, pollution4);

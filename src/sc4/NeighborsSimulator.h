@@ -257,8 +257,9 @@ public:
     virtual void CitySetCostPerUnit(cISC4RegionalCity* city, int commodity, double value) = 0;    // 0x1f8
 
     // --- the confirmation dialog --------------------------------------------------------------------
-    // nSC4UI::GenericConfirmationDialog @ 0x10030b655 with the three localized strings.
-    virtual bool ConfirmationDialog(std::uint32_t titleId, std::uint32_t textId, std::uint32_t okId,
+    // nSC4UI::GenericConfirmationDialog @ 0x10030b655 with the three cSLString ids (group 0x6a231eaa); the
+    // format string (0x0a8e152d) is Sprintf'd with the neighbour city name in `arg`.
+    virtual bool ConfirmationDialog(std::uint32_t titleId, std::uint32_t formatId, std::uint32_t okId,
                                     const cIGZString& arg) = 0;
 };
 
@@ -285,9 +286,9 @@ public:
     virtual void GetConnectionsOfType(std::uint32_t type, ConnectionList& out) const = 0;          // [17] 0x88
     virtual void GetConnectionsOfTypeToCity(std::uint32_t type, const cISC4RegionalCity* city, ConnectionList& out) const = 0;  // [18] 0x90
     virtual void GetConnectionsToCity(const cISC4RegionalCity* city, ConnectionList& out) const = 0;  // [19] 0x98
-    virtual void GetAdjacentCities(std::list<cRZAutoRefCount<cISC4RegionalCity>>& out, bool establishedOnly) const = 0;  // [20] 0xa0
-    virtual void GetConnectedCities(std::list<cRZAutoRefCount<cISC4RegionalCity>>& out, bool establishedOnly) const = 0;  // [21] 0xa8
-    virtual void GetAllConnectedCities(std::list<cRZAutoRefCount<cISC4RegionalCity>>& out, bool establishedOnly) const = 0;  // [22] 0xb0
+    virtual void GetAdjacentCities(std::list<cRZAutoRefCount<cISC4RegionalCity>>& out, bool includeUnestablished) const = 0;  // [20] 0xa0
+    virtual void GetConnectedCities(std::list<cRZAutoRefCount<cISC4RegionalCity>>& out, bool includeUnestablished) const = 0;  // [21] 0xa8
+    virtual void GetAllConnectedCities(std::list<cRZAutoRefCount<cISC4RegionalCity>>& out, bool includeUnestablished) const = 0;  // [22] 0xb0
     virtual cISC4NeighborConnection* FindConnectionSuitableForDeal(std::uint32_t dealType, const cISC4RegionalCity* city) = 0;  // [23] 0xb8
     virtual bool ProposeDeal(std::uint32_t dealType, const cISC4RegionalCity* city, cISC4NeighborDeal** out) = 0;  // [24] 0xc0
     virtual bool ProposeDeals(DealList& out, bool fromUI) = 0;                                     // [25] 0xc8
@@ -352,9 +353,9 @@ public:
     static bool ConvertNeighborCellToConnectionCell(cISC4RegionalCity* city, int x, int z, int& outX, int& outZ);
 
     // --- adjacent / connected cities ---
-    void GetAdjacentCities(std::list<cRZAutoRefCount<cISC4RegionalCity>>& out, bool establishedOnly) const override;
-    void GetConnectedCities(std::list<cRZAutoRefCount<cISC4RegionalCity>>& out, bool establishedOnly) const override;
-    void GetAllConnectedCities(std::list<cRZAutoRefCount<cISC4RegionalCity>>& out, bool establishedOnly) const override;
+    void GetAdjacentCities(std::list<cRZAutoRefCount<cISC4RegionalCity>>& out, bool includeUnestablished) const override;
+    void GetConnectedCities(std::list<cRZAutoRefCount<cISC4RegionalCity>>& out, bool includeUnestablished) const override;
+    void GetAllConnectedCities(std::list<cRZAutoRefCount<cISC4RegionalCity>>& out, bool includeUnestablished) const override;
 
     // --- deals ---
     cISC4NeighborConnection* FindConnectionSuitableForDeal(std::uint32_t dealType, const cISC4RegionalCity* city) override;
@@ -396,6 +397,7 @@ public:
     bool CityEstablished_() const { return cityEstablished_; }
     bool Initialized() const { return initialized_; }
     bool StaticInitializedFlag() const { return mbStaticInitialized; }
+    float CurveValue(float x) const { return curve_.GetOutputValue(x); }
     static void ResetStaticInitialized() { mbStaticInitialized = false; }
     // @ 0x100b6ddd0: set by the first Init, never cleared.
     static inline bool mbStaticInitialized = false;
@@ -409,7 +411,7 @@ private:
     std::uint32_t refCount_ = 0;                               // +0x1c
     cISC4City* city_ = nullptr;                                // +0x20
     cIGZMessageServer2* messages_ = nullptr;                   // +0x28
-    std::uint32_t unused2c_ = 0;                               // +0x2c
+    [[maybe_unused]] std::uint32_t unused2c_ = 0;              // +0x2c
     ConnectionList connections_;                               // +0x30
     DealList deals_;                                           // +0x48
     std::list<DealList::iterator> pendingRemovals_;            // +0x60

@@ -1,0 +1,96 @@
+SOURCE src/sc4/Watercraft.cpp|h
+EVIDENCE test scripts/tests/sc4_watercraft_test.cpp - the fake IWatercraftHost (watercraft manager, city/terrain/surface-water/lot queries, route readers, named animations) and the fake drive-parameter group drive construction/QueryInterface/GetGZCLSID, the version-2 save record, Init/Shutdown with the six named animations and the message-server notification, the default and exemplar-derived drive parameters, SetStateInternal/Crash_SetStateInternal, OutOfBounds/OnLand/Engine_MovementPossible, the movement helpers (straight, pitch quaternion, roll/planing lift, PositionNew clamps), AccelerationFunction and its inverse, the compass helpers (PickInitialDir/PickNewDir/DirIntoCell/DirLookup) including the signed-modulo and last-two-points quirks, InvalidateLookaheadCell truncation, the ferry station records (SetStationInformation, OtherStationInformation's A==B quirk, InitializeCurrentRoute's routeIndex=2, SwitchActiveStation, DockRequests/DoneDocking, ClearDockRequests, EndDocking), the lookahead AI location picking from the water grid and from a station/neighbour route, DoAnimationTick's 5000 ms removal path and the six regular effects, the boat collision regression with the 0x554 speed scale, the crash pitch flags and sink/run-aground progress, the docking/undocking/following steps, the player-drive steering modes and waterski/tow-search hooks, SetNbrRouteData and the two DoMessage branches
+
+0x1004ef26a WatercraftConstructDelegating
+0x1004f4b2a WatercraftConstruct
+0x1004fdf0a WatercraftDestructBase
+0x1004fdf14 WatercraftDestructAndDelete
+0x1004fe50e WatercraftDestructBody
+0x1004fdf42 WatercraftGetGZCLSID
+0x1004f604e WatercraftQueryInterface
+0x1004f5e7e WatercraftWrite
+0x1004f5f32 WatercraftRead
+0x1004f4e06 WatercraftInit
+0x1004f54c6 WatercraftLoadDriveParameters
+0x1004f5b7a WatercraftShutdown
+0x1004f1050 WatercraftSetStateInternal
+0x1004f6414 WatercraftCrashSetStateInternal
+0x1004f63b0 WatercraftMoveTo
+0x1004f6484 WatercraftDoStateTick
+0x1004f65e0 WatercraftDoCrashSequenceTick
+0x1004f75c0 WatercraftHandleExitState
+0x1004f77d2 WatercraftHandleEnterState
+0x1004f76ba WatercraftEndTowing
+0x1004f7720 WatercraftFerrySwitchActiveStation
+0x1004f7a24 WatercraftEndDocking
+0x1004f7a9c WatercraftFerryDockRequests
+0x1004f7c50 WatercraftFerryOtherStationInformation
+0x1004f7e06 WatercraftOnLand
+0x1004f910e WatercraftEngineMovementPossible
+0x1004f976a WatercraftStopRegularEffects
+0x1004f99aa WatercraftStartRegularEffects
+0x1004f9bf6 WatercraftFerryClearDockRequests
+0x1004f9e90 WatercraftOutOfBounds
+0x1004fbbfa WatercraftAccelerationFunction
+0x1004fbd80 WatercraftAccelerationFunctionInverse
+0x1004fbefe WatercraftBoatSize
+0x1004fbf50 WatercraftCrashRegressToPreviousLocation
+0x1004fc1ec WatercraftCrashDetermineCase
+0x1004fc3e2 WatercraftHelperOrientationCloseEnough
+0x1004fca96 WatercraftAssistPickInitialDir
+0x1004fcc3c WatercraftAssistPickNewDir
+0x1004fccb4 WatercraftAssistDirIntoCell
+0x1004fcd1e WatercraftGetDebugExtraText
+0x1004fd4c4 WatercraftMovementPositionStraight
+0x1004fda16 WatercraftMovementPitch
+0x1004fdbf0 WatercraftFerryInitializeCurrentRoute
+0x1004fdcc8 WatercraftAssistDirLookup
+0x1004fdd82 WatercraftCrashPitchDetermination
+0x1004f27aa WatercraftIsNeighborTravelBoat
+0x1004f2818 WatercraftSetNbrRouteData
+0x1004f3894 WatercraftInvalidateLookaheadCell
+0x1004f1cc8 WatercraftFerrySetStationInformation
+0x1004f9ce0 WatercraftDoPlayerDriveTick
+0x1004f9194 WatercraftDoAnimationTick
+0x1004f8d06 WatercraftEngineDetectCollision
+0x1004fc036 WatercraftCrashInanimateCollisionDetection
+0x1004fc4f0 WatercraftEngineAIPickLocation
+
+PARTIAL:
+0x1004f6116 WatercraftDoMessage - the 0x26d31ec1 reload branch and the base dispatch are recovered; the 0xac400a31 tow-request branch only clears its flag because the payload (cIGZMessage2Standard::GetIGZUnknown, the unknown's 0x78 flag slot and the position it carries) is not modelled
+0x1004f67da WatercraftDoDockingTick - OnLand/remove, the horizontal orientation normalization and the within-dockDistance approach are recovered; the original's pair of FerryStationInformation temporaries and its acos-alignment/step math at 0x1004f67da..0x1004f6d98 are approximated
+0x1004f6d9c WatercraftDoFollowingTick - the tower check, the target behind the leader and the step/rotation are recovered; the original's second bounding-sphere target and the 0x1004f6d9c SSE move assembly are approximated
+0x1004f72aa WatercraftDoUndockingTick - the water test and the backing-away step are recovered; the spCity+0x108 lot lookup mask and the terrain-height snap/rotation tail are approximated
+0x1004f7ea0 WatercraftEngineAIBoatMotion - lookahead point advancement and the speed/turn integration are recovered; the two-midpoint steering vectors (0x1004f7ea0..0x1004f89ee) are approximated
+0x1004f89f0 WatercraftMovementPositionNew - the straight path, the speed/turn clamps and the state lookup order are exact; the heading composition after Movement_PositionTurning and the 0x48c copy order are approximated
+0x1004f9f4a WatercraftCrashSequenceRunAground - the crash timer/progress curve, the run-aground-vs-roll decision, the city/height checks and the MoveTo/FinishMove tail are recovered; the two quaternion basis compositions that tilt the model into the terrain are simplified
+0x1004fab22 WatercraftCrashSequenceSink - the progress cap, the roll/pitch signs, the water-level lowering and the MoveTo/FinishMove tail are recovered; the two quaternion basis compositions are simplified
+0x1004fb362 WatercraftTranslatePlayerDriveCommands - the steering-mode selection, the AccelerationFunction speed ramp, the waterski/wake hooks, the tow-search handshake and the heading/steering outputs are recovered; the analogue trigger integration (state +0xb0/+0xb4) and the 13-entry effect tables are only partly modelled
+0x1004fcea0 WatercraftMovementPositionTurning - the sideways step, terrain height, yaw composition and the resulting position are recovered; the original's extra-transform basis composition (0x1004fcea0 SSE) is approximated
+0x1004fd56c WatercraftMovementRotation - the pitch/roll composition and the (right, up, forward) basis are recovered; the original's conditional roll argument (the -(delta<0) & 0x80000000 idiom at 0x1004fd56c) is implemented as a symmetric clamp because its sign convention is ambiguous
+
+SKIPPED:
+0x1004f5b68 WatercraftInitThunk - compiler-emitted non-virtual thunk to Init (this-8)
+0x1004f5e70 WatercraftShutdownThunk - compiler-emitted non-virtual thunk to Shutdown (this-8)
+0x1004f5ea8 WatercraftWriteThunk1 - compiler-emitted non-virtual thunk to Write (this-8)
+0x1004f5ed6 WatercraftWriteThunk2 - compiler-emitted non-virtual thunk to Write (this-0x10)
+0x1004f5f04 WatercraftWriteThunk3 - compiler-emitted non-virtual thunk to Write (this-0x18)
+0x1004f5f76 WatercraftReadThunk1 - compiler-emitted non-virtual thunk to Read (this-8)
+0x1004f5fbe WatercraftReadThunk2 - compiler-emitted non-virtual thunk to Read (this-0x10)
+0x1004f6006 WatercraftReadThunk3 - compiler-emitted non-virtual thunk to Read (this-0x18)
+0x1004f606c WatercraftQueryInterfaceThunk1 - compiler-emitted vtable-adjustor thunk (this-8); no adjusted sub-object in the port
+0x1004f608e WatercraftQueryInterfaceThunk2 - compiler-emitted vtable-adjustor thunk (this-0x10); no adjusted sub-object in the port
+0x1004f60b0 WatercraftQueryInterfaceThunk3 - compiler-emitted vtable-adjustor thunk (this-0x18); no adjusted sub-object in the port
+0x1004f60d2 WatercraftQueryInterfaceThunk4 - compiler-emitted vtable-adjustor thunk (this-0x40); no adjusted sub-object in the port
+0x1004f60f4 WatercraftQueryInterfaceThunk5 - compiler-emitted vtable-adjustor thunk (this-0x68); no adjusted sub-object in the port
+0x1004f63a2 WatercraftDoMessageThunk - compiler-emitted non-virtual thunk to DoMessage (this-0x68)
+0x1004fdf50 WatercraftDestructThunk1 - compiler-emitted non-virtual thunk to the destructor (this-8)
+0x1004fdf5e WatercraftDestructAndDeleteThunk1 - compiler-emitted deleting thunk (this-8)
+0x1004fdf94 WatercraftGetGZCLSIDThunk1 - compiler-emitted non-virtual thunk to GetGZCLSID (this-8)
+0x1004fdfa0 WatercraftGetGZCLSIDThunk2 - compiler-emitted non-virtual thunk to GetGZCLSID (this-0x18)
+0x1004fdfac WatercraftDestructThunk2 - compiler-emitted non-virtual thunk to the destructor (this-0x18)
+0x1004fdfba WatercraftDestructAndDeleteThunk2 - compiler-emitted deleting thunk (this-0x18)
+0x1005001b8 VectorTravelPointConstruct - std::vector<cSC4Watercraft::TravelPoint> explicit instantiation emitted by the compiler; the port uses std::vector directly
+0x100500222 VectorTravelPointAllocate - std::vector<cSC4Watercraft::TravelPoint> allocation helper instantiation; the port uses std::vector directly
+0x100500260 VectorTravelPointPushBackSlow - std::vector<cSC4Watercraft::TravelPoint>::__push_back_slow_path instantiation; the port uses std::vector directly
+0x100500390 VectorTravelPointSplitBuffer - std::__split_buffer<cSC4Watercraft::TravelPoint> instantiation; the port uses std::vector directly

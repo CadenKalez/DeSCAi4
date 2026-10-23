@@ -1,0 +1,66 @@
+SOURCE src/sc4/Airplane.cpp|h
+EVIDENCE test scripts/tests/sc4_airplane_test.cpp - ASan/UBSan unit test of construction/QI, Init with drive parameters and effects, the stream round trip, the heading->yaw derivation, the aircraft altitude/world clip/PlaceSelf helpers, the state and player-drive handshakes, the animation tick, UpdateEffects, clearance/fire queries and AI_TurnToVector
+0x1006ccd2c Construct
+0x1006ccf30 Init
+0x1006cd5dc LoadPlayerDriveParameters
+0x1006cd84a LoadDriveParameters
+0x1006ce36e Shutdown
+0x1006ce480 Write
+0x1006ce51e Read
+0x1006ce5d6 SetOrientation
+0x1006ce7e4 DoMessage
+0x1006ce7f4 DoAnimationTick
+0x1006cf77c DoPlayerDriveTick
+0x1006d0be2 SetAirplaneState
+0x1006d1e62 UpdateEffects
+0x1006d2160 HandleEnterState
+0x1006d224a HandleExitState
+0x1006d22a6 HandlePlayerDriveCommand
+0x1006d2454 EvaluateClearance
+0x1006d2db0 FindFireNearLocation
+0x1006d4852 AI_TurnToVector
+0x1006d54c6 SetDispatchState
+0x1006d54f8 GetCallNumber
+0x1006d5506 SetCallNumber
+0x1006d5514 GetDispatchState
+0x1006d5566 GetGZCLSID
+0x1006d5620 Destructor
+PARTIAL:
+0x1006cdbb2 CalculateClimbSlope needs the not-yet-ported CalculateForces/UpdateOrientation loop; returns 0 for now
+0x1006cde04 CalculateDescentSlope needs the not-yet-ported CalculateForces/UpdateOrientation loop; returns 0 for now
+0x1006ce05e CalculateTurnRate needs the not-yet-ported CalculateForces/UpdateOrientation loop plus acosf; returns 0 for now
+0x1006ce990 AI_PursueGoal selects between the fire search, landing, take-off and destination goals, all of which still need the AI helpers below
+0x1006cee14 UpdatePhysics needs cSC4AircraftManager::GetRunwayList (unrecovered) and the force/orientation core; the 2.4 KB step is not ported
+0x1006cf894 TranslatePlayerDriveCommands is 1.6 KB of player-drive control/effect timing on top of SetDesired/StartNamedEffects; not ported
+0x1006cff10 CalculateForces is the 3.3 KB quaternion lift/drag pipeline (SSE-expanded); not ported
+0x1006d0cd0 DetectCollisions needs the collision-system query and the 2 KB SIMD normal search; not ported
+0x1006d14e8 UpdateOrientation is the 2.4 KB quaternion integration writing the transform; not ported
+0x1006d258c PickRunwayDirection needs cSC4AircraftManager::GetRunwayList plus the weighted runway random choice; not ported
+0x1006d2932 PickApproachBox needs the runway list and the approach box scan; not ported
+0x1006d2f12 AI_GotoDestination needs PickRunwayDirection and the altitude/vector controllers; returns false
+0x1006d33f8 AI_Land is the 2.9 KB landing sequence over all of the above; returns false
+0x1006d3f70 AI_Stop is the SIMD easing of the four controls (+0x314..+0x320) and the two gear values; not ported
+0x1006d40e2 AI_TakeOff needs the runway list and the take-off climb controller; returns false
+0x1006d44cc AI_Taxi needs the runway direction helpers; not ported
+0x1006d4a0c AI_ApproachAltitude is the 1 KB altitude controller; returns false
+0x1006d4df8 AI_FollowVectorAndTurn needs AI_FollowRay/the turn controller; returns false
+0x1006d51a2 AI_FollowRay needs PointDistanceToRay/PointRelativeToRay2D and the altitude controller; returns false
+SKIPPED:
+0x1006ccf26 compiler-generated constructor alias (forwards to 0x1006ccd2c)
+0x1006d552e compiler-generated complete destructor (forwards to 0x1006d5620)
+0x1006ce35c non-virtual thunk to Init
+0x1006ce472 non-virtual thunk to Shutdown
+0x1006ce4f4 non-virtual thunk to Write
+0x1006ce502 non-virtual thunk to Write
+0x1006ce510 non-virtual thunk to Write
+0x1006ce5ac non-virtual thunk to Read
+0x1006ce5ba non-virtual thunk to Read
+0x1006ce5c8 non-virtual thunk to Read
+0x1006ce7ec non-virtual thunk to DoMessage
+0x1006d5538 compiler-generated deleting destructor
+0x1006d5574 non-virtual thunk to the destructor
+0x1006d5582 non-virtual thunk to the deleting destructor
+0x1006d55b8 non-virtual thunk to GetGZCLSID
+0x1006d55c4 non-virtual thunk to GetGZCLSID
+0x1006d55d0 non-virtual thunk to the destructor
+0x1006d55de non-virtual thunk to the deleting destructor

@@ -163,8 +163,8 @@ public:
 class ITrafficNetworkMapAutomaton {
 public:
     virtual ~ITrafficNetworkMapAutomaton() = default;
-    virtual void AddRef() = 0;
-    virtual void Release() = 0;
+    virtual std::uint32_t AddRef() = 0;
+    virtual std::uint32_t Release() = 0;
     virtual bool IsRemoved() = 0;                     // 0x2e0
     virtual std::uint32_t GetLane() = 0;              // 0x478
     virtual std::uint32_t PathTypeWord() const = 0;   // +0x308

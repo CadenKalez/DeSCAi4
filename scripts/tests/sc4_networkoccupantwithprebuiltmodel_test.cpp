@@ -104,7 +104,7 @@ struct FakeResModel final : s3d::cIS3DResModel {
     std::uint32_t AddRef() override { return static_cast<std::uint32_t>(++refs); }
     std::uint32_t Release() override { --refs; return refs > 0 ? static_cast<std::uint32_t>(refs) : 0u; }
     void Slot3() override {}
-    void Slot4() override {}
+    bool CreateModelInstance(std::uint32_t, s3d::cIS3DModelInstance** out) override { *out = nullptr; return false; }
     void Slot5() override {}
     void Slot6() override {}
     void ComputeBounds(cS3DBoundingBox&) override {}

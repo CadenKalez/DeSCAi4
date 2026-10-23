@@ -60,12 +60,20 @@ std::uint32_t cSC4NeighborDeal::SetFlags(std::uint32_t flags, bool on) {
     return flags_;
 }
 
-// Deals that spend money (types e0 / e2 / e4) become unaffordable when the cost exceeds the city's funds.
+// @ 0x100075b46. Spending deals that the city cannot pay for become unaffordable. An otherwise affordable
+// deal only gets the "affordable" flag when its connection disappeared; while a suitable connection exists no
+// state flag is touched (that is what keeps a healthy deal in the active branch of the neighbour simulator).
 void cSC4NeighborDeal::UpdateState() {
-    const std::uint32_t offset = type_ - kDealTypeBase;
+    const std::uint32_t offset = type_ + 0xb88c0020u;
     const bool spends = offset < 5 && ((0x15u >> offset) & 1) != 0;
-    const bool unaffordable = spends && static_cast<double>(cost_) > g_host->CurrentCityFunds();
-    SetFlags(unaffordable ? kDealFlagUnaffordable : kDealFlagAffordable, true);
+    const bool affordableByFunds = !spends || static_cast<double>(cost_) <= g_host->CurrentRegionalCityBudget();
+    if (affordableByFunds) {
+        void* other = GetCityOnOtherSideOfConnection();
+        if (other && g_host->HasSuitableConnection(type_, other)) return;
+        SetFlags(kDealFlagAffordable, true);
+    } else {
+        SetFlags(kDealFlagUnaffordable, true);
+    }
 }
 
 void cSC4NeighborDeal::Cancel() {

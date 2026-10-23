@@ -1,0 +1,39 @@
+SOURCE src/sc4/Aircraft.cpp|h
+EVIDENCE test scripts/tests/sc4_airplane_test.cpp - the cSC4Airplane test also exercises the cSC4Aircraft base (Init flag, QueryInterface aircraft id, PlaceSelf, altitude/clip helpers, player-drive rotation, stream version)
+0x10050190a Construct
+0x1005019b4 Init
+0x100501a1c Shutdown
+0x100501a34 QueryInterface
+0x100501afc PlaceSelf
+0x100501bf2 Write
+0x100501ca6 Read
+0x100501dc2 HandleEnterState
+0x100501e36 HandleExitState
+0x100501e52 DoAnimationTick
+0x100501e78 DoPlayerDriveTick
+0x100502098 GetAltitude
+0x100502160 ClipToWorld
+0x100502408 Destructor
+0x100502440 GetGZCLSID
+SKIPPED:
+0x1005019aa compiler-generated constructor alias (forwards to 0x10050190a)
+0x1005019e6 non-virtual thunk to Init
+0x100501a26 non-virtual thunk to Shutdown
+0x100501a52 non-virtual thunk to QueryInterface
+0x100501a74 non-virtual thunk to QueryInterface
+0x100501a96 non-virtual thunk to QueryInterface
+0x100501ab8 non-virtual thunk to QueryInterface
+0x100501ada non-virtual thunk to QueryInterface
+0x100501c1c non-virtual thunk to Write
+0x100501c4a non-virtual thunk to Write
+0x100501c78 non-virtual thunk to Write
+0x100501cea non-virtual thunk to Read
+0x100501d32 non-virtual thunk to Read
+0x100501d7a non-virtual thunk to Read
+0x100502412 compiler-generated deleting destructor
+0x10050246e non-virtual thunk to the destructor
+0x10050247c non-virtual thunk to the deleting destructor
+0x1005024b2 non-virtual thunk to GetGZCLSID
+0x1005024be non-virtual thunk to GetGZCLSID
+0x1005024ca non-virtual thunk to the destructor
+0x1005024d8 non-virtual thunk to the deleting destructor

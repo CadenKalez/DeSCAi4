@@ -1,0 +1,72 @@
+SOURCE src/sc4/ModelMaker.cpp|h
+EVIDENCE test scripts/tests/sc4_modelmaker_test.cpp - constructor defaults, QueryInterface ids on both groups, AddRef/Release deletion at count 1, Init filters and notifications, load-radius rounding and clamping, Write/Read version handshake, DoMessage dispatch of every occupant/view/city/lighting message, deferred operation queueing and commit, AddModels -> LoadBuildingModels -> AddModel -> placeable insert (transform, owner, properties, zoom/rotation masks), ChangeModels layers, RemoveModels, highlight draw attributes, occupant move, lot condition, terrain hiding flags, the lot-condition message resolving its lot from the occupant's cell, and the partial paths (see PARTIAL). AddModels' retaining-wall branch falls back to LoadModelsCommon because cSC4LotRetainingWallOccupant::AddRetainingWallModels is not recovered
+0x10030c5fe cSC4ModelMakerConstruct
+0x10030c78c cSC4ModelMakerDestruct
+0x10030c87e cSC4ModelMakerQueryInterface
+0x10030c8ca cSC4ModelMakerAddRef
+0x10030c8e6 cSC4ModelMakerRelease
+0x10030c958 cSC4ModelMakerShutdown
+0x10030cd76 cSC4ModelMakerInit
+0x10030cebc cSC4ModelMakerCreateOccupantFilters
+0x10030d0fa cSC4ModelMakerDetermineLoadRadiusAroundVisibleArea
+0x10030d1d2 cSC4ModelMakerWrite
+0x10030d36e cSC4ModelMakerRead
+0x10030d75a cSC4ModelMakerDoMessage
+0x10030de94 cSC4ModelMakerDoOccupantCreated
+0x10030dfb4 cSC4ModelMakerDoOccupantDestroyed
+0x10030e098 cSC4ModelMakerDoOccupantChanged
+0x10030e218 cSC4ModelMakerDoOccupantMoved
+0x10030e4b2 cSC4ModelMakerDoLotStateChanged
+0x10030e5ba cSC4ModelMakerDoOccupantHilighted
+0x10030e844 cSC4ModelMakerUpdateModelLoadRect
+0x10030ea18 cSC4ModelMakerDoZoomAndRotationChange
+0x10030ed04 cSC4ModelMakerDoViewTranslationChange
+0x10030eea0 cSC4ModelMakerDoViewFilterChange
+0x10030efde cSC4ModelMakerDoOccupantInserted
+0x10030f0e0 cSC4ModelMakerDoOccupantRemoved
+0x10030f1ce cSC4ModelMakerDoOccupantShown
+0x10030f36c cSC4ModelMakerDoPostCityInit
+0x10030faba cSC4ModelMakerDoBuildingCompletionChanged
+0x1003108b0 cSC4ModelMakerDoPropStateChanged
+0x10031093a cSC4ModelMakerEnableDeferredOccupantOperations
+0x100310972 cSC4ModelMakerDoLightingChanged
+0x100310bfe cSC4ModelMakerUnloadUnnecessaryModels
+0x100310ea8 cSC4ModelMakerChangeModels
+0x100311028 cSC4ModelMakerRemoveModels
+0x1003110be cSC4ModelMakerAddModels
+0x1003115f2 cSC4ModelMakerDoTerrainHidingForOccupantCells
+0x100311bc2 cSC4ModelMakerCommitDeferredOccupantOperations
+0x100311ee4 cSC4ModelMakerOccupantFilterIterationFunction
+0x1003127ec cSC4ModelMakerRemoveModelsInappropriateForRotation
+0x1003128c2 cSC4ModelMakerLoadOccupantModelsForZoomAndRotation
+0x100312eba cSC4ModelMakerUpdateFocusOfBackgroundLoad
+0x100312f2e cSC4ModelMakerGetOccupantLotCondition
+0x10031300c cSC4ModelMakerLoadBuildingModels
+0x100313254 cSC4ModelMakerApplyStateEffectToModels
+0x10031332c cSC4ModelMakerLoadFloraModels
+0x10031336c cSC4ModelMakerLoadModelsCommon
+0x1003137f4 cSC4ModelMakerLoadPropModels
+0x10031470e cSC4ModelMakerCreatePlaceHolderModelInstance
+0x100314822 cSC4ModelMakerFindModelTransform
+0x100314e0c cSC4ModelMakerGetGZCLSID
+0x100314e90 cSC4ModelMakerDeferredOccupantOperationConstruct
+PARTIAL:
+0x10030fe50 cSC4ModelMakerApplyLotStateEffect - the per-material dynamic texture rebind needs the S3D texture binding factory (service 0x1ac0e11a) and the four occupant interfaces the lot texture ids come from; the condition -> texture slot dispatch and the early-out are recovered
+0x1003116d8 cSC4ModelMakerRebuildDynamicTexture - the tinted texture resource fetch (persist manager key {0x7ab50e44, 0x1ab50c3f}) and the create/update through the texture binding factory are unrecovered; the slot -> instance-id table and the tint colour packing are kept
+0x10031200e cSC4ModelMakerDoTerrainHidingForCells - the per-occupant hiding masks need the network flags (0xa821ef94 vslot 0x40), the lot base texture occupancy (0x97f6d98 vslot 0x38) and the foundation state (0xc8fce101 vslot 0x48); the flag-preserving write, the water pass and the change test are recovered
+0x10031304c cSC4ModelMakerLoadFoundationModels - cSC4FoundationModel (0x10035f09c) is not recovered; only the FoundationOccupantUsesBuildingStyleModels fallback goes through LoadModelsCommon
+0x100313858 cSC4ModelMakerLoadLotBaseTextureModels - the cSC4LotBaseTextureOccupant interface (iid 0x97f6d98) and its vslot 0x50 are not recovered; only the QueryInterface is kept
+0x1003138c4 cSC4ModelMakerLoadNetworkModels - cISC4NetworkOccupant (iid 0xa821ef94, vslot 0x108 GetModelInstances) and the cSC4NetworkOccupant base behind type 0x2890d4de are not recovered
+0x100313a00 cSC4ModelMakerCreateOccupantShadow - the model-instance-id helper and the shadow overlay managers are seams; the instance transform walk of 0x100313a00 is not recovered, so only the property check, the id lookup and one land decal are kept
+0x100314220 cSC4ModelMakerLoadUndergroundConnectionModels - cISC4UndergroundOccupant vslot 0x150 GetModelInstances is not recovered
+0x100314328 cSC4ModelMakerAddModel - the animated-model branch (model class 0xea123be1 / 0xaa123bf9 -> GetAnimatedModelFromResourceKey then the animated object's vslot 0x98 / 0xd8 / 0x108 / 0x118) is not recovered; the resource lookup, size cull, placeholder fallback, transform and insert are recovered
+SKIPPED:
+0x10030c5e8 compiler-generated C1 constructor alias (forwards to 0x10030c5fe)
+0x10030c846 compiler-generated D1 destructor alias (forwards to 0x10030c78c)
+0x10030c850 compiler-generated deleting destructor (Release runs it as vslot 0x28)
+0x10030c8bc non-virtual thunk to QueryInterface
+0x10030c8d8 non-virtual thunk to AddRef
+0x10030c922 non-virtual thunk to Release
+0x10030d360 non-virtual thunk to Write
+0x10030d51e non-virtual thunk to Read
+0x100314e18 non-virtual thunk to GetGZCLSID
