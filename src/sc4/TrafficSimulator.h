@@ -1,9 +1,12 @@
 // cSC4TrafficSimulator — the data-driven core of the traffic simulator (class id 0x6990c1aa, simulator type
 // 0x88027f0d). The original is a 15,000-line class (path finder, trip assignment, ferries, subnetwork flood
 // fill); this file recovers the parts that do not depend on those: tunables, network-info grid, travel-time and
-// capacity queries, funding -> road/rail damage, mass-transit strikes, budget feeds and neighbour-connection
-// geometry (HasMapExit and the neighbour-connection tables are not recovered). Everything that talks to the city (messages, departments, demand grids, ordinances) goes through
-// ITrafficHost.
+// capacity queries, funding -> road/rail damage, mass-transit strikes and budget feeds, the neighbour-connection
+// tables (border slots, pools, map exits, the capacity handout and the roll-over) and the trip-pipeline setup.
+// Still unrecovered: the path finder calls (FindPath / ApplyTraffic / GetCompressedRoute), the subnetwork flood
+// fill (FloodSubnetwork / UpdateSubnetworkInfo), the DoDailySimulation stage machine and the streams.
+// Everything that talks to the city (messages, departments, demand grids, ordinances, lots, neighbour
+// connections) goes through ITrafficHost.
 //
 // Original layout (offsets in the 0x1000-byte object): +0x40/+0x44 city size in cells, +0xd8 network-info grid
 // (x -> z -> chain of NetworkInfo by network type), +0x2c0 edge-density map, +0x350 traffic stats,
@@ -13,15 +16,20 @@
 #pragma once
 #include <array>
 #include <cstdint>
+#include <list>
 #include <map>
 #include <unordered_map>
 #include <vector>
 
 #include "rz/cRZRandom.h"
+#include "sc4/MiscTypes.h"
 #include "sc4/SCPropertyHelp.h"
 #include "sc4/cSC4ResponseCurve.h"
 
 namespace sc4 {
+
+class cISC4PathFinder;
+struct cSC4TripData;
 
 constexpr std::uint32_t kGZCLSID_cSC4TrafficSimulator = 0x6990c1aa;
 constexpr std::uint32_t kTrafficSimulatorType = 0x88027f0d;
@@ -82,6 +90,50 @@ private:
     std::unordered_map<std::uint16_t, std::size_t> index_;
 };
 
+// One border-connection slot (8 bytes): the connection types that touch that border cell, the neighbour pool that
+// holds the trip capacities of the city on the other side, and the travel cost of the connection. The four tables
+// are vectors at +0xf0 west[z], +0x108 north[x], +0x120 east[z] and +0x138 south[x].
+struct TrafficNeighborConnection {
+    std::uint16_t types = 0;   // +0: bit per cISC4NeighborConnection type (kValidNeighborConnectionTypes...)
+    std::uint16_t pool = 0;    // +2: key of the pool map (+0x150); 0 = the default pool (+0x168)
+    float cost = 0.0f;         // +4: trip scale or the far side's property 0xca947077
+};
+
+// Per-cell record of the 0x2e-byte connection table at +0x98, one record per packed cell ((x << 8) | z) of the
+// fixed 0x10000-cell table. Only the nine masks are read by the recovered code; the rest of the record is unused.
+struct TrafficCellConnections {
+    // +0: per travel type, four bits per map side: bit (side + 4 * lane) with side 0 west, 1 north, 2 east, 3 south.
+    std::array<std::uint16_t, 9> masks{};
+    std::array<std::uint8_t, 0x2e - 0x12> rest{};
+};
+
+// One trip search in progress (the original's cSC4TrafficSimulator::StandardTripParams at +0xa70).
+struct StandardTripParams {
+    int sourceX = 0, sourceZ = 0;            // +0/+4: the source cell
+    cISC4PathFinder* primary = nullptr;      // +8
+    cISC4PathFinder* secondary = nullptr;    // +0x10
+    void* source = nullptr;                  // +0x18: cISC4TrafficSource
+    std::uint8_t flag51 = 0;                 // +0x51: set when an earlier trip of this source was split
+    std::uint32_t started = 0;               // +0x54
+    std::uint8_t findersReset = 0;           // +0x58
+    std::uint8_t secondPhase = 0;            // +0x59
+    std::uint32_t workTime = 0;              // +0x5c: milliseconds handed to both path finders
+    std::uint32_t useSecondary = 0;          // +0x60
+};
+
+// The cISC4Lot view the traffic simulator uses: its property holder (vslot 0x18), occupied rectangle (vslot
+// 0x70) and traffic source (vslot 0x20; its vslot 0x18 is the lot's trip list, its vslot 0x20 refreshes that
+// list when it is empty, and its vslot 0x28 is the start rectangle). Cached trip capacities live on the holder.
+class ITrafficLot {
+public:
+    virtual ~ITrafficLot() = default;
+    virtual cISCPropertyHolder* Properties() = 0;
+    virtual void OccupiedRect(SC4RectInt32& rect) = 0;
+    virtual void* TrafficSource() = 0;                              // lot vslot 0x20
+    virtual std::list<cSC4TripData>* TripList(void* source) = 0;    // source vslot 0x18
+    virtual void RefreshTrafficSource(void* source) = 0;            // source vslot 0x20
+};
+
 // One budget department (road or mass transit) line items by index.
 class ITrafficHost {
 public:
@@ -97,6 +149,28 @@ public:
     virtual short DemandGridValue(std::uint32_t gridId, int x, int z) = 0; // building-development grids
     // property value (SC4Percentage as 0..1 per entry) of every active ordinance's travel-strategy adjustments
     virtual void ActiveOrdinanceStrategyAdjustments(std::vector<std::vector<std::int32_t>>& out) = 0;
+
+    // ---- the lot manager and cISC4Lot (lot manager vslot 0x28, lot vslots 0x18 / 0x70) ----
+    // `filter` is the second argument the original passes: 1 in the commute-map and trip-destination sweeps,
+    // 0 in the single-cell lookups.
+    virtual ITrafficLot* LotAt(int x, int z, int filter) = 0;
+
+    // ---- neighbour connections: cSC4NeighborsSimulator / cISC4NeighborConnection / cISC4RegionalCity ----
+    virtual void* NeighborFindConnection(int connectionType, int x, int z) = 0;       // simulator vslot 0x58
+    virtual void* NeighborFindConnectionOnOtherSide(void* connection) = 0;           // simulator vslot 0x70
+    virtual void NeighborGetAllConnections(std::vector<void*>& out) = 0;             // simulator vslot 0x80
+    virtual void NeighborGetConnectedCities(std::vector<void*>& out) = 0;            // simulator vslot 0xa8 (no filter)
+    virtual cISCPropertyHolder* NeighborConnectionProperties(void* connection) = 0;  // connection vslot 0x18
+    virtual void NeighborConnectionCell(void* connection, int& x, int& z) = 0;       // connection vslot 0x30
+    virtual void* NeighborConnectionCity(void* connection) = 0;                      // connection vslot 0x48
+    virtual bool NeighborCityEstablished(void* city) = 0;                            // city vslot 0x158
+    virtual void NeighborCityRegionCell(void* city, int& x, int& z) = 0;             // city vslot 0x28
+    // city vslot 0x88 (0x2010 / 0x2020 / 0x2030 are the population purposes the original asks for)
+    virtual int NeighborCityExtrapolatedPopulation(void* city, std::uint32_t purpose) = 0;
+    // demand simulator vslot 0x30 grid lookup for that id, then the grid's total (vslot 0x48)
+    virtual int RegionDemandTotal(std::uint32_t gridId) = 0;
+    // cISC4TrafficSource vslot 0x28: the rectangle the source's trips start from
+    virtual SC4RectInt32 TrafficSourceStartRect(void* source) = 0;
 };
 
 struct TrafficTunables {
@@ -213,6 +287,49 @@ public:
     int LastCellX() const { return lastX_; }    // +0x40, highest valid x index
     int LastCellZ() const { return lastZ_; }    // +0x44
 
+    // ---- neighbour connection tables (0x1000820ac, 0x100082358, 0x1000828a2, 0x100082ae2, 0x1000884e8,
+    //      0x100089830, 0x10008a090) ----
+    // Side of the map a border cell belongs to (0 west, 1 north, 2 east, 3 south; false when not a border cell).
+    static bool NeighborSide(int x, int z, int lastX, int lastZ, int& side, int& index);
+    // The slot GetTrafficNeighborConnection returns; null when (x, z) is not a border cell.
+    TrafficNeighborConnection* GetTrafficNeighborConnection(int x, int z);
+    std::array<std::vector<TrafficNeighborConnection>, 4>& NeighborConnections() { return neighborConnections_; }
+    // +0x150: the original stores refcounted cSCPropertyHolder*; the port's map owns the holders so that a
+    // simulator destroyed without RemoveUnusedPools does not leak them.
+    std::map<std::uint16_t, cSCPropertyHolder>& NeighborPools() { return neighborPools_; }
+    cISCPropertyHolder* DefaultNeighborPool() { return defaultNeighborPoolValid_ ? &defaultNeighborPool_ : nullptr; }  // +0x168
+    void AddNeighborConnection(int type, int x, int z);      // records the type, the pool and the cost
+    void RemoveNeighborConnection(int type, int x, int z);
+    void RemoveUnusedPools();
+    void* GetNeighborConnection(int travelMode, int x, int z);        // the engine's cISC4NeighborConnection
+    cISCPropertyHolder* GetNeighborPoolPropertyHolder(int travelMode, int x, int z);
+    bool HasMapExit(int x, int z);
+    // +0x98: per-cell connection masks (fixed 0x10000-cell table). Only HasMapExit reads them back so far.
+    TrafficCellConnections& CellConnections(int x, int z) { return cellConnections_[(std::size_t(x) << 8) | (std::size_t(z) & 0xff)]; }
+    const TrafficCellConnections& CellConnections(int x, int z) const { return cellConnections_[(std::size_t(x) << 8) | (std::size_t(z) & 0xff)]; }
+    // +0x80: trip-capacity flag byte per cell (bit per lane group), rows x + 1, columns z + 1
+    std::vector<std::vector<std::uint8_t>>& CellTripFlags() { return cellTripFlags_; }
+    std::array<int, 4>& ConnectionCounts() { return connectionCounts_; }          // +0x31c
+    std::array<int, 4>& TripCapacityTotals() { return tripCapacityTotals_; }      // +0x32c
+    void RecalculateNeighborConnectionCapacities();                              // 0x100087336
+
+    // ---- trip pipeline ----
+    // 0x1000885b8 / the original's vslot 0xa0: the lot's trip capacity still available for lane group `kind`.
+    std::uint32_t GetMaxTripCapacitySlot(const cISCPropertyHolder* holder, std::uint32_t kind) const {
+        return GetTripCapacity(holder, kind);
+    }
+    bool CapacityStillAvailable(const cSC4TripData& trip);                       // 0x100087c06
+    void ApplyTrafficToDestination(std::uint32_t count, int x, int z, std::uint8_t networkType,
+                                   std::uint8_t tripType);                       // 0x1000895c6
+    void WorkOnClearTripDestinations();                                          // 0x100083508
+    void WorkOnRefreshCommuteMap();                                              // 0x1000836ba
+    void WorkOnUpdateNeighborConnections();                                      // 0x100086086
+    // 0x100087cc4: hand one trip to the two path finders (the source rect comes from the host seam).
+    void SetupTrip(StandardTripParams& params, cSC4TripData& trip);
+    // 0x10008bf74: configure a path finder for a lot's dominant trip type; false when the lot has no trips.
+    bool SetupPathFinderForLot(cISC4PathFinder* pathFinder, ITrafficLot* lot);
+    StandardTripParams& TripParams() { return tripParams_; }                     // +0xa70
+
     // ---- subnetworks (lots hold property 0x2a4f9c74 with the ids of the subnetworks they touch) ----
     void ClearSubnetworks();                                        // 0x100082bf4: next id back to 1, every cell id to 0
     // Output order is first-found; the original's hash-set order is unspecified.
@@ -290,6 +407,17 @@ private:
     std::uint64_t insertionPoint_ = 0;
     bool intersectionDirty_ = false;
     int dirtyX0_ = 0, dirtyZ0_ = 0, dirtyX1_ = 0, dirtyZ1_ = 0;
+
+    // neighbour connections: the four border tables, the pool map and its default pool
+    std::array<std::vector<TrafficNeighborConnection>, 4> neighborConnections_;   // +0xf0, +0x108, +0x120, +0x138
+    std::map<std::uint16_t, cSCPropertyHolder> neighborPools_;                    // +0x150
+    cSCPropertyHolder defaultNeighborPool_;                                       // +0x168
+    bool defaultNeighborPoolValid_ = false;
+    std::array<int, 4> connectionCounts_{};                                       // +0x31c: cells per lane group
+    std::array<int, 4> tripCapacityTotals_{};                                     // +0x32c: destination capacity per group
+    std::vector<TrafficCellConnections> cellConnections_;                         // +0x98, fixed 0x10000 cells
+    std::vector<std::vector<std::uint8_t>> cellTripFlags_;                        // +0x80, [x + 1][z + 1]
+    StandardTripParams tripParams_;                                               // +0xa70
 };
 
 }  // namespace sc4

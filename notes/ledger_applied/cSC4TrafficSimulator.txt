@@ -1,0 +1,30 @@
+SOURCE src/sc4/TrafficSimulator.cpp|h
+EVIDENCE scripts/tests/sc4_trafficsimulator_test.cpp - fake neighbour, city, pool-holder and lot records behind the new ITrafficHost methods (cSC4NeighborsSimulator vslots 0x58/0x70/0x80/0xa8, connection vslots 0x18/0x30/0x48, city vslots 0x28/0x88/0x158, demand-sim vslot 0x30+0x48, lot manager vslot 0x28, lot vslots 0x18/0x20/0x70, source vslots 0x18/0x20/0x28) and ITrafficLot drive the border tables: the west/north/east/south side selection (west/east indexed by z, north/south by x), AddNeighborConnection's type bit, far-side cost property 0xca947077, pool creation per far city region cell (0x4a23576b/0x4a23576c) and pool reuse, RemoveNeighborConnection's type clear, pool reset, 0x0b flag clearing and the four +0x31c counters, RemoveUnusedPools (lastX-1 scan quirk), HasMapExit's nine per-cell masks of the inner cell and the 0x200 border-record fallback, GetNeighborConnection's valid-type mask (kValidNeighborConnectionTypesForTransitNetworkType, types 0..12) and the 0x58 FindConnection loop, GetNeighborPoolPropertyHolder's |0x200 mask and missing-pool fallback to the default pool, ApplyTrafficToDestination's lot/pool trip capacities, connection traffic volumes 0xaa9ea81a+tripType and the capacity-reached flag clear, WorkOnUpdateNeighborConnections' 0xaa9ea81a+k -> 0xaa9ea81d+k roll-over and 4..7 -> 8..11 capacity shift, CapacityStillAvailable's max-used arithmetic, SetupTrip's full path-finder call sequence (destination filter/flag, end rect from the lot or the source cell, start rect from the source seam, 0x1cf/3/0x30 travel-type flags, values_f04/f28/ee0 cost arrays, the type-3 secondary path), SetupPathFinderForLot's dominant trip index (ties keep the lower index), its last trip's destination flag and the type-3 secondary branch (empty lists refresh once and configure nothing), and RecalculateNeighborConnectionCapacities' demand share per connected city (30/60/90 of 40/80/120), the lane-group flags, the +0x31c counts and the x86 NaN->0 truncation with empty cities. New seams: ITrafficHost gained 13 methods and ITrafficLot 5; docs/SEAMS.md needs their hook-up rows (the lead owns that file), and two to-do rows are still missing for the unmodelled cSC4LimitTimer slices of WorkOnRefreshCommuteMap / WorkOnClearTripDestinations.
+0x10008a090 GetTrafficNeighborConnection
+0x100089830 GetNeighborConnection
+0x1000820ac AddNeighborConnection
+0x100082358 RemoveNeighborConnection
+0x1000884e8 GetNeighborPoolPropertyHolder
+0x1000828a2 RemoveUnusedPools
+0x100082ae2 HasMapExit
+0x1000895c6 ApplyTrafficToDestination
+0x100086086 WorkOnUpdateNeighborConnections
+0x100087c06 CapacityStillAvailable
+0x100087cc4 SetupTrip
+0x100087336 RecalculateNeighborConnectionCapacities
+0x10008bf74 SetupPathFinderForLot
+PARTIAL:
+0x1000836ba WorkOnRefreshCommuteMap the flag-byte sweep itself is written and tested, but the cSC4LimitTimer deadline argument and the resumable 0x20-byte ScanningIterator at +0xa38 are not modelled: the port runs the whole z-major sweep in one call instead of yielding between slices
+0x100083508 WorkOnClearTripDestinations same missing operand: the cSC4LimitTimer deadline and the +0xa38 ScanningIterator cursor (the capacity 4..7 -> 8..11 shift and the +0x32c totals are written and tested)
+0x100083d00 CreatePathFinder needs the cISC4PathFinder host adapter: the port's IPathFinderHost::TripCapacityLimit() drops the holder/kind operands of the original traffic-simulator slot 0xa0 (GetMaxTripCapacity(holder, kind)), so the path finder cannot be handed this simulator as its host yet
+0x10008bb26 GetWaterRoute calls cSC4WaterPathFinder::FindPath on the water path finder at +0x200, a class that is not recovered
+0x100084492 WorkOnSimCycle needs the DoDailySimulation stage fields (stage +0xa30, the 4.0 ms slice, the trip counters at +0xb68..+0xbc4) and the safe-list / traffic-source iterators at +0xb48/+0xb50
+0x10007e778 DoDailySimulation needs the simulator clock seam, the cSC4DynamicLimitTimer, the safe list iterator (lot-manager vslot 0x78) and the WorkOnSimCycle stage machine
+0x10007e666 DoMonthlySimulation needs the road/mass-transit department accessors (+0x8d0/+0x8d8), the history warehouse (ids 0xea5ba01d, 0x8a5d4116, 0xabb8faac.., 0xec0bdbf8) and the monthly statistic block (+0x350, +0x578/+0x57c, +0x58c, +0x590[9], +0x5c0)
+0x10008c4e4 FloodSubnetwork needs the tunnel map (+0x170, cSC4TrafficSimulator::TunnelInfo), the edge-density grid at +0x890 and the per-cell 0x2e-byte connection masks (+0x98) whose writers (DoConnectionsChanged / FullSetPathNodeConnection) are not recovered
+0x100082e2c UpdateSubnetworkInfo needs the ScanningIterator, the lot occupant census (lot vslot 0x1b0) and its 24-byte bucket lists, and the neighbour-connection city cell (connection vslot 0x30) to accumulate SubnetworkInfo
+0x10007f5f4 DoConnectionsChanged needs the network-occupant / lot connection queries (occupant vslot 0xb0, lot vslot 0x70) and the mask table writer at +0x98
+0x100087f7c PerformPathSearch needs cISC4PathFinder's FindPath (0xb8), ApplyTraffic (0x100), GetCompressedRoute (0xc0) and WasTripReversible (0xf0), none of which the port's PathFinder declares or implements
+0x1000878f8 ConfirmTrips needs the cSC4TripData lists of a traffic source (source vslot 0x18), their kind byte +0x47 and ApplyRoute/ConfirmRoute
+0x10008993a RouteAndLinkTerminals needs cSC4WaterPathFinder::FindPath for the terminal pair route and the ferry terminal link lists (+0x1e8/+0x218)
+SKIPPED:

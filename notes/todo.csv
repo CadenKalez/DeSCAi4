@@ -467,7 +467,7 @@ SCRIPT-1,cSC4AutomataScriptSystem,"Hook IAutomataScriptHost to the real services
 CLASS-cSC4AutomataTuningParams,cSC4AutomataTuningParams,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 PATHING-3,cSC4AutomataTuningParams,Constructor 0x1000fd1d8 is a table of 0x25c bytes of defaults with unnamed fields (6 response curves + tuning scalars); name the fields from their readers in cSC4AutomataManager before recovering,,open,src/sc4/AutomataGenerator.h
 TUNE-1,cSC4AutomataTuningParams,Name the fields (currently by offset f<hex>) once the script/ini readers are recovered; recover SpawnRecallParams (map value at +0x230) and the +0x158 vector element type,CLASS-cSC4AutomataScriptSystem,open,src/sc4/AutomataTuningParams.h
-CLASS-cSC4Automaton,cSC4Automaton,"recover 3 remaining function(s) (0 not started, 3 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4Automaton,cSC4Automaton,"recover 10 remaining function(s) (0 not started, 10 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4Automaton,cSC4Automaton,finish 30 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4Blimp,cSC4Blimp,"recover 7 remaining function(s) (7 not started, 0 partial/pending); bases still unfinished: cSC4Aircraft",CLASS-cSC4Aircraft,open,scripts/export_class.py + notes/remaining_functions.csv
 BUDGET-1,cSC4BudgetSimulator,"BUG: GetBudgetItemForPurpose (src/sc4/BudgetSimulator.cpp:539) indexes the item list by purpose, but the binary (0x100222758) searches for item.reserved8 == purpose id (property 0xea54d285). ParkManager and the civic simulator both pass purpose ids, so their budget paths are affected; fixing it changes the index semantics existing tests rely on.",,open,src/sc4/BudgetSimulator.cpp
@@ -564,7 +564,7 @@ LEDGER-cSC4LightingManager,cSC4LightingManager,finish 1 partial/pending function
 CLASS-cSC4LineGraph,cSC4LineGraph,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4LineGraph,cSC4LineGraph,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4LoadRegionDialog,cSC4LoadRegionDialog,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4LocalGridHelper,cSC4LocalGridHelper,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4LocalGridHelper,cSC4LocalGridHelper,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4Lot,cSC4Lot,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4LotBaseTextureOccupant,cSC4LotBaseTextureOccupant,"recover 26 remaining function(s) (26 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4LotConfigurationEditor,cSC4LotConfigurationEditor,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -572,9 +572,9 @@ CLASS-cSC4LotConfigurationFilterByBuildingType,cSC4LotConfigurationFilterByBuild
 CLASS-cSC4LotConfigurationFilterMonopoly,cSC4LotConfigurationFilterMonopoly,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4LotDeveloper,cSC4LotDeveloper,finish 108 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4LotPropFilter,cSC4LotPropFilter,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4LotRetainingWallModel,cSC4LotRetainingWallModel,"recover 20 remaining function(s) (20 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4LotRetainingWallModel,cSC4LotRetainingWallModel,"recover 20 remaining function(s) (20 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4LotRetainingWallOccupant,cSC4LotRetainingWallOccupant,"recover 33 remaining function(s) (33 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-cSC4LotRetainingWallOccupant,cSC4LotRetainingWallOccupant,finish 10 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4LotRetainingWallOccupant,cSC4LotRetainingWallOccupant,finish 10 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,done,notes/ledger.csv
 LRW-MODEL,cSC4LotRetainingWallOccupant,Recover cSC4LotRetainingWallModel (0xc8) so the ILotRetainingWallModel seam can be dropped,,open,src/sc4/LotRetainingWallOccupant.h
 CLASS-cSC4MadCowPlayerWin,cSC4MadCowPlayerWin,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4MapUtilities,cSC4MapUtilities,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -789,7 +789,7 @@ TRAFFICNETWORKMAP-2,cSC4TrafficNetworkMap,"Read (0x10029eeaa, 4.5 KB) rebuilds t
 TRAFFICNETWORKMAP-3,cSC4TrafficNetworkMap,UpdateIntersectionTiming (0x10029baaa): the 1.9 KB std::set pass that rebalances neighbouring green durations is not ported,,open,src/sc4/TrafficNetworkMap.cpp
 CLASS-cSC4TrafficQueryOccupantFilter,cSC4TrafficQueryOccupantFilter,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4TrafficSimulator,cSC4TrafficSimulator,"recover 4 remaining function(s) (4 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2, cISC4TrafficSimulator","CLASS-cIGZMessageTarget2,CLASS-cISC4TrafficSimulator",open,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-cSC4TrafficSimulator,cSC4TrafficSimulator,finish 87 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4TrafficSimulator,cSC4TrafficSimulator,finish 74 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4TrailerVehicle,cSC4TrailerVehicle,"recover 23 remaining function(s) (23 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4Train,cSC4Train,"recover 35 remaining function(s) (35 not started, 0 partial/pending); bases still unfinished: cSC4TrainCar",CLASS-cSC4TrainCar,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4TrainCar,cSC4TrainCar,"recover 22 remaining function(s) (22 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -816,8 +816,8 @@ CLASS-cSC4VertexHtConstraintSatisfier,cSC4VertexHtConstraintSatisfier,"recover 2
 LEDGER-cSC4VertexHtConstraintSatisfier,cSC4VertexHtConstraintSatisfier,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4VideoPreferencesWinProc,cSC4VideoPreferencesWinProc,"recover 13 remaining function(s) (13 not started, 0 partial/pending); bases still unfinished: cIGZWinProc",CLASS-cIGZWinProc,open,scripts/export_class.py + notes/remaining_functions.csv
 APT-6,cSC4View3DWin,"cSC4View3DWin's +0x4d0 member is NOT the tooltip manager: it is cSC4AdvisorPopupTracker (0x38 bytes, AddGUI stores it, RemoveGUI must Shutdown+Release). Port View3DWin has tipManager_ there and calls ShutdownToolTipManager",,open,src/sc4/View3DWin.cpp
-CLASS-cSC4View3DWin,cSC4View3DWin,"recover 51 remaining function(s) (0 not started, 51 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-cSC4View3DWin,cSC4View3DWin,finish 6 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cSC4View3DWin,cSC4View3DWin,"recover 35 remaining function(s) (0 not started, 35 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4View3DWin,cSC4View3DWin,finish 14 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 UI-NS4UI-1,cSC4View3DWin,nSC4UI (12 functions) is not in src/ at all; AddGUI needs GetWindowChildrenSet/GetWindowChildrenNotInSet/AlignWindowSetToWindow/ClearAcceptFocusFlagRecursive and CreateCatalogView for the catalog menus,,open,src/sc4/View3DWin.cpp
 UI-PROCS-1,cSC4View3DWin,"AddGUI (0x1007892fc) constructs five classes that do not exist in src/: cSC4NewsTickerWinProc (21), cSC4MySimWinProc (31), cSC4BudgetUIWinProc (32), cSC4AdvisorPopupTracker (13), cSC4GraphsViewWinProc (21) - recover them first",,open,src/sc4/View3DWin.cpp
 UI-UNSKIP-1,cSC4View3DWin,"nSC4UI::CreateCatalogView and DoScriptedModalDialog now resolve, so the catalog rows (0x100790aa0 DoLandscapeCatalogView, 0x100790b98 DoFloraCatalogView, 0x100790c4a DoZoneCatalogView, 0x10078afde HandleButtonActivated) and DoBudgetFailure (0x100788d0e) can be un-skipped and written",,open,src/sc4/View3DWin.cpp
@@ -859,7 +859,7 @@ LEDGER-cSC4WatercraftManager,cSC4WatercraftManager,finish 4 partial/pending func
 CLASS-cSC4WeatherSimulator,cSC4WeatherSimulator,"recover 42 remaining function(s) (42 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4WeatherSimulator,cSC4WeatherSimulator,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 WEATHER-1,cSC4WeatherSimulator,"Verify SimulateMoisture's two separable blurs against disassembly (the decompiler collapsed the edge memmoves; the port clamps/mirrors, so cells within 2 of a partial border can differ) and recover MakeWaterAreaList (0x1000e629a, 1,484-byte 256x256 scanner)",,open,src/sc4/WeatherSimulator.cpp
-CLASS-cSC4WinAdviceList,cSC4WinAdviceList,"recover 19 remaining function(s) (19 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4WinAdviceList,cSC4WinAdviceList,"recover 19 remaining function(s) (19 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinAnimationRecorder,cSC4WinAnimationRecorder,"recover 3 remaining function(s) (0 not started, 3 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinCalloutBox,cSC4WinCalloutBox,"recover 29 remaining function(s) (29 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinCatalogView,cSC4WinCatalogView,"recover 38 remaining function(s) (38 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
@@ -964,8 +964,8 @@ OVERLAY-1,cSTEOverlayManager,Hook SC4DrawContext -> IOverlayDrawContext (the dra
 OVERLAY-2,cSTEOverlayManager,Hook cSTETerrainView3D -> IOverlayHost (GetCullingInfo 0x10074e162 + the six mesh-subset draws) and recover the shadow projector behind spRenderer+0x48,,open,src/sc4/OverlayManager.cpp
 CLASS-cSTESelectedTerrainArea,cSTESelectedTerrainArea,"recover 18 remaining function(s) (18 not started, 0 partial/pending); bases still unfinished: cSC4ViewObject3D",CLASS-cSC4ViewObject3D,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSTESurfaceWater,cSTESurfaceWater,"recover 35 remaining function(s) (35 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSTETerrain,cSTETerrain,"recover 41 remaining function(s) (0 not started, 41 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-cSTETerrain,cSTETerrain,finish 56 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cSTETerrain,cSTETerrain,"recover 4 remaining function(s) (0 not started, 4 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSTETerrain,cSTETerrain,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 TERRAIN-1,cSTETerrain,"Lifecycle: Init/Shutdown/StaticInit/QueryInterface/Release, ReadTerrainIniFile, ReadTuningParameters",,open,src/sc4/cSTETerrain.h
 TERRAIN-10,cSTETerrain,"Finish the 10 terrain partials: the exemplar/texture pipeline (ReadTerrainIniFile 5.5 KB, DecideSurfaceCover), the packed SIMD normal/cliff pass and the brush parameter layouts are the blockers",,open,src/sc4/cSTETerrain.cpp
 TERRAIN-11,cSTETerrain,"Remaining terrain work: the shore-cliff cluster (~1.9 KB, self-contained, best next target), the brush path (needs tBrushParameters/tBrushContext + ReadBrushDescriptions), the erosion/flood kernels, SprayVolcanicAsh, Create (height-image import), and ReconcileEdgesWithNeighboringCities (needs IRegionalCityHost)",,open,src/sc4/cSTETerrain.cpp

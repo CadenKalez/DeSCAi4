@@ -1,0 +1,44 @@
+SOURCE src/sc4/Nation.cpp|h
+EVIDENCE test scripts/tests/sc4_nation_test.cpp - fake INationHost/IRegionHost drive the three vtable groups (23/4/6 slots, subobjects at +0/+8/+0x10) and the 0x70-byte field layout, QueryInterface's iids and the Release-below-two path, StaticInit's regions and Downloads directories, LoadRegions, CopyNewUserRegions' data-directory copy, the preference-driven active region and its 0x40-byte field, the economy curves and GetEconomyModifier, SetActiveRegion/DeleteRegion/AddNewRegion, the version-only Write/Read, DoMessage and ResetTutorialCities' delete-recreate, record-file and SetTutorialActive paths
+0x1002887ac cSC4NationConstruct
+0x100288810 cSC4NationDestruct
+0x100288876 cSC4NationDestructComplete
+0x100288880 cSC4NationDestructAndDelete
+0x1002888ae cSC4NationQueryInterface
+0x1002888e2 cSC4NationQueryInterfaceThunk
+0x1002888f0 cSC4NationQueryInterfaceThunk10
+0x1002888fe cSC4NationAddRef
+0x10028890c cSC4NationAddRefThunk
+0x10028891a cSC4NationAddRefThunk10
+0x100288928 cSC4NationRelease
+0x10028896c cSC4NationReleaseThunk
+0x1002889a6 cSC4NationReleaseThunk10
+0x1002889e0 cSC4NationStaticInit
+0x1002891b2 cSC4NationReadSimulatorTunableValues
+0x100289362 cSC4NationLoadRegions
+0x100289582 cSC4NationCopyNewUserRegions
+0x100289748 cSC4NationShutdown
+0x10028988c cSC4NationWrite
+0x1002898b8 cSC4NationWriteThunk
+0x1002898e4 cSC4NationRead
+0x100289926 cSC4NationReadThunk
+0x100289a2c cSC4NationDoMessage
+0x100289a58 cSC4NationDoMessageThunk
+0x100289a88 cSC4NationSetActiveRegion
+0x100289ac6 cSC4NationGetIndexOfCurrentRegionSettingInPreferences
+0x100289d54 cSC4NationDeleteRegion
+0x100289f04 cSC4NationAddNewRegion
+0x10028b224 CopyRegionFiles
+0x10028b4d0 cSC4NationGetRegionDirectory
+0x10028b4de cSC4NationGetRegionCount
+0x10028b4f0 cSC4NationGetActiveRegionIndex
+0x10028b4fa cSC4NationGetActiveRegion
+0x10028b50c cSC4NationGetRegion
+0x10028b51c cSC4NationGetRegionDownloadDirectory
+0x10028b52a cSC4NationGetGZCLSID
+0x10028b536 cSC4NationGetGZCLSIDThunk
+PARTIAL:
+0x100288a9a cSC4NationInit the tutorial-region scan (region->Init, GetAllCities, the city's tutorial number at cISC4RegionalCity +0x208) is recovered but cISC4RegionalCity does not declare that virtual and the registry's default directory is a seam, so the test asserts only the preference path (NATION-1)
+0x10028b0d0 cSC4NationGetEconomyModifier the last term indexes the tunable vector with cISC4City vslot 0xc0 (GetDifficultyLevel), a city virtual the port's cISC4City does not declare, so the index is a seam value (NATION-2)
+0x100289fa6 cSC4NationResetTutorialCities every neighbour it walks is a seam: the tutorial registry (GetRegionDirNames 0x1006431b8, GetItems 0x100643228, GetTutorialRegionDefaultDirName 0x1006437ac, SetActive 0x1006433ee), the region screen (cWinSC4App::DestroyCurrentScreen 0x1006ccaa0 / CreateRegionScreen 0x1006cc934) and the path-based record helpers SC4ReadBinaryRecord 0x1001e93c7 / SC4ReadRegionalCity 0x1001e95c3; the cItem tutorial-number offset (+0x10) is inferred from the caller (NATION-3, NATION-4)
+SKIPPED:

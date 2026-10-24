@@ -1,0 +1,12 @@
+SOURCE src/sc4/LotRetainingWallOccupant.cpp|h
+EVIDENCE test scripts/tests/sc4_lotretainingwalloccupant_test.cpp (registry in scripts/run_tests.sh) together with the now recovered neighbour: the model the ten rows waited for is cSC4LotRetainingWallModel (src/sc4/LotRetainingWallModel.cpp|h, test scripts/tests/sc4_lotretainingwallmodel_test.cpp - ctor layout, Init/SetupVertices geometry, SetTextureData/SetupTextures, GetSortValue, GetWorldBounds, Draw). The occupant keeps calling it through its ILotRetainingWallModel seam; the occupant's own test drives that seam with a fake model, so what remains is the adapter hook-up (todo LRW-MODEL-2), not an unrecovered class. This file only upgrades the ten existing recovered-partial rows of cSC4LotRetainingWallOccupant to recovered; drop it if the lead prefers to wait for the adapter.
+0x10015cd1a cSC4LotRetainingWallOccupantWrite
+0x10015cde8 cSC4LotRetainingWallOccupantRead
+0x10015d30e cSC4LotRetainingWallOccupantFindRetainingWallModel
+0x10015d466 cSC4LotRetainingWallOccupantAddRetainingWallModel
+0x10015d802 cSC4LotRetainingWallOccupantAddRetainingWallModels
+0x10015d8ca cSC4LotRetainingWallOccupantGetLotWallEdgeFlags
+0x10015db0c cSC4LotRetainingWallOccupantGetRetainingWallTypeStatic
+0x10015db62 cSC4LotRetainingWallOccupantAddRetainingWallOccupant
+0x10015de56 cSC4LotRetainingWallOccupantUpdateRetainingWalls
+0x10015e004 cSC4LotRetainingWallOccupantUpdateSurroundingRetainingWalls

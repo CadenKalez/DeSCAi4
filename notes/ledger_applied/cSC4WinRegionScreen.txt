@@ -8,4 +8,6 @@ PARTIAL:
 # 0x10023ce10 / SC4CreateSpanList 0x10023cf28; MakeWholeRegion 0x10023a66c and GetOrCreateRegionalCity 0x10023ae9c need
 # the cISC4Nation / cSC4RegionalCity image plumbing; LoadGUI 0x10023927a needs the region script resources; GZOnCommand
 # 0x10023b92a needs the region dialogs; InitApplicationServices 0x100238972 needs the cSC43DRender wiring and
-# cSC4RegionalTerrainView. No row is SKIPPED.
+# cSC4RegionalTerrainView.
+SKIPPED:
+# none: every remaining function of the class is either recovered or recovered-partial.

@@ -11,7 +11,10 @@
 #include <string>
 #include <vector>
 
+#include "gz/WinGen.h"
 #include "rz/cRZMessage2Standard.h"
+#include "sc4/WinAuraAlert.h"
+#include "sc4/SC4UI.h"
 #include "sc4/View3DWin.h"
 #include "s3d/ModelInstance.h"
 
@@ -53,9 +56,15 @@ struct View3DWinTestAccess {
     static std::uint32_t& LastModifiers(cSC4View3DWin& v) { return v.lastMessageModifiers_; }
     static std::uint16_t& Unknown1c8(cSC4View3DWin& v) { return v.unknown1c8_; }
     static std::uint32_t& SimHiddenTimeout(cSC4View3DWin& v) { return v.simHiddenTimeoutMs_; }
-    static ICursorTextWindow*& CursorTextWindow(cSC4View3DWin& v) { return v.cursorTextWindow_; }
+    static cISC4WinCalloutBox*& CursorTextBox(cSC4View3DWin& v) { return v.cursorTextBox_; }
     static std::list<CursorTextInfo>& CursorText(cSC4View3DWin& v) { return v.cursorText_; }
-    static cIGZUnknown*& CursorTextIcon(cSC4View3DWin& v) { return v.cursorTextIcon_; }
+    static cIGZBuffer*& CursorTextIcon(cSC4View3DWin& v) { return v.cursorTextIcon_; }
+    static cIGZBuffer*& CostIndicatorBuffer(cSC4View3DWin& v) { return v.costIndicatorBuffer_; }
+    static gz::cIGZWinBMP*& CostIndicatorText(cSC4View3DWin& v) { return v.costIndicatorText_; }
+    static std::uint32_t& MayorSubPanelState(cSC4View3DWin& v) { return v.mayorSubPanelState_; }
+    static std::uint32_t& MayorSubPanel(cSC4View3DWin& v) { return v.mayorSubPanel_; }
+    static bool* PanelShown(cSC4View3DWin& v) { return v.panelShown_; }
+    static ISimulatorPauseSink*& Simulator(cSC4View3DWin& v) { return v.simulatorToPause_; }
     static int& CursorTextX(cSC4View3DWin& v) { return v.cursorTextX_; }
     static int& CursorTextY(cSC4View3DWin& v) { return v.cursorTextY_; }
     static cIGZWin*& MissionPanel(cSC4View3DWin& v) { return v.missionPanel_; }
@@ -65,27 +74,28 @@ struct View3DWinTestAccess {
     static int& MouseDownX(cSC4View3DWin& v) { return v.mouseDownX_; }
     static int& MouseDownY(cSC4View3DWin& v) { return v.mouseDownY_; }
     static bool& DraggedPastDeadZone(cSC4View3DWin& v) { return v.draggedPastDeadZone_; }
-    // The GUI block (AddGUI is not recovered; the tests fill it in by hand).
+    // The GUI block AddGUI builds.
     static cIGZWin*& PanelWindow(cSC4View3DWin& v) { return v.panelWindow_; }
-    static cIGZWin*& PanelInterface(cSC4View3DWin& v) { return v.panelInterface_; }
+    static gz::cIGZWinGen*& PanelInterface(cSC4View3DWin& v) { return v.panelInterface_; }
     static cIGZWin*& ToolbarWindow(cSC4View3DWin& v) { return v.toolbarWindow_; }
     static std::vector<cIGZWin*>& GuiWindows(cSC4View3DWin& v) { return v.guiWindows_; }
-    static cIGZWin** PanelAttach(cSC4View3DWin& v) { return v.panelAttach_; }
-    static cIGZWin*& PanelUIWinProc(cSC4View3DWin& v) { return v.panelUIWinProc_; }
-    static cIGZWin*& NewsTickerWinProc(cSC4View3DWin& v) { return v.newsTickerWinProc_; }
-    static cIGZWin*& MySimWinProc(cSC4View3DWin& v) { return v.mySimWinProc_; }
-    static cIGZWin*& BudgetUIWinProc(cSC4View3DWin& v) { return v.budgetUIWinProc_; }
+    static std::vector<cIGZWin*>* PanelWindows(cSC4View3DWin& v) { return v.panelWindows_; }
+    static gz::cIGZWinGen** PanelAttach(cSC4View3DWin& v) { return v.panelAttach_; }
+    static gz::cIGZWinProc*& PanelUIWinProc(cSC4View3DWin& v) { return v.panelUIWinProc_; }
+    static INewsTickerWindow*& NewsTickerWinProc(cSC4View3DWin& v) { return v.newsTickerWinProc_; }
+    static IMySimWindow*& MySimWinProc(cSC4View3DWin& v) { return v.mySimWinProc_; }
+    static IBudgetUIWindow*& BudgetUIWinProc(cSC4View3DWin& v) { return v.budgetUIWinProc_; }
     static cIGZWin*& Window470(cSC4View3DWin& v) { return v.window470_; }
     static cIGZWin*& Window478(cSC4View3DWin& v) { return v.window478_; }
-    static cIGZWin*& GraphsViewWinProc(cSC4View3DWin& v) { return v.graphsViewWinProc_; }
-    static cIGZWin*& BuildingSelectWinProc(cSC4View3DWin& v) { return v.buildingSelectWinProc_; }
+    static IGraphsViewWindow*& GraphsViewWinProc(cSC4View3DWin& v) { return v.graphsViewWinProc_; }
+    static IBuildingSelectWindow*& BuildingSelectWinProc(cSC4View3DWin& v) { return v.buildingSelectWinProc_; }
     static cIGZWin*& Window4a0(cSC4View3DWin& v) { return v.window4a0_; }
     static cIGZWin*& Window4a8(cSC4View3DWin& v) { return v.window4a8_; }
     static cIGZWin*& Window4b0(cSC4View3DWin& v) { return v.window4b0_; }
     static gz::cIGZWinText*& DateText(cSC4View3DWin& v) { return v.dateText_; }
     static gz::cIGZWinText*& BudgetText(cSC4View3DWin& v) { return v.budgetText_; }
     static gz::cIGZWinText*& PopulationText(cSC4View3DWin& v) { return v.populationText_; }
-    static cIGZUnknown*& TipManager(cSC4View3DWin& v) { return v.tipManager_; }
+    static IAdvisorPopupQueue*& AdvisorPopups(cSC4View3DWin& v) { return v.advisorPopups_; }
     static int& CurrentPanel(cSC4View3DWin& v) { return v.currentPanel_; }
 };
 }  // namespace sc4
@@ -340,20 +350,56 @@ struct FakeCityMouseRouter final : ICityMouseRouter {
     bool IsActive() override { return active; }
     bool AllowsEdgeScroll() override { return allowEdgeScroll; }
 };
-struct FakeCursorTextWindow final : ICursorTextWindow {
-    bool visible = false;
-    int shows = 0, hides = 0, resets = 0, positions = 0, line1Sets = 0, line2Sets = 0, iconSets = 0;
-    int lastX = 0, lastY = 0;
+// The cursor-text callout box (+0x5d0) and its window: CursorTextChanged drives the box's own interface and
+// the window's ShowWindow / HideWindow / InvalidateSelfAndParents.
+struct BoxWindow final : cGZWin {
+    explicit BoxWindow(cIGZWinMgr* mgr) : cGZWin(mgr) {}
+    int shows = 0, hides = 0, invalidates = 0;
+    void ShowWindow() override { ++shows; cGZWin::ShowWindow(); }
+    void HideWindow() override { ++hides; cGZWin::HideWindow(); }
+    void InvalidateSelfAndParents() override { ++invalidates; cGZWin::InvalidateSelfAndParents(); }
+};
+struct FakeCalloutBox final : cISC4WinCalloutBox {
+    explicit FakeCalloutBox(cIGZWinMgr* mgr = nullptr) {
+        window_ = new BoxWindow(mgr);
+        window_->AddRef();
+    }
+    ~FakeCalloutBox() { if (window_) window_->Release(); }
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return static_cast<std::uint32_t>(++refs); }
+    std::uint32_t Release() override { return static_cast<std::uint32_t>(refs > 0 ? --refs : 0); }
+    cIGZWin* AsIGZWin() override { return window_; }
+    void SetBackgroundImage(cIGZBuffer* image, int a, int b) override {
+        background = image; ++backgrounds; bgA = a; bgB = b;
+    }
+    cIGZBuffer* GetBackgroundImage() const override { return background; }
+    void SetTitle(const cIGZString& text) override { line1 = text.ToChar(); ++line1Sets; }
+    const cIGZString& GetTitle() const override { return title_; }
+    void SetText(const cIGZString& text) override { line2 = text.ToChar(); ++line2Sets; }
+    const cIGZString& GetText() const override { return text_; }
+    void SetTitleFontStyle(std::uint32_t style) override { titleFont = style; }
+    void SetTextFontStyle(std::uint32_t style) override { textFont = style; }
+    void SetIcon(cIGZBuffer* image) override { icon = image; ++iconSets; }
+    cIGZBuffer* GetIcon() const override { return icon; }
+    void SetIconMeter(cIGZBuffer*, std::uint32_t, float) override {}
+    void SetPointOfInterest(const cRZPoint& value) override { point = value; ++positions; }
+    const cRZPoint& GetPointOfInterest() const override { return point; }
+    void SetAvoidanceRect(const cRZRect&) override {}
+    const cRZRect& GetAvoidanceRect() const override { return avoidance_; }
+    void SetConstraintRect(const cRZRect&) override {}
+    const cRZRect& GetConstraintRect() const override { return constraint_; }
+
+    int refs = 0;
+    BoxWindow* window_ = nullptr;
+    cIGZBuffer* background = nullptr;
+    cIGZBuffer* icon = nullptr;
+    int backgrounds = 0, bgA = 0, bgB = 0;
     std::string line1, line2;
-    cIGZUnknown* icon = reinterpret_cast<cIGZUnknown*>(0x1);
-    void SetLine1(const cIGZString& text) override { line1 = text.ToChar(); ++line1Sets; }
-    void SetLine2(const cIGZString& text) override { line2 = text.ToChar(); ++line2Sets; }
-    void SetIcon(cIGZUnknown* value) override { icon = value; ++iconSets; }
-    void SetPosition(int x, int y) override { positions++; lastX = x; lastY = y; }
-    void ShowWindow() override { ++shows; visible = true; }
-    void HideWindow() override { ++hides; visible = false; }
-    bool IsVisible() override { return visible; }
-    void Reset() override { ++resets; }
+    cRZString title_, text_;
+    cRZPoint point;
+    cRZRect avoidance_, constraint_;
+    std::uint32_t titleFont = 0, textFont = 0;
+    int positions = 0, line1Sets = 0, line2Sets = 0, iconSets = 0;
 };
 struct FakeTerrainEditor final : ITerrainEditor {
     float height = 0.0f;
@@ -404,6 +450,322 @@ struct FakeViewInputHost final : IViewInputHost {
     void PlaySound(int, std::uint32_t) override { ++sounds; }
 };
 
+// A buffer (the toolbar skin, the callout background, the cursor icon, the cost indicator's 0x80x0x20 target).
+struct FakeBuffer final : cIGZBuffer {
+    int refs = 0;
+    std::uint32_t width = 0x80, height = 0x20, transparency = 0;
+    int inits = 0, transparencySets = 0;
+    cRZRect area{0, 0, 0x80, 0x20};
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return static_cast<std::uint32_t>(++refs); }
+    std::uint32_t Release() override { return static_cast<std::uint32_t>(refs > 0 ? --refs : 0); }
+    bool Init(std::uint32_t w, std::uint32_t h, cGZBufferColorType) override {
+        width = w; height = h; area = cRZRect{0, 0, static_cast<int>(w), static_cast<int>(h)}; ++inits; return true;
+    }
+    bool Shutdown() override { return true; }
+    bool Uninitialize() override { return true; }
+    bool Lock(eLockFlags) override { return true; }
+    bool Unlock(eLockFlags) override { return true; }
+    bool IsLocked() const override { return false; }
+    std::uint32_t Width() const override { return width; }
+    std::uint32_t Height() const override { return height; }
+    const cRZRect* GetBufferArea() const override { return &area; }
+    void GetBufferArea(cRZRect& out) const override { out = area; }
+    std::uint32_t GetMemoryUsage() const override { return 0; }
+    cGZBufferColorType GetColorType() const override { return static_cast<cGZBufferColorType>(1); }
+    void GetColorType(cGZBufferColorType& out) const override { out = static_cast<cGZBufferColorType>(1); }
+    std::uint32_t GetBitsPerPixel() const override { return 32; }
+    std::uint32_t GetBytesPerPixel() const override { return 4; }
+    bool Fill(std::uint32_t, const cRZRect&, const cRZRect*) override { return true; }
+    bool Fill(std::uint32_t, int, int, int, int, const cRZRect*) override { return true; }
+    bool Fill(std::uint32_t, const cRZRect*) override { return true; }
+    std::uint32_t GetPixel(std::uint32_t, std::uint32_t) const override { return 0; }
+    void SetPixel(std::uint32_t, std::uint32_t, std::uint32_t) override {}
+    void SetTransparency(std::uint32_t color) override { transparency = color; ++transparencySets; }
+    bool GetTransparency() const override { return transparency != 0; }
+    bool IsPixelTransparent(std::uint32_t, std::uint32_t) override { return false; }
+    bool GetTransparentColor(std::uint32_t& color) const override { color = transparency; return true; }
+    void RemoveTransparency() override {}
+    bool DrawLine(int, int, int, int, int, std::uint32_t) override { return true; }
+    bool Blt(cIGZBuffer*, const cRZRect&, const cRZRect&, const cRZRect*) override { return true; }
+    std::uint32_t ConvertRGBValueToNative(std::uint8_t r, std::uint8_t g, std::uint8_t b) override {
+        return (static_cast<std::uint32_t>(r) << 16) | (static_cast<std::uint32_t>(g) << 8) | b;
+    }
+    bool ConvertNativeValueToRGB(std::uint32_t, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b) override {
+        r = g = b = 0; return true;
+    }
+    std::uint32_t ConvertRGBAValueToNative(std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t) override {
+        return ConvertRGBValueToNative(r, g, b);
+    }
+    bool ConvertNativeValueToRGBA(std::uint32_t, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b, std::uint8_t& a) override {
+        r = g = b = a = 0; return true;
+    }
+    void* GetColorSurfaceBits() override { return nullptr; }
+    std::uint32_t GetColorSurfaceStride() override { return 0; }
+    std::uint32_t GetChangeCounter() override { return 0; }
+    cIGZBufferHardwareCache* GetHardwareCache() override { return nullptr; }
+    bool SetHardwareCache(cIGZBufferHardwareCache*) override { return true; }
+    bool IsReady() override { return true; }
+};
+
+// The cost indicator's cGZWinBMP window.
+struct FakeBmpWindow final : cGZWin, gz::cIGZWinBMP {
+    explicit FakeBmpWindow(cIGZWinMgr* mgr) : cGZWin(mgr) {}
+    cIGZBuffer* bmp = nullptr;
+    std::uint32_t flags = 0;
+    int setBmps = 0, imageAreas = 0;
+    cRZRect imageArea;
+    bool QueryInterface(std::uint32_t iid, void** out) override {
+        if (iid == gz::kGZIID_cIGZWinBMP) { *out = static_cast<gz::cIGZWinBMP*>(this); AddRef(); return true; }
+        return cGZWin::QueryInterface(iid, out);
+    }
+    std::uint32_t AddRef() override { return cGZWin::AddRef(); }
+    std::uint32_t Release() override { return cGZWin::Release(); }
+    cIGZWin* AsIGZWin() override { return this; }
+    void SetBMP(cIGZBuffer* buffer) override { bmp = buffer; ++setBmps; }
+    bool GetBMP(std::uint32_t, void** out) const override { if (!bmp) return false; *out = bmp; return true; }
+    void SetAlphaBlending(bool, float) override {}
+    void GetAlphaBlending(bool& enable, float& alpha) const override { enable = false; alpha = 0.5f; }
+    void SetImageArea(const cRZRect& area) override { imageArea = area; ++imageAreas; }
+    void GetImageArea(cRZRect& area) const override { area = imageArea; }
+    bool GetWinBMPFlag(int flag) const override { return (flags & static_cast<std::uint32_t>(flag)) != 0; }
+    void SetWinBMPFlag(int flag, bool on) override {
+        if (on) flags |= static_cast<std::uint32_t>(flag); else flags &= ~static_cast<std::uint32_t>(flag);
+    }
+};
+
+// A script window: a cGZWin that also answers cIGZWinGen (every panel window AddGUI creates).
+struct FakeGenWindow final : cGZWin, gz::cIGZWinGen {
+    explicit FakeGenWindow(cIGZWinMgr* mgr) : cGZWin(mgr) {}
+    bool QueryInterface(std::uint32_t iid, void** out) override {
+        if (iid == gz::kGZIID_cIGZWinGen || iid == 0x5386d516) {
+            *out = static_cast<gz::cIGZWinGen*>(this);
+            AddRef();
+            return true;
+        }
+        return cGZWin::QueryInterface(iid, out);
+    }
+    std::uint32_t AddRef() override { return cGZWin::AddRef(); }
+    std::uint32_t Release() override { return cGZWin::Release(); }
+    cIGZWin* AsIGZWin() override { return this; }
+    std::uint32_t GetCLSID() const override { return 0; }
+    bool GetWinGenFlag(int) const override { return false; }
+    bool SetWinGenFlag(int, bool) override { return true; }
+    bool SetWinProc(gz::cIGZWinProc* proc) override { winProc = proc; ++winProcs; return true; }
+    gz::cIGZWinProc* GetWinProc() const override { return winProc; }
+    bool GetWinProcAs(std::uint32_t, void**) const override { return false; }
+    bool GetUserArea(cRZRect& out) const override { out = {}; return true; }
+    bool SetUserArea(const cRZRect& area) override { userArea = area; ++userAreas; return true; }
+    bool SetBackgroundBitmap(gz::BGBltType, cIGZBuffer*) override { return true; }
+    bool GetBackgroundBitmap(gz::BGBltType&, cIGZBuffer*&) const override { return false; }
+    bool SetBackgroundBitmap(cIGZBuffer*) override { return true; }
+    bool GetBackgroundBitmap(cIGZBuffer** out) const override { *out = nullptr; return true; }
+    bool SetBackgroundBlitType(gz::BGBltType) override { return true; }
+    bool GetBackgroundBlitType(gz::BGBltType& type) const override { type = gz::kBGTiled; return true; }
+    bool SetUserData(std::uint32_t, std::uint32_t) override { return true; }
+    bool GetUserData(std::uint32_t, std::uint32_t& value) const override { value = 0; return true; }
+    bool SetUserData(std::uint32_t) override { return true; }
+    std::uint32_t GetUserData() const override { return 0; }
+    void SetUserData(std::uint32_t, cIGZUnknown*) override {}
+    bool GetUserData(std::uint32_t, std::uint32_t, void**) override { return false; }
+    void RemoveUserData(std::uint32_t) override {}
+    bool SetGutters(std::uint8_t, std::uint8_t) override { return true; }
+    bool GetGutters(int& x, int& y) override { x = y = 0; return true; }
+    void SetGutters(std::int8_t, std::int8_t, std::int8_t, std::int8_t) override {}
+    bool GetGutters(int& l, int& t, int& r, int& b) const override { l = t = r = b = 0; return true; }
+    bool AddColorBar(int, int, int, const cRZRect&) override { return true; }
+    void AddDividerH(int, int) override {}
+    bool RemoveColorBar(int) override { return true; }
+    gz::cIGZWinProc* winProc = nullptr;
+    cRZRect userArea;
+    int winProcs = 0, userAreas = 0;
+};
+
+// The compass window: a cGZWin that answers cISC4WinAlertBorder.
+struct FakeCompassWindow final : cGZWin, cISC4WinAlertBorder {
+    explicit FakeCompassWindow(cIGZWinMgr* mgr) : cGZWin(mgr) {}
+    cIGZBuffer* image = nullptr;
+    int images = 0;
+    bool QueryInterface(std::uint32_t iid, void** out) override {
+        if (iid == kGZIID_cISC4WinAlertBorder) { *out = static_cast<cISC4WinAlertBorder*>(this); AddRef(); return true; }
+        return cGZWin::QueryInterface(iid, out);
+    }
+    std::uint32_t AddRef() override { return cGZWin::AddRef(); }
+    std::uint32_t Release() override { return cGZWin::Release(); }
+    cIGZWin* AsIGZWin() override { return this; }
+    void SetImage(cIGZBuffer* buffer) override { image = buffer; ++images; }
+};
+
+// The window procedures AddGUI allocates through the host.
+struct FakePanelUIProc final : gz::cIGZWinProc {
+    int refs = 0;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return static_cast<std::uint32_t>(++refs); }
+    std::uint32_t Release() override { return static_cast<std::uint32_t>(refs > 0 ? --refs : 0); }
+    bool DoWinProcMessage(cIGZWin*, cGZMessage&) override { return false; }
+};
+struct FakeNewsTicker final : INewsTickerWindow {
+    int refs = 0, inits = 0, shows = 0, hides = 0;
+    gz::cIGZWinGen* window = nullptr;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return static_cast<std::uint32_t>(++refs); }
+    std::uint32_t Release() override { return static_cast<std::uint32_t>(refs > 0 ? --refs : 0); }
+    bool DoWinProcMessage(cIGZWin*, cGZMessage&) override { return false; }
+    bool Init(gz::cIGZWinGen* value) override { window = value; ++inits; return true; }
+    void ShowTicker() override { ++shows; }
+    void HideTicker() override { ++hides; }
+};
+struct FakeMySimProc final : IMySimWindow {
+    int refs = 0, inits = 0, shows = 0, hides = 0;
+    gz::cIGZWinGen* panel = nullptr;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return static_cast<std::uint32_t>(++refs); }
+    std::uint32_t Release() override { return static_cast<std::uint32_t>(refs > 0 ? --refs : 0); }
+    bool DoWinProcMessage(cIGZWin*, cGZMessage&) override { return false; }
+    void Init() override { ++inits; }
+    void Show() override { ++shows; }
+    void Hide() override { ++hides; }
+};
+struct FakeBudgetProc final : IBudgetUIWindow {
+    int refs = 0, inits = 0, shows = 0, hides = 0;
+    bool visible = false;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return static_cast<std::uint32_t>(++refs); }
+    std::uint32_t Release() override { return static_cast<std::uint32_t>(refs > 0 ? --refs : 0); }
+    void Init() override { ++inits; }
+    void ShowWindow() override { ++shows; visible = true; }
+    void HideWindow() override { ++hides; visible = false; }
+    bool IsVisible() override { return visible; }
+};
+struct FakeGraphsProc final : IGraphsViewWindow {
+    int refs = 0, inits = 0, shows = 0, hides = 0, graphTypes = 0;
+    std::uint32_t lastGraphType = 0;
+    bool visible = false;
+    cIGZWin* window = nullptr;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return static_cast<std::uint32_t>(++refs); }
+    std::uint32_t Release() override { return static_cast<std::uint32_t>(refs > 0 ? --refs : 0); }
+    bool DoWinProcMessage(cIGZWin*, cGZMessage&) override { return false; }
+    bool Init() override { ++inits; return true; }
+    void ShowWindow() override { ++shows; visible = true; }
+    void HideWindow() override { ++hides; visible = false; }
+    bool IsVisible() override { return visible; }
+    void ShowGraphType(std::uint32_t option) override { lastGraphType = option; ++graphTypes; }
+};
+struct FakeBuildingSelectProc final : IBuildingSelectWindow {
+    int refs = 0, inits = 0, shows = 0, hides = 0;
+    bool visible = false;
+    cIGZWin* window = nullptr;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return static_cast<std::uint32_t>(++refs); }
+    std::uint32_t Release() override { return static_cast<std::uint32_t>(refs > 0 ? --refs : 0); }
+    bool DoWinProcMessage(cIGZWin*, cGZMessage&) override { return false; }
+    bool Init() override { ++inits; return true; }
+    void ShowWindow() override { ++shows; visible = true; }
+    void HideWindow() override { ++hides; visible = false; }
+    bool IsVisible() override { return visible; }
+};
+struct FakeAdvisorQueue final : IAdvisorPopupQueue {
+    int refs = 0, inits = 0, shutdowns = 0;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return static_cast<std::uint32_t>(++refs); }
+    std::uint32_t Release() override { return static_cast<std::uint32_t>(refs > 0 ? --refs : 0); }
+    bool Init() override { ++inits; return true; }
+    bool Shutdown() override { ++shutdowns; return true; }
+};
+struct FakeAdvisorWindow final : IAdvisorWindow {
+    int refs = 0, shows = 0, hides = 0;
+    bool visible = false;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return static_cast<std::uint32_t>(++refs); }
+    std::uint32_t Release() override { return static_cast<std::uint32_t>(refs > 0 ? --refs : 0); }
+    void ShowAdvisorWindow() override { ++shows; visible = true; }
+    void HideAdvisorWindow() override { ++hides; visible = false; }
+    bool IsAdvisorWindowVisible() override { return visible; }
+};
+// The simulator's pause pair plus the speed / paused getters UpdateSpeedButtons reads.
+struct FakeSpeedSimulator final : ISimulatorPauseSink {
+    int refs = 1, pauses = 0, resumes = 0;
+    int speed = 1;
+    bool paused = false;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return static_cast<std::uint32_t>(++refs); }
+    std::uint32_t Release() override { return static_cast<std::uint32_t>(--refs); }
+    void Pause() override { ++pauses; }
+    void Resume() override { ++resumes; }
+    int Speed() override { return speed; }
+    bool IsPaused() override { return paused; }
+};
+
+// A toggle button the panel helpers can find (gz::kGZIID_cIGZWinBtn): it records the toggle state.
+struct FakePanelButton final : cGZWin, gz::cIGZWinBtn {
+    explicit FakePanelButton(cIGZWinMgr* mgr) : cGZWin(mgr) {}
+    bool QueryInterface(std::uint32_t iid, void** out) override {
+        if (iid == gz::kGZIID_cIGZWinBtn) { *out = static_cast<gz::cIGZWinBtn*>(this); AddRef(); return true; }
+        return cGZWin::QueryInterface(iid, out);
+    }
+    std::uint32_t AddRef() override { return cGZWin::AddRef(); }
+    std::uint32_t Release() override { return cGZWin::Release(); }
+    cIGZWin* AsIGZWin() override { return static_cast<cIGZWin*>(static_cast<cGZWin*>(this)); }
+    bool GetBtnFlag(int flag) const override { return (flags & flag) != 0; }
+    bool SetBtnFlag(int flag, bool on) override { if (on) flags |= flag; else flags &= ~flag; return true; }
+    bool ToggleOn() override { flags |= gz::kBtnOn; ++toggles; return true; }
+    bool ToggleOff() override { flags &= ~gz::kBtnOn; ++toggles; return true; }
+    bool IsOn() const override { return (flags & gz::kBtnOn) != 0; }
+    bool SetChecked(bool checked) override { return SetBtnFlag(gz::kBtnOn, checked); }
+    bool IsChecked() const override { return IsOn(); }
+    int GetStyle() override { return lastStyle; }
+    bool SetStyle(int style, cIGZBuffer* image, const cRZRect* area) override {
+        lastStyle = style;
+        lastImage = image;
+        hasArea = area != nullptr;
+        if (area) lastArea = *area;
+        ++styles;
+        return true;
+    }
+    bool SetButtonStyle(int) override { return true; }
+    int GetImageW() const override { return 1; }
+    int GetImageH() const override { return 1; }
+    bool GetImageArea(cRZRect& out) const override { out = area; return true; }
+    bool SetBuffer(cIGZBuffer*) override { return true; }
+    bool GetBuffer(cIGZBuffer*& out) const override { out = image; return true; }
+    bool SetFont(gz::IWinButtonFont*) override { return true; }
+    bool SetFontStyle(std::uint32_t) override { return true; }
+    bool GetFontStyle(std::uint32_t& style) override { style = 0; return true; }
+    bool SetFontColor(int, std::uint32_t) override { return true; }
+    bool GetFontColor(int, std::uint32_t& native) const override { native = 0; return true; }
+    bool SetFontColor(int, gz::cRZColor) override { return true; }
+    bool GetFontColor(int, gz::cRZColor&) const override { return true; }
+    bool ClearFontColor(int) override { return true; }
+    bool SetCaptionStyle(int) override { return true; }
+    bool GetCaptionStyle(int& style) const override { style = 0; return true; }
+    bool SetGutters(std::uint8_t, std::uint8_t) override { return true; }
+    bool GetGutters(int& x, int& y) const override { x = y = 0; return true; }
+    bool SetGutters(std::uint8_t, std::uint8_t, std::uint8_t, std::uint8_t) override { return true; }
+    bool GetGutters(int& l, int& t, int& r, int& b) const override { l = t = r = b = 0; return true; }
+    bool FitSizeToContent() override { return true; }
+    bool GetMinMaxInfo(cRZRect& out) override { out = {1, 1, 1, 1}; return true; }
+    bool SetTipText(const cIGZString&) override { return true; }
+    bool GetTipText(cIGZString&) const override { return true; }
+    bool ClearTipText() override { return true; }
+    bool SetTipPlacementType(int) override { return true; }
+    bool GetTipPlacementType(int& type) const override { type = 0; return true; }
+    bool SetTipPlacementOffsets(int, int) override { return true; }
+    bool GetTipPlacementOffsets(int& x, int& y) const override { x = y = 0; return true; }
+    bool SetTipColor(int, std::uint8_t, std::uint8_t, std::uint8_t) override { return true; }
+    bool GetTipColor(int, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b) const override { r = g = b = 0; return true; }
+    void Flash(std::uint32_t, std::uint32_t) override {}
+    bool SetSoundID(int, std::uint32_t) override { return true; }
+    std::uint32_t GetSoundID(int) const override { return 0; }
+    int flags = 0, toggles = 0;
+    int lastStyle = 0, styles = 0;
+    bool hasArea = false;
+    cRZRect lastArea{0, 0, 0, 0};
+    cRZRect area{0, 0, 0, 0};
+    cIGZBuffer* image = nullptr;
+    cIGZBuffer* lastImage = nullptr;
+};
+
 // ------------------------------------------------------------------------------------------------ the host
 struct FakeHost final : IView3DWinHost {
     FakeMessageServer server;
@@ -442,7 +804,7 @@ struct FakeHost final : IView3DWinHost {
     bool urlResult = false;
     // The new seams.
     FakeCityMouseRouter router;
-    FakeCursorTextWindow cursorWindow;
+    FakeCalloutBox cursorWindow;
     FakeTerrainEditor terrain;
     bool canZone = true, gsSelfScroll = false;
     int progressInits = 0, progressCaptions = 0, lastCaptionId = -1;
@@ -510,7 +872,7 @@ struct FakeHost final : IView3DWinHost {
     int budgetOpenCalls = 0, budgetRefreshes = 0;
     bool budgetOpen = false;
     int newsShutdowns = 0, mysimShutdowns = 0, budgetShutdowns = 0, graphsShutdowns = 0;
-    int buildingShutdowns = 0, tipShutdowns = 0;
+    int buildingShutdowns = 0;
     void GetCityName(cIGZString& out) override { out.AssignFromCString(cityName.c_str()); }
     int VisualTimeMode() override { return visualTimeMode; }
     int CityPopulation() override { return population; }
@@ -536,7 +898,136 @@ struct FakeHost final : IView3DWinHost {
     void ShutdownBudgetUIWinProc(cIGZUnknown*) override { ++budgetShutdowns; }
     void ShutdownGraphsViewWinProc(cIGZUnknown*) override { ++graphsShutdowns; }
     void ShutdownBuildingSelectWinProc(cIGZUnknown*) override { ++buildingShutdowns; }
-    void ShutdownToolTipManager(cIGZUnknown*) override { ++tipShutdowns; }
+    // ---- AddGUI's construction seams (0x1007892fc and its callees)
+    std::map<std::uint32_t, cIGZWin*> scriptWindows;                 // by window id
+    std::vector<std::pair<cGZPersistResourceKey, std::uint32_t>> scriptRequests;
+    std::map<std::uint32_t, cIGZBuffer*> images;                     // by instance
+    std::vector<std::uint32_t> imageRequests;
+    int toolbarButtons = 0, compassWindows = 0, compassAttaches = 0, mapViewInits = 0;
+    std::vector<std::uint32_t> localisedStrings;
+    FakePanelUIProc* panelProc = nullptr;
+    FakeNewsTicker* newsProc = nullptr;
+    FakeMySimProc* mySimProc = nullptr;
+    FakeBudgetProc* budgetProc = nullptr;
+    FakeGraphsProc* graphsProc = nullptr;
+    FakeBuildingSelectProc* buildingProc = nullptr;
+    FakeAdvisorQueue* advisorQueue = nullptr;
+    FakeAdvisorWindow advisorWindow;
+    FakeSpeedSimulator speedSimulator;
+    FakeBmpWindow* bmpWindow = nullptr;
+    FakeCompassWindow* compassWindow = nullptr;
+    FakePanelButton* toolbarButton = nullptr;
+    int imageBuffers = 0;
+    bool disasterAlert = false, situationAlert = false, simulatorBusy = false;
+    bool keysDown[0x20] = {};
+    std::vector<std::uint32_t> commands;
+    int establishDialogs = 0;
+    bool establishDialog = true;
+
+    // The four nSC4UI helpers AddGUI runs around every script window (they are recovered in SC4UI.cpp, which
+    // this test links; the view reaches them through the host like every other outside call).
+    std::uint32_t GetWindowChildrenSet(cIGZWin* window, std::set<cIGZWin*>& children) override {
+        return nSC4UI::GetWindowChildrenSet(window, children);
+    }
+    std::uint32_t GetWindowChildrenNotInSet(cIGZWin* window, const std::set<cIGZWin*>& excluded,
+                                            std::set<cIGZWin*>& out) override {
+        return nSC4UI::GetWindowChildrenNotInSet(window, excluded, out);
+    }
+    void AlignWindowSetToWindow(const std::set<cIGZWin*>& windows, cIGZWin* parent) override {
+        nSC4UI::AlignWindowSetToWindow(windows, parent);
+    }
+    void ClearAcceptFocusFlagRecursive(cIGZWin* window) override { nSC4UI::ClearAcceptFocusFlagRecursive(window); }
+
+    cIGZWin* CreateWindowFromScript(const cGZPersistResourceKey& key, cIGZWin* parent, std::uint32_t id) override {
+        scriptRequests.emplace_back(key, id);
+        auto it = scriptWindows.find(id);
+        if (it == scriptWindows.end() || !it->second) return nullptr;
+        if (parent) parent->ChildAdd(it->second);
+        it->second->AddRef();
+        return it->second;
+    }
+    bool CreateWindowFromScript(const cGZPersistResourceKey& key, cIGZWin* parent, std::uint32_t id,
+                                std::uint32_t iid, void** out) override {
+        cIGZWin* window = CreateWindowFromScript(key, parent, id);
+        if (!window) return false;
+        const bool ok = window->QueryInterface(iid, out);
+        window->Release();                     // QueryInterface kept its own reference
+        return ok;
+    }
+    cIGZBuffer* LoadImageBuffer(std::uint32_t, std::uint32_t, std::uint32_t instance) override {
+        imageRequests.push_back(instance);
+        auto it = images.find(instance);
+        if (it == images.end()) return nullptr;
+        it->second->AddRef();
+        return it->second;
+    }
+    cIGZWinMgr* windowManager = nullptr;
+    cIGZWin* CreateToolbarButton() override {
+        ++toolbarButtons;
+        if (!toolbarButton) { toolbarButton = new FakePanelButton(windowManager); toolbarButton->AddRef(); }
+        return toolbarButton;
+    }
+    cIGZWin* CreateCompassWindow() override {
+        ++compassWindows;
+        if (!compassWindow) { compassWindow = new FakeCompassWindow(windowManager); compassWindow->AddRef(); }
+        return compassWindow;
+    }
+    void LocalisedString(std::uint32_t, std::uint32_t instance, cRZString& out) override {
+        localisedStrings.push_back(instance);
+        out.AssignFromCString("Show panel");
+    }
+    gz::cIGZWinProc* CreatePanelUIWinProc() override {
+        if (!panelProc) { panelProc = new FakePanelUIProc(); panelProc->AddRef(); }
+        return panelProc;
+    }
+    INewsTickerWindow* CreateNewsTickerWinProc() override {
+        if (!newsProc) { newsProc = new FakeNewsTicker(); newsProc->AddRef(); }
+        return newsProc;
+    }
+    IMySimWindow* CreateMySimWinProc(gz::cIGZWinGen* panel) override {
+        if (!mySimProc) { mySimProc = new FakeMySimProc(); mySimProc->AddRef(); }
+        mySimProc->panel = panel;
+        return mySimProc;
+    }
+    IBudgetUIWindow* CreateBudgetUIWinProc() override {
+        if (!budgetProc) { budgetProc = new FakeBudgetProc(); budgetProc->AddRef(); }
+        return budgetProc;
+    }
+    IGraphsViewWindow* CreateGraphsViewWinProc(cIGZWin* window) override {
+        if (!graphsProc) { graphsProc = new FakeGraphsProc(); graphsProc->AddRef(); }
+        graphsProc->window = window;
+        return graphsProc;
+    }
+    IBuildingSelectWindow* CreateBuildingSelectWinProc(cIGZWin* window) override {
+        if (!buildingProc) { buildingProc = new FakeBuildingSelectProc(); buildingProc->AddRef(); }
+        buildingProc->window = window;
+        return buildingProc;
+    }
+    IAdvisorPopupQueue* CreateAdvisorPopupTracker() override {
+        if (!advisorQueue) { advisorQueue = new FakeAdvisorQueue(); advisorQueue->AddRef(); }
+        return advisorQueue;
+    }
+    void AttachCompassWinProc(gz::cIGZWinGen*) override { ++compassAttaches; }
+    cISC4WinCalloutBox* CreateCalloutBox() override { cursorWindow.AddRef(); return &cursorWindow; }
+    gz::cIGZWinBMP* CreateWinBMP() override {
+        if (!bmpWindow) { bmpWindow = new FakeBmpWindow(windowManager); bmpWindow->AddRef(); }
+        return bmpWindow;
+    }
+    void InitMapView(cIGZWin*) override { ++mapViewInits; }
+    bool IsKeyDownNow(std::uint32_t key) override { return key < 0x20 && keysDown[key]; }
+    void ExecuteCommand(std::uint32_t command) override { commands.push_back(command); }
+    bool ShowEstablishCityDialog() override { ++establishDialogs; return establishDialog; }
+    bool DisasterAlertActive() override { return disasterAlert; }
+    bool SituationAlertActive() override { return situationAlert; }
+    bool SimulatorBusy() override { return simulatorBusy; }
+    IAdvisorWindow* AdvisorWindow() override { advisorWindow.AddRef(); return &advisorWindow; }
+    cIGZBuffer* CreateImageBuffer() override {
+        ++imageBuffers;
+        if (!imageBuffers) return nullptr;
+        auto* buffer = new FakeBuffer();
+        buffer->AddRef();
+        return buffer;
+    }
     cIGZWin* CreateWinAnimationRecorder() override {
         if (!recorder) return nullptr;
         recorder->AddRef();
@@ -571,7 +1062,6 @@ struct FakeHost final : IView3DWinHost {
         lastScrollY = y;
     }
     void PlayGlobalTerrainEffectSound() override { ++globalTerrainSounds; }
-    ICursorTextWindow* CursorTextWindow() override { return &cursorWindow; }
     int AddContourCallback() override { ++contourAdds; return nextContour; }
     void RemoveContourCallback(int handle) override { ++contourRemoves; lastContourRemoved = handle; }
     bool ProjectPointToViewport(cS3DVector3& point) override {
@@ -588,7 +1078,7 @@ struct FakeHost final : IView3DWinHost {
     bool PopupModalDialogsSafe() override { return popupSafe; }
     bool PopupModalDialogsEnabled() override { return popupEnabled; }
     std::uint32_t SimulationFrameCounter() override { return frameCounter; }
-    void FilterUiCommandMessage(cGZMessage&) override { ++uiFilters; }
+    bool FilterUiCommandMessage(cGZMessage&) override { ++uiFilters; return true; }
     bool HandleUrl(cIGZString*) override { ++urlHandles; return urlResult; }
     void HandleAdviceLink(cGZMessage&) override { ++adviceLinks; }
     void ProcessCheatCode(std::uint32_t id, const char* cmdLine) override {
@@ -652,62 +1142,6 @@ struct TestControl final : cSC4ViewInputControl {
     ControlLog& log_;
 };
 
-// A toggle button the panel helpers can find (gz::kGZIID_cIGZWinBtn): it records the toggle state.
-struct FakePanelButton final : cGZWin, gz::cIGZWinBtn {
-    explicit FakePanelButton(cIGZWinMgr* mgr) : cGZWin(mgr) {}
-    bool QueryInterface(std::uint32_t iid, void** out) override {
-        if (iid == gz::kGZIID_cIGZWinBtn) { *out = static_cast<gz::cIGZWinBtn*>(this); AddRef(); return true; }
-        return cGZWin::QueryInterface(iid, out);
-    }
-    std::uint32_t AddRef() override { return cGZWin::AddRef(); }
-    std::uint32_t Release() override { return cGZWin::Release(); }
-    cIGZWin* AsIGZWin() override { return static_cast<cIGZWin*>(static_cast<cGZWin*>(this)); }
-    bool GetBtnFlag(int flag) const override { return (flags & flag) != 0; }
-    bool SetBtnFlag(int flag, bool on) override { if (on) flags |= flag; else flags &= ~flag; return true; }
-    bool ToggleOn() override { flags |= gz::kBtnOn; ++toggles; return true; }
-    bool ToggleOff() override { flags &= ~gz::kBtnOn; ++toggles; return true; }
-    bool IsOn() const override { return (flags & gz::kBtnOn) != 0; }
-    bool SetChecked(bool checked) override { return SetBtnFlag(gz::kBtnOn, checked); }
-    bool IsChecked() const override { return IsOn(); }
-    int GetStyle() override { return 0; }
-    bool SetStyle(int, cIGZBuffer*, const cRZRect*) override { return true; }
-    bool SetButtonStyle(int) override { return true; }
-    int GetImageW() const override { return 1; }
-    int GetImageH() const override { return 1; }
-    bool GetImageArea(cRZRect& out) const override { out = {0, 0, 1, 1}; return true; }
-    bool SetBuffer(cIGZBuffer*) override { return true; }
-    bool GetBuffer(cIGZBuffer*& out) const override { out = nullptr; return true; }
-    bool SetFont(gz::IWinButtonFont*) override { return true; }
-    bool SetFontStyle(std::uint32_t) override { return true; }
-    bool GetFontStyle(std::uint32_t& style) override { style = 0; return true; }
-    bool SetFontColor(int, std::uint32_t) override { return true; }
-    bool GetFontColor(int, std::uint32_t& native) const override { native = 0; return true; }
-    bool SetFontColor(int, gz::cRZColor) override { return true; }
-    bool GetFontColor(int, gz::cRZColor&) const override { return true; }
-    bool ClearFontColor(int) override { return true; }
-    bool SetCaptionStyle(int) override { return true; }
-    bool GetCaptionStyle(int& style) const override { style = 0; return true; }
-    bool SetGutters(std::uint8_t, std::uint8_t) override { return true; }
-    bool GetGutters(int& x, int& y) const override { x = y = 0; return true; }
-    bool SetGutters(std::uint8_t, std::uint8_t, std::uint8_t, std::uint8_t) override { return true; }
-    bool GetGutters(int& l, int& t, int& r, int& b) const override { l = t = r = b = 0; return true; }
-    bool FitSizeToContent() override { return true; }
-    bool GetMinMaxInfo(cRZRect& out) override { out = {1, 1, 1, 1}; return true; }
-    bool SetTipText(const cIGZString&) override { return true; }
-    bool GetTipText(cIGZString&) const override { return true; }
-    bool ClearTipText() override { return true; }
-    bool SetTipPlacementType(int) override { return true; }
-    bool GetTipPlacementType(int& type) const override { type = 0; return true; }
-    bool SetTipPlacementOffsets(int, int) override { return true; }
-    bool GetTipPlacementOffsets(int& x, int& y) const override { x = y = 0; return true; }
-    bool SetTipColor(int, std::uint8_t, std::uint8_t, std::uint8_t) override { return true; }
-    bool GetTipColor(int, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b) const override { r = g = b = 0; return true; }
-    void Flash(std::uint32_t, std::uint32_t) override {}
-    bool SetSoundID(int, std::uint32_t) override { return true; }
-    std::uint32_t GetSoundID(int) const override { return 0; }
-    int flags = 0, toggles = 0;
-};
-
 // A text control (gz::cIGZWinText) that records the caption and colour the refresh functions set.
 struct FakeTextControl final : cGZWin, gz::cIGZWinText {
     explicit FakeTextControl(cIGZWinMgr* mgr) : cGZWin(mgr) {}
@@ -763,6 +1197,8 @@ int main() {
     FakeHost host;
     SetView3DWinHost(&host);
     FakeMgr mgr;
+    host.windowManager = &mgr;
+    host.cursorWindow.window_->SetWindowManager(&mgr);
     ViewManagerWindow mainWindow(&mgr);
     mainWindow.SetArea(0, 0, 800, 600);
     mgr.mainWin = &mainWindow;
@@ -1621,32 +2057,33 @@ int main() {
 
     // ------------------------------------------------------------------ cursor text
     {
-        host.cursorWindow.visible = false;
-        host.cursorWindow.shows = host.cursorWindow.hides = host.cursorWindow.resets = 0;
-        host.cursorWindow.positions = 0;
-        host.cursorWindow.line1Sets = host.cursorWindow.line2Sets = host.cursorWindow.iconSets = 0;
-        View3DWinTestAccess::CursorTextWindow(*view) = &host.cursorWindow;
-        View3DWinTestAccess::CursorTextIcon(*view) = reinterpret_cast<cIGZUnknown*>(0xabc);
+        FakeCalloutBox& box = host.cursorWindow;
+        box.window_->HideWindow();
+        box.window_->shows = box.window_->hides = box.window_->invalidates = 0;
+        box.positions = 0;
+        box.line1Sets = box.line2Sets = box.iconSets = 0;
+        View3DWinTestAccess::CursorTextBox(*view) = &box;
+        View3DWinTestAccess::CursorTextIcon(*view) = reinterpret_cast<cIGZBuffer*>(0xabc);
         View3DWinTestAccess::CursorText(*view).clear();
         cRZString lineA("A"), lineB("B"), lineC("C"), lineD("D");
 
         view->SetCursorText(1, 10, &lineA, &lineB, 1);
         CHECK(View3DWinTestAccess::CursorText(*view).size() == 1);
-        CHECK(host.cursorWindow.line1 == "A" && host.cursorWindow.line2 == "B");
-        CHECK(host.cursorWindow.icon == reinterpret_cast<cIGZUnknown*>(0xabc));
-        CHECK(host.cursorWindow.visible && host.cursorWindow.shows == 1);
-        CHECK(host.cursorWindow.positions == 1 && host.cursorWindow.lastX == 0 && host.cursorWindow.lastY == 0);
+        CHECK(box.line1 == "A" && box.line2 == "B");
+        CHECK(box.icon == reinterpret_cast<cIGZBuffer*>(0xabc));
+        CHECK(box.window_->IsVisible() && box.window_->shows == 1);
+        CHECK(box.positions == 1 && box.point.x == 0 && box.point.y == 0);
         // A second entry is inserted in front of the last node (orders 20 then 10): the window still shows
         // the *last* node, which is entry 1.
         view->SetCursorText(2, 20, &lineC, &lineD, 0);
         CHECK(View3DWinTestAccess::CursorText(*view).size() == 2);
         CHECK(View3DWinTestAccess::CursorText(*view).front().key == 2);
-        CHECK(host.cursorWindow.line1 == "A" && host.cursorWindow.line2 == "B");
-        CHECK(host.cursorWindow.icon == reinterpret_cast<cIGZUnknown*>(0xabc));   // still the last node
+        CHECK(box.line1 == "A" && box.line2 == "B");
+        CHECK(box.icon == reinterpret_cast<cIGZBuffer*>(0xabc));   // still the last node
         // Order 5 is smaller than every stored order, so the original appends it at the end.
         view->SetCursorText(3, 5, &lineC, &lineD, 0);
         CHECK(View3DWinTestAccess::CursorText(*view).back().key == 3);
-        CHECK(host.cursorWindow.line1 == "C" && host.cursorWindow.line2 == "D");
+        CHECK(box.line1 == "C" && box.line2 == "D");
         // Order 40 lands in front of the first node (from the back) whose order is <= 40.
         view->SetCursorText(4, 40, &lineA, &lineB, 0);
         CHECK(View3DWinTestAccess::CursorText(*view).size() == 4);
@@ -1659,10 +2096,10 @@ int main() {
             CHECK(std::strcmp(info.line2.ToChar(), "D") == 0);
         }
         // Both strings empty: ClearCursorText runs (it calls CursorTextChanged) and SetCursorText calls it
-        // once more, so the window sees two updates (quirk, 0x1007913c6).
-        host.cursorWindow.line1Sets = 0;
+        // once more, so the box sees two updates (quirk, 0x1007913c6).
+        box.line1Sets = 0;
         view->SetCursorText(2, 20, nullptr, nullptr, 0);
-        CHECK(host.cursorWindow.line1Sets == 2);
+        CHECK(box.line1Sets == 2);
         CHECK(View3DWinTestAccess::CursorText(*view).size() == 3);
         CHECK(View3DWinTestAccess::CursorText(*view).front().key != 2);
         // ClearCursorText walks the list from the back and erases the first match.
@@ -1671,23 +2108,23 @@ int main() {
         view->ClearCursorText(1);
         view->ClearCursorText(3);
         CHECK(View3DWinTestAccess::CursorText(*view).empty());
-        host.cursorWindow.hides = host.cursorWindow.resets = 0;
+        box.window_->hides = box.window_->invalidates = 0;
         view->ClearCursorText(0x99);                            // no entry: only the empty-list update
-        CHECK(host.cursorWindow.hides == 1 && host.cursorWindow.resets == 1);
+        CHECK(box.window_->hides == 1 && box.window_->invalidates == 1);
 
-        // UpdateCursorTextPositions only moves the window while it is visible, then updates the cost
-        // indicator with a zero delta.
-        host.cursorWindow.visible = false;
-        host.cursorWindow.positions = 0;
+        // UpdateCursorTextPositions only moves the box while it is visible, then updates the cost indicator
+        // with a zero delta.
+        box.window_->HideWindow();
+        box.positions = 0;
         host.costUpdates = 0;
         view->UpdateCursorTextPositions(12, 34);
-        CHECK(host.cursorWindow.positions == 0);
+        CHECK(box.positions == 0);
         CHECK(View3DWinTestAccess::CursorTextX(*view) == 12 && View3DWinTestAccess::CursorTextY(*view) == 34);
         CHECK(host.costUpdates == 1 && host.lastCostDt == 0.0f);
-        host.cursorWindow.visible = true;
+        box.window_->ShowWindow();
         view->UpdateCursorTextPositions(56, 78);
-        CHECK(host.cursorWindow.positions == 1 && host.cursorWindow.lastX == 56 && host.cursorWindow.lastY == 78);
-        View3DWinTestAccess::CursorTextWindow(*view) = nullptr;
+        CHECK(box.positions == 1 && box.point.x == 56 && box.point.y == 78);
+        View3DWinTestAccess::CursorTextBox(*view) = nullptr;
         View3DWinTestAccess::CursorTextIcon(*view) = nullptr;
     }
 
@@ -1847,8 +2284,8 @@ int main() {
         CHECK(host.contourAdds == 2);
         host.projectResult = true;
         host.projectedPoint = {12.75f, 34.5f, 0.0f};
-        View3DWinTestAccess::CursorTextWindow(*view) = &host.cursorWindow;
-        host.cursorWindow.visible = true;
+        View3DWinTestAccess::CursorTextBox(*view) = &host.cursorWindow;
+        host.cursorWindow.window_->ShowWindow();
         host.cursorWindow.positions = 0;
         view->SetCursorTextPosition3D(cS3DVector3{1.0f, 2.0f, 3.0f});
         CHECK(host.cursorWindow.positions == 1);
@@ -1859,7 +2296,7 @@ int main() {
         view->SetCursorTextPosition3D(cS3DVector3{1.0f, 2.0f, 3.0f});
         CHECK(host.cursorWindow.positions == 0);
         CHECK(View3DWinTestAccess::CursorTextX(*view) == 12);   // unchanged
-        View3DWinTestAccess::CursorTextWindow(*view) = nullptr;
+        View3DWinTestAccess::CursorTextBox(*view) = nullptr;
     }
 
     // ------------------------------------------------------------------ the GUI: panel refresh, render properties, RemoveGUI
@@ -1927,7 +2364,8 @@ int main() {
         CHECK(budget->caption == "$-25" && budget->colors[0] == 0x770000 && host.lastNative == 0x770000);
         host.budgetOpen = false;
         host.budgetOpenCalls = 0;
-        View3DWinTestAccess::BudgetUIWinProc(*view) = new cGZWin(&mgr);
+        auto* budgetProc = new FakeBudgetProc(); budgetProc->AddRef();
+        View3DWinTestAccess::BudgetUIWinProc(*view) = budgetProc;
         view->UpdateBudget();
         CHECK(host.budgetOpenCalls == 1 && host.budgetRefreshes == 0);
         host.budgetOpen = true;
@@ -2005,30 +2443,38 @@ int main() {
         CHECK(host.globalProperties.IntValue(0) == 1);
         cSC4View3DWin::SetRenderPropertiesStatic(intName, value, nullptr);   // no context: nothing happens
 
-        // RemoveGUI: every window leaves the manager, is shut down and released; the five window procedures and
-        // the tool tip manager get their Shutdown. A second call is a no-op.
-        auto makeWindow = [&mgr]() { auto* window = new cGZWin(&mgr); window->AddRef(); return window; };
-        View3DWinTestAccess::PanelInterface(*view) = makeWindow();
-        View3DWinTestAccess::ToolbarWindow(*view) = makeWindow();
-        View3DWinTestAccess::GuiWindows(*view).push_back(makeWindow());
-        View3DWinTestAccess::PanelAttach(*view)[0] = makeWindow();
-        View3DWinTestAccess::PanelUIWinProc(*view) = makeWindow();
-        View3DWinTestAccess::NewsTickerWinProc(*view) = makeWindow();
-        View3DWinTestAccess::MySimWinProc(*view) = makeWindow();
-        View3DWinTestAccess::Window470(*view) = makeWindow();
-        View3DWinTestAccess::Window478(*view) = makeWindow();
-        View3DWinTestAccess::GraphsViewWinProc(*view) = makeWindow();
-        View3DWinTestAccess::BuildingSelectWinProc(*view) = makeWindow();
-        View3DWinTestAccess::Window4a0(*view) = makeWindow();
-        View3DWinTestAccess::Window4a8(*view) = makeWindow();
-        View3DWinTestAccess::Window4b0(*view) = makeWindow();
-        View3DWinTestAccess::TipManager(*view) = makeWindow();
+        // RemoveGUI: every window leaves the manager, is shut down and released; the four window procedures with
+        // a Shutdown get theirs, the panel procedure and the advisor popup queue are only released.
+        auto makeGen = [&mgr]() { auto* window = new FakeGenWindow(&mgr); window->AddRef(); return window; };
+        auto makeProc = []() { auto* proc = new FakePanelUIProc(); proc->AddRef(); return proc; };
+        View3DWinTestAccess::PanelInterface(*view) = makeGen();
+        View3DWinTestAccess::ToolbarWindow(*view) = makeGen();
+        View3DWinTestAccess::GuiWindows(*view).push_back(makeGen());
+        View3DWinTestAccess::PanelAttach(*view)[0] = makeGen();
+        View3DWinTestAccess::PanelUIWinProc(*view) = makeProc();
+        auto* tickerProc = new FakeNewsTicker(); tickerProc->AddRef();
+        View3DWinTestAccess::NewsTickerWinProc(*view) = tickerProc;
+        auto* mysimProc = new FakeMySimProc(); mysimProc->AddRef();
+        View3DWinTestAccess::MySimWinProc(*view) = mysimProc;
+        View3DWinTestAccess::Window470(*view) = makeGen();
+        View3DWinTestAccess::Window478(*view) = makeGen();
+        auto* graphsProc = new FakeGraphsProc(); graphsProc->AddRef();
+        View3DWinTestAccess::GraphsViewWinProc(*view) = graphsProc;
+        auto* buildingProc = new FakeBuildingSelectProc(); buildingProc->AddRef();
+        View3DWinTestAccess::BuildingSelectWinProc(*view) = buildingProc;
+        View3DWinTestAccess::Window4a0(*view) = makeGen();
+        View3DWinTestAccess::Window4a8(*view) = makeGen();
+        View3DWinTestAccess::Window4b0(*view) = makeGen();
+        auto* queue = new FakeAdvisorQueue(); queue->AddRef();
+        View3DWinTestAccess::AdvisorPopups(*view) = queue;
         auto* dateText = new FakeTextControl(&mgr);
         dateText->AddRef();
         View3DWinTestAccess::DateText(*view) = dateText;
         view->RemoveGUI();
         CHECK(host.newsShutdowns == 1 && host.mysimShutdowns == 1 && host.budgetShutdowns == 1);
-        CHECK(host.graphsShutdowns == 1 && host.buildingShutdowns == 1 && host.tipShutdowns == 1);
+        CHECK(host.graphsShutdowns == 1 && host.buildingShutdowns == 1);
+        CHECK(tickerProc->refs == 0 && mysimProc->refs == 0 && graphsProc->refs == 0 && buildingProc->refs == 0);
+        CHECK(queue->shutdowns == 1 && queue->refs == 0);
         CHECK(View3DWinTestAccess::PanelWindow(*view) == nullptr);
         CHECK(View3DWinTestAccess::PanelInterface(*view) == nullptr);
         CHECK(View3DWinTestAccess::ToolbarWindow(*view) == nullptr);
@@ -2048,12 +2494,265 @@ int main() {
         CHECK(View3DWinTestAccess::DateText(*view) == nullptr);
         CHECK(View3DWinTestAccess::BudgetText(*view) == nullptr);
         CHECK(View3DWinTestAccess::PopulationText(*view) == nullptr);
-        CHECK(View3DWinTestAccess::TipManager(*view) == nullptr);
+        CHECK(View3DWinTestAccess::AdvisorPopups(*view) == nullptr);
         view->RemoveGUI();                                          // all null: no-op
         view->UpdateZoomButtons();                                  // no panel: no crash
         view->UpdateDayNightButtons();                              // no menu: no crash
         view->UpdatePopulation();                                   // no text: no crash
         host.cityExists = false;
+    }
+
+    // ------------------------------------------------------------------ AddGUI: the game's 42 windows
+    {
+        host.cityExists = true;
+        host.canZone = false;                       // AddGUI opens panel 0 and disables two buttons
+        host.scriptWindows.clear();
+        host.scriptRequests.clear();
+        host.imageRequests.clear();
+        host.localisedStrings.clear();
+        host.compassWindows = host.compassAttaches = host.toolbarButtons = host.mapViewInits = 0;
+        host.advisorWindow = FakeAdvisorWindow();
+
+        FakeBuffer skin, background, icon, costBuffer, alertImage;
+        host.images.clear();
+        host.images[kToolbarButtonSkinInstance] = &skin;
+        host.images[kCursorTextBoxImageInstance] = &background;
+        host.images[kCursorTextIconInstance] = &icon;
+        host.images[kAlertImageDisaster] = &alertImage;
+        host.images[kAlertImageSituation] = &alertImage;
+        host.images[kAlertImageBusy] = &alertImage;
+        skin.width = 96; skin.height = 32;
+        background.AddRef();
+        icon.AddRef();
+
+        // Every script window AddGUI creates, by the id it asks the factory for.
+        auto addWindow = [&](std::uint32_t id) {
+            auto* window = new FakeGenWindow(&mgr);
+            window->SetID(id);
+            window->SetArea(0, 0, 200, 24);
+            host.scriptWindows[id] = window;
+            return window;
+        };
+        FakeGenWindow* panel = addWindow(kPanelWindowId);
+        auto* title = new FakeTextControl(&mgr); title->SetID(kPanelCityNameId); panel->ChildAdd(title);
+        auto* zoomIn = new FakePanelButton(&mgr); zoomIn->SetID(kPanelZoomInButtonId); panel->ChildAdd(zoomIn);
+        auto* zoomOut = new FakePanelButton(&mgr); zoomOut->SetID(kPanelZoomOutButtonId); panel->ChildAdd(zoomOut);
+        auto* newCity = new FakePanelButton(&mgr); newCity->SetID(kPanelNewCityButtonId); panel->ChildAdd(newCity);
+        auto* mayorButton = new FakePanelButton(&mgr); mayorButton->SetID(kPanelMayorButtonId); panel->ChildAdd(mayorButton);
+        auto* moduleButton = new FakePanelButton(&mgr); moduleButton->SetID(0x2988bc85u); panel->ChildAdd(moduleButton);
+        auto* panel2Button = new FakePanelButton(&mgr); panel2Button->SetID(0x4988bc6au); panel->ChildAdd(panel2Button);
+        auto* speed1 = new FakePanelButton(&mgr); speed1->SetID(kSpeedButtonIds[1]); panel->ChildAdd(speed1);
+        speed1->image = &skin;
+        speed1->area = cRZRect{0, 0, 96, 32};
+        // The date text is a child of the toolbar, the budget / population texts of the view.
+        auto* dateText = new FakeTextControl(&mgr); dateText->SetID(kDateTextId); panel->ChildAdd(dateText);
+        auto* budgetText = new FakeTextControl(&mgr); budgetText->SetID(kBudgetTextId); view->ChildAdd(budgetText);
+        auto* popText = new FakeTextControl(&mgr); popText->SetID(kPopulationTextId); view->ChildAdd(popText);
+        for (int i = 0; i < 5; ++i) addWindow(kPanelScriptIds[i]);
+        // Panel 1 / panel 2 own a child window that AddGUI looks up from the *view*, and so does the compass.
+        auto* mySimChild = addWindow(kPanel2ChildId);
+        view->ChildAdd(mySimChild);
+        auto* panel1Child = addWindow(kPanel1ChildId);
+        view->ChildAdd(panel1Child);
+        auto* ticker = addWindow(kNewsTickerScriptId);
+        auto* tickerControl = new cGZWin(&mgr); tickerControl->SetID(kNewsTickerControlId); ticker->ChildAdd(tickerControl);
+        addWindow(kMapViewScriptId);
+        addWindow(kMayorPanelScriptId);
+        addWindow(kGraphsScriptId);
+        addWindow(kBuildingSelectScriptId);
+        auto* compassChild = addWindow(kCompassChildId);
+        view->ChildAdd(compassChild);
+
+        view->AddGUI();
+        // 1. the toolbar panel, its gen view and its placement (viewH = 600, panelH = 24).
+        CHECK(View3DWinTestAccess::PanelWindow(*view) == panel);
+        CHECK(View3DWinTestAccess::PanelInterface(*view) == static_cast<gz::cIGZWinGen*>(panel));
+        CHECK(panel->GetL() == 300 / 3 + 5 || panel->GetL() == 5);
+        CHECK(panel->GetT() == (600 + 0xb) - 24);
+        CHECK(panel->IsVisible());
+        // 2. the toolbar button: id 0x43, the tip string, the panel as its notification target and the skin.
+        CHECK(host.toolbarButtons == 1 && View3DWinTestAccess::ToolbarWindow(*view) == host.toolbarButton);
+        CHECK(host.toolbarButton->GetID() == kToolbarButtonId);
+        CHECK(host.localisedStrings.size() == 1 && host.localisedStrings[0] == kToolbarButtonTipInstance);
+        CHECK(skin.transparencySets == 1);
+        CHECK(host.toolbarButton->lastImage == &skin && host.toolbarButton->lastStyle == 2);
+        CHECK(!host.toolbarButton->IsVisible());
+        // 3. the five panel windows, each with its gen view and the panel win proc.
+        int guiCount = 5;                                       // the five panels
+        for (int i = 0; i < 5; ++i) {
+            CHECK(View3DWinTestAccess::PanelAttach(*view)[i] != nullptr);
+            CHECK(!View3DWinTestAccess::PanelWindows(*view)[i].empty());
+        }
+        CHECK(static_cast<FakeGenWindow*>(View3DWinTestAccess::PanelWindows(*view)[0].front())->winProcs == 1);
+        CHECK(mySimChild->winProcs == 1 && panel1Child->winProcs == 1);
+        guiCount += 2;                                          // panel 1 / panel 2's own children
+        CHECK(host.mySimProc != nullptr && host.mySimProc->inits == 1);
+        CHECK(host.mySimProc->panel == View3DWinTestAccess::PanelAttach(*view)[2]);
+        // 4. the three text controls.
+        CHECK(View3DWinTestAccess::DateText(*view) == static_cast<gz::cIGZWinText*>(dateText));
+        CHECK(View3DWinTestAccess::BudgetText(*view) == static_cast<gz::cIGZWinText*>(budgetText));
+        CHECK(View3DWinTestAccess::PopulationText(*view) == static_cast<gz::cIGZWinText*>(popText));
+        // 5. the news ticker and its control child.
+        CHECK(host.newsProc != nullptr && host.newsProc->inits == 1);
+        CHECK(View3DWinTestAccess::NewsTickerWinProc(*view) == host.newsProc);
+        guiCount += 2;                                          // the ticker and its control host
+        CHECK(!ticker->IsVisible());
+        // 6. the four other windows, the map view and the two procedures.
+        CHECK(View3DWinTestAccess::Window4b0(*view) != nullptr);
+        CHECK(View3DWinTestAccess::Window4a0(*view) != nullptr);
+        CHECK(View3DWinTestAccess::Window4a8(*view) != nullptr);
+        CHECK(host.mapViewInits == 1);
+        CHECK(host.graphsProc != nullptr && host.graphsProc->inits == 1);
+        CHECK(host.buildingProc != nullptr && host.buildingProc->inits == 1);
+        CHECK(View3DWinTestAccess::GraphsViewWinProc(*view) == host.graphsProc);
+        CHECK(View3DWinTestAccess::BuildingSelectWinProc(*view) == host.buildingProc);
+        // 7. the budget procedure, the cursor-text box, its icon and the cost indicator.
+        CHECK(host.budgetProc != nullptr && host.budgetProc->inits == 1);
+        CHECK(View3DWinTestAccess::CursorTextBox(*view) == &host.cursorWindow);
+        CHECK(host.cursorWindow.textFont == kCursorTextTextFont && host.cursorWindow.titleFont == kCursorTextTitleFont);
+        CHECK(host.cursorWindow.background == &background);
+        CHECK(host.cursorWindow.bgA == -1 && host.cursorWindow.bgB == -1);
+        CHECK(View3DWinTestAccess::CursorTextIcon(*view) == &icon);
+        CHECK(View3DWinTestAccess::CostIndicatorText(*view) == host.bmpWindow);
+        CHECK(host.bmpWindow->setBmps == 1 && host.bmpWindow->imageAreas == 1);
+        CHECK(View3DWinTestAccess::CostIndicatorBuffer(*view) != nullptr);
+        CHECK(host.bmpWindow->GetWinBMPFlag(6));
+        CHECK(host.bmpWindow->imageArea.right == 0x80 && host.bmpWindow->imageArea.bottom == 0x20);
+        // 8. the advisor popup queue, the compass window and the compass win proc.
+        CHECK(host.advisorQueue != nullptr && host.advisorQueue->inits == 1);
+        CHECK(View3DWinTestAccess::AdvisorPopups(*view) == host.advisorQueue);
+        CHECK(host.compassWindows == 1 && host.compassWindow != nullptr);
+        CHECK(host.compassWindow->GetID() == kCompassWindowId && host.compassAttaches == 1);
+        CHECK(compassChild->winProcs == 0);                     // AttachCompassWinProc is the host's job
+        // 9. the empty-city start state: panel 0, and the two city buttons disabled.
+        CHECK(View3DWinTestAccess::CurrentPanel(*view) == 0);
+        CHECK(newCity->GetFlag(kWinEnabled) == false);
+        CHECK(mayorButton->GetFlag(kWinEnabled) == false);
+        CHECK(View3DWinTestAccess::GuiWindows(*view).size() == static_cast<std::size_t>(guiCount));
+        // The script window requests are the panel, the five panels, the ticker and the four other windows.
+        CHECK(host.scriptRequests.size() == 11);
+
+        // ---- ShowPanel / HidePanel: the panel's windows follow the visible flag and the sub-panels' state.
+        view->ShowPanel(0);
+        CHECK(!View3DWinTestAccess::PanelShown(*view)[0] && !View3DWinTestAccess::PanelShown(*view)[1] &&
+              !View3DWinTestAccess::PanelShown(*view)[2]);
+        host.newsProc->hides = host.newsProc->shows = 0;
+        view->ShowPanel(2);                                     // the MySim panel
+        CHECK(View3DWinTestAccess::PanelShown(*view)[1]);
+        CHECK(host.mySimProc->shows == 1);
+        CHECK(host.newsProc->hides == 0);                       // a sub-panel is up: the ticker stays
+        const int mySimHides = host.mySimProc->hides;
+        view->HidePanel(2);
+        CHECK(!View3DWinTestAccess::PanelShown(*view)[1]);
+        CHECK(host.mySimProc->hides == mySimHides + 1);
+        CHECK(host.newsProc->hides == 1);                       // all three sub-panels are gone
+        // ---- ShowMayorSubPanel: each panel id shows its own window and hides the rest.
+        host.advisorWindow = FakeAdvisorWindow();
+        view->ShowMayorSubPanel(0x49edf9b7u);                   // the advisor window
+        CHECK(host.advisorWindow.shows == 1 && View3DWinTestAccess::PanelShown(*view)[0]);
+        CHECK(View3DWinTestAccess::MayorSubPanel(*view) == 0x49edf9b7u);
+        CHECK(View3DWinTestAccess::MayorSubPanelState(*view) == 0);
+        host.budgetProc->visible = false;
+        view->ShowMayorSubPanel(0x41u);                          // the budget panel
+        CHECK(host.budgetProc->shows == 1);
+        CHECK(View3DWinTestAccess::MayorSubPanel(*view) == 0x41u);
+        view->ShowMayorSubPanel(0x99887755u);                    // the map view: the budget hides
+        CHECK(host.budgetProc->hides == 1);
+        CHECK(View3DWinTestAccess::ViewManagerSource(*view) != nullptr);
+        view->ShowMayorSubPanel(0x15200002u);                    // the graphs
+        CHECK(host.graphsProc->shows == 1);
+        host.graphsProc->visible = true;
+        view->ShowMayorSubPanel(0);                              // 0 hides everything it can
+        CHECK(View3DWinTestAccess::MayorSubPanel(*view) == 0);
+        // ---- DoCityObliterated: the obliterate button goes off, panel 4 closes, the toggle comes up.
+        View3DWinTestAccess::CurrentPanel(*view) = kPanelBudgetIndex;
+        view->DoCityObliterated();
+        CHECK(moduleButton->GetFlag(kWinEnabled));               // unaffected: only 0x4988bc6a is disabled
+        CHECK(View3DWinTestAccess::CurrentPanel(*view) == kPanelBudgetIndex);
+        View3DWinTestAccess::CurrentPanel(*view) = 0;
+        // ---- MinimizeUI: hides the toolbar / panel / ticker / menu and records the compass visibility.
+        host.newsProc->hides = host.newsProc->shows = 0;
+        view->MinimizeUI(true);
+        CHECK(!panel->IsVisible());
+        CHECK(host.newsProc->hides >= 1);
+        view->MinimizeUI(true);                                  // already minimised: no-op
+        view->MinimizeUI(false);
+        CHECK(panel->IsVisible());
+        // ---- UpdateSpeedButtons: the pressed speed button follows the simulator's speed and pause flag.
+        host.speedSimulator.speed = 1;
+        host.speedSimulator.paused = false;
+        View3DWinTestAccess::Simulator(*view) = &host.speedSimulator;
+        view->UpdateSpeedButtons();
+        CHECK(speed1->GetBtnFlag(gz::kBtnOn));
+        CHECK(speed1->hasArea && speed1->lastArea.top == 0 && speed1->lastArea.bottom == 16);
+        View3DWinTestAccess::Simulator(*view) = nullptr;
+        // ---- UpdateAlertBorder: the three images in the disaster / situation / busy order.
+        host.disasterAlert = false;
+        host.situationAlert = false;
+        host.simulatorBusy = false;
+        view->UpdateAlertBorder();
+        CHECK(host.compassWindow->images == 1 && host.compassWindow->image == nullptr);
+        host.disasterAlert = true;
+        view->UpdateAlertBorder();
+        CHECK(host.compassWindow->image == &alertImage);
+        host.disasterAlert = false;
+        host.situationAlert = true;
+        view->UpdateAlertBorder();
+        CHECK(host.compassWindow->image == &alertImage);
+        host.situationAlert = false;
+        host.simulatorBusy = true;
+        view->UpdateAlertBorder();
+        CHECK(host.compassWindow->image == &alertImage);
+        host.simulatorBusy = false;
+        // ---- DoMessage(cIGZWin*, cGZMessage&): the button notifications and the filter's answer.
+        cGZMessage message;
+        message.type = kGZMsgCommand;
+        message.param1 = 0x287259f7u;                            // the "changed" notification
+        message.param2 = 0x4988bc6au;
+        host.commands.clear();
+        CHECK(view->DoMessage(static_cast<cIGZWin*>(budgetText), message));
+        CHECK(host.commands.size() == 1 && host.commands[0] == 0x6a935ca8u);
+        message.param2 = 0x1234u;                                // an unknown id: nothing runs
+        host.commands.clear();
+        CHECK(view->DoMessage(static_cast<cIGZWin*>(budgetText), message) && host.commands.empty());
+        message.param1 = 0x287259f6u;                            // the button activation (PARTIAL)
+        CHECK(view->DoMessage(static_cast<cIGZWin*>(budgetText), message));
+        message.type = 0x12;                                     // the size-limit notification
+        CHECK(view->DoMessage(static_cast<cIGZWin*>(budgetText), message));
+        message.type = 5;
+        CHECK(!view->DoMessage(static_cast<cIGZWin*>(budgetText), message));
+        budgetText->SetFlag(0x1000, true);                       // a dialog child: not handled
+        message.type = kGZMsgCommand;
+        CHECK(!view->DoMessage(static_cast<cIGZWin*>(budgetText), message));
+        budgetText->SetFlag(0x1000, false);
+        // ---- DoPanelCommandGUI: the panel toggles open / close a panel.
+        view->ShowPanel(0);
+        View3DWinTestAccess::CurrentPanel(*view) = 0;
+        panel2Button->flags |= gz::kBtnOn;
+        view->DoPanelCommandGUI(0x6a935ca8u);                     // panel 2 on
+        CHECK(View3DWinTestAccess::CurrentPanel(*view) == 2);
+        panel2Button->flags &= ~gz::kBtnOn;
+        view->DoPanelCommandGUI(0x6a935ca8u);                     // panel 2 off again
+        CHECK(View3DWinTestAccess::CurrentPanel(*view) == -1);
+        // ---- RemoveGUI takes the whole GUI down again.
+        view->RemoveGUI();
+        CHECK(View3DWinTestAccess::PanelWindow(*view) == nullptr);
+        CHECK(View3DWinTestAccess::PanelInterface(*view) == nullptr);
+        CHECK(View3DWinTestAccess::GuiWindows(*view).empty());
+        CHECK(View3DWinTestAccess::CursorTextBox(*view) == nullptr);
+        CHECK(View3DWinTestAccess::CostIndicatorText(*view) == nullptr);
+        CHECK(View3DWinTestAccess::AdvisorPopups(*view) == nullptr);
+        // With no windows left, panel 0 only records the pending sub-panel state (0x10078add7).
+        view->ShowMayorSubPanel(0);
+        CHECK(View3DWinTestAccess::MayorSubPanelState(*view) == 1);
+        CHECK(host.advisorQueue->shutdowns == 1);
+        CHECK(host.newsShutdowns >= 1 && host.mysimShutdowns >= 1 && host.budgetShutdowns >= 1);
+        CHECK(host.graphsShutdowns >= 1 && host.buildingShutdowns >= 1);
+        View3DWinTestAccess::Simulator(*view) = nullptr;
+        View3DWinTestAccess::CursorTextIcon(*view) = nullptr;
+        host.images.clear();
+        background.Release();
+        icon.Release();
     }
 
     // ------------------------------------------------------------------ Shutdown
@@ -2125,6 +2824,7 @@ int main() {
     CHECK(orphan->Shutdown());
     delete orphan;
 
+    host.cursorWindow.window_->AddRef();      // the host outlives its manager at exit: keep the window alive
     std::printf(failures ? "FAILED\n" : "sc4_view3dwin ok\n");
     return failures ? 1 : 0;
 }

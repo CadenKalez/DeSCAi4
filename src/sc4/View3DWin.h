@@ -98,24 +98,30 @@
 #include <cstddef>
 #include <cstdint>
 #include <list>
+#include <set>
 #include <unordered_map>
 #include <vector>
 
+#include "gz/Buffer.h"
 #include "gz/CommandServer.h"
 #include "gz/Win.h"
+#include "gz/WinBMP.h"
 #include "gz/WinInterfaces.h"
+#include "gz/WinProc.h"
 #include "gz/WinText.h"
 #include "gz/cIGZMessage2.h"
 #include "rz/cRZAutoRefCount.h"
 #include "rz/cRZString.h"
 #include "rz/cRZTimer.h"
 #include "sc4/CameraControl.h"
+#include "sc4/ISC4WinCalloutBox.h"
 #include "sc4/RenderProperties.h"
 #include "sc4/ViewInputControl.h"
 
 class cIGZCommandParameterSet;
 class cISC4Occupant;
 class cISC4OccupantFilter;
+namespace gz { class cIGZWinGen; }
 namespace s3d { class cIS3DModelInstance; }
 
 namespace sc4 {
@@ -200,6 +206,72 @@ constexpr int kPanelVisualModeButtonModes[2] = {1, 2};               // 1 = noon
 // 0x100a2a9c0: the toolbar button each panel index toggles (DoPanelCommandGUI; kept for the next step).
 constexpr std::uint32_t kPanelToggleButtonIds[5] = {
     0x2988bc85, 0xc988bc79, 0x4988bc6a, 0x8988bc94, 0x2988bc85};
+
+// ---------------------------------------------------------------------------------------------------------------
+// The GUI AddGUI builds (0x1007892fc). Every id / instance / interface id below is a literal of that function.
+// ---------------------------------------------------------------------------------------------------------------
+constexpr std::uint32_t kView3DGuiGroup = 0x96a006b0;          // the UI-script resource group of every window
+constexpr std::uint32_t kView3DImageGroup = 0x46a006b0;        // the image resource group
+constexpr std::uint32_t kView3DImageType = 0x856ddbac;         // the image resource type
+constexpr std::uint32_t kGZIID_cIGZWinGenView = 0x5386d516;    // cIGZWinGen (the panel windows' interface)
+constexpr std::uint32_t kGZIID_cIGZWinText = 0x212cdc1f;       // gz::cIGZWinText
+// The toolbar panel (+0x280) and its interface.
+constexpr std::uint32_t kPanelWindowInstance = 0xc973b411;
+constexpr std::uint32_t kPanelWindowId = 0x0987b48f;
+constexpr std::uint32_t kPanelWindowGenIid = 0x5386d516;
+// The five panel script windows (+0x2b0.. panelWindows_, ids from 0x100a2a980, instances from 0x100a2a9a0).
+constexpr std::uint32_t kPanelScriptIds[5] = {0xc991eda8, 0x69e40a1f, 0xca1f1d9c, 0xc98f49f1, 0x0a78827a};
+constexpr std::uint32_t kPanelScriptInstances[5] = {0x69e3d347, 0x2bc90671, 0xaa1f1f57, 0x49889894, 0xaa53e3ea};
+// The child window of panel 1 / panel 2 that gets its own window procedure (GetChildAsRecursive).
+constexpr std::uint32_t kPanel1ChildId = 0xe9889775;
+constexpr std::uint32_t kPanel2ChildId = 0xabb26b0e;
+// The toolbar button (+0x290): GZCOM exemplar 0x22ecfc47, a cIGZWinBtn (iid 0x8810).
+constexpr std::uint32_t kToolbarButtonExemplar = 0x22ecfc47;
+constexpr std::uint32_t kToolbarButtonId = 0x43;
+constexpr std::uint32_t kToolbarButtonSkinInstance = 0x53244588;
+constexpr std::uint32_t kToolbarButtonStyle = 2;              // three-frame image
+constexpr std::uint32_t kToolbarButtonTipGroup = 0x8a51545d;
+constexpr std::uint32_t kToolbarButtonTipInstance = 0x6a231eaa;
+constexpr int kToolbarButtonFitToContent = 0x20;              // SetBtnFlag(0x20)
+// The three text controls (+0x4b8 / +0x4c0 / +0x4c8).
+constexpr std::uint32_t kDateTextId = 1;
+constexpr std::uint32_t kBudgetTextId = 0x09e418fe;
+constexpr std::uint32_t kPopulationTextId = 0xc9e41918;
+// The news ticker's script window and its control host child.
+constexpr std::uint32_t kNewsTickerScriptInstance = 0x2a2aed99;
+constexpr std::uint32_t kNewsTickerScriptId = 0xca2aedc0;
+constexpr std::uint32_t kNewsTickerControlId = 0xaa231508;
+// The remaining script windows: the map view (+0x498), the two default-hidden windows (+0x4a0 / +0x4a8),
+// the mayor panel (+0x4b0) and the budget dialog window (-).
+constexpr std::uint32_t kMapViewScriptInstance = 0x2bc9060f;
+constexpr std::uint32_t kMapViewScriptId = 0x4200;
+constexpr std::uint32_t kGraphsScriptInstance = 0x6bc9065a;
+constexpr std::uint32_t kGraphsScriptId = 0x0a4a8176;
+constexpr std::uint32_t kBuildingSelectScriptInstance = 0x6bc61f19;
+constexpr std::uint32_t kBuildingSelectScriptId = 0xabc619d2;
+constexpr std::uint32_t kMayorPanelScriptInstance = 0x4bc906b5;
+constexpr std::uint32_t kMayorPanelScriptId = 0x6a64e3c0;
+// The compass: GZCOM exemplar 0xca5d3294 (a cSC4WinAlertBorder, iid 0xca5d3290) and its child win proc window.
+constexpr std::uint32_t kCompassWindowExemplar = 0xca5d3294;
+constexpr std::uint32_t kCompassWindowIid = 0xca5d3290;
+constexpr std::uint32_t kCompassWindowId = 0x6a5e44b6;
+constexpr std::uint32_t kCompassChildId = 0xea8cad14;
+constexpr std::uint32_t kGZIID_cIGZWinGenForChild = 0x5386d516;
+// The callout box (+0x5d0): its two font styles and the cursor-text icon image.
+constexpr std::uint32_t kCursorTextTitleFont = 0xe9c86c9d;
+constexpr std::uint32_t kCursorTextTextFont = 0xa85f1a83;
+constexpr std::uint32_t kCursorTextBoxImageInstance = 0x14416190;
+constexpr std::uint32_t kCursorTextIconInstance = 0x14416160;
+constexpr std::uint32_t kCostIndicatorBufferW = 0x80;         // the cost indicator's backing buffer
+constexpr std::uint32_t kCostIndicatorBufferH = 0x20;
+constexpr std::uint32_t kCostIndicatorColorType = 1;
+// The alert border's three images (UpdateAlertBorder): disaster layer / city situation / simulator busy.
+constexpr std::uint32_t kAlertImageDisaster = 0x14315e60;
+constexpr std::uint32_t kAlertImageSituation = 0x14315e62;
+constexpr std::uint32_t kAlertImageBusy = 0x14315e61;
+// The three simulation-speed buttons of the toolbar (ids 0x100a2a818, modes 0x100a2a830).
+constexpr std::uint32_t kSpeedButtonIds[3] = {0x6a4fbb31, 0x4a4fbb60, 0x8998bbdf};
+constexpr int kSpeedButtonModes[3] = {0, 1, 2};
 
 // The 132 message types the notification helper at +0x1d0 registers (the static array at 0x100a2a550,
 // constructor call at 0x10077f4c8 with count 0x84).
@@ -344,11 +416,15 @@ public:
     virtual void Init() = 0;                            // @ 0x100770fc8
     virtual void Shutdown() = 0;                        // @ 0x10077137e
 };
-// The simulator the view pauses while the city is hidden (+0x238): cISC4Simulator vslots 0x50 / 0x68.
+// The simulator the view pauses while the city is hidden (+0x238): cISC4Simulator vslots 0x50 / 0x68, and the
+// speed (vslot 0xd8) / paused flag (vslot 0x78) UpdateSpeedButtons reads. The two getters default to "paused at
+// speed 0" so a sink that only models the pause pair still compiles.
 class ISimulatorPauseSink : public cIGZUnknown {
 public:
     virtual void Pause() = 0;                           // vslot 0x50
     virtual void Resume() = 0;                          // vslot 0x68
+    virtual int Speed() { return 0; }                   // vslot 0xd8 (0 slow, 1 medium, 2 fast)
+    virtual bool IsPaused() { return true; }            // vslot 0x78
 };
 class INotificationHelper3D {                           // cRZAutoMsg2Notification at +0x1d0
 public:
@@ -368,21 +444,6 @@ public:
     virtual bool ProcessMouse(int& x, int& y, std::uint32_t flags) = 0;  // vslot 0x80
 };
 
-// The window at +0x5d0, the cursor-text window (a cGZWin-based control AddGUI creates; not recovered). The
-// original calls the window through its own vtable and the cGZWin subobject at +8.
-class ICursorTextWindow {
-public:
-    virtual ~ICursorTextWindow() = default;
-    virtual void SetLine1(const cIGZString& text) = 0;      // vslot 0x30
-    virtual void SetLine2(const cIGZString& text) = 0;      // vslot 0x40
-    virtual void SetIcon(cIGZUnknown* icon) = 0;            // vslot 0x60 (+0x5f0 image or null)
-    virtual void SetPosition(int x, int y) = 0;             // vslot 0x78(&{x, y})
-    virtual void ShowWindow() = 0;                          // subobject +8 vslot 0x228
-    virtual void HideWindow() = 0;                          // subobject +8 vslot 0x230
-    virtual bool IsVisible() = 0;                           // subobject +8 vslot 0x238
-    virtual void Reset() = 0;                               // subobject +8 vslot 0x2e0
-};
-
 // SL::spTerrain (cSTETerrain, recovered by another agent): the slots this window calls.
 class ITerrainEditor {
 public:
@@ -396,6 +457,67 @@ public:
     virtual void CancelActiveTool() = 0;                                    // vslot 0x178 (cases 3 / 4)
     virtual void SetActiveToolFlag(bool on) = 0;                            // vslot 0x180 (cases 3 / 4)
     virtual bool TerrainTypeForBrush(int brush, std::uint32_t& out) = 0;    // vslot 0x1d0 (ApplyDefaultTerrainBrush)
+};
+
+// ---------------------------------------------------------------------------------------------------------------
+// The window procedures and helper windows AddGUI constructs (0x1007892fc). Each interface names the recovered
+// class the host allocates and the class's own virtual slots; the view only calls the members listed.
+// ---------------------------------------------------------------------------------------------------------------
+// cSC4NewsTickerWinProc (+0x450): the class virtuals are slots 7..13, so ShowTicker is +0x38 and HideTicker +0x40.
+class INewsTickerWindow : public gz::cIGZWinProc {
+public:
+    virtual bool Init(gz::cIGZWinGen* window) = 0;      // cSC4NewsTickerWinProc::Init @ 0x10031bc44
+    virtual void ShowTicker() = 0;                      // +0x38 @ 0x10031c644
+    virtual void HideTicker() = 0;                      // +0x40 @ 0x10031c760
+};
+// cSC4MySimWinProc (+0x460).
+class IMySimWindow : public gz::cIGZWinProc {
+public:
+    virtual void Init() = 0;                            // @ 0x10031571e
+    virtual void Show() = 0;                            // @ 0x10031b54a
+    virtual void Hide() = 0;                            // @ 0x10031b4d8
+};
+// cSC4BudgetUIWinProc (+0x468): class virtuals 7..10 (+0x38 ShowWindow, +0x40 HideWindow, +0x48 Update,
+// +0x50 IsVisible).
+class IBudgetUIWindow : public cIGZUnknown {
+public:
+    virtual void Init() = 0;                            // @ 0x1002e7f18
+    virtual void ShowWindow() = 0;                      // +0x38
+    virtual void HideWindow() = 0;                      // +0x40
+    virtual bool IsVisible() = 0;                       // +0x50
+};
+// cSC4GraphsViewWinProc (+0x488).
+class IGraphsViewWindow : public gz::cIGZWinProc {
+public:
+    virtual bool Init() = 0;                            // @ 0x1002dffda
+    virtual void ShowWindow() = 0;                      // @ 0x1002e2a7a
+    virtual void HideWindow() = 0;                      // @ 0x1002e2ad2
+    virtual bool IsVisible() = 0;                       // @ 0x1002e2b86
+    virtual void ShowGraphType(std::uint32_t option) = 0;   // @ 0x1002e2b2e
+};
+// cSC4BuildingSelectWinProc (+0x490).
+class IBuildingSelectWindow : public gz::cIGZWinProc {
+public:
+    virtual bool Init() = 0;                            // @ 0x100759328
+    virtual void ShowWindow() = 0;
+    virtual void HideWindow() = 0;
+    virtual bool IsVisible() = 0;
+};
+// cSC4AdvisorPopupTracker (+0x4d0): the class virtuals are Init (+0x30) and Shutdown (+0x38). This is the
+// object the port used to call the host's tool-tip manager (APT-6).
+class IAdvisorPopupQueue : public cIGZUnknown {
+public:
+    virtual bool Init() = 0;                            // +0x30 @ 0x10032f38c
+    virtual bool Shutdown() = 0;                        // +0x38 @ 0x10032f460
+};
+// SL::spCity vslot 0x288 (cSC4City::GetAdvisorSystem @ 0x100048914, the object at city +0x338 =
+// cISC4AdvisorSystem) as the mayor sub-panel needs it: its class virtuals ShowAdvisorWindow (+0xd8),
+// HideAdvisorWindow (+0xe0) and IsAdvisorWindowVisible (+0xe8).
+class IAdvisorWindow : public cIGZUnknown {
+public:
+    virtual void ShowAdvisorWindow() = 0;               // @ 0x100297632
+    virtual void HideAdvisorWindow() = 0;               // @ 0x10029764a
+    virtual bool IsAdvisorWindowVisible() = 0;          // @ 0x100297618
 };
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -452,6 +574,65 @@ public:
     virtual ITerrainEditor* TerrainEditor() = 0;                      // SL::spTerrain
     virtual bool GraphicsSystemAllowsSelfScroll() = 0;                // SL::spGS vslot 0x60 (0x1007839a4; meaning not decoded)
     virtual void RunChangeTerrainDialog(int& type) = 0;               // cSTEChangeTerrainUI @ 0x1007268f2 + DoDialog @ 0x10072690a
+    // --- the four nSC4UI window-set helpers AddGUI runs around every script window (SC4UI.h is recovered; the
+    // helpers go through the host so this file does not pull SC4UI.cpp and its whole UI chain into every link).
+    virtual std::uint32_t GetWindowChildrenSet(cIGZWin* window, std::set<cIGZWin*>& children) = 0;   // @ 0x10030ae2d
+    virtual std::uint32_t GetWindowChildrenNotInSet(cIGZWin* window, const std::set<cIGZWin*>& excluded,
+                                                    std::set<cIGZWin*>& out) = 0;                    // @ 0x10030ae83
+    virtual void AlignWindowSetToWindow(const std::set<cIGZWin*>& windows, cIGZWin* parent) = 0;      // @ 0x10030ad12
+    virtual void ClearAcceptFocusFlagRecursive(cIGZWin* window) = 0;                                  // @ 0x10030b220
+    // --- AddGUI's windows (0x1007892fc): one method per original construction / call block.
+    // SC4CreateWindowFromScript(key, parent, id) @ 0x100039a9f: one reference on the window (null on failure).
+    virtual cIGZWin* CreateWindowFromScript(const cGZPersistResourceKey& key, cIGZWin* parent, std::uint32_t id) = 0;
+    // SC4CreateWindowFromScript(key, parent, id, iid, out) @ 0x100039bf7: the window's `iid` view in `out`.
+    virtual bool CreateWindowFromScript(const cGZPersistResourceKey& key, cIGZWin* parent, std::uint32_t id,
+                                        std::uint32_t iid, void** out) = 0;
+    // cSLBuffer(key, colorType, false) + its inner buffer (0x100043c72): one reference on the image, or null.
+    virtual cIGZBuffer* LoadImageBuffer(std::uint32_t type, std::uint32_t group, std::uint32_t instance) = 0;
+    // GZCOM()->CreateInstance(exemplar 0x22ecfc47, iid cIGZWin / 0x22ba0121) @ 0x100789464: the toolbar button.
+    virtual cIGZWin* CreateToolbarButton() = 0;
+    // GZCOM()->CreateInstance(exemplar 0xca5d3294, iid 0xca5d3290) @ 0x10078a63d: the compass / alert border.
+    virtual cIGZWin* CreateCompassWindow() = 0;
+    // cSLString(group, instance, true) @ 0x1001215e4 (the toolbar button's tip text).
+    virtual void LocalisedString(std::uint32_t group, std::uint32_t instance, cRZString& out) = 0;
+    // new cSC4PanelUIWinProc @ 0x1003585ba (+ AddRef).
+    virtual gz::cIGZWinProc* CreatePanelUIWinProc() = 0;
+    // new cSC4NewsTickerWinProc @ 0x10031ba2c (+ AddRef).
+    virtual INewsTickerWindow* CreateNewsTickerWinProc() = 0;
+    // new cSC4MySimWinProc(panel) @ 0x10031552c (+ AddRef).
+    virtual IMySimWindow* CreateMySimWinProc(gz::cIGZWinGen* panel) = 0;
+    // new cSC4BudgetUIWinProc @ 0x1002e476c (+ AddRef).
+    virtual IBudgetUIWindow* CreateBudgetUIWinProc() = 0;
+    // new cSC4GraphsViewWinProc(window) @ 0x1002dfc9c (+ AddRef).
+    virtual IGraphsViewWindow* CreateGraphsViewWinProc(cIGZWin* window) = 0;
+    // new cSC4BuildingSelectWinProc(window) @ 0x10075913c (+ AddRef).
+    virtual IBuildingSelectWindow* CreateBuildingSelectWinProc(cIGZWin* window) = 0;
+    // new cSC4AdvisorPopupTracker @ 0x10032f2ac (+ AddRef).
+    virtual IAdvisorPopupQueue* CreateAdvisorPopupTracker() = 0;
+    // new cSC4CompassWinProc @ 0x10032ef20 + gen->SetWinProc(proc) @ 0x10078a76b.
+    virtual void AttachCompassWinProc(gz::cIGZWinGen* window) = 0;
+    // new cSC4WinCalloutBox @ 0x1003c5f5c (+ AddRef): the cursor-text box at +0x5d0.
+    virtual cISC4WinCalloutBox* CreateCalloutBox() = 0;
+    // new cGZWinBMP @ 0x1003304ec (+ AddRef): the cost indicator's text window at +0x5c8.
+    virtual gz::cIGZWinBMP* CreateWinBMP() = 0;
+    // cSC4WinMapView::InitWindow @ 0x10035266e on the map view window (the original passes window - 0x10).
+    virtual void InitMapView(cIGZWin* window) = 0;
+    // cRZKeyboard::IsKeyDownNowStatic @ 0x100241b76 (DoPanelCommandGUI's modifier test).
+    virtual bool IsKeyDownNow(std::uint32_t key) = 0;
+    // SL::spCommandServer vslot 0x98 ExecuteCommand(id, 0, 0) (the panel buttons' commands).
+    virtual void ExecuteCommand(std::uint32_t command) = 0;
+    // cSC4View3DWin::DoEstablishCityDialog @ 0x10078ff30 (PARTIAL: builds the modal city dialog).
+    virtual bool ShowEstablishCityDialog() = 0;
+    // SL::spCity vslot 0x240 (cSC4City::GetDisasterLayer) -> the disaster layer's vslot 0x50.
+    virtual bool DisasterAlertActive() = 0;
+    // SL::spCity vslot 0x188 (cSC4City::GetCitySituationManager) -> the manager's vslot 0x30 (non-null).
+    virtual bool SituationAlertActive() = 0;
+    // SL::spSimulator vslot 0x78.
+    virtual bool SimulatorBusy() = 0;
+    // SL::spGS vslot 0x20 @ 0x10078a53c: a graphics buffer for the cost indicator (+0x5c0), or null.
+    virtual cIGZBuffer* CreateImageBuffer() = 0;
+    // SL::spCity vslot 0x288 (cSC4City::GetAdvisorSystem): the mayor sub-panel's advisor window.
+    virtual IAdvisorWindow* AdvisorWindow() = 0;
     // --- the input tools the mouse / tool invokers construct (each is one "new cSC4ViewInputControl*" block)
     virtual cSC4ViewInputControl* CreateZoningTool(std::uint32_t type) = 0;                 // cSC4ViewInputControlZone @ 0x1003c38fc
     virtual cSC4ViewInputControl* CreateTerrainScrubberTool(std::uint32_t type, bool flag) = 0;   // @ 0x100395cac
@@ -460,8 +641,6 @@ public:
     virtual void CityScrollSetMouseScroll(cSC4ViewInputControl* tool, int x, int y) = 0;    // @ 0x1002c1930
     // --- SL::spSS + SL::spViewUtilities + cSC4AudioSoundManager: the global terrain tool's sound (0x100784a1e)
     virtual void PlayGlobalTerrainEffectSound() = 0;
-    // --- the cursor-text window (+0x5d0; AddGUI creates it, so the host owns it)
-    virtual ICursorTextWindow* CursorTextWindow() = 0;
     // --- SL::TerrainView() (cSTETerrainView3D, recovered in parallel): the contour display layer
     virtual int AddContourCallback() = 0;              // TerrainView()->Layer(0)->vslot 0x40(0x7f94205)
     virtual void RemoveContourCallback(int handle) = 0;   // TerrainView()->Layer(0)->vslot 0x78(handle)
@@ -472,7 +651,7 @@ public:
     virtual bool PopupModalDialogsSafe() = 0;                         // SC4GetPopupModalDialogsSafe
     virtual bool PopupModalDialogsEnabled() = 0;                      // SC4GetPopupModalDialogsEnabled
     virtual std::uint32_t SimulationFrameCounter() = 0;               // (+0x170) vslot 0x48
-    virtual void FilterUiCommandMessage(cGZMessage& message) = 0;     // nsSC4TutorialSystem @ 0x10006008e
+    virtual bool FilterUiCommandMessage(cGZMessage& message) = 0;     // nsSC4TutorialSystem @ 0x10006008e (true = keep it)
     virtual bool HandleUrl(cIGZString* link) = 0;                     // cSC4HTMLLinkHandler::DoURL @ 0x1001f22b6
     virtual void HandleAdviceLink(cGZMessage& message) = 0;            // @ 0x100785070
     virtual void ProcessCheatCode(std::uint32_t id, const char* cmdLine) = 0;   // @ 0x10078526a (takes a cRZCmdLine)
@@ -496,13 +675,13 @@ public:
     virtual std::uint32_t MakeNativeColor(std::uint8_t r, std::uint8_t g, std::uint8_t b) = 0;   // RZ::GS() vslot 0x118
     virtual bool BudgetDialogOpen(cIGZUnknown* dialog) = 0;               // cSC4BudgetUIWinProc vslot 0x50 (0x10078883e)
     virtual void RefreshBudgetDialog(cIGZUnknown* dialog) = 0;            // cSC4BudgetUIWinProc vslot 0x48 (0x100788846)
-    // --- the five window procedures RemoveGUI shuts down (each is the original's static Shutdown + Release)
+    // --- the four window procedures RemoveGUI shuts down through their own Shutdown (the fifth, the panel UI
+    // procedure, has none: cSC4PanelUIWinProc only has its destructor).
     virtual void ShutdownNewsTickerWinProc(cIGZUnknown* proc) = 0;    // cSC4NewsTickerWinProc::Shutdown @ 0x10031c016
     virtual void ShutdownMySimWinProc(cIGZUnknown* proc) = 0;         // cSC4MySimWinProc::Shutdown     @ 0x100315eb2
     virtual void ShutdownBudgetUIWinProc(cIGZUnknown* proc) = 0;      // cSC4BudgetUIWinProc::Shutdown  @ 0x1002e4872
     virtual void ShutdownGraphsViewWinProc(cIGZUnknown* proc) = 0;    // cSC4GraphsViewWinProc::Shutdown @ 0x1002dfdc0
     virtual void ShutdownBuildingSelectWinProc(cIGZUnknown* proc) = 0;   // cSC4BuildingSelectWinProc::Shutdown @ 0x100759232
-    virtual void ShutdownToolTipManager(cIGZUnknown* manager) = 0;       // cSC4ToolTipManager::Shutdown @ 0x1007935a4
 };
 IView3DWinHost* View3DWinHost();
 void SetView3DWinHost(IView3DWinHost* host);
@@ -598,6 +777,7 @@ public:
     bool GZOnMouseMove(int x, int y, std::uint32_t modifiers) override;       // @ 0x100783786 (thunk 0x100783ad0)
 
     // --- cISC4View3DWin: the mission / cursor-text / cost-indicator and menu members
+    void MinimizeUI(bool minimize) override;                       // @ 0x100792b4e (vslot 0x1b8)
     void HideMissionStatusPanel() override;                        // @ 0x100792e7e
     void SetCursorText(std::uint32_t id, std::uint32_t order, const cIGZString* line1,
                        const cIGZString* line2, int icon) override;   // @ 0x10079132c
@@ -626,17 +806,26 @@ public:
     void RunGlobalTerrainTool(int tool);                           // @ 0x1007849bc
     bool ToggleContourDisplay();                                   // @ 0x10078fe00
     void AddWinAnimationRecorder(bool enable);                     // @ 0x100780d78
-    // --- the GUI (see "the GUI windows" below). AddGUI is not recovered, so everything it builds is null
-    // until the host fills it; RemoveGUI and the refresh functions below cope with any window being absent.
-    void RemoveGUI();                                              // @ 0x100780eaa (PARTIAL: AddGUI missing)
+    // --- the GUI: AddGUI builds the 42 windows, RemoveGUI tears them down, and the refresh functions poke them.
+    void AddGUI();                                                 // @ 0x1007892fc
+    void RemoveGUI();                                              // @ 0x100780eaa
     bool SetRenderProperties(const cIGZString& name, const cIGZString& value);   // @ 0x10079064e
     static void SetRenderPropertiesStatic(const cRZString& name, const cRZString& value, void* context);   // @ 0x100792b3a
-    void UpdateZoomButtons();                                      // @ 0x1007872e8 (PARTIAL: AddGUI missing)
-    void DoCityEstablished();                                      // @ 0x100786f3e (PARTIAL: AddGUI missing)
-    void UpdateCityName();                                         // @ 0x10078700a (PARTIAL: AddGUI missing)
-    void UpdateDayNightButtons();                                  // @ 0x10078aa58 (PARTIAL: AddGUI missing)
-    void UpdatePopulation();                                       // @ 0x100787fb6 (PARTIAL: AddGUI missing)
-    void UpdateBudget();                                           // @ 0x1007887bc (PARTIAL: AddGUI missing)
+    void UpdateZoomButtons();                                      // @ 0x1007872e8
+    void UpdateSpeedButtons();                                     // @ 0x100787896
+    void UpdateAlertBorder();                                      // @ 0x100787a1c
+    void DoCityEstablished();                                      // @ 0x100786f3e
+    void DoCityObliterated();                                      // @ 0x100786fbe
+    void UpdateCityName();                                         // @ 0x10078700a
+    void UpdateDayNightButtons();                                  // @ 0x10078aa58
+    void UpdatePopulation();                                       // @ 0x100787fb6
+    void UpdateBudget();                                           // @ 0x1007887bc
+    // --- the panel commands (PARTIAL: the menu builders behind HandleButtonActivated / DoPanelCommandGUI)
+    void HandleButtonActivated(cIGZWin* window, cGZMessage& message);   // @ 0x10078afde (PARTIAL)
+    void DoPanelCommandGUI(std::uint32_t command);                 // @ 0x10078c2dc (PARTIAL)
+    void ShowPanel(std::uint32_t panel);                           // @ 0x10078ac02
+    void HidePanel(std::uint32_t panel);                           // @ 0x10078aade
+    void ShowMayorSubPanel(std::uint32_t panel);                   // @ 0x10078ad68
 
 protected:
     void ApplyScrollSpeed();                                       // the shared tail of RecalcScrollVelocity
@@ -669,32 +858,32 @@ protected:
     cIGZWin* viewManagerSource_ = nullptr;              // +0x498 (set by AddGUI; GetViewManager queries it, RemoveGUI shuts it down)
 
     // ---- the GUI windows (the original's +0x280..+0x4d0 block; AddGUI @ 0x1007892fc builds them and
-    // RemoveGUI tears them down). AddGUI is not recovered: it needs the five window procedures below, the
-    // advisor popup tracker and the four nSC4UI window-set helpers. The port keeps the same members so the
-    // refresh functions and RemoveGUI are the original's; in the port they only hold what the host fills.
+    // RemoveGUI tears them down). The host allocates the recovered window procedures behind the I*Window
+    // interfaces above; the plain windows come from the UI-script factory / GZCOM.
     cIGZWin* panelWindow_ = nullptr;                    // +0x280 (the toolbar; every SetWindowEnabled target)
-    cIGZWin* panelInterface_ = nullptr;                 // +0x288 (its interface 0x5386d516)
-    cIGZWin* toolbarWindow_ = nullptr;                  // +0x290 (the second toolbar window)
+    gz::cIGZWinGen* panelInterface_ = nullptr;          // +0x288 (its cIGZWinGen view 0x5386d516)
+    cIGZWin* toolbarWindow_ = nullptr;                  // +0x290 (the GZCOM toolbar button, a cIGZWinBtn)
     std::vector<cIGZWin*> guiWindows_;                  // +0x298 (each holds one reference)
     std::vector<cIGZWin*> panelWindows_[5];             // +0x2b0..+0x328 (panel i's windows, stride 0x18)
-    cIGZWin* panelAttach_[5] = {};                      // +0x328..+0x348 (each holds one reference)
+    gz::cIGZWinGen* panelAttach_[5] = {};               // +0x328..+0x350 (each holds one reference)
     bool panelShown_[3] = {};                           // +0x440 mayor sub-panel / +0x441 my sim / +0x442 tertiary
-    cIGZWin* panelUIWinProc_ = nullptr;                 // +0x448 cSC4PanelUIWinProc (referenced)
-    cIGZWin* newsTickerWinProc_ = nullptr;              // +0x450 cSC4NewsTickerWinProc
-    cIGZWin* mySimWinProc_ = nullptr;                   // +0x460 cSC4MySimWinProc
-    cIGZWin* budgetUIWinProc_ = nullptr;                // +0x468 cSC4BudgetUIWinProc
+    gz::cIGZWinProc* panelUIWinProc_ = nullptr;         // +0x448 cSC4PanelUIWinProc (referenced)
+    INewsTickerWindow* newsTickerWinProc_ = nullptr;    // +0x450 cSC4NewsTickerWinProc
+    IMySimWindow* mySimWinProc_ = nullptr;              // +0x460 cSC4MySimWinProc
+    IBudgetUIWindow* budgetUIWinProc_ = nullptr;        // +0x468 cSC4BudgetUIWinProc
     cIGZWin* window470_ = nullptr;                      // +0x470
     cIGZWin* window478_ = nullptr;                      // +0x478
-    cIGZWin* graphsViewWinProc_ = nullptr;              // +0x488 cSC4GraphsViewWinProc
-    cIGZWin* buildingSelectWinProc_ = nullptr;          // +0x490 cSC4BuildingSelectWinProc
+    IGraphsViewWindow* graphsViewWinProc_ = nullptr;    // +0x488 cSC4GraphsViewWinProc
+    IBuildingSelectWindow* buildingSelectWinProc_ = nullptr;   // +0x490 cSC4BuildingSelectWinProc
     cIGZWin* window4a0_ = nullptr;                      // +0x4a0
     cIGZWin* window4a8_ = nullptr;                      // +0x4a8
-    cIGZWin* window4b0_ = nullptr;                      // +0x4b0
+    cIGZWin* window4b0_ = nullptr;                      // +0x4b0 (the mayor panel's window)
     gz::cIGZWinText* dateText_ = nullptr;               // +0x4b8 (SetCaption = vslot 0x20)
     gz::cIGZWinText* budgetText_ = nullptr;             // +0x4c0
     gz::cIGZWinText* populationText_ = nullptr;         // +0x4c8
-    cIGZUnknown* tipManager_ = nullptr;                 // +0x4d0 (Shutdown = vslot 0x38)
+    IAdvisorPopupQueue* advisorPopups_ = nullptr;       // +0x4d0 cSC4AdvisorPopupTracker (APT-6: not a tool tip manager)
     int currentPanel_ = -1;                             // +0x350
+    std::uint32_t mayorSubPanelState_ = 0;              // +0x530 (ShowMayorSubPanel's state word)
     ICoverageHelper3D* coverageHelper_ = nullptr;        // +0x5f8 (the helper object, borrowed from the host)
     cIGZUnknown* filterInfo_ = nullptr;                 // +0x4d8 (the cSC4ViewFilterInformation's object)
     std::uint32_t viewLevel_ = 1;                       // +0x4e0 (constructor)
@@ -724,18 +913,23 @@ protected:
     cIGZWin* missionPanel_ = nullptr;                   // +0x640 (referenced; HideMissionStatusPanel ChildDeletes it)
     cIGZUnknown* validationWindow_ = nullptr;           // +0x648 (referenced)
     cRZString errorReport_;                             // +0x650
-    // The cost-indicator state (+0x5a0..+0x5ac). The two windows (+0x5c0 / +0x5c8) are not modelled yet.
+    // The cost-indicator state (+0x5a0..+0x5ac) and its two windows (+0x5c0 the backing buffer, +0x5c8 the
+    // cGZWinBMP that shows it).
     std::uint32_t costValue_ = 0;                       // +0x5a0 (the amount SetCostIndicator was given)
     std::int32_t costState_ = 0;                        // +0x5a4 (1 = the indicator is active)
     std::uint32_t costColorState_ = 0;                  // +0x5a8 (0 = cannot afford, 1 = affordable, 2 = free)
     float costTimer_ = 0.0f;                            // +0x5ac (UpdateCostIndicator's countdown, seconds)
-    // The cursor-text block (+0x5a0..+0x5f0). The two windows and the bitmap window belong to the GUI AddGUI
-    // builds; the port borrows the text window from the host and does not model the other two yet.
+    cIGZBuffer* costIndicatorBuffer_ = nullptr;         // +0x5c0 (0x80 x 0x20, SL::spGS vslot 0x20)
+    gz::cIGZWinBMP* costIndicatorText_ = nullptr;       // +0x5c8 (the cGZWinBMP that shows it)
+    // The cursor-text block (+0x5b0..+0x5f0). The +0x5d0 window is a cSC4WinCalloutBox (its interface is the
+    // one CursorTextChanged calls); the icon is the +0x5f0 image.
     int cursorTextX_ = 0;                               // +0x5b0
     int cursorTextY_ = 0;                               // +0x5b4
-    ICursorTextWindow* cursorTextWindow_ = nullptr;     // +0x5d0 (borrowed from the host)
+    int costTextX_ = 0;                                 // +0x5b8 (the cost indicator's own x)
+    int costTextY_ = 0;                                 // +0x5bc (its y)
+    cISC4WinCalloutBox* cursorTextBox_ = nullptr;       // +0x5d0 (referenced; AddGUI creates it)
     std::list<CursorTextInfo> cursorText_;              // +0x5d8
-    cIGZUnknown* cursorTextIcon_ = nullptr;             // +0x5f0 (the icon image; borrowed)
+    cIGZBuffer* cursorTextIcon_ = nullptr;              // +0x5f0 (the icon image of CursorTextInfo::icon == 1)
     // The secondary menu window (+0x358) and its state word (+0x368).
     cIGZWin* secondaryMenu_ = nullptr;                  // +0x358 (referenced; CloseSecondaryMenu ChildDeletes it)
     std::uint32_t secondaryMenuState_ = 0;              // +0x368

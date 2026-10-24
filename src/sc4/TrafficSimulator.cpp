@@ -3,12 +3,33 @@
 #include <algorithm>
 #include <cfloat>
 #include <cmath>
+#include <limits>
+
+#include "sc4/Lot.h"
+#include "sc4/PathFinder.h"
 
 namespace sc4 {
 
 namespace {
 // 1.5 * 2^23 rounding trick of the original: float -> nearest integer
 inline int RoundToInt(float v) { return int(std::lrintf(v)); }
+
+// x86 cvttsd2si: NaN and out-of-range values give the integer indefinite value (LLONG_MIN). The neighbour
+// capacity calculation divides by a city population sum that is 0 when every connected city is empty; the
+// hardware then converts +inf to LLONG_MIN and the low 32 bits land in the trip capacity.
+inline std::int64_t TruncateToInt64(double v) {
+    if (!(v >= -9223372036854775808.0 && v < 9223372036854775808.0)) return std::numeric_limits<std::int64_t>::min();
+    return std::int64_t(v);
+}
+
+// 0x100a16330: cISC4NeighborConnection types usable by each transit network type
+constexpr std::uint32_t kValidNeighborConnectionTypesForTransitNetworkType[6] = {0x200, 0x170c, 0x2,
+                                                                                 0x40,  0x80,   0x800};
+// exemplar ids of the neighbour pool holder and of the connection that carries traffic volumes
+constexpr std::uint32_t kNeighborPoolRegionX = 0x4a23576b, kNeighborPoolRegionZ = 0x4a23576c;
+constexpr std::uint32_t kNeighborConnectionCost = 0xca947077;
+constexpr std::uint32_t kConnectionTrafficVolumeBase = 0xaa9ea81a;   // + trip type: 9 volumes per network type
+constexpr std::uint32_t kConnectionTrafficVolumeArrivedBase = 0xaa9ea81d;  // + trip type: last cycle's volumes
 
 constexpr std::uint32_t kExemplarProperty_curveF78 = 0xca5f7821, kExemplarProperty_curveFB8 = 0x4be09ec9,
                         kExemplarProperty_curveFD8 = 0x4be09eca, kExemplarProperty_fundingCurve = 0x0bd86fd4;
@@ -199,6 +220,23 @@ void cSC4TrafficSimulator::InitGrid(int cellsX, int cellsZ) {
     lastX_ = cellsX - 1;
     lastZ_ = cellsZ - 1;
     grid_.assign(std::size_t(cellsX), std::vector<std::vector<NetworkInfo>>(std::size_t(cellsZ)));
+    // Init (0x100077ac8) sizes the neighbour tables from the city: west/east by depth, north/south by width,
+    // the flag table (width + 2) x (depth + 2) and the fixed 0x10000-cell connection table.
+    neighborConnections_[0].assign(std::size_t(std::max(cellsZ, 0)), {});
+    neighborConnections_[1].assign(std::size_t(std::max(cellsX, 0)), {});
+    neighborConnections_[2].assign(std::size_t(std::max(cellsZ, 0)), {});
+    neighborConnections_[3].assign(std::size_t(std::max(cellsX, 0)), {});
+    cellTripFlags_.assign(std::size_t(std::max(cellsX, 0)) + 2,
+                          std::vector<std::uint8_t>(std::size_t(std::max(cellsZ, 0)) + 2, 0));
+    cellConnections_.assign(0x10000, {});
+    connectionCounts_.fill(0);
+    tripCapacityTotals_.fill(0);
+    neighborPools_.clear();
+    if (!defaultNeighborPoolValid_) {
+        defaultNeighborPoolValid_ = true;
+        // Init's SetMaxTripCapacity(default pool, 3, 0xffffffff): the border lane group never runs out
+        SetMaxTripCapacity(&defaultNeighborPool_, 3, 0xffffffff);
+    }
 }
 
 std::vector<NetworkInfo>* cSC4TrafficSimulator::Cell(int x, int z) const {
@@ -557,6 +595,508 @@ void cSC4TrafficSimulator::GetOccupantCountForAllSubnetworks(std::uint32_t occup
         const auto it = subnetworks_[i].occupantsByType.find(occupantType);
         if (it != subnetworks_[i].occupantsByType.end()) out[i] = it->second;
     }
+}
+
+// ---- neighbour connection tables ---------------------------------------------------------------------------
+
+// Side selection of every border table function (0x1000820ac / 0x100082358 / 0x1000884e8 / 0x100089830 /
+// 0x10008a090 / 0x100082ae2): west/east are indexed by z, north/south by x. False when (x, z) is not a border
+// cell of one of the four sides (the original indexes the table unconditionally and reads out of bounds for a
+// corner cell; the port refuses instead).
+bool cSC4TrafficSimulator::NeighborSide(int x, int z, int lastX, int lastZ, int& side, int& index) {
+    if (x < 0) {
+        side = 0;
+        index = z;
+        return 0 <= z && z <= lastZ;
+    }
+    if (lastX < x) {
+        side = 2;
+        index = z;
+        return 0 <= z && z <= lastZ;
+    }
+    if (z < 0) {
+        side = 1;
+        index = x;
+        return true;
+    }
+    if (lastZ < z) {
+        side = 3;
+        index = x;
+        return true;
+    }
+    side = -1;
+    index = -1;
+    return false;
+}
+
+TrafficNeighborConnection* cSC4TrafficSimulator::GetTrafficNeighborConnection(int x, int z) {
+    int side = 0, index = 0;
+    if (!NeighborSide(x, z, lastX_, lastZ_, side, index)) return nullptr;
+    std::vector<TrafficNeighborConnection>& table = neighborConnections_[std::size_t(side)];
+    if (index < 0 || std::size_t(index) >= table.size()) return nullptr;
+    return &table[std::size_t(index)];
+}
+
+// 0x100089830: the first engine connection of a type the travel mode can use on that border cell.
+void* cSC4TrafficSimulator::GetNeighborConnection(int travelMode, int x, int z) {
+    TrafficNeighborConnection* entry = GetTrafficNeighborConnection(x, z);
+    if (!entry) return nullptr;
+    if (travelMode < 0 || travelMode > 8) return nullptr;
+    const std::uint32_t valid = kValidNeighborConnectionTypesForTransitNetworkType[
+        kTravelModeToTransitNetwork[std::size_t(travelMode)]];
+    if ((valid & entry->types) == 0) return nullptr;
+    for (int type = 0; type <= 12; ++type) {   // the binary tests 0..12 (type 12 is tried once more after the bound)
+
+        if ((valid & entry->types & (1u << type)) == 0) continue;
+        if (void* connection = host_->NeighborFindConnection(type, x, z)) return connection;
+    }
+    return nullptr;
+}
+
+// 0x1000884e8: the property holder of the pool this border cell belongs to (the default pool when the cell
+// records no pool, or when the recorded pool no longer exists).
+cISCPropertyHolder* cSC4TrafficSimulator::GetNeighborPoolPropertyHolder(int travelMode, int x, int z) {
+    std::uint32_t valid = 0xffffffffu;
+    if (travelMode != -1) {
+        if (travelMode < 0 || travelMode > 8) return nullptr;
+        valid = kValidNeighborConnectionTypesForTransitNetworkType[kTravelModeToTransitNetwork[std::size_t(travelMode)]] | 0x200u;
+    }
+    TrafficNeighborConnection* entry = GetTrafficNeighborConnection(x, z);
+    if (!entry || (valid & entry->types) == 0) return nullptr;
+    if (entry->pool != 0) {
+        const auto it = neighborPools_.find(entry->pool);
+        if (it != neighborPools_.end()) return &it->second;
+        entry->pool = 0;
+    }
+    return DefaultNeighborPool();
+}
+
+// 0x1000820ac: record a connection on a border cell. The cost is the far side's property 0xca947077 or, when
+// the far side has none, the trip scale. Cells whose far city is not established keep pool 0 (the default pool).
+void cSC4TrafficSimulator::AddNeighborConnection(int type, int x, int z) {
+    void* connection = host_->NeighborFindConnection(type, x, z);
+    if (!connection) return;
+    TrafficNeighborConnection* entry = GetTrafficNeighborConnection(x, z);
+    if (!entry) return;
+    entry->types = std::uint16_t(entry->types | std::uint16_t(1u << (type & 0x1f)));
+    float cost = tunables_.tripScale;
+    if (void* other = host_->NeighborFindConnectionOnOtherSide(connection)) {
+        if (cISCPropertyHolder* properties = host_->NeighborConnectionProperties(other))
+            cSCPropertyHelp::GetPropertyValue(properties, kNeighborConnectionCost, cost);
+    }
+    if (entry->cost < cost) entry->cost = cost;
+    void* city = host_->NeighborConnectionCity(connection);
+    if (!city || !host_->NeighborCityEstablished(city)) {
+        entry->pool = 0;
+        return;
+    }
+    int regionX = 0, regionZ = 0;
+    host_->NeighborCityRegionCell(city, regionX, regionZ);
+    for (const auto& [key, holder] : neighborPools_) {
+        std::int32_t px = 0, pz = 0;
+        if (!cSCPropertyHelp::GetPropertyValue(&holder, kNeighborPoolRegionX, px)) continue;
+        if (!cSCPropertyHelp::GetPropertyValue(&holder, kNeighborPoolRegionZ, pz)) continue;
+        if (px != regionX || pz != regionZ) continue;
+        entry->pool = key;
+        return;
+    }
+    cSCPropertyHolder holder;
+    cSCPropertyHelp::SetPropertyValue(&holder, kNeighborPoolRegionX, std::int32_t(regionX));
+    cSCPropertyHelp::SetPropertyValue(&holder, kNeighborPoolRegionZ, std::int32_t(regionZ));
+    // the original walks the ordered pool map from its root for the smallest unused id (0x1000822ca)
+    std::uint16_t pool = 1;
+    while (neighborPools_.count(pool) != 0) ++pool;
+    neighborPools_.emplace(pool, holder);
+    entry->pool = pool;
+}
+
+// 0x100082358: drop one connection type from a border cell; when the cell has none left its pool goes back to
+// the default and the lane-group bits of the cell's flag byte are cleared.
+void cSC4TrafficSimulator::RemoveNeighborConnection(int type, int x, int z) {
+    TrafficNeighborConnection* entry = GetTrafficNeighborConnection(x, z);
+    if (!entry) return;
+    entry->types = std::uint16_t(entry->types & ~std::uint16_t(1u << (type & 0x1f)));
+    if (entry->types != 0) return;
+    entry->pool = 0;
+    RemoveUnusedPools();
+    // the original indexes the flag table with the caller's coordinates (rows x + 1, columns z + 1)
+    const int row = x + 1, column = z + 1;
+    if (row < 0 || column < 0 || std::size_t(row) >= cellTripFlags_.size() ||
+        std::size_t(column) >= cellTripFlags_[std::size_t(row)].size())
+        return;
+    std::uint8_t& flags = cellTripFlags_[std::size_t(row)][std::size_t(column)];
+    for (int lane = 0; lane < 4; ++lane)
+        if (((flags >> lane) & 1) != 0) --connectionCounts_[std::size_t(lane)];
+    flags = 0;
+}
+
+// 0x1000828a2: erase every pool no border cell refers to any more. Quirk kept: the original scans indices
+// 0 .. lastX - 1 of all four tables (it uses the x extent for the z-indexed tables too and stops one short),
+// so a pool used only by the last slot of a table is erased.
+void cSC4TrafficSimulator::RemoveUnusedPools() {
+    std::vector<std::uint16_t> used;
+    const int count = lastX_;
+    for (int side = 0; side < 4; ++side) {
+        const std::vector<TrafficNeighborConnection>& table = neighborConnections_[std::size_t(side)];
+        const std::size_t limit = std::min<std::size_t>(table.size(), std::size_t(std::max(count, 0)));
+        for (std::size_t i = 0; i < limit; ++i)
+            if (table[i].pool != 0) used.push_back(table[i].pool);
+    }
+    for (auto it = neighborPools_.begin(); it != neighborPools_.end();) {
+        if (std::find(used.begin(), used.end(), it->first) == used.end()) it = neighborPools_.erase(it);
+        else ++it;
+    }
+}
+
+// 0x100082ae2: does the inner cell of this border cell touch a map exit (a road cell whose mask or whose
+// border record says a neighbour connection leaves there)?
+bool cSC4TrafficSimulator::HasMapExit(int x, int z) {
+    const bool xOutside = x < 0 || lastX_ < x;
+    int side = 0, innerX = x, innerZ = z;
+    if (z < 0) {
+        side = 1;
+        innerZ = 0;
+        if (xOutside) return false;
+    } else {
+        if (!((lastZ_ < z) != xOutside)) return false;
+        if (xOutside) {
+            innerZ = z;
+            innerX = 0;
+        }
+        side = xOutside ? 0 : 3;
+        if (0 <= x && xOutside) {
+            side = 2;
+            innerX = lastX_;
+            innerZ = z;
+        } else if (!xOutside) {
+            innerZ = lastZ_;
+        }
+    }
+    const TrafficCellConnections& cell = CellConnections(innerX, innerZ);
+    for (std::uint16_t mask : cell.masks) {
+        for (int lane = 0; lane < 4; ++lane) {
+            if (((mask >> (lane * 4 + side)) & 1) != 0) return true;
+        }
+    }
+    const TrafficNeighborConnection* entry = GetTrafficNeighborConnection(x, z);
+    return entry && (entry->types & 0x200) != 0;
+}
+
+// ---- congestion / commute accounting -----------------------------------------------------------------------
+
+// 0x1000895c6: add a trip to the destination's lane group. A border destination counts on the neighbour pool
+// holder and on the connection record; an inner destination on the lot. When the group's maximum capacity is
+// reached the lane-group bit is cleared on every cell the destination occupies and its cell count goes down.
+void cSC4TrafficSimulator::ApplyTrafficToDestination(std::uint32_t count, int x, int z, std::uint8_t networkType,
+                                                     std::uint8_t tripType) {
+    cISCPropertyHolder* destination = nullptr;
+    cISCPropertyHolder* connection = nullptr;
+    SC4RectInt32 cells;
+    cells.x0 = cells.x1 = x;
+    cells.z0 = cells.z1 = z;
+    if (x < 0 || z < 0 || lastX_ < x || lastZ_ < z) {
+        destination = GetNeighborPoolPropertyHolder(networkType, x, z);
+        void* record = GetNeighborConnection(networkType, x, z);
+        if (record) {
+            connection = host_->NeighborConnectionProperties(record);
+            if (connection && tripType < 3) {   // the original records the volume on the connection holder
+                const std::uint32_t id = kConnectionTrafficVolumeBase + tripType;
+                std::vector<std::uint32_t> volumes;
+                if (!cSCPropertyHelp::GetPropertyValue(connection, id, volumes)) volumes.assign(9, 0);
+                if (volumes.size() < 9) volumes.resize(9, 0);   // the game always stores nine network slots
+                volumes[networkType] += count;
+                cSCPropertyHelp::SetPropertyValue(connection, id, volumes);
+            }
+        }
+    } else {
+        ITrafficLot* lot = host_->LotAt(x, z, 0);
+        if (!lot) return;
+        destination = lot->Properties();
+        lot->OccupiedRect(cells);
+    }
+    if (!destination) return;
+    const std::uint32_t maximum = GetMaxTripCapacitySlot(destination, tripType);
+    const std::uint32_t used = GetTripCapacity(destination, std::uint32_t(tripType) + 4u) + count;
+    SetTripCapacity(destination, std::uint32_t(tripType) + 4u, used);
+    if (connection) SetTripCapacity(connection, std::uint32_t(tripType) + 4u, used);
+    if (maximum <= used) {
+        for (int cellX = cells.x0; cellX <= cells.x1; ++cellX) {
+            for (int cellZ = cells.z0; cellZ <= cells.z1; ++cellZ) {
+                const int row = cellX + 1, column = cellZ + 1;
+                if (row < 0 || column < 0 || std::size_t(row) >= cellTripFlags_.size() ||
+                    std::size_t(column) >= cellTripFlags_[std::size_t(row)].size())
+                    continue;
+                cellTripFlags_[std::size_t(row)][std::size_t(column)] &= std::uint8_t(~(1u << tripType));
+            }
+        }
+        --connectionCounts_[std::size_t(tripType)];
+    }
+}
+
+// 0x1000836ba: rebuild the trip-capacity flag bytes of every cell from the lots that hold destinations.
+// Quirks kept: the byte keeps bit 3 (only 0xf8 is masked off) and the lane counters go up even when the bit
+// was already set. The lot-manager lookups pass 1 first and fall back to 0, the second one does not count.
+void cSC4TrafficSimulator::WorkOnRefreshCommuteMap() {
+    for (int z = 0; z <= lastZ_; ++z) {
+        for (int x = 0; x <= lastX_; ++x) {
+            std::uint8_t& flags = cellTripFlags_[std::size_t(x) + 1][std::size_t(z) + 1];
+            flags = std::uint8_t(flags & 0xf8);
+            ITrafficLot* lot = host_->LotAt(x, z, 1);
+            const bool counted = lot != nullptr;
+            if (!lot) lot = host_->LotAt(x, z, 0);
+            if (!lot) continue;
+            cISCPropertyHolder* properties = lot->Properties();
+            if (!properties) continue;
+            for (int lane = 0; lane < 4; ++lane) {
+                if (GetMaxTripCapacitySlot(properties, std::uint32_t(lane)) == 0) continue;
+                flags = std::uint8_t(flags | (1u << lane));
+                if (counted) ++connectionCounts_[std::size_t(lane)];
+            }
+        }
+    }
+}
+
+// 0x100083508: move every active lot's used trip capacities into the "arrived" counters and total the lots'
+// maximum capacities per lane group (4 lane groups: indices 4..7 -> 8..11 of the lot's capacity array).
+void cSC4TrafficSimulator::WorkOnClearTripDestinations() {
+    for (int z = 0; z <= lastZ_; ++z) {
+        for (int x = 0; x <= lastX_; ++x) {
+            ITrafficLot* lot = host_->LotAt(x, z, 1);
+            if (!lot) continue;
+            cISCPropertyHolder* properties = lot->Properties();
+            if (!properties) continue;
+            for (std::uint32_t lane = 0; lane < 4; ++lane) {
+                SetTripCapacity(properties, lane + 8u, GetTripCapacity(properties, lane + 4u));
+                SetTripCapacity(properties, lane + 4u, 0);
+            }
+            for (std::uint32_t lane = 0; lane < 4; ++lane)
+                tripCapacityTotals_[std::size_t(lane)] += int(GetMaxTripCapacitySlot(properties, lane));
+        }
+    }
+}
+
+// 0x100086086: roll each neighbour connection's traffic volumes over (0xaa9ea81a + k -> 0xaa9ea81d + k) and
+// clear them, then move the used lane capacities 4..7 to the arrived counters 8..11 and zero them.
+void cSC4TrafficSimulator::WorkOnUpdateNeighborConnections() {
+    std::vector<void*> connections;
+    host_->NeighborGetAllConnections(connections);
+    const std::vector<std::uint32_t> zeros(9, 0);
+    for (void* record : connections) {
+        cISCPropertyHolder* properties = host_->NeighborConnectionProperties(record);
+        if (!properties) continue;
+        for (std::uint32_t k = 0; k < 2; ++k) {
+            std::vector<std::uint32_t> volumes;
+            if (cSCPropertyHelp::GetPropertyValue(properties, kConnectionTrafficVolumeBase + k, volumes))
+                cSCPropertyHelp::SetPropertyValue(properties, kConnectionTrafficVolumeArrivedBase + k, volumes);
+            cSCPropertyHelp::SetPropertyValue(properties, kConnectionTrafficVolumeBase + k, zeros);
+        }
+        for (std::uint32_t lane = 0; lane < 4; ++lane) {
+            SetTripCapacity(properties, lane + 8u, GetTripCapacity(properties, lane + 4u));
+            SetTripCapacity(properties, lane + 4u, 0);
+        }
+    }
+}
+
+// 0x100087336: hand the regional demand for the three wealth purposes out to the neighbour pools in proportion
+// to each connected city's extrapolated population, then mark the border cells that have capacity left.
+void cSC4TrafficSimulator::RecalculateNeighborConnectionCapacities() {
+    const std::int32_t total[3] = {host_->RegionDemandTotal(0x2010), host_->RegionDemandTotal(0x2020),
+                                   host_->RegionDemandTotal(0x2030)};
+    std::vector<void*> cities;
+    host_->NeighborGetConnectedCities(cities);
+    double population[3] = {0.0, 0.0, 0.0};
+    for (void* city : cities) {
+        population[0] += host_->NeighborCityExtrapolatedPopulation(city, 0x2010);
+        population[1] += host_->NeighborCityExtrapolatedPopulation(city, 0x2020);
+        population[2] += host_->NeighborCityExtrapolatedPopulation(city, 0x2030);
+    }
+    for (void* city : cities) {
+        int regionX = 0, regionZ = 0;
+        host_->NeighborCityRegionCell(city, regionX, regionZ);
+        cISCPropertyHolder* pool = nullptr;
+        for (auto& [key, holder] : neighborPools_) {
+            std::int32_t px = 0, pz = 0;
+            if (!cSCPropertyHelp::GetPropertyValue(&holder, kNeighborPoolRegionX, px)) continue;
+            if (!cSCPropertyHelp::GetPropertyValue(&holder, kNeighborPoolRegionZ, pz)) continue;
+            if (px != regionX || pz != regionZ) continue;
+            pool = &holder;
+            break;
+        }
+        if (!pool) continue;
+        for (std::uint32_t kind = 0; kind < 3; ++kind) {
+            const int cityPopulation = host_->NeighborCityExtrapolatedPopulation(city, 0x2010u + kind * 0x10u);
+            const std::int64_t share = TruncateToInt64((double(cityPopulation) / population[kind]) * double(total[kind]));
+            SetMaxTripCapacity(pool, kind, std::uint32_t(share));
+            SetTripCapacity(pool, kind + 4u, 0);
+        }
+        SetMaxTripCapacity(pool, 3, 0xffffffffu);
+        SetTripCapacity(pool, 7, 0);
+    }
+    if (cISCPropertyHolder* defaultPool = DefaultNeighborPool()) SetTripCapacity(defaultPool, 7, 0);
+    for (int side = 0; side < 4; ++side) {
+        std::vector<TrafficNeighborConnection>& table = neighborConnections_[std::size_t(side)];
+        // quirk kept: the original uses the x extent for the z-indexed tables and stops one short
+        const std::size_t limit = std::min<std::size_t>(table.size(), std::size_t(std::max(lastX_, 0)));
+        for (std::size_t index = 0; index < limit; ++index) {
+            TrafficNeighborConnection& entry = table[index];
+            if (entry.types == 0) continue;
+            int x = 0, z = 0;
+            switch (side) {
+                case 0: x = -1; z = int(index); break;
+                case 1: x = int(index); z = -1; break;
+                case 2: x = lastX_ + 1; z = int(index); break;
+                default: x = int(index); z = lastZ_ + 1; break;
+            }
+            if (!HasMapExit(x, z)) continue;
+            cISCPropertyHolder* pool = nullptr;
+            if (entry.pool != 0) {
+                const auto it = neighborPools_.find(entry.pool);
+                if (it != neighborPools_.end()) pool = &it->second;
+                else {
+                    entry.pool = 0;
+                    pool = DefaultNeighborPool();
+                }
+            } else {
+                pool = DefaultNeighborPool();
+            }
+            if (!pool) continue;
+            const int row = x + 1, column = z + 1;
+            if (row < 0 || column < 0 || std::size_t(row) >= cellTripFlags_.size() ||
+                std::size_t(column) >= cellTripFlags_[std::size_t(row)].size())
+                continue;
+            for (int lane = 0; lane < 4; ++lane) {
+                if (GetMaxTripCapacitySlot(pool, std::uint32_t(lane)) == 0) continue;
+                cellTripFlags_[std::size_t(row)][std::size_t(column)] |= std::uint8_t(1u << lane);
+                ++connectionCounts_[std::size_t(lane)];
+            }
+        }
+    }
+}
+
+// ---- trip pipeline -----------------------------------------------------------------------------------------
+
+// 0x100087c06: does the trip's source still have room for all of its trips? The source is a border pool when
+// its cell is outside the map, otherwise the lot at that cell (a missing lot has no room at all).
+bool cSC4TrafficSimulator::CapacityStillAvailable(const cSC4TripData& trip) {
+    cISCPropertyHolder* properties = nullptr;
+    const int x = trip.sourceX, z = trip.sourceZ;
+    if (x < 0 || z < 0 || lastX_ < x || lastZ_ < z) {
+        properties = GetNeighborPoolPropertyHolder(-1, x, z);
+    } else {
+        ITrafficLot* lot = host_->LotAt(x, z, 0);
+        if (!lot) return trip.count == 0;
+        properties = lot->Properties();
+    }
+    if (!properties) return trip.count == 0;
+    const std::uint32_t maximum = GetMaxTripCapacitySlot(properties, trip.type);
+    const std::uint32_t used = GetTripCapacity(properties, std::uint32_t(trip.type) + 4u);
+    return trip.count <= maximum - used;
+}
+
+// 0x100087cc4: configure the two path finders for one trip.
+void cSC4TrafficSimulator::SetupTrip(StandardTripParams& params, cSC4TripData& trip) {
+    cISC4PathFinder* primary = params.primary;
+    if (!primary) return;
+    primary->SetTrafficDensity(trip.count);
+    if (trip.kind != 1) {
+        primary->SetTripDestinationFilter(0);
+        primary->ClearAllDestinationFlags();
+        std::uint8_t flag;
+        if ((trip.flags & 2) == 0 || trip.type != 0) flag = std::uint8_t(1u << (trip.type & 0x1f));
+        else flag = 7;
+        primary->SetDestinationFlag(flag);
+    } else {
+        primary->SetTripDestinationFilter(3);
+        SC4RectInt32 rect;
+        rect.x0 = rect.x1 = trip.sourceX;
+        rect.z0 = rect.z1 = trip.sourceZ;
+        if (!(trip.sourceX < 0 || trip.sourceZ < 0 || lastX_ < trip.sourceX || lastZ_ < trip.sourceZ)) {
+            if (ITrafficLot* lot = host_->LotAt(trip.sourceX, trip.sourceZ, 0)) lot->OccupiedRect(rect);
+        }
+        primary->SetEndRect(rect);
+    }
+    primary->SetMaxWorkTime(params.workTime);
+    if (params.secondary) params.secondary->SetMaxWorkTime(params.workTime);
+    if (params.source) primary->SetStartRect(host_->TrafficSourceStartRect(params.source));
+    primary->ClearAllFlags();
+    primary->ClearAllTravelTypeFlags();
+    primary->SetStartingCostArray(nullptr);
+    primary->SetMaxTripLength(tunables_.tripScale);
+    if (trip.type < 3) {
+        params.useSecondary = 0;
+        params.secondPhase = 1;
+        if (params.flag51 != 0) primary->SetFlag(4);
+        primary->SetTravelTypeFlag(0x1cf, false);
+        if ((trip.flags & 4) == 0) {
+            primary->SetTravelTypeFlag(3, true);
+            const float* costs;
+            switch (trip.index) {
+                case 0: costs = tunables_.values_f04.data(); break;
+                case 1: costs = tunables_.values_f28.data(); break;
+                case 2: costs = tunables_.values_ee0.data(); break;
+                default: return;
+            }
+            primary->SetStartingCostArray(const_cast<float*>(costs));
+        } else {
+            primary->SetTravelTypeFlag(std::uint16_t(1u << (trip.index & 0x1f)), true);
+        }
+    } else if (trip.type == 3) {
+        params.useSecondary = 1;
+        primary->SetFlag(1);
+        primary->SetTravelTypeFlag(0x30, true);
+        params.secondPhase = 0;
+    }
+}
+
+// 0x10008bf74: point a path finder at a lot. The travel-type cost array is chosen by the lot's heaviest trip
+// index (ties keep the lower index) and the destination flag by the type of the lot's last trip. False when the
+// lot has no trips at all, i.e. when nothing was configured. The original walks the libc++ list backwards
+// (end.__prev_ chain); the sums do not depend on the order.
+bool cSC4TrafficSimulator::SetupPathFinderForLot(cISC4PathFinder* pathFinder, ITrafficLot* lot) {
+    if (!pathFinder || !lot) return false;
+    void* source = lot->TrafficSource();
+    if (!source) return false;
+    std::list<cSC4TripData>* trips = lot->TripList(source);
+    if (!trips) return false;
+    if (trips->empty()) {
+        lot->RefreshTrafficSource(source);
+        if (trips->empty()) return false;
+    }
+    int counts[3] = {0, 0, 0};
+    for (const cSC4TripData& trip : *trips) {
+        if (trip.index >= 3) continue;   // the original indexes a three-element vector unconditionally
+        counts[trip.index] += int(trip.count);
+    }
+    int heaviest = 0;
+    for (int index = 1; index < 3; ++index)
+        if (counts[index] > counts[heaviest]) heaviest = index;
+    const std::uint8_t type = trips->back().type;
+    pathFinder->SetStartRect(host_->TrafficSourceStartRect(source));
+    pathFinder->ClearAllFlags();
+    pathFinder->ClearAllTravelTypeFlags();
+    pathFinder->SetStartingCostArray(nullptr);
+    pathFinder->SetMaxTripLength(tunables_.tripScale);
+    pathFinder->SetTripDestinationFilter(0);
+    pathFinder->ClearAllDestinationFlags();
+    pathFinder->SetDestinationFlag(std::uint8_t(1u << (type & 0x1f)));
+    if (type < 3) {
+        pathFinder->SetTravelTypeFlag(0x1cf, false);
+        pathFinder->SetTravelTypeFlag(3, true);
+        const float* costs = nullptr;
+        switch (heaviest) {
+            case 0: costs = tunables_.values_f04.data(); break;
+            case 1: costs = tunables_.values_f28.data(); break;
+            default: costs = tunables_.values_ee0.data(); break;
+        }
+        pathFinder->SetStartingCostArray(const_cast<float*>(costs));
+        return true;
+    }
+    if (type == 3) {
+        pathFinder->SetFlag(1);
+        pathFinder->SetTravelTypeFlag(0x30, true);
+        return true;
+    }
+    return false;
 }
 
 }  // namespace sc4

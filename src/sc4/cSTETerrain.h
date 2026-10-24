@@ -16,10 +16,17 @@
 // walkers, AnalyzeShoreAndCreateCliffs, CreateShoreCliff, CreateShoreCliffs) with the two marked-region
 // helpers it needs (MarkRegion, SmoothenMarkedRegion), and the erosion/flood kernels (DoWaterErosion,
 // DoWindErosion, the completed DoErosion, DoFloodFlowStep and StartFlood).
-// Still pending in notes/ledger.csv: the brush application functions (they need the
-// cISTETerrain::tBrushParameters / tBrushContext layouts and ReadBrushDescriptions), the volcanic ash and
-// wave producers, Create (the height-image import) and the terrain shaping (CreateFlatAreas/
-// LevelAreaStartingAt), and the neighbour-city edge reconcile.
+// Part 6 completes the class. It first decodes the two layouts every brush call takes -
+// cISTETerrain::tBrushParameters (0x38) and cSTETerrain::tBrushContext (0x38) - plus the
+// tBrushComponent (0x78) and tBrushDescription (0x8c of fields) the readers fill, all pinned with
+// static_asserts below. On top of them: the whole brush path (ApplyBrush/ApplyBrushComponents, both
+// ApplyBrushAtLocation variants, the ten BrushFn* callbacks, GetTextureValue, ApplyWaterErosionBrush,
+// DoPostBrushApplicationOperation, the two flood-fill helpers and the two scrub brackets), the five
+// ReadBrush* exemplar readers (closing StaticInit), the volcanic-ash regions (closing
+// AssignSurfaceTexturesAndColors and DoAnimationTick), the three wave-producer functions, the create /
+// height-image path (closing Init), CreateFlatAreas/LevelAreaStartingAt, the neighbour-city edge
+// reconcile and its eight helpers (closing DoMessage), and Read's view-subobject re-creation. Everything
+// that reaches an unrecovered class does so through ITerrainHost / ITerrainView (see the seam list).
 //
 // Vertex (36 bytes): +0 altitude, +4/+8/+0xc normal, +0x10..0x21 texture/colour data, +0x22 u16
 // property flags:
@@ -41,7 +48,9 @@
 #include <cstdint>
 #include <deque>
 #include <functional>
+#include <list>
 #include <map>
+#include <unordered_set>
 #include <string>
 #include <vector>
 
@@ -58,6 +67,8 @@ class cIGZCommandServer;
 class cIGZPersistResourceManager;
 class cIGZOStream;
 class cIGZIStream;
+class cISC4RegionalCity;   // src/sc4/ISC4RegionalCity.h (global scope)
+class cISC4Region;         // src/sc4/Region.h (global scope)
 
 namespace sc4 {
 
@@ -70,6 +81,7 @@ struct TerrainRect {                // SC4Rect<int>: inclusive vertex bounds
 struct TerrainVector3 { float x = 0, y = 0, z = 0; };
 
 struct TerrainPoint { float x = 0, z = 0; };   // SC4Point<float> (x at +0, z at +4)
+struct TerrainPointI { std::int32_t x = 0, z = 0; };   // SC4Point<int>
 
 struct TerrainTuning {              // statics read from the terrain ini / exemplars at startup
     float seaLevel = 250.0f;
@@ -157,6 +169,10 @@ struct TerrainStatics {
     float volcanicAshUpdateInterval = 0.0f;                     // 0x100b17688
     std::int32_t edgeReconciliationSmoothingIterations = 0;     // 0x100b17694
     float edgeReconciliationHeightDifferenceThreshold = 0.0f;   // 0x100b17698
+    // cSC4ResponseCurve kEdgeReconcilliationSmoothingRadiusVsHeightDiff (0x100b71e30, property
+    // 0x48cd7c00): height difference -> smoothing radius in cells. The port keeps the curve points (the
+    // class is not in this test's link set) exactly as it does for the surface-cover curves.
+    std::vector<TerrainPoint> edgeReconciliationSmoothingRadiusCurve;
 
     // ---- __common: the terrain-tuning exemplar's statics (zero until the exemplar is read) -------------------
     float seaLevel = 250.0f;                                    // 0x100b71d48 (the port's demo default)
@@ -214,19 +230,93 @@ constexpr TerrainScriptCommand kTerrainScriptCommands[7] = {
     {0xc4a6af6, "ApplyTerrainBrush"}};
 
 // cISTETerrain::tUIElementsForBrush: five 8-byte pairs (min/max of the brush's UI elements); the
-// original copies 0x28 bytes straight out of the brush description at +0x5c.
+// original copies 0x28 bytes straight out of the brush description at +0x54 (GetUIElementsForBrush
+// 0x100739976 reads node+0x7c..0x9c = value+0x54..0x74).
 struct TerrainBrushUIElements {
     std::uint32_t values[10] = {};
 };
+static_assert(sizeof(TerrainBrushUIElements) == 0x28);
 
-// std::map<unsigned int, tBrushDescription> value: one brush's tuning, read from its exemplar by
-// ReadBrushDescriptions (pending, TERRAIN-5). The original keeps a *pointer* to the per-zoom radii at
-// +0x18; the port keeps the array inline. +0x48 is the per-zoom cost, +0x5c the UI elements.
-struct TerrainBrushDescription {
-    float radius[8] = {};
-    float cost[5] = {};
-    TerrainBrushUIElements ui;
+// cISTETerrain::tBrushComponent (0x78 bytes): one component of a brush. ReadBrushComponentProperties
+// 0x10073aafe fills it from the 0x8a0202xx properties; ApplyBrushComponents 0x100731d10 walks the
+// description's vector one element at a time (stride 0x78) and dispatches on `type`:
+//   0 raise/lower  1 flora  2 smoothen  3 paint  4 place effect  5 level  6 water erosion
+//   7 volcano ash  8 lake bed  9 rain  10 spring
+// The original keeps the two per-zoom tables as std::vector<float> (the reader builds them with
+// vector::vector from a property array), so the inline vectors reproduce the layout exactly.
+struct TerrainBrushComponent {
+    std::uint32_t exemplarID = 0;             // +0x00 (property 0x8a020200)
+    std::int32_t type = 0;                    // +0x04 (property 0x8a020205)
+    void* resource = nullptr;                 // +0x08 lazily loaded {0x7ab50e44,0x891b0e1a,exemplarID}
+    bool useRotationAngle = false;            // +0x10 (property 0x8a020201)
+    std::vector<float> radiusPerZoom;         // +0x18 (property 0x8a020202)
+    std::vector<float> strengthPerZoom;       // +0x30 (property 0x8a020203)
+    // BrushFnRain / BrushFnRaiseLower compare the sampled texture byte with this value.
+    std::uint8_t textureValue = 0;            // +0x48 (property 0x8a020204)
+    std::uint32_t maxDecals = 0;              // +0x4c (property 0x8a020208, types 3 and 4)
+    std::uint32_t decalInstance = 0;          // +0x50 (property 0x8a020206, type 3)
+    float randomAmount = 0.0f;                // +0x54 (property 0x8a020207 / 360; 2*pi for the others)
+    std::uint32_t effectID[2] = {0, 0};       // +0x58 (property 0x8a020209 for type 4)
+    std::vector<std::uint32_t> extraIDs;      // +0x60 (the reader leaves this empty: no property fills it)
 };
+static_assert(sizeof(TerrainBrushComponent) == 0x78);
+
+// std::map<unsigned int, tBrushDescription> value (0x8c bytes): one brush's tuning, read from its
+// exemplar by ReadBrushDescriptions. The original keeps vectors for the per-zoom radii and the
+// component list; the port keeps the same vectors so the offsets match.
+struct TerrainBrushDescription {
+    std::uint32_t brushID = 0;                // +0x00 (the exemplar's instance, the map key)
+    bool rotateToDrag = false;                // +0x04 (property 0x8a020102 != 0)
+    float angleIncrement = 0.0f;              // +0x08 (degrees * pi/180)
+    std::vector<float> radiusPerZoom;         // +0x10 (5 floats, zeroed before the readers run)
+    std::vector<TerrainBrushComponent> components;   // +0x28
+    float costPerZoom[5] = {0, 0, 0, 0, 0};   // +0x40 (property 0x8a020101)
+    TerrainBrushUIElements ui;                // +0x54 (properties 0xaa2ed800..5)
+    std::uint32_t exemplarID = 0;             // +0x7c (property 0x8a020103; the brush's sound id)
+    std::uint32_t soundID = 0;                // +0x80 (property 0x8a020104)
+    float rotationPhase = 0.0f;               // +0x84 (mutable; ApplyBrushComponents advances it)
+    float currentAngle = 0.0f;                // +0x88 (atan2 of the drag + pi/2)
+};
+// The fields end at 0x8c; the vectors force an 8-byte alignment so sizeof is 0x90.
+static_assert(sizeof(TerrainBrushDescription) == 0x90);
+
+// cISTETerrain::tBrushParameters (0x38 bytes): what ApplyBrush (and ApplyTerrainBrush 0xc4a6af6)
+// carries. The four floats are the brush's start and current points; ApplyBrushComponents uses the
+// current point's cell, and the pair gives the drag direction (`currentAngle`). +0x18/+0x1c scale the
+// component's per-zoom strength/radius, +0x20 goes to RedisplayTerrain, +0x24 is the unioned dirty
+// rect the brush writes back, +0x34 is the altitude the Level brush drives toward.
+struct TerrainBrushParameters {
+    float previousX = 0.0f;                   // +0x00
+    float previousZ = 0.0f;                   // +0x04
+    float currentX = 0.0f;                    // +0x08
+    float currentZ = 0.0f;                    // +0x0c
+    std::int32_t zoom = -1;                   // +0x10 (-1 = the terrain's zoom)
+    bool valid = false;                       // +0x14 (set by ApplyBrushComponents)
+    float strengthScale = 1.0f;               // +0x18
+    float radiusScale = 1.0f;                 // +0x1c
+    std::uint32_t redisplayFlags = 0;         // +0x20
+    TerrainRect rect = {0, 0, -1, -1};        // +0x24 (in/out: the cells the brush touched)
+    float levelAltitude = 0.0f;               // +0x34
+};
+static_assert(sizeof(TerrainBrushParameters) == 0x38);
+
+// cSTETerrain::tBrushContext (0x38 bytes): the per-vertex callback state. ApplyBrushComponents fills it
+// once per component and ApplyBrushAtLocation writes the sampled texture byte into +0x14 before each
+// BrushFn call; the BrushFn* bodies read +0x14/+0x18/+0x1c/+0x20 (the component) and +0x28/+0x30.
+struct TerrainBrushContext {
+    float x = 0.0f;                           // +0x00 (the current point)
+    float z = 0.0f;                           // +0x04
+    float previousX = 0.0f;                   // +0x08
+    float previousZ = 0.0f;                   // +0x0c
+    std::int32_t zoom = 0;                    // +0x10
+    std::uint8_t textureValue = 0;            // +0x14 (the sampled brush texture byte)
+    float strength = 0.0f;                    // +0x18
+    float levelAltitude = 0.0f;               // +0x1c (the Level brush's target)
+    TerrainBrushComponent* component = nullptr;          // +0x20
+    TerrainBrushParameters* parameters = nullptr;        // +0x28
+    TerrainBrushDescription* description = nullptr;      // +0x30
+};
+static_assert(sizeof(TerrainBrushContext) == 0x38);
 
 class cSTETerrain;
 class ITerrainView;
@@ -242,6 +332,57 @@ public:
     virtual bool ReadEntry(const cRZString& section, const cRZString& key, cRZString& value) = 0;
     // cRZIniFile::EnumEntries (vslot 0x38).
     virtual bool EnumEntries(const cRZString& section, EnumCallback callback, void* context) = 0;
+};
+
+// cIGZBuffer as the terrain's height-image import uses it (CreateFromGrayScaleImage 0x100735f50):
+// vslot 0x58 width, 0x60 height, 0xb8 the grey byte at (x, y), 0x10 release.
+class ITerrainHeightImage {
+public:
+    virtual ~ITerrainHeightImage() = default;
+    virtual std::uint32_t Width() const = 0;
+    virtual std::uint32_t Height() const = 0;
+    virtual std::uint8_t Gray(std::uint32_t x, std::uint32_t y) const = 0;
+    virtual void Release() = 0;
+};
+
+// cS3DTransform-like placement of one effect instance (the original builds it on the stack for
+// BrushFnPlaceEffect 0x100732f92: a flag word, a position at +0x28 and a uniform scale).
+struct TerrainEffectPlacement {
+    std::uint8_t flags = 0;        // +0x00 (bit0 set, then incremented by the original)
+    std::uint8_t pad[3] = {};
+    float x = 0.0f;                // +0x28
+    float y = 0.0f;                // +0x2c
+    float z = 0.0f;                // +0x30
+};
+// One live effect instance (the effects manager's vslots 0x40 / 0x18 / 0x10).
+class ITerrainEffect {
+public:
+    virtual ~ITerrainEffect() = default;
+    virtual void SetPlacement(const TerrainEffectPlacement& placement) = 0;
+    virtual void Start() = 0;
+    virtual void Release() = 0;
+};
+
+// cSTEWaterWave (not recovered; the view keeps one at +0xb0, the terrain caches it at +0x128). One method
+// per original call/constant UpdateWaveProducers 0x10073ed40, IsGoodWaveProducerLocation 0x10073a4f6 and
+// TryToCreateWaveProducerForShore 0x10073eb1e make.
+class ITerrainWaveSystem {
+public:
+    virtual ~ITerrainWaveSystem() = default;
+    virtual bool GetMeanWaveOrientation(float& orientation) = 0;   // cSTEWaterWave::GetMeanWaveOrientation 0x1007584c0
+    virtual bool AddProducer(float x, float z, float orientation) = 0;   // cSTEWaterWave::AddProducer 0x100758250
+    // +0x30 producer count / +0x34 maximum producer count (UpdateWaveProducers reads both).
+    virtual std::int32_t ProducerCount() const = 0;
+    virtual std::int32_t MaxProducerCount() const = 0;
+    // The class constants the wave equations use (in the original's __const): sea travel distance, widest
+    // wave width, longest wave travel distance, the distance from the shore where a wave starts, the
+    // maximum orientation difference and the gap between waves.
+    virtual float WaveSeaTravelDistance() const = 0;
+    virtual float MaxWaveWidth() const = 0;
+    virtual float MaxWaveTravelDistance() const = 0;
+    virtual float DistanceFromShoreToWaveStart() const = 0;
+    virtual float MaxOrientationDifference() const = 0;
+    virtual float InterWaveGap() const = 0;
 };
 
 // The engine services the model reaches for (seams; see docs/SEAMS.md). One method per original call.
@@ -337,6 +478,89 @@ public:
     // The land simulator's climate/moisture query: +0x140 vslot 0x98, called with (cellX * 16.0f). The
     // returned 0..15-ish index is the surface-cover map's moisture column.
     virtual std::int32_t MoistureIndexAtX(float worldX) = 0;
+
+    // ---- the brush path (ApplyBrushComponents 0x100731d10 and the BrushFn* bodies) ----------------------
+    // cRZRandom::RandomUint32UniformBelow @ 0x10003d366, on the same seeded sRand as the double ranges
+    // (ApplyBrushComponents rotates the brush on a 1-in-5 draw; the flora brush keeps 31% of the vertices).
+    virtual std::uint32_t RandomUint32UniformBelow(std::uint32_t bound) = 0;
+    // spRM vslot 0x18 GetResource({0x7ab50e44, 0x891b0e1a, instance}, 0x1ab50c3f, &out, 0, 0). The
+    // object's vslot 0x18 is the cS3DTextureBufferInfo the brush samples. Null when absent; a null load
+    // aborts the whole brush (the original returns from ApplyBrushComponents).
+    virtual void* LoadBrushComponentResource(std::uint32_t instance) = 0;
+    virtual void* BrushComponentTextureInfo(void* resource) = 0;   // resource vslot 0x18
+    // cS3DTextureBufferInfo::GetWidth/GetHeight (vslots 0x58 / 0x60 in the buffer) and the pixel plane
+    // (the pointer at +0x20, index = column * width + row).
+    virtual bool BrushTextureInfoSize(void* textureInfo, std::uint32_t& width, std::uint32_t& height) = 0;
+    virtual const std::uint8_t* BrushTexturePixels(void* textureInfo) = 0;
+    // cSTESurfaceWater::Rain 0x100730820: true when the surface water is in the per-vertex mode (its
+    // +0x70 flag) and the caller must run BrushFnRain afterwards; false after Rain_Static did the work.
+    virtual bool SurfaceWaterRain(std::int32_t vertexIndex, TerrainBrushContext& context, TerrainRect& rect,
+                                  float amount) = 0;
+    // BrushFnRain 0x10073083e: add `amount` to the surface-water vertex's active float channel
+    // (vertex + 8 + *(int*)(surfaceWater + 0x74) * 4).
+    virtual void SurfaceWaterAddRain(std::int32_t vertexIndex, float amount) = 0;
+    virtual void SurfaceWaterCreateSpring(std::int32_t vertexIndex) = 0;   // 0x100730b16
+    virtual void SurfaceWaterEndBrushScrub(std::uint32_t brushType, std::uint32_t arg) = 0;   // 0x10072f696
+    // SL::spSS vslot 0x50 (0xea451903 / 0x6a451908): the brush start/end sound events. The original adds
+    // and releases a reference around the posts; the host owns the server.
+    virtual void PostBrushSound(std::uint32_t type, std::uint32_t data1, std::uint32_t data2) = 0;
+    // The flora brush (BrushFnFlora 0x100732a0e): the flora simulator (this + 0x148) vslots 0x40 (list)
+    // and 0x90 (insert), the city's +0xb0 "is established" test and SL::spAuraSim vslot 0x38.
+    virtual std::uint32_t FloraBrushCount() = 0;                           // vslot 0x40 with a null list
+    virtual void FloraBrushList(std::vector<std::uint32_t>& ids) = 0;      // vslot 0x40 with the buffer
+    virtual bool FloraOccupantIsBrushable(std::uint32_t id) = 0;           // occupant +0x180 & 3 == 2
+    virtual void AddFloraAt(float x, float y, float z) = 0;               // simulator 0x90
+    virtual bool CityEstablished() = 0;                                    // spCity vslot 0xb0
+    virtual void AddFloraAura(float x, float z) = 0;                       // spAuraSim vslot 0x38
+    // The decal overlay (this + 0x130) vslot 0x20: AddDecal(strength, key, position, randomAmount).
+    virtual bool AddOverlayDecal(cIGZUnknown* overlay, const cGZPersistResourceKey& key,
+                                 const TerrainPoint& position, float strength, float randomAmount) = 0;
+    // spRM vslot 0x88 GetAvailableResourceList with cSCResFilterFixedGroupAndTypeId(0x6534284a,
+    // 0x6a01fc2a): every brush exemplar key (ReadBrushDescriptions 0x10073b49c).
+    virtual void ListBrushResources(std::vector<cGZPersistResourceKey>& out) = 0;
+    // The effects manager (this + 0x138) vslot 0x38 CreateEffect(id0, id1, &out); the instance then gets
+    // vslot 0x40 (SetPosition) / 0x18 (start) / 0x10 (release). Null when the effect cannot be created.
+    virtual ITerrainEffect* CreateTerrainEffect(std::uint32_t id0, std::uint32_t id1) = 0;
+
+    // ---- create / image import (Create 0x100735cfc) -----------------------------------------------
+    // cISC4App vslot 0x138 GetNewCitySpecification(): the name is a cRZString at +0, +0x200 the height
+    // image buffer and +0x208 the obliterated terrain segment (both null for a normal new city).
+    virtual cRZString NewCityName() = 0;
+    virtual ITerrainHeightImage* NewCityHeightImage() = 0;
+    virtual cIGZPersistDBSegment* NewCityObliteratedTerrainSegment() = 0;
+    // cISC4App vslot 0x118 GetRegion() -> region vslot 0xa0: the new city's base altitude, multiplied by
+    // kImageImportScaleFactor when there is no image and no name.
+    virtual bool NewCityBaseAltitude(float& out) = 0;
+    // GZCOM CreateInstance(0xa2ffb5d3, 0x2ffbb60) -> vslot 0x20(path, &buffer, 2): the named height image.
+    virtual ITerrainHeightImage* LoadHeightImage(const cRZString& path) = 0;
+
+    // ---- neighbour-city edge reconcile (ReconcileEdgesWithNeighboringCities 0x10073f916) ----------
+    // cISC4App vslot 0x1c0 GetRegionalCity() (iid 0xab953253).
+    virtual cISC4RegionalCity* RegionalCity() = 0;
+    // RZ::WM() vslot 0x150 -> false means the world manager is mid-city-load and cannot reconcile.
+    virtual bool CityLoadInProgress() = 0;
+    // The message-target adapter the reconcile re-post (0x2a612643) needs (the port has no multiple
+    // inheritance, so the host owns the cIGZMessageTarget2 view of the terrain).
+    virtual cIGZMessageTarget2* TerrainMessageTarget() = 0;
+    // cISC4App vslot 0x118 GetRegion() (iid 0x1cf9da04): the region the current city lives in.
+    virtual cISC4Region* Region() = 0;
+    // cISC4RegionalCity vslot 0x28 GetPosition(x, z) and vslot 0x38 GetCitySize(width, height): the city's
+    // top-left region cell and its size in region cells (a 1x1 city is 64x64 terrain cells).
+    virtual void RegionalCityPosition(const cISC4RegionalCity& city, std::int32_t& x, std::int32_t& z) = 0;
+    virtual void RegionalCitySize(const cISC4RegionalCity& city, std::int32_t& width, std::int32_t& height) = 0;
+    // SC4OpenSaveGame @ 0x1001e9090 / SC4CloseSaveGame @ 0x1001e91b6: the neighbour city's save game, read to
+    // get its shared edge altitudes (LoadEdgeAltitudes). Null when the file cannot be opened.
+    virtual cIGZPersistDBSegment* OpenSaveGame(const cIGZString& path, bool readOnly, bool forReading) = 0;
+    virtual void CloseSaveGame(cIGZPersistDBSegment* segment) = 0;
+    // SC4GetPopupModalDialogsEnabled @ 0x100038e6b (SL::spSC4 vslot 0xb8): the reconcile never runs while the
+    // player has modal dialogs disabled.
+    virtual bool PopupDialogsEnabled() = 0;
+    // cSTEEdgeReconcileInformNoMismatch / Mismatch / Damage (0x100726b58 / 0x100726ec2 / 0x1007270a6): the
+    // three DoDialog bodies. `kind` is 0 no mismatch, 1 mismatch (returns true to reconcile), 2 damage.
+    virtual bool ShowEdgeReconcileDialog(std::int32_t kind) = 0;
+    // SC4ReadGZSerializable's inverse for the view subobject (Read 0x10073f0a2 stores the loaded object at
+    // +0x110): the host wraps the freshly read cSTETerrainView3D into the ITerrainView the port uses.
+    virtual ITerrainView* AdoptLoadedTerrainView(void* loadedObject) = 0;
 };
 ITerrainHost* TerrainHost();
 void SetTerrainHost(ITerrainHost* host);
@@ -359,6 +583,12 @@ public:
     // DoPostCityInit takes three overlay managers out of the view: the two fields at +0xa8 / +0xb0 and
     // vslot 0xb0 with argument 0. They are stored at +0x120 / +0x128 / +0x130 and only released again.
     virtual cIGZUnknown* OverlayManager(std::uint32_t which) = 0;
+    // The view object's +0xb0 (cached at the terrain's +0x128): the water-wave system the wave helpers drive.
+    virtual ITerrainWaveSystem* WaveSystem() { return nullptr; }
+    // The view's vslot 0x40 (HighlightCells): the cells the edge reconcile is about to touch.
+    virtual void HighlightCells(const std::vector<TerrainPointI>&, bool, bool) {}
+    // The view's vslot 0x68 ClearCurrentSelections, called after the reconcile's damage dialog.
+    virtual void ClearCurrentSelections() {}
 };
 
 class cSTETerrain {
@@ -573,6 +803,102 @@ public:
     static void ReleaseBrushDescriptions();                          // 0x10073b548
     static std::map<std::uint32_t, TerrainBrushDescription>& BrushDescriptions();   // sBrushDescriptionMap
 
+    // ---- the brush path (part 6) ------------------------------------------------------------
+    // 0x100731c50: looks the brush up and applies it; true when the brush exists and ran. The four floats
+    // of `parameters` are filled in from the rect afterwards, and a non-empty rect is redisplaayed with
+    // parameters.redisplayFlags.
+    bool ApplyBrush(std::uint32_t brushType, TerrainBrushParameters& parameters);
+    // 0x100731d10: one component at a time; the radius/strength scale with the parameters.
+    void ApplyBrushComponents(TerrainBrushDescription& description, TerrainBrushParameters& parameters);
+    // 0x1007321b8: sample the component's texture over the rotated quad and call `fn` per covered cell.
+    void ApplyBrushAtLocation(void* textureInfo, std::int32_t cellX, std::int32_t cellZ, float radius,
+                              float angle, bool (cSTETerrain::*fn)(std::int32_t, const TerrainBrushContext&),
+                              TerrainBrushContext& context, TerrainRect& rect);
+    // 0x1007327de: the texture-less variant (no texture buffer loaded); step the quad `repeat` times.
+    void ApplyBrushAtLocation(std::int32_t cellX, std::int32_t cellZ, float radius, float angle,
+                              bool (cSTETerrain::*fn)(std::int32_t, const TerrainBrushContext&),
+                              std::uint32_t repeat, TerrainBrushContext& context, TerrainRect& rect);
+    // The ten per-vertex callbacks (0x10073083e, 9cc, a0e, bd2, d22, f92, 33230, 33338, 33360 + Rain).
+    bool BrushFnRain(std::int32_t index, const TerrainBrushContext& context);
+    bool BrushFnRaiseLower(std::int32_t index, const TerrainBrushContext& context);
+    bool BrushFnFlora(std::int32_t index, const TerrainBrushContext& context);
+    bool BrushFnSmoothen(std::int32_t index, const TerrainBrushContext& context);
+    bool BrushFnPaint(std::int32_t index, const TerrainBrushContext& context);
+    bool BrushFnPlaceEffect(std::int32_t index, const TerrainBrushContext& context);
+    bool BrushFnLevel(std::int32_t index, const TerrainBrushContext& context);
+    bool BrushFnVolcanoAsh(std::int32_t index, const TerrainBrushContext& context);
+    bool BrushFnLakeBed(std::int32_t index, const TerrainBrushContext& context);
+    // 0x100733436: the texture byte under a cell centre (the original's rotated texture lookup).
+    bool GetTextureValue(std::int32_t cellX, std::int32_t cellZ, TerrainBrushContext& context);
+    void ApplyWaterErosionBrush(TerrainBrushContext& context, std::int32_t pad, TerrainRect& rect);  // 0x1007332ae
+    void DoPostBrushApplicationOperation(std::int32_t componentType, TerrainBrushContext& context,
+                                         TerrainRect& rect);        // 0x10073340e
+    void InitFloraBrushInfo();                                      // 0x1007385e2 (+0x150/+0x158)
+    void BeginBrushScrub(std::uint32_t brushType);                  // 0x100734a7e
+    void EndBrushScrub(std::uint32_t brushType, std::uint32_t arg); // 0x100738704
+    std::uint32_t FloraBrushCount() const { return floraBrushCount_; }   // +0x150
+    const std::vector<std::uint32_t>& FloraBrushIDs() const { return floraBrushIDs_; }   // +0x158
+
+    // ---- the brush readers (StaticInit) -----------------------------------------------------
+    static void ReadBrushDescriptions();                             // 0x10073b49c
+    static void ReadBrushDescription(const cGZPersistResourceKey& key, void* unused);   // 0x10073aefe
+    static bool ReadBrushWholeProperties(cISCPropertyHolder* holder, TerrainBrushDescription& description);  // 0x10073b26a
+    static bool ReadBrushComponentProperties(cISCPropertyHolder* holder, TerrainBrushDescription& description);  // 0x10073aafe
+    static bool ReadBrushUIProperties(cISCPropertyHolder* holder, TerrainBrushDescription& description);  // 0x10073b3b8
+
+    // ---- volcanic ash (part 6) --------------------------------------------------------------
+    // cSTETerrain::tVolcanicAshRegion: the +0x230 list node is {next, prev, SC4Rect<int> rect, u32 age,
+    // u32 updateTimer}; +0x240 is the list's size.
+    struct tVolcanicAshRegion {
+        TerrainRect rect = {0, 0, 0, 0};   // +0x10
+        std::uint32_t age = 0;             // +0x20 (ms since the region was added)
+        std::uint32_t updateTimer = 0;     // +0x24 (ms since the last re-spray)
+    };
+    void AddVolcanicAshRegion(TerrainRect& r);                       // 0x100731628
+    void SprayVolcanicAsh(const TerrainRect& r);                     // 0x100734724
+    void TickVolcanicAshRegions(std::uint32_t elapsedMs);            // 0x1007379be
+    const std::list<tVolcanicAshRegion>& VolcanicAshRegions() const { return volcanicAshRegions_; }   // +0x230
+    std::uint32_t WaterProximityTick() const { return waterProximityTick_; }   // +0xc8
+
+    // ---- water waves (part 6) ---------------------------------------------------------------
+    bool IsGoodWaveProducerLocation(float x, float z, float orientation) const;   // 0x10073a4f6
+    bool TryToCreateWaveProducerForShore(std::deque<std::int32_t>& shore, int first, int last,
+                                         float& outX, float& outZ, float& outOrientation);   // 0x10073eb1e
+    void UpdateWaveProducers();                                      // 0x10073ed40
+    ITerrainWaveSystem* WaveSystem() const { return waveSystem_; }   // +0x128
+
+    // ---- create / image import (part 6) -----------------------------------------------------
+    bool Create();                                                   // 0x100735cfc
+    bool CreateFromGrayScaleImage(ITerrainHeightImage* image);       // 0x100735f50
+    bool CreateFromGrayScaleImage(const cRZString& path);            // 0x10073610c
+    void CreateFlatAreas(bool smoothen);                             // 0x100736326
+    bool LevelAreaStartingAt(std::int32_t startVertex, float altitude, std::uint16_t mark);  // 0x1007364ec
+    bool WasCreatedFromImage() const { return createdFromImage_; }   // +0xa0
+    bool CreateDone() const { return createDone_; }                  // +0x80
+
+    // ---- neighbour-city edge reconcile (part 6) ---------------------------------------------
+    void ReconcileEdgesWithNeighboringCities(bool a, bool b, bool c);   // 0x10073f916
+    using TerrainEdgeHeights = std::map<int, float>;
+    void ComputeEdgeVerticesToReconcile(TerrainEdgeHeights& heights, bool flag);   // 0x10073fb82
+    void ComputeCellsAndVertsAffectedByReconcilliation(const TerrainEdgeHeights& heights,
+                                                       std::unordered_set<int>& cells,
+                                                       std::unordered_set<int>& verts);   // 0x100740080
+    void HighlightCellsAffectedByEdgeReconcilliation(const std::unordered_set<int>& cells);   // 0x1007406d4
+    void LockEdgeVerticesAndSmoothen(const TerrainEdgeHeights& heights,
+                                     const std::unordered_set<int>& verts);   // 0x1007407bc
+    static void GetCityVertRect(const cISC4RegionalCity& city, TerrainRect& r);   // 0x100740930
+    void ComputeMaxHeightsForEdgeVertices(int edge, const TerrainRect& cityRect,
+                                          const cISC4RegionalCity* city, TerrainEdgeHeights& heights);  // 0x100740992
+    void UpdateMaxHeightsForEdgeVerticesAssumingDefaultNeighborHt(int edge, int start, int end, int step,
+                                                                  int index, float defaultHeight,
+                                                                  TerrainEdgeHeights& heights);   // 0x100740ada
+    static bool GetEdgeSharedWithNeighboringCity(const TerrainRect& a, const TerrainRect& b,
+                                                 TerrainPointI& aEdge, TerrainPointI& bEdge);   // 0x100740bbe
+    void ComputeMaxHeightsForEdgeVertices(const TerrainRect& a, const TerrainRect& b,
+                                          const TerrainPointI& aEdge, const TerrainPointI& bEdge,
+                                          const std::vector<float>& heights,
+                                          TerrainEdgeHeights& out);   // 0x100740c2e
+
     // ---- lighting ---------------------------------------------------------------------------
     void DoLighting(const TerrainRect& r);                           // 0x100737cba (spLightingManager 0xe0)
 
@@ -733,6 +1059,12 @@ private:
     std::vector<float> sediment_;                 // cSTESurfaceWater vertex +0x1c
     std::vector<float> tempWaterLevels_;          // +0x100 (SaveWaterLevelsInTempArray)
     std::uint32_t waterVertexCount_ = 0;          // +0x108
+    ITerrainWaveSystem* waveSystem_ = nullptr;    // +0x128 (the view's +0xb0 object)
+    std::uint32_t floraBrushCount_ = 0;           // +0x150 (InitFloraBrushInfo)
+    std::vector<std::uint32_t> floraBrushIDs_;    // +0x158 (the flora instances the brush may place)
+    std::list<tVolcanicAshRegion> volcanicAshRegions_;   // +0x230 (std::list; +0x240 is its size)
+    std::map<std::uint32_t, std::uint32_t> decalMap_;    // +0x268 vertex -> decals placed (BrushFnPaint)
+    bool createDone_ = false;                     // +0x80 (createFinish; the original's +0x80 flag)
     std::vector<std::vector<std::uint8_t>> surfaceCover_;   // +0x200 (per vertex land-type ratios)
     std::uint32_t zoom_ = 0;                      // +0xdc (indexes the brush radii)
     bool accumulating_ = false;                   // +0xe0

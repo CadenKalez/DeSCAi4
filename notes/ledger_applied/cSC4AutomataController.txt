@@ -1,57 +1,7 @@
 SOURCE src/sc4/AutomataController.cpp|h
-EVIDENCE test scripts/tests/sc4_automatacontroller_test.cpp: fake host/city/queue/automata: Init/Shutdown/Activate lifecycle, sounds, flags, view frustum, effect triggers, queue state handling, behaviours, bounding boxes, lot facing points, radius test, expiry, stream round trip, QueryInterface/refcount, template creation
-0x1000f85b0 cSC4AutomataController_Destruct
-0x1000f8664 cSC4AutomataController_Init
-0x1000f8846 cSC4AutomataController_PlaySFX
-0x1000f895c cSC4AutomataController_Shutdown
-0x1000f8a1e cSC4AutomataController_Activate
-0x1000f8af8 cSC4AutomataController_SetOccupant
-0x1000f8b46 cSC4AutomataController_SetTemplate
-0x1000f8b8a cSC4AutomataController_DoAnimationTick
-0x1000f8c60 cSC4AutomataController_CheckEffectTriggers
-0x1000f8d6e cSC4AutomataController_CheckTimeOfDay
-0x1000f8d74 cSC4AutomataController_NotifySourceDataChanged
-0x1000f8dce cSC4AutomataController_GetBehaviorTemplate
-0x1000f8ec2 cSC4AutomataController_HandleStateTick
-0x1000f9016 cSC4AutomataController_HandleEnterState
-0x1000f90fa cSC4AutomataController_HandleExitState
-0x1000f91e2 cSC4AutomataController_HandleRemoveAutomaton
-0x1000f9288 cSC4AutomataController_HandleViewChanged
-0x1000f946c cSC4AutomataController_GetPosition
-0x1000f94c0 cSC4AutomataController_GetLotFacingPoint
-0x1000f9670 cSC4AutomataController_IsPointWithinRadius
-0x1000f97e6 cSC4AutomataController_GetBoundingBoxIntersection
-0x1000f98ea cSC4AutomataController_GetOccupantBoundingBox
-0x1000f99fe cSC4AutomataController_GetBoundingBox
-0x1000f9b44 cSC4AutomataController_Write
-0x1000f9c74 cSC4AutomataController_WriteThunk
-0x1000f9c82 cSC4AutomataController_Read
-0x1000f9dc6 cSC4AutomataController_ReadThunk
-0x1000f9dd4 cSC4AutomataController_QueryInterface
-0x1000f9e08 cSC4AutomataController_QueryInterfaceThunk
-0x1000fb8de cSC4AutomataController_GetOccupant
-0x1000fb8e8 cSC4AutomataController_GetTemplateName
-0x1000fb902 cSC4AutomataController_GetTemplate
-0x1000fb90c cSC4AutomataController_GetRadius
-0x1000fb926 cSC4AutomataController_IsActive
-0x1000fb97e cSC4AutomataController_CheckFlag
-0x1000fb98a cSC4AutomataController_SetFlag
-0x1000fb9a4 cSC4AutomataController_SetPosition
-0x1000fb9bc cSC4AutomataController_SetLifetime
-0x1000fb9ca cSC4AutomataController_IsFull
-0x1000fb9f0 cSC4AutomataController_TractRect
-0x1000fb9fa cSC4AutomataController_IsExpired
-0x1000fba22 cSC4AutomataController_ReadyToExpire
-0x1000fba2a cSC4AutomataController_IsTickable
-0x1000fbc32 cSC4AutomataController_AddRef
-0x1000fbc40 cSC4AutomataController_Release
-0x1000fbc60 cSC4AutomataController_GetGZCLSID
-0x1000fbc6c cSC4AutomataController_FinalRelease
-0x1000fbc96 cSC4AutomataController_AddRefThunk
-0x1000fbca4 cSC4AutomataController_ReleaseThunk
-0x1000fbcc8 cSC4AutomataController_GetGZCLSIDThunk
+EVIDENCE test scripts/tests/sc4_automatacontroller_test.cpp - CreateTemplateInstance (0x1000f9e16) checked against the otool disassembly, an unknown type answers null (the original builds the "Couldn't create a controller template for controller type %d!" cRZString and drops it), type 0x4a1628c5 builds the generator template (`new(0x158)` plus the inlined tGeneratorTemplate ctor) and type 0x6a1628ba builds cSC4AutomataAttractor::tTemplate itself (`new(0x148)`, ctor 0x1000fbe8e) instead of the old injected-factory seam, both then taking classKey/controllerType = type, radius 0, field60 -1 and the (0,1)-(24,1) response curve, while the same test still covers the class's template and flag accessors, the queue handshake (HandleStateTick / HandleEnterState / HandleExitState), the occupant boxes, Write/Read and the reference counting
+0x1000f9e16 cSC4AutomataController_CreateTemplateInstance
 PARTIAL:
-0x1000f9e16 generator template only; attractor tTemplate built through an injected factory (cSC4AutomataAttractor::tTemplate not recovered); tTemplate base fields from 0xc8 on partly unnamed
 SKIPPED:
-0x1000f8658 trap stub (invalid instruction) in the original, no behaviour
-0x1000f865e trap stub (invalid instruction) in the original, no behaviour
+0x1000f8658 cSC4AutomataController::D1 (complete-object destructor) is clang's 6-byte trap stub `push rbp; mov rbp, rsp; ud2`. The only real destructor body is the base-object one (D2) at 0x1000f85b0, which the port's single C++ destructor implements; a controller is only ever destroyed through a concrete subclass's own deleting destructor, so there is no source body to hand-write and the row should stay skipped
+0x1000f865e cSC4AutomataController::D0 (deleting destructor) is the same `push rbp; mov rbp, rsp; ud2` trap. FinalRelease (0x1000fbc6c, `jmpq *0x20(%rax)`) reaches vslot 0x20 of the dynamic (subclass) vtable, never this slot; nothing to port

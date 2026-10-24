@@ -16,6 +16,8 @@
 #include "gz/cIGZOStream.h"
 #include "rz/cRZVariant.h"
 #include "sc4/DBSegment.h"
+#include "sc4/ISC4RegionalCity.h"
+#include "sc4/Region.h"
 #include "sc4/SCProperty.h"
 
 namespace sc4 {
@@ -711,6 +713,21 @@ TerrainStatics& cSTETerrain::Statics() {
     return statics;
 }
 
+namespace {
+// SC4Rect<int>::IntersectRect @ 0x100314ce8: the overlap of two inclusive rects; touching rects overlap.
+bool IntersectTerrainRect(TerrainRect& out, const TerrainRect& a, const TerrainRect& b) {
+    if (a.right < b.left || b.right < a.left || a.bottom < b.top || b.bottom < a.top) {
+        out = {0, 0, 0, 0};
+        return false;
+    }
+    out.left = a.left < b.left ? b.left : a.left;
+    out.top = a.top < b.top ? b.top : a.top;
+    out.right = a.right < b.right ? a.right : b.right;
+    out.bottom = a.bottom < b.bottom ? a.bottom : b.bottom;
+    return true;
+}
+}  // namespace
+
 void cSTETerrain::UnionRect(TerrainRect& dst, const TerrainRect& a, const TerrainRect& b) {
     dst.left = std::min(a.left, b.left);
     dst.top = std::min(a.top, b.top);
@@ -846,7 +863,7 @@ bool cSTETerrain::StaticInit() {
     ReadTextureInfos();                        // 0x10073d8a4
     ReadTerrainIniFile();                      // 0x10073bb96
     ReadTuningParameters();                    // 0x10073d95e
-    // ReadBrushDescriptions() is still pending (TERRAIN-5): the brush path needs it.
+    ReadBrushDescriptions();                   // 0x10073b49c
     return true;
 }
 
@@ -1108,8 +1125,8 @@ void cSTETerrain::ReadTerrainIniFile() {
 
 void cSTETerrain::ReadTuningParameters() {
     // 0x10073d95e: the terrain-tuning exemplar {0x6534284a, 0x88cd66e9, 1}'s property holder. Every value is
-    // optional. The response curve 0x48cd7c00 (kEdgeReconcilliationSmoothingRadiusVsHeightDiff) belongs to the
-    // edge reconcile (TERRAIN-8) and is not stored yet.
+    // optional. The response curve 0x48cd7c00 (kEdgeReconcilliationSmoothingRadiusVsHeightDiff) is decoded
+    // as interleaved (input, output) floats, the same layout the surface-cover curves use.
     ITerrainHost* host = TerrainHost();
     if (!host) return;
     const cGZPersistResourceKey key{0x6534284a, 0x88cd66e9, 1};
@@ -1171,6 +1188,12 @@ void cSTETerrain::ReadTuningParameters() {
     ReadPropertyInt32(h, 0x48cd7bf3, statics.numSmoothingIterationsAfterWaterErosion);
     ReadPropertyInt32(h, 0x48cd7c01, statics.edgeReconciliationSmoothingIterations);
     ReadPropertyFloat(h, 0x48cd7c02, statics.edgeReconciliationHeightDifferenceThreshold);
+    {
+        std::vector<float> curve;
+        if (ReadPropertyFloatVector(h, 0x48cd7c00, curve))
+            BuildCurvePoints(curve.data(), static_cast<std::uint32_t>(curve.size()),
+                             statics.edgeReconciliationSmoothingRadiusCurve);
+    }
     holder->Release();
 }
 
@@ -1256,7 +1279,7 @@ bool cSTETerrain::Init() {
     host->AddToAutomataManager(this);                        // SL::ATM() vslot 0x28
     if (!createdFromImage_) {
         host->SurfaceWaterInit();                            // spSurfaceWater vslot 0x18
-        // Create() (0x100735cfc) imports the city height image and erodes it: not recovered (TERRAIN-7).
+        Create();                                            // 0x100735cfc (height image import + erosion)
     }
     return true;
 }
@@ -1303,6 +1326,7 @@ void cSTETerrain::DoPostCityInit() {
         overlayManagers_[2] = view_->OverlayManager(2);      // view vslot 0xb0 with 0
         for (cIGZUnknown*& manager : overlayManagers_)
             if (manager) manager->AddRef();
+        waveSystem_ = view_->WaveSystem();                   // +0x128 (the same object the original caches)
     }
 }
 
@@ -1361,9 +1385,14 @@ bool cSTETerrain::DoMessage(cIGZMessage2* message) {
     }
     if (type == 0x66956816 || type == 0x6716a4e6) return true;
     if (type == 0x2a612643) {
-        // The world manager is busy: the reconcile is retried later. Otherwise the terrain reconciles its
-        // edges with the neighbouring cities -- ReconcileEdgesWithNeighboringCities is still pending
-        // (TERRAIN-8), and the re-post to self needs the port's message-target adapter (TERRAIN-1).
+        ITerrainHost* host = TerrainHost();
+        if (!host) return true;
+        if (host->CityLoadInProgress()) {          // RZ::WM() vslot 0x150: busy, retry later
+            if (cIGZMessageTarget2* target = host->TerrainMessageTarget())
+                PostMessageToTarget(0x2a612643, target);
+            return true;
+        }
+        ReconcileEdgesWithNeighboringCities(false, true, true);   // vslot 0x2c8
         return true;
     }
     if (type < 0xc4a6af0) return true;
@@ -1438,11 +1467,32 @@ bool cSTETerrain::DoMessage(cIGZMessage2* message) {
         }
         break;
     }
-    case 0xc4a6af6:
-        // ApplyTerrainBrush: the cISTETerrain::tBrushParameters payload is not modelled yet, so the command
-        // reports failure (TERRAIN-5).
-        result->SetStatusParameterValue(2);
+    case 0xc4a6af6: {                      // ApplyTerrainBrush(brushType, x1, z1, x2, z2[, strength[, radius]])
+        if (params->GetParameterCount() < 5) {
+            result->SetStatusParameterValue(2);
+            return true;
+        }
+        TerrainBrushParameters brush;
+        brush.previousX = (*params)[1].GetValFloat32();
+        brush.previousZ = (*params)[2].GetValFloat32();
+        brush.currentX = (*params)[3].GetValFloat32();
+        brush.currentZ = (*params)[4].GetValFloat32();
+        if (!LocationIsInBounds(brush.previousX, brush.previousZ) ||
+            !LocationIsInBounds(brush.currentX, brush.currentZ)) {
+            result->SetStatusParameterValue(2);
+            return true;
+        }
+        const std::uint32_t brushType = (*params)[0].GetValUint32();
+        brush.strengthScale = params->GetParameterCount() > 5 ? (*params)[5].GetValFloat32() : 1.0f;
+        brush.radiusScale = params->GetParameterCount() > 6 ? (*params)[6].GetValFloat32() : 1.0f;
+        brush.redisplayFlags = 2;
+        brush.levelAltitude = GetAltitude(brush.currentX, brush.currentZ);
+        if (!ApplyBrush(brushType, brush)) {
+            result->SetStatusParameterValue(2);
+            return true;
+        }
         break;
+    }
     default:
         break;
     }
@@ -1463,7 +1513,7 @@ void cSTETerrain::DoAnimationTick(std::uint32_t elapsedMs) {
         }
     }
     if (floodActive_) DoFloodFlowStep();                          // +0xf4
-    // TickVolcanicAshRegions(elapsedMs) (TERRAIN-9) is still pending: the ash regions are not recovered.
+    TickVolcanicAshRegions(elapsedMs);                            // 0x1007379be
     const std::uint32_t next = elapsedMs + waterProximityTick_;   // +0xc8
     waterProximityTick_ = next;
     const bool emptyRect = emptyRect_.left == 0 && emptyRect_.top == 0 && emptyRect_.right == -1 &&
@@ -2949,8 +2999,10 @@ float cSTETerrain::BrushRadius(std::uint32_t brushType) const {
     const auto& map = BrushDescriptions();
     const auto it = map.find(brushType);
     if (it != map.end()) {
-        // The original reads radius[zoom] out of bounds for zoom > 7; the port clamps.
-        radius = it->second.radius[zoom_ < 8 ? zoom_ : 7];
+        // The original reads radiusPerZoom[zoom] with no bounds check; the port clamps (the vector holds
+        // the five zoom entries the exemplar provides).
+        const auto& radii = it->second.radiusPerZoom;
+        if (!radii.empty()) radius = radii[zoom_ < radii.size() ? zoom_ : radii.size() - 1];
     }
     return radius;
 }
@@ -2958,7 +3010,7 @@ float cSTETerrain::BrushRadius(std::uint32_t brushType) const {
 std::int64_t cSTETerrain::GetCostPerBrushApplication(std::uint32_t brushType) const {
     const auto& map = BrushDescriptions();
     const auto it = map.find(brushType);
-    if (it != map.end()) return static_cast<std::int64_t>(it->second.cost[zoom_ < 5 ? zoom_ : 4]);
+    if (it != map.end()) return static_cast<std::int64_t>(it->second.costPerZoom[zoom_ < 5 ? zoom_ : 4]);
     return 32;                                                   // 0x20: the default cost
 }
 
@@ -2983,6 +3035,1390 @@ void cSTETerrain::InitBrushParameters() {
     ITerrainHost* host = TerrainHost();
     if (!host) return;
     for (float& phase : brushPhase_) phase = static_cast<float>(host->RandomDoubleRangeUniform(0.0, 6.2831854820251465));
+}
+
+// ------------------------------------------------------------------------------- the brush path
+
+bool cSTETerrain::ApplyBrush(std::uint32_t brushType, TerrainBrushParameters& parameters) {
+    // 0x100731c50: reset the dirty rect, look the brush up in sBrushDescriptionMap (a lower_bound walk in the
+    // original) and apply every component. A non-empty rect is redisplaayed with the caller's flags; the
+    // original's return value is false only when the brush is unknown.
+    parameters.rect = {0, 0, -1, -1};
+    const auto& map = BrushDescriptions();
+    const auto it = map.find(brushType);
+    if (it == map.end()) return false;
+    ApplyBrushComponents(const_cast<TerrainBrushDescription&>(it->second), parameters);
+    parameters.valid = true;
+    if (parameters.valid && parameters.rect.left <= parameters.rect.right &&
+        parameters.rect.top <= parameters.rect.bottom) {
+        RedisplayTerrain(true, true, parameters.rect, parameters.redisplayFlags);   // vslot 0x228
+    }
+    return true;
+}
+
+void cSTETerrain::ApplyBrushComponents(TerrainBrushDescription& description, TerrainBrushParameters& parameters) {
+    // 0x100731d10. The current point's cell is the brush centre; a zero-length drag keeps the previous
+    // angle. Each component's radius/strength are scaled by the parameters, the texture is loaded lazily
+    // and sampled per cell by ApplyBrushAtLocation.
+    ITerrainHost* host = TerrainHost();
+    if (!host) return;
+    const std::uint32_t cellX = static_cast<std::uint32_t>(parameters.currentX * 0.0625f);
+    if (vertsX_ <= cellX) return;                                // +0x50 = vertsX
+    const std::uint32_t cellZ = static_cast<std::uint32_t>(parameters.currentZ * 0.0625f);
+    if (vertsZ_ <= cellZ) return;                                // +0x54 = vertsZ
+
+    TerrainRect rect{static_cast<std::int32_t>(cellX), static_cast<std::int32_t>(cellZ),
+                     static_cast<std::int32_t>(cellX), static_cast<std::int32_t>(cellZ)};
+
+    TerrainBrushContext context;
+    context.x = parameters.currentX;
+    context.z = parameters.currentZ;
+    context.previousX = parameters.previousX;
+    context.previousZ = parameters.previousZ;
+    context.zoom = parameters.zoom >= 0 ? parameters.zoom : static_cast<std::int32_t>(zoom_);
+    context.levelAltitude = parameters.levelAltitude;
+    context.parameters = &parameters;
+    context.description = &description;
+
+    if (description.rotateToDrag) {
+        // one-in-five backwards: cRZRandom::RandomUint32UniformBelow(sRand, 5) == 0
+        if (host->RandomUint32UniformBelow(5) == 0) {
+            description.rotationPhase -= description.angleIncrement;
+            if (description.rotationPhase < 0.0f) description.rotationPhase += 6.2831855f;
+        } else {
+            description.rotationPhase += description.angleIncrement;
+            if (6.2831855f <= description.rotationPhase) description.rotationPhase -= 6.2831855f;
+        }
+    } else {
+        description.rotationPhase = 0.0f;
+    }
+    if (parameters.currentX != parameters.previousX || parameters.currentZ != parameters.previousZ) {
+        description.currentAngle = std::atan2(parameters.currentZ - parameters.previousZ,
+                                              parameters.currentX - parameters.previousX) + 1.5707963f;
+    }
+
+    for (TerrainBrushComponent& component : description.components) {
+        if (component.exemplarID != 0 && !component.resource) {
+            // GetResource({0x7ab50e44, 0x891b0e1a, exemplarID}, 0x1ab50c3f, &component->resource). A failed
+            // load aborts the whole brush in the original.
+            component.resource = host->LoadBrushComponentResource(component.exemplarID);
+            if (!component.resource) return;
+        }
+        void* textureInfo = component.resource ? host->BrushComponentTextureInfo(component.resource) : nullptr;
+        const auto zoomIndex = static_cast<std::size_t>(context.zoom);
+        const float radius = (zoomIndex < component.radiusPerZoom.size() ? component.radiusPerZoom[zoomIndex]
+                                                                         : 0.0f) *
+                             parameters.radiusScale;
+        float strength = (zoomIndex < component.strengthPerZoom.size() ? component.strengthPerZoom[zoomIndex]
+                                                                        : 0.0f) *
+                         parameters.strengthScale;
+        const float angle = component.useRotationAngle ? description.currentAngle : description.rotationPhase;
+        if (component.type == 2 && 1.0f < strength) strength = 1.0f;   // the smoothen clamp
+        if (component.type == 1) InitFloraBrushInfo();
+        context.strength = strength;
+        context.component = &component;
+
+        using BrushFn = bool (cSTETerrain::*)(std::int32_t, const TerrainBrushContext&);
+        BrushFn fn = &cSTETerrain::BrushFnRaiseLower;
+        switch (component.type) {
+        case 0:
+            break;
+        case 1:
+            if (floraBrushCount_ != 0) {
+                fn = &cSTETerrain::BrushFnFlora;
+                break;
+            }
+            DoPostBrushApplicationOperation(component.type, context, rect);
+            UnionRect(parameters.rect, parameters.rect, rect);
+            continue;
+        case 2:
+            fn = &cSTETerrain::BrushFnSmoothen;
+            break;
+        case 3:
+            fn = &cSTETerrain::BrushFnPaint;
+            break;
+        case 4:
+            fn = &cSTETerrain::BrushFnPlaceEffect;
+            break;
+        case 5:
+            fn = &cSTETerrain::BrushFnLevel;
+            break;
+        case 6:
+            ApplyWaterErosionBrush(context, static_cast<std::int32_t>(strength * 0.0625f), rect);
+            DoPostBrushApplicationOperation(component.type, context, rect);
+            UnionRect(parameters.rect, parameters.rect, rect);
+            continue;
+        case 7:
+            fn = &cSTETerrain::BrushFnVolcanoAsh;
+            break;
+        case 8:
+            fn = &cSTETerrain::BrushFnLakeBed;
+            break;
+        case 9: {
+            // cSTESurfaceWater::Rain returns the per-vertex brush to run, or null when Rain_Static did the work.
+            const std::int32_t index = GetVertIndex(static_cast<std::int32_t>(cellX),
+                                                    static_cast<std::int32_t>(cellZ));   // vslot 0x48
+            if (!host->SurfaceWaterRain(index, context, rect, context.strength)) {
+                DoPostBrushApplicationOperation(component.type, context, rect);
+                UnionRect(parameters.rect, parameters.rect, rect);
+                continue;
+            }
+            fn = &cSTETerrain::BrushFnRain;
+            break;
+        }
+        case 10:
+            host->SurfaceWaterCreateSpring(GetVertIndex(static_cast<std::int32_t>(cellX),
+                                                        static_cast<std::int32_t>(cellZ)));
+            DoPostBrushApplicationOperation(component.type, context, rect);
+            UnionRect(parameters.rect, parameters.rect, rect);
+            continue;
+        default:
+            DoPostBrushApplicationOperation(component.type, context, rect);
+            UnionRect(parameters.rect, parameters.rect, rect);
+            continue;
+        }
+
+        if (textureInfo) {
+            ApplyBrushAtLocation(textureInfo, static_cast<std::int32_t>(cellX), static_cast<std::int32_t>(cellZ),
+                                 radius, angle, fn, context, rect);
+        } else {
+            ApplyBrushAtLocation(static_cast<std::int32_t>(cellX), static_cast<std::int32_t>(cellZ), radius, angle,
+                                 fn, 1, context, rect);
+        }
+        DoPostBrushApplicationOperation(component.type, context, rect);
+        UnionRect(parameters.rect, parameters.rect, rect);
+    }
+}
+
+void cSTETerrain::ApplyBrushAtLocation(void* textureInfo, std::int32_t cellX, std::int32_t cellZ, float radius,
+                                       float angle,
+                                       bool (cSTETerrain::*fn)(std::int32_t, const TerrainBrushContext&),
+                                       TerrainBrushContext& context, TerrainRect& rect) {
+    // 0x1007321b8: the brush is a rotated rectangle the size of the component's texture; every cell centre
+    // is mapped back into texture space and the sampled byte goes to context.textureValue.
+    ITerrainHost* host = TerrainHost();
+    if (!host || !fn) return;
+    std::uint32_t texWidth = 0, texHeight = 0;
+    if (!host->BrushTextureInfoSize(textureInfo, texWidth, texHeight)) return;
+    if (texWidth == 0 || texHeight == 0) return;
+    const float widthScale = radius / static_cast<float>(texWidth);
+    const float height = widthScale * static_cast<float>(texHeight);
+    const float sinAngle = std::sin(angle);
+    const float cosAngle = std::cos(angle);
+
+    TerrainPoint quad[4];
+    ComputeRectAroundPt(quad, static_cast<float>(cellX) * 16.0f, static_cast<float>(cellZ) * 16.0f, radius, height,
+                        angle);
+    int spanMin[260], spanMax[260];
+    int firstRow = 0, lastRow = 0;
+    ComputeSpansForRectangle(quad, spanMin, spanMax, firstRow, lastRow);
+    rect = {INT32_MAX, INT32_MAX, INT32_MIN, INT32_MIN};
+    const std::uint8_t* pixels = host->BrushTexturePixels(textureInfo);
+    if (!pixels || lastRow < firstRow) return;
+
+    const float halfWidth = static_cast<float>(texWidth) * 0.5f;
+    const float halfHeight = static_cast<float>(texHeight) * 0.5f;
+    const float step = 16.0f / widthScale;                     // = 16 * texture width / radius
+    const float deltaTx = -sinAngle * step;
+    const float deltaTy = cosAngle * step;
+    for (std::int32_t row = firstRow; row <= lastRow; ++row) {
+        const std::int32_t firstColumn = spanMin[row];
+        const std::int32_t lastColumn = spanMax[row];
+        if (lastColumn < firstColumn) continue;
+        float u = (static_cast<float>(firstColumn) - static_cast<float>(cellX)) * step;
+        float v = (static_cast<float>(row) - static_cast<float>(cellZ)) * step;
+        float tx = cosAngle * v - sinAngle * u + halfHeight;   // the texture row (index / width)
+        float ty = sinAngle * v + cosAngle * u + halfWidth;    // the texture column
+        for (std::int32_t column = firstColumn; column <= lastColumn; ++column) {
+            const std::int32_t texelX = static_cast<std::int32_t>(tx);
+            const std::int32_t texelY = static_cast<std::int32_t>(ty);
+            if (static_cast<std::uint32_t>(texelX) < texHeight && static_cast<std::uint32_t>(texelY) < texWidth) {
+                context.textureValue = pixels[texelX * static_cast<std::int32_t>(texWidth) + texelY];
+                const std::int32_t index = GetVertIndex(column, row);   // vertsX * row + column
+                if ((this->*fn)(index, context)) {
+                    if (column < rect.left) rect.left = column;
+                    if (column > rect.right) rect.right = column;
+                    if (row < rect.top) rect.top = row;
+                    if (row > rect.bottom) rect.bottom = row;
+                }
+            }
+            tx += deltaTx;
+            ty += deltaTy;
+        }
+    }
+}
+
+void cSTETerrain::ApplyBrushAtLocation(std::int32_t cellX, std::int32_t cellZ, float radius, float angle,
+                                       bool (cSTETerrain::*fn)(std::int32_t, const TerrainBrushContext&),
+                                       std::uint32_t repeat, TerrainBrushContext& context, TerrainRect& rect) {
+    // 0x1007327de: the square (no texture) variant. The whole covered area is visited `repeat` times; the
+    // original calls this with 1 and lets the script command repeat a scrub.
+    if (!fn) return;
+    TerrainPoint quad[4];
+    ComputeRectAroundPt(quad, static_cast<float>(cellX) * 16.0f, static_cast<float>(cellZ) * 16.0f, radius, radius,
+                        angle);
+    int spanMin[260], spanMax[260];
+    int firstRow = 0, lastRow = 0;
+    ComputeSpansForRectangle(quad, spanMin, spanMax, firstRow, lastRow);
+    rect = {INT32_MAX, INT32_MAX, INT32_MIN, INT32_MIN};
+    for (std::uint32_t pass = 0; pass < repeat; ++pass) {
+        for (std::int32_t row = firstRow; row <= lastRow; ++row) {
+            const std::int32_t firstColumn = spanMin[row];
+            const std::int32_t lastColumn = spanMax[row];
+            for (std::int32_t column = firstColumn; column <= lastColumn; ++column) {
+                const std::int32_t index = GetVertIndex(column, row);
+                if ((this->*fn)(index, context)) {
+                    if (column < rect.left) rect.left = column;
+                    if (column > rect.right) rect.right = column;
+                    if (row < rect.top) rect.top = row;
+                    if (row > rect.bottom) rect.bottom = row;
+                }
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------------------------------- the brush callbacks
+
+bool cSTETerrain::BrushFnRain(std::int32_t index, const TerrainBrushContext& context) {
+    // 0x10073083e: add strength/10 of water where the sampled texture value moved.
+    if (!context.component) return false;
+    if (context.textureValue != context.component->textureValue) {
+        ITerrainHost* host = TerrainHost();
+        if (host) host->SurfaceWaterAddRain(index, context.strength / 10.0f);
+    }
+    return false;   // the original always returns 0 (the surface water already accounted for the cell)
+}
+
+bool cSTETerrain::BrushFnRaiseLower(std::int32_t index, const TerrainBrushContext& context) {
+    // 0x1007329cc: raise or lower by the texture difference times the component strength.
+    if (!context.component) return false;
+    const std::uint8_t wanted = context.textureValue;
+    const std::uint8_t current = context.component->textureValue;
+    if (wanted == current) return false;
+    if (current < wanted) {
+        RaiseVertex(static_cast<std::uint32_t>(index),
+                    static_cast<float>(static_cast<std::int32_t>(wanted) - static_cast<std::int32_t>(current)) *
+                        context.strength);
+    } else {
+        LowerVertex(static_cast<std::uint32_t>(index),
+                    static_cast<float>(static_cast<std::int32_t>(current) - static_cast<std::int32_t>(wanted)) *
+                        context.strength);
+    }
+    return true;
+}
+
+bool cSTETerrain::BrushFnFlora(std::int32_t index, const TerrainBrushContext& context) {
+    // 0x100732a0e: 31% of the cells whose texture value is above 9 get a flora instance at a random point in
+    // the cell, but only on land (altitude <= 0 is the original's "can plant" test) and inside the grid.
+    ITerrainHost* host = TerrainHost();
+    if (!host) return false;
+    if (context.textureValue <= 9) return false;
+    if (host->RandomUint32UniformBelow(100) < 0x1f) {
+        const float altitude = vertices_[static_cast<std::size_t>(index)].altitude;
+        if (altitude <= 0.0f) {
+            const std::uint32_t row = static_cast<std::uint32_t>(index) / vertsX_;
+            const std::uint32_t column = static_cast<std::uint32_t>(index) % vertsX_;
+            if (column < cellsX_ && row < cellsZ_) {
+                const float x = static_cast<float>(host->RandomDoubleRangeUniform(static_cast<double>(column) * 16.0,
+                                                                                  static_cast<double>(column) * 16.0 + 16.0));
+                const float z = static_cast<float>(host->RandomDoubleRangeUniform(static_cast<double>(row) * 16.0,
+                                                                                  static_cast<double>(row) * 16.0 + 16.0));
+                (void)host->RandomUint32UniformBelow(floraBrushCount_);   // the original picks an id and drops it
+                const float y = GetAltitude(x, z);                        // vslot 0x60
+                host->AddFloraAt(x, y, z);
+                if (host->CityEstablished()) host->AddFloraAura(x, z);
+            }
+        } else {
+            // the original posts "cannot plant here" through the sound server
+            host->PostBrushSound(0xaa62c9d5, 0, 0);
+        }
+    }
+    return false;
+}
+
+bool cSTETerrain::BrushFnSmoothen(std::int32_t index, const TerrainBrushContext& context) {
+    // 0x100732bd2: relax every existing neighbour that is further below than the talus threshold.
+    if (context.textureValue == 0) return false;
+    const float amount = context.strength;
+    const std::uint32_t row = static_cast<std::uint32_t>(index) / vertsX_;
+    const std::uint32_t column = static_cast<std::uint32_t>(index) % vertsX_;
+    std::uint8_t neighbourMask = 0x7c;                       // west off at the first column
+    if (0 < static_cast<std::int32_t>(column)) neighbourMask = 0xff;
+    if (cellsX_ <= column) neighbourMask &= 0xc7;            // east off at the last column
+    if (row < 1) neighbourMask &= 0xf1;                      // north off at the first row
+    if (cellsZ_ <= row) neighbourMask &= 0x1f;               // south off at the last row
+    bool changed = false;
+    for (std::int32_t direction = 0; direction < 8; ++direction) {
+        if ((neighbourMask & (1u << direction)) == 0) continue;
+        const std::int32_t neighbour = neighborOffsets_[direction] + index;
+        const float threshold = (direction & 1) ? Statics().diagonalHeightDifferenceThreshold
+                                                : Statics().crossHeightDifferenceThreshold;
+        float difference = vertices_[static_cast<std::size_t>(index)].altitude -
+                           vertices_[static_cast<std::size_t>(neighbour)].altitude - threshold;
+        if (0.0f < difference) {
+            difference = difference * static_cast<float>(context.textureValue) * amount * 0.00390625f;
+            LowerVertex(static_cast<std::uint32_t>(index), difference);
+            RaiseVertex(static_cast<std::uint32_t>(neighbour), difference);
+            changed = true;
+        }
+    }
+    return changed;
+}
+
+bool cSTETerrain::BrushFnPaint(std::int32_t index, const TerrainBrushContext& context) {
+    // 0x100732d22: add one decal to the view's third overlay manager, at most maxDecals per cell.
+    ITerrainHost* host = TerrainHost();
+    if (!host || !overlayManagers_[2] || !context.component) return false;
+    if (context.textureValue == 0) return false;
+    const std::uint32_t row = static_cast<std::uint32_t>(index) / vertsX_;
+    const std::uint32_t column = static_cast<std::uint32_t>(index) % vertsX_;
+    if (cellsX_ <= column || cellsZ_ <= row) return false;
+    std::uint32_t& count = decalMap_[static_cast<std::uint32_t>(index)];
+    if (context.component->maxDecals < count) return false;
+    ++count;
+    const cGZPersistResourceKey key{0x7ab50e44, 0x891b0e1a, context.component->decalInstance};
+    float randomAmount = 0.0f;
+    if (0.0f < context.component->randomAmount) {
+        randomAmount = static_cast<float>(host->RandomDoubleRangeUniform(0.0, context.component->randomAmount));
+    }
+    const float x = static_cast<float>(host->RandomDoubleRangeUniform(
+        static_cast<double>(column) * 16.0,
+        static_cast<double>(widthMeters_ < static_cast<float>(column) * 16.0f + 16.0f
+                                ? widthMeters_
+                                : static_cast<float>(column) * 16.0f + 16.0f)));
+    const float z = static_cast<float>(host->RandomDoubleRangeUniform(
+        static_cast<double>(row) * 16.0,
+        static_cast<double>(depthMeters_ < static_cast<float>(row) * 16.0f + 16.0f
+                                ? depthMeters_
+                                : static_cast<float>(row) * 16.0f + 16.0f)));
+    host->AddOverlayDecal(overlayManagers_[2], key, TerrainPoint{x, z}, context.strength, randomAmount);
+    return false;
+}
+
+bool cSTETerrain::BrushFnPlaceEffect(std::int32_t index, const TerrainBrushContext& context) {
+    // 0x100732f92: create one effect instance on the cell, at a random point inside it.
+    ITerrainHost* host = TerrainHost();
+    if (!host || !context.component) return false;
+    if (context.textureValue == context.component->textureValue) return false;
+    const std::uint32_t row = static_cast<std::uint32_t>(index) / vertsX_;
+    const std::uint32_t column = static_cast<std::uint32_t>(index) % vertsX_;
+    std::uint32_t& count = decalMap_[static_cast<std::uint32_t>(index)];
+    if (context.component->maxDecals < count) return false;
+    ITerrainEffect* effect = host->CreateTerrainEffect(context.component->effectID[0],
+                                                       context.component->effectID[1]);
+    if (!effect) return false;
+    ++count;
+    const float x = static_cast<float>(host->RandomDoubleRangeUniform(
+        static_cast<double>(column) * 16.0,
+        static_cast<double>(widthMeters_ < static_cast<float>(column) * 16.0f + 16.0f
+                                ? widthMeters_
+                                : static_cast<float>(column) * 16.0f + 16.0f)));
+    const float z = static_cast<float>(host->RandomDoubleRangeUniform(
+        static_cast<double>(row) * 16.0,
+        static_cast<double>(depthMeters_ < static_cast<float>(row) * 16.0f + 16.0f
+                                ? depthMeters_
+                                : static_cast<float>(row) * 16.0f + 16.0f)));
+    TerrainEffectPlacement placement;
+    placement.flags = 1;                                     // the original sets byte 0 and bit 0 of byte 1
+    placement.pad[0] = 1;
+    placement.x = x;
+    placement.y = std::max(GetAltitude(x, z), GetSeaLevel());
+    placement.z = z;
+    effect->SetPlacement(placement);
+    effect->Start();
+    effect->Release();
+    return false;
+}
+
+bool cSTETerrain::BrushFnLevel(std::int32_t index, const TerrainBrushContext& context) {
+    // 0x100733230: drive the vertex toward context.levelAltitude, by at most textureValue * strength / 256.
+    if (context.textureValue == 0) return false;
+    const float step = static_cast<float>(context.textureValue) * context.strength * 0.00390625f;
+    const float difference = vertices_[static_cast<std::size_t>(index)].altitude - context.levelAltitude;
+    if (0.0f < difference) {
+        if (difference <= step) {
+            SetAltitude(index, context.levelAltitude);        // vslot 0x188
+        } else {
+            LowerVertex(static_cast<std::uint32_t>(index), step);
+        }
+    } else if (difference < 0.0f) {
+        if (-step <= difference) {
+            SetAltitude(index, context.levelAltitude);
+        } else {
+            RaiseVertex(static_cast<std::uint32_t>(index), step);
+        }
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool cSTETerrain::BrushFnVolcanoAsh(std::int32_t index, const TerrainBrushContext& context) {
+    // 0x100733338: mark the vertex as covered by volcanic ash (flag 0x400).
+    if (context.textureValue == 0) return false;
+    vertices_[static_cast<std::size_t>(index)].flags |= 0x400;   // +0x22
+    return true;
+}
+
+bool cSTETerrain::BrushFnLakeBed(std::int32_t index, const TerrainBrushContext& context) {
+    // 0x100733360: move the vertex toward levelAltitude + difference*strength; land is only raised and water
+    // is only lowered (the original tests the surface-water depth before choosing).
+    if (!context.component) return false;
+    const auto& strengths = context.component->strengthPerZoom;
+    const float strength = static_cast<std::size_t>(context.zoom) < strengths.size()
+                               ? strengths[static_cast<std::size_t>(context.zoom)]
+                               : 0.0f;
+    const float amount = static_cast<float>(static_cast<std::int32_t>(context.textureValue) -
+                                            static_cast<std::int32_t>(context.component->textureValue)) *
+                         strength;
+    if (amount == 0.0f) return false;
+    const float level = context.levelAltitude + amount;
+    const float magnitude = std::fabs(amount * 0.0625f);
+    const float difference = level - vertices_[static_cast<std::size_t>(index)].altitude;
+    if (0.0f < difference) {
+        if (0.0f < waterDepth_[static_cast<std::size_t>(index)]) return false;   // under water: no fill
+        if (magnitude <= difference) {
+            RaiseVertex(static_cast<std::uint32_t>(index), amount);
+        } else {
+            SetAltitude(index, level);
+        }
+        return true;
+    }
+    if (difference < 0.0f) {
+        if (magnitude > -difference) {
+            SetAltitude(index, level);
+        } else {
+            LowerVertex(static_cast<std::uint32_t>(index), amount);
+        }
+        return true;
+    }
+    return false;
+}
+
+bool cSTETerrain::GetTextureValue(std::int32_t cellX, std::int32_t cellZ, TerrainBrushContext& context) {
+    // 0x100733436: map the cell centre into the component's texture using the current brush angle.
+    ITerrainHost* host = TerrainHost();
+    if (!host || !context.component || !context.parameters || !context.description) return false;
+    void* textureInfo = context.component->resource ? host->BrushComponentTextureInfo(context.component->resource)
+                                                    : nullptr;
+    if (!textureInfo) return false;
+    std::uint32_t width = 0, height = 0;
+    if (!host->BrushTextureInfoSize(textureInfo, width, height)) return false;
+    const auto& radii = context.component->radiusPerZoom;
+    const float radius = (static_cast<std::size_t>(context.zoom) < radii.size()
+                              ? radii[static_cast<std::size_t>(context.zoom)]
+                              : 0.0f) *
+                         context.parameters->radiusScale;
+    if (radius == 0.0f || width == 0) return false;
+    const float scale = 16.0f / (radius / static_cast<float>(width));
+    const float angle = context.component->useRotationAngle ? context.description->currentAngle
+                                                            : context.description->rotationPhase;
+    const float u = (static_cast<float>(cellX) - static_cast<float>(static_cast<std::int32_t>(context.x * 0.0625f))) *
+                    scale;
+    const float v = (static_cast<float>(cellZ) - static_cast<float>(static_cast<std::int32_t>(context.z * 0.0625f))) *
+                    scale;
+    const float sinAngle = std::sin(angle);
+    const float cosAngle = std::cos(angle);
+    const std::int32_t texelX = static_cast<std::int32_t>(sinAngle * v + cosAngle * u +
+                                                          static_cast<float>(width) * 0.5f);
+    const std::int32_t texelY = static_cast<std::int32_t>(cosAngle * v - sinAngle * u +
+                                                          static_cast<float>(height) * 0.5f);
+    if (static_cast<std::uint32_t>(texelX) < width && static_cast<std::uint32_t>(texelY) < height) {
+        const std::uint8_t* pixels = host->BrushTexturePixels(textureInfo);
+        if (!pixels) return false;
+        context.textureValue = pixels[texelY * static_cast<std::int32_t>(width) + texelX];
+        return true;
+    }
+    return false;
+}
+
+void cSTETerrain::ApplyWaterErosionBrush(TerrainBrushContext& context, std::int32_t pad, TerrainRect& rect) {
+    // 0x1007332ae: the rect is the brush's cell padded by half the flow distance, then one DoWaterErosion per
+    // strength unit with the zoom's flow-step count.
+    const std::int32_t cellX = static_cast<std::int32_t>(context.x * 0.0625f);
+    const std::int32_t cellZ = static_cast<std::int32_t>(context.z * 0.0625f);
+    rect = {cellX, cellZ, cellX, cellZ};
+    PadRectangle(rect, pad / 2);
+    const std::int32_t iterations = static_cast<std::int32_t>(context.strength);
+    const auto& steps = Statics().numFlowStepsPerWaterErosionBrushApplication;
+    const std::uint32_t stepIndex = static_cast<std::uint32_t>(context.zoom);
+    const std::int32_t flowSteps = stepIndex < steps.size() ? static_cast<std::int32_t>(steps[stepIndex]) : 0;
+    for (std::int32_t i = 0; i < iterations; ++i) DoWaterErosion(rect, flowSteps);
+}
+
+void cSTETerrain::DoPostBrushApplicationOperation(std::int32_t componentType, TerrainBrushContext& context,
+                                                  TerrainRect& rect) {
+    // 0x10073340e: the volcano-ash brush registers the rect, the smoothen brush widens it by one cell.
+    (void)context;
+    if (componentType == 7) {
+        AddVolcanicAshRegion(rect);
+        return;
+    }
+    if (componentType == 2) PadRectangle(rect, 1);
+}
+
+void cSTETerrain::InitFloraBrushInfo() {
+    // 0x1007385e2: the flora-instance ids the brush may place, minus the ones whose occupant is not brushable
+    // (occupant +0x180 & 3 == 2 keeps only the "flora" occupants).
+    if (floraBrushCount_ != 0) return;
+    ITerrainHost* host = TerrainHost();
+    if (!host) return;
+    const std::uint32_t count = host->FloraBrushCount();
+    floraBrushIDs_.assign(count, 0);
+    if (count != 0) host->FloraBrushList(floraBrushIDs_);
+    floraBrushCount_ = count;
+    for (std::uint32_t i = 0; i < floraBrushCount_;) {
+        if (i < floraBrushIDs_.size() && host->FloraOccupantIsBrushable(floraBrushIDs_[i])) {
+            ++i;
+        } else {
+            if (i < floraBrushIDs_.size()) floraBrushIDs_.erase(floraBrushIDs_.begin() + static_cast<std::ptrdiff_t>(i));
+            --floraBrushCount_;
+        }
+    }
+    floraBrushIDs_.resize(floraBrushCount_);
+}
+
+void cSTETerrain::BeginBrushScrub(std::uint32_t brushType) {
+    // 0x100734a7e: drop the decal map, post the brush sound and begin the long terrain operation.
+    decalMap_.clear();                                        // +0x268
+    ITerrainHost* host = TerrainHost();
+    const auto& map = BrushDescriptions();
+    const auto it = map.find(brushType);
+    if (host && it != map.end()) {
+        if (it->second.exemplarID != 0) host->PostBrushSound(0xea451903, it->second.exemplarID, it->second.brushID);
+    }
+    BeginLongTerrainOperation();                              // vslot 0x2b8
+}
+
+void cSTETerrain::EndBrushScrub(std::uint32_t brushType, std::uint32_t arg) {
+    // 0x100738704: drop the decal map, post the two end sounds, end the surface-water scrub and the long
+    // terrain operation.
+    decalMap_.clear();
+    ITerrainHost* host = TerrainHost();
+    const auto& map = BrushDescriptions();
+    const auto it = map.find(brushType);
+    if (host && it != map.end()) {
+        if (it->second.exemplarID != 0) host->PostBrushSound(0x6a451908, it->second.brushID, 0);
+        if (it->second.soundID != 0) host->PostBrushSound(0xea451903, it->second.soundID, it->second.brushID + 1);
+    }
+    if (host) host->SurfaceWaterEndBrushScrub(brushType, arg);
+    EndLongTerrainOperation();                                // vslot 0x2c0
+}
+
+// ------------------------------------------------------------------------------- the brush readers
+
+bool cSTETerrain::ReadBrushWholeProperties(cISCPropertyHolder* holder, TerrainBrushDescription& description) {
+    // 0x10073b26a: the angle, the five per-zoom costs and the two ids.
+    float angle = 0.0f;
+    float phase = 0.0f;
+    if (!ReadPropertyFloat(holder, 0x8a020102, angle)) {
+        description.rotateToDrag = true;
+        std::uint32_t bits = 0x3c0efa35;                       // the binary's fallback (0.5 degree in radians)
+        std::memcpy(&description.angleIncrement, &bits, sizeof(bits));
+        if (ITerrainHost* host = TerrainHost())
+            phase = static_cast<float>(host->RandomDoubleRangeUniform(0.0, 6.2831854820251465));
+    } else {
+        description.rotateToDrag = angle != 0.0f;
+        description.angleIncrement = angle * 0.017453292f;
+        if (angle != 0.0f) {
+            if (ITerrainHost* host = TerrainHost())
+                phase = static_cast<float>(host->RandomDoubleRangeUniform(0.0, 6.2831854820251465));
+        }
+    }
+    description.rotationPhase = phase;                        // +0x84
+    description.currentAngle = 0.0f;                          // +0x88
+    std::vector<float> costs;
+    if (ReadPropertyFloatVector(holder, 0x8a020101, costs)) {
+        for (std::size_t i = 0; i < 5 && i < costs.size(); ++i) description.costPerZoom[i] = costs[i];
+    } else {
+        for (float& cost : description.costPerZoom) cost = 0.0f;
+    }
+    if (!ReadPropertyUint32(holder, 0x8a020103, description.exemplarID)) description.exemplarID = 0;
+    if (!ReadPropertyUint32(holder, 0x8a020104, description.soundID)) description.soundID = 0;
+    return true;
+}
+
+bool cSTETerrain::ReadBrushUIProperties(cISCPropertyHolder* holder, TerrainBrushDescription& description) {
+    // 0x10073b3b8: four effect-id pairs and two uints. The defaults are the exemplar's own values.
+    // the four defaults are 8-byte writes: {0xea3169e6, 2}, {.., 1}, {.., 4}, {.., 3}
+    static const std::uint32_t kDefaults[4][2] = {{0xea3169e6, 2}, {0xea3169e6, 1},
+                                                  {0xea3169e6, 4}, {0xea3169e6, 3}};
+    for (int i = 0; i < 4; ++i) {
+        std::uint32_t pair[2] = {0, 0};
+        if (!GetEffectIDProperty(holder, 0xaa2ed800u + static_cast<std::uint32_t>(i), pair)) {
+            pair[0] = kDefaults[i][0];
+            pair[1] = kDefaults[i][1];
+        }
+        description.ui.values[i * 2] = pair[0];
+        description.ui.values[i * 2 + 1] = pair[1];
+    }
+    if (!ReadPropertyUint32(holder, 0xaa2ed804, description.ui.values[8])) description.ui.values[8] = 0x71e5700;
+    if (!ReadPropertyUint32(holder, 0xaa2ed805, description.ui.values[9])) description.ui.values[9] = 0x71e5705;
+    return true;
+}
+
+bool cSTETerrain::ReadBrushComponentProperties(cISCPropertyHolder* holder, TerrainBrushDescription& description) {
+    // 0x10073aafe: up to four component slots (property ids stride by 0x100); the loop stops at the first
+    // slot without a type property, and the description is dropped when a required property is missing.
+    description.components.clear();
+    for (std::uint32_t slot = 0; slot < 4; ++slot) {
+        const std::uint32_t base = slot * 0x100;
+        std::uint32_t type = 0;
+        if (!ReadPropertyUint32(holder, base + 0x8a020205, type)) break;
+        if (11 < type) return false;
+        std::vector<float> radius, strength;
+        if (!ReadPropertyFloatVector(holder, base + 0x8a020202, radius)) return false;
+        if (!ReadPropertyFloatVector(holder, base + 0x8a020203, strength)) return false;
+        // each slot's array only raises the description's first five per-zoom radii (the original walks
+        // exactly five entries and keeps the larger value)
+        for (std::size_t i = 0; i < 5 && i < radius.size(); ++i) {
+            if (description.radiusPerZoom[i] <= radius[i] && description.radiusPerZoom[i] != radius[i])
+                description.radiusPerZoom[i] = radius[i];
+        }
+
+        std::uint8_t useRotation = 0;
+        ReadPropertyUint8(holder, base + 0x8a020201, useRotation);
+        TerrainBrushComponent component;
+        component.type = static_cast<std::int32_t>(type);
+        component.useRotationAngle = useRotation != 0;
+        component.radiusPerZoom = radius;
+        component.strengthPerZoom = strength;
+        if (type == 6 || type == 10) {
+            component.exemplarID = 0;
+            component.textureValue = 0;
+            component.maxDecals = 0;
+            component.decalInstance = 0;
+            component.randomAmount = 6.2831855f;
+        } else {
+            if (!ReadPropertyUint32(holder, base + 0x8a020200, component.exemplarID)) return false;
+            std::uint8_t value = 0;
+            if (!ReadPropertyUint8(holder, base + 0x8a020204, value)) return false;
+            component.textureValue = value;
+            if (type == 3 || type == 4) {
+                if (!ReadPropertyUint32(holder, base + 0x8a020208, component.maxDecals)) return false;
+            } else {
+                component.maxDecals = 0;
+            }
+            if (type == 3) {
+                if (!ReadPropertyUint32(holder, base + 0x8a020206, component.decalInstance)) return false;
+                float degrees = 0.0f;
+                if (!ReadPropertyFloat(holder, base + 0x8a020207, degrees)) return false;
+                component.randomAmount = degrees / 360.0f;
+            } else {
+                component.decalInstance = 0;
+                component.randomAmount = 6.2831855f;
+            }
+        }
+        if (type == 4) {
+            if (!GetEffectIDProperty(holder, base + 0x8a020209, component.effectID)) return false;
+        } else {
+            component.effectID[0] = component.effectID[1] = 0;
+        }
+        description.components.push_back(std::move(component));
+    }
+    return true;
+}
+
+void cSTETerrain::ReadBrushDescription(const cGZPersistResourceKey& key, void* unused) {
+    // 0x10073aefe: load the exemplar's property holder, build the description and insert it into the map
+    // (the original inserts a default first and erases it again when the component reader fails).
+    (void)unused;
+    auto& map = BrushDescriptions();
+    if (map.count(key.instance) != 0) return;
+    ITerrainHost* host = TerrainHost();
+    if (!host) return;
+    cISCPropertyHolder* holder = host->GetPropertyHolder(key);
+    if (!holder) return;
+    TerrainBrushDescription description;
+    description.brushID = key.instance;
+    description.radiusPerZoom.assign(5, 0.0f);
+    ReadBrushWholeProperties(holder, description);
+    if (!ReadBrushComponentProperties(holder, description)) {
+        holder->Release();
+        return;
+    }
+    ReadBrushUIProperties(holder, description);
+    holder->Release();
+    map[key.instance] = std::move(description);
+}
+
+void cSTETerrain::ReadBrushDescriptions() {
+    // 0x10073b49c: every resource of {0x6534284a, 0x6a01fc2a} (the brush exemplars), through the resource
+    // manager's enumerator (vslot 0x88 with a cSCResFilterFixedGroupAndTypeId).
+    ReleaseBrushDescriptions();
+    ITerrainHost* host = TerrainHost();
+    if (!host) return;
+    std::vector<cGZPersistResourceKey> keys;
+    host->ListBrushResources(keys);
+    for (const cGZPersistResourceKey& key : keys) ReadBrushDescription(key, nullptr);
+}
+
+// ==================================================================================== volcanic ash
+
+void cSTETerrain::AddVolcanicAshRegion(TerrainRect& r) {
+    // 0x100731628: union every touching region into `r` (the original unlinks and deletes them), then push
+    // the union as a fresh region at the end of the list.
+    if (r.right < r.left || r.bottom < r.top) return;
+    for (auto it = volcanicAshRegions_.begin(); it != volcanicAshRegions_.end();) {
+        const TerrainRect& other = it->rect;
+        if (other.right < r.left || r.right < other.left || other.bottom < r.top || r.bottom < other.top) {
+            ++it;
+            continue;
+        }
+        UnionRect(r, r, other);
+        it = volcanicAshRegions_.erase(it);
+    }
+    tVolcanicAshRegion region;
+    region.rect = r;
+    region.age = 0;
+    region.updateTimer = 0;
+    volcanicAshRegions_.push_back(region);
+}
+
+void cSTETerrain::SprayVolcanicAsh(const TerrainRect& r) {
+    // 0x100734724: every ash-marked vertex (flag 0x400) in the regions spreads the volcanic-ash texture
+    // (0xe0) over its neighbourhood, scaled by the region's remaining lifetime and the texture's weight.
+    if (volcanicAshRegions_.empty()) return;
+    auto& textures = SurfaceCoverTextures();
+    const std::uint32_t ashTexture = 0xe0;                    // kVolcanicAshTexture
+    const auto texture = textures.find(ashTexture);
+    if (texture == textures.end()) return;
+    const TerrainSurfaceCoverInfo& info = texture->second;
+    const std::uint32_t zoomIndex = zoom_ < 5 ? zoom_ : 4;
+    const std::int32_t spread = info.maxSpread[zoomIndex];
+    const float lifetime = Statics().volcanicAshLifeTime;
+    for (const tVolcanicAshRegion& region : volcanicAshRegions_) {
+        TerrainRect area{r.left - spread, r.top - spread, r.right + spread, r.bottom + spread};
+        if (area.left < 0) area.left = 0;
+        if (area.top < 0) area.top = 0;
+        if (static_cast<std::uint32_t>(area.right) > cellsX_) area.right = static_cast<std::int32_t>(cellsX_);
+        if (static_cast<std::uint32_t>(area.bottom) > cellsZ_) area.bottom = static_cast<std::int32_t>(cellsZ_);
+        TerrainRect overlap{};
+        if (!IntersectTerrainRect(overlap, area, region.rect)) continue;
+        if (overlap.left == region.rect.left && overlap.top == region.rect.top &&
+            overlap.right == region.rect.right && overlap.bottom == region.rect.bottom) {
+            const_cast<tVolcanicAshRegion&>(region).updateTimer = 0;
+        }
+        for (std::int32_t z = overlap.top; z <= overlap.bottom; ++z) {
+            for (std::int32_t x = overlap.left; x <= overlap.right; ++x) {
+                const std::int32_t index = GetVertIndex(x, z);
+                if ((vertices_[static_cast<std::size_t>(index)].flags & 0x400) == 0) continue;
+                TerrainRect local{x - spread, z - spread, x + spread, z + spread};
+                if (local.left < 0) local.left = 0;
+                if (local.top < 0) local.top = 0;
+                if (static_cast<std::uint32_t>(local.right) > cellsX_) local.right = static_cast<std::int32_t>(cellsX_);
+                if (static_cast<std::uint32_t>(local.bottom) > cellsZ_) local.bottom = static_cast<std::int32_t>(cellsZ_);
+                TerrainRect clipped{};
+                if (!IntersectTerrainRect(clipped, local, r)) continue;
+                for (std::int32_t nz = clipped.top; nz <= clipped.bottom; ++nz) {
+                    for (std::int32_t nx = clipped.left; nx <= clipped.right; ++nx) {
+                        const float dx = static_cast<float>(nx - x);
+                        const float dz = static_cast<float>(nz - z);
+                        float amount = EvaluateCurve(info.curves[zoomIndex], std::sqrt(dx * dx + dz * dz) * 16.0f);
+                        amount = amount * (1.0f - static_cast<float>(region.age) / lifetime) * info.weight;
+                        if (0.0f < amount) AddLandTypeAtVertex(GetVertIndex(nx, nz), ashTexture, amount);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void cSTETerrain::TickVolcanicAshRegions(std::uint32_t elapsedMs) {
+    // 0x1007379be: age every region, re-spray on the update interval, and remove (and clear) the expired
+    // ones; the union of everything touched is re-textured and redisplaayed.
+    if (volcanicAshRegions_.empty()) return;
+    TerrainRect dirty{INT32_MAX, INT32_MAX, INT32_MIN, INT32_MIN};
+    for (auto it = volcanicAshRegions_.begin(); it != volcanicAshRegions_.end();) {
+        const std::uint32_t previousAge = it->age;
+        it->age = previousAge + elapsedMs;
+        if (it->age < Statics().volcanicAshLifeTime) {
+            const std::uint32_t previousTimer = it->updateTimer;
+            it->updateTimer = previousTimer + elapsedMs;
+            if (Statics().volcanicAshUpdateInterval <= static_cast<float>(previousTimer + elapsedMs)) {
+                it->updateTimer = 0;
+                UnionRect(dirty, it->rect, dirty);
+            }
+            ++it;
+        } else {
+            UnionRect(dirty, it->rect, dirty);
+            ClearVertexPropertyFlags(it->rect, 0x400);
+            it = volcanicAshRegions_.erase(it);
+        }
+    }
+    if (dirty.left <= dirty.right && dirty.top <= dirty.bottom) {
+        AssignSurfaceTexturesAndColors(dirty);
+        RedisplayTerrain(false, false, dirty, 0);             // vslot 0x228
+    }
+}
+
+// ==================================================================================== water waves
+
+bool cSTETerrain::IsGoodWaveProducerLocation(float x, float z, float orientation) const {
+    // 0x10073a4f6: a wave rectangle (kMaxWaveWidth wide, kWaveSeaTravelDist long, rotated by the
+    // orientation) must lie inside the terrain and be 80% sea; the same rectangle shifted by
+    // kMaxWaveTravelDist must also be 10% land.
+    if (!waveSystem_) return false;
+    ITerrainWaveSystem* waves = waveSystem_;
+    const float seaTravel = waves->WaveSeaTravelDistance();
+    const float halfWidth = waves->MaxWaveWidth() * 0.5f;
+    const float maxTravel = waves->MaxWaveTravelDistance();
+    const float cosSide = std::cos(orientation + 1.5707964f) * halfWidth;
+    const float sinSide = std::sin(orientation + 1.5707964f) * halfWidth;
+    const float cosDirection = std::cos(orientation);
+    const float sinDirection = std::sin(orientation);
+    auto inside = [this](const TerrainPoint* quad) {
+        for (int i = 0; i < 4; ++i) {
+            if (quad[i].x < 0.0f || quad[i].x >= widthMeters_) return false;
+            if (quad[i].z < 0.0f || quad[i].z >= depthMeters_) return false;
+        }
+        return true;
+    };
+    TerrainPoint quad[4] = {
+        {x + cosSide, z + sinSide},
+        {x + seaTravel * cosDirection + cosSide, z + seaTravel * sinDirection + sinSide},
+        {x + seaTravel * cosDirection - cosSide, z + seaTravel * sinDirection - sinSide},
+        {x - cosSide, z - sinSide},
+    };
+    if (!inside(quad)) return false;
+    if (!ComputeBooleanFnForRect(quad, &cSTETerrain::IsSeaVertex, 0.8f)) return false;
+
+    TerrainPoint shifted[4] = {
+        {quad[0].x + maxTravel * cosDirection, quad[0].z + maxTravel * sinDirection},
+        {quad[1].x + maxTravel * cosDirection, quad[1].z + maxTravel * sinDirection},
+        {quad[2].x + maxTravel * cosDirection, quad[2].z + maxTravel * sinDirection},
+        {quad[3].x + maxTravel * cosDirection, quad[3].z + maxTravel * sinDirection},
+    };
+    if (!inside(shifted)) return false;
+    return ComputeBooleanFnForRect(shifted, &cSTETerrain::IsLandVertex, 0.1f);
+}
+
+bool cSTETerrain::TryToCreateWaveProducerForShore(std::deque<std::int32_t>& shore, int first, int last,
+                                                  float& outX, float& outZ, float& outOrientation) {
+    // 0x10073eb1e: orient the wave along the shore run's chord, reject it when it is too far from the mean
+    // wave orientation, and place the producer `shore distance` back from the run's middle.
+    if (!waveSystem_) return false;
+    const float shoreDistance = waveSystem_->DistanceFromShoreToWaveStart();
+    const float maxOrientationDifference = waveSystem_->MaxOrientationDifference();
+    float meanOrientation = 0.0f;
+    const bool hasMean = waveSystem_->GetMeanWaveOrientation(meanOrientation);
+    const std::int32_t firstVertex = shore[static_cast<std::size_t>(first)];
+    const std::int32_t lastVertex = shore[static_cast<std::size_t>(last)];
+    const float dx = static_cast<float>((lastVertex % static_cast<std::int32_t>(vertsX_)) * 16 -
+                                        (firstVertex % static_cast<std::int32_t>(vertsX_)) * 16);
+    const float dz = static_cast<float>((lastVertex / static_cast<std::int32_t>(vertsX_)) * 16 -
+                                        (firstVertex / static_cast<std::int32_t>(vertsX_)) * 16);
+    float angle = std::atan2(dz, dx) + 6.2831855f;
+    if (6.2831855f <= angle) angle -= 6.2831855f;
+    angle += 1.5707964f;
+    if (6.2831855f <= angle) angle -= 6.2831855f;
+    outOrientation = angle;
+    if (hasMean) {
+        float difference = std::fabs(angle - meanOrientation);
+        if (3.1415927f < difference) difference = 6.2831855f - difference;
+        if (maxOrientationDifference < difference && maxOrientationDifference < 6.2831855f - difference)
+            return false;
+    }
+    const std::int32_t middle = (first + last) / 2;
+    const std::int32_t middleVertex = shore[static_cast<std::size_t>(middle)];
+    const float middleX = static_cast<float>((middleVertex % static_cast<std::int32_t>(vertsX_)) * 16);
+    const float middleZ = static_cast<float>((middleVertex / static_cast<std::int32_t>(vertsX_)) * 16);
+    outX = middleX - std::cos(angle) * shoreDistance;
+    outZ = middleZ - std::sin(angle) * shoreDistance;
+    return IsGoodWaveProducerLocation(outX, outZ, outOrientation);   // vslot 0x208
+}
+
+void cSTETerrain::UpdateWaveProducers() {
+    // 0x10073ed40: walk every shore vertex, cut each shore run into segments and try to place a producer.
+    if (!waveSystem_) return;
+    std::int32_t produced = waveSystem_->ProducerCount();
+    const std::int32_t maximum = waveSystem_->MaxProducerCount();
+    if (maximum <= produced) return;
+    const float gap = waveSystem_->InterWaveGap();
+    const float widest = waveSystem_->MaxWaveWidth() * 1.5f;
+    const std::int32_t gapCells = static_cast<std::int32_t>(gap + 0.5f) >> 4;
+    const std::int32_t widthCells = static_cast<std::int32_t>(widest + 0.5f) >> 4;
+    const std::int32_t halfWidthCells = static_cast<std::int32_t>(widest + 0.5f) >> 5;
+    // PORT-ONLY guard: the real constants make both steps positive (340*1.5 -> 31 and 15 cells); a
+    // test-sized wave tuning could round them to zero and the original's do-while would never advance.
+    if (widthCells <= 0 || halfWidthCells <= 0) return;
+    DetectShoreVertices();
+    if (vertsZ_ == 0) return;
+    for (std::uint32_t row = 0; row < vertsZ_; ++row) {
+        for (std::uint32_t column = 0; column < vertsX_; ++column) {
+            const std::int32_t index = GetVertIndex(static_cast<std::int32_t>(column), static_cast<std::int32_t>(row));
+            if ((vertices_[static_cast<std::size_t>(index)].flags & 0x11) != 0x10) continue;
+            std::deque<std::int32_t> shore;
+            GetShoreStartingAtVert(index, shore, 1);
+            const std::int32_t length = static_cast<std::int32_t>(shore.size());
+            if (length <= 0) continue;
+            std::int32_t first = 0;
+            std::int32_t next = widthCells;
+            while (next < length) {
+                float x = 0, z = 0, orientation = 0;
+                if (!TryToCreateWaveProducerForShore(shore, first, next, x, z, orientation) ||
+                    !waveSystem_->AddProducer(x, z, orientation)) {
+                    first += halfWidthCells;
+                    next += halfWidthCells;
+                } else {
+                    ++produced;
+                    if (maximum <= produced) {
+                        for (std::uint32_t i = 0; i < totalVerts_; ++i)
+                            vertices_[i].flags &= static_cast<std::uint16_t>(~1u);
+                        return;
+                    }
+                    first = next + gapCells;
+                    next = first + widthCells;
+                }
+            }
+        }
+    }
+    for (std::uint32_t i = 0; i < totalVerts_; ++i) vertices_[i].flags &= static_cast<std::uint16_t>(~1u);
+}
+
+// ==================================================================================== create / image import
+
+bool cSTETerrain::CreateFromGrayScaleImage(ITerrainHeightImage* image) {
+    // 0x100735f50: sample the image over the vertex grid (the original rounds the fractional source
+    // coordinate), scale by kImageImportScaleFactor and release the buffer.
+    if (!image) return false;
+    const std::uint32_t width = image->Width();
+    if (width == 0) return false;
+    const std::uint32_t height = image->Height();
+    if (height == 0 || vertsZ_ == 0) return false;
+    float sourceZ = 0.0f;
+    const float stepZ = static_cast<float>(height) / static_cast<float>(vertsZ_);
+    for (std::uint32_t z = 0; z < vertsZ_; ++z) {
+        const std::int32_t imageZ = static_cast<std::int32_t>(sourceZ + 0.5f);
+        float sourceX = 0.0f;
+        const float stepX = static_cast<float>(width) / static_cast<float>(vertsX_);
+        for (std::uint32_t x = 0; x < vertsX_; ++x) {
+            const std::int32_t imageX = static_cast<std::int32_t>(sourceX + 0.5f);
+            vertices_[z * vertsX_ + x].altitude =
+                static_cast<float>(image->Gray(static_cast<std::uint32_t>(imageX),
+                                               static_cast<std::uint32_t>(imageZ))) *
+                Statics().imageImportScaleFactor;
+            sourceX += stepX;
+        }
+        sourceZ += stepZ;
+    }
+    image->Release();
+    createdFromImage_ = true;                                 // +0xa0
+    return true;
+}
+
+bool cSTETerrain::CreateFromGrayScaleImage(const cRZString& path) {
+    // 0x10073610c: load the named height image through the GZCOM image loader and import it.
+    ITerrainHost* host = TerrainHost();
+    if (!host) return false;
+    ITerrainHeightImage* image = host->LoadHeightImage(path);
+    if (!image) return false;
+    return CreateFromGrayScaleImage(image);
+}
+
+bool cSTETerrain::Create() {
+    // 0x100735cfc: the first-boot terrain. The new-city specification either carries an obliterated
+    // segment (loaded as-is), a height image (imported), a name (loaded from file) or nothing (a flat city
+    // at the region's base terrain height). Everything then gets eroded and reconciled with the neighbours.
+    ITerrainHost* host = TerrainHost();
+    if (!host) return false;
+    const cRZString name = host->NewCityName();
+    if (cIGZPersistDBSegment* segment = host->NewCityObliteratedTerrainSegment()) {
+        LoadObliterated(segment);                             // vslot 0x300
+        ResetWaterToSeaLevel(gridRect_);
+    } else {
+        ITerrainHeightImage* image = host->NewCityHeightImage();
+        bool fromImage = false;
+        if (name.Strlen() == 0) {
+            if (!image) {
+                float height = Statics().defaultTerrainHeight;
+                float base = 0.0f;
+                if (host->NewCityBaseAltitude(base)) height = base;
+                for (Vertex& vertex : vertices_) vertex.altitude = height;
+                minHeight_ = height;                          // +0x90 / +0x94
+                maxHeight_ = height;
+                ResetWaterToSeaLevel(gridRect_);
+                createDone_ = true;                           // +0x80
+                return true;
+            }
+            CreateFromGrayScaleImage(image);
+            fromImage = true;
+        } else if (image) {
+            CreateFromGrayScaleImage(image);
+            fromImage = true;
+        } else {
+            CreateFromGrayScaleImage(name);
+            fromImage = false;
+        }
+        EnsureMinAllowedHeight();
+        ResetWaterToSeaLevel(gridRect_);
+        DoErosion(0, fromImage);
+        ResetWaterToSeaLevel(gridRect_);
+        ReconcileEdgesWithNeighboringCities(false, false, false);   // vslot 0x2c8
+        FindMinAndMaxHeights();
+    }
+    createDone_ = true;
+    return true;
+}
+
+bool cSTETerrain::LevelAreaStartingAt(std::int32_t startVertex, float maxHeightDifference, std::uint16_t mark) {
+    // 0x1007364ec: flood-fill the same-height neighbourhood (west/north/east/south, the original's four
+    // kOffset entries), stopping at the sea, the mark and the maximum height difference. A big enough
+    // region is levelled to the seed's altitude; a small one only loses its marks.
+    std::vector<std::int32_t> region;
+    region.push_back(startVertex);
+    const float seedAltitude = vertices_[static_cast<std::size_t>(startVertex)].altitude;
+    const float seaLevel = tuning_.seaLevel;
+    std::size_t count = 1;
+    for (std::size_t i = 0; i < count; ++i) {
+        const std::int32_t current = region[i];
+        const std::int32_t row = current / static_cast<std::int32_t>(vertsX_);
+        const std::int32_t column = current % static_cast<std::int32_t>(vertsX_);
+        for (int direction = 0; direction < 4; ++direction) {
+            const std::int32_t x = column + kDirectionX[direction * 2];
+            const std::int32_t z = row + kDirectionZ[direction * 2];
+            if (x < 0 || z < 0 || static_cast<std::uint32_t>(x) >= vertsX_ ||
+                static_cast<std::uint32_t>(z) >= vertsZ_)
+                continue;
+            const std::int32_t neighbour = GetVertIndex(x, z);
+            const Vertex& vertex = vertices_[static_cast<std::size_t>(neighbour)];
+            if ((vertex.flags & mark) != 0) continue;
+            if (vertex.altitude <= seaLevel) continue;
+            if (maxHeightDifference <= std::fabs(vertex.altitude - seedAltitude)) continue;
+            vertices_[static_cast<std::size_t>(neighbour)].flags |= mark;
+            region.push_back(neighbour);
+            ++count;
+        }
+    }
+    if (Statics().minCellsInUsefulFlatArea < static_cast<std::int32_t>(count)) {
+        for (std::int32_t index : region) SetAltitude(index, seedAltitude);   // vslot 0x188
+        return true;
+    }
+    for (std::int32_t index : region)
+        vertices_[static_cast<std::size_t>(index)].flags &= static_cast<std::uint16_t>(~mark);
+    return false;
+}
+
+void cSTETerrain::CreateFlatAreas(bool redisplay) {
+    // 0x100736326: level every terrace inside the altitude band, then widen the mark by the auto-flatten
+    // radius, smooth the marked region and clear the scratch marks.
+    FindMinAndMaxHeights();
+    if (vertsZ_ == 0) return;
+    const float seaLevel = tuning_.seaLevel;
+    const float minTerrace = Statics().minTerraceAltitudeFactor * maxHeight_ + seaLevel;
+    const float maxTerrace = maxHeight_ * Statics().maxTerraceAltitudeFactor + seaLevel;
+    const float maxChange = Statics().maxTerrainHeight * Statics().maxHeightChangeToFlattenFactor;
+    bool flattened = false;
+    for (std::uint32_t z = 0; z < vertsZ_; ++z) {
+        for (std::uint32_t x = 0; x < vertsX_; ++x) {
+            const std::int32_t index = GetVertIndex(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
+            const Vertex& vertex = vertices_[static_cast<std::size_t>(index)];
+            if ((vertex.flags & 1) != 0) continue;
+            if (!(minTerrace < vertex.altitude && vertex.altitude < maxTerrace)) continue;
+            if (LevelAreaStartingAt(index, maxChange, 1)) flattened = true;
+        }
+    }
+    if (!flattened) return;
+    MarkRegion(Statics().autoFlatAreaEdgeSmootheningRadius, &cSTETerrain::IsVertexWithMark1,
+               &cSTETerrain::IsLandAndNotMark1, 2);
+    TerrainRect bounds{};
+    ComputeBoundsOfMarkedRegion(bounds, 2);
+    SmoothenMarkedRegion(bounds, Statics().numSmoothingPassesAfterAutoFlattening, 2);
+    for (Vertex& vertex : vertices_) vertex.flags &= static_cast<std::uint16_t>(0xfffc);
+    if (redisplay) RedisplayTerrain(true, true, gridRect_, 0);   // vslot 0x228
+}
+
+// ==================================================================================== neighbour-city edge reconcile
+
+void cSTETerrain::ReconcileEdgesWithNeighboringCities(bool a, bool b, bool c) {
+    // 0x10073f916: collect the heights the neighbours impose on the shared edges, tell the player, then
+    // drag the terrain toward them (locking the edge vertices and smoothing the surroundings).
+    ITerrainHost* host = TerrainHost();
+    if (!host) return;
+    if (!host->PopupDialogsEnabled()) return;
+    TerrainEdgeHeights heights;
+    ComputeEdgeVerticesToReconcile(heights, c);
+    const bool hasWork = !heights.empty();
+    bool proceed = hasWork;
+    if (a && !hasWork) host->ShowEdgeReconcileDialog(0);      // "no mismatch"
+    if (hasWork && !a && b) proceed = host->ShowEdgeReconcileDialog(1);   // "mismatch, fix?"
+    if (!proceed) {
+        PostMessageA(0xca63d517, a ? 1u : 0u, hasWork ? 1u : 0u, 0, 0);
+        return;
+    }
+    std::unordered_set<int> cells, vertices;
+    ComputeCellsAndVertsAffectedByReconcilliation(heights, cells, vertices);
+    bool done = true;
+    if (b) {
+        HighlightCellsAffectedByEdgeReconcilliation(cells);
+        const bool proceedDamage = host->ShowEdgeReconcileDialog(2);   // "damage, continue?"
+        if (view_) view_->ClearCurrentSelections();           // vslot 0x68
+        if (!proceedDamage) {
+            PostMessageA(0xca63d517, 1, 1, 0, 0);
+            return;
+        }
+        done = true;
+    }
+    LockEdgeVerticesAndSmoothen(heights, vertices);
+    PostMessageA(0xca63d517, a ? 1u : 0u, hasWork ? 1u : 0u, done ? 1u : 0u, 0);
+}
+
+void cSTETerrain::ComputeEdgeVerticesToReconcile(TerrainEdgeHeights& heights, bool useDefaultHeight) {
+    // 0x10073fb82: walk the four edges of the current city, look up the neighbouring city in the region
+    // and read each neighbour's shared edge altitudes out of its save game.
+    ITerrainHost* host = TerrainHost();
+    if (!host) return;
+    cISC4Region* region = host->Region();
+    if (!region) return;
+    sc4::SC4RectT<int> regionBounds;
+    region->GetBoundingRect(regionBounds);                    // vslot 0xc0
+    cISC4RegionalCity* city = host->RegionalCity();
+    if (!city) return;
+    TerrainRect cityVertRect;
+    GetCityVertRect(*city, cityVertRect);
+    std::int32_t cityX = 0, cityZ = 0, cityWidth = 0, cityHeight = 0;
+    host->RegionalCityPosition(*city, cityX, cityZ);          // vslot 0x28
+    host->RegionalCitySize(*city, cityWidth, cityHeight);     // vslot 0x38
+    float defaultHeight = 0.0f;
+    host->NewCityBaseAltitude(defaultHeight);
+    for (int edge = 0; edge < 4; ++edge) {
+        std::int32_t count = 0, x = cityX, z = cityZ;
+        if ((edge | 2) == 2) {
+            count = cityHeight;
+            x = edge == 0 ? cityX - 1 : cityX + cityWidth;
+        } else {
+            count = cityWidth;
+            z = edge == 1 ? cityZ - 1 : cityZ + cityHeight;
+        }
+        if (count <= 0) continue;
+        if (x < regionBounds.x0 || z < regionBounds.z0 || regionBounds.x1 < x || regionBounds.z1 < z) continue;
+        for (std::int32_t i = 0; i < count; ++i) {
+            cRZAutoRefCount<cISC4RegionalCity>* found = region->GetCity(x, z);   // vslot 0x58
+            cISC4RegionalCity* neighbour = found ? found->get() : nullptr;
+            if (!neighbour) {
+                if (useDefaultHeight) {
+                    UpdateMaxHeightsForEdgeVerticesAssumingDefaultNeighborHt(edge, cityX, cityZ, x, z,
+                                                                            defaultHeight, heights);
+                }
+            } else {
+                ComputeMaxHeightsForEdgeVertices(edge, cityVertRect, neighbour, heights);
+            }
+            x += kDirectionX[edge * 2];
+            z += kDirectionZ[edge * 2];
+        }
+    }
+    // Drop the vertices that already match (or are within the threshold) when at least one vertex really
+    // differs; a fully matching edge leaves the map untouched (the original clears it instead).
+    std::vector<int> matching, close;
+    const float threshold = Statics().edgeReconciliationHeightDifferenceThreshold;
+    for (const auto& entry : heights) {
+        const float altitude = vertices_[static_cast<std::size_t>(entry.first)].altitude;
+        if (altitude == entry.second) {
+            matching.push_back(entry.first);
+            close.push_back(entry.first);
+        } else if (std::fabs(altitude - entry.second) <= threshold) {
+            close.push_back(entry.first);
+        }
+    }
+    if (close.size() == heights.size()) {
+        heights.clear();
+    } else {
+        for (int index : matching) heights.erase(index);
+    }
+}
+
+void cSTETerrain::ComputeCellsAndVertsAffectedByReconcilliation(const TerrainEdgeHeights& heights,
+                                                                std::unordered_set<int>& cells,
+                                                                std::unordered_set<int>& verts) {
+    // 0x100740080: for every reconciled vertex, the smoothing radius is looked up from the height
+    // difference and both the cells and the vertices inside that radius are collected.
+    for (const auto& entry : heights) {
+        const std::int32_t index = entry.first;
+        const std::int32_t row = index / static_cast<std::int32_t>(vertsX_);
+        const std::int32_t column = index % static_cast<std::int32_t>(vertsX_);
+        const float difference = std::fabs(entry.second - vertices_[static_cast<std::size_t>(index)].altitude);
+        const std::int32_t radius =
+            static_cast<std::int32_t>(EvaluateCurve(Statics().edgeReconciliationSmoothingRadiusCurve, difference));
+        // vertices (vertsX stride): rows row-radius..row+radius, clamped to cellsZ
+        std::int32_t rowStart = row - radius;
+        if (rowStart < 0) rowStart = 0;
+        std::int32_t rowEnd = row + radius;
+        if (static_cast<std::uint32_t>(rowEnd) > cellsZ_) rowEnd = static_cast<std::int32_t>(cellsZ_);
+        std::int32_t columnStart = column - radius;
+        if (columnStart < 0) columnStart = 0;
+        std::int32_t columnEnd = column + radius;
+        if (static_cast<std::uint32_t>(columnEnd) > cellsX_) columnEnd = static_cast<std::int32_t>(cellsX_);
+        for (std::int32_t z = rowStart; z <= rowEnd; ++z)
+            for (std::int32_t x = columnStart; x <= columnEnd; ++x)
+                verts.insert(GetVertIndex(x, z));
+        // cells (cellsX stride): one row/column wider towards the start, clamped to the last cell
+        std::int32_t cellRowStart = row <= radius ? 0 : row - radius - 1;
+        std::int32_t cellRowEnd = row + radius;
+        if (static_cast<std::uint32_t>(cellRowEnd) > static_cast<std::uint32_t>(lastCellZ_))
+            cellRowEnd = static_cast<std::int32_t>(lastCellZ_);
+        std::int32_t cellColumnStart = column <= radius ? 0 : column - radius - 1;
+        std::int32_t cellColumnEnd = column + radius;
+        if (static_cast<std::uint32_t>(cellColumnEnd) > static_cast<std::uint32_t>(lastCellX_))
+            cellColumnEnd = static_cast<std::int32_t>(lastCellX_);
+        for (std::int32_t z = cellRowStart; z <= cellRowEnd; ++z)
+            for (std::int32_t x = cellColumnStart; x <= cellColumnEnd; ++x)
+                cells.insert(static_cast<int>(static_cast<std::uint32_t>(z) * cellsX_ +
+                                              static_cast<std::uint32_t>(x)));
+    }
+}
+
+void cSTETerrain::HighlightCellsAffectedByEdgeReconcilliation(const std::unordered_set<int>& cells) {
+    // 0x1007406d4: the view marks the cells (it draws them until the reconcile completes).
+    if (!view_) return;
+    std::vector<TerrainPointI> points;
+    points.reserve(cells.size());
+    for (int cell : cells) {
+        points.push_back(TerrainPointI{cell % static_cast<int>(cellsX_), cell / static_cast<int>(cellsX_)});
+    }
+    view_->HighlightCells(points, true, false);               // vslot 0x40
+}
+
+void cSTETerrain::LockEdgeVerticesAndSmoothen(const TerrainEdgeHeights& heights,
+                                              const std::unordered_set<int>& verts) {
+    // 0x1007407bc: apply the reconciled altitudes, mark the untouched vertices next to them and smooth the
+    // marked area, then clear the marks and redisplay.
+    TerrainRect rect{INT32_MAX, INT32_MAX, INT32_MIN, INT32_MIN};
+    for (const auto& entry : heights) SetAltitude(entry.first, entry.second);   // vslot 0x188
+    for (int index : verts) {
+        const std::uint32_t row = static_cast<std::uint32_t>(index) / vertsX_;
+        const std::uint32_t column = static_cast<std::uint32_t>(index) % vertsX_;
+        if (static_cast<std::int32_t>(column) < rect.left) rect.left = static_cast<std::int32_t>(column);
+        if (static_cast<std::int32_t>(column) > rect.right) rect.right = static_cast<std::int32_t>(column);
+        if (static_cast<std::int32_t>(row) < rect.top) rect.top = static_cast<std::int32_t>(row);
+        if (static_cast<std::int32_t>(row) > rect.bottom) rect.bottom = static_cast<std::int32_t>(row);
+        if (heights.find(index) != heights.end()) continue;
+        if (column != 0 && vertsX_ <= static_cast<std::uint32_t>(index) && column != cellsX_ && row != cellsZ_) {
+            vertices_[static_cast<std::size_t>(index)].flags |= 1;
+        }
+    }
+    SmoothenMarkedRegion(rect, Statics().edgeReconciliationSmoothingIterations, 1);
+    ClearVertexPropertyFlags(rect, 1);
+    RedisplayTerrain(true, true, rect, 1);                    // vslot 0x228
+}
+
+void cSTETerrain::GetCityVertRect(const cISC4RegionalCity& city, TerrainRect& r) {
+    // 0x100740930: the city's region cells scaled to terrain cells (a 1x1 region cell is 64 cells).
+    ITerrainHost* host = TerrainHost();
+    if (!host) {
+        r = {0, 0, 0, 0};
+        return;
+    }
+    std::int32_t x = 0, z = 0, width = 0, height = 0;
+    host->RegionalCityPosition(city, x, z);
+    host->RegionalCitySize(city, width, height);
+    r.left = x << 6;
+    r.top = z << 6;
+    r.right = r.left + width * 0x40;
+    r.bottom = r.top + height * 0x40;
+}
+
+void cSTETerrain::ComputeMaxHeightsForEdgeVertices(int edge, const TerrainRect& cityRect,
+                                                   const cISC4RegionalCity* city,
+                                                   TerrainEdgeHeights& heights) {
+    // 0x100740992: open the neighbour's save game, load its edge altitudes for the shared edge (the edge
+    // opposite ours: (edge + 2) % 4) and merge them into the map.
+    ITerrainHost* host = TerrainHost();
+    if (!host || !city) return;
+    TerrainRect neighbourRect;
+    GetCityVertRect(*city, neighbourRect);
+    cRZString path;
+    city->GetCitySaveFilePath(path);                          // vslot 0xf8
+    cIGZPersistDBSegment* segment = host->OpenSaveGame(path, false, true);
+    if (!segment) return;
+    std::vector<float> edgeAltitudes;
+    const int neighbourEdge = (edge + 2) & 3;
+    if (LoadEdgeAltitudes(neighbourEdge, segment, edgeAltitudes)) {
+        TerrainPointI ourEdge, theirEdge;
+        if (GetEdgeSharedWithNeighboringCity(cityRect, neighbourRect, ourEdge, theirEdge)) {
+            ComputeMaxHeightsForEdgeVertices(cityRect, neighbourRect, ourEdge, theirEdge, edgeAltitudes, heights);
+        }
+    }
+    host->CloseSaveGame(segment);
+}
+
+void cSTETerrain::UpdateMaxHeightsForEdgeVerticesAssumingDefaultNeighborHt(int edge, int startX, int startZ,
+                                                                           int x, int z, float defaultHeight,
+                                                                           TerrainEdgeHeights& heights) {
+    // 0x100740ada: walk up to 0x41 vertices along the edge and record the default height where the map
+    // does not already hold a higher value.
+    std::int32_t index = 0;
+    std::int32_t step = 1;
+    const std::int32_t width = static_cast<std::int32_t>(vertsX_);
+    if ((edge & 1) == 0) {
+        index = (z - startZ) * width * 0x40;
+        if (edge == 2) index += static_cast<std::int32_t>(cellsX_);
+    } else {
+        index = (x - startX) * 0x40;
+        if (edge == 3) index += static_cast<std::int32_t>(vertsX_ * cellsZ_);
+    }
+    for (int i = 0; i < 0x41; ++i) {
+        // PORT-ONLY guard: the original's index formula assumes the edge is 64 terrain cells long; a fixture
+        // grid can be smaller, so stop at the end of the vertex array instead of writing out of bounds.
+        if (index < 0 || static_cast<std::uint32_t>(index) >= totalVerts_) break;
+        float& value = heights[index];
+        if (value <= defaultHeight && value != defaultHeight) value = defaultHeight;
+        index += step;
+    }
+}
+
+bool cSTETerrain::GetEdgeSharedWithNeighboringCity(const TerrainRect& a, const TerrainRect& b,
+                                                   TerrainPointI& aEdge, TerrainPointI& bEdge) {
+    // 0x100740bbe: the shared edge is a vertical line when the two rects touch left-to-right, otherwise a
+    // horizontal one; the start/end points only cover the overlapping span.
+    if (b.right == a.left || b.left == a.right) {
+        aEdge.x = bEdge.x = b.right == a.left ? b.right : b.left;
+        aEdge.z = a.top < b.top ? b.top : a.top;
+        bEdge.z = a.bottom < b.bottom ? a.bottom : b.bottom;
+        return true;
+    }
+    std::int32_t edgeZ = 0;
+    if (b.bottom == a.top) {
+        edgeZ = b.bottom;
+    } else if (b.top == a.bottom) {
+        edgeZ = b.top;
+    } else {
+        return false;
+    }
+    aEdge.z = bEdge.z = edgeZ;
+    aEdge.x = a.left < b.left ? b.left : a.left;
+    bEdge.x = a.right < b.right ? a.right : b.right;
+    return true;
+}
+
+void cSTETerrain::ComputeMaxHeightsForEdgeVertices(const TerrainRect& a, const TerrainRect& b,
+                                                   const TerrainPointI& aEdge, const TerrainPointI& bEdge,
+                                                   const std::vector<float>& heights,
+                                                   TerrainEdgeHeights& out) {
+    // 0x100740c2e: walk the shared span and keep the maximum of each pair of edge altitudes.
+    std::int32_t index = (aEdge.x - a.left) + (aEdge.z - a.top) * ((a.right - a.left) + 1);
+    std::int32_t count = bEdge.z - aEdge.z;
+    std::int32_t step = static_cast<std::int32_t>(static_cast<std::uint32_t>(a.right - a.left) + 1);
+    std::int32_t first = aEdge.z;
+    std::int32_t offset = aEdge.z;
+    if (count == 0) {
+        count = bEdge.x - aEdge.x;
+        step = 1;
+        first = aEdge.x;
+        offset = aEdge.x - b.left;
+    } else {
+        offset = aEdge.z - b.top;
+    }
+    if (count < 0) return;
+    for (std::int32_t i = 0; i <= count; ++i) {
+        if (static_cast<std::size_t>(offset) >= heights.size()) break;
+        const float height = heights[static_cast<std::size_t>(offset)];
+        float& value = out[index];
+        if (value <= height && value != height) value = height;
+        index += step;
+        ++offset;
+    }
+    (void)first;
 }
 
 // ==================================================================================== lighting
@@ -3018,14 +4454,14 @@ bool cSTETerrain::Read(cIGZIStream& stream) {
     std::uint16_t version = 0;
     stream.GetUint16(version);
     if (2 < version) return false;
-    // The view (CLSID 0xc9b84e10, cSTETerrainView3D) is read back into +0x110 here. The port has no
-    // adapter from the loaded object to ITerrainView yet (to-do row TERRAIN-VIEW-3), so the view is
-    // skipped and the rest of the payload still loads.
+    // The view (CLSID 0xc9b84e10, cSTETerrainView3D) is read back into +0x110 here; the host wraps the
+    // freshly loaded object into the ITerrainView the port uses.
     cIGZPersistDBSegment* segment = nullptr;
     void* raw = nullptr;
     if (ITerrainHost* host = TerrainHost()) {
         void* viewObject = nullptr;
-        (void)host->ReadGZSerializable(stream, 0xc9b84e10, &viewObject);   // kCLSID_cSTETerrainView3D
+        if (host->ReadGZSerializable(stream, 0xc9b84e10, &viewObject))    // kCLSID_cSTETerrainView3D
+            view_ = host->AdoptLoadedTerrainView(viewObject);
     }
     if (stream.QueryInterface(kGZIID_cISC4DBSegmentIStream, &raw) && raw) {
         auto* in = static_cast<cISC4DBSegmentIStream*>(raw);

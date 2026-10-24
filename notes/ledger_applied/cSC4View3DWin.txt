@@ -1,67 +1,29 @@
 SOURCE src/sc4/View3DWin.cpp|h
-EVIDENCE test scripts/tests/sc4_view3dwin_test.cpp - the nine functions below run in sc4_view3dwin (SetRenderProperties: bool toggle with an empty value, bool/int/float parse and the 0xc9f775bb notification, unknown names and the void context; SetRenderPropertiesStatic through the same setter; UpdateZoomButtons' CanZoomIn/CanZoomOut to button 0x4992046a/0xe9920494 mapping; UpdateCityName writing caption 2; UpdateDayNightButtons' real-time/noon/midnight id+mode table for visual modes 0/1/2; UpdatePopulation's language-manager number; UpdateBudget's money string, negative/positive colours, the early return without a city and the open budget dialog refresh; DoCityEstablished enabling the three city buttons and dropping the active tool; RemoveGUI: window-manager removal, the reverse guiWindows_ releases, every panel/text field cleared, the five window-procedure and tool-tip Shutdowns, and the no-op second call).
-0x10079064e View3DSetRenderProperties
-0x100792b3a View3DSetRenderPropertiesStatic
-0x1007872e8 View3DUpdateZoomButtons
-0x100786f3e View3DCityEstablished
-0x10078700a View3DUpdateCityName
-0x10078aa58 View3DUpdateDayNightButtons
-0x1007887bc View3DUpdateBudget
-0x100787fb6 View3DUpdatePopulation
+EVIDENCE test scripts/tests/sc4_view3dwin_test.cpp - AddGUI / RemoveGUI / ShowPanel / HidePanel / ShowMayorSubPanel / MinimizeUI / DoCityObliterated / UpdateSpeedButtons / UpdateAlertBorder / DoMessage(cIGZWin*, cGZMessage&) / DoPanelCommandGUI all run in sc4_view3dwin; the rows below are the panel pieces that still need a neighbour
 PARTIAL:
-0x100780eaa View3DRemoveGui - the teardown the original performs is all there, but the port does not model the cursor-text window (+0x5d0, borrowed from the host by design) or the cost-indicator windows (+0x5c0 / +0x5c8 / +0x5f0), so those four blocks are skipped; AddGUI, which builds every window it removes, is also unrecovered (the port keeps the members and the host seams so the body is complete once AddGUI lands)
-SKIPPED:
-0x1007892fc AddGUI - needs cSC4NewsTickerWinProc, cSC4MySimWinProc, cSC4BudgetUIWinProc, cSC4AdvisorPopupTracker and cSC4GraphsViewWinProc (none recovered) plus nSC4UI::GetWindowChildrenSet / GetWindowChildrenNotInSet / AlignWindowSetToWindow / ClearAcceptFocusFlagRecursive (nSC4UI has no source file)
-0x10078afde HandleButtonActivated - needs AddGUI's toolbar windows, HidePanel/ShowPanel and the whole button table
-0x10078c2dc DoPanelCommandGUI - needs AddGUI's toolbar windows, ShowPanel/HidePanel, DoEstablishCityDialog and the panel toggle table (kPanelToggleButtonIds is recorded)
-0x10078aade HidePanel - needs the city UI manager at SL::spCity vslot 0x288, cSC4MySimWinProc::Hide and cSC4NewsTickerWinProc (all unrecovered) plus the panel vectors AddGUI fills
-0x10078ac02 ShowPanel - needs the same city UI manager slots (0xd8/0xe0/0xe8), cSC4MySimWinProc::Show and the panel vectors AddGUI fills
-0x10078ad68 ShowMayorSubPanel - needs the city UI manager, cSC4GraphsViewWinProc::ShowWindow/IsVisible/HideWindow and cSC4BuildingSelectWinProc Show/Hide plus five toolbar/stats windows from AddGUI
-0x100792b4e MinimizeUI - hides/shows +0x280, +0x450, +0x470 and +0x290 and calls HidePanel/ShowPanel (all unrecovered)
-0x100786fbe DoCityObliterated - calls HidePanel(4), which is unrecovered
-0x100787896 UpdateSpeedButtons - needs the speed-button control (vslot 0x28 toggle plus 0x80/0x90/0x58/0x60 geometry) and the simulator's speed/pause slots 0xd8/0x78 that AddGUI links to the buttons
-0x100787a1c UpdateAlertBorder - needs cSLBuffer, the city's alert-manager slots (spCity 0x240 and 0x188), the simulator's pause slot and the bitmap window 0x6a5e44b6
-0x100788084 UpdateMayorRatingBar - needs cSLBuffer and the mayor-rating graph windows AddGUI builds
-0x100787e12 UpdateSimulationClock - needs the date text +0x4b8 and the simulator's date object (+0x238 vslot 0x30), both created/linked by AddGUI/DoPreCityInit
-0x100788912 Update24HourClock - needs the clock text windows and the 24-hour clock formatting slots; the windows come from AddGUI
-0x1007858a2 Update24HourClockHover - needs the clock text windows AddGUI builds and the 24-hour clock object
-0x100788bfc UpdateAmbientLightLevel - needs the renderer's lighting-manager slot 0x48 and the clock's time slots (0x60/0x78) plus spSC4 0x130
-0x100787b66 UpdateMissionProgress - needs the mission panel windows (script-built by ShowMissionStatusPanel)
-0x100792c82 ShowMissionStatusPanel - needs the mission panel window from SC4CreateWindowFromScript and the mission status class (no source)
-0x100792ec8 UpdateMissionStatusPanel - needs the mission status class (no source) and the panel window
-0x100788d0e DoBudgetFailure - needs nSC4UI::DoScriptedModalDialog (no source) and SC4GamePause/cSC4AutoGamePause
-0x10078fe78 ObliterateCity - needs nSC4UI::DoScriptedModalDialog and the cSC4ObliterateCity tool
-0x10078ff30 DoEstablishCityDialog - needs nSC4UI::DoScriptedModalDialog and the modal establish-city flow (cSC4EstablishCityWinProc is recovered, the modal helper is not)
-0x10078616c DoPreCityInit - needs AddGUI plus the animation tick manager and the per-city window processors; Shutdown's host seams stand in
-0x1007867d8 DoPostCityInit - same as DoPreCityInit (AddGUI plus the window processors)
-0x100787092 DoLoad - feasible next: the record helpers (cSC4AutoLoadStream) and SC4ReadGZSerializable exist, but the test rig needs a packed DB segment (AutoHelpers/DBSegment sources) added; reads the camera control, renderer, model maker, paused simulator and the effect map
-0x1007871e4 DoSave - feasible next: same DB-segment test rig as DoLoad; writes the camera control, renderer, model maker, paused simulator (version 4) and the effect map
-0x10078e2e0 ProcessCommand - the 6.9 KB command table needs the preference/dialog tools (audio/graphics/game preferences) and the toolbar command set, none recovered
-0x10078410a InvokeCatalogItemCommand - the switch constructs the zoning/network/intersection/disaster input controls, none recovered
-0x100783e2a InvokeDisaster - needs cISCPropertyHolder::GetPropertyValue, the exemplar lookup through SL::spRM and cSC4ViewInputControlTorch / cSC4ViewInputControlEffectDisaster
-0x100785070 HandleAdviceLinkMessage - needs cSC4GraphsViewWinProc::ShowGraphType and ShowMayorSubPanel (unrecovered)
-0x10078526a ProcessCheatCode - needs cSC4ViewInputControlGameOfLife / PlaceLot / TollBooth and the zot/zone occupant-filter class behind the 0x100a6db78 vtable
-0x100788e0e ReadTunableValues - feasible next: needs spSC4's ini accessor (vslot 0xe8) and the command-line rewrite; the RenderProperties parser it feeds is now recovered
-0x100787334 AddBackgroundImageToRenderer - feasible next: needs the renderer's background-image slots, cRZDirectory's pattern search, cSLString and cSLBuffer
-0x100791802 SetCostIndicator(unsigned,unsigned) - needs the +0x5c0 bitmap window and RenderCostIndicator
-0x1007918de RenderCostIndicator - needs the +0x5c0 bitmap window and the WCM text class 0xe2b14587 (measure/draw)
-0x100791c04 SetCostIndicatorAlpha - needs the +0x5c0 bitmap window (its SetFadeAlpha slot)
-0x100791c5a ClearCostIndicator - needs the +0x5c8 text window and RenderCostIndicator
-0x10078d1be InvokeTertiaryMenu(6 args) - needs nSC4UI::CreateCatalogView (no source) and the tertiary menu frame/callout box flow
-0x10078d762 InvokeSecondaryMenu(6 args) - needs nSC4UI::CreateCatalogView and cSC4WinTertiaryMenuFrame
-0x10078dfdc InvokeTertiaryMenu(5 args) - needs nSC4UI::CreateCatalogView
-0x10078c960 InvokeSecondaryMenu(4 args) - needs nSC4UI::CreateCatalogView and AlignWindowToWindow
-0x10078d074 CreateBuildingMenu - needs nSC4UI::CreateCatalogView and the building-chooser windows
-0x10078c690 DoLandscapeMenu - needs nSC4UI::CreateCatalogView/CreateWindowFromScript sets and AlignWindowToWindow
-0x10078cb24 DoZoningMenu - same menu-helper dependency (nSC4UI)
-0x10078cbb4 DoUtilitiesMenu - same menu-helper dependency (nSC4UI)
-0x10078dd12 DoTransportMenu - same menu-helper dependency (nSC4UI)
-0x10078e108 DoVehicleMenu - same menu-helper dependency (nSC4UI)
-0x10078dbb0 DoDisasterCopingMenu - same menu-helper dependency (nSC4UI)
-0x10078ca8c DoDayNightMenu - needs nSC4UI::CreateCatalogView and the day/night catalogue
-0x100790aa0 DoLandscapeCatalogView - needs nSC4UI::CreateCatalogView, cSC4CatalogItem (recovered) and the property holder
-0x100790b98 DoFloraCatalogView - needs nSC4UI::CreateCatalogView plus the flora catalogue data
-0x100790c4a DoZoneCatalogView - needs nSC4UI::CreateCatalogView plus the zone catalogue data
-0x100790cfc DoEarnedVehicleCatalogView - needs cISC4AutomataManager's catalogue and nSC4UI::CreateCatalogView
-0x100790e52 AddAutomataToItemList - needs the automata manager's catalogue item list (cISC4AutomataManager not recovered)
-0x100791d86 AddBuildingsToItemList - needs the building catalogue (nSC4UI/cISC4BuildingCatalogue) not recovered
+0x10078afde View3DHandleButtonActivated - the 4659-byte switch over ~120 button ids is not written: each case either runs a command-server command (the new ExecuteCommand seam) or opens one of nine menu builders (DoZoningMenu 0x10078cb24, DoTransportMenu 0x10078dd12, DoUtilitiesMenu 0x10078cbb4, DoLandscapeMenu 0x10078c690, DoVehicleMenu 0x10078e108, DoDayNightMenu 0x10078ca8c, DoDisasterCopingMenu 0x10078dbb0, CreateBuildingMenu 0x10078d074, InvokeSecondaryMenu 0x10078c960 / 0x10078d762, InvokeTertiaryMenu 0x10078dfdc / 0x10078d1be), none recovered or seamed; the body is empty and reports not-handled
+0x10078c2dc View3DDoPanelCommandGUI - the four panel toggles are written (shift+ctrl+alt + byte 0x1c9 rule, currentPanel_ / kPanelToggleButtonIds bookkeeping, ShowPanel / HidePanel), but the new-city branch needs DoEstablishCityDialog 0x10078ff30 (1625 bytes, unrecovered; the ShowEstablishCityDialog seam answers it) and the real callers are HandleButtonActivated
+0x100788084 View3DUpdateMayorRatingBar - not written: 1848 bytes building the mayor approval bar from cSLBuffer images (0x1431xxxx resource group 0x46a006b0) plus three city queries; needs the image-buffer seam and the advisor approval ratings
+0x100787e12 View3DUpdateSimulationClock - not written: formats RZ::LM() vslot 0x128(0) with cGZDate and the simulator's date (vslot 0x30 -> 0x68 / 0x78 / 0xb8) into the toolbar date text; needs a language-manager date formatter seam
+0x100788912 View3DUpdate24HourClock - not written: 746 bytes choosing one of the clock images (0x14315xxx) from the simulator hour and setting the day/night buttons; needs the image seam and SL::sp24HourClock's date/time accessors
+0x10078616c View3DDoPreCityInit - not written: 1489 bytes creating the camera (cS3DCamera), AddBackgroundImageToRenderer, ReadTunableValues, AddGUI, SL::OnView3DInit and the progress messages; cS3DCamera / cSC43DRender / OnView3DInit are not seamed here
+0x1007867d8 View3DDoPostCityInit - not written: 1668 bytes bringing the city up (DoCityEstablished / DoCityObliterated, Update24HourClock, UpdateMayorRatingBar, ambient light, modeless dialog) with the same neighbours as DoPreCityInit plus the mission dialogs
+0x10078e2e0 View3DProcessCommand - not written: 5940 bytes (the command table: view / camera / zoning / snapshot / album / modal dialogs, ~100 commands over the Invoke* and Do* helpers); needs cSC4WinSnapshotTaker 0x1003a0c84, the album (GoToAlbumForCurrentCity 0x10039cb38) and every menu builder
+SKIPPED: none
+# New seams (View3DWin.h, IView3DWinHost): the four nSC4UI window-set helpers (GetWindowChildrenSet 0x10030ae2d,
+# GetWindowChildrenNotInSet 0x10030ae83, AlignWindowSetToWindow 0x10030ad12, ClearAcceptFocusFlagRecursive 0x10030b220 -
+# routed through the host so View3DWin.cpp does not drag SC4UI.cpp into every test that links it; the host forwards to nSC4UI),
+# the script-window factory (CreateWindowFromScript 3- and 5-argument, SC4CreateWindowFromScript 0x100039a9f / 0x100039bf7),
+# the image buffers (LoadImageBuffer = cSLBuffer 0x100043c72's inner buffer, CreateImageBuffer = SL::spGS vslot 0x20 @ 0x10078a53c),
+# GZCOM CreateInstance for the toolbar button (exemplar 0x22ecfc47 / cIGZWinBtn 0x8810) and the compass window (exemplar
+# 0xca5d3294 / cISC4WinAlertBorder 0xca5d3290), cSLString 0x1001215e4, the recovered window procedures behind
+# INewsTickerWindow (0x10031ba2c), IMySimWindow (0x10031552c), IBudgetUIWindow (0x1002e476c), IGraphsViewWindow (0x1002dfc9c),
+# IBuildingSelectWindow (0x10075913c), IAdvisorPopupQueue (0x10032f2ac = +0x4d0, APT-6) and AttachCompassWinProc
+# (0x10032ef20 + SetWinProc 0x10078a76b), CreateCalloutBox (0x1003c5f5c = +0x5d0), CreateWinBMP (0x1003304ec = +0x5c8),
+# InitMapView (0x10035266e), IAdvisorWindow (spCity vslot 0x288 -> cSC4AdvisorSystem vslots 0xd8 / 0xe0 / 0xe8),
+# DisasterAlertActive (spCity 0x240 -> vslot 0x50), SituationAlertActive (spCity 0x188 -> vslot 0x30), SimulatorBusy
+# (spSimulator vslot 0x78), IsKeyDownNow (0x100241b76), ExecuteCommand (spCommandServer vslot 0x98) and ShowEstablishCityDialog
+# (0x10078ff30). Header corrections: +0x4d0 is the cSC4AdvisorPopupTracker (not a tool tip manager) and its own Shutdown
+# (+0x38) is called; +0x5d0 is the cSC4WinCalloutBox (the ICursorTextWindow seam was dropped); +0x5c0 is a 0x80x0x20
+# cIGZBuffer and +0x5c8 its gz::cIGZWinBMP; +0x530 is ShowMayorSubPanel's second state word; RemoveGUI uses the window
+# manager's DestroyWindow (vslot 0xb8) instead of RemoveWindowFromValidList.

@@ -1,0 +1,10 @@
+SOURCE src/sc4/LocalGridHelper.cpp|h
+EVIDENCE scripts/tests/sc4_localgridhelper_test.cpp - disassembly-decoded (otool -arch x86_64 -tV, 0x1000a98aa..0x1000a9b01): the object is one cISC4VisualEffect* named "local_grid" created lazily through SL::spEffectsManager vslot 0x30 (Init's null guard 0x1000a98d1), Shutdown's IsStarted/Stop(0) then null-before-Release order (0x1000a9926), the destructor's release-without-stop (0x1000a98b8), ShowEffect's start-only-when-stopped / stop-only-when-started guards, and SetPosition's five CellSize calls, floor snap to cell + 1/16 cell, identity rotation, bit-exact y and 16-cell scale with flags 1 only at a scale of exactly 1.0f; fakes cover the null-host / null-service paths
+0x1000a98aa LocalGridConstruct
+0x1000a98b8 LocalGridDestruct
+0x1000a98ce LocalGridInit
+0x1000a98f8 LocalGridShutdown
+0x1000a9940 LocalGridSetPosition
+0x1000a9aac LocalGridShowEffect
+PARTIAL:
+SKIPPED:

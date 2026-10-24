@@ -7,7 +7,9 @@
 #include <utility>
 
 #include "gz/CommandParameterSet.h"
+#include "gz/WinGen.h"
 #include "gz/WinUtils.h"
+#include "sc4/WinAuraAlert.h"
 #include "rz/cRZMessage2Standard.h"
 #include "sc4/SCResParser.h"
 #include "s3d/ModelInstance.h"
@@ -953,9 +955,13 @@ bool cSC4View3DWin::PickOccupant(int x, int y, cISC4Occupant*& out) {       // 0
 // ==================================================================================================== cursor text
 
 void cSC4View3DWin::UpdateCursorTextPositions(int x, int y) {               // 0x100783a60
-    if (cursorTextWindow_) {
-        // The original only repositions the window while it is visible (0x100783a70..0x100783aaa).
-        if (cursorTextWindow_->IsVisible()) cursorTextWindow_->SetPosition(x, y);
+    if (cursorTextBox_) {
+        // The original only repositions the box while it is visible (0x100783a7f..0x100783aaa).
+        cIGZWin* boxWindow = cursorTextBox_->AsIGZWin();
+        if (boxWindow && boxWindow->IsVisible()) {
+            const cRZPoint point{x, y};
+            cursorTextBox_->SetPointOfInterest(point);      // vslot 0x78
+        }
     }
     cursorTextX_ = x;                       // +0x5b0
     cursorTextY_ = y;                       // +0x5b4
@@ -969,24 +975,28 @@ void cSC4View3DWin::UpdateCostIndicator(float dt) {                         // 0
 }
 
 void cSC4View3DWin::CursorTextChanged() {                                   // 0x10079155e
-    if (!cursorTextWindow_) return;
+    if (!cursorTextBox_) return;
     if (!cursorText_.empty()) {
         const CursorTextInfo& info = cursorText_.back();   // the original reads the sentinel's back link
-        cursorTextWindow_->SetLine1(info.line1);
-        cursorTextWindow_->SetLine2(info.line2);
-        cursorTextWindow_->SetIcon(info.icon == 1 ? cursorTextIcon_ : nullptr);
-        if (!cursorTextWindow_->IsVisible()) {
+        cursorTextBox_->SetTitle(info.line1);              // vslot 0x30
+        cursorTextBox_->SetText(info.line2);               // vslot 0x40
+        cursorTextBox_->SetIcon(info.icon == 1 ? cursorTextIcon_ : nullptr);   // vslot 0x60
+        cIGZWin* boxWindow = cursorTextBox_->AsIGZWin();
+        if (boxWindow && !boxWindow->IsVisible()) {
             int x = 0;
             int y = 0;
             if (cIGZWinMgr* manager = GetWindowManager())
                 manager->GetCursorPos(static_cast<cIGZWin*>(static_cast<cGZWin*>(this)), x, y);
-            cursorTextWindow_->SetPosition(x, y);
-            cursorTextWindow_->ShowWindow();
+            const cRZPoint point{x, y};
+            cursorTextBox_->SetPointOfInterest(point);     // vslot 0x78
+            boxWindow->ShowWindow();                       // vslot 0x228 on the cGZWin subobject
         }
         return;
     }
-    cursorTextWindow_->HideWindow();
-    cursorTextWindow_->Reset();
+    if (cIGZWin* boxWindow = cursorTextBox_->AsIGZWin()) {
+        boxWindow->HideWindow();                           // vslot 0x230
+        boxWindow->InvalidateSelfAndParents();             // vslot 0x2e0
+    }
 }
 
 void cSC4View3DWin::ClearCursorText(std::uint32_t id) {                     // 0x100791772
@@ -1108,10 +1118,593 @@ void cSC4View3DWin::AddWinAnimationRecorder(bool enable) {                  // 0
 
 // ==================================================================================================== the GUI
 
-// The toolbar / panel refresh functions. AddGUI (0x1007892fc) is not recovered — it builds 8 script windows,
-// attaches the five window procedures and needs nSC4UI's four window-set helpers, none of which exist yet — so
-// in the port panelWindow_ and the panel block below are whatever the host filled in. Each function is the
-// original's, with a guard for the windows a missing AddGUI leaves null (the original would fault there).
+// AddGUI (0x1007892fc, 5411 bytes): builds the whole city UI out of nine UI-script windows, three GZCOM
+// objects, two image buffers and the five window procedures, in this order:
+//  1. the toolbar panel (+0x280) and its cIGZWinGen view (+0x288), placed at (w/3+5, h+0xb-panelH) when the
+//     view is at least three times as wide as the panel is tall, else at (5, ...);
+//  2. the GZCOM toolbar button (+0x290, a cIGZWinBtn) with its image skin, tip text, id 0x43 and the panel as
+//     its notification target;
+//  3. the five panel windows (+0x2b0..+0x328 + panelAttach_), each wrapped by nSC4UI's child-set alignment;
+//     panel 1 additionally takes the child 0xe9889775 (its own win proc) and panel 2 the MySim child 0xabb26b0e;
+//  4. the three text controls of the toolbar (date / budget / population);
+//  5. the news ticker window, its control host child 0xaa231508 and its Init;
+//  6. the four panel windows are pulled to the front, then the map view (+0x498), the town-hall window (+0x4b0),
+//     the graphs window (+0x4a0, + the graphs proc) and the building-select window (+0x4a8, + its proc);
+//  7. the budget proc, the cursor-text callout box (+0x5d0) with its two font styles and background image, its
+//     cursor icon (+0x5f0), the cost-indicator window (+0x5c8) and its 0x80x0x20 buffer (+0x5c0);
+//  8. the advisor popup tracker (+0x4d0, APT-6), the compass window (GZCOM) and its compass win proc;
+//  9. finally, when the city does not exist yet, panel 0 is opened and the "new city" / "mayor" buttons are
+//     disabled.
+// Quirks kept: the panel interface's win proc is detached (SetWinProc(nullptr)) and its user area cleared
+// before the panel is sized; every script window is created as a child of the view's cGZWin (+0x18) and gets
+// this view as a message filter; the compass window's four flags are set on the *gen* view while the alert
+// border's image is attached to the child 0xea8cad14; the advisor popup tracker is stored in the +0x4d0 slot
+// the header used to call the tool tip manager.
+void cSC4View3DWin::AddGUI() {
+    cIGZWin* parent = static_cast<cIGZWin*>(static_cast<cGZWin*>(this));    // this + 0x18
+    cIGZWinMgr* mgr = GetWindowManager();
+    const int viewW = GetW();
+    const int viewH = GetH();
+    // guiWindows_ holds one reference per window (the original's vector of cRZAutoRefCount<cIGZWin>).
+    auto ownWindow = [this](cIGZWin* window) {
+        if (window) guiWindows_.push_back(window);
+    };
+    auto clearFocus = [this](cIGZWin* window) { if (host_ && window) host_->ClearAcceptFocusFlagRecursive(window); };
+    auto alignSet = [this](const std::set<cIGZWin*>& windows) { if (host_) host_->AlignWindowSetToWindow(windows, nullptr); };
+    auto childrenSet = [this](cIGZWin* window, std::set<cIGZWin*>& out) {
+        if (host_) host_->GetWindowChildrenSet(window, out);
+    };
+    auto childrenNotInSet = [this](cIGZWin* window, const std::set<cIGZWin*>& excluded, std::set<cIGZWin*>& out) {
+        if (host_) host_->GetWindowChildrenNotInSet(window, excluded, out);
+    };
+    // ---- 1. the toolbar panel
+    {
+        cGZPersistResourceKey key{0, kView3DGuiGroup, kPanelWindowInstance};
+        if (host_) panelWindow_ = host_->CreateWindowFromScript(key, parent, kPanelWindowId);
+    }
+    if (panelWindow_) {
+        void* gen = nullptr;
+        if (panelWindow_->QueryInterface(kPanelWindowGenIid, &gen))
+            panelInterface_ = static_cast<gz::cIGZWinGen*>(gen);
+        panelWindow_->AddMessageFilter(static_cast<cIGZWinMessageFilter*>(this));   // vslot 0x3a0
+        if (panelInterface_) {
+            panelInterface_->SetWinProc(nullptr);                       // vslot 0x38
+            cRZRect empty;                                              // {0, 0, 0, 0}
+            panelInterface_->SetUserArea(empty);                        // vslot 0x58
+        }
+        const int panelW = panelWindow_->GetW();
+        (void)panelW;
+        const int panelH = panelWindow_->GetH();
+        int x = 5;
+        if (static_cast<std::uint32_t>(viewH * 3) < static_cast<std::uint32_t>(viewW)) x = viewW / 3 + 5;
+        panelWindow_->GZWinMoveTo(x, (viewH + 0xb) - panelH);           // vslot 0x1c0
+        panelWindow_->ShowWindow();                                     // vslot 0x228
+        panelWindow_->SetFlag(kWinFlag800, false);                      // vslot 0x220
+        clearFocus(panelWindow_);
+    }
+    // ---- 2. the GZCOM toolbar button (+0x290)
+    if (host_) toolbarWindow_ = host_->CreateToolbarButton();
+    if (toolbarWindow_) {
+        void* buttonView = nullptr;
+        if (toolbarWindow_->QueryInterface(gz::kGZIID_cIGZWinBtn, &buttonView)) {
+            auto* button = static_cast<gz::cIGZWinBtn*>(buttonView);
+            if (cIGZBuffer* skin = host_->LoadImageBuffer(kView3DImageType, kView3DImageGroup,
+                                                          kToolbarButtonSkinInstance)) {
+                // Magenta is the button skin's colour key: MakeFillColor(0xff, 0, 0xff) on the view's own
+                // cGZWin (0x1007894f6), then the image's transparency (buffer vslot 0xc8).
+                cIGZWin* viewWindow = static_cast<cIGZWin*>(static_cast<cGZWin*>(this));
+                skin->SetTransparency(viewWindow->MakeFillColor(0xff, 0, 0xff));
+                button->SetStyle(static_cast<int>(kToolbarButtonStyle), skin, nullptr);   // vslot 0x60
+                skin->Release();
+            }
+            button->SetBtnFlag(kToolbarButtonFitToContent, true);       // vslot 0x28
+            cIGZWin* buttonWindow = button->AsIGZWin();                 // vslot 0x18
+            if (buttonWindow) buttonWindow->SetFlag(kWinFlag4, true);   // vslot 0x220
+            if (host_) {
+                cRZString tip;
+                host_->LocalisedString(kToolbarButtonTipGroup, kToolbarButtonTipInstance, tip);
+                button->SetTipText(tip);                                // vslot 0x118
+            }
+            // The button's notification target is the panel, its id 0x43, and it sits 0x1c above the view's
+            // bottom edge at x = 0xc.
+            buttonWindow->SetNotificationTarget(panelWindow_);          // vslot 0x2b0 (on the cIGZWin)
+            buttonWindow->SetID(kToolbarButtonId);                      // vslot 0x200
+            buttonWindow->GZWinMoveTo(0xc, viewH - 0x1c);               // vslot 0x1c0
+            if (parent) parent->ChildAdd(buttonWindow);                 // vslot 0x70
+            buttonWindow->HideWindow();                                 // vslot 0x230
+            button->Release();                                          // the QueryInterface reference
+        }
+        clearFocus(toolbarWindow_);
+    }
+    // ---- 3. the five panel windows
+    if (host_) panelUIWinProc_ = host_->CreatePanelUIWinProc();         // +0x448
+    if (host_) newsTickerWinProc_ = host_->CreateNewsTickerWinProc();   // +0x450
+    for (int i = 0; i < 5; ++i) {
+        std::set<cIGZWin*> children;
+        childrenSet(parent, children);
+        cGZPersistResourceKey key{0, kView3DGuiGroup, kPanelScriptInstances[i]};
+        cIGZWin* window = host_ ? host_->CreateWindowFromScript(key, parent, kPanelScriptIds[i]) : nullptr;
+        if (!window) continue;
+        ownWindow(window);                                              // the factory's reference becomes the vector's
+        panelWindows_[i].push_back(window);                             // borrowed
+        void* gen = nullptr;
+        if (window->QueryInterface(kGZIID_cIGZWinGenView, &gen)) {
+            panelAttach_[i] = static_cast<gz::cIGZWinGen*>(gen);
+            panelAttach_[i]->SetWinProc(panelUIWinProc_);               // vslot 0x38
+            cRZRect empty;
+            panelAttach_[i]->SetUserArea(empty);                        // vslot 0x58
+        }
+        window->AddMessageFilter(static_cast<cIGZWinMessageFilter*>(this));   // vslot 0x3a0
+        clearFocus(window);
+        if (i == 1) {
+            // Panel 1's own child window procedure: the child found from the view, 0xe9889775.
+            void* childGen = nullptr;
+            if (parent->GetChildAsRecursive(kPanel1ChildId, kGZIID_cIGZWinGenView, &childGen)) {
+                auto* child = static_cast<gz::cIGZWinGen*>(childGen);
+                cIGZWin* childWindow = child->AsIGZWin();               // vslot 0x18
+                if (childWindow) {
+                    childWindow->AddRef();                              // the reference the vector keeps
+                    ownWindow(childWindow);
+                    panelWindows_[i].push_back(childWindow);
+                    child->SetWinProc(panelUIWinProc_);
+                    childWindow->AddMessageFilter(static_cast<cIGZWinMessageFilter*>(this));
+                    childWindow->SetFlag(kWinFlag800, true);
+                    childWindow->SendToBack();                          // vslot 0xc0
+                    childWindow->SetFlag(kWinFlag800, false);
+                    clearFocus(childWindow);
+                }
+                child->Release();                                       // GetChildAsRecursive's reference
+            }
+        } else if (i == 2) {
+            if (host_) mySimWinProc_ = host_->CreateMySimWinProc(panelAttach_[i]);   // +0x460
+            if (mySimWinProc_) {
+                mySimWinProc_->Init();
+                if (panelAttach_[i]) panelAttach_[i]->SetWinProc(mySimWinProc_);
+            }
+            void* childGen = nullptr;
+            if (parent->GetChildAsRecursive(kPanel2ChildId, kGZIID_cIGZWinGenView, &childGen)) {
+                auto* child = static_cast<gz::cIGZWinGen*>(childGen);
+                cIGZWin* childWindow = child->AsIGZWin();
+                if (childWindow) {
+                    childWindow->AddRef();                              // the reference the vector keeps
+                    ownWindow(childWindow);
+                    panelWindows_[i].push_back(childWindow);
+                    child->SetWinProc(panelUIWinProc_);
+                    childWindow->AddMessageFilter(static_cast<cIGZWinMessageFilter*>(this));
+                    childWindow->SetFlag(kWinFlag800, true);
+                    childWindow->SendToBack();
+                    childWindow->SetFlag(kWinFlag800, false);
+                    clearFocus(childWindow);
+                }
+                child->Release();
+            }
+        } else if (i > 3) {
+            // Quirk (0x100789a97): panel 4 gets its win proc attached a second time.
+            if (panelAttach_[i]) panelAttach_[i]->SetWinProc(panelUIWinProc_);
+        }
+        std::set<cIGZWin*> added;
+        childrenNotInSet(parent, children, added);
+        alignSet(added);
+        window->HideWindow();                                           // vslot 0x230
+    }
+    (void)mgr;
+    // ---- 4. the three text controls
+    if (panelWindow_) {
+        void* text = nullptr;
+        if (panelWindow_->GetChildAsRecursive(kDateTextId, kGZIID_cIGZWinText, &text))
+            dateText_ = static_cast<gz::cIGZWinText*>(text);            // +0x4b8 (one reference)
+    }
+    if (parent) {
+        void* text = nullptr;
+        if (parent->GetChildAsRecursive(kBudgetTextId, kGZIID_cIGZWinText, &text))
+            budgetText_ = static_cast<gz::cIGZWinText*>(text);          // +0x4c0
+        text = nullptr;
+        if (parent->GetChildAsRecursive(kPopulationTextId, kGZIID_cIGZWinText, &text))
+            populationText_ = static_cast<gz::cIGZWinText*>(text);      // +0x4c8
+    }
+    // ---- 5. the news ticker
+    if (host_) {
+        std::set<cIGZWin*> children;
+        childrenSet(parent, children);
+        gz::cIGZWinGen* gen = nullptr;
+        cGZPersistResourceKey key{0, kView3DGuiGroup, kNewsTickerScriptInstance};
+        if (host_->CreateWindowFromScript(key, parent, kNewsTickerScriptId, kGZIID_cIGZWinGenView, (void**)&gen)) {
+            if (newsTickerWinProc_) newsTickerWinProc_->Init(gen);
+            cIGZWin* ticker = gen->AsIGZWin();
+            if (ticker) {
+                std::set<cIGZWin*> added;
+                childrenNotInSet(parent, children, added);
+                alignSet(added);
+                ticker->HideWindow();
+                ticker->AddRef();                                       // the reference the vector keeps
+                ownWindow(ticker);
+                panelWindows_[1].push_back(ticker);                     // +0x2c8
+                panelWindows_[2].push_back(ticker);                     // +0x2e0
+                if (cIGZWin* tickerParent = ticker->GetParentWin()) {
+                    if (cIGZWin* control = tickerParent->GetChildWindowFromIDRecursive(kNewsTickerControlId)) {
+                        control->HideWindow();
+                        clearFocus(control);
+                        control->AddRef();                              // the reference the vector keeps
+                        ownWindow(control);
+                    }
+                }
+            }
+            gen->Release();                                             // CreateWindowFromScript's reference
+        }
+    }
+    // ---- 6. the four panel windows to the front
+    for (int i = 0; i < 4; ++i) {
+        if (panelWindows_[i].empty()) continue;
+        cIGZWin* window = panelWindows_[i][0];
+        if (!window) continue;
+        window->SetFlag(kWinFlag800, true);
+        window->PullToFront();                                          // vslot 0xb8
+        window->SetFlag(kWinFlag800, false);
+    }
+    // ---- 7. the map view, the town hall, the graphs and the building-select windows
+    // The four "plain" script windows are created with iid 0x22ba0121 (cIGZWin), so the out pointer is the
+    // window itself and the view keeps the reference the factory handed over.
+    auto createScriptWindow = [&](std::uint32_t instance, std::uint32_t id, cIGZWin*& out) {
+        if (!host_ || !parent) return;
+        std::set<cIGZWin*> children;
+        childrenSet(parent, children);
+        if (out) { cIGZWin* old = out; out = nullptr; old->Release(); }
+        void* created = nullptr;
+        cGZPersistResourceKey key{0, kView3DGuiGroup, instance};
+        if (host_->CreateWindowFromScript(key, parent, id, kGZIID_cIGZWin, &created))
+            out = static_cast<cIGZWin*>(created);
+        std::set<cIGZWin*> added;
+        childrenNotInSet(parent, children, added);
+        alignSet(added);
+    };
+    createScriptWindow(kMapViewScriptInstance, kMapViewScriptId, viewManagerSource_);       // +0x498
+    if (viewManagerSource_) {
+        viewManagerSource_->PullToFront();
+        if (host_) host_->InitMapView(viewManagerSource_);               // cSC4WinMapView::InitWindow
+        viewManagerSource_->HideWindow();
+        clearFocus(viewManagerSource_);
+    }
+    createScriptWindow(kMayorPanelScriptInstance, kMayorPanelScriptId, window4b0_);         // +0x4b0
+    if (window4b0_) {
+        clearFocus(window4b0_);
+        window4b0_->PullToFront();
+        window4b0_->HideWindow();
+    }
+    createScriptWindow(kGraphsScriptInstance, kGraphsScriptId, window4a0_);                 // +0x4a0
+    if (window4a0_) {
+        window4a0_->PullToFront();
+        window4a0_->HideWindow();
+        clearFocus(window4a0_);
+        if (host_) {
+            IGraphsViewWindow* proc = host_->CreateGraphsViewWinProc(window4a0_);
+            if (proc != graphsViewWinProc_) {
+                IGraphsViewWindow* old = graphsViewWinProc_;
+                graphsViewWinProc_ = proc;
+                if (old) old->Release();
+            }
+            if (graphsViewWinProc_) graphsViewWinProc_->Init();
+        }
+    }
+    createScriptWindow(kBuildingSelectScriptInstance, kBuildingSelectScriptId, window4a8_);  // +0x4a8
+    if (window4a8_) {
+        window4a8_->PullToFront();
+        window4a8_->HideWindow();
+        clearFocus(window4a8_);
+        if (host_) {
+            IBuildingSelectWindow* proc = host_->CreateBuildingSelectWinProc(window4a8_);
+            if (proc != buildingSelectWinProc_) {
+                IBuildingSelectWindow* old = buildingSelectWinProc_;
+                buildingSelectWinProc_ = proc;
+                if (old) old->Release();
+            }
+            if (buildingSelectWinProc_) buildingSelectWinProc_->Init();
+        }
+    }
+    // ---- 8. the budget proc, the cursor-text box and the cost indicator
+    if (host_) {
+        budgetUIWinProc_ = host_->CreateBudgetUIWinProc();              // +0x468
+        if (budgetUIWinProc_) budgetUIWinProc_->Init();
+        if (cISC4WinCalloutBox* box = host_->CreateCalloutBox()) {       // +0x5d0
+            if (cursorTextBox_) cursorTextBox_->Release();
+            cursorTextBox_ = box;
+            box->SetTextFontStyle(kCursorTextTextFont);                 // vslot 0x58
+            box->SetTitleFontStyle(kCursorTextTitleFont);               // vslot 0x50
+            if (cIGZWin* boxWindow = box->AsIGZWin()) boxWindow->HideWindow();   // vslot 0x230 on +8
+            if (cIGZBuffer* background = host_->LoadImageBuffer(kView3DImageType, kView3DImageGroup,
+                                                                kCursorTextBoxImageInstance)) {
+                box->SetBackgroundImage(background, -1, -1);            // vslot 0x20
+                background->Release();
+            }
+            if (cIGZBuffer* icon = host_->LoadImageBuffer(kView3DImageType, kView3DImageGroup,
+                                                          kCursorTextIconInstance)) {
+                if (cursorTextIcon_ != icon) {
+                    icon->AddRef();
+                    if (cursorTextIcon_) cursorTextIcon_->Release();
+                    cursorTextIcon_ = icon;                             // +0x5f0
+                }
+                icon->Release();
+            }
+            if (cIGZWin* boxWindow = box->AsIGZWin()) parent->ChildAdd(boxWindow);   // vslot 0x70
+        }
+        // The cost indicator's text window (+0x5c8) and its backing buffer (+0x5c0).
+        if (gz::cIGZWinBMP* bmp = host_->CreateWinBMP()) {
+            if (costIndicatorText_) costIndicatorText_->Release();
+            costIndicatorText_ = bmp;
+            bmp->SetWinBMPFlag(6, true);                                // vslot 0x58
+            if (cIGZWin* bmpWindow = bmp->AsIGZWin()) {
+                bmpWindow->SetFlag(kWinIgnoreCursor, true);             // 0x200000
+                bmpWindow->SetFlag(kWinFlag4, true);
+                bmpWindow->HideWindow();
+            }
+            if (cIGZBuffer* buffer = host_->CreateImageBuffer()) {
+                if (costIndicatorBuffer_) costIndicatorBuffer_->Release();
+                costIndicatorBuffer_ = buffer;
+                buffer->Init(kCostIndicatorBufferW, kCostIndicatorBufferH,
+                             static_cast<cGZBufferColorType>(kCostIndicatorColorType));
+                const cRZRect* area = buffer->GetBufferArea();          // vslot 0x68
+                bmp->SetBMP(buffer);                                    // vslot 0x20
+                if (area) {
+                    cRZRect image{0, 0, area->right - area->left, area->bottom - area->top};
+                    bmp->SetImageArea(image);                           // vslot 0x40
+                }
+                buffer->Release();
+            }
+            if (cIGZWin* bmpWindow = bmp->AsIGZWin()) parent->ChildAdd(bmpWindow);
+        }
+        // ---- the advisor popup queue (+0x4d0)
+        advisorPopups_ = host_->CreateAdvisorPopupTracker();
+        if (advisorPopups_) advisorPopups_->Init();
+        // ---- the compass window and its win proc
+        if (cIGZWin* compass = host_->CreateCompassWindow()) {
+            if (cIGZWin* compassView = compass) {
+                const cRZRect& viewArea = GetArea();
+                compassView->SetArea(0, 0, viewArea.right - viewArea.left, viewArea.bottom - viewArea.top);
+                compassView->SetID(kCompassWindowId);
+                compassView->SetFlag(kWinPrivateBuffer, false);         // 0x10000
+                compassView->SetFlag(kWinIgnoreCursor, true);
+                compassView->SetFlag(kWinFlag4, true);
+                if (parent) parent->ChildAdd(compassView);
+            }
+            compass->Release();
+        }
+        {
+            void* compassGen = nullptr;
+            if (parent && parent->GetChildAsRecursive(kCompassChildId, kGZIID_cIGZWinGenView, &compassGen)) {
+                auto* gen = static_cast<gz::cIGZWinGen*>(compassGen);
+                host_->AttachCompassWinProc(gen);
+                gen->Release();
+            }
+        }
+    }
+    // ---- 9. the empty-city start state
+    if (host_ && !host_->CanInvokeZoningTool()) {
+        currentPanel_ = 0;
+        ShowPanel(0);
+        if (panelWindow_) {
+            nsGZWinUtils::SetWindowEnabled(panelWindow_, kPanelNewCityButtonId, false);
+            nsGZWinUtils::SetWindowEnabled(panelWindow_, kPanelMayorButtonId, false);
+        }
+    }
+}
+
+// ShowPanel (0x10078ac02): show every window of panel `panel`, then run the panel's own
+// open/close steps, and hide the news ticker unless one of the three sub-panels is up.
+void cSC4View3DWin::ShowPanel(std::uint32_t panel) {
+    for (cIGZWin* window : panelWindows_[panel < 5 ? panel : 0]) {
+        if (window) window->SetFlag(kWinVisible, true);                 // vslot 0x220
+    }
+    switch (panel) {
+        case 1:
+            panelShown_[1] = false;                                     // the word store at 0x441 clears +0x441 / +0x442
+            panelShown_[2] = false;
+            ShowMayorSubPanel(mayorSubPanel_);                          // +0x52c
+            panelShown_[0] = true;                                      // +0x440
+            break;
+        case 2: {
+            if (host_) {
+                if (IAdvisorWindow* advisor = host_->AdvisorWindow()) {
+                    advisor->HideAdvisorWindow();                       // vslot 0xe0
+                    advisor->Release();
+                }
+            }
+            panelShown_[0] = false;
+            panelShown_[2] = false;
+            if (mySimWinProc_) mySimWinProc_->Show();                   // @ 0x10031b54a
+            panelShown_[1] = true;
+            break;
+        }
+        case 4:
+            panelShown_[2] = true;                                      // falls through
+            [[fallthrough]];
+        case 0:
+            if (mySimWinProc_) {
+                mySimWinProc_->Hide();                                  // @ 0x10031b4d8
+                panelShown_[1] = false;
+            }
+            panelShown_[0] = false;
+            break;
+        default:
+            break;
+    }
+    if (!panelShown_[1] && !panelShown_[0] && !panelShown_[2]) {
+        if (newsTickerWinProc_) newsTickerWinProc_->HideTicker();       // vslot 0x40
+    }
+}
+
+// HidePanel (0x10078aade): disconnect the current secondary menu, hide every window of the panel that is not
+// flagged 0x1000, then run the panel's close step and hide the ticker when no sub-panel is left.
+void cSC4View3DWin::HidePanel(std::uint32_t panel) {
+    CloseSecondaryMenu();                                               // vslot 0x1d8
+    for (cIGZWin* window : panelWindows_[panel < 5 ? panel : 0]) {
+        if (!window) continue;
+        if (!window->GetFlag(0x1000)) window->SetFlag(kWinVisible, false);   // vslot 0x218 / 0x220
+    }
+    if (panel == 1) {
+        ShowMayorSubPanel(0);
+        panelShown_[0] = false;
+    } else if (panel == 4) {
+        panelShown_[2] = false;
+    } else if (panel == 2) {
+        if (mySimWinProc_) mySimWinProc_->Hide();
+        panelShown_[1] = false;
+    }
+    if (!panelShown_[1] && !panelShown_[0] && !panelShown_[2]) {
+        if (newsTickerWinProc_) newsTickerWinProc_->HideTicker();
+    }
+}
+
+// ShowMayorSubPanel (0x10078ad68): open / close the mayor's sub-panels. Only the panel `panel` is shown; the
+// others (the advisor window, the budget, the map view, the graphs, the town hall, the building select panel)
+// are hidden, and the function remembers the last panel in +0x52c / +0x530. Quirk: the state word is only
+// written when the panel changes, and panel 0 is a no-op while a sub-panel state is pending.
+void cSC4View3DWin::ShowMayorSubPanel(std::uint32_t panel) {
+    bool allHidden = true;
+    if (mayorSubPanelState_ == 0) {
+        if (host_) {
+            if (IAdvisorWindow* advisor = host_->AdvisorWindow()) {
+                if (panel == 0x49edf9b7u) {
+                    advisor->ShowAdvisorWindow();                       // vslot 0xd8
+                    panelShown_[0] = true;
+                } else if (advisor->IsAdvisorWindowVisible()) {          // vslot 0xe8
+                    advisor->HideAdvisorWindow();                        // vslot 0xe0
+                    allHidden = false;
+                }
+                advisor->Release();
+            }
+        }
+        if (budgetUIWinProc_) {
+            if (panel == 0x41u) budgetUIWinProc_->ShowWindow();          // vslot 0x38
+            else if (budgetUIWinProc_->IsVisible()) {                    // vslot 0x50
+                budgetUIWinProc_->HideWindow();                          // vslot 0x40
+                allHidden = false;
+            }
+        }
+        if (viewManagerSource_) {                                        // +0x498
+            if (panel == 0x99887755u) viewManagerSource_->ShowWindow();  // vslot 0x228
+            else { viewManagerSource_->HideWindow(); allHidden = false; }
+        }
+        if (graphsViewWinProc_) {                                        // +0x488
+            if (panel == 0x15200002u) graphsViewWinProc_->ShowWindow();
+            else if (graphsViewWinProc_->IsVisible()) { graphsViewWinProc_->HideWindow(); allHidden = false; }
+        }
+        if (window4b0_) {                                                // +0x4b0
+            if (panel == 0x15200003u) window4b0_->ShowWindow();
+            else { window4b0_->HideWindow(); allHidden = false; }
+        }
+        if (buildingSelectWinProc_) {                                    // +0x490
+            if (panel == 0xabc54125u) buildingSelectWinProc_->ShowWindow();
+            else if (buildingSelectWinProc_->IsVisible()) { buildingSelectWinProc_->HideWindow(); allHidden = false; }
+        } else {
+            goto stateCheck;                                            // 0x10078aed6 -> 0x10078ad85
+        }
+    }
+    mayorSubPanel_ = panel;
+    mayorSubPanelState_ = 0;
+    return;
+stateCheck:
+    if (panel == 0) {
+        if (allHidden) mayorSubPanelState_ = 1;
+        return;
+    }
+    mayorSubPanel_ = panel;
+    mayorSubPanelState_ = 0;
+}
+
+// UpdateSpeedButtons (0x100787896): the three simulation-speed buttons of the toolbar follow the simulator's
+// current speed (vslot 0xd8) and its paused flag (vslot 0x78); the pressed button's image area is cut in half
+// (the top half when running, the bottom half when paused).
+void cSC4View3DWin::UpdateSpeedButtons() {
+    int speed = 0;
+    bool paused = true;
+    if (simulatorToPause_) {
+        speed = simulatorToPause_->Speed();                             // vslot 0xd8
+        paused = simulatorToPause_->IsPaused();                         // vslot 0x78
+    }
+    if (!panelWindow_) return;
+    for (int i = 0; i < 3; ++i) {
+        void* view = nullptr;
+        if (!panelWindow_->GetChildAs(kSpeedButtonIds[i], gz::kGZIID_cIGZWinBtn, &view)) continue;
+        auto* button = static_cast<gz::cIGZWinBtn*>(view);
+        button->SetBtnFlag(gz::kBtnOn, speed == kSpeedButtonModes[i]);   // vslot 0x28
+        cRZRect area;
+        cIGZBuffer* image = nullptr;
+        button->GetImageArea(area);                                     // vslot 0x80
+        button->GetBuffer(image);                                       // vslot 0x90
+        if (!image) { button->Release(); continue; }
+        const int half = static_cast<int>(image->Height()) >> 1;        // vslot 0x60
+        const int offset = paused ? half : 0;
+        if (area.top != offset || area.bottom != half + offset) {
+            cRZRect image2{0, offset, static_cast<int>(image->Width()), half + offset};   // vslot 0x58
+            const int style = button->GetStyle();                       // vslot 0x58
+            button->SetStyle(style, image, &image2);                    // vslot 0x60
+        }
+        image->Release();
+        button->Release();
+    }
+}
+
+// UpdateAlertBorder (0x100787a1c): the compass window's alert border shows one of three images - the disaster
+// layer (0x14315e60), the city situation manager (0x14315e62) or the simulator being busy (0x14315e61) - in
+// that order, and no image at all when none applies.
+void cSC4View3DWin::UpdateAlertBorder() {
+    void* view = nullptr;
+    if (!AsIGZWin()->GetChildAsRecursive(kCompassWindowId, kGZIID_cISC4WinAlertBorder, &view)) return;
+    auto* border = static_cast<cISC4WinAlertBorder*>(view);
+    std::uint32_t image = 0;
+    if (host_) {
+        if (host_->DisasterAlertActive()) image = kAlertImageDisaster;          // spCity 0x240 -> 0x50
+        else if (host_->SituationAlertActive()) image = kAlertImageSituation;   // spCity 0x188 -> 0x30
+        else if (host_->SimulatorBusy()) image = kAlertImageBusy;               // spSimulator 0x78
+    }
+    if (image) {
+        if (cIGZBuffer* buffer = host_->LoadImageBuffer(kView3DImageType, kView3DImageGroup, image)) {
+            border->SetImage(buffer);                                           // vslot 0x20
+            buffer->Release();
+        }
+    } else {
+        border->SetImage(nullptr);
+    }
+    border->Release();
+}
+
+// MinimizeUI (0x100792b4e): hide (or show) the toolbar, the panel that is open, the ticker, the secondary menu,
+// the town-hall window and the view's own compass child, and record the state in the compass flag.
+void cSC4View3DWin::MinimizeUI(bool minimize) {
+    if (!panelWindow_) return;
+    const bool visible = panelWindow_->IsVisible();                     // vslot 0x238
+    bool showCompass = false;
+    if (minimize) {
+        if (!visible) return;
+        panelWindow_->HideWindow();                                     // vslot 0x230
+        if (currentPanel_ != -1) HidePanel(static_cast<std::uint32_t>(currentPanel_));
+        if (newsTickerWinProc_) newsTickerWinProc_->HideTicker();
+        CloseSecondaryMenu();                                           // vslot 0x1d8
+        if (window470_) window470_->HideWindow();
+        if (toolbarWindow_) toolbarWindow_->ShowWindow();               // vslot 0x228
+        showCompass = false;
+    } else {
+        if (visible) return;
+        panelWindow_->ShowWindow();
+        if (currentPanel_ != -1) ShowPanel(static_cast<std::uint32_t>(currentPanel_));
+        if (window470_) window470_->ShowWindow();
+        if (panelShown_[1] || panelShown_[0] || panelShown_[2]) {
+            if (newsTickerWinProc_) newsTickerWinProc_->ShowTicker();   // vslot 0x38
+        }
+        if (toolbarWindow_) toolbarWindow_->HideWindow();
+        showCompass = true;
+    }
+    nsGZWinUtils::SetWindowVisible(AsIGZWin(), kCompassChildId, showCompass, false);
+}
+
+// DoCityObliterated (0x100786fbe): the city is gone, so the obliterate button is disabled, the budget panel
+// closes and the obliterate toggle comes up.
+void cSC4View3DWin::DoCityObliterated() {
+    if (panelWindow_) {
+        nsGZWinUtils::SetWindowEnabled(panelWindow_, kPanelObliterateButtonId, false);
+        if (currentPanel_ == kPanelBudgetIndex) HidePanel(kPanelBudgetIndex);
+        nsGZWinUtils::SetButtonToggleState(panelWindow_, kPanelObliterateToggleId, false);
+    }
+}
 
 void cSC4View3DWin::UpdateZoomButtons() {                                   // 0x1007872e8
     if (!panelWindow_) return;
@@ -1201,34 +1794,36 @@ void cSC4View3DWin::SetRenderPropertiesStatic(const cRZString& name, const cRZSt
     if (auto* view = static_cast<cSC4View3DWin*>(context)) view->SetRenderProperties(name, value);
 }
 
-// The whole GUI teardown (0x100780eaa): every window is taken out of the window manager's valid list, shut down
-// and released, the guiWindows_ vector releases its references in reverse, and the five window procedures get
-// their own Shutdown. The port does not model the cost-indicator windows (+0x5c0 / +0x5c8 / +0x5f0) and borrows
-// the cursor-text window from the host (AddGUI would own it), so those three blocks are skipped.
+// The whole GUI teardown (0x100780eaa, 1404 bytes): the toolbar panel and the GZCOM button are destroyed
+// through the window manager and shut down, the guiWindows_ vector removes this view's message filter from
+// every window, destroys and shuts it down, and then releases its references in reverse; the five panel
+// interface references and the four window procedures get their Shutdown / Release; the three text controls,
+// the cursor-text box, the cost-indicator buffer / window and the cursor icon are released; and the advisor
+// popup queue (the +0x4d0 object, APT-6) is shut down and released last.
 void cSC4View3DWin::RemoveGUI() {
     cIGZWinMgr* mgr = GetWindowManager();
-    auto releaseWindow = [mgr](cIGZWin*& window) {
+    auto destroyWindow = [mgr](cIGZWin*& window) {
         if (!window) return;
         cIGZWin* released = window;
         window = nullptr;
-        if (mgr) mgr->RemoveWindowFromValidList(released);
+        if (mgr) mgr->DestroyWindow(released);
         released->Shutdown();
         released->Release();
     };
-    releaseWindow(panelWindow_);                                            // +0x280
+    destroyWindow(panelWindow_);                                            // +0x280
     if (panelInterface_) { panelInterface_->Release(); panelInterface_ = nullptr; }   // +0x288
-    releaseWindow(toolbarWindow_);                                          // +0x290
+    destroyWindow(toolbarWindow_);                                          // +0x290
     for (cIGZWin* window : guiWindows_) {                                   // +0x298
         if (!window) continue;
         window->RemoveMessageFilter(static_cast<cIGZWinMessageFilter*>(this));   // vslot 0x3a8
-        if (mgr) mgr->RemoveWindowFromValidList(window);
-        window->Shutdown();
+        if (mgr) mgr->DestroyWindow(window);
+        window->Shutdown();                                                 // vslot 0x28
     }
     for (auto it = guiWindows_.rbegin(); it != guiWindows_.rend(); ++it) {
-        if (*it) (*it)->Release();
+        if (*it) (*it)->Release();                                          // the vector's own references
     }
     guiWindows_.clear();
-    for (cIGZWin*& attach : panelAttach_) {                                 // +0x328..+0x348
+    for (gz::cIGZWinGen*& attach : panelAttach_) {                           // +0x328..+0x350
         if (attach) { attach->Release(); attach = nullptr; }
     }
     if (newsTickerWinProc_) {                                               // +0x450
@@ -1244,19 +1839,19 @@ void cSC4View3DWin::RemoveGUI() {
     if (panelUIWinProc_) { panelUIWinProc_->Release(); panelUIWinProc_ = nullptr; }   // +0x448
     if (window470_) { window470_->Shutdown(); window470_->Release(); window470_ = nullptr; }   // +0x470
     if (window478_) { window478_->Release(); window478_ = nullptr; }        // +0x478
-    releaseWindow(window4b0_);                                              // +0x4b0
-    releaseWindow(viewManagerSource_);                                      // +0x498
-    releaseWindow(window4a0_);                                              // +0x4a0
-    releaseWindow(window4a8_);                                              // +0x4a8
+    destroyWindow(window4b0_);                                              // +0x4b0
+    destroyWindow(viewManagerSource_);                                      // +0x498
+    destroyWindow(window4a0_);                                              // +0x4a0
+    destroyWindow(window4a8_);                                              // +0x4a8
     if (graphsViewWinProc_) {                                               // +0x488
         if (host_) host_->ShutdownGraphsViewWinProc(graphsViewWinProc_);
-        cIGZWin* proc = graphsViewWinProc_;
+        IGraphsViewWindow* proc = graphsViewWinProc_;
         graphsViewWinProc_ = nullptr;
         proc->Release();
     }
     if (buildingSelectWinProc_) {                                           // +0x490
         if (host_) host_->ShutdownBuildingSelectWinProc(buildingSelectWinProc_);
-        cIGZWin* proc = buildingSelectWinProc_;
+        IBuildingSelectWindow* proc = buildingSelectWinProc_;
         buildingSelectWinProc_ = nullptr;
         proc->Release();
     }
@@ -1269,19 +1864,134 @@ void cSC4View3DWin::RemoveGUI() {
         if (!*text) continue;
         cIGZWin* window = (*text)->AsIGZWin();                              // vslot 0x18
         if (window) {
-            if (mgr) mgr->RemoveWindowFromValidList(window);
-            window->Shutdown();
+            if (mgr) mgr->DestroyWindow(window);
+            window->Shutdown();                                             // vslot 0x28 on the cIGZWin
         }
         gz::cIGZWinText* released = *text;
         *text = nullptr;
         released->Release();
     }
-    if (tipManager_) {                                                      // +0x4d0
-        if (host_) host_->ShutdownToolTipManager(tipManager_);
-        tipManager_->Release();
-        tipManager_ = nullptr;
+    if (cursorTextBox_) {                                                   // +0x5d0
+        if (cIGZWin* boxWindow = cursorTextBox_->AsIGZWin()) ChildDelete(boxWindow);   // vslot 0x80
+        cISC4WinCalloutBox* box = cursorTextBox_;
+        cursorTextBox_ = nullptr;
+        box->Release();
+    }
+    if (costIndicatorBuffer_) { costIndicatorBuffer_->Release(); costIndicatorBuffer_ = nullptr; }   // +0x5c0
+    if (costIndicatorText_) { costIndicatorText_->Release(); costIndicatorText_ = nullptr; }         // +0x5c8
+    cursorText_.clear();                                                    // +0x5d8
+    if (cursorTextIcon_) { cursorTextIcon_->Release(); cursorTextIcon_ = nullptr; }                  // +0x5f0
+    if (advisorPopups_) {                                                   // +0x4d0
+        advisorPopups_->Shutdown();
+        advisorPopups_->Release();
+        advisorPopups_ = nullptr;
     }
 }
+
+// The panel commands (0x10078af10 DoMessage(cIGZWin*, cGZMessage&), 206 bytes): the tutorial system filters the
+// message, a command from the button sender 0x287259f6 goes to HandleButtonActivated, a command from
+// 0x287259f7 is the same button's "changed" notification (handled here), and the parent receives nothing else.
+bool cSC4View3DWin::DoMessage(cIGZWin* window, cGZMessage& message) {
+    if (host_ && !host_->FilterUiCommandMessage(message)) return true;
+    if (window && window->GetFlag(0x1000)) return false;
+    if (message.type == 0x12) return true;                              // the size-limit notification
+    if (message.type != kGZMsgCommand) return false;
+    if (message.param1 == 0x287259f7u) {
+        // The button changed its state: the six panel toggles run a command, the rest is ignored.
+        switch (message.param2) {
+            case 0x2988bc85u: if (host_) host_->ExecuteCommand(0x6a935c34u); break;
+            case 0x4988bc6au: if (host_) host_->ExecuteCommand(0x6a935ca8u); break;
+            case 0xc988bc79u: if (host_) host_->ExecuteCommand(0x6a935ca4u); break;
+            case 0x8988bc94u: if (host_) host_->ExecuteCommand(0x6a935cabu); break;
+            default: break;
+        }
+        return true;
+    }
+    if (message.param1 == 0x287259f6u) HandleButtonActivated(window, message);
+    return true;
+}
+
+// DoPanelCommandGUI (0x10078c2dc, 837 bytes). PARTIAL: the four panel toggles are recovered, but the
+// "establish city" path needs cSC4View3DWin::DoEstablishCityDialog (0x10078ff30, 1625 bytes, not recovered) and
+// the panel commands are driven from HandleButtonActivated (also PARTIAL), so the function is registered as
+// recovered-partial rather than claiming the whole body.
+void cSC4View3DWin::DoPanelCommandGUI(std::uint32_t command) {
+    // The panel's own toggle button (GetChildAsRecursive(id, cIGZWinBtn); the caller releases it).
+    auto panelButton = [this](std::uint32_t id) -> gz::cIGZWinBtn* {
+        void* view = nullptr;
+        if (!panelWindow_ || !panelWindow_->GetChildAsRecursive(id, gz::kGZIID_cIGZWinBtn, &view)) return nullptr;
+        return static_cast<gz::cIGZWinBtn*>(view);
+    };
+    auto buttonState = [&panelButton](std::uint32_t id) {
+        gz::cIGZWinBtn* button = panelButton(id);
+        if (!button) return false;
+        const bool on = button->GetBtnFlag(gz::kBtnOn);
+        button->Release();
+        return on;
+    };
+    bool toggle = false;
+    std::uint32_t panel = 0;
+    switch (command) {
+        case 0x6a935c34u: {                                             // the mayor / panel-0 button
+            toggle = buttonState(0x2988bc85u);
+            // Quirk (0x10078c3b8): shift + control + alt *and* the byte at +0x1c9 open panel 0, otherwise the
+            // panel the city allows (4 = the disappearance panel when zoning is allowed, else 0).
+            const bool alt = host_ && host_->IsKeyDownNow(0x10) && host_->IsKeyDownNow(0x11) &&
+                             host_->IsKeyDownNow(0x12) && (unknown1c8_ >> 8) != 0;
+            if (alt) panel = 0;
+            else panel = (host_ && host_->CanInvokeZoningTool()) ? 4u : 0u;
+            break;
+        }
+        case 0x6a935ca4u:                                               // the "new city" button (panel 1)
+            toggle = buttonState(0xc988bc79u);
+            panel = 1;
+            if (!toggle && host_ && !host_->CanInvokeZoningTool() && !host_->ShowEstablishCityDialog()) {
+                // The dialog was refused: the button's toggle is put back and nothing opens (0x10078c4b6).
+                if (gz::cIGZWinBtn* button = panelButton(0xc988bc79u)) {
+                    button->SetBtnFlag(gz::kBtnOn, false);
+                    button->Release();
+                }
+                return;
+            }
+            break;
+        case 0x6a935ca8u:                                               // panel 2
+            toggle = buttonState(0x4988bc6au);
+            panel = 2;
+            break;
+        case 0x6a935cabu:                                               // panel 3
+            toggle = buttonState(0x8988bc94u);
+            panel = 3;
+            break;
+        default:
+            return;
+    }
+    CloseSecondaryMenu();                                               // vslot 0x1d8
+    if (!toggle) {
+        if (currentPanel_ == static_cast<int>(panel)) {
+            currentPanel_ = -1;
+            HidePanel(panel);
+        }
+    } else {
+        if (currentPanel_ != -1) {
+            HidePanel(static_cast<std::uint32_t>(currentPanel_));
+            std::uint32_t button = 0;
+            if (static_cast<std::uint32_t>(currentPanel_) < 5u) button = kPanelToggleButtonIds[currentPanel_];
+            if (panelWindow_ && button) nsGZWinUtils::SetButtonToggleState(panelWindow_, button, false);
+        }
+        currentPanel_ = static_cast<int>(panel);
+        ShowPanel(panel);
+    }
+    if (panelShown_[1] || panelShown_[0] || panelShown_[2]) {
+        if (newsTickerWinProc_) newsTickerWinProc_->ShowTicker();
+    }
+}
+
+// HandleButtonActivated (0x10078afde, 4659 bytes). PARTIAL: the original is one nested binary search over ~120
+// button ids that either runs a command-server command or opens one of the nine menus (DoZoningMenu,
+// DoTransportMenu, DoUtilitiesMenu, DoLandscapeMenu, DoVehicleMenu, DoDayNightMenu, DoDisasterCopingMenu,
+// CreateBuildingMenu and the two InvokeSecondaryMenu / InvokeTertiaryMenu flavours), none of which is recovered.
+// The menu entry points are not seams yet, so the function reports that it did not handle the message.
+void cSC4View3DWin::HandleButtonActivated(cIGZWin*, cGZMessage&) {}
 
 // ==================================================================================================== tool invokers
 
@@ -1470,7 +2180,7 @@ bool cSC4View3DWin::GZPaint() {                                             // 0
 // ==================================================================================================== message routing
 
 bool cSC4View3DWin::DoMessage(cGZMessage& message) {                         // 0x100784ca4
-    if (host_) host_->FilterUiCommandMessage(message);
+    if (host_) host_->FilterUiCommandMessage(message);   // the tutorial filter's answer is not used here
     const std::int32_t type = static_cast<std::int32_t>(message.type);
     if (type <= 0x1a) {
         if (type > 0x0c) {
@@ -1549,11 +2259,6 @@ bool cSC4View3DWin::DoMessage(cGZMessage& message) {                         // 
     }
     return cGZWin::DoMessage(message);
 }
-
-// PARTIAL (see notes/ledger_pending/cSC4View3DWin.txt): the child-window filter entry point
-// (0x10078af10, 496 bytes) routes button and menu messages from the GUI windows built by AddGUI; the
-// GUI is not recovered, so the port answers "not handled" and leaves the message to the window tree.
-bool cSC4View3DWin::DoMessage(cIGZWin*, cGZMessage&) { return false; }
 
 // PARTIAL: the engine-notification entry point (0x100785a5e, 1657 bytes) drives the advisors, the
 // city name / budget / population panels and the mission progress out of ~46 message types.

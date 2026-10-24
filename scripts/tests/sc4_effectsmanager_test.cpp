@@ -11,7 +11,9 @@
 #include <vector>
 
 #include "rz/cRZMessage2Standard.h"
+#include "gz/CommandParameterSet.h"
 #include "sc4/EffectsManager.h"
+#include "sc4/GameDataRegistry.h"
 
 using namespace sc4;
 
@@ -134,7 +136,14 @@ public:
     void RemoveTickNotification(cIGZUnknown*) override { --tickNotifications; }
     void RegisterGameDataFunctions() override { ++gameDataRegisters; }
     void UnregisterGameDataFunctions() override { ++gameDataUnregisters; }
-    void PostEffectsTickMessage() override { ++tickMessages; }
+    void PostMessage(std::uint32_t type) override { postedMessages.push_back(type); }
+    bool EffectsResourceParseFiles() override { return resourceParseOk; }
+    const char* EffectsResourceErrorString() override { return resourceError.c_str(); }
+    void SetView3DErrorReportString(const char* text) override {
+        ++viewErrorSets;
+        viewErrorWasNull = text == nullptr;
+        viewError = text ? text : "";
+    }
     int ViewZoom() override { return viewZoom; }
     float WorldUnitsPerViewportUnit() override { return unitsPerViewport; }
     float RenderHeightScale() override { return renderHeightScale; }
@@ -210,7 +219,13 @@ public:
     int lastRayX = 0, lastRayY = 0;
 
     int attachCalls = 0, detachCalls = 0, loadEffects = 0, resourceShutdowns = 0, resourceReloads = 0;
-    int cheatHandlers = 0, tickNotifications = 0, gameDataRegisters = 0, gameDataUnregisters = 0, tickMessages = 0;
+    int cheatHandlers = 0, tickNotifications = 0, gameDataRegisters = 0, gameDataUnregisters = 0;
+    int viewErrorSets = 0;
+    bool viewErrorWasNull = false;
+    bool resourceParseOk = true;
+    std::string resourceError = "main.fx: unknown command";
+    std::string viewError;
+    std::vector<std::uint32_t> postedMessages;
     int shakeAdds = 0, shakeRemoves = 0, tintSets = 0, tintClears = 0, snowlineAdds = 0, snowlineRemoves = 0;
     int snowlineSets = 0, rayCalls = 0;
     bool shakeHadPosition = false;
@@ -238,6 +253,63 @@ public:
     cSC4EffectMaps* effectMaps = nullptr;
     FakeUnknown* resource = nullptr;
     FakeUnknown* parser = nullptr;
+};
+
+// The game-data registry as sCreateEffect uses it: one value entry whose handle is the manager and whose context is
+// the manager back again (the original registers the manager with AddValue<cSC4EffectsManager> and digs it back out
+// with GetEntryID(handle) / GetEntryContext(entry)). Everything else is inert.
+class FakeGameDataRegistry final : public cISC4GameDataRegistry {
+public:
+    bool QueryInterface(std::uint32_t iid, void** out) override {
+        if (iid != 1) return false;
+        *out = this;
+        AddRef();
+        return true;
+    }
+    std::uint32_t AddRef() override { return ++refs; }
+    std::uint32_t Release() override {
+        if (refs > 1) return --refs;
+        refs = 0;
+        return 0;
+    }
+    EntryId AddChildEntry(cIGZUnknown*, const char*, EntryId, int, void*) override { return 0; }
+    EntryId AddChildEntry(void*, const char*, GameDataValueFn, EntryId, int, void*) override { return 0; }
+    EntryId AddChildEntry(void* handle, const char*, GameDataCommandFn, EntryId, int, void*) override {
+        valueHandle = handle;
+        return kValueEntry;
+    }
+    bool RemoveChildEntry(cIGZUnknown*) override { return false; }
+    bool RemoveChildEntry(void*) override { return false; }
+    EntryId GetEntryID(cIGZUnknown*) const override { return 0; }
+    EntryId GetEntryID(void* handle) const override { return handle != nullptr && handle == valueHandle ? kValueEntry : 0; }
+    cIGZUnknown* GetNode(EntryId) const override { return nullptr; }
+    void* GetValue(EntryId entry) const override { return entry == kValueEntry ? valueHandle : nullptr; }
+    bool IsValidEntry(EntryId entry) const override { return entry == kValueEntry; }
+    bool IsNodeEntry(EntryId) const override { return false; }
+    const cRZString* GetEntryName(EntryId) const override { return nullptr; }
+    bool DoValueExchange(EntryId, cIGZVariant&, bool) override { return false; }
+    bool DoValueCall(EntryId, cIGZCommandParameterSet*, cIGZCommandParameterSet*) override { return false; }
+    bool SetEntryContext(EntryId entry, void* context) override {
+        if (entry != kValueEntry) return false;
+        entryContext = context;
+        return true;
+    }
+    void* GetEntryContext(EntryId entry) const override { return entry == kValueEntry ? entryContext : nullptr; }
+    bool CheckEntryFlags(EntryId, int) const override { return false; }
+    EntryId GetParentNodeEntry(EntryId) const override { return 0; }
+    EntryId GetRootNodeEntry() const override { return 0; }
+    bool VisitBreadthFirst(EntryId, EntryVisitFn, void*) override { return false; }
+    bool VisitImmediateChildren(EntryId, EntryVisitFn, void*) override { return false; }
+    bool AddNotificationTarget(cISC4GameDataRegistryNotificationTarget*) override { return false; }
+    bool AddNotificationTarget(cIGZMessageTarget2*) override { return false; }
+    bool RemoveNotificationTarget(cISC4GameDataRegistryNotificationTarget*) override { return false; }
+    bool RemoveNotificationTarget(cIGZMessageTarget2*) override { return false; }
+    void DebugDumpRecursive(EntryId) override {}
+
+    static constexpr EntryId kValueEntry = 0x1000;
+    std::uint32_t refs = 0;
+    void* valueHandle = nullptr;
+    void* entryContext = nullptr;
 };
 
 // One description record, for the LOD-scale test.
@@ -863,6 +935,114 @@ void TestDuplicateBindings() {
     CHECK(index >= 0 && index < 2);
 }
 
+// ParseEffectsFiles (0x1005e324a): the parse result clears the 3D view's error report and posts kEffectsParsedMessage,
+// or hands the parser's error string to the view; a manager without a parser does nothing.
+void TestParseEffectsFiles() {
+    FakeHost host;
+    SetEffectsManagerHost(&host);
+    cSC4EffectsManager manager;
+    manager.SetHost(&host);
+
+    manager.ParseEffectsFiles();                  // no parser yet
+    CHECK(host.postedMessages.empty());
+    CHECK(host.viewErrorSets == 0);
+
+    CHECK(manager.Init());                        // the host creates the parser (+0xeb0)
+    manager.ParseEffectsFiles();
+    CHECK(host.viewErrorSets == 1);
+    CHECK(host.viewErrorWasNull);                 // SetErrorReportString(nullptr)
+    CHECK(host.postedMessages.size() == 1);
+    CHECK(host.postedMessages[0] == kEffectsParsedMessage);
+
+    // A failed parse reports the parser's error string instead and posts nothing.
+    host.resourceParseOk = false;
+    host.resourceError = "main.fx: unknown command 'bogus'";
+    manager.ParseEffectsFiles();
+    CHECK(host.viewErrorSets == 2);
+    CHECK(!host.viewErrorWasNull);
+    CHECK(host.viewError == host.resourceError);
+    CHECK(host.postedMessages.size() == 1);
+
+    // The tick callback posts kEffectsTickMessage through the same seam.
+    EffectsTickCallback(nullptr);
+    CHECK(host.postedMessages.size() == 2);
+    CHECK(host.postedMessages[1] == kEffectsTickMessage);
+    CHECK(manager.Shutdown());
+}
+
+// sCreateEffect (0x1005dcb24): the registry's "create_effect" command. Parameters 0..3 are the name and the source
+// position; the effect is created, given a translation-only source transform and started (Start(0)). The out set's
+// parameter 1 carries the success flag and the creation reference is released.
+void TestCreateEffectCommand() {
+    FakeHost host;
+    SetEffectsManagerHost(&host);
+    cSC4EffectsManager manager;
+    manager.SetHost(&host);
+    manager.BeginCollection();
+    cSC4EffectDescription spark;
+    spark.version = 2;
+    manager.Collection().AddEffectDescription("spark", spark);
+    manager.EndCollection();
+
+    FakeGameDataRegistry registry;
+    registry.AddChildEntry(static_cast<void*>(&manager), "create_effect",
+                           static_cast<sc4::GameDataCommandFn>(nullptr), FakeGameDataRegistry::kValueEntry, 1,
+                           nullptr);
+    CHECK(registry.SetEntryContext(FakeGameDataRegistry::kValueEntry, &manager));
+
+    cGZCommandParameterSet in;
+    in.SetParameter(0, cRZVariant(cRZString("spark")));
+    in.SetParameter(1, cRZVariant(1.5f));
+    in.SetParameter(2, cRZVariant(-2.5f));
+    in.SetParameter(3, cRZVariant(3.5f));
+    cGZCommandParameterSet out;
+    CHECK(cSC4EffectsManager::sCreateEffect(&manager, &in, &out, &registry));
+
+    bool created = false;
+    CHECK(out[1].GetValBool(created));
+    CHECK(created);
+    CHECK(manager.VisualEffects().size() == 1);
+    CHECK(manager.ActiveVisualEffectSlots().size() == 1);      // CreateVisualEffect activated it
+    const cSC4VisualEffect* effect = manager.VisualEffects()[0].get();
+    CHECK(effect->Name() == "spark");
+    CHECK(effect->Slot() == 0);                                // the description it resolved
+    CHECK(effect->IsStarted());
+    CHECK(effect->RefCount() == 1);                            // the command released its reference
+    cS3DTransform source;
+    effect->GetSourceTransform(source);
+    CHECK(source.changeCounter == 1);
+    CHECK(source.flags == 1);                                  // translation only
+    CHECK(source.translation[0] == 1.5f);
+    CHECK(source.translation[1] == -2.5f);
+    CHECK(source.translation[2] == 3.5f);
+    CHECK(source.scale == 1.0f);
+
+    // An unknown name still answers true (the command ran) but reports false and creates nothing.
+    cGZCommandParameterSet missingIn;
+    missingIn.SetParameter(0, cRZVariant(cRZString("no-such-effect")));
+    cGZCommandParameterSet missingOut;
+    CHECK(cSC4EffectsManager::sCreateEffect(&manager, &missingIn, &missingOut, &registry));
+    created = true;
+    CHECK(missingOut[1].GetValBool(created));
+    CHECK(!created);
+    CHECK(manager.VisualEffects().size() == 1);
+
+    // A handle the registry does not know (or no registry at all) leaves the manager alone.
+    FakeGameDataRegistry other;
+    cGZCommandParameterSet otherOut;
+    CHECK(cSC4EffectsManager::sCreateEffect(&manager, &in, &otherOut, &other));
+    created = true;
+    CHECK(otherOut[1].GetValBool(created));
+    CHECK(!created);
+    CHECK(manager.VisualEffects().size() == 1);
+    cGZCommandParameterSet nullOut;
+    CHECK(cSC4EffectsManager::sCreateEffect(nullptr, &in, &nullOut, &registry));
+    created = true;
+    CHECK(nullOut[1].GetValBool(created));
+    CHECK(!created);
+    CHECK(cSC4EffectsManager::sCreateEffect(nullptr, &in, &nullOut, nullptr));
+}
+
 }  // namespace
 
 int main() {
@@ -874,6 +1054,8 @@ int main() {
     TestInitShutdownAndTick();
     TestParticlePool();
     TestDuplicateBindings();
+    TestParseEffectsFiles();
+    TestCreateEffectCommand();
     SetEffectsManagerHost(nullptr);
     if (failures == 0) {
         std::printf("all effects manager tests passed\n");

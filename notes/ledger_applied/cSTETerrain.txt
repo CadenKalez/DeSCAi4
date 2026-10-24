@@ -1,41 +1,82 @@
 SOURCE src/sc4/cSTETerrain.cpp|h
-EVIDENCE test scripts/tests/sc4_steterrain_test.cpp - part 5 adds the shore-cliff cluster, the marked-region helpers and the erosion/flood kernels: DetectShoreVertices re-marks the whole 13-vertex shoreline row of a 12 x 12 grid and leaves the inland and the sea rows clear, GetShoreStartingAtVert clears the deque, marks the start vertex and TrackShoreWithLandToTheLeft walks the whole row east (reverse order, every visited vertex marked), AnalyzeShoreAndCreateCliffs keeps the runs whose five inland candidates are high enough and CreateShoreCliff raises those shore columns to a random 30..40 m above the sea with mark-3 on both ends and the five candidate heights jittered, a run of exactly kMinShoreCliffSize is dropped while one shorter becomes a cliff, CreateShoreCliffs runs end to end (raised 13, scratch marks 1/2/3 cleared, the shore bit kept), MarkRegion haloes the mark-3 vertices by two cells (land only, the sea vertex excluded) and SmoothenMarkedRegion moves a 10 m cross pair by (10 - 5) * 0.5 each with nothing else moving, uses the diagonal threshold for a diagonal pair and does nothing with kWindErosionFactor 0, DoWindErosion drops a 20 m spike by 4 m onto its west neighbour only, DoWaterErosion without a flow step only fills and resets the water (depth = sea - altitude, normals and sediment zero) while one flow step erodes (0,0) to 39.96 m, (1,0)/(1,1) to 34.965 m and (2,1) to 29.935 m and a locked vertex keeps its height, DoErosion ignores style 2, uses the per-click wind count for style 1 and the *smoothing* count for style 0 (sic) and the image-import counts (cSC4WinRegionScreen's statics) for the import path, and StartFlood/DoFloodFlowStep flood the 20..40 block with 500 m, conserve the total across the first step, post the padded rectangle 19..41, keep running for three steps and restore the saved (zero) depths after 500; the existing lifecycle/display/edge-subfile/stream and exemplar/normal-pass tests still pass
-# Part 5 of cSTETerrain. It also corrects three already-ledgered functions against the binary: IsShoreVertex
-# (0x10073751a) does test the south neighbour (directions 0, 2, 4 and 6, not 0, 2, 4), GetNeighboringSeaVertex
-# (0x100731a1c) walks west/north/east/south (the even kXIncrement entries), not west/north-west/north/north-east,
-# and GetNeighborWithLowestWaterLevel (0x100737b50) does include directions 6 and 7. The one new seam method is
-# ITerrainHost::RandomDoubleRangeGaussian (cRZRandom::RandomDoubleRangeGaussian at 0x10003d69e). The two
-# kMinShoreCliffSize / kMaxShoreCliffSize statics are now unsigned ints (the exemplar reads them with
-# GetPropertyValue(unsigned int&) at 0x10073dbdd / dbf1) and DoErosion's "from image" counts live in
-# TerrainStatics because the original reads cSC4WinRegionScreen's statics (0x100b2475c / 60 / 58).
-0x1007317fe AnalyzeShoreAndCreateCliffs
-0x100731ab0 CreateShoreCliff
-0x1007335e6 DoWaterErosion
-0x100736216 DoErosion
-0x100736728 MarkRegion
-0x10073697a SmoothenMarkedRegion
-0x100736baa DoWindErosion
-0x100736d3e CreateShoreCliffs
-0x100736ef0 DetectShoreVertices
-0x100736f5e GetShoreStartingAtVert
-0x100737712 DoFloodFlowStep
-0x100739610 TrackShoreWithLandToTheRight
-0x100739798 TrackShoreWithLandToTheLeft
-0x10073e932 StartFlood
+EVIDENCE test scripts/tests/sc4_steterrain_test.cpp - part 6 recovers all 56 outstanding rows. Phase 0: the two layouts are pinned with static_asserts on every field offset - cISTETerrain::tBrushParameters (0x38: previous point +0/+4, current point +8/+0xc, zoom +0x10, valid +0x14, strengthScale +0x18, radiusScale +0x1c, redisplayFlags +0x20, rect +0x24, levelAltitude +0x34) and cSTETerrain::tBrushContext (0x38: current point +0, previous point +8, zoom +0x10, textureValue +0x14, strength +0x18, levelAltitude +0x1c, component +0x20, parameters +0x28, description +0x30), plus tBrushComponent (0x78: id/type/resource/flags, two per-zoom float vectors, textureValue +0x48, maxDecals +0x4c, decalInstance +0x50, randomAmount +0x54, effectID +0x58, extraIDs +0x60) and tBrushDescription (fields to 0x8c, sizeof 0x90: brushID, rotateToDrag, angleIncrement, radius vector, components, cost[5], ui elements, exemplarID +0x7c, soundID +0x80, rotationPhase +0x84, currentAngle +0x88). Phase 1: ApplyBrush looks the description up and redisplays the unioned rect with the caller's flags; ApplyBrushComponents converts the current point to a cell, advances the rotation phase one-in-five backwards, derives the drag angle with atan2, lazily loads each component resource, scales radius/strength, clamps the smoothen strength to 1, dispatches all eleven component types and unions each component's rect; ApplyBrushAtLocation (textured) rotates the quad, maps every covered cell back into texture space with the original's sin/cos offsets and samples the byte into the context, while the square variant walks the same spans once per repeat; the ten callbacks are asserted directly and through the brush (raise/lower by the texture difference, lake-bed land-only fill, volcano-ash 0x400 mark, level step and snap, smoothen talus relaxation with the cross/diagonal thresholds, rain in both surface-water modes, flora 31% placement with the id filter and aura, paint/place-effect through the overlay and effects seams with the count <= maxDecals quirk, GetTextureValue centre texel), ApplyWaterErosionBrush pads the brush rect and runs the zoom's flow steps, DoPostBrushApplicationOperation registers the ash rect / pads the smoothen rect, InitFloraBrushInfo filters the flora ids, Begin/EndBrushScrub post the two sound events and bracket the long operation. Phase 2: the five readers are driven by a fake exemplar holder - the whole-properties reader (45 degree angle -> radians, rotate flag, five costs, the two ids, a random phase, the binary's 0x3c0efa35 fallback), the component reader (type, exemplar, texture byte, max decals, decal instance, degrees/360, the effect-id pair, the first-five radius merge, the four-slot loop, type > 11 rejected and a missing property dropping the description), the UI reader with its four effect-id pair defaults and two uints, and ReadBrushDescriptions over a resource list (a duplicate and a missing holder are skipped). StaticInit now calls ReadBrushDescriptions. Phase 3: AddVolcanicAshRegion merges every overlapping region and pushes the union, SprayVolcanicAsh spreads texture 0xe0 around the 0x400-marked vertices by the zoom's response curve, remaining lifetime and weight, and TickVolcanicAshRegions ages/updates/expires the regions, clears the marks, re-textures and redisplays; AssignSurfaceTexturesAndColors sprays and DoAnimationTick ticks them. Phase 4: IsGoodWaveProducerLocation builds the two rotated wave quads (80% sea, then 10% land after kMaxWaveTravelDist) and rejects them outside the grid, TryToCreateWaveProducerForShore orients along the run's chord, rejects against the mean wave orientation and places the producer behind the run's middle, and UpdateWaveProducers walks the shore runs, places producers up to the maximum and clears mark 1 over the whole grid; the unrecovered cSTEWaterWave (its two travel distances are runtime statics the wave class writes) sits behind ITerrainWaveSystem. Phase 5: Create takes the new-city specification (name, height image, obliterated segment), loads/imports or defaults the heights, erodes, reconciles and computes the range; CreateFromGrayScaleImage samples the image with the original's rounded fractional coordinates and scale, releases the buffer and sets the from-image flag (the cIGZBuffer accessors are the ITerrainHeightImage seam); CreateFlatAreas and LevelAreaStartingAt flood-fill the same-height terrace by up to maxHeightChangeToFlattenFactor, level it to the seed altitude, mark their surroundings with IsVertexWithMark1/IsLandAndNotMark1, smooth and clear marks 1/2 - the tests assert the 5 m budget leaves the 10 m step alone, a too-large minimum rejects and clears, and the full pass levels the step. Phase 6: the four city edges are walked through the region (GetCity), each neighbour's save game is opened and its opposite-edge altitudes loaded (the default neighbour height is used when the city file is missing), the map keeps the maximum, matching/close vertices are dropped, the cells and vertices within the response-curve radius are collected, the view highlights them, the damage dialog is asked, SetAltitude applies the reconciled heights, the untouched edge neighbours get mark 1, the region is smoothed and the marks/redisplay follow - the tests cover the default-height east/south edges with the damage dialog and the 0xca63d517 post, the shared-edge helper (vertical, horizontal and corner-only), and the max merge. Phase 8: Read adopts the freshly read cSTETerrainView3D subobject through the host wrapper, and DoLighting calls the lighting manager's slot 0xe0 row walk (normals at vertex +4, colours at +0x10) through ITerrainHost::ApplyTerrainLightingRow. All of the pre-existing lifecycle/display/edge-subfile/stream/exemplar/normal/shore-cliff/erosion tests still pass, and sc4_terrain + sc4_terrainview3d still pass.
+# Part 6 of cSTETerrain. The two brush layouts were decoded from the call sites (ApplyBrush 0x100731c50,
+# ApplyBrushComponents 0x100731d10, both ApplyBrushAtLocation, the ten BrushFn* bodies, the five ReadBrush*
+# readers and ApplyTerrainBrush 0xc4a6af6) and from the disassembly, and are documented with static_asserts in
+# the header. New seams (each one original call): ITerrainHost::RandomUint32UniformBelow,
+# LoadBrushComponentResource/BrushComponentTextureInfo/BrushTextureInfoSize/BrushTexturePixels,
+# SurfaceWaterRain/SurfaceWaterAddRain/SurfaceWaterCreateSpring/SurfaceWaterEndBrushScrub, PostBrushSound,
+# FloraBrushCount/FloraBrushList/FloraOccupantIsBrushable/AddFloraAt/CityEstablished/AddFloraAura,
+# AddOverlayDecal, CreateTerrainEffect (ITerrainEffect), ListBrushResources, NewCityName/NewCityHeightImage/
+# NewCityObliteratedTerrainSegment/NewCityBaseAltitude/LoadHeightImage (ITerrainHeightImage), Region/
+# RegionalCity/RegionalCityPosition/RegionalCitySize/OpenSaveGame/CloseSaveGame/PopupDialogsEnabled/
+# ShowEdgeReconcileDialog/TerrainMessageTarget/CityLoadInProgress/AdoptLoadedTerrainView; ITerrainView adds
+# WaveSystem (the view object's +0xb0, ITerrainWaveSystem), HighlightCells (vslot 0x40) and
+# ClearCurrentSelections (vslot 0x68). Quirks kept and asserted: the component reader only merges the first
+# five radii; the angle fallback is the binary's 0x3c0efa35 bit pattern; the paint/place-effect brushes add
+# while count <= maxDecals; the square ApplyBrushAtLocation leaves the context's texture byte at the port's 0
+# (the original leaves it uninitialised); the default-neighbour-height edge walk assumes a 64-cell city (the
+# port stops at the vertex array end); the wave walk assumes positive cell steps (the port returns when a
+# test-sized tuning rounds them to zero).
+0x10073083e BrushFnRain
+0x100731628 AddVolcanicAshRegion
+0x100731c50 ApplyBrush
+0x100731d10 ApplyBrushComponents
+0x1007321b8 ApplyBrushAtLocation_cS3DTextureBufferInfo_const_int_int_float_float_bool_cSTETerrain_int_cSTETerrain_tBrushContext_const_cSTETerrain_tBrushContext_SC4Rect_int
+0x1007327de ApplyBrushAtLocation_int_int_float_float_bool_cSTETerrain_int_cSTETerrain_tBrushContext_const_uint_cSTETerrain_tBrushContext_SC4Rect_int
+0x1007329cc BrushFnRaiseLower
+0x100732a0e BrushFnFlora
+0x100732bd2 BrushFnSmoothen
+0x100732d22 BrushFnPaint
+0x100732f92 BrushFnPlaceEffect
+0x100733230 BrushFnLevel
+0x1007332ae ApplyWaterErosionBrush
+0x100733338 BrushFnVolcanoAsh
+0x100733360 BrushFnLakeBed
+0x10073340e DoPostBrushApplicationOperation
+0x100733436 GetTextureValue
+0x100733bc8 AssignSurfaceTexturesAndColors
+0x100734724 SprayVolcanicAsh
+0x100734a7e BeginBrushScrub
+0x100735cfc Create
+0x100735f50 CreateFromGrayScaleImage_cIGZBuffer
+0x10073610c CreateFromGrayScaleImage_cRZString_const
+0x100736326 CreateFlatAreas
+0x1007364ec LevelAreaStartingAt
+0x10073759e DoAnimationTick
+0x1007379be TickVolcanicAshRegions
+0x100737cba DoLighting
+0x100737d3e DoMessage
+0x1007385e2 InitFloraBrushInfo
+0x100738704 EndBrushScrub
+0x100739cb0 Init
+0x10073a346 StaticInit
+0x10073a4f6 IsGoodWaveProducerLocation
+0x10073aafe ReadBrushComponentProperties
+0x10073aefe ReadBrushDescription
+0x10073b26a ReadBrushWholeProperties
+0x10073b3b8 ReadBrushUIProperties
+0x10073b49c ReadBrushDescriptions
+0x10073eb1e TryToCreateWaveProducerForShore
+0x10073ed40 UpdateWaveProducers
+0x10073f0a2 Read
+0x10073f916 ReconcileEdgesWithNeighboringCities
+0x10073fb82 ComputeEdgeVerticesToReconcile
+0x100740080 ComputeCellsAndVertsAffectedByReconcilliation
+0x1007406d4 HighlightCellsAffectedByEdgeReconcilliation
+0x1007407bc LockEdgeVerticesAndSmoothen
+0x100740930 GetCityVertRect
+0x100740992 ComputeMaxHeightsForEdgeVertices_int_SC4Rect_int_const_cISC4RegionalCity_const_std_1_map_int_float_std_1_less_int_std_1_allocator_std_1_pair_int_const_float
+0x100740ada UpdateMaxHeightsForEdgeVerticesAssumingDefaultNeighborHt
+0x100740bbe GetEdgeSharedWithNeighboringCity
+0x100740c2e ComputeMaxHeightsForEdgeVertices_SC4Rect_int_const_SC4Rect_int_const_SC4Point_int_const_SC4Point_int_const_std_1_vector_float_std_1_allocator_float_const_std_1_map_int_float_std_1_less_int_std_1_allocator_std_1_pair_int_const_float
 PARTIAL:
-0x100733bc8 AssignSurfaceTexturesAndColors: the whole pass is in place except SprayVolcanicAsh 0x100734724 (volcanic ash, TERRAIN-9)
-0x10073a346 StaticInit: calls ReadTextureInfos/ReadTerrainIniFile/ReadTuningParameters; ReadBrushDescriptions 0x10073b49c (the brush exemplars, TERRAIN-5) is still missing
-0x100739cb0 Init: the Create branch 0x100735cfc (the city height image import and its erosion) is still missing
-0x10073759e DoAnimationTick: the flood step is wired now, but TickVolcanicAshRegions 0x1007379be (TERRAIN-9) is still missing
+# none: every row above has a complete body. The seams listed above stand in for classes that are not
+# recovered (cIGZBuffer, cSC4NewCitySpecification, the GZCOM image loader, cSTEWaterWave, the three
+# cSTEEdgeReconcileInform dialogs, SC4OpenSaveGame/SC4CloseSaveGame, the cSTETerrainView3D subobject);
+# no field of either brush layout had to be guessed.
 SKIPPED:
-0x100737020 cSTETerrain::cSTETerrain(): covered by the member initialisers
-0x1007372a8 cSTETerrain::~cSTETerrain(): covered by the owner calling Shutdown
-0x1007373f2 cSTETerrain::~cSTETerrain(): the Itanium deleting destructor
-0x1007373fc cSTETerrain::~cSTETerrain(): the Itanium complete-object destructor
-# Still pending (not attempted this session): the brush path (ApplyBrush/ApplyBrushComponents/the two
-# ApplyBrushAtLocation/the ten BrushFn*/GetTextureValue/Begin+EndBrushScrub/ApplyWaterErosionBrush/
-# DoPostBrushApplicationOperation/InitFloraBrushInfo and the five ReadBrush* readers), which still needs the
-# cISTETerrain::tBrushParameters / tBrushContext layouts; Create/CreateFromGrayScaleImage x2/CreateFlatAreas/
-# LevelAreaStartingAt; the volcanic ash (AddVolcanicAshRegion/SprayVolcanicAsh/TickVolcanicAshRegions); the wave
-# producers (IsGoodWaveProducerLocation/TryToCreateWaveProducerForShore/UpdateWaveProducers); the neighbour-city
-# edge reconcile and its helpers. They also need todo rows (notes/todo.csv is the lead's to edit).
+0x100737020 cSTETerrain::cSTETerrain(): covered by the member initialisers (the original only stores the three vtables and zeroes the fields; the port's implicit constructor does the same)
+0x1007372a8 cSTETerrain::~cSTETerrain(): covered by the owner calling Shutdown plus the standard containers freeing themselves (the original also frees the three blocks)
+0x1007373f2 cSTETerrain::~cSTETerrain(): the Itanium deleting destructor of the row above, compiler-emitted
+0x1007373fc cSTETerrain::~cSTETerrain(): the Itanium complete-object destructor of the row above, compiler-emitted
