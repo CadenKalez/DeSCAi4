@@ -1,5 +1,10 @@
 # Start-here prompt for the next agent
 
+> **Start with [notes/SESSION_HANDOFF.md](notes/SESSION_HANDOFF.md)** - it is the state of the work at the end of the
+> 2026-10-23 session: what is finished, what is explicitly not, the highest-value next moves, and the traps that cost
+> time (the unreliable Ghidra MCP, the ledger_upgrade partial bug, and two real bugs in the recovered city-load path).
+
+
 Paste this as your first message / system prompt:
 
 > You are continuing a hand-written clean C++20 decompilation of SimCity 4 (Aspyr macOS/Steam v1.2.1, x86_64)
