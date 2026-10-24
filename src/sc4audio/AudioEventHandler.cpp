@@ -439,7 +439,9 @@ bool cSC4AudioEventHandler::HandleConstructionMessages(cIGZMessage2* message) {
         const std::uint32_t layer = (flags & 0x2) != 0 ? kLayerConstructionNetworkB : kLayerConstructionNetworkA;
         bool hasPosition = false;
         float position[3] = {0.0f, 0.0f, 0.0f};
-        if (standard->GetHasData2()) hasPosition = host->NetworkOccupantPosition(standard->GetIGZUnknown(), position);
+        // Data2 is only the "there is a position" flag; the occupant itself is the message's unknown payload.
+        if (standard->GetHasData2() && standard->GetVoid2() != nullptr)
+            hasPosition = host->NetworkOccupantPosition(standard->GetIGZUnknown(), position);
         if (hasPosition) {
             if (scapeManager_) {
                 cS3DVector3 where{position[0], position[1], position[2]};
@@ -916,7 +918,7 @@ bool cSC4AudioEventHandler::DoMessage(cIGZMessage2* message) {
                     soundSystem->DoEventIds(kEventSoundRegisterValue, value, 0, 0, 0);
             }
             break;
-        case 0xfa0c6390:   // gz::kMouseMessageType
+        case gz::kMouseMessageType:
             result = HandleMouseMessagesForModalWindow(message);
             break;
         case kMessageCityInit:

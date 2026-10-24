@@ -17,8 +17,10 @@
 #include <string>
 #include <vector>
 
+#include "gz/GZCOMDirector.h"
 #include "gz/RZServices.h"
 #include "gz/cIGZFileSystem.h"
+#include "gz/cIGZFrameWork.h"
 #include "rz/Radio.h"
 #include "rz/cRZMessage2Standard.h"
 #include "rz/cRZSysServPtr.h"
@@ -26,6 +28,8 @@
 #include "sc4audio/AudioEventHandler.h"
 #include "sc4audio/AudioScapeManager.h"
 #include "sc4audio_fakes.h"
+
+#include <SDL.h>   // scripts/tests/stubs/SDL.h: the test drives g_ticks by hand
 
 namespace {
 
@@ -130,10 +134,7 @@ struct FakeRadio final : cIGZRadio {
     }
     cIGZRadioStation* GetStation(std::uint32_t index) override {
         stationIndexQueries.push_back(index);
-        if (currentStationObject) return currentStationObject;
-        if (index == 0) return &krgn;
-        if (index == 1) return &kmay;
-        return nullptr;
+        return currentStationObject;   // the "currently tuned" station, if the test set one
     }
     bool SetStation(std::uint32_t index) override { setStationIndices.push_back(index); return true; }
     cIGZRadioStation* GetStation(const char* callSign) override {
@@ -282,8 +283,15 @@ struct RecordingSndSys final : fakes::FakeSndSys {
         std::uint32_t eventId = 0, classId = 0, data1 = 0, data2 = 0, data3 = 0, data4 = 0;
     };
     std::vector<Ids> postedIds;
+    std::vector<Ids> doEventIds;
     std::vector<Created> created;
     std::vector<std::uint32_t> postedEvents;
+
+    bool DoEventIds(std::uint32_t id, std::uint32_t data1, std::uint32_t data2, std::uint32_t data3,
+                    std::uint32_t data4) override {
+        doEventIds.push_back(Ids{id, data1, data2, data3, data4});
+        return true;
+    }
 
     bool PostEventIds(std::uint32_t id, std::uint32_t data1, std::uint32_t data2, std::uint32_t data3,
                       std::uint32_t data4) override {
@@ -301,6 +309,7 @@ struct RecordingSndSys final : fakes::FakeSndSys {
     }
     void Reset() {
         postedIds.clear();
+        doEventIds.clear();
         created.clear();
         postedEvents.clear();
         handlers.clear();
@@ -394,6 +403,62 @@ struct RecordingMessageServer final : cIGZMessageServer {
     bool OnTick(std::uint32_t) override { return false; }
     std::uint32_t GetMessageQueueSize() override { return 0; }
     void SetAlwaysClearQueueOnTick(bool) override {}
+};
+
+
+// The framework RZ::SS() / RZ::GS() ask for the sound system (the handler's cRZSysServPtr lookups use the resolver
+// instead, exactly as the original's RZGetFramework() calls would).
+struct FakeFramework final : cIGZFrameWork {
+    RecordingSndSys* sndSys = nullptr;
+    int refs = 1;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return static_cast<std::uint32_t>(++refs); }
+    std::uint32_t Release() override { return static_cast<std::uint32_t>(--refs); }
+    bool GetSystemService(std::uint32_t serviceId, std::uint32_t iid, void** out) override {
+        if (serviceId == kGZSID_cGZSndSys && iid == kGZIID_cIGZSndSys && sndSys) {
+            sndSys->AddRef();
+            *out = static_cast<cIGZSndSys*>(sndSys);
+            return true;
+        }
+        *out = nullptr;
+        return false;
+    }
+    bool AddSystemService(cIGZSystemService*) override { return true; }
+    bool RemoveSystemService(cIGZSystemService*) override { return true; }
+    bool EnumSystemServices(cIGZUnknownEnumerator&, cIGZUnknown*, std::uint32_t) override { return false; }
+    bool AddHook(cIGZFrameWorkHooks*) override { return false; }
+    bool RemoveHook(cIGZFrameWorkHooks*) override { return false; }
+    bool AddToTick(cIGZSystemService*) override { return false; }
+    bool RemoveFromTick(cIGZSystemService*) override { return false; }
+    bool AddToOnIdle(cIGZSystemService*) override { return false; }
+    bool RemoveFromOnIdle(cIGZSystemService*) override { return false; }
+    int GetOnIdleInterval() const override { return 0; }
+    void SetOnIdleInterval(int) override {}
+    void OnTick(std::uint32_t) override {}
+    void OnIdle() override {}
+    bool IsTickEnabled() const override { return false; }
+    void ToggleTick(bool) override {}
+    void Quit(int) override {}
+    void AbortiveQuit(int) override {}
+    cIGZCmdLine* CommandLine() override { return nullptr; }
+    bool IsInstall() const override { return false; }
+    cIGZCOM* GetCOMObject() override { return nullptr; }
+    int GetState() const override { return 0; }
+    cIGZDebugStream* GetDebugStream() override { return nullptr; }
+    cIGZDebugStream* DefaultDebugStream() override { return nullptr; }
+    cIGZDebugStream* DebugStream() override { return nullptr; }
+    void SetDebugStream(cIGZDebugStream*) override {}
+    void SetDebugLevel(int) override {}
+    int GetDebugLevel() const override { return 0; }
+    cIGZOStream* StdOut() override { return nullptr; }
+    cIGZOStream* StdErr() override { return nullptr; }
+    cIGZIStream* StdIn() override { return nullptr; }
+    bool GetStream(int, std::uint32_t, void**) override { return false; }
+    bool SetStream(int, cIGZUnknown*) override { return false; }
+    void SetApplication(cIGZApp*) override {}
+    cIGZApp* Application() const override { return nullptr; }
+    void ReportException(const char*) override {}
+    cIGZUnknown* ExceptionNotificationObj() const override { return nullptr; }
 };
 
 struct FakeFileSystem final : cIGZFileSystem {
@@ -537,6 +602,28 @@ struct FakePylon final : cIGZUnknown {
     std::uint32_t Release() override { return static_cast<std::uint32_t>(--refs); }
 };
 
+
+// A heap-allocated cRZMessage2Standard: the handler takes and drops references through QueryInterface, and a COM
+// object must never be released to zero on the stack.
+struct TestMessage {
+    TestMessage() {
+        object = new cRZMessage2Standard();
+        object->AddRef();
+    }
+    ~TestMessage() { object->Release(); }
+    // A fresh message of count 1 (the payload flags do not leak between sub-tests).
+    void Reset() {
+        object->Release();
+        object = new cRZMessage2Standard();
+        object->AddRef();
+    }
+    TestMessage(const TestMessage&) = delete;
+    TestMessage& operator=(const TestMessage&) = delete;
+    cRZMessage2Standard* operator->() const { return object; }
+    operator cRZMessage2Standard*() const { return object; }
+    cRZMessage2Standard* object = nullptr;
+};
+
 // ---------------------------------------------------------------------------------------------
 // The test host.
 // ---------------------------------------------------------------------------------------------
@@ -641,10 +728,10 @@ bool ResolveService(std::uint32_t serviceId, std::uint32_t iid, void** out) {
 }
 
 // A cRZMessage2Standard with a type and payloads.
-void SetStandardMessage(cRZMessage2Standard& message, std::uint32_t type, std::uint64_t data1 = 0,
+void SetStandardMessage(cRZMessage2Standard* message, std::uint32_t type, std::uint64_t data1 = 0,
                         bool hasData1 = false) {
-    message.SetType(type);
-    if (hasData1) message.SetData1(data1);
+    message->SetType(type);
+    if (hasData1) message->SetData1(data1);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -720,7 +807,7 @@ void TestInitAndShutdown() {
         CHECK(handler.Init());
         CHECK(handler.IsInitialized());
         CHECK(handler.Init());               // second call is a no-op
-        CHECK(handler.Release() > 0);        // Counted: Release while > 1 only decrements
+        // The stack object is never Release()d to zero: Release at a count of 1 destroys (see the Create test).
         CHECK(radio.radioDirectory == "/game/GameData/Radio/");
         CHECK(sndSys.handlers.size() == 1);
         CHECK(sndSys.handlers[0] == static_cast<cIGZSndEventHandler*>(&handler));
@@ -797,9 +884,10 @@ void TestRegionMusic() {
     radio.onDemand = true;
 
     // Data1 = 1 -> the region station "krgn".
-    cRZMessage2Standard message;
+    TestMessage message;
+    message.Reset();
     SetStandardMessage(message, 0x2a3ad653, 1, true);
-    CHECK(handler.DoMessage(&message));
+    CHECK(handler.DoMessage(message));
     CHECK(radio.setStations.size() == 1);
     CHECK(radio.setStations[0].callSign == "krgn");
     CHECK(!radio.setStations[0].fadeWasNull);
@@ -810,17 +898,19 @@ void TestRegionMusic() {
 
     // Data1 = 0 -> the mayor station "kmay".
     radio.setStations.clear();
+    message.Reset();
     SetStandardMessage(message, 0x2a3ad653, 0, true);
-    CHECK(handler.DoMessage(&message));
+    CHECK(handler.DoMessage(message));
     CHECK(radio.setStations.size() == 1);
     CHECK(radio.setStations[0].callSign == "kmay");
     CHECK(radio.setStations[0].durationMs == 4000);
 
     // Data2 overrides the fade duration.
     radio.setStations.clear();
+    message.Reset();
     SetStandardMessage(message, 0x2a3ad653, 1, true);
-    message.SetData2(250);
-    CHECK(handler.DoMessage(&message));
+    message->SetData2(250);
+    CHECK(handler.DoMessage(message));
     CHECK(radio.setStations.size() == 1);
     CHECK(radio.setStations[0].callSign == "krgn");
     CHECK(radio.setStations[0].durationMs == 250);
@@ -829,122 +919,167 @@ void TestRegionMusic() {
     // The host can override kFadeOutTimeMs.
     host.fadeMs = 1234;
     radio.setStations.clear();
+    message.Reset();
     SetStandardMessage(message, 0x2a3ad653, 1, true);
-    CHECK(handler.DoMessage(&message));
+    CHECK(handler.DoMessage(message));
     CHECK(radio.setStations.size() == 1 && radio.setStations[0].durationMs == 1234);
     host.fadeMs = 4000;
 
     // Already current: GetStation(index) and GetStation("krgn") answer the same station -> no SetStation.
     radio.setStations.clear();
     radio.currentStationObject = &radio.krgn;
-    CHECK(handler.DoMessage(&message));
+    CHECK(handler.DoMessage(message));
     CHECK(radio.setStations.empty());
     radio.currentStationObject = nullptr;
 
     // A mode other than 0 / 1 consumes the message without a station switch but still reports success.
     radio.setStations.clear();
+    message.Reset();
     SetStandardMessage(message, 0x2a3ad653, 7, true);
-    CHECK(handler.DoMessage(&message));
+    CHECK(handler.DoMessage(message));
     CHECK(radio.setStations.empty());
 
     // A message of another type is ignored.
+    message.Reset();
     SetStandardMessage(message, 0x12345678, 1, true);
-    CHECK(handler.DoMessage(&message));
+    CHECK(handler.DoMessage(message));
 
     // Station playlist options (0xa611b34): Data1 selects the station, Data2 the exclusion list, Data3 the mode.
     std::list<cRZString> modifiers;
-    cRZMessage2Standard options;
-    options.SetType(0xa611b34);
-    options.SetData1(1);
-    options.SetVoid2(&modifiers);
-    CHECK(handler.DoMessage(&options));
+    TestMessage options;
+    options->SetType(0xa611b34);
+    options->SetData1(1);
+    options->SetVoid2(&modifiers);
+    CHECK(handler.DoMessage(options));
     CHECK(radio.krgn.modifierCalls == 1 && radio.krgn.modifierList == &modifiers);
     CHECK(radio.krgn.playlistMode == 2);   // no Data3 -> 2
-    options.SetData3(0);
-    CHECK(handler.DoMessage(&options));
+    options->SetData3(0);
+    CHECK(handler.DoMessage(options));
     CHECK(radio.krgn.playlistMode == 2);   // Data3 == 0 -> 2
-    options.SetData3(5);
-    CHECK(handler.DoMessage(&options));
+    options->SetData3(5);
+    CHECK(handler.DoMessage(options));
     CHECK(radio.krgn.playlistMode == 1);   // Data3 != 0 -> 1
-    options.SetData1(0);
-    CHECK(handler.DoMessage(&options));
+    options->SetData1(0);
+    CHECK(handler.DoMessage(options));
     CHECK(radio.kmay.modifierCalls == 1);
 
     // One-shot radio commands.
+    message.Reset();
     SetStandardMessage(message, 0x2a611b51);
-    CHECK(handler.DoMessage(&message));
+    CHECK(handler.DoMessage(message));
     CHECK(radio.stopPlaybackCalls == 1);
 
+    message.Reset();
     SetStandardMessage(message, 0xaa650861, 1, true);
-    CHECK(handler.DoMessage(&message));
-    CHECK(!radio.onDemand);
-    SetStandardMessage(message, 0xaa650861, 0, true);
-    CHECK(handler.DoMessage(&message));
+    CHECK(handler.DoMessage(message));
     CHECK(radio.onDemand);
+    message.Reset();
+    SetStandardMessage(message, 0xaa650861, 0, true);
+    CHECK(handler.DoMessage(message));
+    CHECK(!radio.onDemand);
 
     // Radio on/off + volume (0xaa650860): Data2 sets the volume, Data1 turns the radio on and advances the song.
     radio.on = false;
     radio.volume = 0;
     radio.playNextSongs.clear();
-    SetStandardMessage(message, 0xaa650860, 0, false);
-    message.SetData1(1);
-    message.SetData2(300);
-    CHECK(handler.DoMessage(&message));
+    message.Reset();
+    SetStandardMessage(message, 0xaa650860);
+    message->SetData1(1);
+    message->SetData2(300);
+    CHECK(handler.DoMessage(message));
     CHECK(radio.volume == 300);
     CHECK(radio.on);
     CHECK(radio.playNextSongs.size() == 1);
     // Asking for the state it is already in does nothing.
     radio.setVolumeCalls = 0;
     radio.playNextSongs.clear();
-    CHECK(handler.DoMessage(&message));
+    CHECK(handler.DoMessage(message));
     CHECK(radio.playNextSongs.empty());
     CHECK(radio.setVolumeCalls == 1);   // the volume is still written (the on/off early-out comes after it)
     radio.on = true;
+    message.Reset();
     SetStandardMessage(message, 0xaa650860, 0, true);
-    CHECK(handler.DoMessage(&message));
+    CHECK(handler.DoMessage(message));
     CHECK(!radio.on);
 
     // Play song (0xaa611b6e): Data1 is a cRZString* the handler releases.
     radio.playedSongs.clear();
     auto* song = new cRZString("GameData/Radio/Stations/Region/Music/theme.mp3");
-    message.SetType(0xaa611b6e);
-    message.SetVoid1(song);
-    CHECK(handler.DoMessage(&message));
+    message->SetType(0xaa611b6e);
+    message->SetVoid1(song);
+    CHECK(handler.DoMessage(message));
     CHECK(radio.playedSongs.size() == 1);
     CHECK(radio.playedSongs[0] == "GameData/Radio/Stations/Region/Music/theme.mp3");
 
     // The focus message turns the radio back on only when music is enabled in the preferences.
     host.preferences[sc4audio::kPrefsMusicEnabled] = 1;
     radio.on = false;
+    message.Reset();
     SetStandardMessage(message, 0x4348b111, 1, true);
-    CHECK(handler.DoMessage(&message));
+    CHECK(handler.DoMessage(message));
     CHECK(radio.on);
     host.preferences[sc4audio::kPrefsMusicEnabled] = 0;
     radio.on = true;
+    message.Reset();
     SetStandardMessage(message, 0x4348b111, 0, true);
-    CHECK(handler.DoMessage(&message));
+    CHECK(handler.DoMessage(message));
     CHECK(radio.on);   // music disabled: the message is ignored
 
     // The re-posted requests (0x26d31ec5 -> region, 0x26d31ec4 -> mayor) go through SL::spMS2.
     server.posted.clear();
+    message.Reset();
     SetStandardMessage(message, 0x26d31ec5);
-    CHECK(handler.DoMessage(&message));
+    CHECK(handler.DoMessage(message));
     CHECK(server.posted.size() == 1);
     CHECK(server.posted[0].type == 0x2a3ad653);
     CHECK(server.posted[0].hasData1 && server.posted[0].data1 == 1);
+    message.Reset();
     SetStandardMessage(message, 0x26d31ec4);
-    CHECK(handler.DoMessage(&message));
+    CHECK(handler.DoMessage(message));
     CHECK(server.posted.size() == 2);
     CHECK(server.posted[1].hasData1 && server.posted[1].data1 == 0);
 
+    // The sound-system cache RZ::SS() and RZ::GS() answer from (installed through the process-wide framework).
+    FakeFramework framework;
+    framework.sndSys = &sndSys;
+    SetRZFramework(&framework);
+    RZ::ResetCaches();
+
     // Listener property message (0x4a7fb7e9) forwards Data1 to the sound system as event 0xbaab7a4.
     sndSys.postedIds.clear();
+    message.Reset();
     SetStandardMessage(message, 0x4a7fb7e9, 0x1234, true);
-    CHECK(handler.DoMessage(&message));
-    CHECK(sndSys.postedIds.size() == 1);
-    CHECK(sndSys.postedIds[0].id == 0xbaab7a4 && sndSys.postedIds[0].data1 == 0x1234);
+    CHECK(handler.DoMessage(message));
+    CHECK(sndSys.doEventIds.size() == 1);
+    if (sndSys.doEventIds.size() == 1) {
+        CHECK(sndSys.doEventIds[0].id == 0xbaab7a4 && sndSys.doEventIds[0].data1 == 0x1234);
+    }
+
+    // DoEvent: the tuning-changed id enumerates the update targets and the torch events post their loops.
+    fakes::FakeEvent event;
+    event.id = 0xaa36d9b6;
+    CHECK(!handler.DoEvent(&event));
+    sndSys.postedIds.clear();
+    event.id = 0x8a10611a;   // torch stop: three stop events on keys 0x601..0x603
+    event.message.SetData1(1);
+    event.message.SetData2(2);
+    event.message.SetData3(3);
+    CHECK(!handler.DoEvent(&event));
+    CHECK(sndSys.postedIds.size() == 3);
+    if (sndSys.postedIds.size() == 3) {
+        CHECK(sndSys.postedIds[0].id == 0x6a451908 && sndSys.postedIds[0].data1 == 0x601);
+        CHECK(sndSys.postedIds[1].id == 0x6a451908 && sndSys.postedIds[1].data1 == 0x602);
+        CHECK(sndSys.postedIds[2].id == 0x6a451908 && sndSys.postedIds[2].data1 == 0x603);
+    }
+    // An unknown event id is consumed without an action.
+    sndSys.postedIds.clear();
+    event.id = 0x12345678;
+    CHECK(!handler.DoEvent(&event));
+    CHECK(sndSys.postedIds.empty());
 
     handler.Shutdown();
+    SetRZFramework(nullptr);
+    RZ::ResetCaches();
     sc4audio::SetAudioEventHandlerHost(nullptr);
     SL::spMS2 = nullptr;
     SL::spPreferences = nullptr;
@@ -975,9 +1110,10 @@ void TestCityMessages() {
     // City init: the 11 automata messages are added, the viewport is copied, and an established city asks for the
     // mayor music through the message server.
     host.cityEstablished = true;
-    cRZMessage2Standard message;
+    TestMessage message;
+    message.Reset();
     SetStandardMessage(message, 0x26d31ec1);
-    CHECK(handler.DoMessage(&message));
+    CHECK(handler.DoMessage(message));
     int added = 0;
     for (const auto& notification : server.notifications)
         if (notification.added) ++added;
@@ -988,8 +1124,9 @@ void TestCityMessages() {
 
     // City shutdown: the layers are cleared and the messages removed.
     server.posted.clear();
+    message.Reset();
     SetStandardMessage(message, 0x26d31ec2);
-    CHECK(handler.DoMessage(&message));
+    CHECK(handler.DoMessage(message));
     CHECK(scape.cleared.size() == 1);
     CHECK(scape.cleared[0].first == 0 && !scape.cleared[0].second);
     int removed = 0;
@@ -1031,45 +1168,52 @@ void TestConstructionAndAutomataSounds() {
     host.networkOccupant = &networkOccupant;
 
     // 0x89f10866 without Data2 -> RemoveInstance(layer, Data1). Data3 bit 1 picks the layer.
-    cRZMessage2Standard message;
-    message.SetType(0x89f10866);
-    message.SetData1(7);
-    message.SetData3(0);
-    CHECK(handler.DoMessage(&message));
+    TestMessage message;
+    message->SetType(0x89f10866);
+    message->SetData1(7);
+    message->SetData3(0);
+    CHECK(handler.DoMessage(message));
     CHECK(scape.removed.size() == 1);
     CHECK(scape.removed[0].layer == 0xaa62c82a && scape.removed[0].instance == 7);
     scape.removed.clear();
-    message.SetData3(2);
-    CHECK(handler.DoMessage(&message));
+    message->SetData3(2);
+    CHECK(handler.DoMessage(message));
     CHECK(scape.removed.size() == 1 && scape.removed[0].layer == 0xea62c800);
 
     // 0x89f10866 with Data2 and a network occupant -> InsertInstance at the occupant's position.
     scape.inserted.clear();
-    message.SetVoid2(&networkOccupant);
-    message.SetData3(0);
-    CHECK(handler.DoMessage(&message));
+    message->SetVoid2(&networkOccupant);
+    message->SetIGZUnknown(&networkOccupant);
+    message->SetData3(0);
+    CHECK(handler.DoMessage(message));
     CHECK(scape.inserted.size() == 1);
     CHECK(scape.inserted[0].layer == 0xaa62c82a && scape.inserted[0].instance == 7);
     CHECK(scape.inserted[0].x == 1.0f && scape.inserted[0].y == 2.0f && scape.inserted[0].z == 3.0f);
     CHECK(scape.inserted[0].radius == 0.0f);
+    // Data2 present but null -> the original removes instead of inserting.
+    scape.inserted.clear();
+    scape.removed.clear();
+    message->SetVoid2(nullptr);
+    CHECK(handler.DoMessage(message));
+    CHECK(scape.inserted.empty() && scape.removed.size() == 1);
 
     // 0xa9f10e45 -> UpdateInstance, layer from Data3 bit 1.
     scape.updated.clear();
-    cRZMessage2Standard update;
-    update.SetType(0xa9f10e45);
-    update.SetData1(9);
-    update.SetData3(2);
-    update.SetVoid1(&networkOccupant);
-    CHECK(handler.DoMessage(&update));
+    TestMessage update;
+    update->SetType(0xa9f10e45);
+    update->SetData1(9);
+    update->SetData3(2);
+    update->SetIGZUnknown(&networkOccupant);
+    CHECK(handler.DoMessage(update));
     CHECK(scape.updated.size() == 1);
     CHECK(scape.updated[0].layer == 0xea62c800 && scape.updated[0].instance == 9);
 
     // 0x49e7b1e2 -> InsertInstance keyed by the occupant pointer, in the crew layer.
     scape.inserted.clear();
-    cRZMessage2Standard occupantMessage;
-    occupantMessage.SetType(0x49e7b1e2);
-    occupantMessage.SetVoid1(&occupant);
-    CHECK(handler.DoMessage(&occupantMessage));
+    TestMessage occupantMessage;
+    occupantMessage->SetType(0x49e7b1e2);
+    occupantMessage->SetIGZUnknown(&occupant);
+    CHECK(handler.DoMessage(occupantMessage));
     CHECK(scape.inserted.size() == 1);
     CHECK(scape.inserted[0].layer == 0xc9dc0a61);
     CHECK(scape.inserted[0].x == 4.0f && scape.inserted[0].y == 5.0f && scape.inserted[0].z == 6.0f);
@@ -1077,93 +1221,98 @@ void TestConstructionAndAutomataSounds() {
     // 0xc9e7b1e8: Data1 == 0 removes, otherwise inserts (occupancy layer).
     scape.inserted.clear();
     scape.removed.clear();
-    occupantMessage.SetType(0xc9e7b1e8);
-    occupantMessage.SetData1(0);
-    CHECK(handler.DoMessage(&occupantMessage));
+    occupantMessage->SetType(0xc9e7b1e8);
+    occupantMessage->SetData1(0);
+    CHECK(handler.DoMessage(occupantMessage));
     CHECK(scape.removed.size() == 1 && scape.removed[0].layer == 0x49e7b4b0);
-    occupantMessage.SetData1(1);
-    CHECK(handler.DoMessage(&occupantMessage));
+    occupantMessage->SetData1(1);
+    CHECK(handler.DoMessage(occupantMessage));
     CHECK(scape.inserted.size() == 1 && scape.inserted[0].layer == 0x49e7b4b0);
 
     // 0xa9e3b6e3: a positive Data1 inserts into the "enter" layer at the occupant's position.
     scape.inserted.clear();
-    cRZMessage2Standard instanceMessage;
-    instanceMessage.SetType(0xa9e3b6e3);
-    instanceMessage.SetData1(1);
-    instanceMessage.SetData2(1);
-    instanceMessage.SetVoid1(&occupant);
-    CHECK(handler.DoMessage(&instanceMessage));
+    TestMessage instanceMessage;
+    instanceMessage->SetType(0xa9e3b6e3);
+    instanceMessage->SetData1(1);
+    instanceMessage->SetData2(1);
+    instanceMessage->SetIGZUnknown(&occupant);
+    CHECK(handler.DoMessage(instanceMessage));
     CHECK(scape.inserted.size() == 1);
     CHECK(scape.inserted[0].layer == 0x49de8a94);
     CHECK(scape.inserted[0].radius == 50.0f);
     // Data1 < 0 inserts into the "leave" layer.
     scape.inserted.clear();
-    instanceMessage.SetData1(static_cast<std::uint64_t>(static_cast<std::uint32_t>(-1)));
-    CHECK(handler.DoMessage(&instanceMessage));
+    instanceMessage->SetData1(static_cast<std::uint64_t>(static_cast<std::uint32_t>(-1)));
+    CHECK(handler.DoMessage(instanceMessage));
     CHECK(scape.inserted.size() == 1 && scape.inserted[0].layer == 0xa9de8b59);
     // Data1 == 0 removes from both.
     scape.inserted.clear();
     scape.removed.clear();
-    instanceMessage.SetData1(0);
-    CHECK(handler.DoMessage(&instanceMessage));
+    instanceMessage->SetData1(0);
+    CHECK(handler.DoMessage(instanceMessage));
     CHECK(scape.removed.size() == 2);
     CHECK(scape.removed[0].layer == 0x49de8a94 && scape.removed[1].layer == 0xa9de8b59);
 
     // 0xaa396960 stops the sound of Data2.
     sndSys.postedIds.clear();
-    cRZMessage2Standard stop;
-    stop.SetType(0xaa396960);
-    stop.SetData2(0x55);
-    CHECK(handler.DoMessage(&stop));
+    TestMessage stop;
+    stop->SetType(0xaa396960);
+    stop->SetData2(0x55);
+    CHECK(handler.DoMessage(stop));
     CHECK(sndSys.postedIds.size() == 1);
     CHECK(sndSys.postedIds[0].id == 0x6a451908 && sndSys.postedIds[0].data1 == 0x55);
 
     // 0xea3ada33 creates a soundscape instance with a fresh id; Data1 / Data2 pick the layer.
     scape.inserted.clear();
     FakeAutomaton automaton;
-    cRZMessage2Standard create;
-    create.SetType(0xea3ada33);
-    create.SetVoid1(&automaton);
-    create.SetData1(0);
-    create.SetData2(1);
-    CHECK(handler.DoMessage(&create));
+    TestMessage create;
+    create->SetType(0xea3ada33);
+    create->SetIGZUnknown(&occupant);   // 0xea3ada33 QIs the occupant interface for the position
+    create->SetData1(0);
+    create->SetData2(1);
+    CHECK(handler.DoMessage(create));
     CHECK(scape.inserted.size() == 1);
     CHECK(scape.inserted[0].layer == 0x4a5e7ffc);
     CHECK(scape.inserted[0].instance != 0);
-    CHECK(scape.inserted[0].x == 10.0f && scape.inserted[0].y == 20.0f && scape.inserted[0].z == 30.0f);
+    CHECK(scape.inserted[0].x == 4.0f && scape.inserted[0].y == 5.0f && scape.inserted[0].z == 6.0f);
     scape.inserted.clear();
-    create.SetData1(1);
-    create.SetData2(2);
-    CHECK(handler.DoMessage(&create));
+    create->SetData1(1);
+    create->SetData2(2);
+    CHECK(handler.DoMessage(create));
     CHECK(scape.inserted.size() == 1 && scape.inserted[0].layer == 0x0a5e7f51);
     scape.inserted.clear();
-    create.SetData1(1);
-    create.SetData2(3);
-    CHECK(handler.DoMessage(&create));
+    create->SetData1(1);
+    create->SetData2(3);
+    CHECK(handler.DoMessage(create));
     CHECK(scape.inserted.size() == 1 && scape.inserted[0].layer == 0x6a5e8088);
 
     // 0x8a385dd8: a positional one-shot sound on the automaton, with the retrigger timer.
     sndSys.postedIds.clear();
-    cRZMessage2Standard effect;
-    effect.SetType(0x8a385dd8);
-    effect.SetData1(0x1234);
-    effect.SetData2(0x5678);
-    effect.SetVoid1(&automaton);
-    CHECK(handler.DoMessage(&effect));
+    TestMessage effect;
+    effect->SetType(0x8a385dd8);
+    effect->SetData1(0x1234);
+    effect->SetData2(0x5678);
+    effect->SetIGZUnknown(&automaton);
+    CHECK(handler.DoMessage(effect));
     CHECK(sndSys.postedIds.size() == 2);
     CHECK(sndSys.postedIds[0].id == 0xea451903 && sndSys.postedIds[0].data1 == 0x1234 &&
           sndSys.postedIds[0].data2 == 0x5678 && sndSys.postedIds[0].data3 == 1);
     CHECK(sndSys.postedIds[1].id == 0xca45190f && sndSys.postedIds[1].data1 == 0x5678);
     CHECK(sndSys.postedIds[1].data2 == 10 && sndSys.postedIds[1].data3 == 20 && sndSys.postedIds[1].data4 == 30);
-    // The throttled sound id: the second call within the random delay posts nothing.
+    // The throttled sound id: the second call within the random delay posts nothing, after it posts again.
+    g_ticks = 1000;
     sndSys.postedIds.clear();
-    effect.SetData1(0xa9f14c47);
-    CHECK(handler.DoMessage(&effect));
+    effect->SetData1(0xa9f14c47);
+    CHECK(handler.DoMessage(effect));
     const std::size_t firstCount = sndSys.postedIds.size();
     CHECK(firstCount == 2);
-    CHECK(handler.DoMessage(&effect));
-    CHECK(sndSys.postedIds.size() == firstCount);   // throttled
     CHECK(handler.retriggerDelayMs() >= 1000);
+    g_ticks += 1;   // still inside the 1000..3999 ms (or longer) window
+    CHECK(handler.DoMessage(effect));
+    CHECK(sndSys.postedIds.size() == firstCount);   // throttled
+    g_ticks += handler.retriggerDelayMs();
+    CHECK(handler.DoMessage(effect));
+    CHECK(sndSys.postedIds.size() == firstCount + 2);   // window over: posted again
 
     handler.Shutdown();
     sc4audio::SetAudioEventHandlerHost(nullptr);
@@ -1192,11 +1341,11 @@ void TestDispatchSounds() {
     handler.Init();
 
     FakePylon pylon;
-    cRZMessage2Standard message;
-    message.SetType(0x894671f6);
-    message.SetData1(1);   // fire dispatch type, one of 0/1/5/6 that make a sound
-    message.SetVoid1(&pylon);
-    CHECK(handler.DoMessage(&message));
+    TestMessage message;
+    message->SetType(0x894671f6);
+    message->SetData1(1);   // fire dispatch type, one of 0/1/5/6 that make a sound
+    message->SetIGZUnknown(&pylon);
+    CHECK(handler.DoMessage(message));
     CHECK(sndSys.created.size() == 1);
     CHECK(sndSys.created[0].eventId == 0xea451903);
     CHECK(sndSys.created[0].classId == 0x5b523ba4);
@@ -1206,25 +1355,27 @@ void TestDispatchSounds() {
 
     // Dispatch type 2 makes no sound.
     sndSys.created.clear();
-    message.SetData1(2);
-    CHECK(handler.DoMessage(&message));
+    message->SetData1(2);
+    CHECK(handler.DoMessage(message));
     CHECK(sndSys.created.empty());
 
     // Police dispatch uses the other sound id.
     sndSys.created.clear();
-    message.SetType(0xe94671eb);
-    message.SetData1(0);
-    CHECK(handler.DoMessage(&message));
+    message->SetType(0xe94671eb);
+    message->SetData1(0);
+    CHECK(handler.DoMessage(message));
     CHECK(sndSys.created.size() == 1 && sndSys.created[0].data1 == 0x29d99e9e);
 
     // The pylon messages only report whether the payload answers cISC4PylonOccupant.
-    message.SetType(0xc9f1011a);
-    message.SetData1(0);
-    message.SetVoid1(&pylon);
-    CHECK(handler.DoMessage(&message));
+    message->SetType(0xc9f1011a);
+    message->SetData1(0);
+    message->SetIGZUnknown(&pylon);
+    CHECK(handler.DoMessage(message));
     FakeOccupant notAPylon;
-    message.SetVoid1(&notAPylon);
-    CHECK(!handler.DoMessage(&message));
+    message->SetIGZUnknown(&notAPylon);
+    CHECK(handler.DoMessage(message));                            // DoMessage itself always consumes the message
+    CHECK(!handler.HandleDispatchManagerMessages(message));       // the sub-handler reports the failed QI
+    message->SetIGZUnknown(nullptr);
 
     handler.Shutdown();
     sc4audio::SetAudioEventHandlerHost(nullptr);
@@ -1254,6 +1405,7 @@ void TestDisasterFire() {
     auto* handler = dynamic_cast<cSC4AudioEventHandlerDisasterFire*>(view);
     CHECK(handler != nullptr);
     if (!handler) return;
+    view->AddRef();   // the caller's reference; the object is created at count 0 like every GZ factory object
 
     CHECK(handler->Init());
     CHECK(handler->IsInitialized());
@@ -1278,29 +1430,30 @@ void TestDisasterFire() {
     CHECK(!handler->IsOccupantIncluded(&notOnFire));
 
     // Occupant inserted (0x99ef1142) -> InsertInstance in the disaster layer.
-    cRZMessage2Standard message;
-    message.SetType(0x99ef1142);
-    message.SetVoid1(&occupant);
-    CHECK(handler->DoMessage(&message));
+    TestMessage message;
+    message->SetType(0x99ef1142);
+    message->SetIGZUnknown(&occupant);
+    CHECK(handler->DoMessage(message));
     CHECK(scape.inserted.size() == 1);
     CHECK(scape.inserted[0].layer == 0x49e4ce85);
     CHECK(scape.inserted[0].instance == static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&occupant)));
     // A non-fire occupant is filtered out.
-    message.SetVoid1(&notOnFire);
-    CHECK(handler->DoMessage(&message));
+    message->SetIGZUnknown(&notOnFire);
+    CHECK(handler->DoMessage(message));
     CHECK(scape.inserted.size() == 1);
     // Occupant removed (0x99ef1143) -> RemoveInstance.
-    message.SetType(0x99ef1143);
-    message.SetVoid1(&occupant);
-    CHECK(handler->DoMessage(&message));
+    message->SetType(0x99ef1143);
+    message->SetIGZUnknown(&occupant);
+    CHECK(handler->DoMessage(message));
     CHECK(scape.removed.size() == 1 && scape.removed[0].layer == 0x49e4ce85);
 
     // City init (0x26d31ec1) walks every fire occupant through the host's occupant manager.
     host.fireOccupants = {&occupant, &notOnFire};
     scape.inserted.clear();
-    message.SetType(0x26d31ec1);
-    message.SetVoid1(nullptr);
-    CHECK(handler->DoMessage(&message));
+    message->SetIGZUnknown(nullptr);   // drop the reference to the occupant before it leaves scope
+    message.Reset();
+    message->SetType(0x26d31ec1);
+    CHECK(handler->DoMessage(message));
     CHECK(host.iterateCalls == 1);
     CHECK(scape.inserted.size() == 1);
 

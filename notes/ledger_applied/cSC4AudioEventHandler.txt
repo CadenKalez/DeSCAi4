@@ -1,0 +1,46 @@
+SOURCE src/sc4audio/AudioEventHandler.cpp|h
+EVIDENCE test scripts/tests/sc4_audioeventhandler_test.cpp - COM views and QueryInterface ids, ctor framework lookups, Init/Shutdown (sound-system handler registration, soundscape manager, radio directory built from the file system data directory, 13 new-server + 2 old-server notifications, preference-blob defaults and radio restore), the region-music path (0x2a3ad653 Data1 1 -> cIGZRadio::SetStation("krgn", FadeOptions{0, 4000}) and Data1 0 -> "kmay", the Data2 fade override, the already-current early-out), the 0xa611b34 station options, radio on/off/volume/on-demand/play-song/playback messages, the re-posted 0x26d31ec4/0x26d31ec5 requests, construction/automata/dispatch soundscape and sound-system paths, DoEvent (tuning enumeration, sound property cache, torch loop events), the disaster fire layer and every quirk listed in the header
+0x1003dedb2 AudioEventHandler_Create
+0x1003ed1a2 AudioEventHandler_Construct
+0x1003ed2d6 AudioEventHandler_ConstructRedirect
+0x1003ed2e0 AudioEventHandler_Destruct
+0x1003ed3b0 AudioEventHandler_DestructRedirect
+0x1003ed3ba AudioEventHandler_DeleteDestruct
+0x1003ed3e8 AudioEventHandler_Init
+0x1003ed8ce AudioEventHandler_Shutdown
+0x1003edb82 AudioEventHandler_DoMessageLegacy
+0x1003edb9c AudioEventHandler_HandleModalMessages
+0x1003eddf0 AudioEventHandler_DoMessage
+0x1003ee2f6 AudioEventHandler_HandleMouseMessagesForModalWindow
+0x1003ee462 AudioEventHandler_HandleRadioMessages
+0x1003ee568 AudioEventHandler_HandleConstructionMessages
+0x1003eea44 AudioEventHandler_HandleCityInitShutdownMessages
+0x1003eedda AudioEventHandler_HandleAutomataMessages
+0x1003ef31e AudioEventHandler_HandleDispatchManagerMessages
+0x1003ef5ae AudioEventHandler_SetRadioStation
+0x1003ef652 AudioEventHandler_DoEvent
+0x1003ef790 AudioEventHandler_HandleTorchControlMessages
+0x1003efcf2 AudioEventHandler_AddRef
+0x1003efd2a AudioEventHandler_Release
+0x1003efda6 AudioEventHandler_QueryInterface
+0x1003dedea AudioEventHandlerDisasterFire_Create
+0x1003ec79c AudioEventHandlerDisasterFire_Construct
+0x1003ec83a AudioEventHandlerDisasterFire_Destruct
+0x1003ec8ca AudioEventHandlerDisasterFire_DestructRedirect
+0x1003ec8e2 AudioEventHandlerDisasterFire_DeleteDestruct
+0x1003ec91e AudioEventHandlerDisasterFire_Init
+0x1003ecb84 AudioEventHandlerDisasterFire_Shutdown
+0x1003ecc60 AudioEventHandlerDisasterFire_DoMessage
+0x1003ece84 AudioEventHandlerDisasterFire_IsOccupantIncluded
+0x1003ecef0 AudioEventHandlerDisasterFire_IterateFireOccupantCallback
+0x1003ecf4a AudioEventHandlerDisasterFire_AddRef
+0x1003ecf90 AudioEventHandlerDisasterFire_Release
+0x1003ed02c AudioEventHandlerDisasterFire_QueryInterface
+0x1003ed0a8 AudioEventHandlerDisasterFire_DoEvent
+0x1003ece2a IterateFireOccupantsOnInitCallback
+PARTIAL:
+0x1003ed3e8 AudioEventHandler_Init - the cSC4AudioPreferencesWinProc statics (StaticInit @ 0x1003a8d82, GetVolumeFromSliderValue @ 0x1003abbf4, SetDefaultMusicListPreferences @ 0x1003ab27a, UpdateExclusionList @ 0x1003ab450) live in the unrecovered SC4AudioPreferences.cpp TU and sit behind IAudioEventHandlerHost; the built-in host answers the binary's defaults (kFadeOutTimeMs = 4000, identity slider curve) and the preference-blob handling itself is translated
+0x1003edb9c AudioEventHandler_HandleModalMessages - the mouse-message server the original obtains as RZ::GS() vslot 0x78 -> QueryInterface(0x3ac7a210) -> vslot 0x18 is the IAudioEventHandlerHost::MouseMessageServer seam; the modal-window list handling itself is translated
+0x1003ee568 AudioEventHandler_HandleConstructionMessages - the cISC4NetworkOccupant view (0x180-byte slots) is not recovered: its vslot 0x180 -> occupant vslot 0x40 GetPosition pair is the IAudioEventHandlerHost::NetworkOccupantPosition seam; the layer selection, instance keys and insert/remove/update calls are translated
+0x1003eea44 AudioEventHandler_HandleCityInitShutdownMessages - cISC4City vslot 0xb0 (cSC4City::GetEstablished) has no recovered slot in src/sc4/ISC4City.h, so the "may the city start the mayor music" test is the IAudioEventHandlerHost::CityEstablished seam; the viewport copy, message (un)subscription and the 0x2a3ad653 Data1 0 post are translated
+SKIPPED:

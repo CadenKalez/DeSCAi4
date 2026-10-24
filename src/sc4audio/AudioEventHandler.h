@@ -57,7 +57,18 @@
 //  * HandleMouseMessagesForModalWindow reads the back of an empty list (the sentinel's size field, i.e. null).
 //  * The random retrigger delay multiplies rand() by 3000 in 32-bit arithmetic (wraps; reproduced on purpose).
 //  * AddRef/Release of the disaster class use its own +0x34 count; the cSC4OccupantFilter base's count is unused.
+//
+// Deviations forced by safety (each commented at the place it shows):
+//  * The modal mouse handler skips a null back window (the original dereferences it and crashes on an empty list)
+//    and skips a null mouse payload.
+//  * The message posts guard SL::spMS2 / RZ::SS() / the preference blob where the original dereferences them
+//    unchecked.
+//  * _SetRadioStation initialises the GetCurrentStation out parameter to 0; the original reads it uninitialised
+//    when the station list is empty.
+//  * QueryInterface keeps the original's unchecked out pointer (a null out pointer is a caller bug).
+//  * The occupant-manager callback @ 0x1003ece2a is a free function in the original and a static member here.
 #pragma once
+#include <cstddef>
 #include <cstdint>
 #include <list>
 
@@ -201,9 +212,10 @@ public:
     virtual void GetPosition(float* xyz) = 0;        // [7] +0x38
 };
 
-// What cSC4AudioEventHandler needs from classes that are not recovered yet. The original reaches them through
-// cSC4AudioPreferencesWinProc's static service (SC4AudioPreferences.cpp), the graphics system and the occupant
-// manager; the game integration installs the real adapter (docs/SEAMS.md). Every method mirrors one call.
+// What cSC4AudioEventHandler needs from neighbours that are outside src (see the AEH-* to-do rows): the original
+// reaches them through cSC4AudioPreferencesWinProc's static service (SC4AudioPreferences.cpp), the graphics system
+// and the occupant manager. The game integration installs the real adapter (docs/SEAMS.md); every method mirrors
+// one call.
 class IAudioEventHandlerHost {
 public:
     virtual ~IAudioEventHandlerHost();
@@ -213,7 +225,7 @@ public:
     enum AudioMode : std::uint32_t { kAudioModeMayor = 0, kAudioModeRegion = 1 };
     virtual void PreferencesStaticInit() {}                                       // @ 0x1003a8d82
     virtual std::uint32_t FadeOutTimeMs() { return kDefaultFadeOutTimeMs; }       // kFadeOutTimeMs 0x100b07248
-    // @ 0x1003abbf4: slider position (0..1024) -> volume (0..1024); the original curve is not recovered.
+    // @ 0x1003abbf4: slider position (0..1024) -> volume (0..1024); the real curve lives in cSC4AudioPreferencesWinProc.
     virtual std::uint32_t VolumeFromSliderValue(std::uint32_t sliderValue, AudioType) { return sliderValue; }
     virtual void SetDefaultMusicListPreferences() {}                              // @ 0x1003ab27a
     virtual void UpdateExclusionList(AudioMode) {}                                // @ 0x1003ab450
