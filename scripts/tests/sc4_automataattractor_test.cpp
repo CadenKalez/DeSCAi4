@@ -76,7 +76,7 @@ int main() {
     SetAutomataControllerHost(&host);
     SetAutomataAttractorHost(&attHost);
 
-    auto* tmpl = static_cast<tAttractorTemplate*>(cSC4AutomataController::CreateTemplateInstance(cRZString("Shop"), kControllerTypeAttractor, &CreateAttractorTemplate));
+    auto* tmpl = static_cast<tAttractorTemplate*>(cSC4AutomataController::CreateTemplateInstance(cRZString("Shop"), kControllerTypeAttractor));
     CHECK(tmpl && tmpl->controllerType == kControllerTypeAttractor && tmpl->classKey == kControllerTypeAttractor && tmpl->field60 == -1);
     tmpl->radius = 100.0f;
     tmpl->maxAutomata = 4;
@@ -84,7 +84,11 @@ int main() {
     tmpl->ignoreStates = {5};
     tmpl->strengthCurve.SetResponseCurveData(std::vector<SC4Point>{{0.0f, 1.0f}, {100.0f, 0.5f}});
     tmpl->curve.SetResponseCurveData(std::vector<SC4Point>{{0.0f, 0.0f}, {24.0f, 1.0f}});
-    CHECK(cSC4AutomataController::CreateTemplateInstance(cRZString("x"), kControllerTypeAttractor) == nullptr);   // no factory
+    {   // every attractor request builds a fresh 0x148-byte tTemplate (the type picks it, no factory seam)
+        tControllerTemplate* second = cSC4AutomataController::CreateTemplateInstance(cRZString("x"), kControllerTypeAttractor);
+        CHECK(second != nullptr && second != static_cast<tControllerTemplate*>(tmpl) && second->controllerType == kControllerTypeAttractor);
+        delete second;
+    }
 
     auto* a = new cSC4AutomataAttractor();
     a->AddRef();

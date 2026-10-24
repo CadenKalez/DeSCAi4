@@ -196,7 +196,12 @@ void SetAutomataControllerHost(IAutomataControllerHost* host);
 class cSC4AutomataController : public cIGZSerializable {
 public:
     cSC4AutomataController() = default;
-    virtual ~cSC4AutomataController();                                       // @ 0x1000f85b0 (0x1000f8658/0x1000f865e are trap stubs)
+    // 0x1000f85b0 is the base-object (D2) destructor body, the only one the original ever runs: the complete-object
+    // (D1, 0x1000f8658) and deleting (D0, 0x1000f865e) slots are clang `push rbp; mov rbp, rsp; ud2` traps because a
+    // controller is only ever destroyed through a concrete subclass's own destructor (which is why FinalRelease's
+    // `delete this` goes through vslot 0x20 of the *dynamic* vtable). The port has one destructor = the D2 body, so
+    // deletion works where the bare-base case would trap; subclasses never hit that path either way.
+    virtual ~cSC4AutomataController();
 
     // ---- cIGZUnknown
     bool QueryInterface(std::uint32_t iid, void** out) override;              // @ 0x1000f9dd4 (thunk 0x1000f9e08)
@@ -247,10 +252,11 @@ public:
 
     void PlaySFX(bool start);                                                 // @ 0x1000f8846
     std::uint32_t ControllerId() const { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(this)); }
-    // Creates a template for controller `type` named `name` (0x4a1628c5 generator, 0x6a1628ba attractor via `attractorFactory`),
-    // or null with an error message. @ 0x1000f9e16
-    using AttractorTemplateFactory = tControllerTemplate* (*)();
-    static tControllerTemplate* CreateTemplateInstance(const cRZString& name, std::uint32_t type, AttractorTemplateFactory attractorFactory = nullptr);
+    // Creates a template for controller `type` named `name`, or null for an unknown type. @ 0x1000f9e16
+    // 0x4a1628c5 -> `new tGeneratorTemplate` (0x158 bytes, ctor inlined in the original); 0x6a1628ba ->
+    // `new cSC4AutomataAttractor::tTemplate` (0x148 bytes, ctor @ 0x1000fbe8e, the unit's tAttractorTemplate).
+    // Both then get classKey/controllerType = type, radius 0, field60 -1 and the (0,1)-(24,1) response curve.
+    static tControllerTemplate* CreateTemplateInstance(const cRZString& name, std::uint32_t type);
 
     // @ 0x1000f97e6: the first crossing of the segment a..b (2D points x,z) with the occupant box edges; out = the crossing
     bool GetBoundingBoxIntersection(const float* a, const float* b, float* out) const;

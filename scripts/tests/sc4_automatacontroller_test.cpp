@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "rz/PortMemoryStreams.h"
+#include "sc4/AutomataAttractor.h"   // tAttractorTemplate: the attractor branch of CreateTemplateInstance
 #include "sc4/AutomataController.h"
 #include "sc4/DBSegment.h"
 
@@ -104,8 +105,20 @@ int main() {
 
     // ---- templates
     cRZString name("Ped Gen");
-    CHECK(cSC4AutomataController::CreateTemplateInstance(name, 12345) == nullptr);
-    CHECK(cSC4AutomataController::CreateTemplateInstance(name, kControllerTypeAttractor) == nullptr);   // no attractor factory
+    CHECK(cSC4AutomataController::CreateTemplateInstance(name, 12345) == nullptr);   // unknown type: null
+    // type 0x6a1628ba: the attractor branch constructs cSC4AutomataAttractor::tTemplate itself (no factory seam)
+    auto* attractorTmpl = static_cast<tAttractorTemplate*>(cSC4AutomataController::CreateTemplateInstance(name, kControllerTypeAttractor));
+    CHECK(attractorTmpl != nullptr);
+    CHECK(attractorTmpl->controllerType == kControllerTypeAttractor && attractorTmpl->classKey == kControllerTypeAttractor);
+    CHECK(attractorTmpl->field60 == -1 && attractorTmpl->radius == 0.0f && attractorTmpl->curve.PointCount() == 2);
+    CHECK(std::string(attractorTmpl->name.ToChar()) == "Ped Gen" && attractorTmpl->behaviors.empty() && attractorTmpl->groups.empty());
+    attractorTmpl->strengthCurve.SetResponseCurveData(std::vector<SC4Point>{{0.0f, 1.0f}, {50.0f, 0.0f}});
+    CHECK(attractorTmpl->strengthCurve.PointCount() == 2);   // the attractor-only field at +0x128 exists
+    // Layout note: the binary allocates 0x148 (attractor) and 0x158 (generator) bytes; the port's structs are 0x138 and
+    // 0x150 - it carries a phantom `tControllerTemplate::field28` (+0x28, in the original that word is cRZString's
+    // refcount) and a cSC4ResponseCurve 8 bytes smaller than the original (0x18 vs 0x20), which shifts every template
+    // field after +0x40 by -8. Both deviations predate this test (see the class report); they cancel for code that only
+    // uses named members, which is what the port does.
     tControllerTemplate* tmpl = cSC4AutomataController::CreateTemplateInstance(name, kControllerTypeGenerator);
     CHECK(tmpl && tmpl->controllerType == kControllerTypeGenerator && tmpl->classKey == kControllerTypeGenerator && tmpl->field60 == -1);
     CHECK(std::string(tmpl->name.ToChar()) == "Ped Gen" && tmpl->radius == 0.0f);
@@ -340,6 +353,7 @@ int main() {
     c->Release();   // refcount <= 1: FinalRelease -> Shutdown + delete
     occ->Release();
     delete tmpl;
+    delete attractorTmpl;
     std::printf(failures ? "FAILED\n" : "sc4_automatacontroller OK\n");
     return failures ? 1 : 0;
 }

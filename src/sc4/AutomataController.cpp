@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include "gz/StreamOps.h"
+#include "sc4/AutomataAttractor.h"   // tAttractorTemplate (constructed by CreateTemplateInstance, as in the original)
 #include "sc4/DBSegment.h"
 #include "sc4/GeometryUtilities.h"
 
@@ -485,16 +486,16 @@ bool cSC4AutomataController::Read(cIGZIStream& stream) {
     return !stream.GetError();
 }
 
-tControllerTemplate* cSC4AutomataController::CreateTemplateInstance(const cRZString& name, std::uint32_t type,
-                                                                    AttractorTemplateFactory attractorFactory) {
+tControllerTemplate* cSC4AutomataController::CreateTemplateInstance(const cRZString& name, std::uint32_t type) {
     tControllerTemplate* created = nullptr;
     if (type == kControllerTypeGenerator) {
-        created = new tGeneratorTemplate();
+        created = new tGeneratorTemplate();          // `new(0x158)` + the inlined tGeneratorTemplate ctor
     } else if (type == kControllerTypeAttractor) {
-        created = attractorFactory ? attractorFactory() : nullptr;   // cSC4AutomataAttractor::tTemplate (not recovered yet)
-        if (!created) return nullptr;
+        created = new tAttractorTemplate();          // `new(0x148)` + cSC4AutomataAttractor::tTemplate @ 0x1000fbe8e
     } else {
-        return nullptr;   // the original formats "Couldn't create a controller template for controller type %d!" and drops it
+        // The original formats "Couldn't create a controller template for controller type %d!" into a temporary
+        // cRZString and drops it again (nothing consumes the message), then answers null.
+        return nullptr;
     }
     created->classKey = type;
     created->name.Copy(name);

@@ -301,8 +301,7 @@ cSC4OccupantGroupTemplate* cSC4AutomataScriptSystem::CreateOccupantGroup(const c
 }
 
 tControllerTemplate* cSC4AutomataScriptSystem::CreateControllerTemplate(const cRZString& name, std::uint32_t type) {
-    tControllerTemplate* tmpl = cSC4AutomataController::CreateTemplateInstance(
-        name, type, type == kControllerTypeAttractor ? &CreateAttractorTemplate : nullptr);
+    tControllerTemplate* tmpl = cSC4AutomataController::CreateTemplateInstance(name, type);   // the type picks the template
     if (!tmpl) return nullptr;
     if (!templates_.emplace(KeyOf(name), tmpl).second) {
         Reportf("Couldn't create controller template named \"%s\".  Name already exists?", name.ToChar());
