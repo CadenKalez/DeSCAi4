@@ -367,7 +367,7 @@ CLASS-cS3DMeshBuilder,cS3DMeshBuilder,"recover 10 remaining function(s) (10 not 
 LEDGER-cS3DModelInstanceAnimated,cS3DModelInstanceAnimated,finish 14 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cS3DModelInstanceAnimatedSprite,cS3DModelInstanceAnimatedSprite,"recover 42 remaining function(s) (42 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 SPRITE-1,cS3DModelInstanceAnimatedSprite,"src/s3d/ModelInstanceAnimatedSprite.{h,cpp} and its test exist (untracked) but the test fails: division by zero at ModelInstanceAnimatedSprite.cpp:316/320, texture record index mismatch, DoAutoFrameUpdate accumulator, camera release count. Fix before ledgering the class.",,done,src/s3d/ModelInstanceAnimatedSprite.cpp
-CLASS-cS3DModelProcessor,cS3DModelProcessor,"recover 11 remaining function(s) (11 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cS3DModelProcessor,cS3DModelProcessor,"recover 11 remaining function(s) (11 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DResModel,cS3DResModel,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DResModelFactory,cS3DResModelFactory,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DResSpriteAnim,cS3DResSpriteAnim,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -530,7 +530,7 @@ CLASS-cSC4DynamicParticleSystem,cSC4DynamicParticleSystem,"recover 17 remaining 
 CLASS-cSC4EffectDescription,cSC4EffectDescription,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4EffectMaps,cSC4EffectMaps,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4EffectsCollection,cSC4EffectsCollection,"recover 2 remaining function(s) (0 not started, 2 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4EffectsManager,cSC4EffectsManager,"recover 8 remaining function(s) (0 not started, 8 partial/pending); bases still unfinished: cIGZMessageTarget2, cSC4EffectsCollection","CLASS-cIGZMessageTarget2,CLASS-cSC4EffectsCollection",open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4EffectsManager,cSC4EffectsManager,"recover 6 remaining function(s) (0 not started, 6 partial/pending); bases still unfinished: cIGZMessageTarget2, cSC4EffectsCollection","CLASS-cIGZMessageTarget2,CLASS-cSC4EffectsCollection",open,scripts/export_class.py + notes/remaining_functions.csv
 EFFECTS-1,cSC4EffectsManager,"Recover the four particle/decal classes the factories need (cSC4ModelBasedParticlesEffect, cSC4GeometrySourcedParticlesEffect, cSC4DynamicParticleEffect, cSC4DecalEffect) so LoadAllEffects/ParseEffectsFiles/the factories can be written",,open,src/sc4/EffectsManager.cpp
 LEDGER-cSC4EffectsManager,cSC4EffectsManager,finish 11 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4EffectsModelProcessor,cSC4EffectsModelProcessor,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv

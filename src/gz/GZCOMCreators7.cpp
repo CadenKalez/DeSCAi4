@@ -29,7 +29,12 @@ cRZRandom& SharedRandom() {
     return hosts.random ? *hosts.random : fallback;
 }
 
-void* GZCOM_CreatecSC4City() { return static_cast<void*>(new sc4::cSC4City(GetSimHosts().city)); }
+void* GZCOM_CreatecSC4City() {
+    // Prefer the host installed with gzcom::SetCityHost(); the core creator test only fills the SimHosts registry.
+    sc4::ICityHost* host = CityHost();
+    if (!host) host = GetSimHosts().city;
+    return host ? static_cast<void*>(new sc4::cSC4City(host)) : nullptr;
+}
 void* GZCOM_CreatecSC4TrafficSimulator() {
     return static_cast<void*>(new sc4::cSC4TrafficSimulator(GetSimHosts().traffic, &SharedRandom()));
 }

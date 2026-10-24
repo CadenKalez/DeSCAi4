@@ -3,6 +3,15 @@
 
 namespace gzcom {
 
+namespace {
+sc4::ICityHost* s_cityHost = nullptr;
+void* (*s_cityCreator)() = nullptr;
+}  // namespace
+
+void SetCityHost(sc4::ICityHost* host) { s_cityHost = host; }
+sc4::ICityHost* CityHost() { return s_cityHost; }
+void SetCityCreator(void* (*creator)()) { s_cityCreator = creator; }
+
 std::uint32_t GZCOM_cRZMessage2StandardCLSID() { return kCLSID_cRZMessage2Standard; }
 std::uint32_t GZCOM_cSC4CityCLSID() { return kCLSID_cSC4City; }
 std::uint32_t GZCOM_cGZMessageQueueManager2CLSID() { return kCLSID_cGZMessageQueueManager2; }
@@ -200,29 +209,29 @@ std::uint32_t GZCOM_cSC4MySimAgentSimulatorCLSID() { return kCLSID_cSC4MySimAgen
 
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecRZMessage2Standard() { return nullptr; }
-// original allocates 0x3d0 bytes; the class is not recovered yet
-__attribute__((weak)) void* GZCOM_CreatecSC4City() { return nullptr; }
-// original allocates 0x60 bytes; the class is not recovered yet
+// weak fallback: gzcom_creators/cSC4City.cpp registers the real constructor-backed creator (it needs the city host)
+__attribute__((weak)) void* GZCOM_CreatecSC4City() { return s_cityCreator ? s_cityCreator() : nullptr; }
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecGZMessageQueueManager2() { return nullptr; }
-// original allocates 0x130 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecGZMessageServer2() { return nullptr; }
-// original allocates 0x68 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4TutorialSystem() { return nullptr; }
-// original allocates 0x88 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4LandfillDeveloper() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4TutorialSystem.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4TutorialSystem() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4LandfillDeveloper.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4LandfillDeveloper() { return nullptr; }
 // original allocates 0xa8 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4NeighborsSimulator() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4NeighborConnection() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4NeighborDeal() { return nullptr; }
-// original allocates 0x1000 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4TrafficSimulator() { return nullptr; }
-// original allocates 0x358 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4PollutionSimulator() { return nullptr; }
 // original allocates 0x290 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4PlumbingSimulator() { return nullptr; }
-// original allocates 0x250 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4PoliceSimulator() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4OccupantFilter() { return nullptr; }
@@ -230,85 +239,85 @@ __attribute__((weak)) void* GZCOM_CreatecSC4OccupantFilter() { return nullptr; }
 __attribute__((weak)) void* GZCOM_CreatecSC4DefaultOccupantFilter() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4OccupantTypeFilter() { return nullptr; }
-// original allocates 0x30 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4OccupantTypesFilter() { return nullptr; }
-// original allocates 0x40 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4OccupantTypesFilterHashed() { return nullptr; }
 // original allocates 0x18 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4RealisticOccupantFilter() { return nullptr; }
-// original allocates 0x18 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4NetworkOccupantFilter() { return nullptr; }
-// original allocates 0x18 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4ViewLevelOccupantFilter() { return nullptr; }
 // original allocates 0x78 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4StringSpecificationOccupantFilter() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4LandfillOccupant() { return nullptr; }
-// original allocates 0x0 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4LotBaseTextureOccupant() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4LotBaseTextureOccupant.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4LotBaseTextureOccupant() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4Occupant() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4FloraSimulator() { return nullptr; }
-// original allocates 0x100 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4FlammabilitySimulator() { return nullptr; }
-// original allocates 0x110 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4LandValueSimulator() { return nullptr; }
-// original allocates 0xb8 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4AirportDeveloper() { return nullptr; }
-// original allocates 0xa78 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4ParkManager() { return nullptr; }
-// original allocates 0xe0 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4SeaportDeveloper() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4AirportDeveloper.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4AirportDeveloper() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4ParkManager.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4ParkManager() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4SeaportDeveloper.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4SeaportDeveloper() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4FloraOccupant() { return nullptr; }
 // original allocates 0x1e0 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4WeatherSimulator() { return nullptr; }
-// original allocates 0xa8 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4CivicBuildingSimulator() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4CivicBuildingSimulator.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4CivicBuildingSimulator() { return nullptr; }
 // original allocates 0x58 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4Demolition() { return nullptr; }
-// original allocates 0x50 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4HistoryWarehouse() { return nullptr; }
-// original allocates 0xb20 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4PropDeveloper() { return nullptr; }
-// original allocates 0x18 bytes; the class is not recovered yet
+// weak fallback: gzcom_creators/cSC4HistoryWarehouse.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4HistoryWarehouse() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4PropDeveloper.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4PropDeveloper() { return nullptr; }
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4WealthRequester() { return nullptr; }
-// original allocates 0x1c0 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4ZoneDeveloper() { return nullptr; }
-// original allocates 0x268 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4TractDeveloper() { return nullptr; }
-// original allocates 0x180 bytes; the class is not recovered yet
+// weak fallback: gzcom_creators/cSC4ZoneDeveloper.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4ZoneDeveloper() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4TractDeveloper.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4TractDeveloper() { return nullptr; }
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4LotDeveloper() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4BuildingDevelopmentSimulator() { return nullptr; }
-// original allocates 0x248 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4GrowthDeveloper() { return nullptr; }
-// original allocates 0x0 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4LotRetainingWallOccupant() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4GrowthDeveloper.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4GrowthDeveloper() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4LotRetainingWallOccupant.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4LotRetainingWallOccupant() { return nullptr; }
 // original allocates 0x20 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4PropPlacementPropertiesFactory() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4PropOccupant() { return nullptr; }
 // original allocates 0x0 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4PropOccupantTerrainDecal() { return nullptr; }
-// original allocates 0x0 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4PropOccupantVisualEffect() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4PropOccupantVisualEffect.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4PropOccupantVisualEffect() { return nullptr; }
 // original allocates 0x0 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4PropOccupantBurntBuilding() { return nullptr; }
-// original allocates 0x0 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4PropOccupantAutomataController() { return nullptr; }
-// original allocates 0x1b0 bytes; the class is not recovered yet
+// weak fallback: gzcom_creators/cSC4PropOccupantAutomataController.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4PropOccupantAutomataController() { return nullptr; }
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecS3DCamera() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4FoundationOccupant() { return nullptr; }
-// original allocates 0x170 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4NetworkManager() { return nullptr; }
-// original allocates 0x0 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4ConstructionOccupant() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4NetworkManager.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4NetworkManager() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4ConstructionOccupant.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4ConstructionOccupant() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4Lot() { return nullptr; }
-// original allocates 0x50 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4BusinessUnit() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC424HourClock() { return nullptr; }
@@ -316,7 +325,7 @@ __attribute__((weak)) void* GZCOM_CreatecSC424HourClock() { return nullptr; }
 __attribute__((weak)) void* GZCOM_CreatecSC4PropManager() { return nullptr; }
 // original allocates 0x18 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4CityDetailManager() { return nullptr; }
-// original allocates 0x3c0 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4ZoneManager() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4BuildingOccupant() { return nullptr; }
@@ -332,52 +341,52 @@ void* GZCOM_CreatecSC4NetworkTunnelOccupant() { return nullptr; }
 void* GZCOM_CreatecSC4PipeCustomView() { return nullptr; }
 // original allocates 0x40 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4SubwayCustomView() { return nullptr; }
-// original allocates 0x0 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4NetworkOccupantWithPreBuiltModel() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4NetworkOccupantWithPreBuiltModel.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4NetworkOccupantWithPreBuiltModel() { return nullptr; }
 // original allocates 0x0 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4NetworkBridgeOccupant() { return nullptr; }
-// original allocates 0x2c8 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4Simulator() { return nullptr; }
-// original allocates 0x68 bytes; the class is not recovered yet
+// weak fallback: gzcom_creators/cSC4Simulator.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4Simulator() { return nullptr; }
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4CommercialSimulator() { return nullptr; }
 // original allocates 0x250 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4CrimeSimulator() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4Demand() { return nullptr; }
-// original allocates 0x650 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4ResidentialSimulator() { return nullptr; }
-// original allocates 0x4a8 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4PowerSimulator() { return nullptr; }
-// original allocates 0x20 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4IndustrialSimulator() { return nullptr; }
-// original allocates 0xa0 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4DispatchManager() { return nullptr; }
-// original allocates 0x208 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4AuraSimulator() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4DispatchManager.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4DispatchManager() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4AuraSimulator.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4AuraSimulator() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4BudgetSimulator() { return nullptr; }
-// original allocates 0x180 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4DemandSimulator() { return nullptr; }
-// original allocates 0x228 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4PylonOccupant() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4DemandSimulator.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4DemandSimulator() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4PylonOccupant.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4PylonOccupant() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4DepartmentBudget() { return nullptr; }
 // original allocates 0x90 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4LineItem() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4OccupantManager() { return nullptr; }
-// original allocates 0xf8 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4AdvisorSystem() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4AdvisorSystem.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4AdvisorSystem() { return nullptr; }
 // original allocates 0xb08 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4TrafficNetworkMap() { return nullptr; }
-// original allocates 0x180 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4FireProtectionSimulator() { return nullptr; }
 // original allocates 0xd8 bytes; the class is not recovered yet
 void* GZCOM_CreatecS3DTextureBindingFactory() { return nullptr; }
 // original allocates 0x1a8 bytes; the class is not recovered yet
 void* GZCOM_CreatecGZWinDebugDisplay() { return nullptr; }
-// original allocates 0x180 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4ModelMaker() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4ModelMaker.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4ModelMaker() { return nullptr; }
 // original allocates 0x0 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4PowerPoleOccupant() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
@@ -386,28 +395,28 @@ __attribute__((weak)) void* GZCOM_CreatecSC4PowerLineOccupant() { return nullptr
 void* GZCOM_CreatecSC4ComplexViewOccupantFilter() { return nullptr; }
 // original allocates 0x1b8 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4AnimationTickManager() { return nullptr; }
-// original allocates 0x2d8 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4RegionalCity() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4RegionalCity.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4RegionalCity() { return nullptr; }
 // original allocates 0x300 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4PipeConnectionOccupant() { return nullptr; }
 // original allocates 0x300 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4SubwayConnectionOccupant() { return nullptr; }
 // original allocates 0x170 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4AdvisorCityPlanning() { return nullptr; }
-// original allocates 0xe8 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4NetworkLotManager() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4NetworkLotManager.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4NetworkLotManager() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecGZBuffer() { return nullptr; }
 // original allocates 0x60 bytes; the class is not recovered yet
 void* GZCOM_CreatecGZRealtimeDebugDisplay() { return nullptr; }
-// original allocates 0x140 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4Advice() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4Advice.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4Advice() { return nullptr; }
 // original allocates 0x150 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4AdvisorUtility() { return nullptr; }
-// original allocates 0x148 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4AdviceNeghborDeal() { return nullptr; }
-// original allocates 0x148 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4Advisor() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4AdviceNeghborDeal.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4AdviceNeghborDeal() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4Advisor.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4Advisor() { return nullptr; }
 // original allocates 0x148 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4AdvisorBase() { return nullptr; }
 // original allocates 0x150 bytes; the class is not recovered yet
@@ -422,38 +431,38 @@ void* GZCOM_CreatecSC4AdvisorSafety() { return nullptr; }
 __attribute__((weak)) void* GZCOM_CreatecSC4AdviceSubject() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4DisasterManagerEffect() { return nullptr; }
-// original allocates 0x90 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4DisasterManagerRiot() { return nullptr; }
 // original allocates 0xc8 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4DisasterInstanceRiot() { return nullptr; }
-// original allocates 0x88 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4DisasterManagerFire() { return nullptr; }
 // original allocates 0x1b8 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4DisasterInstanceFire() { return nullptr; }
-// original allocates 0x78 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4DisasterManagerEarthquake() { return nullptr; }
 // original allocates 0x170 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4DisasterInstanceEarthquake() { return nullptr; }
-// original allocates 0x80 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4DisasterManagerPipeBurst() { return nullptr; }
-// original allocates 0x88 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4DisasterInstancePipeBurst() { return nullptr; }
-// original allocates 0x80 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4DisasterManagerVolcano() { return nullptr; }
 // original allocates 0x80 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4DisasterInstanceVolcano() { return nullptr; }
 // original allocates 0x20 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4PathInfoFactory() { return nullptr; }
-// original allocates 0xb0 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4FireOccupant() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4FireOccupant.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4FireOccupant() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4DisasterLayer() { return nullptr; }
 // original allocates 0x20 bytes; the class is not recovered yet
 void* GZCOM_CreatecS3DFSHTextureFactory() { return nullptr; }
 // original allocates 0x20 bytes; the class is not recovered yet
 void* GZCOM_CreatecS3DResModelFactory() { return nullptr; }
-// original allocates 0x140 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4RewardAdvice() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4RewardAdvice.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4RewardAdvice() { return nullptr; }
 // original allocates 0x1b0 bytes; the class is not recovered yet
 void* GZCOM_CreatecGZWinTestService() { return nullptr; }
 // original allocates 0x7a8 bytes; the class is not recovered yet
@@ -466,9 +475,9 @@ void* GZCOM_CreatecSC4EffectsResource() { return nullptr; }
 void* GZCOM_CreatecSC4EffectsResourceFactory() { return nullptr; }
 // original allocates 0x198 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4WinText() { return nullptr; }
-// original allocates 0x178 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4WinAlertBorder() { return nullptr; }
-// original allocates 0x178 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4WinAuraBar() { return nullptr; }
 // original allocates 0xa10 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4WinMiniMap() { return nullptr; }
@@ -476,12 +485,12 @@ void* GZCOM_CreatecSC4WinMiniMap() { return nullptr; }
 void* GZCOM_CreatecSC4WinAdviceList() { return nullptr; }
 // original allocates 0x7b8 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4EffectsParser() { return nullptr; }
-// original allocates 0x10f8 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4EffectsManager() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4EffectsManager.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4EffectsManager() { return nullptr; }
 // original allocates 0x388 bytes; the class is not recovered yet
 void* GZCOM_CreatecSGLDriverDX7() { return nullptr; }
-// original allocates 0x70 bytes; the class is not recovered yet
-void* GZCOM_CreatecGZLuaScriptServer() { return nullptr; }
+// weak fallback: gzcom_creators/cGZLuaScriptServer.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecGZLuaScriptServer() { return nullptr; }
 // original allocates 0x1e0 bytes; the class is not recovered yet
 void* GZCOM_CreatecGZWinLuaScriptConsole() { return nullptr; }
 // original allocates 0x248 bytes; the class is not recovered yet
@@ -494,18 +503,18 @@ void* GZCOM_CreatecGZWinLuaScriptViewVariables() { return nullptr; }
 void* GZCOM_CreatecGZWinLuaScriptViewBreakpoints() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecGZDrawContext() { return nullptr; }
-// original allocates 0x70 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecGZDrawContextAsBuffer() { return nullptr; }
 // original allocates 0x480 bytes; the class is not recovered yet
 void* GZCOM_CreatecGZDrawFontRenderer() { return nullptr; }
-// original allocates 0x78 bytes; the class is not recovered yet
+// weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecGZDrawSystem() { return nullptr; }
 // original allocates 0x148 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4AdvisorCitySituations() { return nullptr; }
 // original allocates 0x290 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4CitySituationAdvice() { return nullptr; }
-// original allocates 0x1a8 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4MySimBalloonAdvice() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4MySimBalloonAdvice.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4MySimBalloonAdvice() { return nullptr; }
 // original allocates 0x210 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4MySimDispatch() { return nullptr; }
 // original allocates 0x448 bytes; the class is not recovered yet
@@ -514,10 +523,10 @@ void* GZCOM_CreatecSC4MyStreetSim() { return nullptr; }
 __attribute__((weak)) void* GZCOM_CreatecSC4LotConfigurationManager() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4DisasterManagerToxic() { return nullptr; }
-// original allocates 0x0 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4SignpostOccupant() { return nullptr; }
-// original allocates 0x0 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4TextDecalOccupant() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4SignpostOccupant.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4SignpostOccupant() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4TextDecalOccupant.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4TextDecalOccupant() { return nullptr; }
 // original allocates 0x28 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4NetworkLayoutCustomView() { return nullptr; }
 // original allocates 0x58 bytes; the class is not recovered yet
@@ -530,10 +539,10 @@ void* GZCOM_CreatecSTESurfaceWater() { return nullptr; }
 __attribute__((weak)) void* GZCOM_CreatecSTETerrain() { return nullptr; }
 // original allocates 0x140 bytes; the class is not recovered yet
 void* GZCOM_CreatecSTETerrainView3D() { return nullptr; }
-// original allocates 0x428 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC43DRender() { return nullptr; }
-// original allocates 0x178 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4CameraControl() { return nullptr; }
+// weak fallback: gzcom_creators/cSC43DRender.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC43DRender() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4CameraControl.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4CameraControl() { return nullptr; }
 // original allocates 0x208 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4ConfigRuleManager() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
@@ -580,10 +589,10 @@ __attribute__((weak)) void* GZCOM_CreatecSC4OrdinanceVehicleEmissionStandard() {
 __attribute__((weak)) void* GZCOM_CreatecSC4OrdinanceWaterConservation() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4OrdinanceYouthCurfew() { return nullptr; }
-// original allocates 0x140 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4MySimAdvice() { return nullptr; }
-// original allocates 0x430 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4MySim() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4MySimAdvice.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4MySimAdvice() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4MySim.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4MySim() { return nullptr; }
 // original allocates 0x60 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4MySimAgentSimulator() { return nullptr; }
 

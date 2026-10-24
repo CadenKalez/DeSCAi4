@@ -35,7 +35,8 @@
 //   +0xdd8 dynamic-particle pool +0xdf0 new +0xe08 free
 //   +0xe20 model-based-particle pool +0xe38 new +0xe50 free
 //   +0xe68 geometry-sourced-particle pool +0xe80 new +0xe98 free
-//   +0xeb0 effect resource (cSC4EffectsResource, AddRef'd)   +0xeb8 effects parser (AddRef'd)
+//   +0xeb0 effects file parser (nSCRes::cFileParser, iid 0x1cf94583, AddRef'd)   +0xeb8 effects parser
+//          (cSC4EffectsParser, AddRef'd)
 //   +0xec0 zoom (-1)   +0xec4 LOD level   +0xec8 previous LOD level   +0xecc LOD offset
 //   +0xed0 particles drawn / frame   +0xed4 active visual effects   +0xed8 particle systems drawn
 //   +0xedc decals drawn   +0xee0 cSC4GlobalEffectParams {rateScale / "density", sizeScale, wind xyz}
@@ -131,10 +132,12 @@
 #include "sc4/VisualEffect.h"
 
 class cIGZUnknown;
+class cIGZCommandParameterSet;
 
 namespace sc4 {
 
 class cSC4EffectsManager;
+class cISC4GameDataRegistry;   // sc4/GameDataRegistry.h (the game-data registry lives in this namespace)
 class SC4DrawContext;
 
 constexpr std::uint32_t kGZIID_cISC4EffectsManager = 0x452294aa;    // +0x10 sub-object (0x1005dd616)
@@ -143,6 +146,8 @@ constexpr std::uint32_t kGZIID_cISC4EffectsCollection = 0xc97cf5ce; // the colle
 constexpr std::uint32_t kGZCLSID_cSC4EffectsManager = 0x00000000;   // read from GZCOM.cpp, see that file
 // Effect-tick plumbing (0x1005dba0e / 0x1005dc8c9): the callback timer posts this message every 1000 ms.
 constexpr std::uint32_t kEffectsTickMessage = 0x697d01ed;
+// ParseEffectsFiles posts this message after a successful parse (0x1005e32b4; it is one of the ids Init registers).
+constexpr std::uint32_t kEffectsParsedMessage = 0xc9f775bb;
 // Message types Init registers on the message server (in the original's order).
 constexpr std::uint32_t kEffectsMessageIds[] = {
     0xa6b79620, 0xa6b79602, 0x697d01ed, 0x2acd2cf3, 0x66956814, 0x26d31ec1,
@@ -189,7 +194,16 @@ public:
     virtual void RemoveTickNotification(cIGZUnknown* listener) = 0;                  // SL::ATM vslot 0x30
     virtual void RegisterGameDataFunctions() = 0;                                   // GameDataRegistry AddNode "effects" + AddValue
     virtual void UnregisterGameDataFunctions() = 0;                                 // the same registry entries removal
-    virtual void PostEffectsTickMessage() = 0;                                      // SL::spMS2 vslot 0x20 (EffectsTickCallback)
+    // SL::spMS2 vslot 0x20 (MessagePost): a cRZMessage2Standard of this type, posted with `false`. Both the effects
+    // tick callback (0x1005dc8c9) and ParseEffectsFiles (0x1005e32ca) build that message inline in the original.
+    virtual void PostMessage(std::uint32_t type) = 0;
+
+    // ---- effect files (0x1005e324a ParseEffectsFiles) ----------------------------------------------------------
+    // The file parser at +0xeb0 is the nSCRes::cFileParser GZCOM object (clsid 0x5cf9459a, iid 0x1cf94583). Its two
+    // calls are separate host methods so the port never reads that object's vtable directly.
+    virtual bool EffectsResourceParseFiles() = 0;                                   // parser vslot 0x38 ParseFiles()
+    virtual const char* EffectsResourceErrorString() = 0;                           // parser vslot 0x50 ErrorString()
+    virtual void SetView3DErrorReportString(const char* text) = 0;                  // SL::spView3D vslot 0x168 (SetErrorReportString)
 
     // ---- zoom / render properties ------------------------------------------------------------------------------
     virtual int ViewZoom() = 0;                                                     // SL::spViewUtilities +0x14
@@ -313,8 +327,19 @@ public:
 
     // ---- particles ---------------------------------------------------------------------------------------------
     // The four other factories (model-based 0x1005e279c, geometry-sourced 0x1005e2908, dynamic 0x1005e2c12 and
-    // decal 0x1005e2d80) are PARTIAL: their classes are not recovered, so they are not declared here.
+    // decal 0x1005e2d80) are SKIPPED: their classes are not recovered, so they are not declared here.
     cSC4ParticlesEffect* NewParticlesEffect();                              // @ 0x1005e2a74
+
+    // ---- effect files and the game-data registry command --------------------------------------------------------
+    // The files the parser at +0xeb0 was given (LoadAllEffects adds "main.fx" / "Effects/config.fx"): a successful
+    // parse clears the 3D view's error report and posts kEffectsParsedMessage, a failed one reports the parser's
+    // error string there instead.
+    void ParseEffectsFiles();                                               // @ 0x1005e324a
+    // The registry's "create_effect" command (registered by Init's RegisterGameDataFunctions). `handle` is the
+    // manager as it was registered with the registry; parameters 0..3 are the effect name and the source position.
+    // It is a plain GameDataCommandFn, so it is static and finds the manager through the registry.
+    static bool sCreateEffect(void* handle, cIGZCommandParameterSet* in, cIGZCommandParameterSet* out,
+                              cISC4GameDataRegistry* registry);             // @ 0x1005dcb24
 
     // ---- snowline / ticks / cheats -----------------------------------------------------------------------------
     void SetSnowlineState(bool enabled);                                    // @ 0x1005e31cc
@@ -427,7 +452,7 @@ private:
     std::vector<int> newParticlesEffectSlots_;          // +0xda8
     std::vector<int> freeParticlesEffectSlots_;         // +0xdc0
 
-    cIGZUnknown* effectsResource_ = nullptr;            // +0xeb0 (one reference)
+    cIGZUnknown* effectsResource_ = nullptr;            // +0xeb0 the nSCRes::cFileParser (one reference)
     cIGZUnknown* effectsParser_ = nullptr;              // +0xeb8 (one reference)
 
     int zoom_ = -1;                                     // +0xec0

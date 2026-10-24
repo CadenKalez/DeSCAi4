@@ -16,6 +16,7 @@
 #include "gz/cGZPersistResourceManager.h"
 #include "rz/LanguageManager.h"
 #include "rz/cRZCmdLine.h"
+#include "gz/GZCOM.h"
 #include "sc4/App.h"
 #include "sc4/AppPlatform.h"
 #include "sc4/AutoHelpers.h"
@@ -76,10 +77,14 @@ struct CityHost final : sc4::ICityHost {
 // The city record inside a save file is a serialized object: the segment asks this factory for the class by id.
 struct Factory final : sc4::ISerializableFactory {
     cIGZSerializable* CreateSerializable(std::uint32_t classId) override {
-        if (classId != 0x8990c372) return nullptr;          // cSC4City's class id
-        auto* city = new sc4::cSC4City(&host);
-        city->AddRef();
-        return city;
+        if (classId == 0x8990c372) {                        // cSC4City
+            auto* city = new sc4::cSC4City(&host);
+            city->AddRef();
+            return city;
+        }
+        // The city's components are created through the GZCOM class table; this probe links only a few creators,
+        // so an unknown id answers null and the city object reports the missing component instead of failing whole.
+        return nullptr;
     }
     CityHost host;
 };

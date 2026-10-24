@@ -340,6 +340,24 @@ bool cSC4App::LoadCity(const cRZString& path, cRZAutoRefCount<cISC4RegionalCity>
         if (segment->Open(true, false)) {
             const std::uint32_t version = cityHooks_.readLoadSaveVersion ? cityHooks_.readLoadSaveVersion(segment) : 0;
             if (version >= 0x3e && version <= 0x42) {
+                // The class table of the file. Without it the COM serializer's classes_ map is empty and
+                // OnGetGZSerializable answers false for EVERY class id - the app record parses (id, then the class id,
+                // which is cSC4City's 0x8990c372) and then nothing is created. LoadClassObjects reads the table and
+                // fills classes_, so the city and its components can be instantiated from the ids in the record.
+                if (auto* isc4 = [&]() -> sc4::cISC4DBSegment* {
+                        sc4::cISC4DBSegment* out = nullptr;
+                        segment->QueryInterface(sc4::kGZIID_cISC4DBSegment, reinterpret_cast<void**>(&out));
+                        return out;
+                    }()) {
+                    const bool classTable = isc4->LoadClassObjects(version);
+                    isc4->Release();
+                    if (!classTable) {
+                        segment->Close();
+                        segment->Shutdown();
+                        segment->Release();
+                        return false;
+                    }
+                }
                 cRZAutoRefCount<cRZString> pathCopy(new cRZString(path.ToChar()));
                 {
                     cRZAutoRefCount<cRZMessage2Standard> loading(new cRZMessage2Standard());

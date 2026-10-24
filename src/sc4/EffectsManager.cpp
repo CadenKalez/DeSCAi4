@@ -9,6 +9,8 @@
 #include <cstdlib>
 
 #include "rz/RZStringUtils.h"
+#include "gz/CommandParameterSet.h"
+#include "sc4/GameDataRegistry.h"
 
 namespace sc4 {
 
@@ -249,6 +251,65 @@ bool cSC4EffectsManager::Shutdown() {
         weatherSim_ = nullptr;
     }
     effectsActive_ = false;
+    return true;
+}
+
+// @ 0x1005e324a: parse the files the file parser at +0xeb0 was given. The original is a two-branch tail: when
+// ParseFiles() answers true it clears the 3D view's error report (SetErrorReportString(nullptr)) and posts
+// kEffectsParsedMessage through the message server; when it answers false it hands the parser's ErrorString() to the
+// view instead. It does not null-check the parser (Init always creates it); the port returns early for a host that
+// supplied none.
+void cSC4EffectsManager::ParseEffectsFiles() {
+    if (!host_ || !effectsResource_) return;
+    if (host_->EffectsResourceParseFiles()) {
+        host_->SetView3DErrorReportString(nullptr);
+        host_->PostMessage(kEffectsParsedMessage);
+        return;
+    }
+    host_->SetView3DErrorReportString(host_->EffectsResourceErrorString());
+}
+
+// @ 0x1005dcb24: the game-data registry's "create_effect" command. `handle` is the manager as registered with the
+// registry: the entry id comes from GetEntryID(handle) and the manager back out of its GetEntryContext. The four
+// parameters are the effect name (GetValString) and the source position's x, y and z (GetValFloat32 each); the effect is
+// created by name, given an identity-with-translation source transform (change counter 1, flag 1 = translation) and
+// started with transition 0. Parameter 1 of the out set receives the success flag (a Bool variant), and the one
+// reference the creation returned is released. The command itself always succeeds (the original returns true even
+// when no manager is reachable; it does not null-check in / out / registry, the port returns / answers false instead).
+bool cSC4EffectsManager::sCreateEffect(void* handle, cIGZCommandParameterSet* in, cIGZCommandParameterSet* out,
+                                       cISC4GameDataRegistry* registry) {
+    cSC4EffectsManager* manager = nullptr;
+    if (registry) {
+        const EntryId entry = registry->GetEntryID(handle);
+        manager = static_cast<cSC4EffectsManager*>(registry->GetEntryContext(entry));
+    }
+    cSC4VisualEffect* effect = nullptr;
+    bool created = false;
+    if (manager && in && out) {
+        cRZString name;
+        cS3DVector3 position;
+        (*in)[0].GetValString(name);
+        (*in)[1].GetValFloat32(position.x);
+        (*in)[2].GetValFloat32(position.y);
+        (*in)[3].GetValFloat32(position.z);
+        if (manager->CreateVisualEffect(name.ToChar(), &effect)) {
+            cS3DTransform source;
+            source.changeCounter = 1;
+            source.flags = 1;                       // kTransformTranslation (0x1002387cf / 0x1005dcc94 write 0x101)
+            source.translation[0] = position.x;
+            source.translation[1] = position.y;
+            source.translation[2] = position.z;
+            effect->SetSourceTransform(source);     // vslot 0x40
+            effect->Start(0);                       // vslot 0x18
+            created = true;
+        }
+    }
+    if (out) {
+        cRZVariant result;
+        result.SetValBool(created);
+        out->SetParameter(1, result);
+    }
+    if (effect) effect->Release();
     return true;
 }
 
@@ -893,5 +954,5 @@ void cSC4EffectsManager::TickCallback(void* userData) { EffectsTickCallback(user
 // The free function the callback timer is armed with (0x1005dc8c9).
 void EffectsTickCallback(void* userData) {
     (void)userData;
-    if (sc4::IEffectsManagerHost* host = sc4::EffectsManagerHost()) host->PostEffectsTickMessage();
+    if (sc4::IEffectsManagerHost* host = sc4::EffectsManagerHost()) host->PostMessage(sc4::kEffectsTickMessage);
 }

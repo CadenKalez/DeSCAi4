@@ -2,7 +2,9 @@
 // the effect registry (name -> description version selection, the (group,type) binding table, the redundant lookup),
 // the visual-effect pool with its new / active / free slot lists, the recycle and retarget rules, the description label
 // started by StopAncilliary, the shake / screen-flash / lighting-tint state, the snowline curve, the effects tick, the
-// message dispatch subset, the Init / Shutdown host protocol and the particle pool.
+// message dispatch subset, the Init / Shutdown host protocol, the particle pool, the effect-file parse step
+// (ParseEffectsFiles) and the game-data registry's create_effect command (sCreateEffect), plus the exact sequence the
+// region screen uses for its region_global effect (create by name, SetEffectTransform, Start(0)).
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -1043,6 +1045,55 @@ void TestCreateEffectCommand() {
     CHECK(cSC4EffectsManager::sCreateEffect(nullptr, &in, &nullOut, nullptr));
 }
 
+// The region screen's region_global block (0x1002386ec..0x1002387e9), the sequence cSC4WinRegionScreen::Init needs:
+// CreateVisualEffect("region_global") through the manager (vslot 0x30), a transform whose translation is
+// (cellsX/2, 0, cellsZ/2) * cellSize from SL::spTerrainMap, SetEffectTransform (effect vslot 0x38) and Start(0)
+// (vslot 0x18), with the returned reference kept in the screen's +0x280 field.
+void TestRegionGlobalEffectPipeline() {
+    FakeHost host;
+    SetEffectsManagerHost(&host);
+    cSC4EffectsManager manager;
+    manager.SetHost(&host);
+    manager.BeginCollection();
+    cSC4EffectDescription global;
+    global.version = 1;
+    manager.Collection().AddEffectDescription("region_global", global);
+    manager.EndCollection();
+    CHECK(manager.HasVisualEffect("region_global"));
+
+    cSC4VisualEffect* effect = nullptr;                       // the screen's +0x280
+    CHECK(manager.CreateVisualEffect("region_global", &effect));
+    CHECK(effect != nullptr);
+    CHECK(effect->RefCount() == 2);                           // the pool's reference plus the screen's
+
+    const float cellSize = host.TerrainCellSize();
+    cS3DTransform transform;
+    transform.changeCounter = 1;
+    transform.flags = 1;                                      // kTransformTranslation
+    transform.translation[0] = static_cast<float>(host.TerrainCellsX()) * 0.5f * cellSize;
+    transform.translation[1] = 0.0f;
+    transform.translation[2] = static_cast<float>(host.TerrainCellsZ()) * 0.5f * cellSize;
+    effect->SetEffectTransform(transform);                    // effect vslot 0x38
+    effect->Start(0);                                          // effect vslot 0x18
+    CHECK(effect->IsStarted());
+    CHECK(manager.ActiveVisualEffectSlots().size() == 1);
+
+    cS3DTransform stored;
+    effect->GetEffectTransform(stored);
+    CHECK(stored.translation[0] == 4.0f * 16.0f);             // 8 cells / 2 * 16 units
+    CHECK(stored.translation[1] == 0.0f);
+    CHECK(stored.translation[2] == 3.0f * 16.0f);             // 6 cells / 2 * 16 units
+    CHECK(stored.flags == 1);
+
+    effect->Release();                                        // the screen dropping its +0x280 reference
+    CHECK(manager.VisualEffects()[0]->RefCount() == 1);
+    // An effect whose description has no components finishes immediately: the next frame recycles the slot.
+    manager.DeactivateUnusedVisualEffects();
+    CHECK(manager.ActiveVisualEffectCount() == 0);
+    CHECK(manager.ActiveVisualEffectSlots().empty());
+    CHECK(manager.FreeVisualEffectSlots().size() == 1);
+}
+
 }  // namespace
 
 int main() {
@@ -1056,6 +1107,7 @@ int main() {
     TestDuplicateBindings();
     TestParseEffectsFiles();
     TestCreateEffectCommand();
+    TestRegionGlobalEffectPipeline();
     SetEffectsManagerHost(nullptr);
     if (failures == 0) {
         std::printf("all effects manager tests passed\n");

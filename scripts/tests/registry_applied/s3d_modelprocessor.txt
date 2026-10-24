@@ -1,0 +1,1 @@
+ "s3d_modelprocessor:$T/s3d_modelprocessor_test.cpp $S/s3d/ModelProcessor.cpp $S/s3d/S3DMath.cpp $S/s3d/TriangleIterator.cpp $S/render/SimGL.cpp $S/rz/cRZRandom.cpp"

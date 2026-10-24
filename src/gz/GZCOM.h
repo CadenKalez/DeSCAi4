@@ -6,7 +6,17 @@
 #include <cstddef>
 #include <cstdint>
 
+namespace sc4 {
+class ICityHost;
+}  // namespace sc4
+
 namespace gzcom {
+
+// The city's host services. The application installs them; the city creator translation unit registers the
+// constructor-backed factory (GZCOM_CreatecSC4City stays a weak fallback so GZCOMCreators7.cpp can override it).
+void SetCityHost(sc4::ICityHost* host);
+sc4::ICityHost* CityHost();
+void SetCityCreator(void* (*creator)());
 
 struct ClassFactoryInfo {
     const char* className;
