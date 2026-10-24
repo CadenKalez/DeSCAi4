@@ -128,8 +128,9 @@ bool cSC4LineItem::Read(cIGZIStream& stream) {
     }
     void* department = nullptr;
     SC4ReadGZSerializable(stream, kGZCLSID_cSC4DepartmentBudget, &department, false);
-    department_ = static_cast<cSC4DepartmentBudget*>(static_cast<cIGZSerializable*>(
-        static_cast<cIGZUnknown*>(department)));
+    // QueryInterface(classId) returns the cISC4DepartmentBudget sub-object (offset +8); a void-chain cast would keep
+    // that +8 address and read the wrong vtable, so downcast through the interface type, which adjusts the offset.
+    department_ = static_cast<cSC4DepartmentBudget*>(static_cast<cISC4DepartmentBudget*>(department));
     stream.GetUint32(nameInstance_);
     stream.GetUint32(nameGroup_);
     nameNeedsReload_ = true;
@@ -545,7 +546,9 @@ bool cSC4DepartmentBudget::Read(cIGZIStream& stream) {
     for (std::uint32_t i = 0; i < count; ++i) {
         void* item = nullptr;
         SC4ReadGZSerializable(stream, kGZCLSID_cSC4LineItem, &item, false);
-        auto* lineItem = static_cast<cSC4LineItem*>(static_cast<cIGZSerializable*>(static_cast<cIGZUnknown*>(item)));
+        // QueryInterface(classId) returns the cISC4LineItem sub-object (offset +8); downcast through the interface type
+        // so the compiler adjusts +8 back to the cSC4LineItem at +0. The old void-chain cast kept the +8 address.
+        auto* lineItem = static_cast<cSC4LineItem*>(static_cast<cISC4LineItem*>(item));
         if (lineItem) lineItems_[lineItem->GetID()] = lineItem;
     }
     stream.GetUint32(count);

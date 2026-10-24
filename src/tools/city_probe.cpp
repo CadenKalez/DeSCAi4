@@ -27,6 +27,8 @@
 #include "sc4/ISC4City.h"
 #include "sc4/SaveGame.h"
 
+cIGZSerializable* CreateCityProbeSerializable(std::uint32_t classId);   // city_probe_creators.cpp
+
 namespace {
 
 struct Object final : cIGZUnknown {
@@ -95,6 +97,8 @@ struct Factory final : sc4::ISerializableFactory {
             if (!unknown->QueryInterface(sc4::kGZIID_cIGZSerializable, reinterpret_cast<void**>(&serializable))) serializable = nullptr;
             unknown->Release();
         }
+        if (!serializable)
+            serializable = CreateCityProbeSerializable(classId);   // recovered outside the GZCOM table
         if (!serializable && missing.insert(classId).second)
             std::printf("  class %08x %s: %s\n", classId, info ? info->className : "(not in the GZCOM table)",
                         !info ? "unknown id" : object ? "no cIGZSerializable" : "creator returns null");

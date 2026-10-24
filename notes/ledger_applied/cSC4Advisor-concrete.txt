@@ -1,0 +1,68 @@
+SOURCE src/sc4/AdvisorConcrete.cpp|h
+EVIDENCE test scripts/tests/sc4_advisorconcrete_test.cpp - asserts the 0x148/0x150/0x168/0x170 object layout and the +0x10/+0x18/+0x20 subobjects, every class id, the base's five message subscriptions and idempotent Shutdown, post_self_update posting a 0xca8f3db6 message back to self, the pending-update simulate_day/simulate_month, the base DoMessage dispatch (city started, 0xc2c09554, reward/self-update walks), Finance's budget record and deferred dirty flag, HQ's health/education record and dirty-bit occupant dispatch, Utility's power-strike globals and the 0xea418d8f event table, Safety's sixteen subscriptions, Traffic's car-zot set, and cSC4AdvisorCityPlanning's class-id QueryInterface, landmark add/remove and Write/Read round trip; the message bus, simulators, advisor system and property holder are IAdvisorConcreteHost fakes, and the large simulator-statistics walks are asserted only for their dispatch
+0x100444c9c cSC4AdvisorBase_Construct
+0x100444cfa cSC4AdvisorBase_Destruct
+0x100444d04 cSC4AdvisorBase_DestructBase
+0x100444d0e cSC4AdvisorBase_DestructAndDelete
+0x100444d3c cSC4AdvisorBase_Init
+0x100444dee cSC4AdvisorBase_Shutdown
+0x100444e86 cSC4AdvisorBase_DoMessage
+0x1004451aa cSC4AdvisorBase_post_self_update
+0x100445270 cSC4AdvisorBase_update_variables
+0x100445276 cSC4AdvisorBase_simulate_day
+0x1004452aa cSC4AdvisorBase_simulate_month
+0x100400a7c cSC4AdvisorCityPlanning_Destruct
+0x100400adc cSC4AdvisorCityPlanning_DestructAndDelete
+0x100400b56 cSC4AdvisorCityPlanning_update_occupant_variables
+0x100401f7a cSC4AdvisorCityPlanning_DoMessage
+0x100402260 cSC4AdvisorCityPlanning_GetLandmarkCount
+0x1004022a4 cSC4AdvisorCityPlanning_HasLandmark
+0x1004022ea cSC4AdvisorCityPlanning_Init
+0x1004023d6 cSC4AdvisorCityPlanning_Shutdown
+0x1004024ac cSC4AdvisorCityPlanning_Write
+0x1004025aa cSC4AdvisorCityPlanning_Read
+0x10040277a cSC4AdvisorCityPlanning_QueryInterface
+0x1004027fe cSC4AdvisorCityPlanning_GetGZCLSID
+0x1004479e8 cSC4AdvisorFinance_Destruct
+0x100447a28 cSC4AdvisorFinance_DestructAndDelete
+0x100447a8c cSC4AdvisorFinance_update_variables
+0x100447e08 cSC4AdvisorFinance_DoMessage
+0x100447eae cSC4AdvisorFinance_Init
+0x100447ed6 cSC4AdvisorFinance_Shutdown
+0x100447eee cSC4AdvisorFinance_GetGZCLSID
+0x100445a14 cSC4AdvisorHQ_Destruct
+0x100445a54 cSC4AdvisorHQ_DestructAndDelete
+0x100446dac cSC4AdvisorHQ_update_variables
+0x100447260 cSC4AdvisorHQ_DoMessage
+0x100447314 cSC4AdvisorHQ_Init
+0x1004476cc cSC4AdvisorHQ_Shutdown
+0x100447784 cSC4AdvisorHQ_GetGZCLSID
+0x100447fbc cSC4AdvisorTraffic_Destruct
+0x10044801c cSC4AdvisorTraffic_DestructAndDelete
+0x100449850 cSC4AdvisorTraffic_DoMessage
+0x100449a6e cSC4AdvisorTraffic_Init
+0x100449ac8 cSC4AdvisorTraffic_Shutdown
+0x100449b16 cSC4AdvisorTraffic_GetGZCLSID
+0x10043ecc8 cSC4AdvisorUtility_Destruct
+0x10043ed08 cSC4AdvisorUtility_DestructAndDelete
+0x100440216 cSC4AdvisorUtility_DoMessage
+0x10044046c cSC4AdvisorUtility_Init
+0x100440846 cSC4AdvisorUtility_Shutdown
+0x1004415aa cSC4AdvisorUtility_GetGZCLSID
+0x100449cf2 cSC4AdvisorSafety_Destruct
+0x100449d32 cSC4AdvisorSafety_DestructAndDelete
+0x10044b6be cSC4AdvisorSafety_Init
+0x10044b844 cSC4AdvisorSafety_Shutdown
+0x10044b9a2 cSC4AdvisorSafety_GetGZCLSID
+PARTIAL:
+0x100445ab8 occupant walk over the hospitals/clinics/schools/museums/libraries group lists (spResidentialSim/spOccupantManager) is unrecovered; the port routes the whole update through IAdvisorConcreteHost::UpdateSimulatorStatistics
+0x100400c50 the building/park/recreation sweep reads spBuildingDevelopmentSim/spCity and is unrecovered; only the member-derived counts are refreshed
+0x100448690 the traffic record (congestion/funding/station utilization) reads spTrafficSim and the city airport/seaport managers and is unrecovered
+0x100448096 the traffic occupant walk (station/depot counts) reads spTrafficSim and is unrecovered
+0x10043fa78 the utility record (power/water production/capacity/usage) reads spPowerSim/spWaterSim/spBudgetSim and is unrecovered
+0x10043ed6c the utility occupant walk (power plants/pumps) is unrecovered
+0x10043f58c the neighbour-deal reads (spNeighborsSim deals) are unrecovered
+0x1004408fe the utility event walk matches queued events against the advice list; only the base event walk runs
+0x10044a922 only the shared property/self-update dispatch is recovered; the sixteen safety message handlers are not decompiled
+0x10044a5ac the safety record (crime/fire/health) reads spCrimeSim/spFireProtectionSim and is unrecovered
+0x100449d96 the safety occupant walk (police/fire stations) is unrecovered

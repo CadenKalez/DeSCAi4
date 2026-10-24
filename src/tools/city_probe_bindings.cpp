@@ -32,6 +32,7 @@
 #include "sc4/cSC4FlammabilitySimulator.h"
 #include "sc4/cSC4ZoneManager.h"
 #include "sc4/cSTETerrainView3D.h"
+#include "tools/city_probe_hosts.h"
 
 
 namespace {
@@ -554,6 +555,21 @@ public:
 };
 Probe21 g_ILandValueHost;
 }
+
+// The probe creators (city_probe_creators.cpp) construct the host-required city classes against these same
+// stub hosts; the concrete Probe* types stay private to this file, so the creators reach them through the
+// interface-typed getters declared in tools/city_probe_hosts.h.
+namespace sc4 {
+IDemolitionHost* CityProbeDemolitionHost() { return &g_IDemolitionHost; }
+ICrimeHost* CityProbeCrimeHost() { return &g_ICrimeHost; }
+IWealthHost* CityProbeWealthHost() { return &g_IWealthHost; }
+INeighborsHost* CityProbeNeighborsHost() { return &g_INeighborsHost; }
+IWeatherHost* CityProbeWeatherHost() { return &g_IWeatherHost; }
+ICommercialHost* CityProbeCommercialHost() { return &g_ICommercialHost; }
+ILandValueHost* CityProbeLandValueHost() { return &g_ILandValueHost; }
+IDemandHost* CityProbeDemandHost() { return &g_IDemandHost; }
+IClockHost* CityProbeClockHost() { return &g_IClockHost; }
+}  // namespace sc4
 
 void InstallCityProbeBindings() {
     sc4::SetDispatchHost(&sc4::g_probe0);
