@@ -1,0 +1,41 @@
+SOURCE src/sc4/ViewInputControlPlaceLot.cpp|h
+EVIDENCE test scripts/tests/sc4_viewinputcontrolplacelot_test.cpp - civic/building-type constructors, both pick dialogs through the host chooser, Init/Shutdown (tool id 0x88f154fb, cursor 0x88e70b76, the six message registrations, the configuration filter and unordered_set, the building-price lookup, the 0x1401/0x1302 effect id, the police/fire/health/education category names and coverage rings, the reward placement count, the preview props, the grid-size buckets), OnMouseMove footprint tracking (world-space clear rectangle quirk, shift path, toll-booth path, automatic facing by street count, cost indicator, cursor text only when the reason changes), OnMouseDownL/PlaceLot (demolition 0x2800/0x800, the two PlaceZone calls and their zone types 0xf/0xb/0xc, CreateLotIfPossible, ConstructDefaultLot, budget withdraw/deposit, placement effects, EndInput below two placements, the mission target restriction), CanPlaceLot/CanDemolishLot/GetLotCenterAndCellCoverage/GetLotFacingStreetCount, SetVisualUserFeedback/SetConstraintFeedback/SetPropOccupantDrawAttributes via fake effects and props, DoMessage (0x277a9364, 0x49d5b83f, 0x99ef1142/43, 0xa6b79602, unknown), OnKeyDown accelerator forwarding, OnMouseExit, ChangeLotConfiguration, SeekCompatibleNetworks, every quirk listed in the header
+0x1003bb6ba PlaceLot_Construct
+0x1003bb93c PlaceLot_ConstructAlias
+0x1003bb94a PlaceLot_Destruct
+0x1003bbb82 PlaceLot_DestructAlias
+0x1003bbb8c PlaceLot_DeleteDestruct
+0x1003bbbba PlaceLot_Init
+0x1003bc9ac PlaceLot_GetBuildingPreviewModel
+0x1003bd89a PlaceLot_Shutdown
+0x1003bda28 PlaceLot_ReleaseLotConfigurationEffects
+0x1003bdcf0 PlaceLot_AddRef
+0x1003bdcfe PlaceLot_AddRefThunk40
+0x1003bdd0c PlaceLot_Release
+0x1003bdd2c PlaceLot_ReleaseThunk40
+0x1003bdd50 PlaceLot_QueryInterface
+0x1003bdd84 PlaceLot_QueryInterfaceThunk40
+0x1003bdd92 PlaceLot_SetPropOccupantDrawAttributes
+0x1003be3f0 PlaceLot_OnKeyDown
+0x1003be50c PlaceLot_SetVisualUserFeedback
+0x1003bed24 PlaceLot_OnMouseDownL
+0x1003beef8 PlaceLot_PlaceLot
+0x1003bfe4e PlaceLot_CanDemolishLot
+0x1003c00a0 PlaceLot_GetAutomaticFacingAndCellCoverage
+0x1003c0282 PlaceLot_GetLotCenterAndCellCoverage
+0x1003c0440 PlaceLot_GetLotFacingStreetCount
+0x1003c05cc PlaceLot_CanPlaceLot
+0x1003c084c PlaceLot_PickTollBoothLotAndOrientation
+0x1003c0c74 PlaceLot_ChangeLotConfiguration
+0x1003c0ca4 PlaceLot_OnMouseMove
+0x1003c11bc PlaceLot_OnMouseExit
+0x1003c1220 PlaceLot_SetConstraintFeedback
+0x1003c1998 PlaceLot_DoMessage
+0x1003c1afc PlaceLot_DoMessageThunk40
+0x1003c1b0e PlaceLot_SeekCompatibleNetworks
+PARTIAL
+0x1003bc070 DoUserLotConfigurationTypePick: the cGZWinGen + cGZWinGrid modal dialog it builds (Sprintf "0x%08x" rows, the window-location saver, RZ::WM() and RZAtoUint32HexA parsing) is not rebuilt; the pick goes through IPlaceLotHost::Chooser(), which owns the real dialog. The filter/unordered-set plumbing before it is ported.
+0x1003bc502 DoUserBuildingTypePick: same dialog as above (two columns, the name through the building development simulator vslot 0x128); routed through the host chooser.
+0x1003bc9ac GetBuildingPreviewModel: the prop previews, effect names, grid-size buckets, coverage categories/radii/rings, global effect id and placement count are ported, but the preview building model itself (the cSC4LocalGridHelper occupant at +0x108, its model instances and the cS3DTextureBinding footprint grid) needs those two unrecovered neighbours; the port creates the preview building prop through IPlaceLotPropManager::CreateBuildingProp instead and leaves gridTexture_ null. The texture block (0x1003bd5xx) is therefore not executed.
+SKIPPED
+none - every symbol of the class is needed on macOS (no DX7/Windows-only/debug code in it)

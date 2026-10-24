@@ -1,0 +1,22 @@
+SOURCE src/audio/HitResource.h
+EVIDENCE test scripts/tests/audio_hitresource_test.cpp - the cHitResource<cHitList> instantiation: QueryInterface hands out the resource sub-object for 0x3b93c5e7/0x456b8f1d and defers to cHitList otherwise, both bases' AddRef/Release resolve to cHitList's, key get/set and GetRefCount, CreatePrivateCopy (copies payload+refcount+key), DebugInstanceTag/DebugClassTag/DebugTypeTag return false without touching the string, and Read/Write forward to cHitList::ReadResource/WriteResource through a stream that exposes the persist-DB record view (iid 0xc56b8f08): text/v1/v2 layouts, invalid layout, no-record-view failure, the criterion update and the [1, count, available, recent] write; scripts/tests/registry/audio_hitresource.txt
+0x1004754ea QueryInterface
+0x100475516 AddRef
+0x100475520 Release
+0x10047552e DestructInPlace
+0x100475538 DestructAndDelete
+0x100475566 GetRefCount
+0x100475570 GetKey
+0x10047558a SetKey
+0x1004755a4 GetType
+0x1004755ae GetGroup
+0x1004755b8 GetInstance
+0x1004755c2 SetType
+0x1004755ce SetGroup
+0x1004755da SetInstance
+0x1004755e6 DebugInstanceTag
+0x1004755ee DebugClassTag
+0x1004755f6 DebugTypeTag
+0x1004755fe Read
+0x100475608 Write
+0x100475612 CreatePrivateCopy

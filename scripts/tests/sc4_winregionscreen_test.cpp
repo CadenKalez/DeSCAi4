@@ -1,9 +1,11 @@
 // cSC4WinRegionScreen test: fake region view / host / services, a fake window manager and the real clocks.
-// Covers the constructor's field set-up, the three-interface QueryInterface, the message dispatch (cGZMessage scroll
-// messages, the accelerator message, the command-dispatcher message), the scroll command table, the bounds math with
-// its truncation quirk, the renderer position, GZPaint (timer, smooth scroll, clamping, the y-negated scroll position),
-// the signpost mouse paths, the panel switching, the tuning / preference reads, the snapshot defaults, the region/city
-// launch helpers, the population refresh and the shutdown release path.
+// Covers the constructor's field set-up, the three-interface QueryInterface, Init (the leaving-app + region-music +
+// entered-app messages, the 14 commands, the backdrop / view / 12 snapshots / scroll / clouds children, the
+// application services and the saved view position), the message dispatch (cGZMessage scroll messages, the
+// accelerator message, the command-dispatcher message), the scroll command table, the bounds math with its
+// truncation quirk, the renderer position, GZPaint (timer, smooth scroll, clamping, the y-negated scroll position),
+// the signpost mouse paths, the panel switching, the tuning / preference reads, the snapshot defaults, the
+// region/city launch helpers, the population refresh and the shutdown release path.
 #include <climits>
 #include <cmath>
 #include <cstdint>
@@ -138,15 +140,28 @@ struct FakeAccelerator final : cIGZWinKeyAccelerator {
     bool ProcessAccelerator(const cGZMessage&) override { return false; }
 };
 
+// One posted message as the fake server saw it: the type plus the Data1 payload the music request carries.
+struct PostedMessage {
+    std::uint32_t type = 0;
+    bool hasData1 = false;
+    std::uint64_t data1 = 0;
+};
+
 struct FakeMessageServer final : cIGZMessageServer2 {
-    std::vector<std::uint32_t> posted;
+    std::vector<PostedMessage> posted;
     int refs = 1;
     bool QueryInterface(std::uint32_t, void**) override { return false; }
     std::uint32_t AddRef() override { return ++refs; }
     std::uint32_t Release() override { return --refs; }
     bool MessageSend(cIGZMessage2*) override { return true; }
     bool MessagePost(cIGZMessage2* message, bool) override {
-        posted.push_back(message->GetType());
+        PostedMessage entry;
+        entry.type = message->GetType();
+        if (auto* standard = dynamic_cast<cIGZMessage2Standard*>(message)) {
+            entry.hasData1 = standard->GetHasData1();
+            entry.data1 = standard->GetData1();
+        }
+        posted.push_back(entry);
         return true;
     }
     bool AddNotification(cIGZMessageTarget2*, std::uint32_t) override { return true; }
@@ -193,6 +208,13 @@ struct FakeCommandServer final : cIGZCommandServer {
     bool ConvertCommandOutputToString(cIGZCommandParameterSet*, cIGZString&) override { return false; }
 };
 
+struct FakeGraphicSystem final : cIGZUnknown {
+    int refs = 0;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return ++refs; }
+    std::uint32_t Release() override { return --refs; }
+};
+
 struct FakeRenderer final : IRegionRenderer {
     float screenX = 0, screenY = 0;
     int inits = 0, shutdowns = 0;
@@ -225,6 +247,14 @@ struct FakeHost final : IRegionScreenHost {
     std::vector<std::uint8_t> preferences = std::vector<std::uint8_t>(0x1734, 0);
     std::vector<std::string> log;
 
+    FakeGraphicSystem graphicSystem;
+    cIGZWinMgr* mgr = nullptr;
+    bool createView = false;
+    int savedPreviousRegion = 0;
+    bool savedRegionValid = false;
+    std::vector<FakeBuffer*> snapshotBuffers;
+    int snapshotLoads = 0, blankBuffers = 0;
+
     std::vector<std::string> regions{"Alpha", "Beta"};
     int currentRegion = 0;
     int cellLeft = 0, cellTop = 0, cellRight = 2, cellBottom = 1;
@@ -247,7 +277,7 @@ struct FakeHost final : IRegionScreenHost {
     void SavePreferences() override { log.push_back("savePreferences"); }
     int DoubleClickTimeMs() override { return 500; }
     void PlayUiSound(std::uint32_t) override { log.push_back("sound"); }
-    cIGZUnknown* GraphicSystemObject() override { return nullptr; }
+    cIGZUnknown* GraphicSystemObject() override { return &graphicSystem; }
     void SetTerrainMap(cSC4RegionalTerrainMap*) override { log.push_back("terrainMap"); }
     void SetViewUtilities(IRegionRenderer*) override { log.push_back("viewUtilities"); }
     void ClearEffectsManagerGlobal() override { log.push_back("clearEffects"); }
@@ -259,10 +289,19 @@ struct FakeHost final : IRegionScreenHost {
     IEffectsManager* CreateEffectsManager() override { return effects; }
     cIGZWinKeyAccelerator* CreateKeyAccelerator() override { return &accelerator; }
     INotificationHelper* CreateNotificationHelper() override { return &notifications; }
-    cIGZMessage2Standard* CreateStandardMessage() override { return new cRZMessage2Standard(); }
-    void PostEngineMessage(std::uint32_t type) override { messages.posted.push_back(type); }
+    cIGZMessage2Standard* CreateStandardMessage() override {
+        auto* message = new cRZMessage2Standard();
+        message->AddRef();   // the host hands out one reference (the screen releases it)
+        return message;
+    }
+    void PostEngineMessage(std::uint32_t type) override { messages.posted.push_back(PostedMessage{type, false, 0}); }
     int RegionCount() override { return static_cast<int>(regions.size()); }
     int CurrentRegionIndex() override { return currentRegion; }
+    void UpdateRegionViewState() override { log.push_back("updateRegionViewState"); }
+    bool PreviousRegionIndex(int& previousIndex) override {
+        previousIndex = savedPreviousRegion;
+        return savedRegionValid;
+    }
     void SelectRegion(int index) override { currentRegion = index; log.push_back("selectRegion:" + std::to_string(index)); }
     const char* RegionNameAt(int index) override {
         return index >= 0 && index < static_cast<int>(regions.size()) ? regions[index].c_str() : nullptr;
@@ -291,8 +330,15 @@ struct FakeHost final : IRegionScreenHost {
     void ClearRegionViewSlot() override { log.push_back("clearRegionViewSlot"); }
     std::uint32_t LaunchCityFromRegion(RegionCityRef*) override { log.push_back("launchCity"); return launchCityResult; }
     void QuitToRegionSelect(bool flag) override { quitFlag = flag ? 1 : 0; log.push_back("quit"); }
-    IRegionView* CreateRegionView() override { return nullptr; }
-    cIGZWin* CreateBackdropWindow() override { return nullptr; }
+    IRegionView* CreateRegionView() override { return createView && mgr ? new FakeView(mgr) : nullptr; }
+    IWinBuffer* LoadRegionScreenSnapshot(std::uint32_t) override {
+        ++snapshotLoads;
+        return NewSnapshotBuffer();
+    }
+    IWinBuffer* CreateBlankDisplayBuffer() override {
+        ++blankBuffers;
+        return NewSnapshotBuffer();
+    }
     cISCPropertyHolder* CreateTuningProperties() override {
         if (!tuning) return nullptr;
         tuning->AddRef();
@@ -315,6 +361,12 @@ struct FakeHost final : IRegionScreenHost {
         out.AssignFromCString(text.c_str());
     }
     bool CameraBasis(RegionCameraBasis& out) override { out = basis; return true; }
+
+    FakeBuffer* NewSnapshotBuffer() {
+        auto* buffer = new FakeBuffer();
+        snapshotBuffers.push_back(buffer);
+        return buffer;
+    }
 };
 
 int Count(const std::vector<std::string>& log, const std::string& value) {
@@ -334,6 +386,18 @@ int main() {
     main->SetArea(0, 0, 640, 480);
     mgr.mainWin = main;
 
+    // Init asks the host for the view, the 12 snapshot buffers and the nation's saved region-view state.
+    host.mgr = &mgr;
+    host.createView = true;
+    host.savedPreviousRegion = host.currentRegion;
+    host.savedRegionValid = true;
+    {
+        const std::int32_t viewX = 400 * 256, viewY = 300 * 256;   // saved region-map position * 256
+        std::memcpy(host.preferences.data() + kPrefsViewX, &viewX, sizeof viewX);
+        std::memcpy(host.preferences.data() + kPrefsViewY, &viewY, sizeof viewY);
+        host.preferences[kPrefsSignpostMode] = 1;   // LoadGUI reads it back into signpostMode_
+    }
+
     SetRegionScreenHost(&host);
     auto* screen = new cSC4WinRegionScreen(&mgr);
     screen->AddRef();
@@ -351,16 +415,32 @@ int main() {
     CHECK(screen->SignpostMode() == 1);
     CHECK(screen->View() == nullptr && screen->Clouds() == nullptr && screen->Scroll() == nullptr);
 
-    // --- Init (partial): posts both messages, registers the 14 commands, adds the notifications
+    // --- Init: leaves / enters the app, posts the region-music request, registers the 14 commands, adds the
+    // notifications, builds the children, starts the services and restores the saved view position.
     CHECK(screen->Init());
-    CHECK(host.messages.posted.size() == 2);
-    CHECK(host.messages.posted[0] == kRegionScreenMsgLeavingApp);
-    CHECK(host.messages.posted[1] == kRegionScreenMsgEnteredApp);
+    CHECK(host.messages.posted.size() == 5);
+    CHECK(host.messages.posted[0].type == kRegionScreenMsgLeavingApp);
+    CHECK(host.messages.posted[1].type == kRegionScreenMsgRegionMusic);
+    CHECK(host.messages.posted[1].hasData1);
+    CHECK(host.messages.posted[1].data1 == 1);   // Data1 1 selects "krgn"; mayor mode posts 0 ("kmay")
+    CHECK(host.messages.posted[2].type == kMsgRegionCityViewChanged);
+    CHECK(host.messages.posted[3].type == kRegionScreenCameraGridMessage);
+    CHECK(host.messages.posted[4].type == kRegionScreenMsgEnteredApp);
     CHECK(host.commands.registered.size() == 14);
     CHECK(host.commands.registered[0] == kCmdRegionQuitGame);
     CHECK(host.commands.registered[13] == kCmdRegionCancel);
     CHECK(host.notifications.added == 1);
     CHECK(screen->Accelerator() == &host.accelerator);
+    CHECK(host.graphicSystem.refs == 1);
+    CHECK(Count(host.log, "updateRegionViewState") == 1);
+    CHECK(host.snapshotLoads == 12 && host.blankBuffers == 0);
+    for (int i = 0; i < 12; ++i) CHECK(screen->SnapshotBuffer(i) != nullptr);
+    CHECK(screen->TargetX() == 80.0f && screen->TargetY() == 60.0f);   // -w/2 + 400, -h/2 + 300
+    CHECK(screen->SignpostMode() == 1);   // restored from the preference by LoadGUI
+    CHECK(host.renderer->inits == 1 && host.effects->inits == 1);
+    CHECK(Count(host.log, "terrainMap") == 1 && Count(host.log, "viewUtilities") == 1);
+    CHECK(screen->Camera() != nullptr && screen->CameraControl() != nullptr && screen->TerrainMap() != nullptr);
+    CHECK(screen->TerrainMap()->CellCountX() == 3 * 0x10 && screen->TerrainMap()->CellCountZ() == 2 * 0x10);
 
     // --- QueryInterface: the base's extra iid is refused, the filter view is answered, the message target is not.
     {
@@ -377,15 +457,18 @@ int main() {
         screen->Release();
     }
 
-    // --- the region view and the two sibling windows
-    auto* view = new FakeView(&mgr);
-    view->window->SetArea(0, 0, 640, 480);
-    screen->SetView(view);
-    auto* clouds = new cSC4WinRegionClouds(&mgr);
-    screen->SetClouds(clouds);
-    auto* scroll = new cSC4WinRegionScroll(&mgr);
-    screen->SetScroll(scroll);
-    CHECK(screen->View() == view && screen->Clouds() == clouds && screen->Scroll() == scroll);
+    // --- the region view, backdrop, scroll and clouds Init built
+    auto* view = static_cast<FakeView*>(screen->View());
+    auto* clouds = screen->Clouds();
+    auto* scroll = screen->Scroll();
+    CHECK(view != nullptr && clouds != nullptr && scroll != nullptr && screen->Backdrop() != nullptr);
+    CHECK(view->window->GetParentWin() == screen);
+    CHECK(view->window->GetW() == 640 && view->window->GetH() == 480);
+    CHECK(view->window->GetFlag(kWinVisible));
+    CHECK(view->regionIndex == host.currentRegion);
+    CHECK(view->colour1 == 0x00808080 && view->colour2 == 0xffff0000);
+    CHECK(clouds->GetParentWin() == screen && scroll->GetParentWin() == screen);
+    CHECK(!clouds->IsVisible());   // the clouds preference is off
 
     // --- ComputeBaseLimits: 3x2 cells (the map is smaller than the window, so the bounds collapse)
     screen->ComputeBaseLimits();
@@ -400,14 +483,6 @@ int main() {
     host.cellRight = 2;
     host.cellBottom = 1;
     screen->ComputeBaseLimits();
-
-    // --- InitApplicationServices (partial) creates the camera, the control and the terrain map
-    screen->InitApplicationServices();
-    CHECK(screen->Camera() != nullptr && screen->CameraControl() != nullptr);
-    CHECK(screen->TerrainMap() != nullptr);
-    CHECK(screen->TerrainMap()->CellCountX() == 3 * 0x10 && screen->TerrainMap()->CellCountZ() == 2 * 0x10);
-    CHECK(host.renderer->inits == 1 && host.effects->inits == 1);
-    CHECK(Count(host.log, "terrainMap") == 1 && Count(host.log, "viewUtilities") == 1);
 
     // --- UpdateRendererPosition: the basis scales the target and swaps z into y
     host.basis.right[0] = 1.0f; host.basis.right[1] = 0.0f; host.basis.right[2] = 0.0f;
@@ -587,7 +662,7 @@ int main() {
         host.snapshotSet = 1;
         screen->SetCitySnapshotsToDefault(stored);
         CHECK(stored.snapshot.get() == small);
-        CHECK(stored.mask.get() == nullptr);
+        CHECK(stored.mask.get() == screen->SnapshotBuffer(7));   // the small set's mask Init loaded
         CHECK(snapshot->refs == 2);
         host.snapshotSet = 0;
         screen->SetCitySnapshotsToDefault(stored);
@@ -760,15 +835,17 @@ int main() {
         host.commands.unregistered.clear();
         CHECK(screen->Shutdown());
         CHECK(host.messages.posted.size() == 2);
-        CHECK(host.messages.posted[0] == kRegionScreenMsgLeavingRegion);
-        CHECK(host.messages.posted[1] == kRegionScreenMsgLeftRegion);
+        CHECK(host.messages.posted[0].type == kRegionScreenMsgLeavingRegion);
+        CHECK(host.messages.posted[1].type == kRegionScreenMsgLeftRegion);
         CHECK(host.commands.unregistered.size() == 14);
         CHECK(host.notifications.removed == 1);
         CHECK(host.renderer->shutdowns == 1 && host.effects->shutdowns == 1);
         CHECK(host.frameService->shutdowns == 1);
         CHECK(Count(host.log, "clearEffects") == 1 && Count(host.log, "clearView") == 1);
         CHECK(screen->Scroll() == nullptr && screen->Clouds() == nullptr && screen->View() == nullptr);
+        CHECK(screen->Backdrop() == nullptr);
         CHECK(screen->SnapshotBuffer(0) == nullptr);
+        CHECK(host.graphicSystem.refs == 0);
         CHECK(snapshot->refs == 1 && mask->refs == 1 && small->refs == 1);   // only the test's references are left
         CHECK(smallSnapshot->refs == 1);
     }
@@ -786,6 +863,7 @@ int main() {
     host.cityRefs.clear();   // the host owns the two cities' references
     delete cityA;
     delete cityB;
+    for (FakeBuffer* buffer : host.snapshotBuffers) delete buffer;   // the screen released its references
     delete host.renderer;
     delete host.frameService;
     delete host.effects;

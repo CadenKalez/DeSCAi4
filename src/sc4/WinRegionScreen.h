@@ -29,6 +29,8 @@
 //   leaves the +0x1a8 byte alone for the stop message (0x10023a07d / 0x10023a001).
 // * The region city list's GetCity slot (0x58) answers a pointer to the list's cRZAutoRefCount slot, not a city
 //   (every caller dereferences it once: 0x10023792d, 0x10023c580, 0x10023b58c).
+// Init posts 0x2a3ad653 with Data1 = 1 (the region-music request; mayor mode posts Data1 = 0): see
+// cSC4AudioEventHandler::HandleRadioMessages and kRegionScreenMsgRegionMusic below.
 // The port keeps the host services as pointers and the notification helper behind a seam where the original has the
 // 0x18-byte object inline at +0x1b8, so sizeof(cSC4WinRegionScreen) differs; every offset in the comments is the
 // original's.
@@ -81,6 +83,10 @@ constexpr std::uint32_t kRegionScreenMsgTypes[17] = {
     0x6a935cdd, 0x2a948272, 0x2a94826b, 0x6a935ce2, 0x6aa9fe51, 0x0bb3c277, 0x0bb2747d, 0x6a935cf1};
 constexpr std::uint32_t kRegionScreenMsgLeavingApp = 0xabb5bb44;   // posted before Init
 constexpr std::uint32_t kRegionScreenMsgEnteredApp = 0xcbb5bb45;   // posted after Init
+// The region-music request Init posts to SL::spMS2 with Data1 = 1 (0x100237d54). cSC4AudioEventHandler::
+// HandleRadioMessages turns it into cIGZRadio::SetStation("krgn", fade), i.e. GameData/Radio/Stations/Region/Music;
+// mayor mode posts Data1 = 0 ("kmay").
+constexpr std::uint32_t kRegionScreenMsgRegionMusic = 0x2a3ad653;
 constexpr std::uint32_t kRegionScreenMsgLeavingRegion = 0x8bb5bb46;
 constexpr std::uint32_t kRegionScreenMsgLeftRegion = 0x8bb5bb4b;
 constexpr std::uint32_t kRegionScreenScrollStart = 0x8a4bac53;     // cSC4WinRegionScroll messages
@@ -297,9 +303,14 @@ public:
     virtual cIGZMessage2Standard* CreateStandardMessage() = 0;              // new cRZMessage2Standard with one reference
     virtual void PostEngineMessage(std::uint32_t type) = 0;                 // SL::spMS2 vslot 0x20 (message, false)
 
-    // --- region data (cISC4Region and its city list, not recovered)
+    // --- region data (cISC4Region and its city list)
     virtual int RegionCount() = 0;                                          // region vslot 0x30
-    virtual int CurrentRegionIndex() = 0;                                   // region vslot 0x38
+    virtual int CurrentRegionIndex() = 0;                                   // cISC4Nation vslot 0x38 (0x100237d16)
+    // cISC4Nation vslot 0x30 (0x100237cfd, no arguments, return ignored) and vslot 0x50 (0x100237d0a, which writes
+    // the previous region index and answers the validity flag). The nation object stays behind the host; the screen
+    // only needs the pair to decide whether Init restores the saved view position (0x100237d29).
+    virtual void UpdateRegionViewState() = 0;
+    virtual bool PreviousRegionIndex(int& previousIndex) = 0;
     virtual void SelectRegion(int index) = 0;                               // region vslot 0x48
     virtual const char* RegionNameAt(int index) = 0;                        // region vslot 0x58 -> 0x18 -> 0x38
     virtual const char* RegionName() = 0;                                   // city list vslot 0x18 -> vslot 0x38
@@ -313,9 +324,14 @@ public:
     virtual std::uint32_t LaunchCityFromRegion(RegionCityRef* city) = 0;    // cISC4App vslot 0x30
     virtual void QuitToRegionSelect(bool flag) = 0;                         // cISC4App vslot 0x58
 
-    // --- the region view window (cSC4WinRegionView, not recovered)
-    virtual IRegionView* CreateRegionView() = 0;                            // new cSC4WinRegionView
-    virtual cIGZWin* CreateBackdropWindow() = 0;                            // the plain window at +0x170
+    // --- the region view window (cSC4WinRegionView, recovered in src/sc4/WinRegionView.*; the screen reaches it
+    // through the IRegionView seam so the test can fake the whole view).
+    virtual IRegionView* CreateRegionView() = 0;                            // new cSC4WinRegionView (one owner)
+    // Init's 12 snapshot buffers (0x100238088..0x10023829f): cSLBuffer(type 0x856ddbac, group 0x6a1eed2c,
+    // instance, colour 9, always-reload false).GetBuffer(), and the fallback the original uses when an image is
+    // missing: SL::spGS vslot 0x28 makes a blank display-format buffer. Both return one reference.
+    virtual IWinBuffer* LoadRegionScreenSnapshot(std::uint32_t instance) = 0;
+    virtual IWinBuffer* CreateBlankDisplayBuffer() = 0;
 
     // --- tuning
     // SL::spRM lookup of {0x6534284a, 0x690f693f, 0xaa383bfe} with iid 0xa52160f5; returns the property holder with one
@@ -395,6 +411,7 @@ public:
 
     // --- test access
     IRegionView* View() const { return view_; }
+    cIGZWin* Backdrop() const { return backdrop_; }
     cSC4WinRegionClouds* Clouds() const { return clouds_; }
     cSC4WinRegionScroll* Scroll() const { return scroll_; }
     cSC4CameraControl* CameraControl() const { return cameraControl_; }

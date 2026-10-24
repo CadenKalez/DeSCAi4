@@ -85,6 +85,7 @@ cSC4WinRegionScreen::~cSC4WinRegionScreen() {   // @ 0x100235edc
     Shutdown();
     // The original releases whatever Shutdown left behind, in its field order.
     if (scroll_) {
+        ChildDeleteAbsolute(scroll_);
         scroll_->Release();
         scroll_ = nullptr;
     }
@@ -117,6 +118,7 @@ cSC4WinRegionScreen::~cSC4WinRegionScreen() {   // @ 0x100235edc
     for (cIGZWin*& panel : panels_) ReleaseWindow(panel);
     ReleaseWindow(backdrop_);
     if (clouds_) {
+        ChildDeleteAbsolute(clouds_);
         clouds_->Release();
         clouds_ = nullptr;
     }
@@ -314,20 +316,160 @@ bool cSC4WinRegionScreen::Init() {   // @ 0x100237bf2 (PARTIAL)
     SetID(kRegionScreenWindowId);
 
     if (host) {
+        // The keyboard accelerator: GZCOM class 0x42e967be / iid 0xe2c1b3c4 (0x100237c4a..0x100237cde).
+        accelerator_ = host->CreateKeyAccelerator();
+        if (accelerator_) accelerator_->Init();
+
+        // cISC4App::GetNation() (vslot 0x110) -> nation vslot 0x30 / 0x50 / 0x38: the current region index, and
+        // the flag + previous index that gate the saved-view restore further down (0x100237ce1..0x100237d2c).
+        host->UpdateRegionViewState();
+        int previousRegionIndex = 0;
+        const bool havePreviousRegion = host->PreviousRegionIndex(previousRegionIndex);
         currentRegionIndex_ = host->CurrentRegionIndex();
+        const bool restoreSavedView = havePreviousRegion && currentRegionIndex_ == previousRegionIndex;
+
+        // The region-music request: a cRZMessage2Standard of type 0x2a3ad653 with Data1 = 1, posted to SL::spMS2
+        // with MessagePost(message, false) (0x100237d30..0x100237d84). cSC4AudioEventHandler::HandleRadioMessages
+        // answers Data1 = 1 with cIGZRadio::SetStation("krgn", fade) - the Region/Music/*.mp3 playlist - and
+        // Data1 = 0 with the mayor station "kmay".
+        if (cIGZMessage2Standard* message = host->CreateStandardMessage()) {
+            message->SetType(kRegionScreenMsgRegionMusic);
+            message->SetData1(1);
+            if (cIGZMessageServer2* server = host->MessageServer2()) server->MessagePost(message, false);
+            message->Release();
+        }
+
+        // The screen takes the main window's area (0x100237d87).
+        SetArea(0, 0, GetW(), GetH());
+
+        // SL::spGS, one reference held (0x100237dcc..0x100237e0a).
+        if (cIGZUnknown* graphicSystem = host->GraphicSystemObject()) {
+            if (graphicSystem != graphicSystem_) {
+                graphicSystem->AddRef();
+                ReleaseUnknown(graphicSystem_);
+                graphicSystem_ = graphicSystem;
+            }
+        } else {
+            ReleaseUnknown(graphicSystem_);
+        }
+        InitApplicationServices();
+
+        // The backdrop at +0x170: a plain window behind everything (0x100237e16..0x100237ebf).
+        {
+            auto* backdrop = new cGZWin(GetWindowManager());
+            backdrop->AddRef();
+            backdrop_ = backdrop;
+            backdrop->SetArea(0, 0, GetW(), GetH());
+            backdrop->SetFlag(kWinPrivateBuffer, false);
+            ChildAdd(backdrop);
+            backdrop->SendToBack();
+            backdrop->SetFlag(kWinFlag800, false);
+            backdrop->SetFlag(kFlagIgnoreCursor, true);
+            backdrop->SetFlag(kWinVisible, false);
+        }
+
+        // The region view at +0x160 (0x100237ec0..0x100238087). The original constructs cSC4WinRegionView inline;
+        // the port asks the host, because the view reaches its own engine neighbours through IRegionViewHost.
+        view_ = host->CreateRegionView();
+        if (view_) {
+            if (cIGZWin* viewWindow = view_->AsWindow()) {
+                ChildAdd(viewWindow);
+                viewWindow->SetArea(0, 0, GetW(), GetH());
+                viewWindow->PullToFront();
+                viewWindow->SetFlag(kWinFlag800, false);
+                viewWindow->SetFlag(kWinHitTestTransparency, true);
+                viewWindow->SetFlag(kWinVisible, true);
+            }
+            view_->SetRegionIndex(currentRegionIndex_);
+            view_->SetLabelColours(labelColor1_, labelColor2_);
+        }
+
+        // The 12 city snapshot buffers: six image + mask pairs, one pair per city size code for the large and the
+        // small set (0x100238088..0x10023829f). Each image is a cSLBuffer lookup; when either half of a pair is
+        // missing the original replaces the pair with blank 1 x 1 display buffers from SL::spGS (Init 1,1 /
+        // Lock 0x8001 / Fill 0 / Unlock 0x8001). The host owns both calls.
+        for (int i = 0; i < 6; ++i) {
+            IWinBuffer* image = host->LoadRegionScreenSnapshot(kRegionScreenSnapshotInstances[i][0]);
+            IWinBuffer* mask = host->LoadRegionScreenSnapshot(kRegionScreenSnapshotInstances[i][1]);
+            if (!image || !mask) {
+                ReleaseBuffer(image);
+                ReleaseBuffer(mask);
+                image = host->CreateBlankDisplayBuffer();
+                mask = host->CreateBlankDisplayBuffer();
+                for (IWinBuffer* buffer : {image, mask}) {
+                    if (!buffer) continue;
+                    buffer->Init(1, 1);
+                    if (buffer->Lock(0x8001)) {
+                        buffer->Fill(0, cRZRect{0, 0, 1, 1});
+                        buffer->Unlock(0x8001);
+                    }
+                }
+            }
+            SetSnapshotBuffer(i * 2, image);
+            SetSnapshotBuffer(i * 2 + 1, mask);
+            ReleaseBuffer(image);
+            ReleaseBuffer(mask);
+        }
+
+        // The scroll window at +0x288 (0x1002382a0..0x1002383a4).
+        {
+            scroll_ = new cSC4WinRegionScroll(GetWindowManager());
+            scroll_->AddRef();
+            scroll_->SetArea(0, 0, GetW(), GetH());
+            scroll_->SetFlag(kWinPrivateBuffer, false);
+            ChildAdd(scroll_);
+            scroll_->PullToFront();
+            scroll_->SetFlag(kWinFlag800, false);
+            scroll_->SetFlag(kFlagIgnoreCursor, true);
+        }
+
+        // The cloud shadows at +0x168 (0x1002383a5..0x100238481).
+        {
+            clouds_ = new cSC4WinRegionClouds(GetWindowManager());
+            clouds_->AddRef();
+            ChildAdd(clouds_);
+            clouds_->PullToFront();
+            clouds_->SetFlag(kWinFlag800, false);
+            bool cloudsVisible = false;
+            if (const std::uint8_t* preferences = host->Preferences()) {
+                cloudsVisible = preferences[kPrefsCloudsVisible] != 0;
+            }
+            clouds_->SetFlag(kWinVisible, cloudsVisible);
+            clouds_->SetDriftVector(90.51f, 18.75f);
+        }
+
+        PutCitiesInView();
+        ReadTunableValues();
+        targetX_ = static_cast<float>((boundMaxX_ + boundMinX_) / 2);
+        targetY_ = static_cast<float>((boundMaxY_ + boundMinY_) / 2);
+        // The saved view position (0x1002384e2..0x100238579): only when the previous region index is the current
+        // one and the nation's validity flag is set; the original then ignores an unset X preference (INT32_MIN).
+        if (restoreSavedView) {
+            if (const std::uint8_t* preferences = host->Preferences()) {
+                std::int32_t savedX = 0, savedY = 0;
+                std::memcpy(&savedX, preferences + kPrefsViewX, sizeof savedX);
+                std::memcpy(&savedY, preferences + kPrefsViewY, sizeof savedY);
+                if (savedX != std::numeric_limits<std::int32_t>::min()) {
+                    targetX_ = static_cast<float>(GetW()) * -0.5f + static_cast<float>(savedX) * 0.00390625f;
+                    targetY_ = static_cast<float>(GetH()) * -0.5f + static_cast<float>(savedY) * 0.00390625f;
+                }
+            }
+        }
+
+        if (notifications_) notifications_->AddAllNotifications(static_cast<cIGZMessageTarget2*>(this));
         if (cIGZCommandServer* server = host->CommandServer()) {
             for (int i = 0; i < 14; ++i) {
                 server->RegisterCommand(kRegionScreenCommands[i], kRegionScreenCommandNames[i], nullptr);
             }
         }
-        accelerator_ = host->CreateKeyAccelerator();
-        if (accelerator_) accelerator_->Init();
-        if (notifications_) notifications_->AddAllNotifications(static_cast<cIGZMessageTarget2*>(this));
+        LoadGUI();
+        hideCountdown_ = 2;
+        // PARTIAL: the "region_global" effect at +0x280 (0x1002386ec..0x1002387e9): the original asks the
+        // cSC4EffectsManager (vslot 0x30) for the effect named "region_global", gives it a transform built from
+        // SL::spTerrainMap (vslots 0x30 / 0x38 / 0x40 -> cell size and cell counts) and starts it (effect vslot
+        // 0x18, transition 0). The effects-manager seam here only covers Init / Shutdown, and cISC4VisualEffect is
+        // not wired into it, so the +0x280 window stays null for now.
     }
-    // PARTIAL: the 3113-byte original also creates the region view (vslot 0x10000 / 0x80000 flags), the backdrop, the
-    // 12 snapshot buffers from the graphic system (its do/while runs once: 0x100237...), the scroll and clouds
-    // windows, PutCitiesInView, the camera centre, LoadGUI and the "region_global" child. Those depend on
-    // cSC4WinRegionView, cSC43DRender and the window-script loader, none of which are recovered.
     PostRegionScreenMessage(kRegionScreenMsgEnteredApp);
     return true;
 }
@@ -358,11 +500,16 @@ bool cSC4WinRegionScreen::Shutdown() {   // @ 0x100239aa0
     ShutdownApplicationServices();
     ReleaseUnknown(graphicSystem_);
     if (clouds_) {
+        // See the scroll window below: ChildDeleteAll in the original has already dropped the child-list reference.
+        ChildDeleteAbsolute(clouds_);
         clouds_->Release();
         clouds_ = nullptr;
     }
     ReleaseUnknown(unknown1a8_);
     if (scroll_) {
+        // The original reaches this point after ChildDeleteAll, which has already dropped the child-list reference;
+        // the port removes the window explicitly so a later Release cannot leave a dangling child.
+        ChildDeleteAbsolute(scroll_);
         scroll_->Release();
         scroll_ = nullptr;
     }
@@ -1092,20 +1239,31 @@ void cSC4WinRegionScreen::SetMemberWindow(int which, cIGZWin* window) {
 }
 
 void cSC4WinRegionScreen::SetClouds(cSC4WinRegionClouds* clouds) {
+    if (clouds == clouds_) return;
     if (clouds) clouds->AddRef();
-    if (clouds_) clouds_->Release();
+    if (clouds_) {
+        ChildDeleteAbsolute(clouds_);   // it is a child whenever Init created it
+        clouds_->Release();
+    }
     clouds_ = clouds;
 }
 
 void cSC4WinRegionScreen::SetScroll(cSC4WinRegionScroll* scroll) {
+    if (scroll == scroll_) return;
     if (scroll) scroll->AddRef();
-    if (scroll_) scroll_->Release();
+    if (scroll_) {
+        ChildDeleteAbsolute(scroll_);   // it is a child whenever Init created it
+        scroll_->Release();
+    }
     scroll_ = scroll;
 }
 
 void cSC4WinRegionScreen::SetView(IRegionView* view) {
     if (view == view_) return;
-    delete view_;
+    if (view_) {
+        if (cIGZWin* window = view_->AsWindow()) ChildDeleteAbsolute(window);
+        delete view_;
+    }
     view_ = view;
 }
 
