@@ -3,11 +3,16 @@
 #include "audio/HitClassIds.h"
 #include "audio/HitList.h"
 #include "audio/HitManAccess.h"
+#include "audio/HitResource.h"
 #include "audio/HitResourceFactory.h"
+#include "audio/HitTrackPlayer.h"
 #include "gz/cIGZPersistRecord.h"
 #include "gz/cGZAny.h"
 #include "gz/cGZPropertySet.h"
 #include "gz/cIGZIStream.h"
+#include "rz/cRZIStream.h"
+#include "rz/cRZOStream.h"
+#include "rz/cRZString.h"
 
 static int failures = 0;
 #define CHECK(c) do { if (!(c)) { std::printf("FAIL line %d: %s\n", __LINE__, #c); ++failures; } } while (0)
@@ -48,6 +53,26 @@ int main() {
             while (c->Release() != 0) {}           // drops the copy (destructor)
         }
         r->Release();
+    }
+
+    // cHitResource<cHitTrackPlayer>: the shared template forwards Read/Write to the payload's own
+    // ReadResource/WriteResource. cHitTrackPlayer's are the 8-byte `return false` bodies at
+    // 0x100473b32/0x100473b3a, so both instantiations of the template are `return false` here.
+    // The Debug*Tag methods are the other 8-byte `return false` bodies (0x100473da6/ae/b6,
+    // cHitList's at 0x1004755e6/ee/f6) and are not part of any vtable.
+    {
+        auto* trackResource = new cHitResource<cHitTrackPlayer>();
+        trackResource->AddRef();
+        cRZNullIStream in;
+        cRZNullOStream out;
+        CHECK(!trackResource->Read(in, 0, nullptr));
+        CHECK(!trackResource->Write(out, 0, nullptr));
+        cRZString tag("unchanged");
+        CHECK(!trackResource->DebugInstanceTag(tag));
+        CHECK(!trackResource->DebugClassTag(tag));
+        CHECK(!trackResource->DebugTypeTag(tag));
+        CHECK(tag.str() == "unchanged");
+        CHECK(trackResource->Release() == 0);  // only the test's reference; deletes
     }
 
     // track property sets start with the default parent sound and the "Track" type name

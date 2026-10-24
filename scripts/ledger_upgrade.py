@@ -19,7 +19,7 @@ rows = list(csv.reader(path.open()))
 pat = re.compile(r"^(?:non-virtual thunk to |virtual thunk to )?" + re.escape(a.cls) + r"::")
 n = 0
 for r in rows[1:]:
-    if pat.match(r[1]) and not r[4].startswith("recovered"):
+    if pat.match(r[1]) and r[4] != "recovered":   # recovered-partial rows must be closable too
         r[3] = a.source
         r[4] = "recovered-partial" if int(r[0], 16) in partial else a.status
         r[5] = a.evidence

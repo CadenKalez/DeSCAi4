@@ -5,7 +5,7 @@ AUDIT-1,(audit),1378 ledger rows (314 classes) still name no verification. Repai
 CITYLOAD-1,(boot),"city_probe (src/tools/city_probe.cpp) boots the app with 9 segments and reaches cSC4App::LoadCity, but the app-record read fails: cSC4App::Read needs stream version 2 then SC4ReadGZSerializable(cISC4City 0x66ba4db5). The serializable factory is now registered (SetSerializableFactory, cSC4City class id 0x8990c372) and cSC4DBSegment::Open does open the serializer with mode 1, so the next thing to check is the record's own contents/version - investigate with otool on 0x100045576 (cSC4App::Read) before changing anything",,open,src/tools/city_probe.cpp
 ODR-1,(build),"OccupantManager.h and NetworkTool.h both define kGZIID_cIGZMessageTarget2, so the two headers cannot be included in one TU; move the constant to a single shared header",,open,src/sc4/OccupantManager.h
 CLASS-(free),(free),"recover 365 remaining function(s) (256 not started, 109 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-(free),(free),finish 169 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-(free),(free),finish 113 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 GZCOM-1,(gz),"Regenerate the GZCOM tables (scripts/gen_gzcom.py) so the recovered creators stop returning null: cSC4AirportDeveloper 0x1000c8034, cSC4SeaportDeveloper, cSC4NetworkLotManager 0x100404d80, cSC4TutorialSystem 0x10005f086, cSC4GrowthDeveloper 0x100156020, cSC4WeatherSimulator, cSC4DemandSimulator",,open,src/gz/GZCOM.cpp
 CLASS-AspyrDXTTools,AspyrDXTTools,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-CQTPlayer,CQTPlayer,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -242,7 +242,7 @@ CLASS-cGZWinTreeViewDrag,cGZWinTreeViewDrag,"recover 7 remaining function(s) (7 
 CLASS-cGarbageHeap,cGarbageHeap,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cHTMLDocument,cHTMLDocument,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cHitIniFile,cHitIniFile,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
-LEDGER-cHitList,cHitList,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cHitList,cHitList,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,done,notes/ledger.csv
 LEDGER-cHitMan,cHitMan,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 HITRES-1,cHitResource<T>,"Recover Read/Write (through the DB-record interface, id kIidRecordAccess) and the DebugInstanceTag/DebugClassTag/DebugTypeTag methods of the resource template",,open,src/audio/HitResource.h
 CLASS-cHitResource<cHitList>,cHitResource<cHitList>,"recover 3 remaining function(s) (0 not started, 3 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv

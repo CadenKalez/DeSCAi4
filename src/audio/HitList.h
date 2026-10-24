@@ -15,6 +15,8 @@
 #include <vector>
 
 #include "audio/interfaces/cIHitList.h"
+#include "gz/cIGZIStream.h"
+#include "gz/cIGZOStream.h"
 
 class cHitList : public cIHitList {
 public:
@@ -25,7 +27,8 @@ public:
     bool QueryInterface(std::uint32_t iid, void** out) override;
     std::uint32_t AddRef() override { return ++refCount_; }
     std::uint32_t Release() override;  // deletes when the count is <= 1
-    std::uint32_t GetRefCount() const { return static_cast<std::uint32_t>(refCount_); }
+    // Own virtuals after the destructor pair: [19] GetRefCount, [20] ReadResource, [21] WriteResource.
+    virtual std::uint32_t GetRefCount() const { return static_cast<std::uint32_t>(refCount_); }  // @ 0x100482970
 
     bool AddValue(std::int32_t value) override;
     bool AddVariant(const cIGZVariant&) override { return false; }
@@ -42,8 +45,16 @@ public:
     bool SetStringValueByIndex(std::uint32_t, const cIGZString&) override { return false; }
     bool RemoveByIndex(std::uint32_t index) override;
 
-    // Resource parsing/serialisation (cHitList::ReadResource/WriteResource). Accepted layouts,
-    // tried in this order:
+    // cHitList::ReadResource / WriteResource — the persist-resource stream entry points (own vtable
+    // slots [20]/[21], after GetRefCount at [19]). The original reads the stream's whole record:
+    // it QueryInterfaces the stream for iid 0xc56b8f08 (cIGZPersistDBSerialRecord), takes the size
+    // from slot +0x1a0 (GetSize) and copies the record with slot +0xd8 (GetFieldVoid), then parses
+    // the bytes and releases the record. Write emits the v1 layout through SetUint32 (slot +0x48).
+    // Both ignore the flags and user-data arguments.
+    virtual bool ReadResource(cIGZIStream& stream, std::uint32_t flags, cIGZUnknown* userData);   // 0x100482366
+    virtual bool WriteResource(cIGZOStream& stream, std::uint32_t flags, cIGZUnknown* userData);  // 0x100482812
+
+    // Resource parsing/serialisation logic without the stream. Accepted layouts, tried in order:
     //   text   : dword n, then n bytes "a,b,lo-hi,..." (ids and inclusive ranges)
     //   v1     : dword 1, dword count, count x int32
     //   v2     : dword count, count x int32

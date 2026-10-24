@@ -6,6 +6,7 @@
 #include <string>
 
 #include "audio/HitManAccess.h"
+#include "gz/cIGZPersistDBSerialRecord.h"
 #include "rz/RZConvert.h"
 #include "rz/cRZString.h"
 
@@ -136,6 +137,45 @@ bool cHitList::RemoveByIndex(std::uint32_t index) {
 }
 
 // cHitList::ReadResource(cIGZIStream&, unsigned int, cIGZUnknown*) @ 0x100482366
+//
+// The stream handed to Read() is the DB record's istream view; the original asks that same object
+// for the cIGZPersistDBSerialRecord view (iid 0xc56b8f08, QueryInterface slot [0]), reads the whole
+// record (GetSize = +0x1a0, GetFieldVoid = +0xd8), appends a NUL after it and parses the bytes.
+// The original only writes that NUL in the text-format branch (v1/v2 never look at it) and ignores
+// GetFieldVoid's result; the port zero-initialises the buffer, which parses identically.
+// Deviation: the original dereferences the record without checking QueryInterface's result (a
+// stream without the record view crashes); the port returns false instead.
+bool cHitList::ReadResource(cIGZIStream& stream, std::uint32_t flags, cIGZUnknown* userData) {
+    (void)flags;  // unused by the original
+    (void)userData;
+    cIGZPersistDBSerialRecord* record = nullptr;
+    if (!stream.QueryInterface(kGZIID_cIGZPersistDBSerialRecord, reinterpret_cast<void**>(&record)) || record == nullptr)
+        return false;
+    const std::uint32_t size = record->GetSize();
+    std::vector<std::uint8_t> data(static_cast<std::size_t>(size) + 1, 0);
+    record->GetFieldVoid(data.data(), size);  // the original ignores the result
+    data[size] = 0;
+    const bool ok = ReadResourceBytes(data.data(), size);
+    record->Release();
+    return ok;
+}
+
+// cHitList::WriteResource(cIGZOStream&, unsigned int, cIGZUnknown*) @ 0x100482812
+//
+// Writes dword 1, the item count, then the available ids followed by the recent ones (all through
+// SetUint32, ostream slot +0x48). The original pop-front/push-back rotates each std::list while it
+// writes; that preserves order, so the port iterates without mutating. Returns true (the original
+// ignores SetUint32's result).
+bool cHitList::WriteResource(cIGZOStream& stream, std::uint32_t flags, cIGZUnknown* userData) {
+    (void)flags;  // unused by the original
+    (void)userData;
+    std::vector<std::uint32_t> dwords;
+    WriteResourceDwords(dwords);
+    for (const std::uint32_t value : dwords) stream.SetUint32(value);
+    return true;
+}
+
+// cHitList::ReadResourceBytes — the parse half of ReadResource (see the layout note in HitList.h).
 bool cHitList::ReadResourceBytes(const std::uint8_t* data, std::uint32_t size) {
     auto dword = [&](std::uint32_t i) {
         std::uint32_t v = 0;
@@ -164,6 +204,8 @@ bool cHitList::ReadResourceBytes(const std::uint8_t* data, std::uint32_t size) {
                 const std::uint32_t to = RZ::ConvertToUint(token.ToChar());
                 for (std::uint32_t v = from; v <= to; ++v) {
                     values.push_back(static_cast<std::int32_t>(v));
+                    // The original's unsigned loop wraps past 0xFFFFFFFF and never terminates for a
+                    // range ending there; the port stops after the last id it can represent.
                     if (v == 0xFFFFFFFFu) break;
                 }
             }
@@ -180,7 +222,7 @@ bool cHitList::ReadResourceBytes(const std::uint8_t* data, std::uint32_t size) {
     return true;
 }
 
-// cHitList::WriteResource(cIGZOStream&, unsigned int, cIGZUnknown*) @ 0x100482812
+// The dword sequence WriteResource puts on the stream (kept separate so it is testable directly).
 void cHitList::WriteResourceDwords(std::vector<std::uint32_t>& out) const {
     out.push_back(1);
     out.push_back(static_cast<std::uint32_t>(available_.size() + recent_.size()));

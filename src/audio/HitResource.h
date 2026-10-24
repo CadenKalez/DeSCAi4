@@ -1,16 +1,24 @@
 // cHitResource<T> — adapts a Hit payload type T (cHitList, cHitTrackPlayer, ...) to the persistent
 // resource system by adding a (type, group, instance) key and the cIHitPersistResource interface.
-// Recovered from the cHitResource<cHitList> instantiation @ 0x1004754ea..0x1004757bc.
+// Recovered from the cHitResource<cHitList> instantiation @ 0x1004754ea..0x1004757bc and the
+// cHitResource<cHitTrackPlayer> instantiation @ 0x100473a90..0x100474302.
 //
-// Layout (cHitList case, 0x60 bytes): T at +0x00, resource sub-object vptr at +sizeof(T)=+0x48,
-// key at +0x50. QueryInterface hands out the resource sub-object for the persist-resource and
-// cIHitResource ids and defers everything else to T. CreatePrivateCopy copies T (including its
-// refcount, as the original does) and the key, then queries the copy.
+// Layout: T at +0x00, then the resource sub-object vptr, then the key. In the binary the resource
+// vptr is at +0x48 for cHitList and +0x208 for cHitTrackPlayer, and the key follows it (+0x50 /
+// +0x210; see the GetKey disassembly). The port's T sizes differ (std::vector/deque members) but the
+// template keeps the same T + vptr + key order. QueryInterface hands out the resource sub-object for
+// the persist-resource and cIHitResource ids and defers everything else to T. CreatePrivateCopy
+// copies T (including its refcount, as the original does) and the key, then queries the copy.
+//
+// DebugInstanceTag/DebugClassTag/DebugTypeTag are not interface methods and are not in either
+// vtable; both instantiations return false and leave the string untouched (0x1004755e6/ee/f6,
+// 0x100473da6/ae/b6).
 #pragma once
 #include <cstdint>
 
 #include "audio/HitClassIds.h"
 #include "gz/cIGZPersistResource.h"
+#include "gz/cIGZString.h"
 
 using cIHitResource = cIHitPersistResource;  // cIHitResource adds nothing beyond the persist interface
 
@@ -43,11 +51,21 @@ public:
     bool SetInstance(std::uint32_t instance) override { key_.instance = instance; return true; }
     std::uint32_t GetRefCount() const override { return T::GetRefCount(); }
 
-    // Stream I/O: the original forwards to T::ReadResource/WriteResource, which read through a
-    // DB-record interface (id kIidRecordAccess) that is not recovered yet. Use the payload's own
-    // byte/dword API (e.g. cHitList::ReadResourceBytes) until it is.
-    bool Read(cIGZIStream&, std::uint32_t, cIGZUnknown*) override { return false; }
-    bool Write(cIGZOStream&, std::uint32_t, cIGZUnknown*) override { return false; }
+    // Stream I/O: both instantiations forward to the payload's own ReadResource/WriteResource and
+    // return its result (the cHitList one is a tail call; cHitTrackPlayer::ReadResource is inline
+    // and returns false, so those two instantiations are just `return false`). The payload reads the
+    // persist-DB record view (iid kIidRecordAccess) that the stream itself QueryInterfaces.
+    bool Read(cIGZIStream& stream, std::uint32_t flags, cIGZUnknown* userData) override {
+        return T::ReadResource(stream, flags, userData);
+    }
+    bool Write(cIGZOStream& stream, std::uint32_t flags, cIGZUnknown* userData) override {
+        return T::WriteResource(stream, flags, userData);
+    }
+
+    // Debug tags (own methods, not part of cIHitPersistResource and not in the vtable): always false.
+    bool DebugInstanceTag(cIGZString&) { return false; }
+    bool DebugClassTag(cIGZString&) { return false; }
+    bool DebugTypeTag(cIGZString&) { return false; }
 
     bool CreatePrivateCopy(std::uint32_t iid, void** out) override {
         auto* copy = new cHitResource(*this);
