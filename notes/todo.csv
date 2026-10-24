@@ -972,6 +972,7 @@ TERRAIN-6,cSTETerrain,"Erosion and floods: DoErosion, DoWindErosion, DoWaterEros
 TERRAIN-7,cSTETerrain,"Map creation: Create, CreateFromGrayScaleImage (2), DoPostCityInit, EnsureMinAllowedHeight",TERRAIN-1,open,src/sc4/cSTETerrain.h
 TERRAIN-8,cSTETerrain,"Neighbour cities and saving: ReconcileEdgesWithNeighboringCities, Save, SaveEdgeAltitudes, Save/LoadObliterated, Write/Read",TERRAIN-1,open,src/sc4/cSTETerrain.h
 TERRAIN-9,cSTETerrain,"Messages and animation: DoMessage, DoAnimationTick, UpdateWaveProducers, volcanic ash",TERRAIN-1,open,src/sc4/cSTETerrain.h
+TERRAIN-BRUSH-1,cSTETerrain,Decode cISTETerrain::tBrushParameters and cSTETerrain::tBrushContext from the call sites (ApplyBrush/ApplyBrushComponents/ApplyBrushAtLocation/the BrushFn* bodies/ReadBrush*); 20 of the 56 outstanding terrain functions take one of them,,open,src/sc4/cSTETerrain.h
 LEDGER-cSTETerrainView3D,cSTETerrainView3D,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 TERRAIN-VIEW-1,cSTETerrainView3D,Write SC4DrawContext over cMetalGDriver implementing ITerrainDrawContext (start from the adapter in scripts/terrain_shot.mm),,open,src/sc4/cSTETerrainView3D.h
 TERRAIN-VIEW-2,cSTETerrainView3D,"Recover SC4ViewUtilities (frustum planes, GetVisibleEdges) that fill TerrainFrustumPlanes",,open,docs/SEAMS.md
