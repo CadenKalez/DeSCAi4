@@ -245,8 +245,8 @@ LEDGER-cHitIniFile,cHitIniFile,finish 3 partial/pending function(s) (see notes/l
 LEDGER-cHitList,cHitList,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,done,notes/ledger.csv
 LEDGER-cHitMan,cHitMan,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 HITRES-1,cHitResource<T>,"Recover Read/Write (through the DB-record interface, id kIidRecordAccess) and the DebugInstanceTag/DebugClassTag/DebugTypeTag methods of the resource template",,open,src/audio/HitResource.h
-CLASS-cHitResource<cHitList>,cHitResource<cHitList>,"recover 3 remaining function(s) (0 not started, 3 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cHitResource<cHitTrackPlayer>,cHitResource<cHitTrackPlayer>,"recover 3 remaining function(s) (0 not started, 3 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cHitResource<cHitList>,cHitResource<cHitList>,"recover 3 remaining function(s) (0 not started, 3 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cHitResource<cHitTrackPlayer>,cHitResource<cHitTrackPlayer>,"recover 3 remaining function(s) (0 not started, 3 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cHitTrackDataBlock,cHitTrackDataBlock,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cHitTrackPlayer,cHitTrackPlayer,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cIGZBuffer,cIGZBuffer,"recover 2 remaining function(s) (2 not started, 0 partial/pending); bases still unfinished: cIGZUnknown",CLASS-cIGZUnknown,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -834,7 +834,7 @@ CLASS-cSC4ViewInputControlLabelTool,cSC4ViewInputControlLabelTool,"recover 19 re
 CLASS-cSC4ViewInputControlLevelTerrain,cSC4ViewInputControlLevelTerrain,"recover 11 remaining function(s) (11 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4ViewInputControlNetworkIntxTool,cSC4ViewInputControlNetworkIntxTool,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4ViewInputControlNetworkTool,cSC4ViewInputControlNetworkTool,"recover 16 remaining function(s) (16 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4ViewInputControlPlaceLot,cSC4ViewInputControlPlaceLot,"recover 31 remaining function(s) (31 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4ViewInputControlPlaceLot,cSC4ViewInputControlPlaceLot,"recover 31 remaining function(s) (31 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4ViewInputControlPlaceLot,cSC4ViewInputControlPlaceLot,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4ViewInputControlPlayerDrive,cSC4ViewInputControlPlayerDrive,"recover 36 remaining function(s) (36 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2, cIGZWinProc","CLASS-cIGZMessageTarget2,CLASS-cIGZWinProc",open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4ViewInputControlQuery,cSC4ViewInputControlQuery,"recover 149 remaining function(s) (149 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,done,scripts/export_class.py + notes/remaining_functions.csv
