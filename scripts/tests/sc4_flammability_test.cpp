@@ -138,9 +138,9 @@ int main() {
     FakeOccupant ignored(kOccupantTypeBuilding, SC4Rect{10, 10, 10, 10}, 90);
     cSCPropertyHelp::SetPropertyValue(&ignored.props_, kPropertyNoFlammabilityFlag, true);
     host.occupants = {&building, &prop, &ignored};
-    sim.OnMessage(kMessageOccupantAdded, &building);
-    sim.OnMessage(kMessageOccupantAdded, &prop);
-    sim.OnMessage(kMessageOccupantAdded, &ignored);
+    sim.OnMessage(kFlammabilityMsgOccupantAdded, &building);
+    sim.OnMessage(kFlammabilityMsgOccupantAdded, &prop);
+    sim.OnMessage(kFlammabilityMsgOccupantAdded, &ignored);
     CHECK(sim.IsCellFlammable(2, 2) && sim.IsCellFlammable(3, 3));
     CHECK(sim.GetFlammabilityGrid()->GetTractValue(2, 2) == 100);
     // quirk kept: an added occupant writes its own value to the effective grid even where the raw grid
@@ -152,22 +152,22 @@ int main() {
     // ordinance multiplier applies on the next messages (rain doubles by the 2.0 tunable)
     host.resistance = 0.5f;
     host.weather = 2;
-    sim.OnMessage(kMessageOrdinanceChanged, nullptr);
-    sim.OnMessage(kMessageOccupantMoved, &building);
+    sim.OnMessage(kFlammabilityMsgOrdinanceChanged, nullptr);
+    sim.OnMessage(kFlammabilityMsgOccupantMoved, &building);
     CHECK(sim.GetFlammabilityGrid()->GetTractValue(2, 2) == 100);   // 100 * (0.5 * 2.0)
     host.resistance = 0.4f;
     host.weather = 0;
-    sim.OnMessage(kMessageWeatherChanged, nullptr);
-    sim.OnMessage(kMessageOccupantMoved, &building);
+    sim.OnMessage(kFlammabilityMsgWeatherChanged, nullptr);
+    sim.OnMessage(kFlammabilityMsgOccupantMoved, &building);
     CHECK(sim.GetFlammabilityGrid()->GetTractValue(2, 2) == 40);
     host.resistance = 1.0f;
-    sim.OnMessage(kMessageOrdinanceChanged, nullptr);
-    sim.OnMessage(kMessageOccupantMoved, &building);
-    sim.OnMessage(kMessageOccupantMoved, &prop);
+    sim.OnMessage(kFlammabilityMsgOrdinanceChanged, nullptr);
+    sim.OnMessage(kFlammabilityMsgOccupantMoved, &building);
+    sim.OnMessage(kFlammabilityMsgOccupantMoved, &prop);
 
     // remove the prop: its cell falls back to what is still there
     host.occupants = {&building, &ignored};
-    sim.OnMessage(kMessageOccupantRemoved, &prop);
+    sim.OnMessage(kFlammabilityMsgOccupantRemoved, &prop);
     CHECK(sim.GetFlammabilityGrid()->GetTractValue(3, 3) == 100);
 
     // a full pass: 256 cells / 40 per day = 6 cells per tick; run 80 ticks to complete one

@@ -168,7 +168,7 @@ void cSC4TrafficNetworkMap::ClearUnusableRoadsMap() {
 }
 
 // 0x100299312
-bool cSC4TrafficNetworkMap::DoMessage(cGZMessage&) {
+bool cSC4TrafficNetworkMap::DoMessage(::cGZMessage&) {
     return false;
 }
 

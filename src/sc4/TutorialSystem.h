@@ -71,6 +71,7 @@
 // global / vslot / address of every original call is in the comment). The tutorial window procedure is the
 // unrecovered cSC4TutorialUIWinProc, reduced here to ITutorialUIWinProc.
 #pragma once
+#include "sc4/CommonIIDs.h"
 #include <cstdint>
 #include <vector>
 
@@ -89,9 +90,7 @@ class cISC4WinCatalogView;      // sc4/WinCatalogView.h (recovered)
 
 constexpr std::uint32_t kGZCLSID_cSC4TutorialSystem = 0xaa3836fb;          // GetGZCLSID @ 0x10006011a
 constexpr std::uint32_t kGZIID_cISC4TutorialSystem = 0xaa3836f6;           // the +0x00 view (cSC4City's component)
-constexpr std::uint32_t kGZIID_cIGZMessageTarget2 = 0x452294aa;            // the +0x08 view
 constexpr std::uint32_t kGZIID_cGZMessageTargetLegacy = 0xe98b2f57;        // the +0x10 view
-constexpr std::uint32_t kGZIID_cIGZSerializable = 0xe4fda3d4;              // the +0x18 view
 constexpr std::uint32_t kTutorialMessageFinished = 0xaa3840e6;             // endTutorial(data1 == 0)
 constexpr std::uint32_t kTutorialMessageCityLoaded = 0x26c63343;           // endTutorial(true) when +0x3c
 constexpr std::uint32_t kTutorialMessageCityViewStarted = 0xea8ae29a;      // start the registry's task once

@@ -44,6 +44,7 @@
 //   +0x628 uint32 networkType (ctor argument)             +0x62c uint32 placementFlagMask
 //   +0x630 cISC4NetworkORFilter* (counted)
 #pragma once
+#include "sc4/CommonIIDs.h"
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -78,7 +79,6 @@ struct SC4RectU {
 // Interface ids (QueryInterface @ 0x100186cc2): 1 = cIGZUnknown, 0x0a74ca15 = cISC4NetworkTool,
 // 0x452294aa = cIGZMessageTarget2 (returns the +8 sub-object).
 constexpr std::uint32_t kGZIID_cISC4NetworkTool = 0x0a74ca15;
-constexpr std::uint32_t kGZIID_cIGZMessageTarget2 = 0x452294aa;
 
 // The message Init registers on the message server (@ 0x100187752: spMS2 slot +0x28, id 0xa6b79602) and
 // DoMessage consumes: payload 2 holds a pointer to the new altitude (+0x1d8).

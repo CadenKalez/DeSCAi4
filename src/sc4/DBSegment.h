@@ -20,6 +20,7 @@
 // (the original dereferenced null), and SaveClassObjects stops when a pass writes nothing (the
 // original could spin forever on an unreachable count).
 #pragma once
+#include "sc4/CommonIIDs.h"
 #include <cstdint>
 #include <map>
 #include <vector>
@@ -41,7 +42,6 @@ constexpr std::uint32_t kGZIID_cISC4DBSegmentIStreamAlt = 0x051b11bd;
 constexpr std::uint32_t kGZIID_cISC4DBSegmentOStream = 0x6999a8fb;      // also 0xc51b11cb
 constexpr std::uint32_t kGZIID_cISC4DBSegmentOStreamAlt = 0xc51b11cb;
 constexpr std::uint32_t kGZIID_cISC4COMSerializer = 0x699899ea;
-constexpr std::uint32_t kGZIID_cIGZSerializable = 0xe4fda3d4;
 constexpr std::uint32_t kClassObjectGroup = 0x299b2d1b;
 constexpr std::uint32_t kClassTableType = 0x499b23fe;
 constexpr std::uint32_t kVariantObjectTag = 0xa9bee9ac;                 // ReadVariant/WriteVariant

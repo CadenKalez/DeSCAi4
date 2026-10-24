@@ -98,24 +98,24 @@ void cSC4FlammabilitySimulator::ReadSimulatorTunableValues() {
 
 void cSC4FlammabilitySimulator::OnMessage(std::uint32_t type, ISimOccupant* occupant) {
     switch (type) {
-        case kMessageOrdinanceChanged:
-        case kMessageWeatherChanged: {
+        case kFlammabilityMsgOrdinanceChanged:
+        case kFlammabilityMsgWeatherChanged: {
             float multiplier = host_->GetOrdinanceFlameResistance();
             if (host_->GetCurrentWeather() == 2) multiplier *= ordinanceRainFactor_;
             factor_ = multiplier;
             break;
         }
-        case kMessageOccupantMoved:
+        case kFlammabilityMsgOccupantMoved:
             if (occupant) DoOccupantUpdate(occupant, false);
             break;
         case kMessageDailyTick:
             DoDailySimulation();
             break;
-        case kMessageOccupantAdded:
-        case kMessageOccupantChanged:
+        case kFlammabilityMsgOccupantAdded:
+        case kFlammabilityMsgOccupantChanged:
             if (occupant && !occupant->HasProperty(kPropertyNoFlammabilityFlag)) DoOccupantUpdate(occupant, true);
             break;
-        case kMessageOccupantRemoved:
+        case kFlammabilityMsgOccupantRemoved:
             if (occupant && !occupant->HasProperty(kPropertyNoFlammabilityFlag)) DoOccupantUpdate(occupant, false);
             break;
         default:

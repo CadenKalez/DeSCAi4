@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
+#include <set>
 #include <string>
 
 #include "gz/GZFramework.h"
@@ -74,35 +75,40 @@ struct CityHost final : sc4::ICityHost {
     void SendMessage(cIGZMessage2*) override {}
 };
 
-// The city record inside a save file is a serialized object: the segment asks this factory for the class by id.
+// Every serialized object of a city file is created from its class id, as the game's serializer does through GZCOM
+// (cSC4COMSerializer::OnGetGZSerializable -> GZCOM()->CreateInstance(classId, cIGZSerializable)). The probe goes
+// through the generated GZCOM creator table (gz/GZCOM.h); classes whose creator is not linked or not recovered come
+// back null and are listed, so the output names the next class LoadCity needs.
 struct Factory final : sc4::ISerializableFactory {
     cIGZSerializable* CreateSerializable(std::uint32_t classId) override {
-        if (classId == 0x8990c372) {                        // cSC4City
+        if (classId == 0x8990c372) {                        // cSC4City: the probe's own host
             auto* city = new sc4::cSC4City(&host);
             city->AddRef();
             return city;
         }
-        // The city's components are created through the GZCOM class table; this probe links only a few creators,
-        // so an unknown id answers null and the city object reports the missing component instead of failing whole.
-        return nullptr;
+        const gzcom::ClassFactoryInfo* info = gzcom::FindClassFactory(classId);
+        void* object = info && info->create ? info->create() : nullptr;
+        cIGZSerializable* serializable = nullptr;
+        if (object) {
+            auto* unknown = static_cast<cIGZUnknown*>(object);   // the creators hand out the primary (cIGZUnknown) pointer
+            unknown->AddRef();
+            if (!unknown->QueryInterface(sc4::kGZIID_cIGZSerializable, reinterpret_cast<void**>(&serializable))) serializable = nullptr;
+            unknown->Release();
+        }
+        if (!serializable && missing.insert(classId).second)
+            std::printf("  class %08x %s: %s\n", classId, info ? info->className : "(not in the GZCOM table)",
+                        !info ? "unknown id" : object ? "no cIGZSerializable" : "creator returns null");
+        return serializable;
     }
     CityHost host;
+    std::set<std::uint32_t> missing;
 };
 
 void Step(const char* name, bool ok) { std::printf("[%s] %s\n", ok ? "OK" : "FAIL", name); std::fflush(stdout); }
 
-// The application record of a city file: stream {0x49dd6f4c, 0x49dd6f4e, 1}, read with the recovered auto-load stream.
-bool ReadAppRecord(cIGZPersistDBSegment* segment, std::uint32_t version, std::function<bool(cIGZIStream&)> reader) {
-    sc4::cSC4AutoLoadStream record(segment, 0x49dd6f4c, 0x49dd6f4e, 1);
-    sc4::cISC4DBSegmentIStream* stream = record.GetStream();
-    if (!stream) { std::printf("  app record: stream did not open (version %u)\n", version); return false; }
-    const bool ok = reader(*stream);
-    std::printf("  app record: read %s (version %u)\n", ok ? "OK" : "FAILED", version);
-    return ok;
-}
-
-
 }  // namespace
+
+void InstallCityProbeBindings();   // city_probe_bindings.cpp
 
 int main(int argc, char** argv) {
     const std::string bundle = std::string(std::getenv("HOME")) +
@@ -161,8 +167,8 @@ int main(int argc, char** argv) {
         std::printf("  save version: %u (loadable range %u..%u)\n", v, sc4::kLoadSaveVersionOldest, sc4::kLoadSaveVersionDefault);
         return v;
     };
-    hooks.setSaveVersion = [](cIGZPersistDBSegment*, std::uint32_t) { return true; };
-    hooks.readAppRecord = ReadAppRecord;
+    // loadClassObjects / readAppRecord stay unset: LoadCity runs the game's own cSC4DBSegment::LoadClassObjects and
+    // reads the app record with cSC4AutoLoadStream.
     hooks.notify = [](const std::string& title, const std::string& text) { std::printf("  notify: %s - %s\n", title.c_str(), text.c_str()); };
     hooks.loadText = [](std::uint32_t, std::uint32_t) { return std::string(); };
     hooks.busy = [](bool) {};
@@ -176,10 +182,12 @@ int main(int argc, char** argv) {
     Step("PostFrameWorkInit", app->PostFrameWorkInit());
     std::printf("  resource segments: %u\n", static_cast<unsigned>(resources->GetSegmentCount()));
 
+    InstallCityProbeBindings();
     std::printf("  city file: %s\n", cityPath.c_str());
     std::fflush(stdout);
     const bool loaded = app->LoadCity(cRZString(cityPath.c_str()), nullptr);
     Step("LoadCity", loaded);
+    std::printf("  classes the file needs that could not be created: %zu\n", factory.missing.size());
     if (loaded) {
         cISC4City* city = app->GetCity();
         if (city) {

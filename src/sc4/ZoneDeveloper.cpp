@@ -31,7 +31,6 @@ std::set<const void*> g_cheatRegisteringObjects;   // developers that registered
 
 constexpr std::uint32_t kGZIID_cISC4ZoneDeveloper = 0xe818ed2b;
 constexpr std::uint32_t kGZIID_cISC4LotManager = 0x681905bd;
-constexpr std::uint32_t kGZIID_cIGZMessageTarget2 = 0x452294aa;
 constexpr std::uint32_t kZoneDeveloperIIDSerializable = 0xe4fda3d4;
 constexpr std::uint32_t kGZIID_cISC4NetworkOccupant = 0xa821ef94;
 

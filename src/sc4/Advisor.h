@@ -56,6 +56,7 @@
 // Everything the original reaches through globals goes through IAdvisorHost.
 
 #pragma once
+#include "sc4/CommonIIDs.h"
 #include <cstdint>
 #include <list>
 #include <map>
@@ -79,7 +80,6 @@ namespace sc4 {
 
 constexpr std::uint32_t kGZCLSID_cSC4Advisor = 0xeac937b4;        // GetGZCLSID @ 0x1004452b8
 constexpr std::uint32_t kGZIID_cISC4Advisor = 0xca09f544;         // the interface at +0x10
-constexpr std::uint32_t kGZIID_cIGZMessageTarget2 = 0x452294aa;   // the interface at +0x20
 
 // The advisor messages (the "type" of the cRZMessage2Standard the original's sNotify<> helpers build).
 constexpr std::uint32_t kAdviceMessageTriggered = 0xea917750;      // show/hide the advices (data1 = show text keys)

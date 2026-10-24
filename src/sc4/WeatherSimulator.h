@@ -45,6 +45,7 @@
 // other half so saves are deterministic); GetCurrentSeasonMonth shifts southern-hemisphere months with
 // (m + 5) % 12 + 1 (0x1000e491c).
 #pragma once
+#include "sc4/CommonIIDs.h"
 #include <cstdint>
 #include <vector>
 
@@ -65,8 +66,6 @@ namespace sc4 {
 constexpr std::uint32_t kGZCLSID_cSC4WeatherSimulator = 0x2990c1bc;
 constexpr std::uint32_t kGZIID_cISC4WeatherSimulator = 0xc6c66245;
 constexpr std::uint32_t kGZIID_cIGZMessageTargetLegacy = 0xe98b2f57;
-constexpr std::uint32_t kGZIID_cIGZMessageTarget2 = 0x452294aa;
-constexpr std::uint32_t kGZIID_cIGZSerializable = 0xe4fda3d4;
 
 // Messages the simulator sends / receives.
 constexpr std::uint32_t kWeatherMessageCityStarted = 0x26d31ec1;   // received: run DoCompleteSimulation

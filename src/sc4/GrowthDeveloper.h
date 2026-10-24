@@ -91,6 +91,7 @@
 // cSC4BuildingDevelopmentSimulator (which owns these objects) is not recovered, so nothing constructs the
 // class in the game yet.
 #pragma once
+#include "sc4/CommonIIDs.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -118,7 +119,6 @@ class cISC4GrowthDeveloper;
 constexpr std::uint32_t kGrowthDeveloperClassId = 0x0990c138;
 constexpr std::uint32_t kGZIID_cISC4GrowthDeveloper = 0xe7cdd662;
 constexpr std::uint32_t kGZIID_cISC4GrowthDeveloperSerializable = 0xe4fda3d4;
-constexpr std::uint32_t kGZIID_cIGZMessageTarget2 = 0x452294aa;
 
 // cISC4GrowthDeveloper::GrowthItem (0xc bytes): one tract of a growth/decline list. `style` is the
 // per-item style index the last map-update stage assigned (see the quirk above).

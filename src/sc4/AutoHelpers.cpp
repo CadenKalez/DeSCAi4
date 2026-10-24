@@ -1,7 +1,5 @@
 #include "sc4/AutoHelpers.h"
 
-#include "rz/cRZVariant.h"
-
 namespace sc4 {
 
 namespace {
@@ -53,13 +51,6 @@ bool cSC4AutoLoadStream::openStream(cISC4DBSegment* segment, std::uint32_t type,
         if (segment->OpenIStream(key, &stream_)) {
             stream_->GetUint16(version_);
             if (!stream_->GetError()) {
-                // The record's format version decides how the COM serializer reads an object's id: below
-                // kWideIdVersion (0x42) the id is 32-bit, at or above it 64-bit. The serializer asks the STREAM for
-                // that version through GetUserData, and an unset value reads as "new" (wide). The save side writes the
-                // version already; the load side has to publish it too, or every 32-bit-id record is parsed as 64-bit
-                // and the object never comes out - which is exactly why cSC4App::LoadCity failed on a real city file.
-                auto* versionValue = new cRZVariant(static_cast<std::uint32_t>(version_));
-                stream_->SetUserData(versionValue);   // the stream's auto-refcount owns it; releasing here frees it
                 if (segment_ != segment) {
                     segment->AddRef();
                     cISC4DBSegment* old = segment_;

@@ -177,10 +177,13 @@ struct AppCityHooks {
     std::function<bool(cIGZPersistDBSegment*, cRZAutoRefCount<cISC4RegionalCity>& out)> readRegionalCity;
     // SC4ReadAppLoadSaveVersion: the file's save version (0 when unreadable)
     std::function<std::uint32_t(cIGZPersistDBSegment*)> readLoadSaveVersion;
-    // new cSC4DBSegment (the city file's segment), already set to a save version with `setSaveVersion`
+    // new cSC4DBSegment (the city file's segment)
     std::function<cIGZPersistDBSegment*()> createCitySegment;
-    std::function<bool(cIGZPersistDBSegment*, std::uint32_t version)> setSaveVersion;
-    // the app record of a city file: open the stream {0x49dd6f4c, 0x49dd6f4e, 1} for reading / writing
+    // test stand-in for the segment's vslot 0x38, cSC4DBSegment::LoadClassObjects(version) (the class table and every
+    // serialized object of the file); unset, LoadCity calls the real one
+    std::function<bool(cIGZPersistDBSegment*, std::uint32_t version)> loadClassObjects;
+    // test stand-in for reading the app record of a city file (stream {0x49dd6f4c, 0x49dd6f4e, 1}, record version 1, the
+    // save version as the stream's user data); unset, LoadCity does it with cSC4AutoLoadStream
     std::function<bool(cIGZPersistDBSegment*, std::uint32_t version, std::function<bool(cIGZIStream&)> reader)> readAppRecord;
     // RZ::GS() vslot 0x88 (called twice before the city is closed on the way out)
     std::function<void()> flushGraphics;

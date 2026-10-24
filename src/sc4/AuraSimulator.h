@@ -84,6 +84,7 @@
 // directly (all recovered). This class is what IGrowthAuraApi (growth developer: transient aura 0x68, park map
 // 0x70, landmark map 0x78) and IQueryAuraSim (view query: GetAura 0x28) were waiting for.
 #pragma once
+#include "sc4/CommonIIDs.h"
 
 #include <cstdint>
 #include <list>
@@ -108,7 +109,6 @@ class cISC4AuraSimulator;
 constexpr std::uint32_t kAuraSimulatorClassId = 0x0990bdd8;
 constexpr std::uint32_t kGZIID_cISC4AuraSimulator = 0xc773e880;
 constexpr std::uint32_t kGZIID_cISC4AuraSimulatorSerializable = 0xe4fda3d4;
-constexpr std::uint32_t kGZIID_cIGZMessageTarget2 = 0x452294aa;
 
 // The simulator exemplar: {type 0x6534284a, group 0xe7e2c2db, instance 0xaa023079}, loaded with iid 0xa52160f5.
 constexpr std::uint32_t kAuraExemplarType = 0x6534284a, kAuraExemplarGroup = 0xe7e2c2db, kAuraExemplarInstance = 0xaa023079;

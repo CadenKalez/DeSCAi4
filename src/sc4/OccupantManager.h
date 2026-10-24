@@ -6,6 +6,7 @@
 // then skip the duplicate-suppression set). The grid owns one reference per occupant. The original
 // indexed the grid with unchecked byte coordinates; this port clamps/skips out-of-range cells.
 #pragma once
+#include "sc4/CommonIIDs.h"
 #include <cstdint>
 #include <list>
 #include <memory>
@@ -20,7 +21,6 @@ namespace sc4 {
 
 constexpr std::uint32_t kGZIID_cISC4OccupantManager = 0xc6bb8334;
 constexpr std::uint32_t kGZIID_cISC4OccupantFilter = 0x46a80026;
-constexpr std::uint32_t kGZIID_cIGZMessageTarget2 = 0x452294aa;
 constexpr std::uint32_t kGZCLSID_cSC4OccupantManager = 0x098f964d;
 constexpr std::uint32_t kGZCLSID_cSC4OccupantFilter = 0xa9c74dc9;
 constexpr std::uint32_t kGZCLSID_cSC4OccupantTypeFilter = 0xe9c75ed1;

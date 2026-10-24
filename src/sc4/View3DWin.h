@@ -95,6 +95,7 @@
 // 0x6b0 is not reachable: the 42 GUI members keep their meaning but take the port's smaller vector/string sizes).
 // Compile without FMA contraction: the results follow the original single-precision operation order.
 #pragma once
+#include "sc4/CommonIIDs.h"
 #include <cstddef>
 #include <cstdint>
 #include <list>
@@ -133,7 +134,6 @@ class cSC4View3DWin;
 // ---------------------------------------------------------------------------------------------------------------
 constexpr std::uint32_t kGZIID_cISC4View3DWin = 0xfa47b3f9;          // the view interface (negative as an int)
 constexpr std::uint32_t kGZIID_cIGZWinMessageFilter = 0xc6ae7085;    // DoMessage(cIGZWin*, cGZMessage&)
-constexpr std::uint32_t kGZIID_cIGZMessageTarget2 = 0x452294aa;      // DoMessage(cIGZMessage2*)
 constexpr std::uint32_t kView3DWindowId = 0x9a47b417;                // Init, cGZWin::SetID
 constexpr std::uint32_t kView3DViewManagerIid = 0x67c5bede;          // GetViewManager's QueryInterface
 constexpr std::uint32_t kView3DCursorId = 0xc16c4e1b;                // Init + the default cursor of RemoveCurrentViewInputControl

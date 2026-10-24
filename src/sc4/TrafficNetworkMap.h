@@ -57,6 +57,10 @@
 #include "sc4/MiscTypes.h"
 #include "sc4/Occupant.h"
 
+// the window/message struct of gz/WinInterfaces.h (an elaborated `class cGZMessage` inside namespace sc4 used to declare a
+// second, unrelated sc4::cGZMessage that broke every header that later named the real one)
+struct cGZMessage;
+
 namespace sc4 {
 
 constexpr std::uint32_t kGZCLSID_cSC4TrafficNetworkMap = 0x6a0f82b2;
@@ -374,7 +378,7 @@ public:
                              int flag, std::uint32_t networkFlags);   // 0x10029e684
 
     // ---- ticks and messages (0x100299322 .. 0x100299f86) ----
-    bool DoMessage(class cGZMessage& message);                                  // 0x100299312
+    bool DoMessage(::cGZMessage& message);                                  // 0x100299312
     bool DoMessage2(std::uint32_t messageId, std::uint32_t dataA, float dataB); // 0x100299322 (partial)
     void DoAnimationTick(std::uint32_t frame, float milliseconds);             // 0x100299982
     void GarbageCollectPathInfo();                                             // 0x100299dc0

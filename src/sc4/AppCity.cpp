@@ -340,24 +340,6 @@ bool cSC4App::LoadCity(const cRZString& path, cRZAutoRefCount<cISC4RegionalCity>
         if (segment->Open(true, false)) {
             const std::uint32_t version = cityHooks_.readLoadSaveVersion ? cityHooks_.readLoadSaveVersion(segment) : 0;
             if (version >= 0x3e && version <= 0x42) {
-                // The class table of the file. Without it the COM serializer's classes_ map is empty and
-                // OnGetGZSerializable answers false for EVERY class id - the app record parses (id, then the class id,
-                // which is cSC4City's 0x8990c372) and then nothing is created. LoadClassObjects reads the table and
-                // fills classes_, so the city and its components can be instantiated from the ids in the record.
-                if (auto* isc4 = [&]() -> sc4::cISC4DBSegment* {
-                        sc4::cISC4DBSegment* out = nullptr;
-                        segment->QueryInterface(sc4::kGZIID_cISC4DBSegment, reinterpret_cast<void**>(&out));
-                        return out;
-                    }()) {
-                    const bool classTable = isc4->LoadClassObjects(version);
-                    isc4->Release();
-                    if (!classTable) {
-                        segment->Close();
-                        segment->Shutdown();
-                        segment->Release();
-                        return false;
-                    }
-                }
                 cRZAutoRefCount<cRZString> pathCopy(new cRZString(path.ToChar()));
                 {
                     cRZAutoRefCount<cRZMessage2Standard> loading(new cRZMessage2Standard());
@@ -369,8 +351,30 @@ bool cSC4App::LoadCity(const cRZString& path, cRZAutoRefCount<cISC4RegionalCity>
                 citySegment_ = segment;
                 segment->AddRef();
                 if (SL::spRM) SL::spRM->RegisterDBSegmentBack(*segment);
-                if (cityHooks_.setSaveVersion && cityHooks_.setSaveVersion(segment, version) && cityHooks_.readAppRecord &&
-                    cityHooks_.readAppRecord(segment, version, [&](cIGZIStream& stream) { return Read(stream, segment); })) {
+                // 0x1000457c8: the segment's vslot 0x38 is cSC4DBSegment::LoadClassObjects(version) - the class table
+                // and every serialized object of the file, created through the serializer's factory. Only then is the
+                // application record read: the stream {0x49dd6f4c, 0x49dd6f4e, 1} must have record version 1, and the
+                // file's save version is handed to it as user data (stream vslot 0x98) so the serializer reads object ids
+                // 32-bit below save version 0x42. The hooks stand in for both steps in tests.
+                const auto loadClassObjects = [&]() -> bool {
+                    if (cityHooks_.loadClassObjects) return cityHooks_.loadClassObjects(segment, version);
+                    sc4::cISC4DBSegment* isc4 = nullptr;
+                    if (!segment->QueryInterface(sc4::kGZIID_cISC4DBSegment, reinterpret_cast<void**>(&isc4)) || !isc4) return false;
+                    const bool loaded = isc4->LoadClassObjects(version);
+                    isc4->Release();
+                    return loaded;
+                };
+                const auto readAppRecord = [&]() -> bool {
+                    auto reader = [&](cIGZIStream& stream) { return Read(stream, segment); };
+                    if (cityHooks_.readAppRecord) return cityHooks_.readAppRecord(segment, version, reader);
+                    sc4::cSC4AutoLoadStream record(segment, 0x49dd6f4c, 0x49dd6f4e, 1);
+                    cRZAutoRefCount<cRZVariant> versionValue(new cRZVariant(version));
+                    sc4::cISC4DBSegmentIStream* stream = record.GetStream();
+                    if (!record.IsOpen() || !stream || record.GetVersion() != 1) return false;
+                    stream->SetUserData(versionValue.get());
+                    return reader(*stream);
+                };
+                if (loadClassObjects() && readAppRecord()) {
                     city_->SetCitySerialNumber(regionalCity_->get()->GetCitySerialNumber());
                     city_->SetCitySaveFilePath(path);
                     city_->SetCityNameChanged(false);

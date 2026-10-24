@@ -33,7 +33,6 @@ constexpr float kNetworkWeight0[3] = {10.0f, 0.0f, -5.0f};
 constexpr float kNetworkWeight1[3] = {2.0f, -5.0f, -1.0f};
 constexpr float kNetworkWeight2[3] = {1.0f, -2.0f, -1.0f};
 
-constexpr std::uint32_t kGZIID_cIGZMessageTarget2 = 0x452294aa;
 constexpr std::uint32_t kTractMessageStyleTick = 0x66956817;   // DoMessage's only message
 constexpr std::int32_t kStyleTickMessageId1 = 6;               // simulator registration ids
 constexpr std::int32_t kStyleTickMessageId2 = 7;
