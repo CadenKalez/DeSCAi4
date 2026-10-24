@@ -54,7 +54,9 @@ struct Options final : sc4::IVideoOptionStore {
 
 namespace exphost {
 static cGZFramework* g_framework = nullptr;
+static cSC4App* g_app = nullptr;
 cGZFramework* BootFramework() { return g_framework; }
+cSC4App* BootApplication() { return g_app; }
 
 bool RunBoot(bool verbose, bool keepAlive) {
     int failures = 0;
@@ -71,6 +73,7 @@ bool RunBoot(bool verbose, bool keepAlive) {
     cGZFramework::sSetFrameWork(framework);
     framework->COM().RealInit();
     auto* app = new cSC4App("SimCity 4", framework->AppView());
+    g_app = app;
     app->AddRef();
     app->SetFramework(framework);
     auto* languages = new cRZLanguageManager();
