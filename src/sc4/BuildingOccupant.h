@@ -14,7 +14,10 @@
 namespace sc4 {
 
 constexpr std::uint32_t kGZCLSID_cSC4BuildingOccupant = 0xa9bd882d;
+#ifndef SC4_kOccupantTypeBuilding_DEFINED
+#define SC4_kOccupantTypeBuilding_DEFINED
 constexpr std::uint32_t kOccupantTypeBuilding = 0x278128a0;
+#endif
 constexpr std::uint32_t kMessageBuildingLitChanged = 0x09d8e0b6;
 constexpr std::uint32_t kMessageBuildingInserted = 0x8b8b2ced;     // forwarded 0x99ef1142
 constexpr std::uint32_t kMessageBuildingRemoved = 0x8b8b2cee;      // forwarded 0x99ef1143

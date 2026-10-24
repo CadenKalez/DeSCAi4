@@ -26,7 +26,10 @@ constexpr std::uint32_t kOccupantTypeFire = 0x69d25c5f;
 constexpr std::uint32_t kOccupantGroupFire = 0x5005;
 constexpr std::uint32_t kPropertyOnFire = 0x69dbebe1;            // set on the target while it burns
 constexpr std::uint32_t kPropertyMaxFireStage = 0x49beda31;
+#ifndef SC4_kOccupantTypeBuilding_DEFINED
+#define SC4_kOccupantTypeBuilding_DEFINED
 constexpr std::uint32_t kOccupantTypeBuilding = 0x278128a0;
+#endif
 
 // A running particle effect (slots 3..7 of the effect object).
 class IFlameEffect : public cIGZUnknown {

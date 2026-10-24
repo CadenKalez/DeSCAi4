@@ -103,10 +103,11 @@
 
 namespace SC4Audio {
 
-// The message types the manager registers and handles all belong to other recovered headers:
-// city init / shutdown and the listener-moved message to Listener.h, the three occupant messages to
-// sc4/Occupant.h, focus change and tuning reload to SoundManager.h. The four without an owner are
-// declared by the implementation (see kAmbienceMessage* in AudioAmbienceManager.cpp).
+// The message types the manager registers and handles belong to other recovered headers: city init /
+// shutdown and the listener-moved message to Listener.h, the three occupant messages and the two lot
+// messages to sc4/Occupant.h and sc4/Lot.h, focus change and tuning reload to SoundManager.h. The two
+// no other header owns (the automaton callback and the railway crossing) are declared by the
+// implementation in AudioAmbienceManager.cpp.
 
 // The manager's game-side interface (iid 0x6a12f51c; vtable at object+0x10).
 inline constexpr std::uint32_t kGZIID_cISC4AudioAmbienceManager = 0x6a12f51c;
@@ -203,6 +204,8 @@ public:
     // SL::sp24HourClock vslots 0x50 (hour) and 0x68 (minute); false when there is no clock (the
     // original dereferences the clock without a check in _AddAlarmOccupant).
     virtual bool ClockTime(int& hour, int& minute) = 0;
+    // SFX::SoundManager()->GenerateNewInstanceId() (cSC4AudioSoundManager's process-wide counter).
+    virtual std::uint32_t GenerateNewInstanceId() = 0;
     virtual void LogError(const char* /*message*/) {}
 };
 IAmbienceManagerHost* AmbienceManagerHost();
@@ -259,7 +262,7 @@ public:
 
     // --- inspection (tests) ---
     std::size_t LayerCount() const { return layers_.size(); }
-    const std::list<cISC4AudioAmbienceLayer*>& Layers() const { return layers_; }
+    const std::list<cSC4AudioAmbienceLayer*>& Layers() const { return layers_; }
     std::size_t AlarmCount() const { return alarms_.size(); }
     const std::list<tOccupantAlarm>& Alarms() const { return alarms_; }
     std::uint32_t Stage() const { return stage_; }
@@ -315,19 +318,19 @@ private:
     std::int32_t refCount_ = 0;                 // +0x20
     std::uint32_t serviceId_ = 0xaa12f911;      // +0x24
     bool running_ = false;                      // +0x28
-    bool unused29_ = true;                      // +0x29 (written by the constructor, never read)
+    [[maybe_unused]] bool unused29_ = true;     // +0x29 (written by the constructor, never read)
     // +0x30..+0x4f
     cIGZUnknown* scapeManager_ = nullptr;       // +0x30
     cIGZSndSys* soundSystem_ = nullptr;         // +0x38
     sc4::cISC4OccupantManager* occupantManager_ = nullptr;   // +0x40
     sc4::cISC4OccupantFilter* tickFilter_ = nullptr;         // +0x48
     // +0x50..+0x67
-    std::list<cISC4AudioAmbienceLayer*> layers_;    // +0x50
+    std::list<cSC4AudioAmbienceLayer*> layers_;     // +0x50 (the binary's list holds the concrete class)
     // +0x68..+0x87 (a 4-byte hole at +0x84)
     std::int32_t zoomLevel_ = 0;                // +0x68
     float listenerTarget_[3] = {0, 0, 0};       // +0x6c
     float listenerEye_[3] = {0, 0, 0};          // +0x78
-    std::uint32_t unused84_ = 0;                // +0x84
+    [[maybe_unused]] std::uint32_t unused84_ = 0;   // +0x84
     // +0x88..+0x9f
     std::list<tOccupantAlarm> alarms_;          // +0x88
     // +0xa0..+0xa7

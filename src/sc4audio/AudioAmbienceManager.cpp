@@ -7,7 +7,6 @@
 
 #include "sc4/Lot.h"
 #include "sc4/OccupantFilters2.h"
-#include "sc4/OccupantFilters3.h"
 #include "sc4/SCPropertyHelp.h"
 #include "sc4audio/Listener.h"
 #include "sc4audio/SoundManager.h"
@@ -224,7 +223,7 @@ bool cSC4AudioAmbienceManager::Shutdown() {
 // _RemoveAllLayers @ 0x1003e99ba: Shutdown then Release every layer, dropping its list node.
 void cSC4AudioAmbienceManager::RemoveAllLayers() {
     for (auto it = layers_.begin(); it != layers_.end();) {
-        cISC4AudioAmbienceLayer* layer = *it;
+        cSC4AudioAmbienceLayer* layer = *it;
         layer->Shutdown();
         layer->Release();
         it = layers_.erase(it);
@@ -241,7 +240,7 @@ void cSC4AudioAmbienceManager::HandleSetMasterVolume(cIGZSndEventStd* event) {
     cIGZMessage2Standard* message = event->AsMessage2Standard();
     if (!message) return;
     const std::uint32_t volume = static_cast<std::uint32_t>(message->GetData1());
-    for (cISC4AudioAmbienceLayer* layer : layers_) layer->SetScoreMasterVolume(volume);
+    for (cSC4AudioAmbienceLayer* layer : layers_) layer->SetScoreMasterVolume(volume);
 }
 
 // DoEvent @ 0x1003e9a3a: the events cSC4AudioAmbienceLayer posts for its freshness scores carry the
@@ -337,7 +336,7 @@ bool cSC4AudioAmbienceManager::HandleFocusChange(cIGZMessage2Standard* message) 
     const std::uint64_t focus = message->GetData1();
     const bool lost = (focus == 0);
     stage_ = lost ? 4u : 1u;
-    for (cISC4AudioAmbienceLayer* layer : layers_) layer->Pause(lost);
+    for (cSC4AudioAmbienceLayer* layer : layers_) layer->Pause(lost);
     return true;
 }
 
@@ -414,13 +413,18 @@ bool cSC4AudioAmbienceManager::HandleInitMessage() {
     cityRectValid_ = true;
     UpdateAttentionRect();
 
-    auto* filter = new sc4::cSC4AudioAmbienceManagerOccupantFilter();
-    filter->AddRef();
-    if (sc4::cISC4OccupantFilter* previous = tickFilter_) {
-        tickFilter_ = filter;
-        previous->Release();
-    } else {
-        tickFilter_ = filter;
+    // The original allocates this filter with new; see the deviation note in the header.
+    void* created = nullptr;
+    if (host && host->CreateInstance(kCLSID_cSC4AudioAmbienceManagerFilter, kIID_cSC4AmbienceOccupantFilterAlt,
+                                     &created) &&
+        created) {
+        auto* filter = static_cast<sc4::cISC4OccupantFilter*>(created);
+        if (sc4::cISC4OccupantFilter* previous = tickFilter_) {
+            tickFilter_ = filter;
+            previous->Release();
+        } else {
+            tickFilter_ = filter;
+        }
     }
 
     if (!iterator_.IsModular()) iterator_.SetModular(true);
@@ -692,6 +696,7 @@ bool cSC4AudioAmbienceManager::DoMessage(cIGZMessage2* message) {
 // rectangle (and begins every layer's update); stage 2 spends up to one millisecond handing cells and
 // occupants to the layers; stage 3 ends the layers' update. A focus-change message parks the stage at 4.
 bool cSC4AudioAmbienceManager::OnTick(std::uint32_t elapsedMs) {
+    (void)elapsedMs;    // the original ignores the framework's tick length and measures with its own timer
     if (!active_) return true;
     const std::uint32_t elapsed = tickTimer_.GetElapsedTimeU32();
     tickTimer_.Restart();
@@ -707,18 +712,18 @@ bool cSC4AudioAmbienceManager::OnTick(std::uint32_t elapsedMs) {
         iterator_.SetRect(minX, minZ, maxX, maxZ);
         iterator_.Reset(false);
         const SC4RectFloat rect{attentionRect_.x0, attentionRect_.z0, attentionRect_.x1, attentionRect_.z1};
-        for (cISC4AudioAmbienceLayer* layer : layers_) layer->BeginUpdate(rect);
+        for (cSC4AudioAmbienceLayer* layer : layers_) layer->BeginUpdate(rect);
         stage_ = 2;
     } else if (stage_ != 2) {
         if (stage_ != 3) return true;
-        for (cISC4AudioAmbienceLayer* layer : layers_) layer->EndUpdate();
+        for (cSC4AudioAmbienceLayer* layer : layers_) layer->EndUpdate();
         stage_ = 1;
         return true;
     }
 
     if (!DoStageUpdate(elapsed)) return true;
     stage_ = 3;
-    for (cISC4AudioAmbienceLayer* layer : layers_) layer->EndUpdate();
+    for (cSC4AudioAmbienceLayer* layer : layers_) layer->EndUpdate();
     stage_ = 1;
     return true;
 }
@@ -746,17 +751,17 @@ bool cSC4AudioAmbienceManager::DoStageUpdate(std::uint32_t elapsedMs) {
                 occupantManager_->IterateOccupantsByStandardCityCell(&IterateOccupantsOnTickCallback, this, from, to,
                                                                      tickFilter_);
             }
-            for (cISC4AudioAmbienceLayer* layer : layers_) layer->HandleCell(x0, z0);
-            for (cISC4AudioAmbienceLayer* layer : layers_) layer->HandleCell(x1, z0);
-            for (cISC4AudioAmbienceLayer* layer : layers_) layer->HandleCell(x0, z1);
-            for (cISC4AudioAmbienceLayer* layer : layers_) layer->HandleCell(x1, z1);
+            for (cSC4AudioAmbienceLayer* layer : layers_) layer->HandleCell(x0, z0);
+            for (cSC4AudioAmbienceLayer* layer : layers_) layer->HandleCell(x1, z0);
+            for (cSC4AudioAmbienceLayer* layer : layers_) layer->HandleCell(x0, z1);
+            for (cSC4AudioAmbienceLayer* layer : layers_) layer->HandleCell(x1, z1);
             if (workTimer_.GetElapsedTimeU32() >= 1000) break;
         }
     }
     // Quirk kept: the listeners' "eye" is the manager's listener target and the "target" its eye.
     const cS3DVector3 eye{listenerTarget_[0], listenerTarget_[1], listenerTarget_[2]};
     const cS3DVector3 target{listenerEye_[0], listenerEye_[1], listenerEye_[2]};
-    for (cISC4AudioAmbienceLayer* layer : layers_) layer->Update(elapsedMs, eye, target);
+    for (cSC4AudioAmbienceLayer* layer : layers_) layer->Update(elapsedMs, eye, target);
     return finished;
 }
 
@@ -796,7 +801,7 @@ void cSC4AudioAmbienceManager::UpdateAlarms() {
             if (!alarm.repeating) {
                 // fired when the clock passed `time` since the last update
                 if (time <= now && time > alarm.hour) {
-                    const std::uint32_t instance = cSC4AudioSoundManager::GenerateNewInstanceId();
+                    const std::uint32_t instance = host->GenerateNewInstanceId();
                     float position[3] = {0.0f, 0.0f, 0.0f};
                     if (alarm.occupant) alarm.occupant->GetPosition(position);
                     if (soundSystem_) {
@@ -841,7 +846,7 @@ void cSC4AudioAmbienceManager::UpdateAlarms() {
 bool cSC4AudioAmbienceManager::HandleOccupant(sc4::cISC4Occupant* occupant) {
     if (!scapeManager_) return false;
     if (occupant && occupant->IsFlagSet(kOccupantFlagVisible)) {
-        for (cISC4AudioAmbienceLayer* layer : layers_) layer->HandleOccupant(occupant);
+        for (cSC4AudioAmbienceLayer* layer : layers_) layer->HandleOccupant(occupant);
     }
     return true;
 }
