@@ -5,7 +5,11 @@
 // redisplay + altitude range, the water-proximity/land-type surface helpers, the shoreline helpers and the
 // effect-id property; finally the exemplar/texture pipeline (ReadTuningParameters/ReadTextureInfos/
 // ReadTextureInfo/ReadTerrainIniFile/ReadMiscTexturesForTerrainTypes/DetermineTextureFamilyMembersForGridCells),
-// DecideSurfaceCover and the two-triangle normal/cliff pass (CalculateNormalsAndAssignCliffTextures/MarkCliff).
+// DecideSurfaceCover and the two-triangle normal/cliff pass (CalculateNormalsAndAssignCliffTextures/MarkCliff);
+// and finally part 5 -- the shore-cliff cluster (DetectShoreVertices/GetShoreStartingAtVert/TrackShore*/
+// AnalyzeShoreAndCreateCliffs/CreateShoreCliff/CreateShoreCliffs), the marked-region helpers
+// (MarkRegion/SmoothenMarkedRegion) and the erosion/flood kernels (DoErosion/DoWindErosion/DoWaterErosion/
+// StartFlood/DoFloodFlowStep).
 // The engine services (message server, lighting manager, view, city, surface water, simulator, command
 // registry, flood fill, texture resources, terrain ini) are fakes here; the scripting payloads use the small
 // parameter-set / property-holder fakes below so the test keeps the registered link set.
@@ -1614,6 +1618,49 @@ int main() {
         statics.diagonalHeightDifferenceThreshold = 22.624f;
         statics.windErosionFactor = 0.0f;
         statics.numSmoothingIterationsAfterWaterErosion = 1;
+    }
+    {
+        // ---- StartFlood / DoFloodFlowStep: the 20..40 cell block is flooded with 500 m of water, the first
+        //      flow step hands half of it to the dry ring, the rectangle grows and after 500 steps the saved
+        //      depths are restored
+        cSTETerrain flood;
+        TerrainTuning floodTuning;
+        floodTuning.seaLevel = 20.0f;
+        flood.Init(48, 48, floodTuning);
+        for (cSTETerrain::Vertex& vertex : flood.Vertices()) vertex.altitude = 30.0f;
+        flood.WaterDepth().assign(flood.VertexCount(), 0.0f);
+        host.messages.posts.clear();
+        flood.StartFlood();
+        CHECK(flood.IsFloodActive());
+        const std::size_t floodCentre =
+            static_cast<std::size_t>(flood.GetVertIndex(30, 30));
+        // the first step drains the block from its rim inwards (the pass updates in place), so the centre
+        // only lost a little of its 500 m: 250 halved once per column of the block
+        CHECK(flood.WaterDepth()[floodCentre] < 500.0f && 490.0f < flood.WaterDepth()[floodCentre]);
+        // the 400 vertices of the block got 500 m each and the first step only moves water between vertices
+        double total = 0.0;
+        for (float depth : flood.WaterDepth()) total += depth;
+        CHECK(Near(static_cast<float>(total), 400.0f * 500.0f, 1.0f));
+        // the flow step posts the (already padded) rectangle and redisplays it
+        CHECK(!host.messages.posts.empty());
+        CHECK(host.messages.posts.back().type == 0x678e6e3a);
+        CHECK(host.messages.posts.back().data[0] == 19u * 0x10000u + 41u);   // 20..40 grown by one
+        CHECK(host.messages.posts.back().data[1] == 19u * 0x10000u + 41u);
+        // the ring just outside the block received water from it
+        CHECK(0.0f < flood.WaterDepth()[static_cast<std::size_t>(flood.GetVertIndex(30, 40))]);
+        // two more steps keep the flood running
+        flood.DoFloodFlowStep();
+        flood.DoFloodFlowStep();
+        CHECK(flood.IsFloodActive());
+        // 500 steps end the flood and restore the depths saved by StartFlood (all zero)
+        for (int step = 0; step < 500 && flood.IsFloodActive(); ++step) flood.DoFloodFlowStep();
+        CHECK(!flood.IsFloodActive());
+        for (float depth : flood.WaterDepth()) CHECK(depth == 0.0f);
+        // a tick with the flood running takes a step (and the flood-active flag gates it)
+        flood.StartFlood();
+        CHECK(flood.IsFloodActive());
+        flood.DoAnimationTick(16);
+        CHECK(flood.IsFloodActive());
     }
     {
         // ---- GetEffectIDProperty: the two-dword property, anything else fails

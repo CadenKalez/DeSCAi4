@@ -1,42 +1,41 @@
 SOURCE src/sc4/cSTETerrain.cpp|h
-EVIDENCE test scripts/tests/sc4_steterrain_test.cpp - the exemplar/texture pipeline: ReadTuningParameters reads ~50 properties from a fake property holder (the sea-level/default-height clamps, the degree-to-radian conversions, the candidate-sum times six, the ash interval divide), ReadTextureInfos/ReadTextureInfo parse the cover weight and five interleaved response curves from fake resources, ReadTerrainIniFile feeds the TropicalTextureMapTable temperature rows plus the WindErosion/Hydrology tunables through a fake ini (including the 0x-prefixed tokens and the two clamps), DetermineTextureFamilyMembersForGridCells sizes the family grids from the exemplar's randomization table, DecideSurfaceCover picks the temperature/moisture map id, the beach id, the low-cliff id and the deep/shallow sea-bed id and spreads each texture's curve over its padded neighbourhood, and CalculateNormalsAndAssignCliffTextures/MarkCliff give a unit-y normal on flat ground plus the cliff mark and the internal-triangulation flip on a spike; the existing lifecycle/display/edge-subfile/stream tests still pass
-# Part 4 of cSTETerrain: the data readers and the surface/normal pass. The new seams are
-# ITerrainIniFile (cRZIniFile's ReadEntry/EnumEntries) and, on ITerrainHost, GetPropertyHolder
-# (spRM GetResource + the cISCPropertyHolder), ListTerrainTextureResources (GetAvailableResourceList with
-# cSCResFilterFixedGroupAndTypeId), OpenTerrainIni (SC4GetResourceAsFile {0x8a5971c5,0,0xaa597172}),
-# ChangeTerrainType / SetUpTexturesForCurrentTerrainTypeAndZoom / TerrainTextureSubTextureCount (the view
-# statics), and MoistureIndexAtX (the land simulator's +0x140 vslot 0x98). The statics block now holds the
-# __data globals with the binary's initialised values (macho_read of 0x100b175c0..0x100b17698).
-0x10073d8a4 ReadTextureInfos
-0x10073d22a ReadTextureInfo
-0x10073d95e ReadTuningParameters
-0x10073bb96 ReadTerrainIniFile
-0x10073b602 ReadMiscTexturesForTerrainTypes
-0x100731418 AddTemperatureAndMoistureToSurfaceCoverEntry
-0x10073159e AddToTerrainTypeTextureList
-0x100737430 DetermineTextureFamilyMembersForGridCells
-0x100733e48 DecideSurfaceCover
-0x100734dc8 CalculateNormalsAndAssignCliffTextures
-0x100735398 MarkCliff
-# already partial rows this session completes:
-0x10073defa RedisplayTerrain_bool_bool_SC4Rect_int_const_uint
-0x10073e4e6 SetTerrainType
-0x10073847e DoPostCityInit
+EVIDENCE test scripts/tests/sc4_steterrain_test.cpp - part 5 adds the shore-cliff cluster, the marked-region helpers and the erosion/flood kernels: DetectShoreVertices re-marks the whole 13-vertex shoreline row of a 12 x 12 grid and leaves the inland and the sea rows clear, GetShoreStartingAtVert clears the deque, marks the start vertex and TrackShoreWithLandToTheLeft walks the whole row east (reverse order, every visited vertex marked), AnalyzeShoreAndCreateCliffs keeps the runs whose five inland candidates are high enough and CreateShoreCliff raises those shore columns to a random 30..40 m above the sea with mark-3 on both ends and the five candidate heights jittered, a run of exactly kMinShoreCliffSize is dropped while one shorter becomes a cliff, CreateShoreCliffs runs end to end (raised 13, scratch marks 1/2/3 cleared, the shore bit kept), MarkRegion haloes the mark-3 vertices by two cells (land only, the sea vertex excluded) and SmoothenMarkedRegion moves a 10 m cross pair by (10 - 5) * 0.5 each with nothing else moving, uses the diagonal threshold for a diagonal pair and does nothing with kWindErosionFactor 0, DoWindErosion drops a 20 m spike by 4 m onto its west neighbour only, DoWaterErosion without a flow step only fills and resets the water (depth = sea - altitude, normals and sediment zero) while one flow step erodes (0,0) to 39.96 m, (1,0)/(1,1) to 34.965 m and (2,1) to 29.935 m and a locked vertex keeps its height, DoErosion ignores style 2, uses the per-click wind count for style 1 and the *smoothing* count for style 0 (sic) and the image-import counts (cSC4WinRegionScreen's statics) for the import path, and StartFlood/DoFloodFlowStep flood the 20..40 block with 500 m, conserve the total across the first step, post the padded rectangle 19..41, keep running for three steps and restore the saved (zero) depths after 500; the existing lifecycle/display/edge-subfile/stream and exemplar/normal-pass tests still pass
+# Part 5 of cSTETerrain. It also corrects three already-ledgered functions against the binary: IsShoreVertex
+# (0x10073751a) does test the south neighbour (directions 0, 2, 4 and 6, not 0, 2, 4), GetNeighboringSeaVertex
+# (0x100731a1c) walks west/north/east/south (the even kXIncrement entries), not west/north-west/north/north-east,
+# and GetNeighborWithLowestWaterLevel (0x100737b50) does include directions 6 and 7. The one new seam method is
+# ITerrainHost::RandomDoubleRangeGaussian (cRZRandom::RandomDoubleRangeGaussian at 0x10003d69e). The two
+# kMinShoreCliffSize / kMaxShoreCliffSize statics are now unsigned ints (the exemplar reads them with
+# GetPropertyValue(unsigned int&) at 0x10073dbdd / dbf1) and DoErosion's "from image" counts live in
+# TerrainStatics because the original reads cSC4WinRegionScreen's statics (0x100b2475c / 60 / 58).
+0x1007317fe AnalyzeShoreAndCreateCliffs
+0x100731ab0 CreateShoreCliff
+0x1007335e6 DoWaterErosion
+0x100736216 DoErosion
+0x100736728 MarkRegion
+0x10073697a SmoothenMarkedRegion
+0x100736baa DoWindErosion
+0x100736d3e CreateShoreCliffs
+0x100736ef0 DetectShoreVertices
+0x100736f5e GetShoreStartingAtVert
+0x100737712 DoFloodFlowStep
+0x100739610 TrackShoreWithLandToTheRight
+0x100739798 TrackShoreWithLandToTheLeft
+0x10073e932 StartFlood
 PARTIAL:
 0x100733bc8 AssignSurfaceTexturesAndColors: the whole pass is in place except SprayVolcanicAsh 0x100734724 (volcanic ash, TERRAIN-9)
 0x10073a346 StaticInit: calls ReadTextureInfos/ReadTerrainIniFile/ReadTuningParameters; ReadBrushDescriptions 0x10073b49c (the brush exemplars, TERRAIN-5) is still missing
 0x100739cb0 Init: the Create branch 0x100735cfc (the city height image import and its erosion) is still missing
+0x10073759e DoAnimationTick: the flood step is wired now, but TickVolcanicAshRegions 0x1007379be (TERRAIN-9) is still missing
 SKIPPED:
 0x100737020 cSTETerrain::cSTETerrain(): covered by the member initialisers
 0x1007372a8 cSTETerrain::~cSTETerrain(): covered by the owner calling Shutdown
 0x1007373f2 cSTETerrain::~cSTETerrain(): the Itanium deleting destructor
 0x1007373fc cSTETerrain::~cSTETerrain(): the Itanium complete-object destructor
-# Still pending (not attempted this session), each blocked on a missing neighbour or the brush layout:
-#   the brush path (ApplyBrush/ApplyBrushComponents/the two ApplyBrushAtLocation/the ten BrushFn*/
-#   GetTextureValue/Begin/EndBrushScrub/ApplyWaterErosionBrush/ReadBrushDescriptions+the four readers);
-#   the erosion/flood kernels (DoWaterErosion/DoWindErosion/DoFloodFlowStep); the cliff/shore creation
-#   (CreateShoreCliffs/DetectShoreVertices/TrackShore*/AnalyzeShoreAndCreateCliffs/CreateShoreCliff) and the
-#   wave producers; the volcanic ash (AddVolcanicAshRegion/SprayVolcanicAsh/TickVolcanicAshRegions); the
-#   terrain shaping (Create/CreateFromGrayScaleImage x2/MarkRegion/SmoothenMarkedRegion/CreateFlatAreas/
-#   LevelAreaStartingAt/InitFloraBrushInfo); the neighbour-city edge reconcile and its helpers. They also
-#   need todo rows (notes/todo.csv is the lead's to edit).
+# Still pending (not attempted this session): the brush path (ApplyBrush/ApplyBrushComponents/the two
+# ApplyBrushAtLocation/the ten BrushFn*/GetTextureValue/Begin+EndBrushScrub/ApplyWaterErosionBrush/
+# DoPostBrushApplicationOperation/InitFloraBrushInfo and the five ReadBrush* readers), which still needs the
+# cISTETerrain::tBrushParameters / tBrushContext layouts; Create/CreateFromGrayScaleImage x2/CreateFlatAreas/
+# LevelAreaStartingAt; the volcanic ash (AddVolcanicAshRegion/SprayVolcanicAsh/TickVolcanicAshRegions); the wave
+# producers (IsGoodWaveProducerLocation/TryToCreateWaveProducerForShore/UpdateWaveProducers); the neighbour-city
+# edge reconcile and its helpers. They also need todo rows (notes/todo.csv is the lead's to edit).

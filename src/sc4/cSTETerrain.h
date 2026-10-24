@@ -12,10 +12,14 @@
 // ReadTerrainIniFile/ReadTuningParameters plus the ini callbacks), DetermineTextureFamilyMembersForGridCells,
 // DecideSurfaceCover, the completed AssignSurfaceTexturesAndColors, and the two-triangle normal pass
 // CalculateNormalsAndAssignCliffTextures with MarkCliff.
+// Part 5 adds the shore-cliff cluster (DetectShoreVertices, GetShoreStartingAtVert, the two TrackShore*
+// walkers, AnalyzeShoreAndCreateCliffs, CreateShoreCliff, CreateShoreCliffs) with the two marked-region
+// helpers it needs (MarkRegion, SmoothenMarkedRegion), and the erosion/flood kernels (DoWaterErosion,
+// DoWindErosion, the completed DoErosion, DoFloodFlowStep and StartFlood).
 // Still pending in notes/ledger.csv: the brush application functions (they need the
-// cISTETerrain::tBrushParameters / tBrushContext layouts and ReadBrushDescriptions), the erosion and flood
-// kernels (DoWaterErosion/DoWindErosion/DoFloodFlowStep), the volcanic ash and wave producers, Create and the
-// shoreline shaping functions, and the neighbour-city edge reconcile.
+// cISTETerrain::tBrushParameters / tBrushContext layouts and ReadBrushDescriptions), the volcanic ash and
+// wave producers, Create (the height-image import) and the terrain shaping (CreateFlatAreas/
+// LevelAreaStartingAt), and the neighbour-city edge reconcile.
 //
 // Vertex (36 bytes): +0 altitude, +4/+8/+0xc normal, +0x10..0x21 texture/colour data, +0x22 u16
 // property flags:
@@ -35,6 +39,7 @@
 #pragma once
 #include <array>
 #include <cstdint>
+#include <deque>
 #include <functional>
 #include <map>
 #include <string>
@@ -76,9 +81,14 @@ struct TerrainTuning {              // statics read from the terrain ini / exemp
 constexpr float kTerrainCellWidth = 16.0f;
 constexpr std::uint16_t kVertexHiddenEven = 0x0020, kVertexHiddenOdd = 0x0040, kVertexHiddenWhole = 0x0060;
 constexpr std::uint16_t kVertexFlipInternal = 0x1000, kVertexFlipExternal = 0x2000, kVertexLocked = 0x4000;
-constexpr std::uint16_t kVertexMark1 = 0x0001, kVertexMark3 = 0x0004;      // scratch marks of MarkRegion
+constexpr std::uint16_t kVertexMark1 = 0x0001, kVertexMark2 = 0x0002, kVertexMark3 = 0x0004;   // scratch marks
+constexpr std::uint16_t kVertexShore = 0x0010;                            // DetectShoreVertices: land next to the sea
 constexpr std::uint16_t kVertexCliffFlip = 0x0800;                        // cliff flip-triangulation mark
 constexpr std::uint16_t kVertexCliffMark = 0x0008;                        // MarkCliff: vertex touches a cliff
+// kXIncrement / kZIncrement, the eight neighbour directions (0x100a29c10 / 0x100a29c40): 0 = west and
+// clockwise, so the even entries are the four axis neighbours.
+constexpr std::int32_t kDirectionX[8] = {-1, -1, 0, 1, 1, 1, 0, -1};
+constexpr std::int32_t kDirectionZ[8] = {0, -1, -1, -1, 0, 1, 1, 1};
 constexpr std::uint32_t kGZCLSID_cSTETerrain = 0xe98f9525;
 
 // The class's mutable globals. The original keeps them as individual symbols:
@@ -135,8 +145,10 @@ struct TerrainStatics {
     std::int32_t numSmoothingPassesAfterAutoFlattening = 0;     // 0x100b17660
     std::int32_t autoFlatAreaEdgeSmootheningRadius = 0;         // 0x100b17664
     bool shoreCliffsUponCreation = false;                       // 0x100b17668
-    float minShoreCliffSize = 0.0f;                             // 0x100b1766c
-    float maxShoreCliffSize = 0.0f;                             // 0x100b17670
+    // The two sizes are read as unsigned ints (GetPropertyValue(..., unsigned int&) at 0x10073dbdd/dbf1):
+    // the exemplar property is an integer, not a float.
+    std::uint32_t minShoreCliffSize = 0;                        // 0x100b1766c
+    std::uint32_t maxShoreCliffSize = 0;                        // 0x100b17670
     float minShoreCliffCandidateHeightSum = 0.0f;               // 0x100b17674 (x6 after the exemplar read)
     float minShoreCliffHeight = 0.0f;                           // 0x100b17678
     float maxShoreCliffHeight = 0.0f;                           // 0x100b1767c
@@ -148,6 +160,12 @@ struct TerrainStatics {
 
     // ---- __common: the terrain-tuning exemplar's statics (zero until the exemplar is read) -------------------
     float seaLevel = 250.0f;                                    // 0x100b71d48 (the port's demo default)
+    // The "from image" tuning DoErosion reads when Create imports a height image: the original loads
+    // cSC4WinRegionScreen's copies through the pointers at 0x100a656e8 / f0 / f8, which resolve to
+    // 0x100b2475c / 0x100b24760 / 0x100b24758.
+    std::int32_t imageImportWaterErosionIterations = 0;         // cSC4WinRegionScreen::kNumWaterErosionIterationsPerPlayerClick
+    std::int32_t imageImportFlowSteps = 0;                      // cSC4WinRegionScreen::kNumFlowStepsForGlobalWaterErosion
+    std::int32_t imageImportSmoothingIterations = 0;            // cSC4WinRegionScreen::kNumSmoothingIterationsAfterWaterErosion
     std::vector<float> maxNormalTerrainHeight;                  // 0x100b71d30 (indexed by terrain type)
     std::vector<float> minRegularHeightFactor, maxRegularHeightFactor;      // 0x100b71d50 / d68
     std::vector<float> minMountainHeightFactor, maxMountainHeightFactor;    // 0x100b71d80 / d98
@@ -238,6 +256,9 @@ public:
     virtual bool ReadGZSerializable(cIGZIStream& stream, std::uint32_t iid, void** out) = 0;
     // cRZRandom::RandomDoubleRangeUniform (the class's seeded sRand, call at 0x10003d3e4).
     virtual double RandomDoubleRangeUniform(double lo, double hi) = 0;
+    // cRZRandom::RandomDoubleRangeGaussian (call at 0x10003d69e; CreateShoreCliff jitters the cliff height
+    // by gaussian(0, 2) and the vertex heights by uniform(-8, 8)).
+    virtual double RandomDoubleRangeGaussian(double mean, double sigma) = 0;
     // SL::spLightingManager vslot 0xe0 (DoLighting 0x100737cba): light one row of terrain vertices.
     virtual void ApplyTerrainLightingRow(std::int32_t z, std::int32_t x, std::int32_t endX, float* normals,
                                          std::int32_t normalStride, void* colours, std::int32_t colourStride) = 0;
@@ -349,6 +370,16 @@ public:
         std::uint16_t flags = 0;
     };
     static_assert(sizeof(Vertex) == 0x24);
+
+    // cSTETerrain::tCliffVertInfo (0x1c bytes): one candidate cliff run crossing the shore. The original
+    // fills five "inland" candidates (shore + k * step, k = 1..5, step = shore - sea) and pushes the
+    // vertices inside CreateShoreCliff.
+    struct tCliffVertInfo {
+        std::int32_t seaVertex = 0;
+        std::int32_t shoreVertex = 0;
+        std::int32_t candidate[5] = {0, 0, 0, 0, 0};
+    };
+    static_assert(sizeof(tCliffVertInfo) == 0x1c);
 
     // The original's constructor only stores the three vtables and zeroes the fields (the member initialisers
     // here) and its destructor (0x1007372a8) calls Shutdown and frees the three blocks. The port keeps both
@@ -484,9 +515,15 @@ public:
 
     // ---- erosion / flood --------------------------------------------------------------------
     void DoErosion(std::uint32_t style, bool fromImage);             // 0x100736216 (style 0 = water, 1 = wind)
+    // 0x1007335e6: the hydraulic kernel (water fill, rain, flow, erosion/deposit, sea-level reset).
+    void DoWaterErosion(const TerrainRect& r, std::int32_t flowSteps);
+    void DoWindErosion(std::int32_t iterations);                    // 0x100736baa (talus relaxation)
     void EnsureMinAllowedHeight();                                   // 0x1007361a0
     void ChangeTerrainLevel(bool raise, float amount);               // 0x100735746
     void StartFlood();                                               // 0x10073e932
+    // 0x100737712: one flood step (flow to the lowest neighbour, grow the rect, evaporate after step 350,
+    // restore the saved depths after 500 steps).
+    void DoFloodFlowStep();
     bool IsFloodActive() const { return floodActive_; }              // +0xf4
     // 0x100731a1c: the first sea vertex among the west / north-west / north / north-east neighbours.
     std::int32_t GetNeighboringSeaVertex(std::int32_t index) const;
@@ -494,6 +531,26 @@ public:
     // ---- water proximity / land type ratios (the surface pass helpers) ----------------------
     void ComputeWaterProximityValues(const TerrainRect& r);          // 0x100733c62 (grid + flood fill)
     void AdjustLandTypeRatios(const TerrainRect& r);                 // 0x10073173a (weights -> at most 250)
+
+    // ---- shore cliffs (CreateShoreCliffs and its helpers) -----------------------------------
+    // 0x100736d3e: mark the shoreline, trace every shore run and raise a random-height cliff on the long
+    // ones, then mark an 8-cell halo and smoothen it 20 times. `redisplay` also redisplays the whole grid.
+    bool CreateShoreCliffs(bool redisplay);
+    void DetectShoreVertices();                                       // 0x100736ef0 (clears + sets 0x10)
+    // 0x100736f5e: clears `shore`, pushes the vertex, sets `mark` on it and traces both ways.
+    void GetShoreStartingAtVert(std::int32_t vertex, std::deque<std::int32_t>& shore, std::uint16_t mark);
+    void TrackShoreWithLandToTheRight(std::int32_t vertex, std::deque<std::int32_t>& shore, std::uint16_t mark);  // 0x100739610
+    void TrackShoreWithLandToTheLeft(std::int32_t vertex, std::deque<std::int32_t>& shore, std::uint16_t mark);   // 0x100739798
+    bool AnalyzeShoreAndCreateCliffs(std::deque<std::int32_t>& shore);      // 0x1007317fe
+    void CreateShoreCliff(std::vector<tCliffVertInfo>& cliffs);             // 0x100731ab0
+
+    // ---- marked regions ---------------------------------------------------------------------
+    // 0x100736728: for every vertex accepted by vertexFn, mark every vertex within `radius` that markFn
+    // accepts (the x range is clamped to cellsX and the z range to cellsZ, as in the original).
+    void MarkRegion(std::int32_t radius, bool (cSTETerrain::*vertexFn)(std::int32_t) const,
+                    bool (cSTETerrain::*markFn)(std::int32_t) const, std::uint16_t mark);
+    // 0x10073697a: talus-angle relaxation of the vertices marked with `mark`, `iterations` passes.
+    void SmoothenMarkedRegion(const TerrainRect& r, std::int32_t iterations, std::uint16_t mark);
 
     // ---- brushed-region helpers -------------------------------------------------------------
     void ComputeBoundsOfMarkedRegion(TerrainRect& r, std::uint16_t mask) const;   // 0x1007359a2
@@ -635,6 +692,8 @@ public:
 private:
     std::uint32_t ClampCell(float coordinate, std::uint32_t limit) const;
     static std::uint32_t FloorCell(float coordinate);
+    // cSTESurfaceWater::ResetWaterToSeaLevel @ 0x10072e648: depth = sea - altitude, normals and sediment zero.
+    void ResetWaterToSeaLevel(const TerrainRect& r);
     void CellChanged(std::uint32_t cx, std::uint32_t cz) { if (onCellChanged_) onCellChanged_(cz, cx); }
     std::uint16_t& Flags(std::int32_t index) { return vertices_[static_cast<std::size_t>(index)].flags; }
     std::uint16_t Flags(std::int32_t index) const { return vertices_[static_cast<std::size_t>(index)].flags; }

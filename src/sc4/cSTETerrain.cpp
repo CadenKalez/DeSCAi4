@@ -386,13 +386,14 @@ bool cSTETerrain::IsLandVertex(std::uint32_t x, std::uint32_t z) const {
 }
 
 bool cSTETerrain::IsShoreVertex(std::int32_t index) const {
-    // 0x10073751a: a land vertex (strictly above the sea) with a sea neighbour. Only directions 0, 2 and 4
-    // are tested (the original's loop stops at 6), so a sea neighbour to the south (direction 6) is missed.
+    // 0x10073751a: a land vertex (strictly above the sea) with a sea neighbour. The original walks the four
+    // even entries of the neighbour mask -- west, north, east and south (the loop counter is compared before
+    // it is advanced, so 6 is still tested).
     const float sea = tuning_.seaLevel;
     if (!(sea < vertices_[static_cast<std::size_t>(index)].altitude)) return false;
     const std::uint32_t z = static_cast<std::uint32_t>(index) / vertsX_, x = static_cast<std::uint32_t>(index) % vertsX_;
     const std::uint8_t mask = GetNeighbors(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z));
-    for (int dir = 0; dir < 6; dir += 2) {
+    for (int dir = 0; dir < 8; dir += 2) {
         if (!((mask >> dir) & 1)) continue;
         if (vertices_[static_cast<std::size_t>(neighborOffsets_[dir] + index)].altitude < sea) return true;
     }
@@ -400,16 +401,13 @@ bool cSTETerrain::IsShoreVertex(std::int32_t index) const {
 }
 
 std::int32_t cSTETerrain::GetNeighboringSeaVertex(std::int32_t index) const {
-    // 0x100731a1c. The original walks the west / north-west / north / north-east neighbours (the four
-    // entries of kXIncrement / kZIncrement at 0x100a29c10 / 0x100a29c40) and returns the first one below
-    // the sea level.
-    static const std::int32_t kXIncrement[4] = {-1, -1, 0, 1};
-    static const std::int32_t kZIncrement[4] = {0, -1, -1, -1};
+    // 0x100731a1c. The original walks the four even entries of kXIncrement / kZIncrement (0x100a29c10 /
+    // 0x100a29c40) -- west, north, east and south -- and returns the first one below the sea level.
     const std::uint32_t vertsX = vertsX_, vertsZ = vertsZ_;
-    for (int dir = 0; dir < 4; ++dir) {
+    for (int dir = 0; dir < 8; dir += 2) {
         // (sic) the row coordinate is divided by the *vertex count in Z*, not X: the original reads +0x54.
-        const std::uint32_t x = static_cast<std::uint32_t>(index) % vertsX + static_cast<std::uint32_t>(kXIncrement[dir]);
-        const std::uint32_t z = static_cast<std::uint32_t>(index) / vertsZ + static_cast<std::uint32_t>(kZIncrement[dir]);
+        const std::uint32_t x = static_cast<std::uint32_t>(index) % vertsX + static_cast<std::uint32_t>(kDirectionX[dir]);
+        const std::uint32_t z = static_cast<std::uint32_t>(index) / vertsZ + static_cast<std::uint32_t>(kDirectionZ[dir]);
         if (vertsX <= x || vertsZ <= z) continue;
         const std::uint32_t neighbour = z * vertsX + x;
         if (tuning_.seaLevel <= vertices_[neighbour].altitude) continue;   // not a sea vertex
@@ -1147,8 +1145,8 @@ void cSTETerrain::ReadTuningParameters() {
     ReadPropertyInt32(h, 0x48cd7b54, statics.autoFlatAreaEdgeSmootheningRadius);
     ReadPropertyFloat(h, 0x69ac5640, statics.minWaterDepthForDeepSeaBedTexture);
     ReadPropertyFloat(h, 0x69ac5641, statics.maxWaterDepthForDeepSeaBedTexture);
-    ReadPropertyFloat(h, 0x48cd7b60, statics.minShoreCliffSize);
-    ReadPropertyFloat(h, 0x48cd7b64, statics.maxShoreCliffSize);
+    ReadPropertyUint32(h, 0x48cd7b60, statics.minShoreCliffSize);
+    ReadPropertyUint32(h, 0x48cd7b64, statics.maxShoreCliffSize);
     ReadPropertyFloat(h, 0x48cd7b65, statics.maxNormalYForCliff);
     ReadPropertyFloat(h, 0x48cd7b61, statics.minShoreCliffCandidateHeightSum);
     statics.minShoreCliffCandidateHeightSum *= 6.0f;
@@ -1464,8 +1462,8 @@ void cSTETerrain::DoAnimationTick(std::uint32_t elapsedMs) {
             // else: re-post 0x2a612643 to the terrain itself (the message-target adapter, TERRAIN-1).
         }
     }
-    // if (floodActive_) DoFloodFlowStep() (TERRAIN-6) and TickVolcanicAshRegions(elapsedMs) (TERRAIN-9) are
-    // pending: the flood flow and the ash regions are not recovered.
+    if (floodActive_) DoFloodFlowStep();                          // +0xf4
+    // TickVolcanicAshRegions(elapsedMs) (TERRAIN-9) is still pending: the ash regions are not recovered.
     const std::uint32_t next = elapsedMs + waterProximityTick_;   // +0xc8
     waterProximityTick_ = next;
     const bool emptyRect = emptyRect_.left == 0 && emptyRect_.top == 0 && emptyRect_.right == -1 &&
@@ -1620,30 +1618,219 @@ void cSTETerrain::ChangeTerrainLevel(bool raise, float amount) {
     RedisplayTerrain(true, true, gridRect_, 1);                // +0x58, flags 1
 }
 
+void cSTETerrain::ResetWaterToSeaLevel(const TerrainRect& r) {
+    // cSTESurfaceWater::ResetWaterToSeaLevel @ 0x10072e648: the port owns the two channels the surface
+    // water keeps (depth at vertex +0x0, sediment at +0x1c) and the vertex normals the call also zeroes.
+    for (std::int32_t z = r.top; z <= r.bottom; ++z)
+        for (std::int32_t x = r.left; x <= r.right; ++x) {
+            const std::size_t i = static_cast<std::size_t>(z) * vertsX_ + static_cast<std::size_t>(x);
+            waterDepth_[i] = tuning_.seaLevel - vertices_[i].altitude;
+            vertices_[i].normal[0] = vertices_[i].normal[1] = vertices_[i].normal[2] = 0.0f;
+            sediment_[i] = 0.0f;
+        }
+}
+
 void cSTETerrain::DoErosion(std::uint32_t style, bool fromImage) {
-    // 0x100736216. Style 1 is wind only; style 0 runs the water erosion passes (with the "from image"
-    // variants of the iteration counts) and then the wind passes. Both simulation kernels are pending
-    // (TERRAIN-6), so only the wind/water pass counts are modelled here.
+    // 0x100736216. Style 1 is wind only; style 0 runs the water erosion passes and then hands
+    // *kNumSmoothingIterationsAfterWaterErosion* to DoWindErosion (sic -- not the wind click count, which
+    // style 1 uses). The "from image" variants are cSC4WinRegionScreen's statics (see TerrainStatics).
     std::int32_t windIterations = Statics().numWindErosionIterationsPerUserClick;
-    if (style == 0) {
-        const std::int32_t smoothing =
-            fromImage ? Statics().numSmoothingIterationsAfterWaterErosion
-                             : Statics().numSmoothingIterationsAfterWaterErosion;
-        const std::int32_t flowSteps =
-            Statics().numFlowStepsForGlobalWaterErosion;
-        (void)smoothing;
-        (void)flowSteps;
-        // DoWaterErosion(gridRect_, flowSteps) x kNumWaterErosionIterationsPerPlayerClick: pending.
-    } else if (style != 1) {
-        return;
+    if (style != 1) {
+        if (style != 0) return;
+        const std::int32_t smoothing = fromImage ? Statics().imageImportSmoothingIterations
+                                                 : Statics().numSmoothingIterationsAfterWaterErosion;
+        const std::int32_t flowSteps = fromImage ? Statics().imageImportFlowSteps
+                                                 : Statics().numFlowStepsForGlobalWaterErosion;
+        const std::int32_t waterIterations = fromImage ? Statics().imageImportWaterErosionIterations
+                                                       : Statics().numWaterErosionIterationsPerPlayerClick;
+        for (std::int32_t pass = 0; pass < waterIterations; ++pass) DoWaterErosion(gridRect_, flowSteps);
+        windIterations = smoothing;
     }
-    // DoWindErosion(windIterations): pending.
-    (void)windIterations;
+    DoWindErosion(windIterations);
+}
+
+void cSTETerrain::DoWindErosion(std::int32_t iterations) {
+    // 0x100736baa: the talus pass. Every vertex that is more than the cross (axis) or diagonal threshold
+    // above a neighbour drops by the excess times kWindErosionFactor and the neighbour rises by the same.
+    if (iterations <= 0) return;
+    const TerrainStatics& statics = Statics();
+    const std::int32_t vertsX = static_cast<std::int32_t>(vertsX_);
+    for (std::int32_t pass = 0; pass < iterations; ++pass) {
+        for (std::uint32_t index = 0; index < totalVerts_; ++index) {
+            const auto signedIndex = static_cast<std::int32_t>(index);
+            const std::uint8_t mask = GetNeighbors(signedIndex % vertsX, signedIndex / vertsX);
+            for (int dir = 0; dir < 8; ++dir) {
+                if (!((mask >> dir) & 1)) continue;
+                const auto neighbour = static_cast<std::uint32_t>(signedIndex + neighborOffsets_[dir]);
+                const float threshold = (dir & 1) ? statics.diagonalHeightDifferenceThreshold
+                                                  : statics.crossHeightDifferenceThreshold;
+                const float excess = (vertices_[index].altitude - vertices_[neighbour].altitude) - threshold;
+                if (!(0.0f < excess)) continue;
+                const float amount = excess * statics.windErosionFactor;
+                LowerVertex(index, amount);
+                RaiseVertex(neighbour, amount);
+            }
+        }
+    }
+}
+
+void cSTETerrain::DoWaterErosion(const TerrainRect& r, std::int32_t flowSteps) {
+    // 0x1007335e6: the hydraulic erosion kernel.
+    //  1. Fill the rectangle's water to 15 m below the sea level and clear its sediment.
+    //  2. Per flow step: rain on everything above that line, then for every wet vertex move the water to
+    //     the lowest neighbour -- interior vertices only, using the level difference halved and capped at
+    //     the vertex's own depth -- carrying sediment up to kMaxSedimentPerUnitWater, eroding the source by
+    //     the rate the slope allows and depositing the surplus back when the vertex keeps water.
+    //  3. Reset the rectangle (padded by one cell) to a sea-level water surface
+    //     (cSTESurfaceWater::ResetWaterToSeaLevel 0x10072e648).
+    static const float kOneByRoot2 = 0.70710677f;      // the original's function-local static
+    const TerrainStatics& statics = Statics();
+    const float seaLine = tuning_.seaLevel - 15.0f;
+    const float rateSlope = (statics.maxHydraulicErosionRate - statics.minHydraulicErosionRate) /
+                            (statics.hydraulicErosionRateRampEnd - statics.hydraulicErosionRateRampBegin);
+    for (std::int32_t z = r.top; z <= r.bottom; ++z)
+        for (std::int32_t x = r.left; x <= r.right; ++x) {
+            const std::size_t i = static_cast<std::size_t>(z) * vertsX_ + static_cast<std::size_t>(x);
+            const float altitude = vertices_[i].altitude;
+            waterDepth_[i] = altitude < seaLine ? seaLine - altitude : 0.0f;
+            sediment_[i] = 0.0f;
+        }
+    for (std::int32_t step = 0; step < flowSteps; ++step) {
+        // rain: every vertex above the sea line gains depth proportional to its altitude
+        for (std::int32_t z = r.top; z <= r.bottom; ++z)
+            for (std::int32_t x = r.left; x <= r.right; ++x) {
+                const std::size_t i = static_cast<std::size_t>(z) * vertsX_ + static_cast<std::size_t>(x);
+                if (seaLine < vertices_[i].altitude) waterDepth_[i] += vertices_[i].altitude * statics.rainFallFactor;
+            }
+        for (std::int32_t z = r.top; z <= r.bottom; ++z) {
+            for (std::int32_t x = r.left; x <= r.right; ++x) {
+                const std::size_t i = static_cast<std::size_t>(z) * vertsX_ + static_cast<std::size_t>(x);
+                const float depth = waterDepth_[i];
+                if (!(0.0f < depth)) continue;
+                const float altitude = vertices_[i].altitude;
+                if (!(seaLine <= altitude)) {
+                    // below the sea line the water surface is pinned to it
+                    waterDepth_[i] = seaLine - altitude;
+                    continue;
+                }
+                std::int32_t target = -1;
+                std::int32_t direction = -1;
+                float amount = depth;
+                if (x != r.right && z != r.top && z != r.bottom && x != r.left) {
+                    direction = GetNeighborWithLowestWaterLevel(static_cast<std::int32_t>(i));
+                    if (direction < 0) continue;          // nowhere to flow: the vertex keeps its water
+                    target = static_cast<std::int32_t>(i) + neighborOffsets_[direction];
+                    const auto t = static_cast<std::size_t>(target);
+                    const float transfer = ((depth + altitude) -
+                                            (waterDepth_[t] + vertices_[t].altitude)) * 0.5f;
+                    if (transfer <= depth) amount = transfer;      // NaN keeps the full depth
+                }
+                if (!(0.0f < amount)) continue;
+                const float capacity = statics.maxSedimentPerUnitWater * amount;
+                float sediment = sediment_[i];
+                float carried = 0.0f;
+                if (sediment <= capacity) {
+                    float slope = 0.0f;
+                    if (0 <= target) {
+                        slope = altitude - vertices_[static_cast<std::size_t>(target)].altitude;
+                        if ((direction & 1) != 0) slope *= kOneByRoot2;
+                    }
+                    float erodeRate = statics.minHydraulicErosionRate;
+                    if (statics.hydraulicErosionRateRampBegin < slope) {
+                        erodeRate = statics.maxHydraulicErosionRate;
+                        if (slope < statics.hydraulicErosionRateRampEnd)
+                            erodeRate = (slope - statics.hydraulicErosionRateRampBegin) * rateSlope +
+                                        statics.minHydraulicErosionRate;
+                    }
+                    if ((vertices_[i].flags & kVertexLocked) == 0) {
+                        const float eroded = (capacity - sediment) * erodeRate;
+                        vertices_[i].altitude = altitude - eroded;
+                        carried = eroded + sediment_[i];
+                        sediment_[i] = 0.0f;
+                    }
+                } else {
+                    sediment_[i] = sediment - capacity;
+                    carried = capacity;
+                }
+                float remaining = depth - amount;
+                waterDepth_[i] = remaining;
+                if (0 <= target && seaLine < vertices_[static_cast<std::size_t>(target)].altitude) {
+                    waterDepth_[static_cast<std::size_t>(target)] += amount;
+                    sediment_[static_cast<std::size_t>(target)] += carried;
+                    remaining = waterDepth_[i];
+                }
+                if (remaining <= 0.0f) {
+                    sediment_[i] = 0.0f;
+                } else {
+                    const float depositBase = sediment_[i];
+                    if (0.0f < depositBase && (vertices_[i].flags & kVertexLocked) == 0) {
+                        const float deposit = depositBase * statics.hydraulicDepositRate;
+                        vertices_[i].altitude += deposit;
+                        sediment_[i] = depositBase - deposit;
+                    }
+                }
+            }
+        }
+    }
+    TerrainRect reset;
+    reset.left = std::max(r.left - 1, 0);
+    reset.top = std::max(r.top - 1, 0);
+    reset.right = std::min(r.right + 1, static_cast<std::int32_t>(cellsX_));
+    reset.bottom = std::min(r.bottom + 1, static_cast<std::int32_t>(cellsZ_));
+    ResetWaterToSeaLevel(reset);
+}
+
+void cSTETerrain::DoFloodFlowStep() {
+    // 0x100737712: one step of the flood. While the step counter is below 501 the wet vertices of the
+    // flood rectangle hand their water to their lowest neighbour (interior vertices only, the level
+    // difference halved and capped at the vertex's own depth), then the rectangle grows by one cell. From
+    // step 350 on the water also evaporates towards the depth StartFlood saved. After 500 steps the flood
+    // ends and the saved depths are restored over the whole grid.
+    static const std::int32_t kFloodDryStartIteration = 350;      // the original's function-local static
+    const std::int32_t cellsX = static_cast<std::int32_t>(cellsX_);
+    const std::int32_t cellsZ = static_cast<std::int32_t>(cellsZ_);
+    const float sea = tuning_.seaLevel;
+    if (static_cast<std::int32_t>(floodStep_) < 0x1f5) {
+        for (std::int32_t z = floodRect_.top; z < floodRect_.bottom; ++z) {
+            for (std::int32_t x = floodRect_.left; x < floodRect_.right; ++x) {
+                const std::size_t i = static_cast<std::size_t>(z) * vertsX_ + static_cast<std::size_t>(x);
+                if (kFloodDryStartIteration < static_cast<std::int32_t>(floodStep_))
+                    waterDepth_[i] = (waterDepth_[i] - tempWaterLevels_[i]) * -0.01f + waterDepth_[i];
+                float amount = waterDepth_[i];
+                std::int32_t target = -1;
+                if (x != 0 && z != 0 && x != cellsX && z != cellsZ) {
+                    const std::int32_t direction = GetNeighborWithLowestWaterLevel(static_cast<std::int32_t>(i));
+                    if (direction < 0) continue;                  // nowhere to flow
+                    target = static_cast<std::int32_t>(i) + neighborOffsets_[direction];
+                    const auto t = static_cast<std::size_t>(target);
+                    const float transfer = ((vertices_[i].altitude + waterDepth_[i]) -
+                                            (waterDepth_[t] + vertices_[t].altitude)) * 0.5f;
+                    if (transfer <= waterDepth_[i]) amount = transfer;
+                }
+                if (!(0.0f < amount)) continue;
+                if (0 <= target) {
+                    const auto t = static_cast<std::size_t>(target);
+                    // only a dry-land target (above the sea, strictly) keeps the water
+                    if (sea <= vertices_[t].altitude && vertices_[t].altitude != sea) waterDepth_[t] += amount;
+                }
+                waterDepth_[i] -= amount;
+            }
+        }
+        PadRectangle(floodRect_, 1);                               // +0x218
+        floodStep_ += 1;                                           // +0x228
+    } else {
+        floodActive_ = false;                                      // +0xf4
+        RestoreWaterLevelsFromTempArray(gridRect_);
+    }
+    PostMessageA(0x678e6e3a, static_cast<std::uint32_t>(floodRect_.left * 0x10000 + floodRect_.right),
+                 static_cast<std::uint32_t>(floodRect_.top * 0x10000 + floodRect_.bottom), 0, 0);
+    RedisplayTerrain(false, true, floodRect_, 0);                  // vslot 0x228
 }
 
 void cSTETerrain::StartFlood() {
-    // 0x10073e932: save the current depths, then flood the 20..40 cell block by 500 m of water and start
-    // stepping the flood. The step itself (DoFloodFlowStep) is pending (TERRAIN-6).
+    // 0x10073e932: save the current depths, then flood the 20..40 cell block by 500 m of water and take
+    // the first flow step. The original's loops are not clamped to the city size (they walk the literal
+    // 20..40 block); the port keeps the clamps so a small test grid stays in bounds.
     SaveWaterLevelsInTempArray(gridRect_);
     floodStep_ = 0;                                            // +0x228
     floodRect_ = {20, 20, 40, 40};                             // +0x218
@@ -1656,6 +1843,7 @@ void cSTETerrain::StartFlood() {
             waterDepth_[static_cast<std::size_t>(vertsX_) * static_cast<std::uint32_t>(z) +
                         static_cast<std::uint32_t>(x)] += 500.0f;
     floodActive_ = true;                                       // +0xf4
+    DoFloodFlowStep();
 }
 
 // ==================================================================================== surfaces
@@ -2273,8 +2461,9 @@ std::int32_t cSTETerrain::GetNeighborWithLowestWaterLevel(std::int32_t index) co
     const float level = vertices_[static_cast<std::size_t>(index)].altitude + waterDepth_[static_cast<std::size_t>(index)];
     std::int32_t best = -1;
     float bestDrop = 0.0f;
-    // Straight neighbours first: directions 0, 2 and 4 only (the original skips 6).
-    for (std::int32_t dir = 0; dir < 6; dir += 2) {
+    // Straight neighbours first: the even directions 0, 2, 4 and 6 (the original compares the counter
+    // before advancing it, so south is included).
+    for (std::int32_t dir = 0; dir <= 6; dir += 2) {
         if (!((mask >> dir) & 1)) continue;
         const std::size_t n = static_cast<std::size_t>(neighborOffsets_[dir] + index);
         const float drop = level - (vertices_[n].altitude + waterDepth_[n]);
@@ -2283,10 +2472,10 @@ std::int32_t cSTETerrain::GetNeighborWithLowestWaterLevel(std::int32_t index) co
             bestDrop = drop;
         }
     }
-    // Then the diagonals, 1, 3 and 5 (skipping 7), compared against sqrt(2) times the best straight drop.
+    // Then the diagonals 1, 3, 5 and 7, compared against sqrt(2) times the best straight drop.
     static const float kRoot2 = 1.4142135f;
     bestDrop *= kRoot2;
-    for (std::int32_t dir = 1; dir < 6; dir += 2) {
+    for (std::int32_t dir = 1; dir <= 7; dir += 2) {
         if (!((mask >> dir) & 1)) continue;
         const std::size_t n = static_cast<std::size_t>(neighborOffsets_[dir] + index);
         const float drop = level - (vertices_[n].altitude + waterDepth_[n]);
@@ -2412,6 +2601,338 @@ bool cSTETerrain::ComputeBooleanFnForRect(const TerrainPoint* quad, bool (cSTETe
         }
     }
     return static_cast<int>(static_cast<float>(tested) * fraction) <= hits;
+}
+
+// =============================================================================== shore cliffs
+
+void cSTETerrain::DetectShoreVertices() {
+    // 0x100736ef0: clear the shore mark over the whole grid rect, then re-mark every shore vertex.
+    ClearVertexPropertyFlags(gridRect_, kVertexShore);
+    for (std::uint32_t index = 0; index < totalVerts_; ++index)
+        if (IsShoreVertex(static_cast<std::int32_t>(index)))
+            vertices_[index].flags |= kVertexShore;
+}
+
+void cSTETerrain::GetShoreStartingAtVert(std::int32_t vertex, std::deque<std::int32_t>& shore,
+                                         std::uint16_t mark) {
+    // 0x100736f5e.
+    shore.clear();
+    shore.push_back(vertex);
+    Flags(vertex) |= mark;
+    TrackShoreWithLandToTheRight(vertex, shore, mark);
+    TrackShoreWithLandToTheLeft(vertex, shore, mark);
+}
+
+void cSTETerrain::TrackShoreWithLandToTheRight(std::int32_t vertex, std::deque<std::int32_t>& shore,
+                                               std::uint16_t mark) {
+    // 0x100739610: look for the first sea neighbour over directions 0..6 (south-west is never the first
+    // pick, sic), then walk from vertex to vertex while keeping the land on the right. The scan rotates
+    // about the previous direction and stops as soon as the shore turns inland.
+    const std::uint32_t vertsX = vertsX_, vertsZ = vertsZ_;
+    const float sea = tuning_.seaLevel;
+    std::int32_t x = static_cast<std::int32_t>(static_cast<std::uint32_t>(vertex) % vertsX);
+    std::int32_t z = static_cast<std::int32_t>(static_cast<std::uint32_t>(vertex) / vertsX);
+    std::int32_t found = -1;
+    for (std::int32_t dir = 0; dir < 7; ++dir) {
+        const std::uint32_t nx = static_cast<std::uint32_t>(x + kDirectionX[dir]);
+        if (vertsX <= nx) continue;
+        const std::uint32_t nz = static_cast<std::uint32_t>(z + kDirectionZ[dir]);
+        if (vertsZ <= nz) continue;
+        if (vertices_[nz * vertsX + nx].altitude < sea) {
+            found = dir;
+            break;
+        }
+    }
+    if (found < 0) return;
+    std::uint32_t stop = static_cast<std::uint32_t>(found + 1);
+    std::uint32_t direction = static_cast<std::uint32_t>(found + 2) & 7u;
+    std::uint32_t previous = stop;
+    if (direction == stop) return;
+    for (;;) {
+        bool added = false;
+        const std::uint32_t nx = static_cast<std::uint32_t>(x + kDirectionX[direction]);
+        if (nx < vertsX) {
+            const std::uint32_t nz = static_cast<std::uint32_t>(z + kDirectionZ[direction]);
+            if (nz < vertsZ) {
+                const std::uint32_t next = nz * vertsX + nx;
+                const std::uint16_t flags = vertices_[next].flags;
+                if ((flags & kVertexShore) != 0 && (flags & mark) == 0) {
+                    vertices_[next].flags = static_cast<std::uint16_t>(flags | mark);
+                    shore.push_back(static_cast<std::int32_t>(next));
+                    x = static_cast<std::int32_t>(nx);
+                    z = static_cast<std::int32_t>(nz);
+                    added = true;
+                } else if (sea < vertices_[next].altitude) {
+                    return;                                       // the shore turns inland
+                }
+            }
+        }
+        if (added) {
+            stop = (previous + 5) & 7u;
+            direction = (previous + 6) & 7u;
+            previous = stop;
+        } else {
+            const std::uint32_t nextDirection = (direction + 1) & 7u;
+            previous = direction;
+            direction = nextDirection;
+        }
+        if (direction == stop) return;
+    }
+}
+
+void cSTETerrain::TrackShoreWithLandToTheLeft(std::int32_t vertex, std::deque<std::int32_t>& shore,
+                                              std::uint16_t mark) {
+    // 0x100739798: the mirror image -- the first sea neighbour is searched over directions 7 down to 0
+    // (all eight of them) and the walk then rotates the other way, pushing in front of the deque.
+    const std::uint32_t vertsX = vertsX_, vertsZ = vertsZ_;
+    const float sea = tuning_.seaLevel;
+    std::int32_t x = static_cast<std::int32_t>(static_cast<std::uint32_t>(vertex) % vertsX);
+    std::int32_t z = static_cast<std::int32_t>(static_cast<std::uint32_t>(vertex) / vertsX);
+    std::int32_t found = -1;
+    for (std::int32_t dir = 7; dir >= 0; --dir) {
+        const std::uint32_t nx = static_cast<std::uint32_t>(x + kDirectionX[dir]);
+        if (vertsX <= nx) continue;
+        const std::uint32_t nz = static_cast<std::uint32_t>(z + kDirectionZ[dir]);
+        if (vertsZ <= nz) continue;
+        if (vertices_[nz * vertsX + nx].altitude < sea) {
+            found = dir;
+            break;
+        }
+    }
+    if (found < 0) return;
+    std::uint32_t stop = static_cast<std::uint32_t>(found);
+    std::uint32_t direction = (found == 0) ? 7u : static_cast<std::uint32_t>(found - 1);
+    for (;;) {
+        if (direction == stop) return;                            // the walk came full circle
+        bool added = false;
+        bool inland = false;
+        const std::uint32_t nx = static_cast<std::uint32_t>(x + kDirectionX[direction]);
+        if (nx < vertsX) {
+            const std::uint32_t nz = static_cast<std::uint32_t>(z + kDirectionZ[direction]);
+            if (nz < vertsZ) {
+                const std::uint32_t next = nz * vertsX + nx;
+                const std::uint16_t flags = vertices_[next].flags;
+                if ((flags & kVertexShore) != 0 && (flags & mark) == 0) {
+                    vertices_[next].flags = static_cast<std::uint16_t>(flags | mark);
+                    shore.push_front(static_cast<std::int32_t>(next));
+                    x = static_cast<std::int32_t>(nx);
+                    z = static_cast<std::int32_t>(nz);
+                    added = true;
+                } else if (sea < vertices_[next].altitude) {
+                    inland = true;
+                }
+            }
+        }
+        if (!added) {
+            if (inland) return;
+            const std::uint32_t nextDirection = (direction == 0) ? 7u : direction - 1;
+            if (nextDirection != stop) {
+                direction = nextDirection;
+                continue;
+            }
+            direction = stop;
+            return;
+        }
+        // The next sweep starts four directions on and ends one before that.
+        stop = (direction + 4) & 7u;
+        direction = (((direction + 4) & 7u) + 7) & 7u;
+        if (direction == stop) return;
+    }
+}
+
+bool cSTETerrain::AnalyzeShoreAndCreateCliffs(std::deque<std::int32_t>& shore) {
+    // 0x1007317fe: for every vertex of the run, step inland from its sea neighbour (one vertex per unit of
+    // the shore->sea offset) and sum the heights above the sea level over five candidates. A sum above
+    // kMinShoreCliffCandidateHtSum keeps the vertex, anything else flushes the accumulated run into
+    // CreateShoreCliff when it is longer than kMinShoreCliffSize (a run of exactly that size is dropped, sic).
+    const TerrainStatics& statics = Statics();
+    const std::uint32_t count = static_cast<std::uint32_t>(shore.size());
+    if (count < statics.minShoreCliffSize) return false;
+    if (static_cast<std::int32_t>(count) < 1) return false;
+    const float sea = tuning_.seaLevel;
+    std::vector<tCliffVertInfo> cliffs;
+    bool created = false;
+    for (std::int32_t i = 0; i < static_cast<std::int32_t>(count); ++i) {
+        const std::int32_t vertex = shore[static_cast<std::size_t>(i)];
+        tCliffVertInfo info;
+        info.shoreVertex = vertex;
+        info.seaVertex = GetNeighboringSeaVertex(vertex);
+        const std::int32_t step = vertex - info.seaVertex;
+        float heightSum = vertices_[static_cast<std::size_t>(vertex)].altitude - sea;
+        std::int32_t candidate = vertex * 2 - info.seaVertex;
+        bool flush = false;
+        for (int k = 0; k < 5; ++k) {
+            info.candidate[k] = candidate;
+            const std::uint32_t index = static_cast<std::uint32_t>(candidate);
+            // (sic) only the row end is checked (and only against vertsZ): a negative candidate wraps to a
+            // huge unsigned row and flushes there.
+            if (vertsZ_ <= index / vertsX_ ||
+                vertices_[static_cast<std::size_t>(candidate)].altitude < sea) {
+                flush = true;
+                break;
+            }
+            heightSum += vertices_[static_cast<std::size_t>(candidate)].altitude - sea;
+            candidate += step;
+        }
+        if (!flush && statics.minShoreCliffCandidateHeightSum < heightSum) {
+            cliffs.push_back(info);
+            continue;
+        }
+        if (static_cast<std::uint64_t>(cliffs.size()) > statics.minShoreCliffSize) {
+            CreateShoreCliff(cliffs);
+            created = true;
+        }
+        cliffs.clear();
+    }
+    if (static_cast<std::uint64_t>(cliffs.size()) > statics.minShoreCliffSize) {
+        CreateShoreCliff(cliffs);
+        created = true;
+    }
+    return created;
+}
+
+void cSTETerrain::CreateShoreCliff(std::vector<tCliffVertInfo>& cliffs) {
+    // 0x100731ab0: one random cliff height above the sea (uniform kMinShoreCliffHt..kMaxShoreCliffHt), then
+    // every candidate vertex gets that height, jittered by a gaussian whose sign depends on whether the
+    // shore vertex is below the target, and by a uniform -8..8 m. The heights go through the virtual
+    // SetAltitude (vslot 0x188).
+    ITerrainHost* host = TerrainHost();
+    if (!host) return;
+    const float sea = tuning_.seaLevel;
+    const double random = host->RandomDoubleRangeUniform(Statics().minShoreCliffHeight,
+                                                         Statics().maxShoreCliffHeight);
+    std::uint32_t count = static_cast<std::uint32_t>(cliffs.size());
+    if (Statics().maxShoreCliffSize < count) count = Statics().maxShoreCliffSize;
+    if (static_cast<std::int32_t>(count) <= 0) return;
+    const float target = static_cast<float>(random + static_cast<double>(sea));
+    for (std::uint32_t i = 0; i < count; ++i) {
+        const tCliffVertInfo& info = cliffs[i];
+        if (static_cast<std::uint32_t>(info.seaVertex) >= totalVerts_ ||
+            static_cast<std::uint32_t>(info.shoreVertex) >= totalVerts_) {
+            // The original indexes the vertex array with GetNeighboringSeaVertex's -1 (a corrupting write on
+            // non-square grids); the port cannot reproduce that and skips the entry instead (quirk noted).
+            continue;
+        }
+        Flags(info.seaVertex) |= kVertexMark3;
+        Flags(info.shoreVertex) |= kVertexMark3;
+        const double gaussian = host->RandomDoubleRangeGaussian(0.0, 2.0);
+        float height;
+        if (vertices_[static_cast<std::size_t>(info.shoreVertex)].altitude <= target) {
+            height = target - static_cast<float>(gaussian);
+        } else {
+            height = static_cast<float>(gaussian) + target;
+        }
+        SetAltitude(info.shoreVertex, height);
+        const double base = static_cast<double>(height);
+        for (int k = 0; k < 5; ++k) {
+            const std::int32_t index = info.candidate[k];
+            if (static_cast<std::uint32_t>(index) >= totalVerts_) continue;   // see the note above
+            const double jitter = host->RandomDoubleRangeUniform(-8.0, 8.0);
+            SetAltitude(index, static_cast<float>(jitter + base));
+        }
+    }
+}
+
+bool cSTETerrain::CreateShoreCliffs(bool redisplay) {
+    // 0x100736d3e: mark the shoreline, trace a run from every unvisited shore vertex, raise the cliffs on
+    // the promising runs, then halo the cliff vertices by eight cells, smoothen that halo 20 times and
+    // clear the three scratch marks over the whole grid.
+    DetectShoreVertices();
+    bool created = false;
+    if (vertsZ_ != 0) {
+        for (std::uint32_t row = 0; row < vertsZ_; ++row) {
+            const std::uint32_t rowStart = row * vertsX_;
+            for (std::uint32_t col = 0; col < vertsX_; ++col) {
+                // (sic) the test also requires the mark-1 bit to be clear: (flags & 0x11) == 0x10.
+                if ((vertices_[rowStart + col].flags & (kVertexShore | kVertexMark1)) != kVertexShore) continue;
+                std::deque<std::int32_t> shore;
+                GetShoreStartingAtVert(static_cast<std::int32_t>(rowStart + col), shore, kVertexMark1);
+                if (AnalyzeShoreAndCreateCliffs(shore)) created = true;
+            }
+        }
+        if (created) {
+            MarkRegion(8, &cSTETerrain::IsVertexWithMark3, &cSTETerrain::IsLandAndNotMark3, kVertexMark2);
+            TerrainRect marked;
+            ComputeBoundsOfMarkedRegion(marked, kVertexMark2);
+            SmoothenMarkedRegion(marked, 0x14, kVertexMark2);
+            if (redisplay) RedisplayTerrain(true, true, gridRect_, 0);
+        }
+    }
+    if (totalVerts_ != 0)
+        for (std::uint32_t index = 0; index < totalVerts_; ++index)
+            vertices_[index].flags &= static_cast<std::uint16_t>(0xfff8);   // clear marks 1, 2 and 3
+    return created;
+}
+
+// ============================================================================= marked regions
+
+void cSTETerrain::MarkRegion(std::int32_t radius, bool (cSTETerrain::*vertexFn)(std::int32_t) const,
+                             bool (cSTETerrain::*markFn)(std::int32_t) const, std::uint16_t mark) {
+    // 0x100736728. Both member function pointers call through their (ptr, this-adjustment) pair, so the
+    // original passes them as two-argument pointers; the port calls them directly. The rectangle is clamped
+    // to cellsX / cellsZ (the last *cell*, not the last vertex), as the original does.
+    const std::int32_t vertsX = static_cast<std::int32_t>(vertsX_);
+    const std::int32_t vertsZ = static_cast<std::int32_t>(vertsZ_);
+    const std::int32_t cellsX = static_cast<std::int32_t>(cellsX_);
+    const std::int32_t cellsZ = static_cast<std::int32_t>(cellsZ_);
+    if (vertsZ == 0) return;
+    for (std::int32_t z = 0; z < vertsZ; ++z) {
+        for (std::int32_t x = 0; x < vertsX; ++x) {
+            if (!(this->*vertexFn)(z * vertsX + x)) continue;
+            const std::int32_t left = std::max(x - radius, 0);
+            const std::int32_t right = std::min(x + radius, cellsX);
+            const std::int32_t top = std::max(z - radius, 0);
+            const std::int32_t bottom = std::min(z + radius, cellsZ);
+            if (bottom < top) continue;
+            for (std::int32_t zz = top; zz <= bottom; ++zz) {
+                if (right < left) break;
+                for (std::int32_t xx = left; xx <= right; ++xx) {
+                    const std::int32_t index = vertsX * zz + xx;
+                    if ((this->*markFn)(index)) Flags(index) |= mark;
+                }
+            }
+        }
+    }
+}
+
+void cSTETerrain::SmoothenMarkedRegion(const TerrainRect& r, std::int32_t iterations, std::uint16_t mark) {
+    // 0x10073697a: talus-angle relaxation. For every marked vertex, each existing neighbour closer than the
+    // cross (axis) or diagonal threshold pulls the pair together by the excess times kWindErosionFactor;
+    // only the endpoints that carry `mark` move.
+    if (iterations <= 0) return;
+    const TerrainStatics& statics = Statics();
+    const std::int32_t vertsX = static_cast<std::int32_t>(vertsX_);
+    for (std::int32_t pass = 0; pass < iterations; ++pass) {
+        for (std::int32_t z = r.top; z <= r.bottom; ++z) {
+            for (std::int32_t x = r.left; x <= r.right; ++x) {
+                const std::int32_t index = vertsX * z + x;
+                const std::uint16_t flags = vertices_[static_cast<std::size_t>(index)].flags;
+                const std::uint8_t mask = GetNeighbors(x, z);
+                for (int dir = 0; dir < 8; ++dir) {
+                    if (!((mask >> dir) & 1)) continue;
+                    const std::int32_t neighbour = index + neighborOffsets_[dir];
+                    const std::uint16_t neighbourFlags = vertices_[static_cast<std::size_t>(neighbour)].flags;
+                    if (((flags | neighbourFlags) & mark) == 0) continue;
+                    const float difference =
+                        vertices_[static_cast<std::size_t>(index)].altitude -
+                        vertices_[static_cast<std::size_t>(neighbour)].altitude;
+                    const float threshold = (dir & 1) ? statics.diagonalHeightDifferenceThreshold
+                                                      : statics.crossHeightDifferenceThreshold;
+                    if (threshold < difference) {
+                        const float amount = (difference - threshold) * statics.windErosionFactor;
+                        if ((flags & mark) != 0) LowerVertex(static_cast<std::uint32_t>(index), amount);
+                        if ((neighbourFlags & mark) != 0)
+                            RaiseVertex(static_cast<std::uint32_t>(neighbour), amount);
+                    } else if (difference < -threshold) {
+                        const float amount = (-difference - threshold) * statics.windErosionFactor;
+                        if ((flags & mark) != 0) RaiseVertex(static_cast<std::uint32_t>(index), amount);
+                        if ((neighbourFlags & mark) != 0)
+                            LowerVertex(static_cast<std::uint32_t>(neighbour), amount);
+                    }
+                }
+            }
+        }
+    }
 }
 
 // ==================================================================================== brushes
