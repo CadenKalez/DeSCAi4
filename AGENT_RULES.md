@@ -72,6 +72,10 @@ Several AI tools (Claude sessions, DeepSeek, background agents) commit to this o
   `pre-commit` refuses a commit that shrinks `notes/ledger.csv` (a lost update; override with SC4_ALLOW_LEDGER_SHRINK=1
   when rows are removed on purpose), duplicate ledger names, or a malformed TESTS array (`scripts/check_test_registry.py`);
   `commit-msg` requires a `Co-Authored-By:` line naming the tool that wrote the commit (Claude, DeepSeek, ...).
+- **Never revert or stage a whole source tree.** `git checkout -- src/`, `git add -A src/` and `git stash` reach into
+  every other agent's uncommitted work: one `git checkout -- src/` on 2026-10-23 destroyed an agent's half-finished
+  cSTETerrain part 5 and left HEAD's test uncompilable for an hour. Name the exact paths, both when staging and when
+  reverting, and never assume a path is yours because you touched it last.
 - **Do not reuse a file name for a different helper** (a test fake was overwritten this way), and run the full suite before
   committing a change to a header other classes include.
 - **Tests:** `python3 scripts/run_tests_fast.py` is the incremental, parallel runner (object cache in $TMPDIR/sc4-obj,
