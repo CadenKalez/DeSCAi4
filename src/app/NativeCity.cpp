@@ -7,6 +7,8 @@
 
 #include "gz/GZCOM.h"
 #include "sc4/App.h"
+#include "sc4/Exemplar.h"
+#include "sc4/ServiceLocator.h"
 #include "sc4/AutoHelpers.h"
 #include "sc4/DBSegment.h"
 #include "sc4/ISC4City.h"
@@ -23,6 +25,7 @@ cIGZSerializable* CreateCityProbeSerializable7(std::uint32_t classId);
 void InstallCityProbeBindings();                                          // city_probe_bindings.cpp
 
 namespace native {
+void SetTerrainHostCity(cISC4City* city);   // NativeTerrainHost.cpp
 namespace {
 
 // The city's host services. The game implements this with the framework, the message server and GZCOM; the probe only
@@ -44,6 +47,7 @@ struct Factory final : sc4::ISerializableFactory {
         if (classId == 0x8990c372) {                        // cSC4City: the probe's own host
             auto* city = new sc4::cSC4City(&host);
             city->AddRef();
+            SetTerrainHostCity(city);
             return city;
         }
         // Classes the decompilation kept as plain C++ (no cIGZUnknown base) have a GZCOM creator that returns a raw
@@ -85,7 +89,7 @@ bool LoadCityFile(cSC4App& app, const std::string& path) {
         installed = true;
         sc4::SetSerializableFactory(&factory);
         auto& hooks = app.CityHooks();
-        hooks.createCity = []() -> cISC4City* { auto* city = new sc4::cSC4City(&cityHost); city->AddRef(); return city; };
+        hooks.createCity = []() -> cISC4City* { auto* city = new sc4::cSC4City(&cityHost); city->AddRef(); SetTerrainHostCity(city); return city; };
         hooks.createCitySegment = []() -> cIGZPersistDBSegment* {
             auto* segment = new sc4::cSC4DBSegment();
             segment->AddRef();
@@ -99,6 +103,15 @@ bool LoadCityFile(cSC4App& app, const std::string& path) {
         hooks.destroyCurrentScreen = [] { if (g_screens.destroyCurrentScreen) g_screens.destroyCurrentScreen(); };
         hooks.createCityScreen = [] { if (g_screens.createCityScreen) g_screens.createCityScreen(); };
         hooks.createRegionScreen = [] {};
+        // Exemplars (type 0x6534284a) and cohorts: the resource manager needs the recovered factories to build them from the packages.
+        if (SL::spRM) {
+            static sc4::cSCResExemplarFactory exemplarFactory;
+            static sc4::cSCResExemplarCohortFactory cohortFactory;
+            exemplarFactory.AddRef();
+            cohortFactory.AddRef();
+            SL::spRM->RegisterObjectFactory(0x453429b3, sc4::kResourceTypeExemplar, &exemplarFactory);
+            SL::spRM->RegisterObjectFactory(0x053429c8, sc4::kResourceTypeCohort, &cohortFactory);
+        }
         InstallStubHosts();
         InstallCityProbeBindings();
     }

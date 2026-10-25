@@ -203,6 +203,18 @@ cIGZWin* cSC4View3DWin::AsIGZWin() {
     return static_cast<cIGZWin*>(static_cast<cGZWin*>(this));
 }
 
+void cSC4View3DWin::AttachRenderStack(IRenderer3D* renderer, cIGZUnknown* camera, cSC4CameraControl* control) {
+    if (renderer) renderer->AddRef();
+    if (renderer_) renderer_->Release();
+    renderer_ = renderer;
+    if (camera) camera->AddRef();
+    if (cameraObject_) cameraObject_->Release();
+    cameraObject_ = camera;
+    if (control) control->AddRef();
+    if (cameraControl_) cameraControl_->Release();
+    cameraControl_ = control;
+}
+
 void* cSC4View3DWin::GetRenderer() { return renderer_; }                    // +0x188
 cIGZUnknown* cSC4View3DWin::GetModelMaker() { return modelMaker_; }         // +0x190 (400 decimal)
 cIGZUnknown* cSC4View3DWin::GetCoverageHelper() { return coverageHelper_; } // +0x5f8

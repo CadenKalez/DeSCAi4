@@ -20,6 +20,8 @@ void SetPngDecoder(PngDecoder decoder);
 
 // A bitmap resource {0x856ddbac, group, instance} of the game data as a CPU buffer (ARGB8888), one counted reference; null when no
 // package has it. The same decoder serves files (DecodeFunction).
+// The bytes of one resource from the game's .dat packages (false when none has it).
+bool LoadResourceBytes(std::uint32_t type, std::uint32_t group, std::uint32_t instance, std::vector<std::uint8_t>& bytes);
 cGZBuffer* LoadBitmapResource(std::uint32_t group, std::uint32_t instance);
 PngDecoder DecodeFunction();
 

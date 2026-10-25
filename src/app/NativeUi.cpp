@@ -47,8 +47,7 @@ PngDecoder g_decodePng = nullptr;   // set by host_main.mm (ImageIO lives there)
 }  // namespace
 
 // The standard bitmap resources (type 0x856ddbac, PNG) of the game data, searched in the engine's package order; one counted reference.
-cGZBuffer* LoadBitmapResource(std::uint32_t group, std::uint32_t instance) {
-    if (!g_decodePng) return nullptr;
+bool LoadResourceBytes(std::uint32_t type, std::uint32_t group, std::uint32_t instance, std::vector<std::uint8_t>& bytes) {
     static std::vector<std::unique_ptr<dbpf::Package>> packages;
     static const char* kNames[] = {"Intro.dat", "SimCity_1.dat", "SimCity_2.dat", "SimCity_3.dat", "SimCity_4.dat", "SimCity_5.dat", "EP1.dat"};
     static std::size_t opened = 0;
@@ -59,13 +58,17 @@ cGZBuffer* LoadBitmapResource(std::uint32_t group, std::uint32_t instance) {
             packages.push_back(std::move(package));
             opened = packages.size();
         }
-        const dbpf::Entry* entry = packages[i]->Find(0x856ddbac, group, instance);
-        std::vector<std::uint8_t> bytes;
-        if (entry && packages[i]->Read(*entry, bytes)) {
-            if (cGZBuffer* buffer = g_decodePng(bytes)) return buffer;
-        }
+        const dbpf::Entry* entry = packages[i]->Find(type, group, instance);
+        if (entry && packages[i]->Read(*entry, bytes)) return true;
     }
-    return nullptr;
+    return false;
+}
+
+cGZBuffer* LoadBitmapResource(std::uint32_t group, std::uint32_t instance) {
+    if (!g_decodePng) return nullptr;
+    std::vector<std::uint8_t> bytes;
+    if (!LoadResourceBytes(0x856ddbac, group, instance, bytes)) return nullptr;
+    return g_decodePng(bytes);
 }
 
 PngDecoder DecodeFunction() { return g_decodePng; }

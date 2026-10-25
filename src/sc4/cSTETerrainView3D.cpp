@@ -1,5 +1,8 @@
 // cSTETerrainView3D — data structures, texture spans, culling, lighting, level cells, picking, messages.
 // The drawing half lives in cSTETerrainView3DDraw.cpp. See the header for the memory layouts.
+#include <cstdio>
+#include <cstdlib>
+
 #include "sc4/cSTETerrainView3D.h"
 
 #include <algorithm>
@@ -739,6 +742,7 @@ void cSTETerrainView3D::ComputeHeightCull(TerrainFrustumCull& c, const float* mi
                 maxWater = std::max(maxWater, s.waterPoints[base + static_cast<std::size_t>(i)].y);
             }
             const float threshold = minVis[row];
+            if (std::getenv("SC4_CULLDUMP") && (row % 4) == 0) { static int dumps = 0; if (dumps++ < 40) std::fprintf(stderr, "cull row %d cols %d..%d maxTerrain %.1f minTerrain %.1f maxWater %.1f minVis %.1f\n", row, st, en, maxTerrain, minTerrain, maxWater, threshold); }
             c.terrainVisible[static_cast<std::size_t>(row)] = threshold <= maxTerrain;
             c.waterVisible[static_cast<std::size_t>(row)] = minTerrain < maxWater && threshold <= maxWater;
             if (c.terrainVisible[static_cast<std::size_t>(row)] || c.waterVisible[static_cast<std::size_t>(row)]) {

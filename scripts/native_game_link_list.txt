@@ -472,7 +472,7 @@ src/app/hosts/StubSignTool.cpp
 src/app/hosts/StubSignpost.cpp
 src/app/hosts/StubSimulator.cpp
 src/app/hosts/StubSoundBank.cpp
-src/app/hosts/StubTerrain.cpp
+src/app/NativeTerrainHost.cpp
 src/app/hosts/StubTextDecal.cpp
 src/app/hosts/StubToxic.cpp
 src/app/hosts/StubTractDeveloper.cpp
@@ -556,3 +556,7 @@ src/app/hosts/IfaceITrafficAutomatonHost.cpp
 src/app/hosts/IfaceIAutomatonHost.cpp
 src/app/hosts/IfaceIVehicleHost.cpp
 src/app/hosts/IfaceIPedestrianHost.cpp
+src/app/NativeCityView.cpp
+src/app/NativeTerrainView.cpp
+src/s3d/FSH.cpp
+src/sc4/cSTETerrainView3DDraw.cpp

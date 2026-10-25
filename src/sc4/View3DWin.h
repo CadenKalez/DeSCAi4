@@ -716,6 +716,11 @@ public:
     bool Shutdown() override;                                      // @ 0x100780992
     bool GZPaint() override;                                       // @ 0x100781590
 
+    // DoPreCityInit / DoPostCityInit (0x10078616c / 0x1007867d8) are not recovered; the host builds the camera, camera control and
+    // renderer the first one creates and attaches them here, then enables painting (the last step of the second).
+    void AttachRenderStack(IRenderer3D* renderer, cIGZUnknown* camera, cSC4CameraControl* control);   // PARTIAL
+    void EnablePainting(bool enable) { paintEnabled_ = enable; }
+
     // --- cISC4View3DWin (group +0)
     cIGZWin* AsIGZWin() override;                                  // @ 0x10078153e
     void* GetRenderer() override;                                  // @ 0x100781548

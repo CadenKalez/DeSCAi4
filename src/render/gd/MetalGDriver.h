@@ -69,6 +69,10 @@ public:
     void TexEnv(eGDTextureEnvTarget target, eGDTextureEnvParamType param, eGDTextureEnvModeParam mode) override;
     using cGDriverBase::TexEnv;
     void TexStage(std::uint32_t stage) override;
+    void TexStageCoord(eGDTexCoordSource source) override;
+    void TexStageMatrix(const float* m, std::uint32_t a, std::uint32_t b, eGDTexMatFlags flags) override;
+    void ColorMultiplier(float r, float g, float b) override;
+    void AlphaMultiplier(float a) override;
     void SetTexture(std::uint32_t texture, std::uint32_t stage) override;
     std::uint32_t GetTexture(std::uint32_t stage) const override;
     std::uint32_t CreateTexture(eGDInternalTextureFormat format, std::uint32_t width, std::uint32_t height, std::uint32_t mipLevels, eGDTextureHintFlags hint) override;

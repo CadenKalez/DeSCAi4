@@ -504,6 +504,7 @@ bool cSC4COMSerializer::LoadClassObjects(std::uint32_t version) {
                 cClassInfo& info = classes_[classId];
                 table->GetUint32(info.expected);
                 info.actual = 0;
+                if (std::getenv("SC4_CLASSES")) std::fprintf(stderr, "class table: %08x x%u\n", classId, info.expected);
             }
         }
         const bool tableError = table->GetError();

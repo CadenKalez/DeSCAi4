@@ -22,6 +22,7 @@
 
 #include "app/NativeBoot.h"
 #include "app/NativeCity.h"
+#include "app/NativeCityView.h"
 #include "app/NativeFonts.h"
 #include "app/NativeGraphics.h"
 #include "app/NativeCity.h"
@@ -249,7 +250,8 @@ void Frame() {
         if (gMessages2) gMessages2->OnTick(16);   // posted and general messages (the splash timer, screen swaps)
         app->OnTick(16);
     }
-    if (native::DrawRegionLayers()) InvalidateTree(gMgr->GetMainWindow());   // the map is drawn under the windows: they repaint over it
+    const bool regionScreen = gAppWindow && gAppWindow->CurrentScreen() && gAppWindow->CurrentScreen()->GetID() == 0xea659793;
+    if (regionScreen && native::DrawRegionLayers()) InvalidateTree(gMgr->GetMainWindow());   // the map is drawn under the windows: they repaint over it
     gMgr->Pump();
     gMgr->Plot();
     gGraphics->Services().Tick();
@@ -309,7 +311,10 @@ bool Boot() {
         screen.graphics = gGraphics.get();
         screen.createWindowFromScript = &native::CreateWindowFromScript;
         screen.loadBitmap = [](std::uint32_t group, std::uint32_t instance) { return native::LoadBitmapResource(group, instance); };
-        native::SetCityScreenCallbacks({[] { if (gAppWindow) gAppWindow->DestroyCurrentScreen(); }, [] { if (gAppWindow) gAppWindow->CreateCityScreen(); }});
+        native::SetCityScreenCallbacks({[] { if (gAppWindow) gAppWindow->DestroyCurrentScreen(); }, [] {
+            if (!gAppWindow || !gAppWindow->CreateCityScreen()) return;
+            if (sc4::cSC4View3DWin* view = gAppWindow->View3D()) native::AttachCityRenderStack(*view, native::BootApplication() ? native::BootApplication()->GetCity() : nullptr, gDriver.get(), static_cast<gz::cIGZDrawContext*>(gGraphics->Primary()->GetDrawContext()), kW, kH);
+        }});
         screen.loadCity = [app](const std::string& path) { return native::LoadCityFile(*app, path); };
         native::InstallRegionScreenHost(screen);
         cISC4Nation* nation = native::CreateNation();

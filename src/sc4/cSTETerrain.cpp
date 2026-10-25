@@ -1,3 +1,6 @@
+#include <cstdio>
+#include <cstdlib>
+
 #include "sc4/cSTETerrain.h"
 
 #include <algorithm>
@@ -107,10 +110,11 @@ void cSTETerrain::LayOutGrid(std::uint32_t cellsX, std::uint32_t cellsZ) {
     const std::int32_t offsets[8] = {-1, ~vx, -vx, 1 - vx, 1, vx + 1, vx, vx - 1};
     std::copy(offsets, offsets + 8, neighborOffsets_);
     gridRect_ = {0, 0, static_cast<std::int32_t>(cellsX), static_cast<std::int32_t>(cellsZ)};   // +0x58
-    vertices_.assign(totalVerts_, Vertex{});
-    waterDepth_.assign(totalVerts_, 0.0f);        // cSTESurfaceWater vertex +0x0
-    sediment_.assign(totalVerts_, 0.0f);          // cSTESurfaceWater vertex +0x1c
-    tempWaterLevels_.assign(totalVerts_, 0.0f);   // +0x100 (allocated in the original's Init)
+    // The original Init allocates the vertex array only when there is none (+0x88 == 0), so a terrain that Load read keeps its data.
+    if (vertices_.size() != totalVerts_) vertices_.assign(totalVerts_, Vertex{});
+    if (waterDepth_.size() != totalVerts_) waterDepth_.assign(totalVerts_, 0.0f);        // cSTESurfaceWater vertex +0x0
+    if (sediment_.size() != totalVerts_) sediment_.assign(totalVerts_, 0.0f);          // cSTESurfaceWater vertex +0x1c
+    if (tempWaterLevels_.size() != totalVerts_) tempWaterLevels_.assign(totalVerts_, 0.0f);   // +0x100 (allocated in the original's Init)
     surfaceCover_.assign(vertsZ_, std::vector<std::uint8_t>(vertsX_, 0));   // +0x200
     waterVertexCount_ = 0;                        // +0x108
     initialized_ = true;
@@ -857,6 +861,7 @@ bool cSTETerrain::StaticInit() {
     // 0x10073a346: the flag, the shutdown hook, the resource-manager hold, then the four data readers.
     if (StaticInited()) return true;
     StaticInited() = true;
+    if (std::getenv("SC4_DEBUG")) std::fprintf(stderr, "cSTETerrain::StaticInit host %p\n", static_cast<void*>(TerrainHost()));
     if (ITerrainHost* host = TerrainHost()) {
         host->RegisterStaticShutdown();        // SL::spSC4 vslot 0x218 (StaticShutdown, 0)
         host->AcquireResourceManager();        // spResMan = SL::spRM, one reference held
@@ -978,23 +983,24 @@ void cSTETerrain::AddToTerrainTypeTextureList(std::int32_t terrainType, std::uin
 
 void cSTETerrain::AddTemperatureAndMoistureToSurfaceCoverEntry(const cRZString& key, const cRZString& value,
                                                                void* terrainTypePointer) {
-    // 0x100731418: the key is the temperature row (0..31); the value is up to 15 whitespace-separated
-    // texture ids for moisture columns 1..15 (column 0 stays 0). The context selects the terrain type.
+    // 0x100731418: the key is the temperature row (0..31); the value is up to 15 comma-separated texture ids for the moisture
+    // columns 0..14 (cRZString::SplitToken on ','; the first token lands on the map base, 0x100b714b0). The context selects the
+    // terrain type.
     const std::uint32_t temperature = ParseTerrainUint(key.ToChar()) & 0xfffffff;
     const std::uint32_t terrainType =
         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(terrainTypePointer)) & 0x7fffff;
     std::array<std::uint32_t, 512>& table = SurfaceCoverMapSlot()[terrainType < 4 ? terrainType : 0];
     const char* cursor = value.ToChar();
     for (std::uint32_t token = 0; token < 15; ++token) {
-        while (*cursor != '\0' && std::isspace(static_cast<unsigned char>(*cursor))) ++cursor;
-        if (*cursor == '\0') break;
+        while (*cursor == ' ' || *cursor == '\t') ++cursor;
         char text[64];
         std::size_t length = 0;
-        while (*cursor != '\0' && !std::isspace(static_cast<unsigned char>(*cursor)) && length + 1 < sizeof(text))
-            text[length++] = *cursor++;
+        while (*cursor != '\0' && *cursor != ',' && length + 1 < sizeof(text)) text[length++] = *cursor++;
+        while (length > 0 && (text[length - 1] == ' ' || text[length - 1] == '\t' || text[length - 1] == '\r')) --length;
         text[length] = '\0';
+        if (*cursor == ',') ++cursor;
         const std::uint32_t textureId = ParseTerrainUint(text);
-        table[(temperature & 31) * 16 + token + 1] = textureId;
+        table[(temperature & 31) * 16 + token] = textureId;
         AddToTerrainTypeTextureList(static_cast<std::int32_t>(terrainType), textureId);
     }
 }
@@ -1226,6 +1232,7 @@ bool cSTETerrain::Init() {
     if (!StaticInit()) return false;                 // the original only calls it when sbInited is clear
     if (initialized_) Shutdown();                    // vslot 0x20
     ITerrainHost* host = TerrainHost();
+    if (std::getenv("SC4_DEBUG")) std::fprintf(stderr, "cSTETerrain::Init host %p\n", static_cast<void*>(host));
     if (!host) return false;
     initialized_ = true;
     if (!city_) {
@@ -1260,8 +1267,10 @@ bool cSTETerrain::Init() {
     if (effectsManager_) effectsManager_->AddRef();
     // cSTETriangleGridIterator::Init(0x10) at +0x1a0: the iterator class is not recovered (TERRAIN-1).
     tuning_.seaLevel = Statics().seaLevel;                   // +0x9c = kSeaLevel
-    minHeight_ = 0.0f;                                       // +0x90 / +0x94
-    maxHeight_ = 0.0f;
+    if (!loadOk_) {   // a loaded terrain keeps the range it was saved with
+        minHeight_ = 0.0f;                                   // +0x90 / +0x94
+        maxHeight_ = 0.0f;
+    }
     emptyRect_ = {0, 0, -1, -1};                             // +0xcc
     InitBrushParameters();
     if (host->Messages()) {
@@ -1278,7 +1287,7 @@ bool cSTETerrain::Init() {
         host->RegisterWithSimulator(this);                   // vslot 0x98
     }
     host->AddToAutomataManager(this);                        // SL::ATM() vslot 0x28
-    if (!createdFromImage_) {
+    if (!createdFromImage_ && !loadOk_) {   // +0x80 is set by Create and by a successful Load
         host->SurfaceWaterInit();                            // spSurfaceWater vslot 0x18
         Create();                                            // 0x100735cfc (height image import + erosion)
     }
@@ -2058,6 +2067,13 @@ void cSTETerrain::DecideSurfaceCover(const TerrainRect& r) {
     host->ChangeTerrainType(terrainType_);                                  // view 0x1007467ca
     host->SetUpTexturesForCurrentTerrainTypeAndZoom(static_cast<std::int32_t>(zoom_));   // 0x10074688c
 
+    if (std::getenv("SC4_DEBUG")) {
+        std::fprintf(stderr, "DecideSurfaceCover: zoom %u terrainType %d covers %zu spread %d type0-map[%d]=%u rect %d,%d,%d,%d gridSize %zu familyCols %d\n", unsigned(zoom_), int(terrainType_), SurfaceCoverTexturesSlot().size(),
+                     int(statics.maxSurfaceTextureSpread[zoom_ & 7]), 0x1f * 16, unsigned(SurfaceCoverMapSlot()[0][0x1f * 16]), r.left, r.top, r.right, r.bottom, statics.textureRandomizationGridSize.size(), int(TextureGridCellCountX()[0]));
+        std::size_t nonzeroMap = 0;
+        for (auto v : SurfaceCoverMapSlot()[0]) nonzeroMap += v != 0;
+        std::fprintf(stderr, "DecideSurfaceCover: %zu surface-cover map entries set; water depth[mid]=%.2f\n", nonzeroMap, waterDepth_[vertsX_ * 64 + 64]);
+    }
     const std::int32_t spread = statics.maxSurfaceTextureSpread[zoom_ & 7];
     const std::int32_t rowStart = std::max(r.top - spread, 0);
     const std::int32_t rowEnd = std::min(r.bottom + spread, static_cast<std::int32_t>(cellsZ_));
@@ -2139,6 +2155,11 @@ void cSTETerrain::DecideSurfaceCover(const TerrainRect& r) {
             const std::uint16_t textureKey = textureKeyFor(textureId, index);
 
             auto info = SurfaceCoverTexturesSlot().find(textureId);
+            if (std::getenv("SC4_DEBUG")) {
+                static int zero = 0, missing = 0, ok = 0, shown = 0;
+                if (textureId == 0) ++zero; else if (info == SurfaceCoverTexturesSlot().end()) ++missing; else ++ok;
+                if ((++shown & 4095) == 0) std::fprintf(stderr, "DecideSurfaceCover: ids zero %d missing-info %d ok %d (last temperature %d moisture %d id %u)\n", zero, missing, ok, int(temperature), int(moisture), unsigned(textureId));
+            }
             if (info == SurfaceCoverTexturesSlot().end()) continue;
             TerrainSurfaceCoverInfo& cover = info->second;
             const std::int32_t radius = cover.maxSpread[zoom];
@@ -4472,6 +4493,7 @@ bool cSTETerrain::Read(cIGZIStream& stream) {
         if (dbSegment) segment = dbSegment->AsIGZPersistDBSegment();
     }
     Load(segment);
+    if (std::getenv("SC4_DEBUG")) std::fprintf(stderr, "cSTETerrain::Read: version %u segment %p loadOk %d verts %u x %u\n", unsigned(version), static_cast<void*>(segment), int(loadOk_), vertsX_, vertsZ_);
     return true;
 }
 

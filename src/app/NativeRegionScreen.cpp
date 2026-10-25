@@ -162,7 +162,7 @@ public:
         dirty_ = true;
         return true;
     }
-    bool Shutdown() override { tiles_.clear(); return true; }
+    bool Shutdown() override { tiles_.clear(); cols_ = rows_ = 0; dirty_ = false; source_ = nullptr; return true; }
     void ScrollTo(int, int) override { InvalidateAllTiles(); }
     void InvalidateRect(const cRZRect& rect) override {
         for (int r = 0; r < rows_; ++r)

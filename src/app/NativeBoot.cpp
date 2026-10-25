@@ -10,6 +10,7 @@
 #include "app/NativeBoot.h"
 #include "gz/GZFramework.h"
 #include "gz/cGZPersistResourceManager.h"
+#include "sc4/ServiceLocator.h"
 #include "rz/LanguageManager.h"
 #include "rz/cRZCmdLine.h"
 #include "sc4/App.h"
@@ -81,6 +82,7 @@ bool RunBoot(bool verbose, bool keepAlive, gd::cIGZGDriver* driver, const std::f
     framework->AddSystemService(languages);
     auto* resources = new cGZPersistResourceManager();
     framework->AddSystemService(resources);
+    SL::spRM = resources;   // the service locator's own lookup (ServiceLocator.cpp) does not find the manager under its id yet
 
     // static: the start-up hooks outlive this function when the application is kept alive
     static Graphics graphics;

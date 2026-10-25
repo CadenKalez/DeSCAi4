@@ -2163,8 +2163,8 @@ int main() {
         table["HighCliff"] = "0x21";
         table["LowCliff"] = "0x22";
         table["Beach"] = "0x23";
-        table["24"] = "10 17 18";                     // temperature 24: moisture 1..3
-        table["31"] = "0x40 0x41";
+        table["24"] = "10,17,18";                     // temperature 24: moisture 0..2 (comma separated, the first token is column 0)
+        table["31"] = "0x40,0x41";
         ini->sections["MiscTerrainTunables"]["RaiseLowerAmount"] = "12.5";
         ini->sections["MiscTerrainTunables"]["EnableSimulation"] = "0";
         ini->sections["WindErosion"]["NumIterationsPerUserClick"] = "7";
@@ -2210,7 +2210,8 @@ int main() {
         CHECK(Near(s.hydraulicErosionRateRampBegin, std::tan(30.0f * 0.017453292f) * 16.0f, 1e-3f));
         const std::vector<std::uint32_t>& used = cSTETerrain::TexturesUsedInTerrainType(0);
         // the fixed ids, the cliff/beach ids, and the ini's temperature tokens 10, 17, 18, 0x40, 0x41
-        const std::vector<std::uint32_t> expected = {10, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x21, 0x22, 0x23,
+        // (an ini row with fewer than 15 tokens still adds id 0: the original splits 15 times and converts the empty tail to 0)
+        const std::vector<std::uint32_t> expected = {0, 10, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x21, 0x22, 0x23,
                                                       0x40, 0x41, 0xe0};
         CHECK(used == expected);                             // ascending and without duplicates
         CHECK(cSTETerrain::TexturesUsedInTerrainType(3).empty());
@@ -2238,7 +2239,7 @@ int main() {
         cover.maxSpread[0] = 1;
         cSTETerrain::SurfaceCoverTextures()[17] = cover;
         host.textureSubTextureCount = 1;
-        host.moistureIndex = 2;
+        host.moistureIndex = 1;
         surface.DecideSurfaceCover(TerrainRect{0, 0, 4, 4});
         auto keysOf = [](const cSTETerrain::Vertex& vertex) {
             std::vector<std::uint16_t> keys;
@@ -2253,7 +2254,7 @@ int main() {
             const std::vector<std::uint16_t> keys = keysOf(vertex);
             return std::find(keys.begin(), keys.end(), key) != keys.end();
         };
-        // altitude 40: temperature 31 - round(((40-4)/((300-11)*0.5))*30 - 0.5) = 24, moisture 2 -> id 17
+        // altitude 40: temperature 31 - round(((40-4)/((300-11)*0.5))*30 - 0.5) = 24, moisture 1 -> id 17
         CHECK(hasKey(surface.Vertices()[static_cast<std::size_t>(surface.GetVertIndex(1, 1))], 17));
         CHECK(hasKey(surface.Vertices()[static_cast<std::size_t>(beachIndex)], 0x23));
         CHECK(hasKey(surface.Vertices()[static_cast<std::size_t>(cliffIndex)], 0x22));
