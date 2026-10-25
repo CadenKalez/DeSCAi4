@@ -309,6 +309,7 @@ bool Boot() {
         screen.graphics = gGraphics.get();
         screen.createWindowFromScript = &native::CreateWindowFromScript;
         screen.loadBitmap = [](std::uint32_t group, std::uint32_t instance) { return native::LoadBitmapResource(group, instance); };
+        native::SetCityScreenCallbacks({[] { if (gAppWindow) gAppWindow->DestroyCurrentScreen(); }, [] { if (gAppWindow) gAppWindow->CreateCityScreen(); }});
         screen.loadCity = [app](const std::string& path) { return native::LoadCityFile(*app, path); };
         native::InstallRegionScreenHost(screen);
         cISC4Nation* nation = native::CreateNation();

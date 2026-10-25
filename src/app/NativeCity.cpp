@@ -71,6 +71,12 @@ struct Factory final : sc4::ISerializableFactory {
 
 }  // namespace
 
+namespace {
+CityScreenCallbacks g_screens;
+}
+
+void SetCityScreenCallbacks(CityScreenCallbacks callbacks) { g_screens = std::move(callbacks); }
+
 bool LoadCityFile(cSC4App& app, const std::string& path) {
     static CityHost cityHost;
     static Factory factory;
@@ -90,8 +96,8 @@ bool LoadCityFile(cSC4App& app, const std::string& path) {
         hooks.loadText = [](std::uint32_t, std::uint32_t) { return std::string(); };
         hooks.busy = [](bool) {};
         hooks.flushGraphics = [] {};
-        hooks.destroyCurrentScreen = [] {};
-        hooks.createCityScreen = [] {};
+        hooks.destroyCurrentScreen = [] { if (g_screens.destroyCurrentScreen) g_screens.destroyCurrentScreen(); };
+        hooks.createCityScreen = [] { if (g_screens.createCityScreen) g_screens.createCityScreen(); };
         hooks.createRegionScreen = [] {};
         InstallStubHosts();
         InstallCityProbeBindings();
