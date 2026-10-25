@@ -361,8 +361,10 @@ public:
     void ClearRegionViewSlot() override {}
     std::uint32_t LaunchCityFromRegion(RegionCityRef* ref) override {
         auto* adapter = ref ? dynamic_cast<CityAdapter*>(ref->get()) : nullptr;
+        if (std::getenv("SC4_DEBUG")) std::fprintf(stderr, "launch city adapter=%p\n", (void*)adapter);
         if (!adapter || !g_services.loadCity) return 0;
         const std::string path = adapter->SavePath();
+        if (std::getenv("SC4_DEBUG")) std::fprintf(stderr, "launch city path \"%s\"\n", path.c_str());
         return !path.empty() && g_services.loadCity(path) ? 1 : 0;
     }
     void QuitToRegionSelect(bool) override {}

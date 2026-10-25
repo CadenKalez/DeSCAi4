@@ -21,8 +21,10 @@
 #include <vector>
 
 #include "app/NativeBoot.h"
+#include "app/NativeCity.h"
 #include "app/NativeFonts.h"
 #include "app/NativeGraphics.h"
+#include "app/NativeCity.h"
 #include "app/NativeRegion.h"
 #include "app/NativeRegionScreen.h"
 #include "app/NativeUi.h"
@@ -307,6 +309,7 @@ bool Boot() {
         screen.graphics = gGraphics.get();
         screen.createWindowFromScript = &native::CreateWindowFromScript;
         screen.loadBitmap = [](std::uint32_t group, std::uint32_t instance) { return native::LoadBitmapResource(group, instance); };
+        screen.loadCity = [app](const std::string& path) { return native::LoadCityFile(*app, path); };
         native::InstallRegionScreenHost(screen);
         cISC4Nation* nation = native::CreateNation();
         app->SetNation(nation);
@@ -411,6 +414,16 @@ int main(int argc, char** argv) {
         if (!shot.empty()) {
             const int n = frames > 0 ? frames : 120;
             for (int i = 0; i < n; ++i) { Frame(); [NSThread sleepForTimeInterval:0.004]; }
+            if (const char* click = std::getenv("SC4_CLICK")) {   // "x,y": a synthetic double click after the frames
+                int cx = 0, cy = 0;
+                std::sscanf(click, "%d,%d", &cx, &cy);
+                gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, cx, cy, 0);
+                for (int k = 0; k < 2; ++k) {
+                    gMgr->GZWinMsgPost_Mouse(kGZMsgMouseDownL, cx, cy, 0);
+                    gMgr->GZWinMsgPost_Mouse(kGZMsgMouseUpL, cx, cy, 0);
+                    for (int i = 0; i < 10; ++i) { Frame(); [NSThread sleepForTimeInterval:0.004]; }
+                }
+            }
             if (std::getenv("SC4_DEBUG")) {
                 cIGZWin* desktop = gMgr->GetMainWindow();
                 if (cIGZWin* w = desktop->GetChildWindowFromIDRecursive(0xaaa9c9d9)) {

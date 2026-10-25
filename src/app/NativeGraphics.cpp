@@ -140,6 +140,7 @@ const std::vector<Buffer*>& Buffer::All() { return g_buffers; }
 Buffer::Buffer(int width, int height, bool onScreen) : onScreen_(onScreen) {
     g_buffers.push_back(this);
     buffer_ = new cGZBuffer();
+    buffer_->AddRef();   // this object's own reference (the draw-context wrappers hold theirs)
     if (onScreen) g_screenTarget = buffer_;
     // The screen is only a size and a colour space (the driver holds the pixels). A private buffer is shown by uploading it as a
     // texture, and cGZBufferSimGLCache only knows the formats the shipped game used: ARGB8888 for 32-bit, 16-bit otherwise.

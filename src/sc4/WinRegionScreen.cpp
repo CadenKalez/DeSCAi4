@@ -1082,6 +1082,7 @@ bool cSC4WinRegionScreen::GZOnMouseDownR(int x, int y, std::uint32_t modifiers) 
 }
 
 bool cSC4WinRegionScreen::GZOnMouseDownL(int x, int y, std::uint32_t) {   // @ 0x1002377b2
+    if (false) fprintf(stderr, "region click %d,%d signpost=%d city=%p\n", x, y, int(signpostActive_), view_ ? (void*)view_->GetCityAtPoint(x, y) : nullptr);
     IRegionScreenHost* host = RegionScreenHost();
     if (signpostActive_) {
         RegionViewCity* city = view_ ? view_->GetCityAtPoint(x, y) : nullptr;
@@ -1199,6 +1200,15 @@ bool cSC4WinRegionScreen::GZOnCommand(std::uint32_t command, std::uint64_t param
     }
     if (command != 0x287259f6) return true;   // PARTIAL: only the button command is wired
     switch (param) {
+    case 0x4a560000: {   // open the selected city
+        if (getenv("SC4_DEBUG")) fprintf(stderr, "open city: selected=%p\n", view_ ? (void*)view_->GetSelectedCity() : nullptr);
+        RegionViewCity* selected = view_ ? view_->GetSelectedCity() : nullptr;
+        // PARTIAL: the original also sets the difficulty level on the application (cISC4App vslot 0x58) first.
+        RegionCityRef* cityRef = selected ? GetOrCreateRegionalCity(*selected, true) : nullptr;
+        if (getenv("SC4_DEBUG")) fprintf(stderr, "open city: ref=%p\n", (void*)cityRef);
+        if (cityRef && !LaunchRegionalCity(cityRef)) RestoreSignposts();
+        return true;
+    }
     case 0x4a560001:
         RestoreSignposts();
         return true;

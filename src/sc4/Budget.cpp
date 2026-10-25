@@ -172,7 +172,7 @@ bool cSC4DepartmentBudget::Shutdown() {
             entry.second->Release();
         }
         lineItems_.clear();
-        for (auto& funded : locallyFunded_) funded.first->Release();
+        for (auto& funded : locallyFunded_) if (funded.first) funded.first->Release();
         locallyFunded_.clear();
     }
     return true;
@@ -557,7 +557,8 @@ bool cSC4DepartmentBudget::Read(cIGZIStream& stream) {
         SC4ReadGZSerializable(stream, kGZIID_cISCPropertyHolder, &holder, false);
         std::uint32_t purpose = 0;
         stream.GetUint32(purpose);
-        locallyFunded_.insert({static_cast<cISCPropertyHolder*>(holder), purpose});
+        // a holder whose class the host cannot create reads back null: keep the stream in step but do not track it
+        if (holder) locallyFunded_.insert({static_cast<cISCPropertyHolder*>(holder), purpose});
     }
     stream.GetUint32(nameInstance_);
     stream.GetUint32(nameGroup_);
