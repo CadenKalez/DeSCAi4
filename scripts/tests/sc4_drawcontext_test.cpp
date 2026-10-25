@@ -299,6 +299,7 @@ public:
 // A two-layer material whose texture records start with the texture id RenderModelInstance reads.
 struct MaterialFixture {
     std::uint32_t textureIds[2] = {111, 222};
+    const void* textureBindings[2] = {&textureIds[0], &textureIds[1]};   // binding -> record -> id
     s3d::cS3DMaterial material{};
 
     MaterialFixture() {
@@ -310,7 +311,7 @@ struct MaterialFixture {
         material.b10 = 5;     // blend destination
         material.layerCount = 2;
         material.layers[0].textureId = 111;
-        material.layers[0].texture = reinterpret_cast<std::uint64_t>(&textureIds[0]);
+        material.layers[0].texture = reinterpret_cast<std::uint64_t>(&textureBindings[0]);
         material.layers[0].sampler[0] = 3;
         material.layers[0].sampler[1] = 3;
         material.layers[0].sampler[2] = 1;
@@ -319,7 +320,7 @@ struct MaterialFixture {
         material.layers[0].pad15 = 5;
         material.layers[0].scale = 1.0f;
         material.layers[1].textureId = 222;
-        material.layers[1].texture = reinterpret_cast<std::uint64_t>(&textureIds[1]);
+        material.layers[1].texture = reinterpret_cast<std::uint64_t>(&textureBindings[1]);
         material.layers[1].sampler[0] = 2;
         material.layers[1].sampler[1] = 1;
         material.layers[1].sampler[2] = 2;

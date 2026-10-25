@@ -197,6 +197,8 @@ src/sc4/AutomataScriptSystem.cpp
 src/sc4/AutomataGenerator.cpp
 src/sc4/SpiralIterator.cpp
 src/sc4/ModelMaker.cpp
+src/sc4/ModelMakerUtility.cpp
+src/sc4/CellTextureModel.cpp
 src/sc4/SCPropertyHelp.cpp
 src/sc4/AutomataStates.cpp
 src/rz/StringConversion.cpp
@@ -557,6 +559,8 @@ src/app/hosts/IfaceIAutomatonHost.cpp
 src/app/hosts/IfaceIVehicleHost.cpp
 src/app/hosts/IfaceIPedestrianHost.cpp
 src/app/NativeCityView.cpp
+src/app/NativeModelMaker.cpp
 src/app/NativeTerrainView.cpp
 src/s3d/FSH.cpp
 src/sc4/cSTETerrainView3DDraw.cpp
+src/s3d/S3DModel.cpp

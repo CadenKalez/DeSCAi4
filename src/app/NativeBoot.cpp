@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "sc4/DBSegment.h"
 #include "app/NativeBoot.h"
 #include "gz/GZFramework.h"
 #include "gz/cGZPersistResourceManager.h"
@@ -83,6 +84,7 @@ bool RunBoot(bool verbose, bool keepAlive, gd::cIGZGDriver* driver, const std::f
     auto* resources = new cGZPersistResourceManager();
     framework->AddSystemService(resources);
     SL::spRM = resources;   // the service locator's own lookup (ServiceLocator.cpp) does not find the manager under its id yet
+    sc4::SetPersistResourceManagerService(resources);   // the occupants' exemplar holders resolve their exemplars through it
 
     // static: the start-up hooks outlive this function when the application is kept alive
     static Graphics graphics;

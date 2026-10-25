@@ -5,6 +5,8 @@
 #include "sc4/ModelMaker.h"
 
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
 #include <cmath>
 #include <cstring>
 #include <string>
@@ -16,6 +18,7 @@
 #include "sc4/DBSegment.h"
 #include "sc4/GeometryUtilities.h"
 #include "sc4/Lot.h"
+#include "sc4/LotBaseTextureOccupant.h"
 #include "sc4/SCProperty.h"
 #include "sc4/SCPropertyHelp.h"
 #include "sc4/ServiceLocator.h"
@@ -1232,11 +1235,12 @@ bool cSC4ModelMaker::LoadFoundationModels(cISC4Occupant* occupant, int zoom, int
 }
 
 bool cSC4ModelMaker::LoadLotBaseTextureModels(cISC4Occupant* occupant, int zoom, int rotation, std::uint32_t type) {
-    // PARTIAL: the original queries the occupant for 0x97f6d98 (the lot base texture occupant) and then calls its
-    // vslot 0x50 with (0, 0); that class is not recovered, so the port only performs the query.
+    // The lot base texture occupant (0x97f6d98) builds its cell models itself: vslot 0x50 LoadModels(false).
     void* raw = nullptr;
-    if (occupant && occupant->QueryInterface(0x97f6d98, &raw)) {
-        static_cast<cIGZUnknown*>(raw)->Release();
+    if (occupant && occupant->QueryInterface(kGZIID_cISC4LotBaseTextureOccupant, &raw)) {
+        auto* lotTexture = static_cast<cISC4LotBaseTextureOccupant*>(raw);
+        lotTexture->LoadModels(false);
+        lotTexture->Release();
     }
     (void)zoom;
     (void)rotation;
@@ -1601,9 +1605,13 @@ void cSC4ModelMaker::DoPostCityInit() {
     UpdateModelLoadRect();
     ReleaseViewFilter();
     g_host->RefreshViewFilter();
+    // view vslot 0x90 is the view filter information: the occupants below are shown through its filter, so the
+    // model maker takes it again here (with a null filter nothing would ever become visible).
+    viewFilter_ = g_host->CurrentViewFilter();
     OccupantList list;
     if (occupantManager_) {
         occupantManager_->GetOccupantsByOccupantManagerCells(list, nullptr, nullptr, modelFilter_, 0xffffffff);
+        if (std::getenv("SC4_DEBUG")) std::fprintf(stderr, "ModelMaker: post city init, %zu model occupants, load rect %d,%d..%d,%d zoom %d rot %d\n", list.size(), loadRect_.x0, loadRect_.z0, loadRect_.x1, loadRect_.z1, zoom_, rotation_);
         for (cISC4Occupant* occupant : list) {
             const bool visible = (occupant->GetFlags() & kOccupantFlagVisible) != 0;
             const std::uint32_t type = occupant->GetType();

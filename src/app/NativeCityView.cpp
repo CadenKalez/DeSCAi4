@@ -9,11 +9,14 @@
 #include "sc4/ViewUtilities.h"
 #include "sc4/CameraControl.h"
 #include "app/NativeTerrainView.h"
+#include "app/NativeModelMaker.h"
 #include "sc4/Render3D.h"
 #include "sc4/View3DWin.h"
 #include "sc4/cSC4City.h"
 #include "sc4/cSTETerrain.h"
 #include "sc4/ISC4City.h"
+#include "sc4/OccupantManager.h"
+#include <map>
 
 namespace native {
 namespace {
@@ -94,6 +97,26 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
         std::printf("city view: terrain component %p -> %p", static_cast<void*>(terrainObject), static_cast<void*>(terrain));
         if (terrain) std::printf(" cells %u x %u", terrain->CellCountX(), terrain->CellCountZ());
         std::printf("\n");
+        // The occupant manager is not a cIGZInitShutdown in the port, so the city's component pass skips it; its Init
+        // initialises every occupant the save restored (and lets the queries below and the model maker see them).
+        cIGZUnknown* om = city->GetComponent(sc4::CityComponent::OccupantManager);
+        void* iface = nullptr;
+        if (om && om->QueryInterface(sc4::kGZIID_cISC4OccupantManager, &iface)) {
+            auto* manager = static_cast<sc4::cISC4OccupantManager*>(iface);
+            manager->Init();
+            if (std::getenv("SC4_DEBUG")) {   // census of the loaded occupants by type
+                static std::map<std::uint32_t, int> census;
+                census.clear();
+                const float lo[3] = {-1e6f, -1e6f, -1e6f}, hi[3] = {1e6f, 1e6f, 1e6f};
+                auto* all = new sc4::cSC4OccupantFilter();
+                all->AddRef();
+                manager->IterateOccupantsByBBox([](sc4::cISC4Occupant* o, void*) { ++census[o->GetType()]; return true; }, nullptr, lo, hi,
+                                                static_cast<sc4::cISC4OccupantFilter*>(all));
+                all->Release();
+                for (auto& [type, n] : census) std::printf("occupants: type %08x x%d\n", type, n);
+            }
+            manager->Release();
+        }
     }
     // DoPreCityInit: the camera, its control (looking at the middle of a 1 km city) and the renderer.
     auto* camera = new s3d::cS3DCamera();
@@ -107,7 +130,9 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
         const float sizeX = static_cast<float>(terrain->CellCountX()) * 16.0f, sizeZ = static_cast<float>(terrain->CellCountZ()) * 16.0f;
         control->SetCitySize(sizeX, sizeZ);
         control->SetZoomAndRotation(std::getenv("SC4_ZOOM") ? std::atoi(std::getenv("SC4_ZOOM")) : 0, 0);
-        control->SetViewTargetPosition(cS3DVector3{sizeX * 0.5f, 0.0f, sizeZ * 0.5f});
+        float focusX = sizeX * 0.5f, focusZ = sizeZ * 0.5f;
+        if (const char* focus = std::getenv("SC4_FOCUS")) std::sscanf(focus, "%f,%f", &focusX, &focusZ);   // dev: look at a world x,z
+        control->SetViewTargetPosition(cS3DVector3{focusX, 0.0f, focusZ});
         control->SendViewChangeMessage();
     }
 
@@ -121,6 +146,10 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     const bool ok = render->Init();
     render->SetBackingStoreEnabled(false);   // the Metal driver keeps no backing store yet: a restore would replay whatever the screen held
     std::printf("city view: renderer %s\n", ok ? "up" : "FAILED");
+    if (auto* city = dynamic_cast<sc4::cSC4City*>(cityInterface); city && ok) {
+        native::InstallModelResources(driver);
+        native::AttachModelMaker(*render, *city);
+    }
 
     auto* adapter = new RendererAdapter(render, control, driver, screen);
     view.AttachRenderStack(adapter, nullptr, control);

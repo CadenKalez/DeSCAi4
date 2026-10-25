@@ -704,8 +704,10 @@ void SC4DrawContext::SetRenderState(const s3d::cS3DMaterial& material, const s3d
     // (optionally) the inverse-scale texture transform.
     for (std::uint32_t index = 0; index < layerCount; ++index) {
         const s3d::S3DMaterialLayer& layer = material.layers[index];
-        // +8 points at the texture record whose first word is the texture id (the original does not check it)
-        const auto* textureRecord = *reinterpret_cast<const void* const*>(&layer.texture);
+        // +8 points at the texture binding, whose first word points at the texture record that starts with the
+        // texture id (**(+0x18), as cS3DModelInstance::GetSortValue reads it; the original checks neither pointer)
+        const auto* binding = *reinterpret_cast<const void* const* const*>(&layer.texture);
+        const auto* textureRecord = binding ? *binding : nullptr;
         const std::uint32_t texture = textureRecord ? *static_cast<const std::uint32_t*>(textureRecord) : 0;
         if (index == 0 || DeviceSecondStage()) driver_->SetTexture(texture, index);
         stages_[index].texture = static_cast<std::int32_t>(texture);
@@ -737,7 +739,8 @@ void SC4DrawContext::SetRenderStateHighlight(const s3d::cS3DMaterial& material,
     // The highlight type is the byte after the attribute flags (+1).
     SetRenderStateHighlight((attributes->flags >> 8) & 0xffu);
     if (material.layerCount == 0) return;
-    const auto* textureRecord = *reinterpret_cast<const void* const*>(&material.layers[0].texture);
+    const auto* binding = *reinterpret_cast<const void* const* const*>(&material.layers[0].texture);
+    const auto* textureRecord = binding ? *binding : nullptr;
     const std::uint32_t texture = textureRecord ? *static_cast<const std::uint32_t*>(textureRecord) : 0;
     driver_->SetTexture(texture, 0);
     stages_[0].texture = static_cast<std::int32_t>(texture);
