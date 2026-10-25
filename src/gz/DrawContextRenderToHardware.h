@@ -83,6 +83,9 @@ public:
     virtual void SetTexture(std::uint32_t texture, bool scaled, bool tiled) = 0;          // vslot 0x100 (0x1007b4cf6)
     virtual void DrawTriangleList(cGZDrawVertex* vertices, int count) = 0;                // vslot 0x108 (0x1007b4de2)
     virtual void DrawQuadList(cGZDrawVertex* vertices, int count) = 0;                    // vslot 0x110 (0x1007b4e58)
+    // The derived class's own Suspend / Resume (0x1007b3abe / 0x1007b3b5e) run after / instead of the engine's.
+    virtual void Suspend() {}
+    virtual void Resume() {}
 };
 
 class cGZDrawContextRenderToHardware : public gz::cIGZDrawEngine {

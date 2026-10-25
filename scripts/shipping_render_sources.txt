@@ -12,3 +12,8 @@ src/render/TexelOps.cpp
 src/render/TextureStageData.cpp
 src/render/gd/VideoModes.cpp
 src/sc4/BackingStore.cpp
+src/gz/DrawContextRenderToHardware.cpp
+src/gz/DrawContextRenderToSimGL.cpp
+src/gz/BufferSimGLCache.cpp
+src/gz/Buffer.cpp
+src/rz/TileSetup.cpp

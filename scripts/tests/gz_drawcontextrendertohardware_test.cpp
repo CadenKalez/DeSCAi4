@@ -370,8 +370,8 @@ int main() {
         CHECK(!engine->StateDirty());
         CHECK(host.setViewportCalls == 1 && host.viewport.right == 8 && host.viewport.bottom == 4);
         CHECK(host.setTransformCalls == 1);
-        CHECK(Near(host.transform[0], 0.125f) && Near(host.transform[5], 0.25f));
-        CHECK(Near(host.transform[10], 0.0f) && Near(host.transform[12], 1.0f) && Near(host.transform[13], 1.0f));
+        CHECK(Near(host.transform[0], 0.25f) && Near(host.transform[5], -0.5f));   // 2/8, -2/4 (the literal pool of 0x10065564c)
+        CHECK(Near(host.transform[10], 0.0f) && Near(host.transform[12], -1.0f) && Near(host.transform[13], 1.0f));
         CHECK(Near(host.transform[14], 0.5f) && Near(host.transform[15], 1.0f));
         CHECK(host.drawQuadCalls == 1);
         CHECK(host.lastQuads.size() == 4);
@@ -400,8 +400,8 @@ int main() {
         engine->SetClipRect({2, 1, 6, 3});
         CHECK(engine->TransformDirty());
         CHECK(engine->Draw(gz::eDrawingOp::FillRect, rect, 2) == gz::eEngineDrawResult::Done);
-        CHECK(host.setTransformCalls == 2 && Near(host.transform[0], 0.25f) && Near(host.transform[5], 0.5f));
-        CHECK(Near(host.transform[12], 0.5f) && Near(host.transform[13], 0.5f));
+        CHECK(host.setTransformCalls == 2 && Near(host.transform[0], 0.5f) && Near(host.transform[5], -1.0f));
+        CHECK(Near(host.transform[12], -2.0f) && Near(host.transform[13], 2.0f));
         // An empty clip installs the degenerate matrix (only z / w survive).
         engine->SetClipRect({-8, -8, -4, -4});
         CHECK(engine->Draw(gz::eDrawingOp::FillRect, rect, 2) == gz::eEngineDrawResult::Done);

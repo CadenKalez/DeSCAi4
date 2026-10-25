@@ -246,6 +246,7 @@ bool cGZDrawContextRenderToHardware::SetBltSource(cIGZUnknown* source, float x, 
 void cGZDrawContextRenderToHardware::Suspend() {
     dirty_ = true;
     transformDirty_ = true;
+    if (hardware_ != nullptr) hardware_->Suspend();
 }
 
 // 0x1006555b6: only filled rectangles and filled triangles are handled here; everything else is left to the context's
@@ -272,19 +273,22 @@ gz::eEngineDrawResult cGZDrawContextRenderToHardware::Draw(gz::eDrawingOp op, co
     return eEngineDrawResult::Done;
 }
 
-// 0x10065564c: a D3D-style orthographic projection onto the clip rectangle (translation in the fourth row). An empty
+// 0x10065564c: an orthographic projection of the clip rectangle onto [-1,1]^2, y down (translation in the fourth row). An empty
 // clip installs the degenerate matrix instead.
 void cGZDrawContextRenderToHardware::UpdateTransform() {
     transformDirty_ = false;
     if (clip_.left < clip_.right && clip_.top < clip_.bottom) {
         if (hardware_ != nullptr) hardware_->SetViewport(clip_);
-        const float inverseWidth = 1.0f / static_cast<float>(clip_.right - clip_.left);
-        const float inverseHeight = 1.0f / static_cast<float>(clip_.bottom - clip_.top);
-        const float matrix[16] = {inverseWidth, 0.0f, 0.0f, 0.0f,
-                                  0.0f, inverseHeight, 0.0f, 0.0f,
+        // The literal pool of 0x10065564c: scale +2/w and -2/h (y is flipped: the clip's top row is +1), then the translation
+        // -1 - left * scaleX and 1 - top * scaleY; z = 0.5, w = 1 in the last row. (An earlier reading took the constants
+        // as 1, 1, 1 and shipped a matrix that put every vertex outside the clip volume.)
+        const float scaleX = 2.0f / static_cast<float>(clip_.right - clip_.left);
+        const float scaleY = -2.0f / static_cast<float>(clip_.bottom - clip_.top);
+        const float matrix[16] = {scaleX, 0.0f, 0.0f, 0.0f,
+                                  0.0f, scaleY, 0.0f, 0.0f,
                                   0.0f, 0.0f, 0.0f, 0.0f,
-                                  1.0f - static_cast<float>(clip_.left) * inverseWidth,
-                                  1.0f - static_cast<float>(clip_.top) * inverseHeight, 0.5f, 1.0f};
+                                  -1.0f - static_cast<float>(clip_.left) * scaleX,
+                                  1.0f - static_cast<float>(clip_.top) * scaleY, 0.5f, 1.0f};
         if (hardware_ != nullptr) hardware_->SetTransform(matrix);
     } else {
         if (hardware_ != nullptr) hardware_->SetTransform(kNullOrthoMat);
@@ -563,7 +567,9 @@ void cGZDrawContextRenderToHardware::DrawTriangleBlt(float x, float y, const cRZ
 }
 
 void cGZDrawContextRenderToHardware::Flush() {}                                                   // 0x1007b4f4c (nothing to do)
-void cGZDrawContextRenderToHardware::Resume() {}                                                  // 0x100656e7c (nothing to do)
+void cGZDrawContextRenderToHardware::Resume() {                                                   // 0x100656e7c (nothing to do)
+    if (hardware_ != nullptr) hardware_->Resume();                                                // the derived class's Resume
+}
 bool cGZDrawContextRenderToHardware::LockTarget(gz::cGZBufferSurfaceDesc&, bool) { return false; }   // 0x100656e82
 void cGZDrawContextRenderToHardware::UnlockTarget() {}                                            // 0x100656e8a (nothing to do)
 
