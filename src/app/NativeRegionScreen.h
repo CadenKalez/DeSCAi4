@@ -4,6 +4,7 @@
 // (the screen's IRegionalCity, the view's IRegionCityView and the record cSC4RegionalCity).
 #pragma once
 #include <functional>
+#include <string>
 
 #include "app/NativeGraphics.h"
 #include "sc4/WinRegionScreen.h"
@@ -18,6 +19,8 @@ struct RegionScreenServices {
     Graphics* graphics = nullptr;
     cIGZWin* (*createWindowFromScript)(const cGZPersistResourceKey&, cIGZWin*, std::uint32_t) = nullptr;
     std::function<cGZBuffer*(std::uint32_t group, std::uint32_t instance)> loadBitmap;
+    std::function<bool(const std::string& path)> loadCity;   // loads a city file and enters it
+
 };
 
 // Installs both hosts (sc4::SetRegionScreenHost / SetRegionViewHost).

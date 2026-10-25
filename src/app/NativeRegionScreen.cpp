@@ -5,6 +5,8 @@
 #include <map>
 #include <memory>
 
+#include "app/NativeUi.h"
+#include "dbpf/DBPFReader.h"
 #include "gz/RZServices.h"
 #include "gz/cIGZMessage2.h"
 #include "rz/cRZMessage2Standard.h"
@@ -115,6 +117,7 @@ public:
     bool IsTutorial() const override { return Concrete(city_)->IsTutorial(); }
     void GetPointsOfInterest(int, std::vector<RegionalCityPointOfInterest>&) override {}
     RegionCityRef* Ref() { return &ref_; }
+    std::string SavePath() const { cRZString path; city_->GetCitySaveFilePath(path); return path.ToChar(); }
     void Adopt() { ref_ = static_cast<IRegionalCity*>(this); }
 
 private:
@@ -180,7 +183,7 @@ public:
             for (int c = 0; c < cols_; ++c) {
                 auto& tile = tiles_[std::size_t(r * cols_ + c)];
                 if (tile.second) {
-                    source_->RenderTile(tile.first->AsBuffer(), c * tileW_, r * tileH_);
+                    source_->RenderTile(tile.first->Pixels(), c * tileW_, r * tileH_);   // the CPU pixels: the cities are blended by hand
                     tile.second = false;
                 }
                 screen->Resume();
@@ -240,6 +243,7 @@ public:
         mirror->mapX = city.mapX; mirror->mapY = city.mapY; mirror->size = city.size;
         if (city.snapshot) mirror->image = static_cast<BitmapBuffer*>(city.snapshot.get())->Pixels();
         if (city.mask) mirror->mask = static_cast<BitmapBuffer*>(city.mask.get())->Pixels();
+        BuildHitSpans(*mirror);
         mirrors_.push_back(mirror);
         copies_.push_back(std::make_unique<RegionViewCity>(city));
         view_->AddCity(mirror);
@@ -263,6 +267,27 @@ public:
     cIGZWin* AsWindow() override { return static_cast<cIGZWin*>(static_cast<cGZWin*>(view_)); }
 
 private:
+    // The hit-test runs of SC4CreateSpanList (threshold 0, no alpha bytes): per row, a start marker x | y << 16 and an end marker
+    // (exclusive) for every run of pixels with any alpha; GetCityAtPoint tests membership by the parity of a lower_bound.
+    static void BuildHitSpans(sc4::cSC4RegionViewCity& city) {
+        city.hitSpans.clear();
+        cIGZBuffer* image = city.image;
+        if (!image) return;
+        const std::uint32_t width = image->Width(), height = image->Height();
+        for (std::uint32_t row = 0; row < height; ++row) {
+            std::uint32_t start = 0;
+            bool inside = false;
+            for (std::uint32_t col = 0; col <= width; ++col) {
+                const bool solid = col < width && (image->GetPixel(col, row) >> 24) != 0;
+                if (solid && !inside) { start = col; inside = true; }
+                else if (!solid && inside) {
+                    city.hitSpans.push_back(start | (row << 16));
+                    city.hitSpans.push_back(col | (row << 16));
+                    inside = false;
+                }
+            }
+        }
+    }
     sc4::cSC4RegionViewCity* MirrorOf(int x, int z) {
         for (sc4::cSC4RegionViewCity* m : mirrors_) if (m->x == x && m->z == z) return m;
         return nullptr;
@@ -334,7 +359,12 @@ public:
     RegionCityRef* FindOrCreateCity(const RegionViewCity& city, bool) override { return FindCity(city.x, city.z); }
     bool LaunchRegionCityByName(const cRZString&, RegionCityRef*) override { return false; }
     void ClearRegionViewSlot() override {}
-    std::uint32_t LaunchCityFromRegion(RegionCityRef*) override { return 0; }
+    std::uint32_t LaunchCityFromRegion(RegionCityRef* ref) override {
+        auto* adapter = ref ? dynamic_cast<CityAdapter*>(ref->get()) : nullptr;
+        if (!adapter || !g_services.loadCity) return 0;
+        const std::string path = adapter->SavePath();
+        return !path.empty() && g_services.loadCity(path) ? 1 : 0;
+    }
     void QuitToRegionSelect(bool) override {}
 
     IRegionView* CreateRegionView() override { return new ViewAdapter(); }
@@ -343,6 +373,26 @@ public:
         return image ? new BitmapBuffer(image) : nullptr;
     }
     IWinBuffer* CreateBlankDisplayBuffer() override { return new BitmapBuffer(); }
+    // The pictures a city file carries for the region map: PNG records {0x8a2482b9, 0x4a2482bb, 0} (the city's block) and 2 (its mask).
+    bool LoadCityThumbnails(int x, int z, IWinBuffer** image, IWinBuffer** mask) override {
+        cISC4Region* region = ActiveRegion();
+        cRZAutoRefCount<cISC4RegionalCity>* holder = region ? region->GetCity(x, z) : nullptr;
+        if (!holder || !holder->get() || !DecodeFunction()) return false;
+        cRZString path;
+        Concrete(holder->get())->GetCitySaveFilePath(path);
+        dbpf::Package package;
+        if (!package.Open(path.ToChar())) return false;
+        auto load = [&](std::uint32_t instance) -> IWinBuffer* {
+            const dbpf::Entry* entry = package.Find(0x8a2482b9, 0x4a2482bb, instance);
+            std::vector<std::uint8_t> bytes;
+            if (!entry || !package.Read(*entry, bytes)) return nullptr;
+            cGZBuffer* decoded = DecodeFunction()(bytes);
+            return decoded ? new BitmapBuffer(decoded) : nullptr;
+        };
+        *image = load(0);
+        *mask = load(2);
+        return *image != nullptr;
+    }
 
     cISCPropertyHolder* CreateTuningProperties() override { return nullptr; }
     bool CloudOpacityBytes(cISCPropertyHolder*, std::uint8_t&, std::uint8_t&) override { return false; }

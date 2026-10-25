@@ -320,6 +320,9 @@ public:
     virtual int CitySnapshotSet() = 0;                                      // city list vslot 0x90
     // region vslot 0xb8 (GetCityLocations): the city places of the active region (x, z, log2 of the edge length).
     virtual void CityLocations(std::vector<cISC4Region::cLocation>& out) { (void)out; }
+    // SC4ReadCityRegionViewThumbnails (0x1001d2cf3) for the city at (x, z): the picture the city's save file carries for the region
+    // map (records {0x8a2482b9, 0x4a2482bb, 0} and its mask at instance 2). Each comes back with one reference, or null.
+    virtual bool LoadCityThumbnails(int x, int z, IWinBuffer** image, IWinBuffer** mask) { (void)x; (void)z; (void)image; (void)mask; return false; }
     virtual RegionCityRef* FindCity(int x, int z) = 0;                      // city list vslot 0x58 (borrowed)
     virtual RegionCityRef* FindOrCreateCity(const RegionViewCity& city, bool create) = 0;
     virtual bool LaunchRegionCityByName(const cRZString& name, RegionCityRef* city) = 0;   // cISC4App vslot 0x68

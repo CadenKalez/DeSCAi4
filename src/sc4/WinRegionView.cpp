@@ -300,10 +300,42 @@ void cSC4WinRegionView::RenderTile(cIGZBuffer* buffer, int x, int y) {   // @ 0x
     } else {
         buffer->Fill(buffer->ConvertRGBValueToNative(0, 0, 0), static_cast<const cRZRect*>(nullptr));
     }
-    // PARTIAL (5.4 KB at 0x10075bbf0..0x10075d4fc): the per-city compositing is not recovered. It walks the city
-    // vector, clips the thumbnail rectangle, rebuilds the city's +0x58 transparent-run list from the mask (growing
-    // semi-transparent edges), blits or alpha-blends the image through it, then draws the label windows through
-    // cIGZWinCtrlMgr and the airport / seaport effect icons. Only the backdrop blit above is complete.
+    // The cities, back to front, each blended over the tile at its map position (the original's loop, 0x10075bbf0, clips the city's
+    // rectangle against the tile first). PARTIAL: the original blends through the mask's transparent-run list (growing the
+    // semi-transparent edge, +0x58) and then draws the selected city's grid, the label windows and the airport / seaport icons
+    // (to 0x10075d4fc); here the picture's own alpha is blended and nothing else is drawn.
+    if (cities_.empty() || !buffer->Lock(cIGZBuffer::kLockWrite)) return;
+    auto* destination = static_cast<std::uint8_t*>(buffer->GetColorSurfaceBits());
+    const std::uint32_t destinationPitch = buffer->GetColorSurfaceStride();
+    const cRZRect tileArea = *buffer->GetBufferArea();
+    for (cSC4RegionViewCity* city : cities_) {
+        if (!city || !city->image) continue;
+        cRZRect rect;
+        GetRegionScreenRect(*city, rect);   // in view coordinates, i.e. canvas coordinates
+        const int left = rect.left - x, top = rect.top - y;
+        const int width = rect.right - rect.left, height = rect.bottom - rect.top;
+        const int x0 = std::max(left, tileArea.left), y0 = std::max(top, tileArea.top);
+        const int x1 = std::min(left + width, tileArea.right), y1 = std::min(top + height, tileArea.bottom);
+        if (x0 >= x1 || y0 >= y1 || !city->image->Lock(cIGZBuffer::kLockRead)) continue;
+        const auto* source = static_cast<const std::uint8_t*>(city->image->GetColorSurfaceBits());
+        const std::uint32_t sourcePitch = city->image->GetColorSurfaceStride();
+        for (int row = y0; row < y1; ++row) {
+            const auto* from = reinterpret_cast<const std::uint32_t*>(source + static_cast<std::size_t>(row - top) * sourcePitch) + (x0 - left);
+            auto* to = reinterpret_cast<std::uint32_t*>(destination + static_cast<std::size_t>(row) * destinationPitch) + x0;
+            for (int col = x0; col < x1; ++col, ++from, ++to) {
+                const std::uint32_t pixel = *from, alpha = pixel >> 24;
+                if (alpha == 0) continue;
+                if (alpha == 255) { *to = pixel | 0xff000000u; continue; }
+                const std::uint32_t back = *to;
+                std::uint32_t out = 0xff000000u;
+                for (int shift = 0; shift <= 16; shift += 8)
+                    out |= ((((pixel >> shift) & 0xff) * alpha + ((back >> shift) & 0xff) * (255 - alpha) + 127) / 255) << shift;
+                *to = out;
+            }
+        }
+        city->image->Unlock(cIGZBuffer::kLockRead);
+    }
+    buffer->Unlock(cIGZBuffer::kLockWrite);
 }
 
 void cSC4WinRegionView::GetRegionScreenRect(const cSC4RegionViewCity& city, cRZRect& out) const {   // @ 0x10075dae2

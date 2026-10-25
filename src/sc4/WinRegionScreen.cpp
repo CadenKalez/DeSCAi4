@@ -721,6 +721,17 @@ void cSC4WinRegionScreen::PutCitiesInView() {   // @ 0x100236398 (PARTIAL)
             city.mapX = zs * -37.49f + static_cast<float>(location.x) * 90.51f;
             city.mapY = zs * 45.25f + static_cast<float>(edge + location.x) * 18.75f;
             SetCitySnapshotsToDefault(city);
+            // The city's own picture replaces the default one. (The original also resamples it by the fraction of its map position and
+            // turns the mask into the alpha channel and three span lists - RecalculateImagesFromCitySnapshots, still PARTIAL; the picture
+            // here already carries its alpha.)
+            IWinBuffer* image = nullptr;
+            IWinBuffer* mask = nullptr;
+            if (host->LoadCityThumbnails(location.x, location.z, &image, &mask) && image) {
+                city.snapshot = image;
+                city.mask = mask;
+            }
+            ReleaseBuffer(image);
+            ReleaseBuffer(mask);
             cities_.push_back(std::move(city));
         }
     }
@@ -1024,10 +1035,16 @@ bool cSC4WinRegionScreen::GZPaint() {   // @ 0x100237382
     float screenX = 0, screenY = 0;
     if (renderer_) renderer_->GetScreenOffsets(screenX, screenY);
     float planeX = 0, planeY = 0;
-    if (cameraControl_) {
+    RegionCameraBasis basisProbe;
+    IRegionScreenHost* basisHost = RegionScreenHost();
+    if (cameraControl_ && basisHost && basisHost->CameraBasis(basisProbe)) {
         const cS3DVector2 offset = cameraControl_->ScreenOffset();   // camera control +0xa0 / +0xa4
         planeX = offset.x;
         planeY = offset.y;
+    } else {
+        // No camera basis (the host has no 3-D renderer): the screen offset is the target plus half the window, y up.
+        planeX = targetX_ + static_cast<float>(GetW()) * 0.5f;
+        planeY = -(targetY_ + static_cast<float>(GetH()) * 0.5f);
     }
     // Quirk: x rounds through the float bits with a +12582912 bias, y with 12582912 - value (a negated result).
     const int scrollX = RoundThroughBits(planeX) - GetW() / 2 - kRoundBiasBits;
