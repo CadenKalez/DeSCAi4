@@ -16,6 +16,10 @@
 #include "sc4/cSTETerrain.h"
 #include "sc4/ISC4City.h"
 #include "sc4/OccupantManager.h"
+#include "rz/cRZMessage2Standard.h"
+#include "sc4/ServiceLocator.h"
+#include "sc4/ViewInputControlCityScroll.h"
+#include <CoreGraphics/CoreGraphics.h>
 #include <map>
 
 namespace native {
@@ -85,6 +89,51 @@ private:
     std::uint32_t refs_ = 0;
 };
 
+// The view input tools' services (SL::spView3D / RZ::WM()) and the right-button scroll tool's.
+class ViewInput final : public sc4::IViewInputHost, public sc4::ICityScrollHost {
+public:
+    struct ViewAdapter final : sc4::IViewInputView {
+        sc4::cSC4View3DWin* view = nullptr;
+        bool QueryInterface(std::uint32_t, void**) override { return false; }
+        std::uint32_t AddRef() override { return 1; }
+        std::uint32_t Release() override { return 1; }
+        void EndInput(int) override { if (view) view->RemoveCurrentViewInputControl(false); }   // vslot 0xd0
+        sc4::cSC4ViewInputControl* TopControl() override { return view ? view->GetCurrentViewInputControl() : nullptr; }
+    };
+    explicit ViewInput(sc4::cSC4View3DWin& view) { adapter_.view = &view; }
+    sc4::IViewInputView* View3D() override { return &adapter_; }
+    cIGZWinMgr* WindowManager() override { return adapter_.view->GetWindowManager(); }
+    void PlaySound(int, std::uint32_t) override {}
+    bool RightButtonDown() override {
+        return CGEventSourceButtonState(kCGEventSourceStateCombinedSessionState, kCGMouseButtonRight);
+    }
+    bool ReadTunables(std::uint32_t&, std::uint32_t&) override { return false; }   // the constructor's 12 / 80 are the shipped values
+    void SetScrolling(bool scrolling, float angle, float speed) override { adapter_.view->SetScrolling(scrolling, angle, speed); }
+    void ScrollStop() override { adapter_.view->ScrollStop(); }
+
+private:
+    ViewAdapter adapter_;
+};
+
+// The camera control's services: its view-change notifications go out on the game's message server (the model maker,
+// the renderer, the terrain view and the lighting manager listen for them) and the city renderer's view utilities follow it.
+class CameraHost final : public sc4::ICameraControlHost {
+public:
+    sc4::cSC43DRender* render = nullptr;
+    cIGZMessageServer2* MessageServer() override { return SL::spMS2; }
+    cIGZMessage2Standard* CreateMessage() override {
+        auto* message = new cRZMessage2Standard();
+        message->AddRef();
+        return message;
+    }
+    bool HasViewUtilities() override { return render && render->GetViewUtilities(); }
+    void UpdateViewUtilities(sc4::cSC4CameraControl* control) override { render->GetViewUtilities()->UpdateCameraPosition(control); }
+    void GetCityCornerPosition(int corner, cS3DVector3& out) override {
+        if (HasViewUtilities()) render->GetViewUtilities()->GetCityCornerPosition(corner, &out.x);
+    }
+    bool PickTerrain(const cS3DVector3&, const cS3DVector3&, cS3DVector3&) override { return false; }
+};
+
 }  // namespace
 
 bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, gd::cIGZGDriver* driver, gz::cIGZDrawContext* screen, int width, int height) {
@@ -118,6 +167,9 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
             manager->Release();
         }
     }
+    static CameraHost cameraHost;
+    cameraHost.render = nullptr;
+    sc4::SetCameraControlHost(&cameraHost);
     // DoPreCityInit: the camera, its control (looking at the middle of a 1 km city) and the renderer.
     auto* camera = new s3d::cS3DCamera();
     camera->AddRef();
@@ -143,6 +195,7 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     render->SetViewportSize(static_cast<std::uint32_t>(width), static_cast<std::uint32_t>(height));
     render->SetCamera(camera);
     render->SetCameraControl(control);
+    cameraHost.render = render;
     const bool ok = render->Init();
     render->SetBackingStoreEnabled(false);   // the Metal driver keeps no backing store yet: a restore would replay whatever the screen held
     std::printf("city view: renderer %s\n", ok ? "up" : "FAILED");
@@ -152,6 +205,11 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     }
 
     auto* adapter = new RendererAdapter(render, control, driver, screen);
+    static ViewInput* input = nullptr;
+    delete input;
+    input = new ViewInput(view);
+    sc4::SetViewInputHost(input);
+    sc4::SetCityScrollHost(input);
     view.AttachRenderStack(adapter, nullptr, control);
     view.EnablePainting(true);
     return ok;

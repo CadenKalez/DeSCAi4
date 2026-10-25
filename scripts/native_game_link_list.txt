@@ -212,6 +212,7 @@ src/sc4/WinSC4App.cpp
 src/app/NativeBoot.cpp
 src/app/NativeUi.cpp
 src/sc4/View3DWin.cpp
+src/sc4/ViewInputControlCityScroll.cpp
 src/sc4/WinRegionScreen.cpp
 src/sc4/WinSplashScreen.cpp
 src/gz/LegacyControl.cpp
@@ -467,7 +468,7 @@ src/app/hosts/StubPropVisualEffect.cpp
 src/app/hosts/StubPropertyView.cpp
 src/app/hosts/StubPylonOccupant.cpp
 src/app/hosts/StubQuery.cpp
-src/app/hosts/StubRender3D.cpp
+src/app/NativeRender3DHost.cpp
 src/app/hosts/StubResizableOutline.cpp
 src/app/hosts/StubRewardAdvice.cpp
 src/app/hosts/StubSignTool.cpp
@@ -483,7 +484,7 @@ src/app/hosts/StubTutorialTask.cpp
 src/app/hosts/StubUndergroundNetworkTool.cpp
 src/app/hosts/StubUndergroundOccupant.cpp
 src/app/hosts/StubVertexHtConstraint.cpp
-src/app/hosts/StubView3DWin.cpp
+src/app/NativeView3DWinHost.cpp
 src/app/hosts/StubViewInput.cpp
 src/app/hosts/StubWeather.cpp
 src/app/hosts/StubWinAdviceList.cpp

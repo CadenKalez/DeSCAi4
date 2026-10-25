@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -38,6 +39,7 @@
 #include "gz/GZFramework.h"
 #include "gz/WinFont.h"
 #include "render/gd/MetalGDriver.h"
+#include "sc4/View3DWin.h"
 #include "sc4/App.h"
 #include "sc4/SC4UI.h"
 #include "sc4/SLBuffer.h"
@@ -373,8 +375,39 @@ void WritePng(const std::string& path) {
 - (void)mouseUp:(NSEvent*)e { [self post:kGZMsgMouseUpL e:e]; }
 - (void)rightMouseDown:(NSEvent*)e { [self post:kGZMsgMouseDownR e:e]; }
 - (void)rightMouseUp:(NSEvent*)e { [self post:kGZMsgMouseUpR e:e]; }
-- (void)keyDown:(NSEvent*)e { gMgr->GZWinMsgPost_Keyboard(kGZMsgKeyDown, e.keyCode, 0); }
-- (void)keyUp:(NSEvent*)e { gMgr->GZWinMsgPost_Keyboard(kGZMsgKeyUp, e.keyCode, 0); }
+// The city view's keys: what the game's key accelerator (the keyboard shortcut table, not loaded natively yet) turns
+// into cSC4View3DWin commands - arrows scroll, +/- and Page Up/Down zoom, comma/period rotate.
+static bool CityViewKey(NSEvent* e, bool down) {
+    sc4::cSC4View3DWin* view = gAppWindow ? gAppWindow->View3D() : nullptr;
+    if (!view) return false;
+    std::uint32_t command = 0;
+    switch (e.keyCode) {
+        case 123: command = down ? 0x6a935cd8 : 0x2a94826b; break;   // left
+        case 124: command = down ? 0x6a935ce0 : 0x2a94826e; break;   // right
+        case 126: command = down ? 0x6a935cdd : 0x2a948272; break;   // up
+        case 125: command = down ? 0x6a935ce2 : 0x2a948275; break;   // down
+        case 24: case 69: case 116: command = down ? 0x6a935cb7 : 0; break;   // = / keypad + / Page Up: zoom in
+        case 27: case 78: case 121: command = down ? 0x6a935cba : 0; break;   // - / keypad - / Page Down: zoom out
+        case 43: command = down ? 0x6a935cc9 : 0; break;                      // , rotate left
+        case 47: command = down ? 0x6a935ccc : 0; break;                      // . rotate right
+        default: return false;
+    }
+    if (command && !(down && e.isARepeat)) view->ProcessViewCommand(command);
+    return true;
+}
+- (void)keyDown:(NSEvent*)e { if (!CityViewKey(e, true)) gMgr->GZWinMsgPost_Keyboard(kGZMsgKeyDown, e.keyCode, 0); }
+- (void)keyUp:(NSEvent*)e { if (!CityViewKey(e, false)) gMgr->GZWinMsgPost_Keyboard(kGZMsgKeyUp, e.keyCode, 0); }
+- (void)rightMouseDragged:(NSEvent*)e { [self post:kGZMsgMouseMove e:e]; }
+// The wheel: one GZ notch (120) per accumulated line of scrolling, posted as a Windows wParam (delta high, keys low).
+- (void)scrollWheel:(NSEvent*)e {
+    static double accumulated = 0;
+    accumulated += e.hasPreciseScrollingDeltas ? e.scrollingDeltaY / 10.0 : e.scrollingDeltaY;
+    if (std::fabs(accumulated) < 1.0) return;
+    const int delta = accumulated > 0 ? 120 : -120;
+    accumulated = 0;
+    NSPoint p = [self gz:e];
+    gMgr->GZWinMsgPost_Mouse(kGZMsgMouseWheel, int(p.x), int(p.y), (std::uint32_t(delta) << 16) | [self flags:e]);
+}
 - (void)updateTrackingAreas {
     for (NSTrackingArea* a in self.trackingAreas) [self removeTrackingArea:a];
     [self addTrackingArea:[[NSTrackingArea alloc] initWithRect:self.bounds
@@ -433,6 +466,32 @@ int main(int argc, char** argv) {
                     gMgr->GZWinMsgPost_Mouse(kGZMsgMouseDownL, cx, cy, 0);
                     gMgr->GZWinMsgPost_Mouse(kGZMsgMouseUpL, cx, cy, 0);
                     for (int i = 0; i < 10; ++i) { Frame(); [NSThread sleepForTimeInterval:0.004]; }
+                }
+            }
+            if (const char* script = std::getenv("SC4_INPUT")) {   // dev: "token:frames,..." city view input after the click
+                // tokens: left/right/up/down (held for the frames), zin/zout/rl/rr (view commands), wheel+/wheel- (at the centre)
+                std::string all(script);
+                std::size_t at = 0;
+                while (at < all.size()) {
+                    std::size_t end = all.find(',', at);
+                    if (end == std::string::npos) end = all.size();
+                    const std::string token = all.substr(at, end - at);
+                    at = end + 1;
+                    const std::size_t colon = token.find(':');
+                    const std::string name = token.substr(0, colon);
+                    const int hold = colon == std::string::npos ? 30 : std::atoi(token.c_str() + colon + 1);
+                    sc4::cSC4View3DWin* v = gAppWindow ? gAppWindow->View3D() : nullptr;
+                    static const std::map<std::string, std::pair<std::uint32_t, std::uint32_t>> kCommands = {
+                        {"left", {0x6a935cd8, 0x2a94826b}}, {"right", {0x6a935ce0, 0x2a94826e}}, {"up", {0x6a935cdd, 0x2a948272}},
+                        {"down", {0x6a935ce2, 0x2a948275}}, {"zin", {0x6a935cb7, 0}}, {"zout", {0x6a935cba, 0}},
+                        {"rl", {0x6a935cc9, 0}}, {"rr", {0x6a935ccc, 0}}};
+                    if (name == "wheel+" || name == "wheel-")
+                        gMgr->GZWinMsgPost_Mouse(kGZMsgMouseWheel, kW / 2, kH / 2, std::uint32_t(name == "wheel+" ? 120 : -120) << 16);
+                    else if (auto it = kCommands.find(name); it != kCommands.end() && v)
+                        v->ProcessViewCommand(it->second.first);
+                    for (int i = 0; i < hold; ++i) { Frame(); [NSThread sleepForTimeInterval:0.004]; }
+                    if (auto it = kCommands.find(name); it != kCommands.end() && v && it->second.second) v->ProcessViewCommand(it->second.second);
+                    std::printf("input: %s for %d frames\n", name.c_str(), hold);
                 }
             }
             if (std::getenv("SC4_DEBUG")) {

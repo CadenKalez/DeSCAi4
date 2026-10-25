@@ -323,6 +323,49 @@ bool cSC4View3DWin::SetZoomAndRotation(int zoom, int rotation) {
     return changed;
 }
 
+bool cSC4View3DWin::ProcessCommand(std::uint32_t command, cIGZCommandParameterSet&, cIGZCommandParameterSet&) {   // 0x10078e2e0
+    return ProcessViewCommand(command);
+}
+
+bool cSC4View3DWin::ProcessViewCommand(std::uint32_t command) {
+    const bool keyboardIdle = keyboardScrollX_ == 0 && keyboardScrollY_ == 0;
+    auto stepScroll = [&](float angle) {
+        if (keyboardIdle && cameraControl_) cameraControl_->ScrollByViewportAngle(angle, 1.0f);
+        return false;
+    };
+    auto keyboardScroll = [&](int& axis, int value) {
+        if (!keyboardIdle) return false;   // a held direction blocks the others until it is released
+        axis = value;
+        RecalcScrollVelocity();
+        return false;
+    };
+    switch (command) {
+        case 0x6a935cd8: return keyboardScroll(keyboardScrollX_, -1);   // scroll left
+        case 0x6a935cdd: return keyboardScroll(keyboardScrollY_, -1);   // scroll up
+        case 0x6a935ce0: return keyboardScroll(keyboardScrollX_, 1);    // scroll right
+        case 0x6a935ce2: return keyboardScroll(keyboardScrollY_, 1);    // scroll down
+        case 0x2a94826b: case 0x2a94826e: case 0x2a948272: case 0x2a948275:   // a scroll key went up
+            keyboardScrollX_ = 0;
+            keyboardScrollY_ = 0;
+            RecalcScrollVelocity();
+            return false;
+        case 0x2a9484da: return stepScroll(3.1415927f);
+        case 0x2a9484f2: return stepScroll(4.712389f);
+        case 0x2a9484ff: return stepScroll(0.0f);
+        case 0x2a94850b: return stepScroll(1.5707964f);
+        case 0x6a935cb7: ZoomIn(); return false;
+        case 0x6a935cba: ZoomOut(); return false;
+        case 0x6a935cbd: SetZoom(0); return false;
+        case 0x6a935cbf: SetZoom(1); return false;
+        case 0x6a935cc2: SetZoom(2); return false;
+        case 0x6a935cc4: SetZoom(3); return false;
+        case 0x6a935cc7: SetZoom(4); return false;
+        case 0x6a935cc9: RotateLeft(); return false;
+        case 0x6a935ccc: RotateRight(); return false;
+        default: return false;
+    }
+}
+
 cIGZWinKeyAccelerator* cSC4View3DWin::GetKeyAccelerator() const { return keyAccelerator_; }   // 0x100781ab2
 
 void cSC4View3DWin::SetKeyAccelerator(cIGZWinKeyAccelerator* accelerator) {   // 0x100781ac0

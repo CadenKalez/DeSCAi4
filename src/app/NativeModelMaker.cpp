@@ -377,7 +377,7 @@ public:
     cIGZUnknown* ViewUtilities() override { return nullptr; }
     int ViewZoom() override { const SC4ViewUtilities* v = Utilities(); return v ? v->Zoom() : 0; }
     int ViewRotation() override { const SC4ViewUtilities* v = Utilities(); return v ? v->Rotation() : 0; }
-    float ViewRotationAngle() override { return 0.0f; }
+    float ViewRotationAngle() override { const SC4ViewUtilities* v = Utilities(); return v ? v->RotationAngle() : 0.0f; }
     float ViewportUnitsPerWorldUnit() override {
         const SC4ViewUtilities* v = Utilities();
         const float world = v ? v->ViewportUnitsToWorldUnits(1.0f) : 0.0f;
@@ -404,7 +404,12 @@ public:
     void TerrainNormalAt(float, float, float out[3]) override { out[0] = 0; out[1] = 1; out[2] = 0; }
     bool NetworkAt(float, float) override { return false; }
     void PositionToCityCell(float x, float z, int& cx, int& cz) override { cx = static_cast<int>(x / 16.0f); cz = static_cast<int>(z / 16.0f); }
-    bool ReadConfigOption(const char*, std::string&) override { return false; }
+    // No background loader thread natively: the model maker loads a new zoom / rotation's models at once.
+    bool ReadConfigOption(const char* key, std::string& value) override {
+        if (std::string(key) != "backgroundLoad") return false;
+        value = "off";
+        return true;
+    }
     sc4::IModelBackgroundLoader* CreateBackgroundLoader() override { return nullptr; }
     sc4::IModelAnimationCoordinator* CreateAnimationCoordinator() override { return nullptr; }
     sc4::cISC4OccupantFilter* CreateZoomRotationModelChangeOccupantFilter() override { return nullptr; }

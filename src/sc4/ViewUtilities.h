@@ -182,6 +182,7 @@ public:
     void SetCitySize(float citySizeX, float citySizeZ) { citySizeX_ = citySizeX; citySizeZ_ = citySizeZ; }
     int Zoom() const { return zoom_; }
     int Rotation() const { return rotation_; }
+    float RotationAngle() const { return rotationAngle_; }                              // +0x24
     bool DrawFrustumReduced() const { return drawReduced_; }
     const FrustumBounds& ViewFrustumBounds() const { return view_; }
     const FrustumBounds& DrawFrustumBounds() const { return draw_; }

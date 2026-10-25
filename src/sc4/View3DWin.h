@@ -736,6 +736,10 @@ public:
     bool RotateLeft() override;                                    // @ 0x100781f6e
     bool RotateRight() override;                                   // @ 0x100781f9e
     bool SetZoomAndRotation(int zoom, int rotation) override;      // @ 0x10078205a
+    // PARTIAL (0x10078e2e0): the camera commands of ProcessCommand - keyboard scrolling (start / stop), the one-step
+    // scrolls, zoom in / out / to a level and rotation. The tool, panel and game-speed commands are not ported.
+    bool ProcessCommand(std::uint32_t command, cIGZCommandParameterSet& in, cIGZCommandParameterSet& out) override;
+    bool ProcessViewCommand(std::uint32_t command);
     void GetCurrentViewFilterInfo(cSC4ViewFilterInformation& out) override;   // @ 0x1007820a4
     bool SetCurrentViewFilterInfo(cSC4ViewFilterInformation& info) override;  // @ 0x1007820ba
     void GetCurrentViewLevelInfo(cSC4ViewLevelInformation& out) override;     // @ 0x100782230

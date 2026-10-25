@@ -21,6 +21,9 @@ void WinMgr::PostWinMessage(std::uint32_t type, std::uint64_t p1, std::uint64_t 
         message.param1 = std::uint64_t(std::int64_t(std::int16_t(packed & 0xffff)));
         message.param2 = std::uint64_t(std::int64_t(std::int16_t(packed >> 16)));
         message.param3 = std::uint64_t(p1) << 16;
+        // The wheel posts the Windows wParam shape (delta in the high word, key state in the low one); the window reads
+        // the key state from param3's high half and the signed delta from its low half.
+        if (type == kGZMsgMouseWheel) message.param3 = ((std::uint64_t(p1) & 0xffffu) << 16) | ((std::uint64_t(p1) >> 16) & 0xffffu);
         ProcessMouseMessage(message);
         return;
     }

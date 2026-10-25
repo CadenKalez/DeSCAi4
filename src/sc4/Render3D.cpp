@@ -2925,12 +2925,30 @@ bool cSC43DRender::Pick(int, int, const float*, const float*, cISC4OccupantFilte
     return false;
 }
 
-bool cSC43DRender::DoMessage(cIGZMessage2*) {
-    // 0x100762b36 (PARTIAL: the dispatcher itself is not ported. It switches on the message's type id (vslot 0x20)
-    // and forwards to DoViewRotationChange2 / DoViewZoomChange3 (now ported and tested), ReadProperties,
-    // ForceFullRedraw, UpdateVisibleTerrainMetrics and the backing-store / dirty-rectangle paths; the city and terrain
-    // messages need the SL::spCity / SL::spTerrain services through the cIGZMessage2 accessors, which the port's host
-    // seam does not expose yet. See notes/ledger_pending/cSC43DRender.txt.)
+bool cSC43DRender::DoMessage(cIGZMessage2* message) {
+    // 0x100762b36 (PARTIAL: the camera zoom / rotation messages and the property reload are ported; the view
+    // translation (0xa6b79612, the translated backing-store update), the terrain dirty rectangles (0x870bc918), the
+    // full redraws (0xa6b79621 / 0x6acb92a9), the backing-store switch (0xc9f775bb), the lighting-manager swap
+    // (0x8acaa95f) and the city / terrain set-up (0x26d31ec1 / 0x4a9f2ffe) are not. See
+    // notes/ledger_pending/cSC43DRender.txt.)
+    if (!message) return true;
+    auto* standard = static_cast<cIGZMessage2Standard*>(message);
+    const std::uint32_t type = standard->GetType();
+    if (type == 0xa6b79601 || type == 0xa6b79602) {
+        const auto* oldView = static_cast<const int*>(standard->GetVoid1());   // {zoom, rotation}
+        const auto* newView = static_cast<const int*>(standard->GetVoid2());
+        if (!oldView || !newView) return true;
+        if (type == 0xa6b79601) {   // the rotation changed
+            if (oldView[1] != newView[1]) DoViewRotationChange2(oldView[0], oldView[1], newView[0], newView[1]);
+            return true;
+        }
+        viewOffsetX_ = 0;           // the zoom / rotation is done: a pending translated update is dropped
+        viewOffsetY_ = 0;
+        if (oldView[0] != newView[0]) DoViewZoomChange3(oldView[0], oldView[1], newView[0], newView[1]);
+        if (oldView[1] != newView[1] && !modelChanges_.empty()) ProcessModelChangeQueue();
+    } else if (type == 0xc53d10aa) {
+        ReadProperties();
+    }
     return true;
 }
 

@@ -845,6 +845,7 @@ void cSC4ModelMaker::DoZoomAndRotationChange(int oldZoom, int oldRotation, int z
         OccupantList list;
         occupantManager_->GetOccupantsByOccupantManagerCells(list, nullptr, nullptr, zoomRotationFilter_,
                                                             0xffffffff);
+        if (std::getenv("SC4_DEBUG")) std::fprintf(stderr, "ModelMaker: zoom/rotation %d,%d -> %d,%d: %zu occupants\n", oldZoom, oldRotation, zoom, rotation, list.size());
         if (!list.empty()) {
             inViewIteration_ = true;
             for (cISC4Occupant* occupant : list) LoadOccupantModelsForZoomAndRotation(occupant, zoom, rotation);
@@ -1441,28 +1442,52 @@ void cSC4ModelMaker::LoadOccupantModelsForZoomAndRotation(cISC4Occupant* occupan
     if (placeable && placeable->GetModelCount() != 0) {
         const int modelClass = g_utility->GetOccupantModelClass(occupant);
         if (modelClass == -0x55edc407) return;   // the occupant's model class has no per-view instances
+        // The zoom and rotation the existing models were made for: the lowest bit of each mask (5 = none).
+        auto lowestBit = [](std::uint32_t mask, int last) {
+            for (int i = 0; i <= last; ++i)
+                if (mask & (1u << i)) return i;
+            return 5;
+        };
+        const int madeZoom = lowestBit(placeable->GetZoomLevelsCreatedFor(), 4);
+        const int madeRotation = lowestBit(placeable->GetRotationsCreatedFor(), 3);
         std::uint32_t orientation = 0;
         int state = 0;
         g_utility->GetOccupantOrientationAndState(occupant, orientation, state);
-        bool lit = false;
         cISCPropertyHolder* holder = occupant->AsPropertyHolder();
-        if (holder) lit = holder->HasProperty(0xe83a081d);
-        std::vector<std::uint32_t> current;
+        const bool lit = holder && holder->HasProperty(0xe83a081d);
+        std::vector<std::uint32_t> existing;
         std::vector<std::uint32_t> target;
-        std::vector<float> ignored;
-        g_utility->GetAllModelInstanceIDs(current, &ignored, occupant, zoom, rotation, state, lit, orientation,
-                                          nullptr, nullptr);
-        g_utility->GetAllModelInstanceIDs(target, &ignored, occupant, currentZoom_, currentRotation_, state, lit,
-                                          orientation, nullptr, nullptr);
-        if (current == target) {
-            // the ids match: only the zoom / rotation the placeable object records have to change
-            if (placeable) {
-                placeable->AddRef();
+        g_utility->GetAllModelInstanceIDs(target, nullptr, occupant, zoom, rotation, state, lit, orientation, nullptr, nullptr);
+        if (madeZoom != 5 && madeRotation != 5)
+            g_utility->GetAllModelInstanceIDs(existing, nullptr, occupant, madeZoom, madeRotation, state, lit, orientation,
+                                              nullptr, nullptr);
+        if (existing == target) {
+            // The same models serve the new view. A rotation only turns them in place (unless the occupant carries
+            // property 0x4835c6a6 or is lit), facing the camera's new angle.
+            if (madeRotation == rotation) return;
+            if (holder && holder->GetProperty(0x4835c6a6)) {
+                // falls through to the rebuild below
+            } else {
+                if (lit) return;
+                std::uint32_t count = static_cast<std::uint32_t>(placeable->GetModelCount());
+                std::vector<cIS3DModelInstance*> models(count);
+                if (count) placeable->GetModels(models.data(), count);
+                const float angle = -rotationAngle_;
+                const float sine = std::sin(angle), cosine = std::cos(angle);
+                for (cIS3DModelInstance* model : models) {
+                    auto* instance = reinterpret_cast<s3d::cIS3DModelInstance*>(model);
+                    cS3DTransform transform;
+                    instance->GetTransform(transform);
+                    transform.rotation[0][0] = cosine; transform.rotation[0][1] = 0; transform.rotation[0][2] = sine;
+                    transform.rotation[1][0] = 0;      transform.rotation[1][1] = 1; transform.rotation[1][2] = 0;
+                    transform.rotation[2][0] = -sine;  transform.rotation[2][1] = 0; transform.rotation[2][2] = cosine;
+                    transform.flags |= nS3D::kTransformRotation;
+                    instance->SetTransform(transform);
+                }
                 placeable->SetZoomLevelsCreatedFor(zoomBit);
                 placeable->SetRotationsCreatedFor(rotationBit);
-                placeable->Release();
+                return;
             }
-            return;
         }
     }
     const std::uint32_t type = occupant->GetType();
