@@ -60,7 +60,7 @@ struct NativeTerrainHost final : ITerrainHost {
         for (std::int32_t i = x; i < endX; ++i, normal += normalStride, colour += colourStride) {
             const float* n = reinterpret_cast<const float*>(normal);
             const float dot = n[0] * -0.45f + n[1] * 0.78f + n[2] * 0.43f;
-            float lit = 0.50f + 0.55f * (dot > 0.0f ? dot : 0.0f);
+            float lit = 0.80f + 0.45f * (dot > 0.0f ? dot : 0.0f);
             if (lit > 1.0f) lit = 1.0f;
             const std::uint8_t byte = static_cast<std::uint8_t>(lit * 255.0f);
             for (int k = 0; k < 3; ++k) colour[k] = byte;   // colour B: the lit colour the textured passes modulate

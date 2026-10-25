@@ -106,7 +106,7 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     if (terrain) {   // DoPostCityInit: the camera knows the city's size; look at its middle
         const float sizeX = static_cast<float>(terrain->CellCountX()) * 16.0f, sizeZ = static_cast<float>(terrain->CellCountZ()) * 16.0f;
         control->SetCitySize(sizeX, sizeZ);
-        control->SetZoomAndRotation(2, 0);
+        control->SetZoomAndRotation(std::getenv("SC4_ZOOM") ? std::atoi(std::getenv("SC4_ZOOM")) : 0, 0);
         control->SetViewTargetPosition(cS3DVector3{sizeX * 0.5f, 0.0f, sizeZ * 0.5f});
         control->SendViewChangeMessage();
     }
