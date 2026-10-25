@@ -21,6 +21,7 @@
 #include "sc4/LotBaseTextureOccupant.h"
 #include "sc4/ModelMaker.h"
 #include "sc4/ModelMakerUtility.h"
+#include "sc4/NetworkOccupantModel.h"
 #include "sc4/OccupantManager.h"
 #include "sc4/PlaceableObject.h"
 #include "sc4/ServiceLocator.h"
@@ -305,6 +306,12 @@ sc4::cSTETerrain* Terrain() {
     return terrain;
 }
 
+// GetTexture's binding factory: the network textures live in the S3D texture group.
+class NetworkModelHost final : public sc4::INetworkModelHost {
+public:
+    std::uint32_t NetworkTexture(std::uint32_t instance) override { return TextureRecord(kModelTextureGroup, instance)->id; }
+};
+
 class CellTextureHost final : public sc4::ICellTextureModelHost {
 public:
     bool LockedLotAltitude(int, int, float&) override { return false; }   // no lot manager in the native city yet
@@ -446,6 +453,15 @@ bool AttachModelMaker(sc4::cSC43DRender& render, sc4::cSC4City& city) {
     static ModelMakerHost makerHost;
     static sc4::cSC4ModelMakerUtility utility;
     static CellTextureHost cellTextureHost;
+    static NetworkModelHost networkModelHost;
+    sc4::SetNetworkModelHost(&networkModelHost);
+    sc4::SetNetworkModelFactory([](sc4::cISC4Occupant* occupant) -> s3d::cIS3DModelInstance* {
+        auto* network = dynamic_cast<sc4::cSC4NetworkOccupant*>(occupant);
+        if (!network) return nullptr;
+        auto* model = new sc4::cSC4NetworkOccupantModel(*network);
+        model->AddRef();
+        return model;
+    });
     static LotBaseTextureHost lotBaseTextureHost;
     sc4::SetCellTextureModelHost(&cellTextureHost);
     sc4::SetLotBaseTextureHost(&lotBaseTextureHost);

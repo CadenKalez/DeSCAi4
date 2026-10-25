@@ -177,6 +177,11 @@ public:
 IModelMakerUtility* ModelMakerUtility();
 void SetModelMakerUtility(IModelMakerUtility* utility);
 
+// The model instance a network occupant hands out from GetModelInstances (cISC4NetworkOccupant vslot 0x108, the
+// occupant's own cS3DModelInstanceBasic subobject in the original; see sc4/NetworkOccupantModel.h). One reference.
+using NetworkModelFactory = s3d::cIS3DModelInstance* (*)(cISC4Occupant* occupant);
+void SetNetworkModelFactory(NetworkModelFactory factory);
+
 // ---- seam: cSC4ModelBackgroundLoader (unrecovered owner of the background load tasks) -----------------------
 class IModelBackgroundLoader : public cIGZUnknown {
 public:

@@ -199,6 +199,7 @@ src/sc4/SpiralIterator.cpp
 src/sc4/ModelMaker.cpp
 src/sc4/ModelMakerUtility.cpp
 src/sc4/CellTextureModel.cpp
+src/sc4/NetworkOccupantModel.cpp
 src/sc4/SCPropertyHelp.cpp
 src/sc4/AutomataStates.cpp
 src/rz/StringConversion.cpp

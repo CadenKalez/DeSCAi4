@@ -133,6 +133,10 @@ IModelMakerHost* ModelMakerHost() { return g_host; }
 void SetModelMakerHost(IModelMakerHost* host) { g_host = host; }
 IModelMakerUtility* ModelMakerUtility() { return g_utility; }
 void SetModelMakerUtility(IModelMakerUtility* utility) { g_utility = utility; }
+namespace {
+NetworkModelFactory g_networkModelFactory = nullptr;
+}
+void SetNetworkModelFactory(NetworkModelFactory factory) { g_networkModelFactory = factory; }
 
 // ---- the deferred occupant operation (0x100314e90) --------------------------------------------------------------
 DeferredOccupantOperation::DeferredOccupantOperation(cISC4Occupant* value, OperationType type)
@@ -1250,16 +1254,23 @@ bool cSC4ModelMaker::LoadLotBaseTextureModels(cISC4Occupant* occupant, int zoom,
 }
 
 bool cSC4ModelMaker::LoadNetworkModels(cISC4Occupant* occupant, int zoom, int rotation) {
-    // PARTIAL: the original asks the occupant for cISC4NetworkOccupant (iid 0xa821ef94) and calls its vslot 0x108
-    // GetModelInstances(zoom, rotation, out, 10, count); for the 0x2890d4de piece it reads the cSC4NetworkOccupant
-    // base at -0x10 and calls its vslot 0xc0 instead. Neither occupant interface is recovered, so the model list
-    // stays empty and the placeable object is left untouched.
-    if (!occupant) return false;
-    void* raw = nullptr;
-    if (occupant->QueryInterface(0xa821ef94, &raw)) static_cast<cIGZUnknown*>(raw)->Release();
+    // The original asks the occupant for cISC4NetworkOccupant (iid 0xa821ef94) and calls its vslot 0x108
+    // GetModelInstances(zoom, rotation, out, 10, count), which hands back the occupant's own model instance; the
+    // port's stand-in for that instance is cSC4NetworkOccupantModel (see sc4/NetworkOccupantModel.h). PARTIAL: the
+    // 0x2890d4de piece (the pre-built model occupant, vslot 0xc0 of its cSC4NetworkOccupant base) is not handled.
     (void)zoom;
     (void)rotation;
-    return false;
+    if (!occupant || !g_networkModelFactory) return false;
+    s3d::cIS3DModelInstance* model = g_networkModelFactory(occupant);   // one reference, or null
+    if (!model) return false;
+    cISC43DPlaceableObject* placeable = occupant->GetOrCreatePlaceableObject();
+    if (placeable) {
+        placeable->AddRef();
+        placeable->AddModel(reinterpret_cast<cIS3DModelInstance*>(model));
+        placeable->Release();
+    }
+    model->Release();
+    return placeable != nullptr;
 }
 
 bool cSC4ModelMaker::LoadUndergroundConnectionModels(cISC4Occupant* occupant, int zoom, int rotation) {

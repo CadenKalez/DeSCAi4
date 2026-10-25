@@ -153,6 +153,7 @@ public:
     void SetVariation(std::uint8_t variation);
     std::uint8_t GetVariation() const { return variation_; }
     void SetUnderTexture(std::uint32_t texture);
+    std::uint32_t UnderTexture() const { return underTexture_; }
     void SetQuadDraw(std::uint32_t pieceId, std::uint8_t rotationFlip);
     void SetTextureCoordinates(std::uint8_t rotationFlip);
     void AddPart(const float (*positions)[3], const float (*uvs)[2], const std::uint32_t* indices,
