@@ -1210,11 +1210,11 @@ bool cSC4ModelMaker::LoadModelsCommon(cISC4Occupant* occupant, int zoom, int rot
             }
             instance->SetProperties(instance->GetProperties() | 0x40);
         } else if (type == kModelOccupantTypeProp) {
-            const bool animatable = !holder || !holder->HasProperty(0x4a70d491);
-            std::uint32_t properties = instance->GetProperties();
-            properties = (properties & ~0x22u);
-            properties |= animatable ? 0x22u : 0x20u;
-            instance->SetProperties(static_cast<int>(properties));
+            // 0x100313670: a prop carrying 0x4a70d491 (not animatable) gets 0x22 with bit 0 and bit 1 cleared first;
+            // every other prop only gains 0x20.
+            const std::uint32_t properties = static_cast<std::uint32_t>(instance->GetProperties());
+            const bool notAnimatable = holder && holder->HasProperty(0x4a70d491);
+            instance->SetProperties(static_cast<int>(notAnimatable ? ((properties & 0xffffffdcu) | 0x22u) : (properties | 0x20u)));
         } else if (type == kModelOccupantTypeFlora) {
             instance->SetProperties(static_cast<int>(static_cast<std::uint32_t>(instance->GetProperties()) | 0x80u));
         }
@@ -1791,6 +1791,16 @@ s3d::cIS3DModelInstance* cSC4ModelMaker::AddModel(cISC4Occupant* occupant, const
         instance->SetProperties(static_cast<int>(static_cast<std::uint32_t>(instance->GetProperties()) & 1u));
     }
     instance->SetOwner(occupant);
+    if (std::getenv("SC4_MODELDEBUG") && occupant->GetType() == kModelOccupantTypeBuilding) {
+        float lo[3], hi[3];
+        occupant->GetBoundingBox(lo, hi);
+        cS3DBoundingBox world;
+        instance->GetWorldBounds(world);
+        std::uint32_t orientation = 0;
+        int st = 0;
+        if (g_utility) g_utility->GetOccupantOrientationAndState(occupant, orientation, st);
+        std::fprintf(stderr, "model %08x/%08x: occupant %.1f..%.1f x %.1f..%.1f, model %.1f..%.1f x %.1f..%.1f, orientation %d lit %d state %d\n", modelKey.group, modelKey.instance, lo[0], hi[0], lo[2], hi[2], world.min[0], world.max[0], world.min[2], world.max[2], st, int(lit), state);
+    }
     if (cISC43DPlaceableObject* placeable = occupant->GetOrCreatePlaceableObject()) {
         placeable->AddRef();
         placeable->AddModel(reinterpret_cast<sc4::cIS3DModelInstance*>(instance));
@@ -1804,33 +1814,28 @@ s3d::cIS3DModelInstance* cSC4ModelMaker::AddModel(cISC4Occupant* occupant, const
 
 void cSC4ModelMaker::FindModelTransform(cISCPropertyHolder* holder, bool objectRotation, int rotation,
                                         const float* position, const float* offset, cS3DTransform& transform) {
+    // 0x100314822. `rotation` is the occupant's orientation (0..3). Object-rotated models turn with the occupant and
+    // take their offset as it is; the others face the camera (minus the view's rotation angle) and the offset turns
+    // with the occupant's orientation (y unrotated).
+    static const float kOrigin[3] = {0, 0, 0};
     bool followTerrain = false;
     if (holder) cSCPropertyHelp::GetPropertyValue(holder, 0x69f14d33, followTerrain);
-    float translation[3] = {0, 0, 0};
+    float translation[3] = {position[0], position[1], position[2]};
     float angle = 0;
     if (objectRotation) {
         angle = SC4ViewUtilities::GetObjectYRotationAngle(rotation);
-        if (!offset) {
-            translation[0] = position[0];
-            translation[1] = position[1];
-            translation[2] = position[2];
-        } else {
+        if (offset) {
             translation[0] = position[0] + offset[0];
             translation[1] = position[1] + offset[1];
             translation[2] = position[2] + offset[2];
         }
     } else {
         angle = -rotationAngle_;
-        if (!offset) {
-            translation[0] = position[0];
-            translation[1] = position[1];
-            translation[2] = position[2];
-        } else {
-            static const float kOrigin[3] = {0, 0, 0};
+        if (offset) {
             float rotated[3] = {0, 0, 0};
-            SC4GeometryUtilities::RotatePoint(kOrigin, offset, -angle, 1, rotated);
+            SC4GeometryUtilities::RotatePoint(kOrigin, offset, -SC4ViewUtilities::GetObjectYRotationAngle(rotation), 1, rotated);
             translation[0] = position[0] + rotated[0];
-            translation[1] = position[1] + rotated[1];
+            translation[1] = position[1] + offset[1];
             translation[2] = position[2] + rotated[2];
         }
     }
@@ -1848,48 +1853,43 @@ void cSC4ModelMaker::FindModelTransform(cISCPropertyHolder* holder, bool objectR
     ++transform.changeCounter;
     transform.flags |= nS3D::kTransformRotation;
     if (followTerrain && g_host) {
-        // 0x100314a74..0x100314cbf: lay the model on the terrain / network slope. The original picks the ground
-        // normal from the traffic network when the cell has one, otherwise from the terrain, and only alters the
-        // rotation when the normal's y is below cos(30 degrees).
-        float normal[3] = {0, 1, 0};
-        if (g_host->NetworkAt(translation[0], translation[2])) {
-            normal[1] = 1.0f;
-        } else {
-            g_host->TerrainNormalAt(translation[0], translation[2], normal);
-        }
-        g_host->TerrainNormalAt(translation[0], translation[2], normal);
-        const float length = std::sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
-        if (length > 0.0f) {
-            normal[0] /= length;
-            normal[1] /= length;
-            normal[2] /= length;
-            if (normal[1] < 0.866f) {
-                const float yInverse = 1.0f / std::sqrt(normal[1] * normal[1] + normal[2] * normal[2] + 0.25f);
-                const float sideX = 0.5f * yInverse;
-                const float sideZ = normal[2] * yInverse;
-                const float forward[3] = {0, 0, 1};
-                float rotated[3] = {0, 0, 0};
-                SC4GeometryUtilities::RotatePoint(forward, forward, -angle, 1, rotated);
-                const float nx = normal[2] * rotated[1] - normal[1] * rotated[2];
-                const float ny = normal[0] * rotated[2] - normal[2] * rotated[0];
-                const float nz = normal[1] * rotated[0] - normal[0] * rotated[1];
-                const float inverse = 1.0f / std::sqrt(nx * nx + ny * ny + nz * nz);
-                const float cx = nx * inverse;
-                const float cy = ny * inverse;
-                const float cz = nz * inverse;
-                transform.rotation[0][0] = cx;
-                transform.rotation[0][1] = normal[0];
-                transform.rotation[0][2] = normal[1] * cz - normal[2] * cy;
-                transform.rotation[1][0] = cy;
-                transform.rotation[1][1] = normal[1];
-                transform.rotation[1][2] = normal[2] * cx - normal[0] * cz;
-                transform.rotation[2][0] = cz;
-                transform.rotation[2][1] = normal[2];
-                transform.rotation[2][2] = normal[0] * cy - normal[1] * cx;
+        // 0x100314a74..0x100314cbf: lay the model on the ground slope (the network piece's normal when the cell has a
+        // network - the host has no network normal, so the terrain's stands in - else the terrain's, skipped on water).
+        // A normal steeper than 30 degrees is pulled back towards a 0.5 horizontal component first.
+        const bool network = g_host->NetworkAt(position[0], position[2]);
+        if (network || !g_host->TerrainCellHasWater(static_cast<int>(position[0]), static_cast<int>(position[2]))) {
+            float n[3] = {0, 0, 0};
+            g_host->TerrainNormalAt(position[0], position[2], n);
+            if (network) {
+                const float inverse = 1.0f / std::sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
+                n[0] *= inverse; n[1] *= inverse; n[2] *= inverse;
+            }
+            if (n[1] != 1.0f) {
+                if (n[1] < 0.866f && 0.5f < n[0]) {
+                    const float f = 1.0f / std::sqrt(n[2] * n[2] + n[1] * n[1] + 0.25f);
+                    n[0] = f * 0.5f; n[1] *= f; n[2] *= f;
+                }
+                if (n[1] < 0.866f && 0.5f < n[2]) {
+                    const float f = 1.0f / std::sqrt(n[1] * n[1] + n[0] * n[0] + 0.25f);
+                    n[0] *= f; n[1] *= f; n[2] = f * 0.5f;
+                }
+                float forward[3] = {0, 0, 1};
+                SC4GeometryUtilities::RotatePoint(kOrigin, forward, -angle, 1, forward);
+                float c[3] = {n[1] * forward[2] - n[2] * forward[1], n[2] * forward[0] - forward[2] * n[0],
+                              forward[1] * n[0] - forward[0] * n[1]};
+                const float inverse = 1.0f / std::sqrt(c[2] * c[2] + c[1] * c[1] + c[0] * c[0]);
+                c[0] *= inverse; c[1] *= inverse; c[2] *= inverse;
+                transform.rotation[0][0] = c[0];
+                transform.rotation[0][1] = n[0];
+                transform.rotation[0][2] = n[2] * c[1] - n[1] * c[2];
+                transform.rotation[1][0] = c[1];
+                transform.rotation[1][1] = n[1];
+                transform.rotation[1][2] = n[0] * c[2] - n[2] * c[0];
+                transform.rotation[2][0] = c[2];
+                transform.rotation[2][1] = n[2];
+                transform.rotation[2][2] = n[1] * c[0] - n[0] * c[1];
                 transform.flags |= nS3D::kTransformRotation;
                 ++transform.changeCounter;
-                (void)sideX;
-                (void)sideZ;
             }
         }
     }
