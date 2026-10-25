@@ -20,6 +20,9 @@
 #include "rz/cRZMessage2Standard.h"
 #include "rz/cRZVersion.h"
 #include "rz/cRZVariant.h"
+#include <cstdio>
+#include <cstdlib>
+
 #include "sc4/App.h"
 #include "sc4/AutoHelpers.h"
 #include "sc4/DBSegment.h"
@@ -374,7 +377,11 @@ bool cSC4App::LoadCity(const cRZString& path, cRZAutoRefCount<cISC4RegionalCity>
                     stream->SetUserData(versionValue.get());
                     return reader(*stream);
                 };
-                if (loadClassObjects() && readAppRecord()) {
+                const bool classesLoaded = loadClassObjects();
+                if (std::getenv("SC4_DEBUG")) std::fprintf(stderr, "LoadCity: class objects %s\n", classesLoaded ? "loaded" : "FAILED");
+                const bool appRecordRead = classesLoaded && readAppRecord();
+                if (std::getenv("SC4_DEBUG") && classesLoaded) std::fprintf(stderr, "LoadCity: app record %s\n", appRecordRead ? "read" : "FAILED");
+                if (classesLoaded && appRecordRead) {
                     // The original dereferences the caller's regional city unconditionally; tools that load a bare city file (the
                     // probe) pass none, so the serial number stays 0 then.
                     city_->SetCitySerialNumber(regionalCity_ && regionalCity_->get() ? regionalCity_->get()->GetCitySerialNumber() : 0);

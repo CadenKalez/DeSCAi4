@@ -320,6 +320,7 @@ public:
     const cS3DMatrix4& ModelMatrix() const { return modelMatrix_; }         // +0x2d8
     float ModelY() const { return modelY_; }                                // +0x33c
     bool ModelDirty() const { return modelDirty_; }                         // +0x340
+    void SetModelDirty(bool dirty) { modelDirty_ = dirty; }                 // a derived Read sets +0x340
     bool NeedsModelCreate() const { return needsModelCreate_; }             // +0x341
     bool ModelCreated() const { return modelCreated_; }                     // +0x342
     std::uint32_t NetworkTypeId() const { return networkTypeId_; }          // +0x348

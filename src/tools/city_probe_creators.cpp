@@ -31,6 +31,7 @@
 #include "sc4/LandValueSimulator.h"
 #include "sc4/NeighborsSimulator.h"
 #include "sc4/OccupantManager.h"
+#include "sc4/Lot.h"
 #include "sc4/Ordinance.h"
 #include "sc4/PropManager.h"
 #include "sc4/WealthRequester.h"
@@ -188,6 +189,8 @@ cIGZSerializable* CreateCityProbeSerializable(std::uint32_t classId) {
             return WrapPlain(new cSC4PropManager());
         case 0x299062c0:   // cSC4LotConfigurationManager (separate TU: header constant collision)
             return CreateCityProbeLotConfigurationManager();
+        case 0xc9bd5d4a:   // cSC4Lot (a plain class: its GZCOM creator returns the raw object)
+            return WrapPlain(new cSC4Lot());
         case 0x8990c12d:   // cSC4Demand(IDemandHost*)
             return WrapPlain(new cSC4Demand(CityProbeDemandHost()));
         case 0xa7e7f929:   // cSC424HourClock(IClockHost*)

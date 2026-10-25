@@ -7,6 +7,9 @@ class cSC4App;
 
 namespace native {
 
+// Installs a neutral stub for every host interface the recovered classes reach (the real hosts replace them as they are written).
+void InstallStubHosts();
+
 // Installs the city hooks once and loads the city file through cSC4App::LoadCity; true when the city came up.
 bool LoadCityFile(cSC4App& app, const std::string& path);
 

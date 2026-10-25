@@ -1,0 +1,45 @@
+// cSC4PipeOccupant - one piece of underground water pipe (class id / interface id 0x49c05b9f). A cSC4UndergroundOccupant
+// (network type 4, model instance offset 0x6000000) that adds one field: the watered state at +0x358 (0 dry, 1 watered;
+// the draw colour is looked up by it). Recovered from SimCity 4 Deluxe Edition 1.2.1 (0x1001a0ec8..0x1001a14c6).
+//
+// PARTIAL: the pipe statics (the diagonal-piece edge distances computed by StaticInit and the tCustomGeometryInfo piece
+// tables sCustomGeometryInfo) are not recovered; the geometry info is an empty table, so a pipe loads, saves and answers
+// its interfaces but builds no model.
+#pragma once
+#include "sc4/UndergroundOccupant.h"
+
+namespace sc4 {
+
+constexpr std::uint32_t kGZCLSID_cSC4PipeOccupant = 0x49c05b9f;
+constexpr std::uint32_t kGZIID_cISC4PipeOccupantView = 0xa9764c8c;   // the second interface QueryInterface answers
+constexpr std::uint32_t kPipeNetworkType = 4;
+constexpr std::int32_t kPipeModelInstanceOffset = 0x6000000;
+
+class cSC4PipeOccupant : public cSC4UndergroundOccupant {
+public:
+    cSC4PipeOccupant();                                                  // 0x1001a0ec8
+    ~cSC4PipeOccupant() override = default;                              // 0x1001a0f6c
+
+    bool QueryInterface(std::uint32_t iid, void** out) override;        // 0x1001a1332
+    bool Init() override;                                                // 0x1001a102e
+    bool Init(const float (*corners)[3]);                                // 0x1001a11ae
+    bool Shutdown() override;                                            // 0x1001a1200
+    bool Write(cIGZOStream& stream) const override;                      // 0x1001a1218 (record version 3)
+    bool Read(cIGZIStream& stream) override;                             // 0x1001a1290
+    std::uint32_t GetGZCLSID() const override { return kGZCLSID_cSC4PipeOccupant; }   // 0x1001a14a0
+    void GetSortValue(std::uint32_t& out) const override;               // 0x1001a13a0
+    cS3DVector3 GetDrawColor() const override;                           // 0x1001a1434
+    const tCustomGeometryInfo* GetCustomGeometryInfo() const override;  // 0x1001a14ac
+    std::uint32_t GetNetworkType() const override { return kPipeNetworkType; }                 // 0x1001a14ba
+    std::int32_t GetModelInstanceOffset() const override { return kPipeModelInstanceOffset; }   // 0x1001a14c6
+
+    void SetWateredState(bool watered);                                  // 0x1001a1404
+    std::int32_t WateredState() const { return wateredState_; }
+
+    static bool StaticInit();                                            // 0x1001a106a (PARTIAL)
+
+private:
+    std::int32_t wateredState_ = 0;   // +0x358
+};
+
+}  // namespace sc4

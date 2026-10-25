@@ -14,6 +14,12 @@
 #include "sc4/cSC4City.h"
 
 cIGZSerializable* CreateCityProbeSerializable(std::uint32_t classId);   // city_probe_creators.cpp
+cIGZSerializable* CreateCityProbeSerializable2(std::uint32_t classId);
+cIGZSerializable* CreateCityProbeSerializable3(std::uint32_t classId);
+cIGZSerializable* CreateCityProbeSerializable4(std::uint32_t classId);
+cIGZSerializable* CreateCityProbeSerializable5(std::uint32_t classId);
+cIGZSerializable* CreateCityProbeSerializable6(std::uint32_t classId);
+cIGZSerializable* CreateCityProbeSerializable7(std::uint32_t classId);
 void InstallCityProbeBindings();                                          // city_probe_bindings.cpp
 
 namespace native {
@@ -43,6 +49,8 @@ struct Factory final : sc4::ISerializableFactory {
         // Classes the decompilation kept as plain C++ (no cIGZUnknown base) have a GZCOM creator that returns a raw
         // object, which is not a COM pointer; the probe's wrapper takes priority for those.
         if (cIGZSerializable* wrapped = CreateCityProbeSerializable(classId)) return wrapped;
+        for (auto create : {CreateCityProbeSerializable2, CreateCityProbeSerializable3, CreateCityProbeSerializable4, CreateCityProbeSerializable5, CreateCityProbeSerializable6, CreateCityProbeSerializable7})
+            if (cIGZSerializable* wrapped = create(classId)) return wrapped;
         const gzcom::ClassFactoryInfo* info = gzcom::FindClassFactory(classId);
         void* object = info && info->create ? info->create() : nullptr;
         cIGZSerializable* serializable = nullptr;
@@ -85,6 +93,7 @@ bool LoadCityFile(cSC4App& app, const std::string& path) {
         hooks.destroyCurrentScreen = [] {};
         hooks.createCityScreen = [] {};
         hooks.createRegionScreen = [] {};
+        InstallStubHosts();
         InstallCityProbeBindings();
     }
     const bool loaded = app.LoadCity(cRZString(path.c_str()), nullptr);

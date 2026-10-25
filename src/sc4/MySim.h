@@ -604,6 +604,10 @@ public:
     int get_track_handle();                                         // 0x348 @ 0x1007aab7c
     // Not in the vtable: CreateLuaTable/ActivateLuaContext helpers and the create-tool wrappers.
     void CreateLuaTable();                                          // @ 0x10079ea2a
+    // derived-class access (cSC4MyStreetSim's constructor writes +0x1ec / +0x230, its Init reads +0x244)
+    void SetBitmapId(std::uint32_t id) { bitmapId_ = id; }
+    void SetTrackHandle(std::int32_t handle) { trackHandle_ = handle; }
+    std::int32_t LuaTableRef() const { return luaTableRef_; }
     bool CreateChangeHouseTool();                                   // @ 0x1007aaab4
     bool CreateChangeJobTool();                                     // @ 0x1007aab9e
     cGZPersistResourceKey GetRandomWalkModelKey();                  // @ 0x1007aa8d0

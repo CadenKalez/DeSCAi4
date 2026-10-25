@@ -410,6 +410,11 @@ int main(int argc, char** argv) {
         gDriver = gd::cMetalGDriver::Create((__bridge void*)layer, kW, kH);
         if (!gDriver) { std::printf("no Metal device\n"); return 1; }
         Boot();
+        if (const char* cityPath = std::getenv("SC4_LOADCITY")) {   // development: load one city file straight after boot and exit
+            cSC4App* loadApp = native::BootApplication();
+            const bool loaded = loadApp && native::LoadCityFile(*loadApp, cityPath);
+            return loaded ? 0 : 2;
+        }
 
         if (!shot.empty()) {
             const int n = frames > 0 ? frames : 120;

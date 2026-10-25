@@ -1,3 +1,6 @@
+#include <cstdio>
+#include <cstdlib>
+
 #include "sc4/DBSegment.h"
 
 #include <algorithm>
@@ -506,6 +509,7 @@ bool cSC4COMSerializer::LoadClassObjects(std::uint32_t version) {
         const bool tableError = table->GetError();
         const bool closed = segment_->CloseIStream(table);
         result = !tableError && tableVersion == 1 && closed;
+        if (!result && std::getenv("SC4_DEBUG")) std::fprintf(stderr, "LoadClassObjects: class table failed (version %u error %d closed %d)\n", tableVersion, int(tableError), int(closed));
         table->Release();
 
         if (result) {
@@ -523,6 +527,7 @@ bool cSC4COMSerializer::LoadClassObjects(std::uint32_t version) {
                             std::uint32_t size = 0;
                             stream->GetUint32(size);
                             if (record->GetSize() + position < size) {
+                                if (std::getenv("SC4_DEBUG")) std::fprintf(stderr, "LoadClassObjects: class %08x object size check failed\n", classId);
                                 result = false;
                                 break;
                             }
@@ -532,6 +537,7 @@ bool cSC4COMSerializer::LoadClassObjects(std::uint32_t version) {
                             if (span > kMaxCrcSpan - 1) span = kMaxCrcSpan;
                             std::uint32_t crc = 0;
                             if (!GetCRC(record, span, crc) || storedCrc != crc) {
+                                if (std::getenv("SC4_DEBUG")) std::fprintf(stderr, "LoadClassObjects: class %08x crc mismatch\n", classId);
                                 record->SeekAbsolute(position + size);
                                 result = false;
                                 break;
@@ -546,7 +552,9 @@ bool cSC4COMSerializer::LoadClassObjects(std::uint32_t version) {
                             }
                             cIGZSerializable* object = nullptr;
                             if (OnGetGZSerializable(&object, id, classId)) {
-                                object->Read(*stream);
+                                const bool readOk = object->Read(*stream);
+                                if (std::getenv("SC4_DEBUG") && (!readOk || stream->GetError() || record->GetPosition() != position + size))
+                                    std::fprintf(stderr, "LoadClassObjects: class %08x object %u read %s, error %d, consumed %d of %u\n", classId, info.expected - n, readOk ? "ok" : "FAILED", int(stream->GetError()), int(record->GetPosition()) - int(position), size);
                                 if (record->GetPosition() != position + size) record->SeekAbsolute(position + size);
                             } else {
                                 record->SeekAbsolute(position + size);
@@ -557,7 +565,9 @@ bool cSC4COMSerializer::LoadClassObjects(std::uint32_t version) {
                         result = false;
                     }
                     const bool classClosed = segment_->CloseIStream(stream);
+                    if (info.expected != info.actual && std::getenv("SC4_DEBUG")) std::fprintf(stderr, "LoadClassObjects: class %08x expected %u objects, created %u\n", classId, info.expected, info.actual);
                     if (info.expected != info.actual) result = false;
+                    if (!classClosed && std::getenv("SC4_DEBUG")) std::fprintf(stderr, "LoadClassObjects: class %08x stream close failed\n", classId);
                     if (!classClosed) result = false;
                     stream->Release();
                 }

@@ -210,6 +210,9 @@ public:
     bool Subscribed() const { return subscribed_; }                // +0x140
     // +0xa8 (the event -> advice map) is private; cSC4MySim::init_balloons remaps it onto its balloon list and erases
     // the events that have no balloon advice, so the subclass may read and erase single entries.
+    // subclass access to +0xc0 / +0xd8 (cSC4AdvisorCitySituations rebuilds the active set itself)
+    AdviceMap& MutableCurrentAdvices() { return currentAdvices_; }
+    std::vector<cAdviceInfo>& MutableAdvices() { return advices_; }
     const std::map<int, int>& EventAdvices() const { return eventAdvices_; }
     void EraseEventAdvice(int eventId) { eventAdvices_.erase(eventId); }
 
