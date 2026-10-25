@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cfloat>
+#include <cstdio>
+#include <cstdlib>
 
 #include "sc4/DrawContext.h"
 #include "sc4/PackedRenderState.h"
@@ -116,12 +118,14 @@ void cSC4CellTextureModel::SetupVertices(bool updateVertices, bool, void*, void*
     const float x0 = static_cast<float>(cellX * 16), z0 = static_cast<float>(cellZ * 16);
     const float x1 = static_cast<float>(cellX * 16 + 16), z1 = static_cast<float>(cellZ * 16 + 16);
     const float xs[4] = {x0, x1, x0, x1}, zs[4] = {z0, z0, z1, z1};
+    std::uint8_t shades[4] = {0xff, 0xff, 0xff, 0xff};
+    if (g_host) g_host->CellCornerShades(cellX, cellZ, shades);
     for (int i = 0; i < 4; ++i) {
         vertices_[i].x = xs[i];
         vertices_[i].y = corners[i];
         vertices_[i].z = zs[i];
-        // The lighting manager colours these in the original (alpha = the spec's); see the header.
-        vertices_[i].rgba[0] = vertices_[i].rgba[1] = vertices_[i].rgba[2] = 0xff;
+        // the terrain's light (the lighting manager colours the locked-lot quad in the original), the spec's alpha
+        vertices_[i].rgba[0] = vertices_[i].rgba[1] = vertices_[i].rgba[2] = shades[i];
         vertices_[i].rgba[3] = spec_.alpha;
     }
     UpdateTextureRotation();
@@ -167,17 +171,21 @@ int cSC4CellTextureModel::Draw(SC4DrawContext* context, bool highlight) {
     context->SetTexture(static_cast<int>(texture), 0);
     if (mode == 0) {
         context->SetRenderState(States().opaque);
-    } else {
+        context->SetTexWrapModes(2, 2, 0);
+    } else if (mode == 1) {
         context->SetRenderState(States().translucent);
-        if (mode == 2) {
-            for (Vertex& vertex : vertices_) {
-                vertex.rgba[0] = spec_.red;
-                vertex.rgba[1] = spec_.green;
-                vertex.rgba[2] = spec_.blue;
-            }
-        }
+        context->SetTexWrapModes(2, 2, 0);
+    } else {
+        // The lot texture combiner: the spec colour (times the light, white here) and alpha through the texture factor,
+        // combined with the texture in the spec's combine mode (mLotTextureCombiner, byte 0 = the mode).
+        context->SetRenderState(States().combine);
+        context->SetTexWrapModes(2, 2, 0);
+        context->SetTexFiltering(1, 1, 0);
+        const cS3DVector4 colour{spec_.red / 255.0f, spec_.green / 255.0f, spec_.blue / 255.0f, spec_.alpha / 255.0f};
+        context->SetTexColor(colour);
+        const gd::cGDCombiner combiner{0x21020000u | spec_.combineMode, 0x00030001u, 0};
+        context->SetTexCombiner(combiner, 0);
     }
-    context->SetTexWrapModes(2, 2, 0);
     context->DrawPrims(1 /* triangle strip */, 10 /* V3F_C4UB_T2F */, 4, vertices_);
     return 1;
 }

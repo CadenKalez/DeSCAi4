@@ -172,6 +172,10 @@ bool cWinSC4App::CreateCityScreen() {   // @ 0x1006cc9e8
     auto* view = new cSC4View3DWin(mgr_);   // 0x6b0 bytes in the original (the port's layout is documented there)
 
     view3D_ = view;                                 // +0x180
+    // Port: the view pointer holds its own reference. Shutdown releases +0x180 like the original, but the port's
+    // window references (the current screen and the child list) already balance on their own, so without this the
+    // view is released once too often when the application window goes away with a city open.
+    view->AddRef();
     cIGZWin* window = view->AsIGZWin();             // its cGZWin subobject (+0x18 in the original)
     if (!window) return false;
     currentScreen_ = window;                        // +0x178 (the original's AddRef on the +0x18 view)
@@ -185,6 +189,7 @@ bool cWinSC4App::DestroyCurrentScreen() {   // @ 0x1006ccaa0
     if (!currentScreen_) return false;
     ChildDelete(currentScreen_.get());   // vslot 0x80; the manager releases the child-list reference
     currentScreen_ = nullptr;            // the owner's reference
+    if (view3D_) view3D_->Release();     // (port: the reference CreateCityScreen took)
     view3D_ = nullptr;                   // the view died with the screen
     return true;
 }

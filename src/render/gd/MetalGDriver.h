@@ -67,7 +67,8 @@ public:
     void BindTexture(eGDTextureTarget target, std::uint32_t texture) override;
     void TexParameter(eGDTextureTarget target, eGDTextureParamType param, eGDTextureParam value) override;
     void TexEnv(eGDTextureEnvTarget target, eGDTextureEnvParamType param, eGDTextureEnvModeParam mode) override;
-    using cGDriverBase::TexEnv;
+    void TexEnv(eGDTextureEnvTarget target, eGDTextureEnvParamType param, const float* values) override;
+    void SetCombiner(const cGDCombiner& combiner, std::uint32_t stage) override;
     void TexStage(std::uint32_t stage) override;
     void TexStageCoord(eGDTexCoordSource source) override;
     void TexStageMatrix(const float* m, std::uint32_t a, std::uint32_t b, eGDTexMatFlags flags) override;

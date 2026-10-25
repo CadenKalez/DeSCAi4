@@ -54,7 +54,10 @@ const TextureBinding* TextureRecord(std::uint32_t group, std::uint32_t instance)
     slot = std::make_unique<TextureBinding>();
     std::vector<std::uint8_t> bytes;
     if (!g_driver) return slot.get();
-    if (!LoadResourceBytes(kFshType, kModelTextureGroup, instance, bytes) && !LoadResourceBytes(kFshType, group, instance, bytes)) return slot.get();
+    if (!LoadResourceBytes(kFshType, kModelTextureGroup, instance, bytes) && !LoadResourceBytes(kFshType, group, instance, bytes)) {
+        if (std::getenv("SC4_DEBUG")) std::fprintf(stderr, "s3d: texture %08x (model group %08x) not found\n", instance, group);
+        return slot.get();
+    }
     s3d::FshFile file;
     std::vector<std::uint8_t> rgba;
     int w = 0, h = 0;
@@ -312,6 +315,19 @@ public:
     std::uint32_t NetworkTexture(std::uint32_t instance) override { return TextureRecord(kModelTextureGroup, instance)->id; }
 };
 
+// The terrain's lit grey at a vertex: the same fixed sun NativeTerrainHost::ApplyTerrainLightingRow lights the terrain with.
+std::uint8_t TerrainShade(int x, int z) {
+    sc4::cSTETerrain* terrain = native::Terrain();
+    if (!terrain) return 0xff;
+    const int countX = static_cast<int>(terrain->CellCountX()) + 1, countZ = static_cast<int>(terrain->CellCountZ()) + 1;
+    if (x < 0 || z < 0 || x >= countX || z >= countZ) return 0xff;
+    const float* n = terrain->Vertices()[static_cast<std::size_t>(z) * countX + x].normal;
+    const float dot = n[0] * -0.45f + n[1] * 0.78f + n[2] * 0.43f;
+    float lit = 0.80f + 0.45f * (dot > 0.0f ? dot : 0.0f);
+    if (lit > 1.0f) lit = 1.0f;
+    return static_cast<std::uint8_t>(lit * 255.0f);
+}
+
 class CellTextureHost final : public sc4::ICellTextureModelHost {
 public:
     bool LockedLotAltitude(int, int, float&) override { return false; }   // no lot manager in the native city yet
@@ -322,6 +338,10 @@ public:
         out[1] = terrain->GetAltitudeAtVertex(x + 1, z);
         out[2] = terrain->GetAltitudeAtVertex(x, z + 1);
         out[3] = terrain->GetAltitudeAtVertex(x + 1, z + 1);
+    }
+    void CellCornerShades(int x, int z, std::uint8_t out[4]) override {
+        const int xs[4] = {x, x + 1, x, x + 1}, zs[4] = {z, z, z + 1, z + 1};
+        for (int i = 0; i < 4; ++i) out[i] = TerrainShade(xs[i], zs[i]);
     }
     const sc4::CellTextureBinding* TextureBinding(std::uint32_t instance) override { return LotTextureBinding(instance); }
 };

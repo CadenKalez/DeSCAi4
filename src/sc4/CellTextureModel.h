@@ -10,7 +10,7 @@
 // +0xdc the four uv pairs again for the terrain cell draw.
 //
 // Seams: the lot manager / lot developer / terrain / texture binding factory (ICellTextureModelHost). The lighting
-// manager colouring of the locked-lot quad (SetupVertices' second half) is left out: the quad stays white.
+// manager colouring of the locked-lot quad (SetupVertices' second half) is left out: that quad takes the terrain shade.
 //
 // Port notes:
 //  * The unlocked path draws through the draw context's terrain cell helper (+0x78 vslot 0x78) in the original, which
@@ -18,7 +18,9 @@
 //  * The uv rotation tables (0x100a16ad0..0x100a16b0c) are not in the export; the four rotations are rebuilt from the
 //    way UpdateTextureRotation spreads them over the corners (rotation 0 maps u to x and v to z).
 //  * The combine path (a combine mode other than 0xff) tints with the spec colour through the lot texture combiner
-//    (0x21020000 with the mode in the first byte); the port draws it translucent with the colour in the vertices.
+//    (0x21020000 with the mode in the first byte, then 0x0001 / 0x03); the light factor the original multiplies the
+//    colour by (the draw context's lighting, +0x68 vslot 0x50) is taken as white, and the mode-3 fallback for devices
+//    without that combine (render properties +0x778: mode 1 at half alpha) is not ported.
 #pragma once
 #include <cstdint>
 
@@ -42,6 +44,9 @@ public:
     virtual bool LockedLotAltitude(int cellX, int cellZ, float& altitude) = 0;
     // SL::spTerrain vslot 0x88: the four corner altitudes of a cell, (x, z), (x + 1, z), (x, z + 1), (x + 1, z + 1).
     virtual void CellCornerAltitudes(int cellX, int cellZ, float out[4]) = 0;
+    // The terrain's lit vertex colour at the same four corners (what the terrain cell draw the unlocked path uses in the
+    // original modulates the texture with), 0..255 grey.
+    virtual void CellCornerShades(int cellX, int cellZ, std::uint8_t out[4]) = 0;
     // SL::spTextureBindingFactory vslot 0x20 with {0x7ab50e44, 0x0986135e, instance}; null when missing. Not owned.
     virtual const CellTextureBinding* TextureBinding(std::uint32_t instance) = 0;
 };

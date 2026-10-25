@@ -234,6 +234,7 @@ struct cMetalGDriver::Impl {
     // matrices (modelview = target 0, projection = target 1)
     simd_float4x4 view = matrix_identity_float4x4, proj = matrix_identity_float4x4;
     eGDMatrixTarget matrixTarget = 0;
+    simd_float4 textureFactor = simd_make_float4(1, 1, 1, 1);   // D3DRS_TEXTUREFACTOR (TexEnv with a colour)
 
     // interleaved arrays
     eGDVertexFormat format = 0;
@@ -682,6 +683,37 @@ void cMetalGDriver::TexEnv(eGDTextureEnvTarget target, eGDTextureEnvParamType pa
     r.envMode = mode;
 }
 
+// The texture environment colour: the texture factor the stage operations read as their TFACTOR argument
+// (cGDriver::TexEnv(float*) sets D3DRS_TEXTUREFACTOR from it).
+void cMetalGDriver::TexEnv(eGDTextureEnvTarget, eGDTextureEnvParamType, const float* values) {
+    impl_->textureFactor = simd_make_float4(values[0], values[1], values[2], values[3]);
+}
+
+// cGDriver::SetCombiner (the DX7 driver's decoding): the stage switches to the combiner environment (mode 4) and takes
+// the record's colour / alpha operations, sources, operands and scales.
+void cMetalGDriver::SetCombiner(const cGDCombiner& combiner, std::uint32_t stageIndex) {
+    Impl& m = *impl_;
+    auto& stage = m.records[stageIndex & 1];
+    stage.envMode = 4;
+    stage.dirty = 1;
+    stage.appliedEnvMode = 0xffffffffu;
+    m.anyStageDirty = true;
+    const auto* raw = reinterpret_cast<const std::uint8_t*>(&combiner);
+    if (raw[0] == 0xff) return;
+    // the two operand tables of SetCombiner (0x100a26770 / 0x100a26780, nSGLDX7::lookup in the DX7 driver)
+    static constexpr std::uint32_t kColorOperand[4] = {2, 3, 4, 5}, kAlphaOperand[4] = {4, 5, 4, 5};
+    stage.rgbCombine = raw[0];
+    stage.alphaCombine = raw[4];
+    for (int i = 0; i < 3; ++i) {
+        stage.rgbSource[i] = raw[1 + i] & 0xf;
+        stage.alphaSource[i] = raw[5 + i] & 0xf;
+        stage.rgbOperand[i] = kColorOperand[(raw[1 + i] >> 4) & 3];
+        stage.alphaOperand[i] = kAlphaOperand[(raw[5 + i] >> 4) & 3];
+    }
+    stage.rgbScale = raw[8];
+    stage.alphaScale = raw[9];
+}
+
 std::uint32_t cMetalGDriver::CreateTexture(eGDInternalTextureFormat format, std::uint32_t width, std::uint32_t height, std::uint32_t mips, eGDTextureHintFlags hint) {
     Impl& m = *impl_;
     const std::uint32_t id = m.table.NewTexture();
@@ -908,7 +940,7 @@ void cMetalGDriver::Encode(int primitive, std::size_t vertexOffset, int vertexCo
     DrawConstants dc;
     dc.view = s.view;
     dc.proj = s.proj;
-    dc.textureFactor = simd_make_float4(1, 1, 1, 1);
+    dc.textureFactor = s.textureFactor;
     dc.stride = static_cast<std::uint32_t>(s.stride);
     dc.alphaRef = AlphaRefByte(mirror_.alphaRef);
     dc.pad0 = dc.pad1 = 0;

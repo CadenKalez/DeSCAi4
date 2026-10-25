@@ -1,5 +1,6 @@
 #include "app/NativeCityView.h"
 
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 
@@ -55,8 +56,10 @@ public:
         // PARTIAL: the renderer's camera / city notifications (DoMessage) are not recovered; the view utilities follow the camera here.
         if (SC4ViewUtilities* utilities = render_->GetViewUtilities()) utilities->UpdateCameraPosition(control_);
         if (std::getenv("SC4_DEBUG")) {
-            static int printed = 0;
-            if (printed++ < 2) {
+            static int printed = 0, lastRotation = -1, lastZoom = -1;
+            if (printed++ < 2 || control_->Rotation() != lastRotation || control_->Zoom() != lastZoom) {
+                lastRotation = control_->Rotation();
+                lastZoom = control_->Zoom();
                 const cS3DVector3 t = control_->ViewTarget(), c = control_->CameraPosition(), d = control_->ViewDirection();
                 if (s3d::cS3DCamera* camera = control_->Camera()) {
                     float l, r, t, b, n, f;
@@ -131,7 +134,32 @@ public:
     void GetCityCornerPosition(int corner, cS3DVector3& out) override {
         if (HasViewUtilities()) render->GetViewUtilities()->GetCityCornerPosition(corner, &out.x);
     }
-    bool PickTerrain(const cS3DVector3&, const cS3DVector3&, cS3DVector3&) override { return false; }
+    // SL::TerrainView() vslot 0x18: where the line through `origin` along `direction` meets the terrain. The camera
+    // keeps its target on the ground with it, so it rotates and zooms about the point the view is centred on.
+    sc4::cSTETerrain* terrain = nullptr;
+    bool PickTerrain(const cS3DVector3& origin, const cS3DVector3& direction, cS3DVector3& hit) override {
+        if (!terrain) return false;
+        const float length = std::sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
+        if (length <= 0.0f || direction.y >= 0.0f) return false;
+        const cS3DVector3 d{direction.x / length, direction.y / length, direction.z / length};
+        auto above = [&](float t) {
+            const float x = origin.x + d.x * t, y = origin.y + d.y * t, z = origin.z + d.z * t;
+            return y - terrain->GetAltitude(x, z);
+        };
+        // walk down the line from well above the terrain until it goes under, then halve the step
+        float t = -6000.0f, step = 8.0f;
+        if (above(t) <= 0.0f) return false;
+        while (above(t + step) > 0.0f) {
+            t += step;
+            if (t > 6000.0f) return false;
+        }
+        for (int i = 0; i < 20; ++i) {
+            step *= 0.5f;
+            if (above(t + step) > 0.0f) t += step;
+        }
+        hit = cS3DVector3{origin.x + d.x * t, origin.y + d.y * t, origin.z + d.z * t};
+        return true;
+    }
 };
 
 }  // namespace
@@ -169,6 +197,7 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     }
     static CameraHost cameraHost;
     cameraHost.render = nullptr;
+    cameraHost.terrain = terrain;
     sc4::SetCameraControlHost(&cameraHost);
     // DoPreCityInit: the camera, its control (looking at the middle of a 1 km city) and the renderer.
     auto* camera = new s3d::cS3DCamera();
@@ -184,7 +213,7 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
         control->SetZoomAndRotation(std::getenv("SC4_ZOOM") ? std::atoi(std::getenv("SC4_ZOOM")) : 0, 0);
         float focusX = sizeX * 0.5f, focusZ = sizeZ * 0.5f;
         if (const char* focus = std::getenv("SC4_FOCUS")) std::sscanf(focus, "%f,%f", &focusX, &focusZ);   // dev: look at a world x,z
-        control->SetViewTargetPosition(cS3DVector3{focusX, 0.0f, focusZ});
+        control->SetViewTargetPosition(cS3DVector3{focusX, terrain->GetAltitude(focusX, focusZ), focusZ});
         control->SendViewChangeMessage();
     }
 
