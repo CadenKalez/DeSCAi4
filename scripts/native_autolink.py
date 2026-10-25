@@ -11,11 +11,11 @@ listf, main = pathlib.Path(sys.argv[1]), sys.argv[2]
 rounds = int(sys.argv[3]) if len(sys.argv) > 3 else 12
 DEBUG = bool(os.environ.get("NATIVE_DEBUG"))   # -O0, frame pointers, ASan: objects in build/native_obj_debug
 OBJ = ROOT / ("build/native_obj_debug" if DEBUG else "build/native_obj"); OBJ.mkdir(parents=True, exist_ok=True)
-BAD = ("experimental_host", "src/tools", "src/app/main.mm", "MetalGL", "GLApi", "GLState", "D3DDevice7", "DDSurface7", "D3DVertexBuffer7",
+BAD = ("src/app/game_main.mm", "experimental_host", "src/tools", "src/app/main.mm", "MetalGL", "GLApi", "GLState", "D3DDevice7", "DDSurface7", "D3DVertexBuffer7",
        "DirectDraw7", "D3D7Stub", "DX7", "MacOpenGL", "FastATI", "/pending/", "src/sc4/AutomataState.cpp", "src/app/GameAudio",
        "src/app/audio_demo", "gzcom_creators/cGZLuaScriptServer.cpp", "GZCOMCreatorsLotConfig.cpp")
-FLAGS = ["-std=c++20", "-w", "-fobjc-arc", "-Isrc", "-Iscripts/tests/stubs", "-arch", "arm64"] + (["-O0", "-g", "-fno-omit-frame-pointer", "-fsanitize=address"] if DEBUG else ["-O1", "-g"])
-FW = ["-framework", "Foundation", "-framework", "Metal", "-framework", "QuartzCore", "-framework", "Cocoa", "-framework", "ImageIO",
+FLAGS = ["-std=c++20", "-w", "-fobjc-arc", "-Isrc", "-Iscripts/tests/stubs", "-I/opt/homebrew/include/freetype2", "-arch", "arm64"] + (["-O0", "-g", "-fno-omit-frame-pointer", "-fsanitize=address"] if DEBUG else ["-O1", "-g"])
+FW = ["-L/opt/homebrew/lib", "-lfreetype", "-framework", "Foundation", "-framework", "Metal", "-framework", "QuartzCore", "-framework", "Cocoa", "-framework", "ImageIO",
       "-framework", "UniformTypeIdentifiers", "-framework", "CoreGraphics", "-framework", "AVFoundation"]
 srcs = [p for p in ROOT.joinpath("src").rglob("*") if p.suffix in (".cpp", ".mm") and not any(b in str(p) for b in BAD)]
 text = {str(p.relative_to(ROOT)): p.read_text(errors="ignore") for p in srcs}
@@ -45,7 +45,7 @@ def build():
                 errs.append(s + ": " + "\n".join(l for l in r.stderr.splitlines() if "error" in l)[:600])
     if errs:
         print("COMPILE ERRORS:\n" + "\n".join(errs)); sys.exit(1)
-    out = pathlib.Path(os.environ.get("TMPDIR", "/tmp")) / ("native_link_probe_debug" if DEBUG else "native_link_probe")
+    out = pathlib.Path(os.environ.get("TMPDIR", "/tmp")) / ((os.environ.get("NATIVE_OUT") or ("native_link_probe_debug" if DEBUG else "native_link_probe")))
     r = subprocess.run(["clang++", "-arch", "arm64"] + [str(obj(s)) for s in entries() + [main]] + FW + (["-fsanitize=address"] if DEBUG else []) + ["-o", str(out)], capture_output=True, text=True)
     return r.stderr
 

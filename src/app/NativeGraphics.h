@@ -9,6 +9,7 @@
 #pragma once
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 #include "gz/Buffer.h"
 #include "gz/DrawContext.h"
@@ -67,6 +68,8 @@ public:
     cIGZBuffer* AsBuffer() { return asBuffer_; }
     cGZBuffer* Pixels() { return buffer_; }
     bool OnScreen() const { return onScreen_; }
+    // every live buffer (debug dumps of private buffers)
+    static const std::vector<Buffer*>& All();
 
 private:
     int refs_ = 1;
@@ -95,7 +98,7 @@ public:
     gz::cIGZDrawEngine* CreateEngine(gz::IDrawTargetBuffer* target) override;
 
     bool HasGraphicsSystem() override { return true; }
-    cGZBufferColorType DisplayColorType() override { return {kBufferColorXRGB8888, 32}; }
+    cGZBufferColorType DisplayColorType() override { return {kBufferColorARGB8888, 32}; }
     bool QueryTextureBitCount(std::uint32_t& bits) override { bits = 32; return true; }
 
 private:

@@ -131,13 +131,19 @@ private:
 // The screen buffer's pixels (its context asks for the engine lazily, when it first needs a target, so the choice is made by
 // the target rather than by when the request arrives).
 gz::IDrawTargetBuffer* g_screenTarget = nullptr;
+std::vector<Buffer*> g_buffers;
 
 }  // namespace
 
+const std::vector<Buffer*>& Buffer::All() { return g_buffers; }
+
 Buffer::Buffer(int width, int height, bool onScreen) : onScreen_(onScreen) {
+    g_buffers.push_back(this);
     buffer_ = new cGZBuffer();
     if (onScreen) g_screenTarget = buffer_;
-    buffer_->Init(std::uint32_t(width), std::uint32_t(height), cGZBufferColorType{kBufferColorXRGB8888, 32});
+    // The screen is only a size and a colour space (the driver holds the pixels). A private buffer is shown by uploading it as a
+    // texture, and cGZBufferSimGLCache only knows the formats the shipped game used: ARGB8888 for 32-bit, 16-bit otherwise.
+    buffer_->Init(std::uint32_t(width), std::uint32_t(height), cGZBufferColorType{onScreen ? kBufferColorXRGB8888 : kBufferColorARGB8888, 32});
     buffer_->Fill(0, nullptr);
     context_ = new gz::cGZDrawContext();
     context_->AddRef();
@@ -148,6 +154,7 @@ Buffer::Buffer(int width, int height, bool onScreen) : onScreen_(onScreen) {
 }
 
 Buffer::~Buffer() {
+    g_buffers.erase(std::remove(g_buffers.begin(), g_buffers.end(), this), g_buffers.end());
     if (asBuffer_) asBuffer_->Release();
     if (context_) context_->Release();
     if (buffer_) buffer_->Release();

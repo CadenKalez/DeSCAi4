@@ -511,6 +511,15 @@ std::unique_ptr<cMetalGDriver> cMetalGDriver::Create(void* caMetalLayer, std::ui
     MTLTextureDescriptor* wd = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm width:1 height:1 mipmapped:NO];
     m.whiteTexture = [m.device newTextureWithDescriptor:wd];
     m.table.Init();
+    // The mode the drawable already is: a Metal device is always the "hardware driver" (the application reads byte 0 of +0x30 as
+    // "accelerated" and would otherwise fall back to the software one); +0x2e, the 2-D blit capability, stays 0.
+    m.currentMode = sGDMode{};
+    m.currentMode.id = 0;
+    m.currentMode.width = width;
+    m.currentMode.height = height;
+    m.currentMode.bitsPerPixel = 32;
+    m.currentMode.flags[0] = 1u << 16;   // byte 2 = 1 for every entry; byte 0 (full screen) = 0: windowed
+    m.currentMode.reserved30 = 1;
     if (modes) m.modeList = std::make_unique<cVideoModeList>(modes);
     const std::uint32_t white = 0xffffffff;
     [m.whiteTexture replaceRegion:MTLRegionMake2D(0, 0, 1, 1) mipmapLevel:0 withBytes:&white bytesPerRow:4];

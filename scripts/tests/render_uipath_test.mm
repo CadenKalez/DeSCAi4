@@ -83,6 +83,7 @@ int main() {
         const float blitRect[4] = {32, 8, 48, 24};
         CHECK(engine->Draw(gz::eDrawingOp::FillRect, blitRect, 2) == gz::eEngineDrawResult::Done);
         engine->ClearBltTiling();
+
         engine->Suspend();
 
         std::vector<std::uint8_t> frame;
