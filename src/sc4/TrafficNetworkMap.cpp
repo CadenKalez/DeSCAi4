@@ -172,16 +172,24 @@ bool cSC4TrafficNetworkMap::DoMessage(::cGZMessage&) {
     return false;
 }
 
-// 0x1002a034c
+// 0x100299312 (message target 2 slot) — the recovered logic lives in DoMessage2; this interface slot is
+// unrecovered and handles nothing.
+bool cSC4TrafficNetworkMap::DoMessage(cIGZMessage2*) {
+    return false;
+}
+
+// 0x1002a034c — four sub-objects: the map (0xca0f81b9) at +0, the message target (iid 1) at +8, the
+// message target 2 (0x452294aa) at +0x10 and the serializable (0xe4fda3d4) at +0x18. The class id
+// 0x6a0f82b2 is not answered (as in the original).
 bool cSC4TrafficNetworkMap::QueryInterface(std::uint32_t iid, void** out) {
     if (!out) return false;
-    if (iid == kGZIID_cISC4TrafficNetworkMap || iid == 1u || iid == kGZIID_MessageTarget2 ||
-        iid == 0xe4fda3d4u) {
-        *out = this;
-        AddRef();
-        return true;
-    }
-    return false;
+    if (iid == kGZIID_cISC4TrafficNetworkMap) *out = static_cast<cISC4TrafficNetworkMap*>(this);
+    else if (iid == kGZIID_cIGZSerializable) *out = static_cast<cIGZSerializable*>(this);
+    else if (iid == 1) *out = static_cast<cIGZMessageTarget*>(this);
+    else if (iid == kGZIID_cIGZMessageTarget2) *out = static_cast<cIGZMessageTarget2*>(this);
+    else return false;
+    AddRef();
+    return true;
 }
 
 // 0x1002a03c0

@@ -2,6 +2,9 @@
 
 #include <algorithm>
 
+#include "gz/cIGZIStream.h"
+#include "gz/cIGZOStream.h"
+
 namespace sc4 {
 
 namespace {
@@ -17,6 +20,158 @@ cSC4PowerSimulator::cSC4PowerSimulator(IPowerHost* host, cRZRandom* random) : ho
 }
 
 cSC4PowerSimulator::~cSC4PowerSimulator() { ShutdownMarkAndWireBits(); }
+
+// ---- identity -------------------------------------------------------------------------------------------
+
+bool cSC4PowerSimulator::QueryInterface(std::uint32_t iid, void** out) {
+    if (iid == 0xe4fda3d4) *out = static_cast<cIGZSerializable*>(this);         // +0x10
+    else if (iid == 0x452294aa) *out = static_cast<cIGZMessageTarget2*>(this);  // +0x8
+    else if (iid == 1 || iid == kGZIID_cISC4PowerSimulator) *out = static_cast<cISC4PowerSimulator*>(this);  // +0
+    else return false;
+    AddRef();
+    return true;
+}
+
+std::uint32_t cSC4PowerSimulator::Release() {
+    if (refCount_ < 2) {
+        delete this;   // the destructor releases the bit maps
+        return 0;
+    }
+    return --refCount_;
+}
+
+bool cSC4PowerSimulator::DoMessage(cIGZMessage2*) { return true; }   // message routing unrecovered
+
+// ---- streams ---------------------------------------------------------------------------------------------
+
+bool cSC4PowerSimulator::Write(cIGZOStream& stream) const {
+    stream.SetUint16(6);
+    host_->WritePowerGrid(stream);                                      // +0x38 power line grid
+    stream.SetSint32(month_);                                           // +0x68
+    stream.SetSint32(usedCapacity6c);                                   // +0x6c
+    stream.SetSint32(capacity70);                                       // +0x70
+    stream.SetFloat32(ratio94);                                         // +0x94
+    stream.SetSint32(monthlyValue98_);                                  // +0x98
+    stream.SetSint32(poweredConsumers9c);                               // +0x9c
+    stream.SetSint32(unpoweredConsumersA0);                             // +0xa0
+    stream.SetSint32(monthlyRequirementA4);                             // +0xa4
+    stream.SetSint64(monthlyCostA8_);                                   // +0xa8
+    stream.SetSint32(monthlyProduction80);                              // +0x80
+    stream.SetSint32(monthlyConsumption84);                             // +0x84
+    stream.SetSint32(monthlyImport88);                                  // +0x88
+    stream.SetSint32(monthlyExport8c);                                  // +0x8c
+    stream.SetSint32(monthlyDemand90);                                  // +0x90
+    host_->WriteSupplyGrid(stream);                                     // +0xb0 supply grid
+    stream.SetUint32(std::uint32_t(consumptionMap_.size()));            // +0xb8 rows
+    stream.SetUint32(consumptionMap_.empty() ? 0 : std::uint32_t(consumptionMap_.front().size()));   // columns
+    for (const auto& row : consumptionMap_)
+        for (std::int16_t value : row) stream.SetSint16(value);
+    for (const auto& row : monthlyPower_)                               // +0xd0
+        for (int value : row) stream.SetSint32(value);
+    for (int value : annualPower_) stream.SetSint32(value);             // +0x2b0
+    stream.SetSint32(plantCount);                                       // +0x354
+    stream.SetSint32(overworkedPlants);                                 // +0x358 (10 slots)
+    stream.SetSint32(agedPlants);
+    stream.SetSint32(distressedPlants);
+    for (int value : plantCountByType) stream.SetSint32(value);
+    stream.SetSint32(plantCountTypeExtra);
+    for (const PowerPlantEntry& entry : plants_) {                      // +0x2d8 (no count prefix)
+        stream.SetUint32(std::uint32_t(entry.state));
+        host_->WritePlant(stream, entry.occupant);
+    }
+    stream.SetUint32(poleCount_);                                       // +0x31c
+    stream.SetUint32(enabledPoles_);                                    // +0x320
+    for (IPowerPole* pole : poles_) host_->WritePole(stream, pole);     // +0x2f0
+    stream.SetUint32(bitWords_);                                        // +0x338
+    for (std::uint32_t i = 0; i < bitWords_; ++i) stream.SetUint32(visitedBits_[i]);      // +0x328
+    for (std::uint32_t i = 0; i < bitWords_; ++i) stream.SetUint32(wireBits_[i]);         // +0x330
+    for (std::uint32_t i = 0; i < bitWords_; ++i) stream.SetUint32(poweredBits_[i]);      // +0x348
+    for (std::uint32_t i = 0; i < bitWords_; ++i) stream.SetUint32(gridVisitedBits_[i]);  // +0x340
+    stream.SetUint8(flag350_);                                          // +0x350
+    stream.SetUint8(flag3a8_);                                          // +0x3a8
+    stream.SetSint32(value3ac_);                                        // +0x3ac
+    stream.SetUint8(dirty_ ? 1 : 0);                                    // +0x3b0
+    stream.SetUint8(dirtySecond_ ? 1 : 0);                              // +0x3b1
+    stream.SetUint32(value3c4_);                                        // +0x3c4
+    return !stream.GetError();
+}
+
+bool cSC4PowerSimulator::Read(cIGZIStream& stream) {
+    std::uint16_t version = 0;
+    stream.GetUint16(version);
+    if (version > 6) return false;
+    host_->ReadPowerGrid(stream);                                       // +0x38 power line grid
+    stream.GetSint32(month_);                                           // +0x68
+    stream.GetSint32(usedCapacity6c);                                   // +0x6c
+    stream.GetSint32(capacity70);                                       // +0x70
+    if (version < 6) {
+        std::int32_t ratio = 0;
+        stream.GetSint32(ratio);
+        ratio94 = float(ratio) * 0.01f;                                 // older saves stored whole percents
+    } else {
+        stream.GetFloat32(ratio94);                                     // +0x94
+    }
+    stream.GetSint32(monthlyValue98_);                                  // +0x98
+    stream.GetSint32(poweredConsumers9c);                               // +0x9c
+    stream.GetSint32(unpoweredConsumersA0);                             // +0xa0
+    stream.GetSint32(monthlyRequirementA4);                             // +0xa4
+    stream.GetSint64(monthlyCostA8_);                                   // +0xa8
+    stream.GetSint32(monthlyProduction80);                              // +0x80
+    stream.GetSint32(monthlyConsumption84);                             // +0x84
+    stream.GetSint32(monthlyImport88);                                  // +0x88
+    stream.GetSint32(monthlyExport8c);                                  // +0x8c
+    stream.GetSint32(monthlyDemand90);                                  // +0x90
+    host_->ReadSupplyGrid(stream);                                      // +0xb0 supply grid
+    std::uint32_t rows = 0, columns = 0;
+    stream.GetUint32(rows);
+    stream.GetUint32(columns);
+    consumptionMap_.resize(rows);
+    for (auto& row : consumptionMap_) {
+        row.resize(columns);
+        for (std::int16_t& value : row) stream.GetSint16(value);
+    }
+    for (auto& row : monthlyPower_)                                     // +0xd0
+        for (int& value : row) stream.GetSint32(value);
+    for (int& value : annualPower_) stream.GetSint32(value);            // +0x2b0
+    stream.GetSint32(plantCount);                                       // +0x354
+    stream.GetSint32(overworkedPlants);                                 // +0x358
+    stream.GetSint32(agedPlants);
+    stream.GetSint32(distressedPlants);
+    for (int& value : plantCountByType) stream.GetSint32(value);
+    stream.GetSint32(plantCountTypeExtra);
+    plants_.clear();                                                    // +0x2d8
+    for (int i = 0; i < plantCount; ++i) {
+        PowerPlantEntry entry;
+        std::uint32_t state = 0;
+        stream.GetUint32(state);
+        entry.state = int(state);
+        host_->ReadPlant(stream, &entry.occupant);
+        plants_.push_back(entry);
+    }
+    stream.GetUint32(poleCount_);                                       // +0x31c
+    stream.GetUint32(enabledPoles_);                                    // +0x320
+    poles_.resize(poleCount_);
+    for (IPowerPole*& pole : poles_) host_->ReadPole(stream, &pole);    // +0x2f0
+    stream.GetUint32(bitWords_);                                        // +0x338
+    ShutdownMarkAndWireBits();
+    visitedBits_ = new std::uint32_t[bitWords_];
+    wireBits_ = new std::uint32_t[bitWords_];
+    poweredBits_ = new std::uint32_t[bitWords_];
+    gridVisitedBits_ = new std::uint32_t[bitWords_];
+    for (std::uint32_t i = 0; i < bitWords_; ++i) stream.GetUint32(visitedBits_[i]);      // +0x328
+    for (std::uint32_t i = 0; i < bitWords_; ++i) stream.GetUint32(wireBits_[i]);         // +0x330
+    for (std::uint32_t i = 0; i < bitWords_; ++i) stream.GetUint32(poweredBits_[i]);      // +0x348
+    for (std::uint32_t i = 0; i < bitWords_; ++i) stream.GetUint32(gridVisitedBits_[i]);  // +0x340
+    std::uint8_t byte = 0;
+    stream.GetUint8(byte); flag350_ = byte;                             // +0x350
+    stream.GetUint8(byte); flag3a8_ = byte;                             // +0x3a8
+    stream.GetSint32(value3ac_);                                        // +0x3ac
+    stream.GetUint8(byte); dirty_ = byte != 0;                          // +0x3b0
+    stream.GetUint8(byte); dirtySecond_ = byte != 0;                    // +0x3b1
+    flag3a8_ = 0;                                                       // quirk kept: Read clears +0x3a8
+    stream.GetUint32(value3c4_);                                        // +0x3c4
+    return !stream.GetError();
+}
 
 void cSC4PowerSimulator::ReadSimulatorTunableValues(const cISCPropertyHolder* exemplar) {
     neighborhoodRadius_ = 2;

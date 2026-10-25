@@ -254,17 +254,17 @@ public:
     bool GetStopPoint(cS3DVector3& out);                                   // 0x4f8 @ 0x10011a4ac
     std::uint8_t GetCellLifespan() const;                                  // 0x500 @ 0x100508e60
     void SetCellLifespan(std::uint8_t lifespan);                           // 0x508 @ 0x10050f560
-    void UpdateOrientation(const cS3DVector3& target, float* out) const;   // 0x510 @ 0x100119eec
+    virtual void UpdateOrientation(const cS3DVector3& target, float* out) const;   // 0x510 @ 0x100119eec
     const std::deque<tLookaheadNode>& GetLookaheadDeque() const;           // 0x518 @ 0x1000e25f0
     void OffsetPathPoint(cS3DVector3& point);                              // 0x520 @ 0x100119f70
     virtual void RecalculatePathOffset();                                  // 0x528 @ 0x10011b73e
-    void SlowDownForStopLight();                                           // 0x530 @ 0x10011a580
+    virtual void SlowDownForStopLight();                                           // 0x530 @ 0x10011a580
     void ReturnToDefaultSpeed();                                           // 0x538 @ 0x10011a5d0
     void UpdateCollision();                                                // 0x540 @ 0x100116cb6
     bool CheckIntersectionDensity();                                       // 0x548 @ 0x1001174e2
     bool DoStopSignTick(float milliseconds);                               // 0x550 @ 0x1001173cc
     bool DoStopAtStationTick(float milliseconds);                          // 0x558 @ 0x10011733e
-    bool ChooseNewDestination();                                           // 0x560 @ 0x1001187dc
+    virtual bool ChooseNewDestination();                                           // 0x560 @ 0x1001187dc
     bool ChooseLookaheadTiles();                                           // 0x568 @ 0x100118b1c
     bool ChooseLookaheadTileByDensity(const tLookaheadNode& from, tLookaheadNode& out);   // 0x570 @ 0x1001190b6
     bool ChooseLookaheadTileByRoute(const tLookaheadNode& from, tLookaheadNode& out);     // 0x578 @ 0x100119390

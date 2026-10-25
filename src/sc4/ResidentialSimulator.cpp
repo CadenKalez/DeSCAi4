@@ -2,6 +2,9 @@
 
 #include <algorithm>
 
+#include "gz/cIGZIStream.h"
+#include "gz/cIGZOStream.h"
+
 namespace sc4 {
 
 namespace {
@@ -21,6 +24,27 @@ cSC4ResidentialSimulator::cSC4ResidentialSimulator(IResidentialHost* host, cRZRa
     : host_(host), random_(random), schools_(7), hospitals_(3) {
     ReadSimulatorTunableValues(nullptr);
 }
+
+// ---- identity -------------------------------------------------------------------------------------------
+
+bool cSC4ResidentialSimulator::QueryInterface(std::uint32_t iid, void** out) {
+    if (iid == 0xe4fda3d4) *out = static_cast<cIGZSerializable*>(this);         // +0x10
+    else if (iid == 0x452294aa) *out = static_cast<cIGZMessageTarget2*>(this);  // +0x8
+    else if (iid == 1 || iid == kGZIID_cISC4ResidentialSimulator) *out = static_cast<cISC4ResidentialSimulator*>(this);  // +0
+    else return false;
+    AddRef();
+    return true;
+}
+
+std::uint32_t cSC4ResidentialSimulator::Release() {
+    if (refCount_ < 2) {
+        delete this;
+        return 0;
+    }
+    return --refCount_;
+}
+
+bool cSC4ResidentialSimulator::DoMessage(cIGZMessage2*) { return true; }   // routing unrecovered
 
 void cSC4ResidentialSimulator::SetDefaultCurves(DepartmentData& d, const std::vector<SC4Point>& a, const std::vector<SC4Point>& b) {
     d.staffCurve.SetResponseCurveData(a);
@@ -403,6 +427,146 @@ std::uint32_t cSC4ResidentialSimulator::GetCellLifeExpectancy(const cISCProperty
     std::vector<float> values;
     if (exemplar->HasProperty(0x6941a67f) && cSCPropertyHelp::GetPropertyValue(exemplar, 0x6941a67f, values)) curve.SetResponseCurveData(values.data(), values.size());
     return std::uint32_t(curve.GetOutputValue(host_->CellLifeExpectancyBase(x, z))) & 0xff;
+}
+
+// ---- streams ------------------------------------------------------------------------------------------------------
+
+namespace {
+
+// tDepartmentData stream format (WriteDepartmentData @ 0x100204b72 / ReadDepartmentData @ 0x100205126). The
+// response curves (+0x18/+0x38/+0x58) are tunables rebuilt from the exemplar and are not serialized; the two
+// int16 grids at +0x80/+0x88 are reached through the host.
+void WriteDepartmentData(cIGZOStream& stream, IResidentialHost* host, const DepartmentData& d) {
+    stream.SetFloat32(d.minimumFunding);
+    stream.SetFloat32(d.strikeThreshold);
+    stream.SetFloat32(d.value08);
+    stream.SetSint32(static_cast<std::int32_t>(d.strikeDays));
+    stream.SetFloat32(d.strikeEndFunding);
+    stream.SetUint8(d.onStrike ? 1 : 0);
+    stream.SetSint32(static_cast<std::int32_t>(d.strikeStartDay));
+    host->WriteDepartmentGrid(stream);                       // +0x80
+    host->WriteDepartmentGrid(stream);                       // +0x88
+    stream.SetFloat32(d.value90);
+    stream.SetFloat32(d.value94);
+    stream.SetUint32(d.messageId);
+}
+
+void ReadDepartmentData(cIGZIStream& stream, IResidentialHost* host, DepartmentData& d, std::uint16_t version) {
+    if (version >= 5) {
+        stream.GetFloat32(d.minimumFunding);
+        stream.GetFloat32(d.strikeThreshold);
+        stream.GetFloat32(d.value08);
+    } else {
+        float v = 0;
+        stream.GetFloat32(v); d.minimumFunding = v * 0.01f;
+        stream.GetFloat32(v); d.strikeThreshold = v * 0.01f;
+        stream.GetFloat32(v); d.value08 = v * 0.01f;
+    }
+    std::int32_t days = 0;
+    stream.GetSint32(days); d.strikeDays = static_cast<std::uint32_t>(days);
+    if (version >= 6) {
+        stream.GetFloat32(d.strikeEndFunding);
+    } else {
+        float v = 0;
+        stream.GetFloat32(v); d.strikeEndFunding = v * 0.01f;
+    }
+    std::uint8_t onStrike = 0;
+    stream.GetUint8(onStrike); d.onStrike = onStrike != 0;
+    std::int32_t start = 0;
+    stream.GetSint32(start); d.strikeStartDay = static_cast<std::uint32_t>(start);
+    host->ReadDepartmentGrid(stream);                        // +0x80
+    host->ReadDepartmentGrid(stream);                        // +0x88
+    if (version >= 5) {
+        stream.GetFloat32(d.value90);
+    } else {
+        float v = 0;
+        stream.GetFloat32(v); d.value90 = v * 0.01f;
+    }
+    stream.GetFloat32(d.value94);
+    stream.GetUint32(d.messageId);
+}
+
+template <class List>
+void WriteOccupantList(cIGZOStream& stream, IResidentialHost* host, const List& list) {
+    stream.SetUint32(std::uint32_t(list.size()));
+    for (IResidentialOccupant* occupant : list) host->WriteOccupant(stream, occupant);
+}
+
+// The record holds far fewer occupants than this; a larger count means the reader is out of step with the stream
+// (the streamed layout is only partly recovered), and trusting it would allocate without bound.
+constexpr std::uint32_t kMaxStreamedOccupants = 1u << 20;
+
+template <class List>
+bool ReadOccupantList(cIGZIStream& stream, IResidentialHost* host, List& list) {
+    std::uint32_t count = 0;
+    stream.GetUint32(count);
+    list.clear();
+    if (count > kMaxStreamedOccupants) return false;
+    for (std::uint32_t i = 0; i < count; ++i) {
+        IResidentialOccupant* occupant = nullptr;
+        host->ReadOccupant(stream, &occupant);
+        if (occupant) list.push_back(occupant);
+    }
+    return !stream.GetError();
+}
+
+}  // namespace
+
+bool cSC4ResidentialSimulator::Write(cIGZOStream& stream) const {
+    // PARTIAL: the ~30 coverage/workforce/EQ/HQ grids and the ScanningIterator that make up most of the
+    // original record belong to the unrecovered population model and are not streamed (see notes/ledger_pending).
+    stream.SetUint16(7);
+    stream.SetSint32(population_);                            // +0x60
+    stream.SetUint8(fundingChanged_ ? 1 : 0);                 // +0x12c
+    WriteDepartmentData(stream, host_, health_);              // +0x160
+    WriteDepartmentData(stream, host_, education_);           // +0x200
+    WriteOccupantList(stream, host_, extraSchools_);          // +0x2d0
+    WriteOccupantList(stream, host_, extraHospitals_);        // +0x2e8
+    WriteOccupantList(stream, host_, healthAffecting2_);      // +0x300
+    stream.SetUint32(std::uint32_t(schools_.size()));         // +0x318 (7 lists)
+    for (const auto& list : schools_) WriteOccupantList(stream, host_, list);
+    stream.SetUint32(std::uint32_t(hospitals_.size()));       // +0x330 (3 lists)
+    for (const auto& list : hospitals_) WriteOccupantList(stream, host_, list);
+    WriteOccupantList(stream, host_, healthAffecting1_);      // +0x348
+    stream.SetUint8(autoBudgetSchools_ ? 1 : 0);              // +0x648
+    stream.SetUint8(autoBudgetHospitals_ ? 1 : 0);            // +0x649
+    return !stream.GetError();
+}
+
+bool cSC4ResidentialSimulator::Read(cIGZIStream& stream) {
+    std::uint16_t version = 0;
+    stream.GetUint16(version);
+    if (version > 7) return false;
+    stream.GetSint32(population_);                            // +0x60
+    std::uint8_t flag = 0;
+    stream.GetUint8(flag); fundingChanged_ = flag != 0;       // +0x12c
+    ReadDepartmentData(stream, host_, health_, version);      // +0x160
+    ReadDepartmentData(stream, host_, education_, version);   // +0x200
+    if (!ReadOccupantList(stream, host_, extraSchools_)) return false;           // +0x2d0
+    if (!ReadOccupantList(stream, host_, extraHospitals_)) return false;         // +0x2e8
+    if (!ReadOccupantList(stream, host_, healthAffecting2_)) return false;       // +0x300
+    std::uint32_t schoolLists = 0;
+    stream.GetUint32(schoolLists);
+    if (schoolLists > kMaxStreamedOccupants) return false;
+    schools_.clear();
+    for (std::uint32_t i = 0; i < schoolLists; ++i) {
+        std::list<IResidentialOccupant*> list;
+        if (!ReadOccupantList(stream, host_, list)) return false;
+        schools_.push_back(list);
+    }
+    std::uint32_t hospitalLists = 0;
+    stream.GetUint32(hospitalLists);
+    if (hospitalLists > kMaxStreamedOccupants) return false;
+    hospitals_.clear();
+    for (std::uint32_t i = 0; i < hospitalLists; ++i) {
+        std::list<IResidentialOccupant*> list;
+        if (!ReadOccupantList(stream, host_, list)) return false;
+        hospitals_.push_back(list);
+    }
+    if (!ReadOccupantList(stream, host_, healthAffecting1_)) return false;       // +0x348
+    stream.GetUint8(flag); autoBudgetSchools_ = flag != 0;    // +0x648
+    stream.GetUint8(flag); autoBudgetHospitals_ = flag != 0;  // +0x649
+    return !stream.GetError();
 }
 
 }  // namespace sc4

@@ -10,6 +10,9 @@
 #include <vector>
 
 #include "gz/cGZPersistResourceKey.h"
+#include "gz/cIGZSerializable.h"
+#include "gz/cIGZIStream.h"
+#include "gz/cIGZOStream.h"
 #include "sc4/Exemplar.h"
 #include "sc4/FloraOccupant.h"
 #include "sc4/SCProperty.h"
@@ -56,8 +59,20 @@ public:
 IFloraSimulatorHost* FloraSimulatorHost();
 void SetFloraSimulatorHost(IFloraSimulatorHost* host);
 
-class cSC4FloraSimulator {
+class cSC4FloraSimulator : public cIGZSerializable {
 public:
+    cSC4FloraSimulator() = default;
+    ~cSC4FloraSimulator() = default;
+
+    // cIGZUnknown / cIGZSerializable identity (one shared count at +0x1c; the original answers +0 for
+    // iid 1 / 0x06c66177, +8 for the message target and +0x10 for the serializable).
+    bool QueryInterface(std::uint32_t iid, void** out) override;
+    std::uint32_t AddRef() override { return ++refCount_; }
+    std::uint32_t Release() override;
+    bool Write(cIGZOStream& stream) const override;
+    bool Read(cIGZIStream& stream) override;
+    std::uint32_t GetGZCLSID() const override { return kFloraSimulatorClassId; }
+
     static void MakeDefaultStaticFloraData(cSC4StaticFloraData& data);
     static bool StaticInit();
     static bool StaticShutdown();
@@ -80,6 +95,7 @@ public:
     void SetElevationScale(float scale) { elevationScale_ = scale; }
 
 private:
+    std::uint32_t refCount_ = 0;                                    // +0x1c
     float elevationScale_ = 1.0f;                                   // +0xd0 (tunable)
 };
 

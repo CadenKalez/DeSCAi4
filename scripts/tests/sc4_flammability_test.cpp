@@ -65,10 +65,17 @@ public:
     void RegisterSimulator(const char*) override { registered = true; }
     void UnregisterSimulator() override { registered = false; }
     cIGZSerializable* CreateSerializable(std::uint32_t classId) override {
-        if (classId != 0x49b9e602) return nullptr;
-        auto* g = new cSC4SimGrid<std::uint8_t>();
-        g->AddRef();
-        return static_cast<cIGZSerializable*>(g);
+        if (classId == 0x49b9e602) {
+            auto* g = new cSC4SimGrid<std::uint8_t>();
+            g->AddRef();
+            return static_cast<cIGZSerializable*>(g);
+        }
+        if (classId == kFlammabilitySimulatorClassId) {
+            auto* s = new cSC4FlammabilitySimulator(this);
+            s->AddRef();
+            return static_cast<cIGZSerializable*>(s);
+        }
+        return nullptr;
     }
 
     struct Fire { int x, z; bool lot; int intensity; };
@@ -223,6 +230,55 @@ int main() {
         seg->Release();
     }
     unlink(path.c_str());
+
+    // SC4ReadGZSerializable round trip: the city-load serializer creates the object from its class id
+    // through the factory, then QueryInterface(0xe4fda3d4) hands out the cIGZSerializable view.
+    std::string rtPath = "/tmp/sc4_flam_rt_" + std::to_string(getpid()) + ".sc4";
+    const cGZPersistResourceKey rtKey{0x50505050, 0x60606060, 1};
+    {
+        cSC4DBSegment* seg = new cSC4DBSegment();
+        seg->AddRef();
+        seg->Init();
+        cRZString p(rtPath.c_str());
+        seg->SetPath(p);
+        CHECK(seg->Open(false, true));
+        cISC4DBSegmentOStream* os = nullptr;
+        CHECK(seg->OpenOStream(rtKey, &os, true));
+        // the object itself, written through the cIGZSerializable view (version 2 + two grids + hotspots);
+        // an extra reference keeps the stack object alive across the serializer's own add/release pair.
+        sim.AddRef();
+        CHECK(SC4WriteGZSerializable(*os, static_cast<cIGZUnknown*>(&sim)));
+        CHECK(seg->CloseOStream(os));
+        os->Release();
+        CHECK(seg->Close());
+        seg->Release();
+    }
+    {
+        cSC4DBSegment* seg = new cSC4DBSegment();
+        seg->AddRef();
+        seg->Init();
+        cRZString p(rtPath.c_str());
+        seg->SetPath(p);
+        CHECK(seg->Open(true, false));
+        CHECK(seg->LoadClassObjects(0x48));
+        cISC4DBSegmentIStream* is = nullptr;
+        CHECK(seg->OpenIStream(rtKey, &is));
+        void* raw = nullptr;
+        CHECK(SC4ReadGZSerializable(*is, kGZIID_cISC4FlammabilitySimulator, &raw, false));
+        CHECK(raw != nullptr);
+        // downcast through the interface type, never a void chain (see Budget.cpp's QueryInterface trap)
+        auto* rt = static_cast<cSC4FlammabilitySimulator*>(static_cast<cIGZSerializable*>(raw));
+        CHECK(rt && rt->GetGZCLSID() == kFlammabilitySimulatorClassId);
+        CHECK(rt->GetFlammabilityGrid() && rt->GetFlammabilityGrid()->GetTractValue(2, 2) == 110);
+        CHECK(rt->GetHotspots().size() == 1 && rt->GetHotspots().front().weight == 4);
+        static_cast<cIGZSerializable*>(raw)->Release();
+        CHECK(seg->CloseIStream(is));
+        is->Release();
+        CHECK(seg->Close());
+        seg->Release();
+    }
+    unlink(rtPath.c_str());
+
     CHECK(sim.Shutdown() && !host.registered);
     std::printf(failures ? "FAILED (%d)\n" : "PASS sc4_flammability\n", failures);
     return failures != 0;

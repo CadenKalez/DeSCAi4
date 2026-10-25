@@ -88,6 +88,9 @@ struct Factory final : sc4::ISerializableFactory {
             city->AddRef();
             return city;
         }
+        // Classes the decompilation kept as plain C++ (no cIGZUnknown base) have a GZCOM creator that returns a raw
+        // object, which is not a COM pointer; the probe's wrapper takes priority for those.
+        if (cIGZSerializable* wrapped = CreateCityProbeSerializable(classId)) return wrapped;
         const gzcom::ClassFactoryInfo* info = gzcom::FindClassFactory(classId);
         void* object = info && info->create ? info->create() : nullptr;
         cIGZSerializable* serializable = nullptr;
@@ -97,8 +100,6 @@ struct Factory final : sc4::ISerializableFactory {
             if (!unknown->QueryInterface(sc4::kGZIID_cIGZSerializable, reinterpret_cast<void**>(&serializable))) serializable = nullptr;
             unknown->Release();
         }
-        if (!serializable)
-            serializable = CreateCityProbeSerializable(classId);   // recovered outside the GZCOM table
         if (!serializable && missing.insert(classId).second)
             std::printf("  class %08x %s: %s\n", classId, info ? info->className : "(not in the GZCOM table)",
                         !info ? "unknown id" : object ? "no cIGZSerializable" : "creator returns null");
@@ -115,6 +116,7 @@ void Step(const char* name, bool ok) { std::printf("[%s] %s\n", ok ? "OK" : "FAI
 void InstallCityProbeBindings();   // city_probe_bindings.cpp
 
 int main(int argc, char** argv) {
+    std::setvbuf(stdout, nullptr, _IONBF, 0);   // a crash mid-load must not swallow the progress lines
     const std::string bundle = std::string(std::getenv("HOME")) +
         "/Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents";
     const std::string docs = "/tmp/sc4city_docs";

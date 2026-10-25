@@ -188,8 +188,14 @@ cSC4City::~cSC4City() {
 }
 
 bool cSC4City::QueryInterface(std::uint32_t iid, void** out) {
-    if (iid == kGZIID_cIGZUnknown || iid == kCityClassId || iid == kGZIID_cISC4City ||
-        iid == kGZIID_cIGZSerializable) {
+    // The city is two sub-objects: cISC4City (primary) and cIGZSerializable. Callers cast the answer back to the interface
+    // they asked for (cSC4App::Read takes the cISC4City one), so each id must answer its own view.
+    if (iid == kGZIID_cIGZUnknown || iid == kGZIID_cISC4City) {
+        *out = static_cast<cISC4City*>(this);
+        AddRef();
+        return true;
+    }
+    if (iid == kCityClassId || iid == kGZIID_cIGZSerializable) {
         *out = static_cast<cIGZSerializable*>(this);
         AddRef();
         return true;

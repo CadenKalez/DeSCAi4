@@ -16,6 +16,28 @@ const cGZPersistResourceKey kTunablesKey{0x6534284a, 0xe7e2c2db, 0xa8f41ee3};
 
 cSC4FlammabilitySimulator::cSC4FlammabilitySimulator(IFlammabilityHost* host) : host_(host) {}
 
+// 0x1000c2caa: the original answers +0 for iid 1 / 0x48f41617, +8 for the message target and +0x10 for
+// the serializable. The port keeps a single cIGZSerializable base, so every accepted id resolves to `this`;
+// the serializable id is what the city-load serializer (SC4ReadGZSerializable) asks for.
+bool cSC4FlammabilitySimulator::QueryInterface(std::uint32_t iid, void** out) {
+    if (iid == 0xe4fda3d4) *out = static_cast<cIGZSerializable*>(this);
+    else if (iid == 1 || iid == kGZIID_cISC4FlammabilitySimulator || iid == kFlammabilitySimulatorClassId)
+        *out = static_cast<cIGZUnknown*>(this);
+    else return false;
+    AddRef();
+    return true;
+}
+
+// 0x1000c2d3a: below 2 destroys (Shutdown, then the deleting destructor).
+std::uint32_t cSC4FlammabilitySimulator::Release() {
+    if (refCount_ < 2) {
+        Shutdown();
+        delete this;
+        return 0;
+    }
+    return --refCount_;
+}
+
 bool cSC4FlammabilitySimulator::Init() {
     if (initialized_) return true;
     initialized_ = true;

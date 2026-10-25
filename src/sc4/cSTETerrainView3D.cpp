@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "gz/cIGZIStream.h"
+#include "gz/cIGZOStream.h"
 #include "sc4/GeometryUtilities.h"
 
 namespace sc4 {
@@ -35,23 +37,24 @@ cSTETerrainView3D::~cSTETerrainView3D() {                                       
     gridTexture_.reset();
 }
 
-int cSTETerrainView3D::Release() {                                                                // 0x10074e460
-    if (refCount_ > 0) --refCount_;
-    return refCount_;
+std::uint32_t cSTETerrainView3D::Release() {                                                     // 0x10074e460
+    // the original thunks to cRZUnknown::Release (this + 8), which destroys at the last reference.
+    if (refCount_ < 2) {
+        delete this;
+        return 0;
+    }
+    return --refCount_;
 }
 
-int cSTETerrainView3D::QueryInterface(std::uint32_t id, int* whichBase) {                         // 0x10074e056
-    int base = -1;
-    switch (id) {
-        case 0xc989f960: case kGZCLSID: base = 0; break;
-        case 0x6771477d: base = 0x18; break;
-        case 0x452294aa: base = 0x20; break;
-        case 0xe4fda3d4: base = 0x28; break;
-        default: return 0;                                         // falls back to cRZUnknown::QueryInterface
-    }
-    if (whichBase) *whichBase = base;
+bool cSTETerrainView3D::QueryInterface(std::uint32_t iid, void** out) {                           // 0x10074e056
+    // The original answers +0 (0xc989f960 / 0xc9b84e10), +0x18 (0x6771477d), +0x20 (0x452294aa) and
+    // +0x28 (0xe4fda3d4). The port keeps a single cIGZSerializable base, so every accepted id resolves
+    // to `this`; the serializable id is what the city-load serializer (SC4ReadGZSerializable) asks for.
+    if (iid != 0xc989f960 && iid != kGZCLSID && iid != 0x6771477d && iid != 0x452294aa && iid != 0xe4fda3d4 && iid != 1)
+        return false;
+    if (out) *out = static_cast<cIGZSerializable*>(this);
     AddRef();
-    return 1;
+    return true;
 }
 
 void cSTETerrainView3D::UnionRect(TerrainRect& dst, const TerrainRect& r) {                       // SC4Rect<int>::UnionRect
@@ -899,7 +902,24 @@ bool cSTETerrainView3D::DoMessage(const TerrainViewMessage& msg) {              
     return true;
 }
 
-bool cSTETerrainView3D::Read(const std::vector<std::uint8_t>& stream) {                            // 0x10074e0ee
+bool cSTETerrainView3D::Read(cIGZIStream& stream) {                                                  // 0x10074e0ee
+    restoredFromStream_ = true;
+    std::uint16_t version = 0;
+    stream.GetUint16(version);
+    if (version != 1) return false;
+    std::uint8_t grid = 0;
+    stream.GetUint8(grid);
+    S().displayGrid = grid != 0;
+    return !stream.GetError();
+}
+
+bool cSTETerrainView3D::Write(cIGZOStream& stream) const {                                            // 0x1007503de
+    stream.SetUint16(1);
+    stream.SetUint8(S().displayGrid ? 1 : 0);
+    return !stream.GetError();
+}
+
+bool cSTETerrainView3D::Read(const std::vector<std::uint8_t>& stream) {                            // byte-buffer test hook
     restoredFromStream_ = true;
     if (stream.size() < 3) return false;
     std::uint16_t version;
@@ -909,7 +929,7 @@ bool cSTETerrainView3D::Read(const std::vector<std::uint8_t>& stream) {         
     return true;
 }
 
-std::vector<std::uint8_t> cSTETerrainView3D::Write() const {                                       // 0x1007503de
+std::vector<std::uint8_t> cSTETerrainView3D::Write() const {                                       // byte-buffer test hook
     return {1, 0, static_cast<std::uint8_t>(S().displayGrid ? 1 : 0)};
 }
 

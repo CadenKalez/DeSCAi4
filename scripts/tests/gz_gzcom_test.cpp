@@ -5,7 +5,7 @@ static int failures = 0;
 #define CHECK(c) do { if (!(c)) { std::printf("FAIL line %d: %s\n", __LINE__, #c); ++failures; } } while (0)
 using namespace gzcom;
 int main() {
-    CHECK(kClassFactoryCount == 194);
+    CHECK(kClassFactoryCount == 197);
     CHECK(GZCOM_cSC4CityCLSID() == 0x8990c372);
     CHECK(GZCOM_cSC4PollutionSimulatorCLSID() == 0x8990c065);
     CHECK(GZCOM_cSC4LotCLSID() == 0xc9bd5d4a);

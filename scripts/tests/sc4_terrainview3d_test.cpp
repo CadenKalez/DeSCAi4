@@ -251,6 +251,17 @@ int main() {
     CHECK(!view.HandleCheatCommand({"level", "1"}) && !view.HandleCheatCommand({}));
     CHECK(view.QueryInterface(0xc9b84e10, nullptr) == 1 && view.QueryInterface(0x1234, nullptr) == 0);
 
+    // cIGZSerializable identity: the city-load serializer reaches Read/Write/GetGZCLSID through the
+    // 0xe4fda3d4 view. (A full SC4ReadGZSerializable round trip needs sc4/DBSegment.cpp, which is not in
+    // this test's link set; the stream Write/Read above covers the payload.)
+    {
+        void* sz = nullptr;
+        CHECK(view.QueryInterface(0xe4fda3d4, &sz) && sz != nullptr);
+        auto* serializable = static_cast<cIGZSerializable*>(sz);
+        CHECK(serializable->GetGZCLSID() == cSTETerrainView3D::kGZCLSID);
+        serializable->Release();   // undo the QueryInterface reference
+    }
+
     // ---- lighting / rects ------------------------------------------------------------------------------------------
     view.SetLightingUpdateRect(nullptr);
     view.SetLightingUpdateRect(&(const TerrainRect&)TerrainRect{1, 1, 2, 2});

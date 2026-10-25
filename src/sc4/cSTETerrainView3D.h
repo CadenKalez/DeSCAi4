@@ -27,6 +27,7 @@
 #include <string>
 #include <vector>
 
+#include "gz/cIGZSerializable.h"
 #include "sc4/cSTETerrain.h"
 
 struct cSC4PackedRenderState;
@@ -213,7 +214,7 @@ public:
 };
 
 // ---------------------------------------------------------------------------------------------------------------
-class cSTETerrainView3D {
+class cSTETerrainView3D : public cIGZSerializable {
 public:
     static constexpr std::uint32_t kGZCLSID = 0xc9b84e10;
     static constexpr int kZoomLevels = 5;
@@ -262,7 +263,7 @@ public:
     static Shared& S();
 
     explicit cSTETerrainView3D(ITerrainViewHost* host = nullptr);
-    ~cSTETerrainView3D();
+    virtual ~cSTETerrainView3D();
 
     // ---- lifetime -----------------------------------------------------------------------------------------
     static bool StaticInit(ITerrainViewHost* host);
@@ -270,11 +271,11 @@ public:
     bool Init(cSTETerrain* terrain);
     void Shutdown();
     bool IsInitialized() const { return initialized_; }
-    std::uint32_t GetGZCLSID() const { return kGZCLSID; }
-    int AddRef() { return ++refCount_; }
-    int Release();
+    std::uint32_t GetGZCLSID() const override { return kGZCLSID; }
+    std::uint32_t AddRef() override { return ++refCount_; }
+    std::uint32_t Release() override;
     // QueryInterface ids: 0xc989f960 / 0xc9b84e10 this, 0x6771477d / 0x452294aa / 0xe4fda3d4 secondary bases.
-    int QueryInterface(std::uint32_t id, int* whichBase);
+    bool QueryInterface(std::uint32_t iid, void** out) override;
 
     // ---- terrain size / data structures ----------------------------------------------------------------------
     static void SetTerrainSize(std::uint32_t cellsX, std::uint32_t cellsZ);
@@ -330,6 +331,9 @@ public:
 
     // ---- messages / persistence -----------------------------------------------------------------------------
     bool DoMessage(const TerrainViewMessage& msg);
+    // cIGZSerializable view (version u16 (1) + bool displayGrid); the byte-buffer pair below is the test hook.
+    bool Read(cIGZIStream& stream) override;
+    bool Write(cIGZOStream& stream) const override;
     bool Read(const std::vector<std::uint8_t>& stream);       // version u16 (1) + bool displayGrid
     std::vector<std::uint8_t> Write() const;
     bool GetDisplayGridFlag() const { return S().displayGrid; }

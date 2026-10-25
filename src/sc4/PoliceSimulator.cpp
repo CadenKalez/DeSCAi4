@@ -3,6 +3,10 @@
 #include <algorithm>
 #include <cmath>
 
+#include "gz/cIGZIStream.h"
+#include "gz/cIGZOStream.h"
+#include "sc4/DBSegment.h"
+
 namespace sc4 {
 
 namespace {
@@ -15,6 +19,115 @@ typename List::iterator FindIn(List& list, T* value) { return std::find(list.beg
 
 cSC4PoliceSimulator::cSC4PoliceSimulator(IPoliceHost* host) : host_(host), protection_(this, 2, 40) {
     ReadSimulatorTunableValues(nullptr);
+}
+
+// ---- identity -------------------------------------------------------------------------------------------
+
+bool cSC4PoliceSimulator::QueryInterface(std::uint32_t iid, void** out) {
+    if (iid == 0xe4fda3d4) *out = static_cast<cIGZSerializable*>(this);                     // +0x18
+    else if (iid == 0x452294aa) *out = static_cast<cIGZMessageTarget2*>(this);              // +0x8
+    else if (iid == kGZIID_cISC4ProtectionDispatchSimulator) *out = static_cast<cISC4ProtectionDispatchSimulator*>(this);  // +0x10
+    else if (iid == 1 || iid == kGZIID_cISC4PoliceSimulator) *out = static_cast<cISC4PoliceSimulator*>(this);  // +0
+    else return false;
+    AddRef();
+    return true;
+}
+
+std::uint32_t cSC4PoliceSimulator::Release() {
+    if (refCount_ < 2) {
+        delete this;
+        return 0;
+    }
+    return --refCount_;
+}
+
+bool cSC4PoliceSimulator::DoMessage(cIGZMessage2*) { return true; }   // routing unrecovered
+
+// ---- streams ---------------------------------------------------------------------------------------------
+
+void cSC4PoliceSimulator::WriteGridInt16(cIGZOStream& stream, cSC4SimGrid<std::int16_t>* grid) {
+    SC4WriteGZSerializable(stream, static_cast<const cISC4SimGridBase*>(grid));
+}
+bool cSC4PoliceSimulator::ReadGridInt16(cIGZIStream& stream, cSC4SimGrid<std::int16_t>** out) {
+    void* raw = nullptr;
+    if (!SC4ReadGZSerializable(stream, kInt16GridIid, &raw, false)) return false;
+    *out = SimGridCast<std::int16_t>(raw);
+    return true;
+}
+void cSC4PoliceSimulator::WriteGridUint8(cIGZOStream& stream, cSC4SimGrid<std::uint8_t>* grid) {
+    SC4WriteGZSerializable(stream, static_cast<const cISC4SimGridBase*>(grid));
+}
+bool cSC4PoliceSimulator::ReadGridUint8(cIGZIStream& stream, cSC4SimGrid<std::uint8_t>** out) {
+    void* raw = nullptr;
+    if (!SC4ReadGZSerializable(stream, kUint8GridIid, &raw, false)) return false;
+    *out = SimGridCast<std::uint8_t>(raw);
+    return true;
+}
+void cSC4PoliceSimulator::WriteStation(cIGZOStream& stream, IProtectionStation* station) {
+    host_->WriteOccupant(stream, Police(station));
+}
+bool cSC4PoliceSimulator::ReadStation(cIGZIStream& stream, IProtectionStation** out) {
+    IPoliceOccupant* occupant = nullptr;
+    if (!host_->ReadOccupant(stream, &occupant)) return false;
+    *out = occupant;
+    return true;
+}
+
+bool cSC4PoliceSimulator::Write(cIGZOStream& stream) const {
+    stream.SetUint16(8);
+    if (!protection_.Write(stream)) return false;
+    SC4WriteGZSerializable(stream, nullptr);                              // +0x128 police power grid (unrecovered)
+    stream.SetUint32(std::uint32_t(fundedJails_.size()));                 // +0x168
+    for (IPoliceOccupant* jail : fundedJails_) host_->WriteOccupant(stream, jail);
+    stream.SetUint32(std::uint32_t(jails_.size()));                       // +0x130
+    for (IPoliceOccupant* jail : jails_) host_->WriteOccupant(stream, jail);
+    stream.SetSint32(jailCapacity_);                                      // +0x148
+    stream.SetSint32(jailPopulation_);                                    // +0x14c
+    stream.SetSint32(criminals_);                                         // +0x150
+    stream.SetSint32(arrestsPrev_);                                       // +0x154
+    stream.SetSint32(arrestsThisMonth_);                                  // +0x15c
+    stream.SetSint32(unjailedAdded_);                                     // +0x164
+    stream.SetSint32(crimesPrev_);                                        // +0x158
+    stream.SetSint32(crimesThisMonth_);                                   // +0x160
+    SC4WriteGZSerializable(stream, nullptr);                              // +0x118 dispatch helper (unrecovered)
+    return !stream.GetError();
+}
+
+bool cSC4PoliceSimulator::Read(cIGZIStream& stream) {
+    std::uint16_t version = 0;
+    stream.GetUint16(version);
+    if (version > 8) return false;
+    if (!protection_.Read(stream)) return false;
+    void* raw = nullptr;
+    SC4ReadGZSerializable(stream, kInt16GridIid, &raw, false);            // +0x128 police power grid (null)
+    if (raw) static_cast<cIGZUnknown*>(raw)->Release();
+    std::uint32_t count = 0;
+    stream.GetUint32(count);                                              // +0x168 funded jails
+    fundedJails_.clear();
+    for (std::uint32_t i = 0; i < count; ++i) {
+        IPoliceOccupant* jail = nullptr;
+        if (host_->ReadOccupant(stream, &jail) && jail) fundedJails_.push_back(jail);
+    }
+    stream.GetUint32(count);                                              // +0x130 jails
+    jails_.clear();
+    for (std::uint32_t i = 0; i < count; ++i) {
+        IPoliceOccupant* jail = nullptr;
+        if (host_->ReadOccupant(stream, &jail) && jail) jails_.push_back(jail);
+    }
+    stream.GetSint32(jailCapacity_);                                      // +0x148
+    stream.GetSint32(jailPopulation_);                                    // +0x14c
+    stream.GetSint32(criminals_);                                         // +0x150
+    stream.GetSint32(arrestsPrev_);                                       // +0x154
+    stream.GetSint32(arrestsThisMonth_);                                  // +0x15c
+    stream.GetSint32(unjailedAdded_);                                     // +0x164
+    stream.GetSint32(crimesPrev_);                                        // +0x158
+    stream.GetSint32(crimesThisMonth_);                                   // +0x160
+    if (version >= 8) {
+        raw = nullptr;
+        SC4ReadGZSerializable(stream, kGZIID_cISC4ProtectionDispatchSimulator, &raw, false);   // +0x118 (null)
+        if (raw) static_cast<cIGZUnknown*>(raw)->Release();
+    }
+    return !stream.GetError();
 }
 
 void cSC4PoliceSimulator::ReadSimulatorTunableValues(const cISCPropertyHolder* exemplar) {

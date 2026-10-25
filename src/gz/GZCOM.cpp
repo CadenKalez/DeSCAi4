@@ -206,6 +206,9 @@ std::uint32_t GZCOM_cSC4OrdinanceYouthCurfewCLSID() { return kCLSID_cSC4Ordinanc
 std::uint32_t GZCOM_cSC4MySimAdviceCLSID() { return kCLSID_cSC4MySimAdvice; }
 std::uint32_t GZCOM_cSC4MySimCLSID() { return kCLSID_cSC4MySim; }
 std::uint32_t GZCOM_cSC4MySimAgentSimulatorCLSID() { return kCLSID_cSC4MySimAgentSimulator; }
+std::uint32_t GZCOM_cSC4PedestrianCLSID() { return kCLSID_cSC4Pedestrian; }
+std::uint32_t GZCOM_cSC4VehicleManagerCLSID() { return kCLSID_cSC4VehicleManager; }
+std::uint32_t GZCOM_cSC4PedestrianManagerCLSID() { return kCLSID_cSC4PedestrianManager; }
 
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecRZMessage2Standard() { return nullptr; }
@@ -229,8 +232,8 @@ __attribute__((weak)) void* GZCOM_CreatecSC4NeighborDeal() { return nullptr; }
 __attribute__((weak)) void* GZCOM_CreatecSC4TrafficSimulator() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4PollutionSimulator() { return nullptr; }
-// original allocates 0x290 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4PlumbingSimulator() { return nullptr; }
+// weak fallback: GZCOMCreators7.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4PlumbingSimulator() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4PoliceSimulator() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
@@ -377,8 +380,8 @@ void* GZCOM_CreatecSC4LineItem() { return nullptr; }
 __attribute__((weak)) void* GZCOM_CreatecSC4OccupantManager() { return nullptr; }
 // weak fallback: gzcom_creators/cSC4AdvisorSystem.cpp provides the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4AdvisorSystem() { return nullptr; }
-// original allocates 0xb08 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4TrafficNetworkMap() { return nullptr; }
+// weak fallback: GZCOMCreators7.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4TrafficNetworkMap() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4FireProtectionSimulator() { return nullptr; }
 // original allocates 0xd8 bytes; the class is not recovered yet
@@ -537,8 +540,8 @@ void* GZCOM_CreatecSC4PoliceHelicopterDispatchSource() { return nullptr; }
 void* GZCOM_CreatecSTESurfaceWater() { return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSTETerrain() { return nullptr; }
-// original allocates 0x140 bytes; the class is not recovered yet
-void* GZCOM_CreatecSTETerrainView3D() { return nullptr; }
+// weak fallback: GZCOMCreators7.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSTETerrainView3D() { return nullptr; }
 // weak fallback: gzcom_creators/cSC43DRender.cpp provides the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC43DRender() { return nullptr; }
 // weak fallback: gzcom_creators/cSC4CameraControl.cpp provides the real constructor-backed creator when linked
@@ -595,6 +598,12 @@ __attribute__((weak)) void* GZCOM_CreatecSC4MySimAdvice() { return nullptr; }
 __attribute__((weak)) void* GZCOM_CreatecSC4MySim() { return nullptr; }
 // original allocates 0x60 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4MySimAgentSimulator() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4Pedestrian.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4Pedestrian() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4VehicleManager.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4VehicleManager() { return nullptr; }
+// weak fallback: gzcom_creators/cSC4PedestrianManager.cpp provides the real constructor-backed creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4PedestrianManager() { return nullptr; }
 
 const ClassFactoryInfo kClassFactories[] = {
     {"cRZMessage2Standard", kCLSID_cRZMessage2Standard, 0x0, &GZCOM_CreatecRZMessage2Standard},
@@ -791,6 +800,10 @@ const ClassFactoryInfo kClassFactories[] = {
     {"cSC4MySimAdvice", kCLSID_cSC4MySimAdvice, 0x140, &GZCOM_CreatecSC4MySimAdvice},
     {"cSC4MySim", kCLSID_cSC4MySim, 0x430, &GZCOM_CreatecSC4MySim},
     {"cSC4MySimAgentSimulator", kCLSID_cSC4MySimAgentSimulator, 0x60, &GZCOM_CreatecSC4MySimAgentSimulator},
+    // The automata classes (created by cSC4AutomataCOMDirector in the original; allocSize 0 = class allocator).
+    {"cSC4Pedestrian", kCLSID_cSC4Pedestrian, 0x3b8, &GZCOM_CreatecSC4Pedestrian},
+    {"cSC4VehicleManager", kCLSID_cSC4VehicleManager, 0x0, &GZCOM_CreatecSC4VehicleManager},
+    {"cSC4PedestrianManager", kCLSID_cSC4PedestrianManager, 0x0, &GZCOM_CreatecSC4PedestrianManager},
 };
 const std::size_t kClassFactoryCount = sizeof(kClassFactories) / sizeof(kClassFactories[0]);
 

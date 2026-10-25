@@ -21,14 +21,21 @@
 #include <memory>
 #include <vector>
 
+#include "gz/cIGZUnknown.h"
 #include "sc4/RandomIterator.h"
 #include "sc4/cSC4SimGrid.h"
+
+class cIGZIStream;
+class cIGZOStream;
 
 namespace sc4 {
 
 constexpr std::uint32_t kProtectionBuildingOccupantType = 0x278128a0;
 constexpr std::uint32_t kProtectionAdjustedGridInstance = 0x49b9e602;
 constexpr std::uint32_t kProtectionUnadjustedGridInstance = 0x49b9e605;
+constexpr std::uint32_t kGZIID_cISC4ProtectionDispatchSimulator = 0xc9c00435;
+constexpr std::uint32_t kInt16GridIid = 0x223e2b67;    // cISC4SimGrid<int16>
+constexpr std::uint32_t kUint8GridIid = 0xc9bd939a;    // cISC4SimGrid<uint8>
 
 // A station's radius effect: cell position, radius in cells, centre and edge strength (SC4 ProtectionEffect).
 struct ProtectionEffect {
@@ -54,6 +61,10 @@ public:
     virtual void Position(float xyz[3]) = 0;                // vslot 0x40
 };
 
+// The 0xc9c00435 "dispatch" view (GetDispatchesAtStation etc.). Answered at +0x10 by the fire/police
+// simulators; kept as a distinct (empty) base so cIGZSerializable lands at +0x18, as in the binary.
+class cISC4ProtectionDispatchSimulator : public cIGZUnknown {};
+
 class IProtectionHost {
 public:
     virtual ~IProtectionHost() = default;
@@ -76,6 +87,13 @@ public:
     virtual void RegisterStationProperty(IProtectionStation* station, bool add) = 0;   // occupant manager 0x198
     virtual void GetDispatchEffect(const ProtectionDispatchInfo& info, ProtectionEffect& effect) = 0;   // vslot 0xa8
     virtual void TakeStationDispatch(IProtectionStation* station) = 0;   // vslot 0x60 (hands out one vehicle)
+    // ---- stream seams: the protection base reaches nested serializables through the subclass host ----
+    virtual void WriteGridInt16(cIGZOStream&, cSC4SimGrid<std::int16_t>*) {}       // SC4WriteGZSerializable(stream, grid)
+    virtual bool ReadGridInt16(cIGZIStream&, cSC4SimGrid<std::int16_t>**) { return false; }
+    virtual void WriteGridUint8(cIGZOStream&, cSC4SimGrid<std::uint8_t>*) {}
+    virtual bool ReadGridUint8(cIGZIStream&, cSC4SimGrid<std::uint8_t>**) { return false; }
+    virtual void WriteStation(cIGZOStream&, IProtectionStation* station) {}   // SC4WriteGZSerializable(stream, occupant)
+    virtual bool ReadStation(cIGZIStream&, IProtectionStation** out) { *out = nullptr; return false; }
 };
 
 // cSC4MapUtilities::AddRadiusEffect: adds a linear falloff (peak at the centre, `edge` at the radius) to every
@@ -107,6 +125,10 @@ public:
     IProtectionStation* DispatchFromNearestStation(float x, float z, std::uint32_t* dispatchId);
     const std::list<IProtectionStation*>& Stations() const { return stations_; }
 
+    // Streams (the fire/police simulators delegate to these). Version 3.
+    bool Write(cIGZOStream& stream) const;
+    bool Read(cIGZIStream& stream);
+
     cSC4SimGrid<std::uint8_t>* AdjustedGrid() const { return adjusted_.get(); }
     cSC4SimGrid<std::int16_t>* UnadjustedGrid() const { return unadjusted_.get(); }
     float AverageProtection() const { return averageProtection_; }
@@ -115,13 +137,15 @@ public:
     std::uint32_t dispatchBitsInUse = 1;                 // +0xf0
     int cellsPerDay = 0;                                 // +0x30
     std::vector<std::vector<std::int8_t>> zoneColumns;   // the zone manager's per-cell zone bytes (+0x98 chain)
+    bool flagE8_ = false;                                // +0xe8 (streamed flag; the pass that sets it is unrecovered)
+    std::uint32_t valueEC_ = 0;                          // +0xec (streamed scalar; unrecovered)
 
 private:
     IProtectionHost* host_;
     int tractSize_, cellDivisor_;
     RandomIterator walk_;
-    std::unique_ptr<cSC4SimGrid<std::uint8_t>> adjusted_;
-    std::unique_ptr<cSC4SimGrid<std::int16_t>> unadjusted_;
+    SimGridPtr<std::uint8_t> adjusted_;
+    SimGridPtr<std::int16_t> unadjusted_;
     std::list<IProtectionStation*> stations_;
     int zonedCount_ = 0, protectionSum_ = 0, protectedCount_ = 0;
     float averageProtection_ = 0.0f, coverageShare_ = 0.0f;

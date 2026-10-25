@@ -22,14 +22,20 @@
 #include <list>
 #include <vector>
 
+#include "gz/cIGZMessage2.h"
+#include "gz/cIGZSerializable.h"
 #include "rz/cRZRandom.h"
 #include "sc4/ProtectionSimulator.h"
 #include "sc4/SCPropertyHelp.h"
 #include "sc4/cSC4ResponseCurve.h"
 
+class cIGZIStream;
+class cIGZOStream;
+
 namespace sc4 {
 
 constexpr std::uint32_t kGZCLSID_cSC4PoliceSimulator = 0x6990c04f;
+constexpr std::uint32_t kGZIID_cISC4PoliceSimulator = 0x67659895;
 
 // exemplar properties
 constexpr std::uint32_t kPoliceStationEffectPeak = 0x48d71ed0, kPoliceStationEffectEdge = 0x48d71ed1;
@@ -76,6 +82,9 @@ public:
     virtual bool IsAboveWater(float x, float z) = 0;
     virtual bool IsZonedAt(int x, int z) = 0;
     virtual void TakeStationDispatch(IProtectionStation* station) = 0;
+    // ---- stream seams: jail/station occupants are reached through the host ----
+    virtual void WriteOccupant(cIGZOStream&, IPoliceOccupant*) {}        // SC4WriteGZSerializable(stream, occupant)
+    virtual bool ReadOccupant(cIGZIStream&, IPoliceOccupant**) { return false; }
 };
 
 struct PoliceTunables {
@@ -90,9 +99,24 @@ struct PoliceTunables {
     float jailbreakEndThreshold = 0.5f; // +0x230
 };
 
-class cSC4PoliceSimulator : private IProtectionHost {
+// The primary view the city holds for this simulator (cISC4PoliceSimulator, iid 0x67659895).
+class cISC4PoliceSimulator : public cIGZUnknown {};
+
+class cSC4PoliceSimulator : public cISC4PoliceSimulator,
+                            public cIGZMessageTarget2,
+                            public cISC4ProtectionDispatchSimulator,
+                            public cIGZSerializable,
+                            private IProtectionHost {
 public:
     explicit cSC4PoliceSimulator(IPoliceHost* host);
+
+    bool QueryInterface(std::uint32_t iid, void** out) override;
+    std::uint32_t AddRef() override { return ++refCount_; }
+    std::uint32_t Release() override;
+    std::uint32_t GetGZCLSID() const override { return kGZCLSID_cSC4PoliceSimulator; }
+    bool Write(cIGZOStream& stream) const override;
+    bool Read(cIGZIStream& stream) override;
+    bool DoMessage(cIGZMessage2* message) override;
 
     // tunables from the simulator exemplar {type 0x6534284a, group 0xe7e2c2db, instance 0x28dfcf89}; null = defaults
     void ReadSimulatorTunableValues(const cISCPropertyHolder* exemplar);
@@ -163,7 +187,6 @@ public:
     static bool GetDispatchesAtStation(IPoliceOccupant* station, std::uint32_t* mask, std::uint32_t* baseCall,
                                        std::uint32_t* count);
     static bool CanHandleDispatchType(std::uint32_t type) { return type == 0; }
-    std::uint32_t GetGZCLSID() const { return kGZCLSID_cSC4PoliceSimulator; }
     std::size_t GetPoliceStationCount() const { return protection_.Stations().size(); }
     std::size_t GetJailCount() const { return jails_.size(); }
     const std::list<IPoliceOccupant*>& Jails() const { return jails_; }
@@ -198,9 +221,17 @@ private:
     void RegisterStationProperty(IProtectionStation* station, bool add) override;
     void GetDispatchEffect(const ProtectionDispatchInfo& info, ProtectionEffect& effect) override;
     void TakeStationDispatch(IProtectionStation* station) override { host_->TakeStationDispatch(station); }
+    // IProtectionHost stream seams (the base serializes its grids/stations through these).
+    void WriteGridInt16(cIGZOStream& stream, cSC4SimGrid<std::int16_t>* grid) override;
+    bool ReadGridInt16(cIGZIStream& stream, cSC4SimGrid<std::int16_t>** out) override;
+    void WriteGridUint8(cIGZOStream& stream, cSC4SimGrid<std::uint8_t>* grid) override;
+    bool ReadGridUint8(cIGZIStream& stream, cSC4SimGrid<std::uint8_t>** out) override;
+    void WriteStation(cIGZOStream& stream, IProtectionStation* station) override;
+    bool ReadStation(cIGZIStream& stream, IProtectionStation** out) override;
 
     IPoliceHost* host_;
     cRZRandom random_{0xffffffff};
+    std::uint32_t refCount_ = 0;   // +0x110 (COM identity)
     PoliceTunables tunables_;
     cSC4ProtectionSimulator protection_;
     cSC4ResponseCurve stationEfficiency_, jailEfficiency_, strikeChance_, jailbreakChance_;

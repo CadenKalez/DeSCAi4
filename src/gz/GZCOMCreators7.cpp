@@ -6,6 +6,7 @@
 #include "sc4/LandValueSimulator.h"
 #include "sc4/LotDeveloper.h"
 #include "sc4/PoliceSimulator.h"
+#include "sc4/PlumbingSimulator.h"
 #include "sc4/PollutionSimulator.h"
 #include "sc4/PowerSimulator.h"
 #include "sc4/ResidentialSimulator.h"
@@ -15,6 +16,7 @@
 #include "sc4/cSC4City.h"
 #include "sc4/cSC4FlammabilitySimulator.h"
 #include "sc4/cSC4ZoneManager.h"
+#include "sc4/cSTETerrainView3D.h"
 
 namespace gzcom {
 
@@ -57,6 +59,12 @@ void* GZCOM_CreatecSC4ResidentialSimulator() {
 }
 void* GZCOM_CreatecSC4PowerSimulator() {
     return static_cast<void*>(new sc4::cSC4PowerSimulator(GetSimHosts().power, &SharedRandom()));
+}
+void* GZCOM_CreatecSC4PlumbingSimulator() {
+    return static_cast<void*>(new sc4::cSC4PlumbingSimulator(GetSimHosts().plumbing, &SharedRandom()));
+}
+void* GZCOM_CreatecSTETerrainView3D() {
+    return static_cast<void*>(new sc4::cSTETerrainView3D(GetSimHosts().terrainView));
 }
 void* GZCOM_CreatecSC4FireProtectionSimulator() {
     return static_cast<void*>(new sc4::cSC4FireProtectionSimulator(GetSimHosts().fire));

@@ -19,6 +19,8 @@
 // The city geometry the original reads from the global city object (SL::spCity) is injected
 // through ISimGridCity.
 #pragma once
+#include <memory>
+#include <type_traits>
 #include <cstdint>
 #include <vector>
 
@@ -42,6 +44,7 @@ void SetSimGridCity(ISimGridCity* city);
 
 constexpr std::uint32_t kGZIID_cISC4SimGrid = 0xc9bd939a;
 constexpr std::uint32_t kGZIID_cIGZSerializableSimGrid = 0xe4fda3d4;
+constexpr std::uint32_t kGZIID_cISC4SimGridInt16 = 0x223e2b67;   // the typed interface of the int16 grid (power line, protection)
 
 template <class T> struct SimGridTraits;
 #define SC4_SIMGRID_TRAITS(Type, Id, Put, Get) \
@@ -73,7 +76,9 @@ public:
 
     // One implementation serves both interface bases.
     bool QueryInterface(std::uint32_t iid, void** out) override {
-        if (iid == kGZIID_cISC4SimGrid || iid == kGZIID_cIGZUnknown) *out = static_cast<cISC4SimGridBase*>(this);
+        if (iid == kGZIID_cISC4SimGrid || iid == kGZIID_cIGZUnknown ||
+            (std::is_same_v<T, std::int16_t> && iid == kGZIID_cISC4SimGridInt16))
+            *out = static_cast<cISC4SimGridBase*>(this);
         else if (iid == kGZIID_cIGZSerializableSimGrid) *out = static_cast<cIGZSerializable*>(this);
         else return false;
         AddRef();
@@ -230,6 +235,28 @@ bool cSC4SimGrid<T>::Read(cIGZIStream& s) {
         for (std::int32_t z = 0; z < countZ_; ++z) SimGridTraits<T>::Read(s, data_[x][z]);
     }
     return true;
+}
+
+// Owner for a grid a simulator keeps. Grids are reference counted: one read from a city file is also held by the
+// serializer's object table, so deleting it directly (std::unique_ptr's default) frees it under the table's feet.
+// Release() drops this owner's reference and deletes a grid nobody else holds (count below 2).
+template <class T>
+struct SimGridDeleter {
+    void operator()(cSC4SimGrid<T>* grid) const { if (grid) grid->Release(); }
+};
+template <class T>
+using SimGridPtr = std::unique_ptr<cSC4SimGrid<T>, SimGridDeleter<T>>;
+
+// Downcast of a grid read from a stream. The class id in the file decides the element type, so a record that holds
+// a different type than the caller expects (or a stream that is out of step) must be refused: treating a uint8 grid
+// as an int16 one corrupts the vectors and crashes in the destructor. Releases the reference on a mismatch.
+template <class T>
+cSC4SimGrid<T>* SimGridCast(void* raw) {
+    if (!raw) return nullptr;
+    auto* base = static_cast<cISC4SimGridBase*>(raw);
+    auto* grid = dynamic_cast<cSC4SimGrid<T>*>(base);
+    if (!grid) base->Release();
+    return grid;
 }
 
 }  // namespace sc4

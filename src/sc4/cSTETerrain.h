@@ -55,6 +55,7 @@
 #include <vector>
 
 #include "gz/cIGZPersistDBSegment.h"
+#include "gz/cIGZSerializable.h"
 #include "rz/cRZString.h"
 
 class cIGZMessageServer2;
@@ -591,7 +592,7 @@ public:
     virtual void ClearCurrentSelections() {}
 };
 
-class cSTETerrain {
+class cSTETerrain : public cIGZSerializable {
 public:
     struct Vertex {
         float altitude = 0;
@@ -618,10 +619,10 @@ public:
     cSTETerrain() = default;
 
     // ---- COM identity (vtable groups at +0x0 / +0x8 / +0x10) --------------------------------
-    bool QueryInterface(std::uint32_t iid, void** out);               // 0x10073aa92
-    std::uint32_t AddRef();                                           // 0x1007313ee
-    std::uint32_t Release();                                          // 0x10073e0ba (destroys at <= 1)
-    std::uint32_t GetGZCLSID() const { return kGZCLSID_cSTETerrain; }  // 0x100738ffa
+    bool QueryInterface(std::uint32_t iid, void** out) override;      // 0x10073aa92
+    std::uint32_t AddRef() override;                                  // 0x1007313ee
+    std::uint32_t Release() override;                                 // 0x10073e0ba (destroys at <= 1)
+    std::uint32_t GetGZCLSID() const override { return kGZCLSID_cSTETerrain; }  // 0x100738ffa
     // The three non-virtual thunks. A class with the original's three bases gets them from the
     // compiler; the port has no multiple inheritance, so they are plain forwarders.
     std::uint32_t AddRefThunk_13fc() { return AddRef(); }             // 0x1007313fc (this - 8)
@@ -903,9 +904,9 @@ public:
     void DoLighting(const TerrainRect& r);                           // 0x100737cba (spLightingManager 0xe0)
 
     // ---- persistence ------------------------------------------------------------------------
-    void Write(cIGZOStream& stream) const;                           // 0x10073efda
-    bool Read(cIGZIStream& stream);                                  // 0x10073f0a2
-    bool WriteThunk(cIGZOStream& stream) const { Write(stream); return true; }   // 0x10073f094 (this - 0x10)
+    bool Write(cIGZOStream& stream) const override;                   // 0x10073efda
+    bool Read(cIGZIStream& stream) override;                          // 0x10073f0a2
+    bool WriteThunk(cIGZOStream& stream) const { return Write(stream); }   // 0x10073f094 (this - 0x10)
     bool ReadThunk(cIGZIStream& stream) { return Read(stream); }               // 0x10073f16c (this - 0x10)
     void SaveObliterated(cIGZPersistDBSegment* segment);             // 0x100740de0
     void LoadObliterated(cIGZPersistDBSegment* segment);             // 0x100740e12

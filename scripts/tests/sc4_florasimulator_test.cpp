@@ -1,6 +1,9 @@
 #include <cstdio>
+#include <string>
+#include <unistd.h>
 #include <unordered_set>
 
+#include "sc4/DBSegment.h"
 #include "sc4/FloraSimulator.h"
 #include "sc4/SCPropertyHelp.h"
 static int failures = 0;
@@ -102,6 +105,53 @@ int main() {
     CHECK(sim.GetBestFloraTypeForLocation(0, 0, score) == 0x10);
     sim.SetElevationScale(0.5f);
     CHECK(sim.GetElevationIndex(0, 0, false) == 2);                     // 1.5 rounds to even
+
+    // SC4ReadGZSerializable round trip: the city-load serializer creates the object from its class id
+    // through the factory, then QueryInterface(0xe4fda3d4) hands out the cIGZSerializable view.
+    {
+        struct Factory : ISerializableFactory {
+            cIGZSerializable* CreateSerializable(std::uint32_t classId) override {
+                if (classId != kFloraSimulatorClassId) return nullptr;
+                auto* f = new cSC4FloraSimulator();
+                f->AddRef();
+                return f;
+            }
+        } factory;
+        SetSerializableFactory(&factory);
+        std::string path = "/tmp/sc4_flora_rt_" + std::to_string(getpid()) + ".sc4";
+        const cGZPersistResourceKey rtKey{0x90909090, 0xa0a0a0a0, 1};
+        {
+            cSC4DBSegment* seg = new cSC4DBSegment();
+            seg->AddRef(); seg->Init();
+            cRZString p(path.c_str()); seg->SetPath(p);
+            CHECK(seg->Open(false, true));
+            cISC4DBSegmentOStream* os = nullptr;
+            CHECK(seg->OpenOStream(rtKey, &os, true));
+            sim.AddRef();   // keep the stack object alive across the serializer's add/release pair
+            CHECK(SC4WriteGZSerializable(*os, static_cast<cIGZUnknown*>(&sim)));
+            CHECK(seg->CloseOStream(os)); os->Release();
+            CHECK(seg->Close()); seg->Release();
+        }
+        {
+            cSC4DBSegment* seg = new cSC4DBSegment();
+            seg->AddRef(); seg->Init();
+            cRZString p(path.c_str()); seg->SetPath(p);
+            CHECK(seg->Open(true, false));
+            CHECK(seg->LoadClassObjects(0x48));
+            cISC4DBSegmentIStream* is = nullptr;
+            CHECK(seg->OpenIStream(rtKey, &is));
+            void* raw = nullptr;
+            CHECK(SC4ReadGZSerializable(*is, kFloraSimulatorInterfaceId, &raw, false));
+            CHECK(raw != nullptr);
+            auto* rt = static_cast<cSC4FloraSimulator*>(static_cast<cIGZSerializable*>(raw));
+            CHECK(rt && rt->GetGZCLSID() == kFloraSimulatorClassId);
+            static_cast<cIGZSerializable*>(raw)->Release();
+            CHECK(seg->CloseIStream(is)); is->Release();
+            CHECK(seg->Close()); seg->Release();
+        }
+        unlink(path.c_str());
+        SetSerializableFactory(nullptr);
+    }
 
     CHECK(cSC4FloraSimulator::StaticShutdown());
     CHECK(!sim.IsFloraTypeValid(0x10));

@@ -219,6 +219,12 @@ constexpr std::uint32_t kCLSID_cSC4OrdinanceYouthCurfew = 0xc2bf1dc5;
 constexpr std::uint32_t kCLSID_cSC4MySimAdvice = 0x6a9335de;
 constexpr std::uint32_t kCLSID_cSC4MySim = 0x4a1dbbbf;
 constexpr std::uint32_t kCLSID_cSC4MySimAgentSimulator = 0x29e37dec;
+// The three automata classes below are created by cSC4AutomataCOMDirector (not the GZCOM factory table) in the
+// original binary, so they have no GZCOM_Create* symbol of their own; the port registers them here so the city
+// loader (gzcom::FindClassFactory -> creator) can materialize them.
+constexpr std::uint32_t kCLSID_cSC4Pedestrian = 0x896e75af;
+constexpr std::uint32_t kCLSID_cSC4VehicleManager = 0xa98f9d3b;
+constexpr std::uint32_t kCLSID_cSC4PedestrianManager = 0xc98f9d17;
 
 std::uint32_t GZCOM_cRZMessage2StandardCLSID();
 void* GZCOM_CreatecRZMessage2Standard();
@@ -608,6 +614,12 @@ std::uint32_t GZCOM_cSC4MySimCLSID();
 void* GZCOM_CreatecSC4MySim();
 std::uint32_t GZCOM_cSC4MySimAgentSimulatorCLSID();
 void* GZCOM_CreatecSC4MySimAgentSimulator();
+std::uint32_t GZCOM_cSC4PedestrianCLSID();
+void* GZCOM_CreatecSC4Pedestrian();
+std::uint32_t GZCOM_cSC4VehicleManagerCLSID();
+void* GZCOM_CreatecSC4VehicleManager();
+std::uint32_t GZCOM_cSC4PedestrianManagerCLSID();
+void* GZCOM_CreatecSC4PedestrianManager();
 
 extern const ClassFactoryInfo kClassFactories[];
 extern const std::size_t kClassFactoryCount;

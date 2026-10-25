@@ -53,7 +53,11 @@
 #include <vector>
 
 #include "gz/StreamOps.h"
+#include "gz/cGZMessageServer.h"
+#include "gz/cIGZMessage2.h"
+#include "gz/cIGZSerializable.h"
 #include "rz/cRZRandomSuper.h"
+#include "sc4/CommonIIDs.h"
 #include "sc4/MiscTypes.h"
 #include "sc4/Occupant.h"
 
@@ -274,10 +278,20 @@ struct TrafficTrainJunctionArray {
     std::uint16_t cursor[4] = {};          // +0x18, +0x38, +0x58, +0x78
 };
 
-class cSC4TrafficNetworkMap {
+// The map's own interface (class id 0x6a0f82b2, iid 0xca0f81b9). Only the COM identity is recovered;
+// the concrete methods are called directly, so the interface carries no extra slots.
+class cISC4TrafficNetworkMap : public cIGZUnknown {
+public:
+    virtual ~cISC4TrafficNetworkMap() = default;
+};
+
+class cSC4TrafficNetworkMap : public cISC4TrafficNetworkMap,
+                              public cIGZMessageTarget,
+                              public cIGZMessageTarget2,
+                              public cIGZSerializable {
 public:
     explicit cSC4TrafficNetworkMap(ITrafficNetworkMapHost* host, const TrafficNetworkMapTuning* tuning = nullptr);
-    ~cSC4TrafficNetworkMap();
+    ~cSC4TrafficNetworkMap() override;
 
     // ---- object life cycle (0x100298a0e .. 0x100299312) ----
     bool Init();                                   // 0x100298c72
@@ -289,11 +303,12 @@ public:
     void ClearUnusableRoadsMap();                  // 0x1002992c2
 
     // ---- COM surface (the original has four sub-objects; one refcount here) ----
-    bool QueryInterface(std::uint32_t iid, void** out);   // 0x1002a034c
-    std::uint32_t AddRef();                                // 0x1002a03c0
-    std::uint32_t Release();                               // 0x1002a03f8
+    bool QueryInterface(std::uint32_t iid, void** out) override;   // 0x1002a034c
+    std::uint32_t AddRef() override;                                // 0x1002a03c0
+    std::uint32_t Release() override;                               // 0x1002a03f8
     std::uint32_t RefCount() const { return refCount_; }
-    static constexpr std::uint32_t GetGZCLSID() { return kGZCLSID_cSC4TrafficNetworkMap; }   // 0x1002a051a
+    std::uint32_t GetGZCLSID() const override { return kGZCLSID_cSC4TrafficNetworkMap; }   // 0x1002a051a
+    bool DoMessage(cIGZMessage2* message) override;                 // 0x100299312 (message target 2)
 
     // ---- tile storage and accessors (0x10029a228 .. 0x10029dc54) ----
     bool HandleInsertNetworkOccupant(ITrafficNetworkMapOccupant* occupant);   // 0x10029a228
@@ -378,7 +393,7 @@ public:
                              int flag, std::uint32_t networkFlags);   // 0x10029e684
 
     // ---- ticks and messages (0x100299322 .. 0x100299f86) ----
-    bool DoMessage(::cGZMessage& message);                                  // 0x100299312
+    bool DoMessage(::cGZMessage& message) override;                          // 0x100299312 (message target)
     bool DoMessage2(std::uint32_t messageId, std::uint32_t dataA, float dataB); // 0x100299322 (partial)
     void DoAnimationTick(std::uint32_t frame, float milliseconds);             // 0x100299982
     void GarbageCollectPathInfo();                                             // 0x100299dc0
@@ -387,8 +402,8 @@ public:
     bool HandleTuningParametersChanged();                                      // 0x10029b7ae
 
     // ---- persistence (0x10029e972 / 0x10029eeaa) ----
-    bool Write(cIGZOStream& stream) const;   // partial
-    bool Read(cIGZIStream& stream);          // partial
+    bool Write(cIGZOStream& stream) const override;   // partial
+    bool Read(cIGZIStream& stream) override;          // partial
 
     // ---- accessors ----
     int CellsX() const { return cellsX_; }

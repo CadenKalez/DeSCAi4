@@ -736,6 +736,18 @@ public:
     bool DoMessage(cIGZMessage2*) override { return true; }
 };
 
+// The city-load serializer creates cSTETerrain from its class id (0xe98f9525) through this factory,
+// then hands out the cIGZSerializable view via QueryInterface(0xe4fda3d4).
+class FakeSerializableFactory final : public ISerializableFactory {
+public:
+    cIGZSerializable* CreateSerializable(std::uint32_t classId) override {
+        if (classId != 0xe98f9525) return nullptr;
+        auto* terrain = new cSTETerrain();
+        terrain->AddRef();
+        return terrain;
+    }
+};
+
 // The records the edge subfiles live in are opened on a real package file.
 cGZDBSegmentPackedFile* Open(const std::string& path, bool write) {
     auto* segment = new cGZDBSegmentPackedFile();
@@ -1147,6 +1159,53 @@ int main() {
         CHECK(back.LastLoadSucceeded());
         CHECK(back.VertexCountX() == 9 && back.VertexCountZ() == 7);
         CHECK(back.GetAltitudeAtVertex(8, 6) == t.GetAltitudeAtVertex(8, 6));
+    }
+
+    // ----------------------------------------------------- SC4ReadGZSerializable round trip
+    {
+        FakeSerializableFactory factory;
+        SetSerializableFactory(&factory);
+        const std::string rtPath = (dir / "stream_rt.dat").string();
+        {
+            auto* segment = new cSC4DBSegment();
+            segment->AddRef();
+            segment->Init();
+            cRZString p(rtPath.c_str());
+            segment->SetPath(p);
+            CHECK(segment->Open(false, true));   // write mode (serializer mode 2) so SaveClassObjects runs
+            cISC4DBSegmentOStream* out = nullptr;
+            CHECK(segment->OpenOStream({0xaaaabbbb, 0x11112223, 1}, &out, true) && out != nullptr);
+            t.AddRef();    // keep the stack fixture alive across the serializer's add/release pair
+            CHECK(SC4WriteGZSerializable(*out, static_cast<cIGZUnknown*>(&t)));
+            CHECK(segment->CloseOStream(out));
+            out->Release();
+            CHECK(segment->Close());
+            segment->Release();
+        }
+        {
+            auto* reopen = new cSC4DBSegment();
+            reopen->AddRef();
+            reopen->Init();
+            cRZString p(rtPath.c_str());
+            reopen->SetPath(p);
+            CHECK(reopen->Open(true, false));
+            CHECK(reopen->LoadClassObjects(0x48));
+            cISC4DBSegmentIStream* in = nullptr;
+            CHECK(reopen->OpenIStream({0xaaaabbbb, 0x11112223, 1}, &in) && in != nullptr);
+            void* raw = nullptr;
+            CHECK(SC4ReadGZSerializable(*in, 0xc70bd37e, &raw, false));
+            CHECK(raw != nullptr);
+            auto* rt = static_cast<cSTETerrain*>(static_cast<cIGZSerializable*>(raw));
+            CHECK(rt && rt->GetGZCLSID() == 0xe98f9525);
+            CHECK(rt->VertexCountX() == 9 && rt->VertexCountZ() == 7);
+            CHECK(rt->GetAltitudeAtVertex(8, 6) == t.GetAltitudeAtVertex(8, 6));
+            static_cast<cIGZSerializable*>(raw)->Release();
+            CHECK(reopen->CloseIStream(in));
+            in->Release();
+            CHECK(reopen->Close());
+            reopen->Release();
+        }
+        SetSerializableFactory(nullptr);
     }
     // =================================================================================== life cycle
     cSTETerrain::Statics().seaLevel = 100.0f;      // the runtime statics are otherwise the demo defaults

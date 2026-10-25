@@ -24,14 +24,20 @@
 #include <list>
 #include <vector>
 
+#include "gz/cIGZMessage2.h"
+#include "gz/cIGZSerializable.h"
 #include "rz/cRZRandom.h"
 #include "sc4/SCPropertyHelp.h"
 #include "sc4/cSC4ResponseCurve.h"
 #include "sc4/cSC4SimGrid.h"
 
+class cIGZIStream;
+class cIGZOStream;
+
 namespace sc4 {
 
 constexpr std::uint32_t kGZCLSID_cSC4PlumbingSimulator = 0x0990c075;
+constexpr std::uint32_t kGZIID_cISC4PlumbingSimulator = 0x47782ccc;
 constexpr std::uint32_t kPlumbingOccupantBuilding = 0x278128a0, kPlumbingOccupantNetwork = 0xc772bf98;
 constexpr std::uint32_t kPropBuildingWaterDemand = 0xc8ed2d84;    // exemplar: water the building consumes
 constexpr std::uint32_t kPropWaterProductionCapacity = 0x88ed3303;
@@ -99,6 +105,9 @@ public:
     virtual bool IsWater(int x, int z) = 0;                          // slot 0x110
 };
 
+// The primary view the city holds for this simulator (cISC4PlumbingSimulator, iid 0x47782ccc).
+class cISC4PlumbingSimulator : public cIGZUnknown {};
+
 class IPlumbingHost {
 public:
     virtual ~IPlumbingHost() = default;
@@ -121,6 +130,15 @@ public:
     // lot manager 0x70(occupant): the lot exists, its slot 0x208 answers true and its slot 0x210 false (production is zeroed).
     virtual bool ProducerLotDisabled(IPlumbingOccupant* occupant) = 0;
     virtual std::vector<IPlumbingNeighborConnection*> NeighborConnections(void* regionalCity) = 0;   // neighbours 0x90(5, city)
+    // ---- stream seams: nested serializables reached through the host (keeps the sim free of the DB-segment layer) ----
+    virtual void WriteGrid(cIGZOStream&, cSC4SimGrid<std::uint8_t>*) {}   // SC4WriteGZSerializable(stream, grid)
+    virtual bool ReadGrid(cIGZIStream&, cSC4SimGrid<std::uint8_t>**) { return false; }
+    virtual void WriteWaterGrid(cIGZOStream&) {}                          // +0xf0 int16 water grid (0x223e2b67)
+    virtual bool ReadWaterGrid(cIGZIStream&) { return false; }
+    virtual void WriteOccupant(cIGZOStream&, IPlumbingOccupant*) {}       // SC4WriteGZSerializable(stream, occupant)
+    virtual bool ReadOccupant(cIGZIStream&, IPlumbingOccupant**) { return false; }
+    virtual void WritePipe(cIGZOStream&, IPlumbingPipe*) {}               // SC4WriteGZSerializable(stream, pipe)
+    virtual bool ReadPipe(cIGZIStream&, IPlumbingPipe**) { return false; }
 };
 
 // cIGZMessage2 (the parts DoMessage reads).
@@ -148,7 +166,9 @@ struct WaterProducer {
 
 enum class WaterSourceType : int { Ground = 0, Surface = 1, None = 2 };
 
-class cSC4PlumbingSimulator {
+class cSC4PlumbingSimulator : public cISC4PlumbingSimulator,
+                              public cIGZMessageTarget2,
+                              public cIGZSerializable {
 public:
     cSC4PlumbingSimulator(IPlumbingHost* host, cRZRandom* random);
     virtual ~cSC4PlumbingSimulator();
@@ -161,13 +181,16 @@ public:
     bool Shutdown();
     void SetInitialized(bool initialized) { initialized_ = initialized; }
     // cIGZUnknown over the original's three views.
-    enum class Interface { None, Self, MessageTarget, Serializable };
-    Interface QueryInterface(std::uint32_t iid);
-    void AddRef() { ++refCount_; }
-    int Release();   // deletes the simulator when the count drops below 2
+    bool QueryInterface(std::uint32_t iid, void** out) override;
+    std::uint32_t AddRef() override { return ++refCount_; }
+    std::uint32_t Release() override;   // deletes the simulator when the count drops below 2
+    std::uint32_t GetGZCLSID() const override { return kGZCLSID_cSC4PlumbingSimulator; }
+    bool Write(cIGZOStream& stream) const override;
+    bool Read(cIGZIStream& stream) override;
 
     // ---- messages ----
     // Dispatches a simulator message. DoIdle (the flood-fill pass) is a virtual hook that is not recovered (PLUMBING-1).
+    bool DoMessage(cIGZMessage2* message) override;   // cIGZMessageTarget2 entry (routing unrecovered)
     bool DoMessage(IPlumbingMessage& message);
     virtual bool DoIdle(std::uint32_t idleTime);
     void DoOccupantInserted(IPlumbingOccupant* occupant);
@@ -214,7 +237,6 @@ public:
     int GetNumBurstPipes() const { return burstPipes_; }
     int GetNumWateredBuildings() const { return wateredBuildings_; }
     int GetNumUnwateredBuildings() const { return totalBuildings_ - wateredBuildings_; }
-    std::uint32_t GetGZCLSID() const { return kGZCLSID_cSC4PlumbingSimulator; }
 
     // ---- state exposed for tests and the not-yet-recovered passes ----
     std::list<WaterProducer>& Producers() { return producers_; }
@@ -256,9 +278,11 @@ private:
     int averagePollution_ = 0;                  // +0xe8 average pollution over the producers (UpdateWaterProduction)
     bool initialized_ = false;                  // +0x18 service wiring done (Init phase one)
     bool gridsInitialized_ = false;             // +0x19 grids / maps allocated (Init phase two)
-    int refCount_ = 0;                          // +0x1c
+    std::uint32_t refCount_ = 0;                // +0x1c
     int countdown_ = 0;                         // +0x128
     bool dirty_ = false, dirtySecond_ = false;  // +0x12c, +0x12d
+    std::int32_t valueE4_ = 0;                  // +0xe4 (streamed scalar; the pass that maintains it is unrecovered)
+    std::int64_t value1b8_ = 0;                 // +0x1b8 (streamed scalar, 64-bit; unrecovered)
 
     std::uint8_t& CellFlag(int x, int z) { return cellFlags_[std::size_t(cellsX_ * z + x)]; }
 };

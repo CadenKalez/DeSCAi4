@@ -11,6 +11,7 @@ class ICityHost;
 class ITrafficHost;
 class IPollutionHost;
 class IPoliceHost;
+class IPlumbingHost;
 class IFlammabilityHost;
 class ILandValueHost;
 class IWealthHost;
@@ -20,6 +21,7 @@ class ICommercialHost;
 class IResidentialHost;
 class IPowerHost;
 class IFireHost;
+class ITerrainViewHost;
 }  // namespace sc4
 
 namespace gzcom {
@@ -29,6 +31,7 @@ struct SimHosts {
     sc4::ITrafficHost* traffic = nullptr;
     sc4::IPollutionHost* pollution = nullptr;
     sc4::IPoliceHost* police = nullptr;
+    sc4::IPlumbingHost* plumbing = nullptr;
     sc4::IFlammabilityHost* flammability = nullptr;
     sc4::ILandValueHost* landValue = nullptr;
     sc4::IWealthHost* wealth = nullptr;
@@ -38,6 +41,7 @@ struct SimHosts {
     sc4::IResidentialHost* residential = nullptr;
     sc4::IPowerHost* power = nullptr;
     sc4::IFireHost* fire = nullptr;
+    sc4::ITerrainViewHost* terrainView = nullptr;
     cIGZWinMgr* windowManager = nullptr;     // RZ::WM()
     cRZRandom* random = nullptr;             // the shared generator; a private one is used when null
 };

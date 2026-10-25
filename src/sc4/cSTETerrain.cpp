@@ -620,11 +620,12 @@ ITerrainHost* TerrainHost() { return HostSlot(); }
 void SetTerrainHost(ITerrainHost* host) { HostSlot() = host; }
 
 bool cSTETerrain::QueryInterface(std::uint32_t iid, void** out) {
-    // 0x10073aa92: the original answers with this, this + 0x8 (cIGZMessageTarget2) or this + 0x10
-    // (the persist interface). The port has no multiple inheritance, so every accepted id gets the
-    // one object; the identity check is what callers rely on.
+    // 0x10073aa92: the original answers with this (+0, iid 1 / 0xab953253 / 0xc70bd37e), this + 0x8
+    // (cIGZMessageTarget2) or this + 0x10 (cIGZSerializable). The port keeps a single cIGZSerializable
+    // base, so every accepted id resolves to `this`; the serializable id is what the city-load
+    // serializer (SC4ReadGZSerializable) asks for.
     if (iid != 0xab953253 && iid != 0xc70bd37e && iid != 0xe4fda3d4 && iid != 0x452294aa && iid != 1) return false;
-    if (out) *out = this;
+    if (out) *out = static_cast<cIGZSerializable*>(this);
     AddRef();
     return true;
 }
@@ -4436,7 +4437,7 @@ void cSTETerrain::DoLighting(const TerrainRect& r) {
 
 // =============================================================================== persistence (streams)
 
-void cSTETerrain::Write(cIGZOStream& stream) const {
+bool cSTETerrain::Write(cIGZOStream& stream) const {
     stream.SetUint16(2);
     if (ITerrainHost* host = TerrainHost()) host->WriteGZSerializable(stream, view_ ? view_->Serializable() : nullptr);
     cIGZPersistDBSegment* segment = nullptr;
@@ -4448,6 +4449,7 @@ void cSTETerrain::Write(cIGZOStream& stream) const {
         if (dbSegment) segment = dbSegment->AsIGZPersistDBSegment();   // vslot 0x18
     }
     Save(segment);
+    return true;
 }
 
 bool cSTETerrain::Read(cIGZIStream& stream) {

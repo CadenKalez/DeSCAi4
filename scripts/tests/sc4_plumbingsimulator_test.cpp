@@ -439,10 +439,14 @@ int main() {
     sim.totalBuildings_ = 10; sim.wateredBuildings_ = 7;
     CHECK(sim.GetWaterProductionCapacity() == 1 && sim.GetWaterConsumed() == 2 && sim.GetWaterImported() == 3 && sim.GetWaterExported() == 4);
     CHECK(sim.GetNumWateredBuildings() == 7 && sim.GetNumUnwateredBuildings() == 3);
-    CHECK(sim.QueryInterface(0x47782ccc) == cSC4PlumbingSimulator::Interface::Self);
-    CHECK(sim.QueryInterface(0x452294aa) == cSC4PlumbingSimulator::Interface::MessageTarget);
-    CHECK(sim.QueryInterface(0xe4fda3d4) == cSC4PlumbingSimulator::Interface::Serializable);
-    CHECK(sim.QueryInterface(0x1234) == cSC4PlumbingSimulator::Interface::None);
+    {   // the three views (the references the queries take are left: the simulator lives on the stack): cISC4PlumbingSimulator, the message target and the serializable; an unknown id answers nothing
+        void* view = nullptr;
+        CHECK(sim.QueryInterface(0x47782ccc, &view) && view == static_cast<cISC4PlumbingSimulator*>(&sim));
+        CHECK(sim.QueryInterface(0x452294aa, &view) && view == static_cast<cIGZMessageTarget2*>(&sim));
+        CHECK(sim.QueryInterface(0xe4fda3d4, &view) && view == static_cast<cIGZSerializable*>(&sim));
+        view = nullptr;
+        CHECK(!sim.QueryInterface(0x1234, &view) && !view);
+    }
     const int pumpRefs = pump.refs;
     sim.Shutdown();
     CHECK(pump.refs == pumpRefs - 1 && sim.GetNumWaterSources() == 0 && sim.GetWateredGrid() == nullptr);

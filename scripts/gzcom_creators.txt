@@ -39,3 +39,4 @@ cSC43DRender
 cSC4CameraControl
 cSC4MySimAdvice
 cSC4MySim
+cSC4TrafficNetworkMap

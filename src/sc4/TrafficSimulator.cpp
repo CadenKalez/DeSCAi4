@@ -68,6 +68,42 @@ cSC4TrafficSimulator::cSC4TrafficSimulator(ITrafficHost* host, cRZRandom* random
     tunables_.tripScale = 90.0f;
 }
 
+// 0x100077980 — the class answers its own interface (0x68027f37) and cIGZUnknown at +0, the message
+// target 2 (0x452294aa) at +8 and the serializable (0xe4fda3d4) at +0x10. The class id 0x6990c1aa is
+// not answered (as in the original).
+bool cSC4TrafficSimulator::QueryInterface(std::uint32_t iid, void** out) {
+    if (iid == kGZIID_cIGZSerializable) *out = static_cast<cIGZSerializable*>(this);
+    else if (iid == kGZIID_cIGZMessageTarget2) *out = static_cast<cIGZMessageTarget2*>(this);
+    else if (iid == 1 || iid == kGZIID_cISC4TrafficSimulator) *out = static_cast<cISC4TrafficSimulator*>(this);
+    else return false;
+    AddRef();
+    return true;
+}
+
+// 0x100077a10
+std::uint32_t cSC4TrafficSimulator::Release() {
+    if (refCount_ < 2) {
+        delete this;
+        return 0;
+    }
+    return --refCount_;
+}
+
+// The original's DoMessage is the daily-simulation stage machine (still unrecovered); the port drives
+// the same work through ITrafficHost, so no message is handled here.
+bool cSC4TrafficSimulator::DoMessage(cIGZMessage2*) {
+    return false;
+}
+
+// 0x10007a5f8 / 0x10007b550 — the stream format is not recovered yet; stubbed so the class can be a
+// cIGZSerializable. See notes/ledger_pending/cSC4TrafficSimulator.txt.
+bool cSC4TrafficSimulator::Write(cIGZOStream&) const {
+    return false;
+}
+bool cSC4TrafficSimulator::Read(cIGZIStream&) {
+    return false;
+}
+
 bool cSC4TrafficSimulator::ReadSimulatorTunableValues(const cISCPropertyHolder* exemplar) {
     if (!exemplar) return false;
     TrafficTunables& t = tunables_;

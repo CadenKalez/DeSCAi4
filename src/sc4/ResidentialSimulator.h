@@ -16,13 +16,19 @@
 #include <string>
 #include <vector>
 
+#include "gz/cIGZMessage2.h"
+#include "gz/cIGZSerializable.h"
 #include "rz/cRZRandom.h"
 #include "sc4/SCPropertyHelp.h"
 #include "sc4/cSC4ResponseCurve.h"
 
+class cIGZIStream;
+class cIGZOStream;
+
 namespace sc4 {
 
 constexpr std::uint32_t kGZCLSID_cSC4ResidentialSimulator = 0x4990c013;
+constexpr std::uint32_t kGZIID_cISC4ResidentialSimulator = 0x077ac1ee;
 constexpr std::uint32_t kMessageHealthStrike = 0x077accd2, kMessageEducationStrike = 0x077accd0;
 constexpr std::uint32_t kResidentialStrikeStartDate = 0xeaa69f83;   // shared with the police simulator
 constexpr std::uint32_t kOccupantAutoBudget = 0x6c05fc4d;
@@ -68,6 +74,11 @@ public:
     virtual std::uint8_t CellWorkforce(unsigned x, unsigned z) = 0;      // vslot 0xe8
     virtual std::uint8_t GlobalWorkforce() = 0;                          // vslot 0x110
     virtual float CellLifeExpectancyBase(unsigned x, unsigned z) = 0;    // vslot 0x120
+    // ---- stream seams: occupants / per-department grids reached through the host ----
+    virtual void WriteOccupant(cIGZOStream&, IResidentialOccupant*) {}   // SC4WriteGZSerializable(stream, occupant)
+    virtual bool ReadOccupant(cIGZIStream&, IResidentialOccupant**) { return false; }
+    virtual void WriteDepartmentGrid(cIGZOStream&) {}                    // int16 grid (+0x80/+0x88 of tDepartmentData)
+    virtual bool ReadDepartmentGrid(cIGZIStream&) { return false; }
 };
 
 struct DepartmentData {
@@ -86,9 +97,22 @@ struct DepartmentData {
     std::uint32_t messageId = 0;       // +0x98
 };
 
-class cSC4ResidentialSimulator {
+// The primary view the city holds for this simulator (cISC4ResidentialSimulator, iid 0x077ac1ee).
+class cISC4ResidentialSimulator : public cIGZUnknown {};
+
+class cSC4ResidentialSimulator : public cISC4ResidentialSimulator,
+                                 public cIGZMessageTarget2,
+                                 public cIGZSerializable {
 public:
     cSC4ResidentialSimulator(IResidentialHost* host, cRZRandom* random);
+
+    bool QueryInterface(std::uint32_t iid, void** out) override;
+    std::uint32_t AddRef() override { return ++refCount_; }
+    std::uint32_t Release() override;
+    std::uint32_t GetGZCLSID() const override { return kGZCLSID_cSC4ResidentialSimulator; }
+    bool Write(cIGZOStream& stream) const override;
+    bool Read(cIGZIStream& stream) override;
+    bool DoMessage(cIGZMessage2* message) override;
 
     // Loads defaults and then the simulator exemplar {0x6534284a, 0xe7e2c2db, 0x69189c84}; null = defaults.
     void ReadSimulatorTunableValues(const cISCPropertyHolder* exemplar);
@@ -177,6 +201,7 @@ private:
 
     IResidentialHost* host_;
     cRZRandom* random_;
+    std::uint32_t refCount_ = 0;   // +0x1c (COM identity)
     DepartmentData health_, education_;
     std::vector<std::list<IResidentialOccupant*>> schools_, hospitals_;
     std::list<IResidentialOccupant*> extraSchools_, extraHospitals_, healthAffecting1_, healthAffecting2_;

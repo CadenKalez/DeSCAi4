@@ -178,6 +178,7 @@ public:
     virtual void GetTransform(cS3DTransform& out) = 0;              // slot 0x48
     virtual void SetTransform(const cS3DTransform& transform) = 0;  // slot 0x50
     virtual void SetOpacity(float opacity, bool translucent) = 0;   // slot 0x128
+    virtual void SetAutoFrameRate(float rate) {}                    // slot 0x108 (cS3DModelInstanceAnimated; pedestrian-only)
     virtual void UpdateAnimation(float seconds) = 0;                // slot 0x110 (cS3DModelProcessor::Update)
     virtual int GetFrame() const = 0;                               // slot 0xf0
     virtual int GetFrameCount() const = 0;                          // slot 0xf8
@@ -290,8 +291,8 @@ public:
     void Remove(bool fade);                                           // 0x68  @0x10010a5a2
     void SetOrientation(const float* xyz);                            // 0x70  @ 0x100106f24
     bool GetOrientation(float* xyz) const;                            // 0x78  @ 0x1001070e6
-    void MoveTo(const float* position, const float* direction);        // 0x80  @ 0x100107572
-    float GetRadius() const { return radius_; }                       // 0x88  @ 0x1005070c0
+    virtual void MoveTo(const float* position, const float* direction);        // 0x80  @ 0x100107572
+    virtual float GetRadius() const { return radius_; }                       // 0x88  @ 0x1005070c0
     bool GetDisabled() const;                                         // 0x90  @ 0x1002f8090
     bool PlayAnim(const cGZPersistResourceKey& key);                  // 0x98  @ 0x10010ab32
     bool PlayAnim(std::uint32_t animId);                              // 0xa0  @ 0x10010ae6a
@@ -382,7 +383,7 @@ public:
     void FinishMove(bool fadeIn, bool fadeOut);                       // 0x358 @ 0x100107b2a
     bool PostInit();                                                  // 0x360 @ 0x100108016
     void SendCallbackMessage(std::uint32_t event, std::uint32_t data);   // 0x368 @ 0x10010bf22
-    void UpdateAnimation(float milliseconds);                         // 0x370 @ 0x100108136
+    virtual void UpdateAnimation(float milliseconds);                         // 0x370 @ 0x100108136
     void UpdateEffects();                                             // 0x378 @ 0x10010b956
     void UpdateAttraction();                                          // 0x380 @ 0x10010bbfa
     void InitLighting();                                              // 0x388 @ 0x10010a9b4

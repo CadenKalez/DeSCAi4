@@ -18,6 +18,47 @@ std::map<std::uint32_t, std::vector<std::uint32_t>> g_floraFamilyMap;       // m
 IFloraSimulatorHost* FloraSimulatorHost() { return g_host; }
 void SetFloraSimulatorHost(IFloraSimulatorHost* host) { g_host = host; }
 
+// 0x1000c2252: the original answers +0 for iid 1 / 0x06c66177, +8 for the message target and +0x10 for
+// the serializable. The port keeps a single cIGZSerializable base, so every accepted id resolves to `this`;
+// the serializable id is what the city-load serializer (SC4ReadGZSerializable) asks for.
+bool cSC4FloraSimulator::QueryInterface(std::uint32_t iid, void** out) {
+    if (iid == 0xe4fda3d4) *out = static_cast<cIGZSerializable*>(this);
+    else if (iid == 1 || iid == kFloraSimulatorInterfaceId || iid == kFloraSimulatorClassId)
+        *out = static_cast<cIGZUnknown*>(this);
+    else return false;
+    AddRef();
+    return true;
+}
+
+// 0x1000c219a: below 2 destroys the object.
+std::uint32_t cSC4FloraSimulator::Release() {
+    if (refCount_ < 2) {
+        delete this;
+        return 0;
+    }
+    return --refCount_;
+}
+
+// 0x1000be5a0. The original serialises version 2 then, in order:
+//   +0x50..0x53 four bools, +0x54/+0x58 two floats, +0x5c/+0x60 two u32, +0x64/+0x68/+0x6c/+0x70 four
+//   s32, +0x74 one u8, +0x78 the RandomIterator, +0xb8 the cRZRandom, +0xd8 the ilist<cISC4Occupant*>
+//   (the obliterated-flora list), +0xf0/+0xf4 two floats. None of those instance fields are recovered in
+//   this port (the seeding / daily-simulation state lives behind the IFloraSimulatorHost seam), so only the
+//   version is written. PARTIAL: the field list above is the confirmed binary layout, not a guessed body.
+bool cSC4FloraSimulator::Write(cIGZOStream& stream) const {
+    stream.SetUint16(2);
+    return !stream.GetError();
+}
+
+// 0x1000be6d8. See Write: the port has none of the version-2 payload fields, so it accepts the version and
+// stops. PARTIAL (confirmed field list above).
+bool cSC4FloraSimulator::Read(cIGZIStream& stream) {
+    std::uint16_t version = 0;
+    stream.GetUint16(version);
+    if (version != 2) return false;
+    return !stream.GetError();
+}
+
 void cSC4FloraSimulator::MakeDefaultStaticFloraData(cSC4StaticFloraData& data) {
     static const std::uint32_t kDefaultTraits[14] = {
         0x44368000, 0x44368000, 0x43b68000, 0x40000000, 0x43000000, 0x44b68000, 0x44c30000,

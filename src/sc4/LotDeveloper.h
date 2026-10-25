@@ -12,12 +12,18 @@
 #pragma once
 #include <cstdint>
 
+#include "gz/cIGZIStream.h"
+#include "gz/cIGZOStream.h"
+#include "gz/cIGZMessage2.h"
+#include "gz/cIGZSerializable.h"
+#include "sc4/CommonIIDs.h"
 #include "sc4/SCProperty.h"
 #include "sc4/cSC4ResponseCurve.h"
 
 namespace sc4 {
 
 constexpr std::uint32_t kGZCLSID_cSC4LotDeveloper = 0xa990bfe0;
+constexpr std::uint32_t kGZIID_cISC4LotDeveloper = 0x4818e5d2;
 constexpr std::uint32_t kLotDeveloperTunablesKeyType = 0xe7e2c2db;     // exemplar key {type, group, instance}
 constexpr std::uint32_t kLotDeveloperTunablesKeyGroup = 0x6534284a;
 constexpr std::uint32_t kLotDeveloperTunablesKeyInstance = 0xe8da7677;
@@ -77,9 +83,25 @@ public:
     virtual void OccupantBounds(void* occupant, float lo[3], float hi[3]) = 0;
 };
 
-class cSC4LotDeveloper {
+// The lot developer's own interface (class id 0xa990bfe0, iid 0x4818e5d2). Only the COM identity is
+// recovered; the concrete methods are called directly, so the interface carries no extra slots.
+class cISC4LotDeveloper : public cIGZUnknown {
+public:
+    virtual ~cISC4LotDeveloper() = default;
+};
+
+class cSC4LotDeveloper : public cISC4LotDeveloper, public cIGZMessageTarget2, public cIGZSerializable {
 public:
     explicit cSC4LotDeveloper(IBaseLotDeveloperHost* host) : host_(host) {}
+    ~cSC4LotDeveloper() override = default;
+
+    bool QueryInterface(std::uint32_t iid, void** out) override;
+    std::uint32_t AddRef() override { return ++refCount_; }
+    std::uint32_t Release() override;
+    bool DoMessage(cIGZMessage2* message) override;   // unrecovered
+    bool Write(cIGZOStream& stream) const override;   // unrecovered (stub)
+    bool Read(cIGZIStream& stream) override;          // unrecovered (stub)
+    std::uint32_t GetGZCLSID() const override { return kGZCLSID_cSC4LotDeveloper; }
 
     // tunables (ReadSimulatorTunableValues): reads from the simulator exemplar when it exists
     void ReadSimulatorTunableValues(const cISCPropertyHolder* exemplar);
@@ -104,6 +126,7 @@ public:
 
 private:
     IBaseLotDeveloperHost* host_;
+    std::uint32_t refCount_ = 0;               // COM refcount (shared by the three sub-objects)
     LotDeveloperTunables tunables_;
     cSC4ResponseCurve developmentCostCurve_;                           // +0x148
 };

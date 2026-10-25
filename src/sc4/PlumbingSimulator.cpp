@@ -4,6 +4,8 @@
 #include <cmath>
 
 #include "gz/Bit1.h"
+#include "gz/cIGZIStream.h"
+#include "gz/cIGZOStream.h"
 #include "sc4/SpiralIterator.h"
 
 namespace sc4 {
@@ -32,16 +34,18 @@ cSC4PlumbingSimulator::cSC4PlumbingSimulator(IPlumbingHost* host, cRZRandom* ran
 
 cSC4PlumbingSimulator::~cSC4PlumbingSimulator() { Shutdown(); }
 
-cSC4PlumbingSimulator::Interface cSC4PlumbingSimulator::QueryInterface(std::uint32_t iid) {
-    Interface result = Interface::None;
-    if (iid == 1 || iid == 0x47782ccc) result = Interface::Self;
-    else if (iid == 0x452294aa) result = Interface::MessageTarget;
-    else if (iid == 0xe4fda3d4) result = Interface::Serializable;
-    if (result != Interface::None) AddRef();
-    return result;
+// ---- identity -------------------------------------------------------------------------------------------------
+
+bool cSC4PlumbingSimulator::QueryInterface(std::uint32_t iid, void** out) {
+    if (iid == 0xe4fda3d4) *out = static_cast<cIGZSerializable*>(this);         // +0x10
+    else if (iid == 0x452294aa) *out = static_cast<cIGZMessageTarget2*>(this);  // +0x8
+    else if (iid == 1 || iid == kGZIID_cISC4PlumbingSimulator) *out = static_cast<cISC4PlumbingSimulator*>(this);  // +0
+    else return false;
+    AddRef();
+    return true;
 }
 
-int cSC4PlumbingSimulator::Release() {
+std::uint32_t cSC4PlumbingSimulator::Release() {
     if (refCount_ < 2) {
         Shutdown();
         delete this;
@@ -49,6 +53,8 @@ int cSC4PlumbingSimulator::Release() {
     }
     return --refCount_;
 }
+
+bool cSC4PlumbingSimulator::DoMessage(cIGZMessage2*) { return true; }   // message-server routing unrecovered
 
 // ---- tunables -----------------------------------------------------------------------------------------------------
 
@@ -583,6 +589,126 @@ void cSC4PlumbingSimulator::GetConnectionCell(IPlumbingNeighborConnection* conne
     if (z < 0) z = 0;
     if (x >= cellsX) x = cellsX - 1;
     if (z >= cellsZ) z = cellsZ - 1;
+}
+
+// ---- streams -----------------------------------------------------------------------------------------------------
+
+namespace {
+
+// cSC4PlumbingSimulator::WriteWaterProducer (0x10009d00c): x/z, the lot rect, capacity, production and the
+// occupant reference. percent (+0x24) and polluted (+0x28) are deliberately not serialized.
+void WriteWaterProducer(cIGZOStream& stream, IPlumbingHost* host, const WaterProducer& producer) {
+    stream.SetSint32(producer.x);
+    stream.SetSint32(producer.z);
+    stream.SetSint32(producer.rect.left);
+    stream.SetSint32(producer.rect.top);
+    stream.SetSint32(producer.rect.right);
+    stream.SetSint32(producer.rect.bottom);
+    stream.SetUint32(std::uint32_t(producer.capacity));
+    stream.SetUint32(std::uint32_t(producer.production));
+    host->WriteOccupant(stream, producer.occupant);
+}
+
+// cSC4PlumbingSimulator::ReadWaterProducer (0x10009d488).
+bool ReadWaterProducer(cIGZIStream& stream, IPlumbingHost* host, WaterProducer& producer) {
+    stream.GetSint32(producer.x);
+    stream.GetSint32(producer.z);
+    stream.GetSint32(producer.rect.left);
+    stream.GetSint32(producer.rect.top);
+    stream.GetSint32(producer.rect.right);
+    stream.GetSint32(producer.rect.bottom);
+    std::uint32_t capacity = 0, production = 0;
+    stream.GetUint32(capacity);
+    stream.GetUint32(production);
+    producer.capacity = int(capacity);
+    producer.production = int(production);
+    host->ReadOccupant(stream, &producer.occupant);
+    return !stream.GetError();
+}
+
+}  // namespace
+
+bool cSC4PlumbingSimulator::Write(cIGZOStream& stream) const {
+    stream.SetUint16(4);
+    host_->WriteGrid(stream, auxGrid_);                                     // +0x58
+    host_->WriteGrid(stream, supplyGrid_);                                  // +0x60
+    stream.SetUint32(std::uint32_t(cellsX_));                               // +0xd0
+    stream.SetUint32(std::uint32_t(cellsZ_));                               // +0xd4
+    for (std::uint8_t flag : cellFlags_) stream.SetUint8(flag);             // +0xc8
+    stream.SetSint32(valueE4_);                                             // +0xe4
+    stream.SetUint32(std::uint32_t(averagePollution_));                     // +0xe8
+    stream.SetSint64(value1b8_);                                            // +0x1b8
+    stream.SetUint32(std::uint32_t(producers_.size()));                     // +0x120
+    stream.SetUint32(std::uint32_t(pollutedSources_));                      // +0x23c
+    for (const WaterProducer& producer : producers_) WriteWaterProducer(stream, host_, producer);
+    WriteWaterProducer(stream, host_, currentProducer_ ? *currentProducer_ : WaterProducer{});
+    // +0x1b0 ScanningIterator (the DoIdle flood-fill walk) is not recovered (PLUMBING-1); skipped symmetrically.
+    stream.SetSint64(demand_);                                              // +0x198
+    stream.SetUint32(std::uint32_t(pipes_.size()));                         // +0x218
+    stream.SetUint32(std::uint32_t(distressedPipes_));                      // +0x21c
+    stream.SetUint32(std::uint32_t(burstPipes_));                           // +0x220
+    for (IPlumbingPipe* pipe : pipes_) host_->WritePipe(stream, pipe);      // +0x200
+    host_->WriteWaterGrid(stream);                                          // +0xf0 int16 water grid
+    stream.SetSint64(capacity_);                                            // +0x178
+    stream.SetSint64(consumed_);                                            // +0x180
+    stream.SetSint64(imported_);                                            // +0x188
+    stream.SetSint64(exported_);                                            // +0x190
+    return !stream.GetError();
+}
+
+bool cSC4PlumbingSimulator::Read(cIGZIStream& stream) {
+    std::uint16_t version = 0;
+    stream.GetUint16(version);
+    if (version != 4) return false;
+    cSC4SimGrid<std::uint8_t>* grid = nullptr;
+    host_->ReadGrid(stream, &grid); auxGrid_ = grid;                        // +0x58
+    grid = nullptr;
+    host_->ReadGrid(stream, &grid); supplyGrid_ = grid;                     // +0x60
+    std::uint32_t cellsX = 0, cellsZ = 0;
+    stream.GetUint32(cellsX); cellsX_ = int(cellsX);                        // +0xd0
+    stream.GetUint32(cellsZ); cellsZ_ = int(cellsZ);                        // +0xd4
+    bitmapSize_ = std::max(cellsX_, cellsZ_);                               // +0xe0
+    cellFlags_.resize(std::size_t(cellsX_) * std::size_t(cellsZ_));
+    for (std::uint8_t& flag : cellFlags_) stream.GetUint8(flag);            // +0xc8
+    stream.GetSint32(valueE4_);                                             // +0xe4
+    std::uint32_t pollution = 0;
+    stream.GetUint32(pollution); averagePollution_ = int(pollution);        // +0xe8
+    stream.GetSint64(value1b8_);                                            // +0x1b8
+    std::uint32_t producerCount = 0;
+    stream.GetUint32(producerCount);                                        // producer count
+    std::uint32_t polluted = 0;
+    stream.GetUint32(polluted); pollutedSources_ = int(polluted);           // +0x23c
+    producers_.clear();
+    for (std::uint32_t i = 0; i < producerCount; ++i) {
+        WaterProducer producer;
+        ReadWaterProducer(stream, host_, producer);
+        producers_.push_back(producer);
+    }
+    WaterProducer current;
+    ReadWaterProducer(stream, host_, current);                              // +0x1a8 (released if unused)
+    currentProducer_ = nullptr;
+    if (current.occupant) current.occupant->Release();                      // drop the temporary reference
+    // +0x1b0 ScanningIterator: skipped (PLUMBING-1).
+    stream.GetSint64(demand_);                                              // +0x198
+    std::uint32_t pipeCount = 0;
+    stream.GetUint32(pipeCount);                                            // +0x218
+    std::uint32_t distressed = 0, burst = 0;
+    stream.GetUint32(distressed); distressedPipes_ = int(distressed);       // +0x21c
+    stream.GetUint32(burst); burstPipes_ = int(burst);                      // +0x220
+    pipes_.clear();
+    for (std::uint32_t i = 0; i < pipeCount; ++i) {
+        IPlumbingPipe* pipe = nullptr;
+        host_->ReadPipe(stream, &pipe);
+        if (pipe) pipes_.push_back(pipe);
+    }
+    host_->ReadWaterGrid(stream);                                           // +0xf0 int16 water grid
+    gridsInitialized_ = true;
+    countdown_ = 0;                                                         // +0x128 cleared on load
+    stream.GetSint64(capacity_);                                            // +0x178
+    stream.GetSint64(consumed_);                                            // +0x180
+    stream.GetSint64(imported_);                                            // +0x188
+    stream.GetSint64(exported_);                                            // +0x190
+    return !stream.GetError();
 }
 
 }  // namespace sc4

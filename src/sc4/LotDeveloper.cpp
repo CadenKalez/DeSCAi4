@@ -8,6 +8,41 @@
 
 namespace sc4 {
 
+// 0x10013eda8 — the class answers its own interface (0x4818e5d2) and cIGZUnknown at +0, the message
+// target 2 (0x452294aa) at +8 and the serializable (0xe4fda3d4) at +0x10. The class id 0xa990bfe0 is
+// not answered (as in the original).
+bool cSC4LotDeveloper::QueryInterface(std::uint32_t iid, void** out) {
+    if (iid == kGZIID_cIGZSerializable) *out = static_cast<cIGZSerializable*>(this);
+    else if (iid == kGZIID_cIGZMessageTarget2) *out = static_cast<cIGZMessageTarget2*>(this);
+    else if (iid == 1 || iid == kGZIID_cISC4LotDeveloper) *out = static_cast<cISC4LotDeveloper*>(this);
+    else return false;
+    AddRef();
+    return true;
+}
+
+// 0x10013ee38
+std::uint32_t cSC4LotDeveloper::Release() {
+    if (refCount_ < 2) {
+        delete this;
+        return 0;
+    }
+    return --refCount_;
+}
+
+// The original's DoMessage drives construction/demolition; that stage machine is unrecovered.
+bool cSC4LotDeveloper::DoMessage(cIGZMessage2*) {
+    return false;
+}
+
+// 0x10014009a / 0x100140242 — the stream format is not recovered yet; stubbed so the class can be a
+// cIGZSerializable. See notes/ledger_pending/cSC4LotDeveloper.txt.
+bool cSC4LotDeveloper::Write(cIGZOStream&) const {
+    return false;
+}
+bool cSC4LotDeveloper::Read(cIGZIStream&) {
+    return false;
+}
+
 void cSC4LotDeveloper::ReadSimulatorTunableValues(const cISCPropertyHolder* exemplar) {
     if (!exemplar) return;
     LotDeveloperTunables& t = tunables_;

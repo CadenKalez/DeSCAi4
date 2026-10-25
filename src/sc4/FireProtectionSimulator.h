@@ -16,14 +16,20 @@
 #include <list>
 #include <vector>
 
+#include "gz/cIGZMessage2.h"
+#include "gz/cIGZSerializable.h"
 #include "rz/cRZRandom.h"
 #include "sc4/ProtectionSimulator.h"
 #include "sc4/SCPropertyHelp.h"
 #include "sc4/cSC4ResponseCurve.h"
 
+class cIGZIStream;
+class cIGZOStream;
+
 namespace sc4 {
 
 constexpr std::uint32_t kGZCLSID_cSC4FireProtectionSimulator = 0x2990c05a;
+constexpr std::uint32_t kGZIID_cISC4FireProtectionSimulator = 0x88f54c7b;
 
 constexpr std::uint32_t kFireStationEffectPeak = 0x08f55dc0, kFireStationEffectEdge = 0x08f55dc1;
 constexpr std::uint32_t kFireStationRadius = 0x08f55dc2;
@@ -64,6 +70,9 @@ public:
     virtual bool IsAboveWater(float x, float z) = 0;
     virtual bool IsZonedAt(int x, int z) = 0;
     virtual void TakeStationDispatch(IProtectionStation* station) = 0;
+    // ---- stream seams: station occupants are reached through the host ----
+    virtual void WriteOccupant(cIGZOStream&, IFireOccupant*) {}       // SC4WriteGZSerializable(stream, occupant)
+    virtual bool ReadOccupant(cIGZIStream&, IFireOccupant**) { return false; }
 };
 
 struct FireTunables {
@@ -76,9 +85,24 @@ struct FireTunables {
 
 struct FireResourceKey { std::uint32_t type = 0, group = 0, instance = 0; };
 
-class cSC4FireProtectionSimulator : private IProtectionHost {
+// The primary view the city holds for this simulator (cISC4FireProtectionSimulator, iid 0x88f54c7b).
+class cISC4FireProtectionSimulator : public cIGZUnknown {};
+
+class cSC4FireProtectionSimulator : public cISC4FireProtectionSimulator,
+                                    public cIGZMessageTarget2,
+                                    public cISC4ProtectionDispatchSimulator,
+                                    public cIGZSerializable,
+                                    private IProtectionHost {
 public:
     explicit cSC4FireProtectionSimulator(IFireHost* host);
+
+    bool QueryInterface(std::uint32_t iid, void** out) override;
+    std::uint32_t AddRef() override { return ++refCount_; }
+    std::uint32_t Release() override;
+    std::uint32_t GetGZCLSID() const override { return kGZCLSID_cSC4FireProtectionSimulator; }
+    bool Write(cIGZOStream& stream) const override;
+    bool Read(cIGZIStream& stream) override;
+    bool DoMessage(cIGZMessage2* message) override;
 
     // tunables from the simulator exemplar {type 0x6534284a, group 0xe7e2c2db, instance 0x68f5524a}; null = defaults
     void ReadSimulatorTunableValues(const cISCPropertyHolder* exemplar);
@@ -102,7 +126,6 @@ public:
     static bool CanHandleDispatchType(std::uint32_t type) { return type == 1; }
     static bool GetDispatchAutomataProperties(const void* occupant, std::uint32_t& automatonType,
                                               FireResourceKey& modelKey, FireResourceKey& secondKey);
-    std::uint32_t GetGZCLSID() const { return kGZCLSID_cSC4FireProtectionSimulator; }
     std::size_t GetFireStationCount() const { return protection_.Stations().size(); }
     int GetFireStations(std::list<IFireOccupant*>& out) const;
     float GetAverageCoverage() const { return protection_.AverageProtection(); }
@@ -153,9 +176,17 @@ private:
     void RegisterStationProperty(IProtectionStation* station, bool add) override;
     void GetDispatchEffect(const ProtectionDispatchInfo& info, ProtectionEffect& effect) override;
     void TakeStationDispatch(IProtectionStation* station) override { host_->TakeStationDispatch(station); }
+    // IProtectionHost stream seams (the base serializes its grids/stations through these).
+    void WriteGridInt16(cIGZOStream& stream, cSC4SimGrid<std::int16_t>* grid) override;
+    bool ReadGridInt16(cIGZIStream& stream, cSC4SimGrid<std::int16_t>** out) override;
+    void WriteGridUint8(cIGZOStream& stream, cSC4SimGrid<std::uint8_t>* grid) override;
+    bool ReadGridUint8(cIGZIStream& stream, cSC4SimGrid<std::uint8_t>** out) override;
+    void WriteStation(cIGZOStream& stream, IProtectionStation* station) override;
+    bool ReadStation(cIGZIStream& stream, IProtectionStation** out) override;
 
     IFireHost* host_;
     cRZRandom random_{0xffffffff};
+    std::uint32_t refCount_ = 0;   // +0x110 (COM identity)
     FireTunables tunables_;
     cSC4ProtectionSimulator protection_;
     cSC4ResponseCurve stationEfficiency_, strikeChance_;

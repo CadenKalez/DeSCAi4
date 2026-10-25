@@ -28,6 +28,7 @@
 #include <vector>
 
 #include "gz/cGZPersistResourceKey.h"
+#include "gz/cIGZSerializable.h"
 #include "gz/cIGZIStream.h"
 #include "gz/cIGZOStream.h"
 #include "rz/cRZRandom.h"
@@ -40,6 +41,7 @@
 namespace sc4 {
 
 constexpr std::uint32_t kFlammabilitySimulatorClassId = 0xe990c045;
+constexpr std::uint32_t kGZIID_cISC4FlammabilitySimulator = 0x48f41617;   // the primary interface (also answered for iid 1)
 constexpr std::uint32_t kFlammabilityGridInstance = 0x49d5b953;
 constexpr std::uint32_t kRawFlammabilityGridInstance = 0x49d5b964;
 
@@ -98,11 +100,17 @@ public:
     virtual void UnregisterSimulator() = 0;
 };
 
-class cSC4FlammabilitySimulator {
+class cSC4FlammabilitySimulator final : public cIGZSerializable {
 public:
     struct tHotspot { int x = 0, z = 0, weight = 1; };
 
     explicit cSC4FlammabilitySimulator(IFlammabilityHost* host);
+    ~cSC4FlammabilitySimulator() = default;
+
+    // cIGZUnknown / cIGZSerializable identity (one shared count at +0x1c).
+    bool QueryInterface(std::uint32_t iid, void** out) override;
+    std::uint32_t AddRef() override { return ++refCount_; }
+    std::uint32_t Release() override;
 
     bool Init();
     bool Shutdown();
@@ -115,9 +123,9 @@ public:
     bool GetFlammabilityHotspot(std::uint8_t* value, int* x, int* z);
     std::uint8_t GetAverageFlammability() const { return average_; }
 
-    bool Write(cIGZOStream& stream) const;
-    bool Read(cIGZIStream& stream);
-    std::uint32_t GetGZCLSID() const { return kFlammabilitySimulatorClassId; }
+    bool Write(cIGZOStream& stream) const override;
+    bool Read(cIGZIStream& stream) override;
+    std::uint32_t GetGZCLSID() const override { return kFlammabilitySimulatorClassId; }
 
     // Exposed for tests / the daily update.
     void DoDailySimulation();
@@ -136,6 +144,7 @@ private:
 
     IFlammabilityHost* host_;
     bool initialized_ = false;                    // +0x18
+    std::uint32_t refCount_ = 0;                  // +0x1c
     cRZRandom random_{0};                         // +0x20
     RandomIterator cellWalk_;                     // +0x38
     int cityCellsX_ = 0, cityCellsZ_ = 0;         // +0x48,+0x4c

@@ -16,9 +16,12 @@
 
 #include "gz/cIGZIStream.h"
 #include "gz/cIGZOStream.h"
+#include "gz/cIGZMessage2.h"
+#include "gz/cIGZSerializable.h"
 #include "gz/cGZPersistResourceKey.h"
 #include "rz/cRZAutoRefCount.h"
 #include "rz/cRZRandom.h"
+#include "sc4/CommonIIDs.h"
 #include "sc4/SCProperty.h"
 #include "sc4/cSC4SimGrid.h"
 
@@ -52,7 +55,14 @@ public:
     virtual void OnZoneDisplayAlphaChanged() {}
 };
 
-class cSC4ZoneManager {
+// The zone manager's own interface (class id 0x298f9b2d, iid 0x67652433). The recovered port only needs
+// the COM identity; the concrete methods are called directly, so the interface carries no extra slots.
+class cISC4ZoneManager : public cIGZUnknown {
+public:
+    virtual ~cISC4ZoneManager() = default;
+};
+
+class cSC4ZoneManager : public cISC4ZoneManager, public cIGZMessageTarget2, public cIGZSerializable {
 public:
     struct ZoneDevelopmentResult {
         std::int8_t zoneType = 0;
@@ -63,6 +73,12 @@ public:
     };
 
     explicit cSC4ZoneManager(IZoneManagerHost* host);
+    ~cSC4ZoneManager() override = default;
+
+    bool QueryInterface(std::uint32_t iid, void** out) override;
+    std::uint32_t AddRef() override { return ++refCount_; }
+    std::uint32_t Release() override;
+    bool DoMessage(cIGZMessage2* message) override;   // unrecovered; the port does not route messages here
 
     bool Init();
     bool Shutdown();
@@ -84,9 +100,9 @@ public:
     std::int32_t GetMinZoneSize(int zoneType) const { return minSize_[zoneType]; }
     std::int32_t GetMaxZoneSize(int zoneType) const { return maxSize_[zoneType]; }
 
-    bool Write(cIGZOStream& stream) const;
-    bool Read(cIGZIStream& stream);
-    std::uint32_t GetGZCLSID() const { return kZoneManagerClassId; }
+    bool Write(cIGZOStream& stream) const override;
+    bool Read(cIGZIStream& stream) override;
+    std::uint32_t GetGZCLSID() const override { return kZoneManagerClassId; }
 
     // Exposed for tests / callers that adjust statistics when zones change.
     void AdjustZoneCounts(int fromType, int toType, std::int32_t cells) {
@@ -99,6 +115,7 @@ private:
     void ReadSimulatorTunableValues();
 
     IZoneManagerHost* host_;
+    std::uint32_t refCount_ = 0;               // COM refcount (shared by the three sub-objects)
     bool initialized_ = false;                 // +0x18
     bool countsLoaded_ = false;                // +0x20 (set by Read: Init keeps the loaded counters)
     cRZRandom random_{0xffffffffu};            // +0x58

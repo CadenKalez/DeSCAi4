@@ -375,7 +375,9 @@ bool cSC4App::LoadCity(const cRZString& path, cRZAutoRefCount<cISC4RegionalCity>
                     return reader(*stream);
                 };
                 if (loadClassObjects() && readAppRecord()) {
-                    city_->SetCitySerialNumber(regionalCity_->get()->GetCitySerialNumber());
+                    // The original dereferences the caller's regional city unconditionally; tools that load a bare city file (the
+                    // probe) pass none, so the serial number stays 0 then.
+                    city_->SetCitySerialNumber(regionalCity_ && regionalCity_->get() ? regionalCity_->get()->GetCitySerialNumber() : 0);
                     city_->SetCitySaveFilePath(path);
                     city_->SetCityNameChanged(false);
                     if (cityHooks_.destroyCurrentScreen) cityHooks_.destroyCurrentScreen();

@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <set>
 #include <string>
+#include "gz/SimHostRegistry.h"
 #include "sc4/DBSegment.h"
 #include "sc4/CommercialSimulator.h"
 #include "sc4/CrimeSimulator.h"
@@ -44,6 +45,18 @@ void Seam(const char* what) {
 
 namespace sc4 {
 namespace {
+// Stream seams of the simulators' hosts. The game's host implements these with SC4Read/WriteGZSerializable; nested
+// objects whose class the probe does not model are read and dropped so the stream stays in step.
+void* ReadNested(cIGZIStream& stream, std::uint32_t iid) {
+    void* raw = nullptr;
+    SC4ReadGZSerializable(stream, iid, &raw, false);
+    return raw;
+}
+void DropNested(cIGZIStream& stream) {
+    if (void* raw = ReadNested(stream, 1)) static_cast<cIGZUnknown*>(raw)->Release();
+}
+}  // namespace
+namespace {
 class Probe0 final : public IDispatchHost {
 public:
     cIGZMessageServer2* MessageServer() override { Seam("IDispatchHost::MessageServer"); return nullptr; }
@@ -74,6 +87,10 @@ public:
     PowerPlantBudgetEntry GetPlantBudgetEntry(IPowerOccupant* plant) override { Seam("IPowerHost::GetPlantBudgetEntry"); return {}; }
     float DepartmentFundingFraction() override { Seam("IPowerHost::DepartmentFundingFraction"); return 0; }
     int CityDay() override { Seam("IPowerHost::CityDay"); return {}; }
+    bool ReadPowerGrid(cIGZIStream& stream) override { DropNested(stream); return true; }
+    bool ReadSupplyGrid(cIGZIStream& stream) override { DropNested(stream); return true; }
+    bool ReadPlant(cIGZIStream& stream, IPowerOccupant** out) override { *out = nullptr; DropNested(stream); return true; }
+    bool ReadPole(cIGZIStream& stream, IPowerPole** out) override { *out = nullptr; DropNested(stream); return true; }
 };
 Probe1 g_IPowerHost;
 }
@@ -97,6 +114,10 @@ public:
     void BurstPipeAt(int cellX, int cellZ) override { Seam("IPlumbingHost::BurstPipeAt");}
     bool ProducerLotDisabled(IPlumbingOccupant* occupant) override { Seam("IPlumbingHost::ProducerLotDisabled"); return false; }
     std::vector<IPlumbingNeighborConnection*> NeighborConnections(void* regionalCity) override { Seam("IPlumbingHost::NeighborConnections"); return {}; }
+    bool ReadGrid(cIGZIStream& stream, cSC4SimGrid<std::uint8_t>** out) override { *out = SimGridCast<std::uint8_t>(ReadNested(stream, 1)); return true; }
+    bool ReadWaterGrid(cIGZIStream& stream) override { DropNested(stream); return true; }
+    bool ReadOccupant(cIGZIStream& stream, IPlumbingOccupant** out) override { *out = nullptr; DropNested(stream); return true; }
+    bool ReadPipe(cIGZIStream& stream, IPlumbingPipe** out) override { *out = nullptr; DropNested(stream); return true; }
 };
 Probe2 g_IPlumbingHost;
 }
@@ -573,4 +594,21 @@ IClockHost* CityProbeClockHost() { return &g_IClockHost; }
 
 void InstallCityProbeBindings() {
     sc4::SetDispatchHost(&sc4::g_probe0);
+    // The GZCOM creators hand these to the simulators they construct; without them every Read() that touches its
+    // host dereferences null.
+    gzcom::SimHosts& hosts = gzcom::GetSimHosts();
+    hosts.power = &sc4::g_IPowerHost;
+    hosts.plumbing = &sc4::g_IPlumbingHost;
+    hosts.fire = &sc4::g_IFireHost;
+    hosts.police = &sc4::g_IPoliceHost;
+    hosts.traffic = &sc4::g_ITrafficHost;
+    hosts.pollution = &sc4::g_IPollutionHost;
+    hosts.flammability = &sc4::g_IFlammabilityHost;
+    hosts.landValue = &sc4::g_ILandValueHost;
+    hosts.wealth = &sc4::g_IWealthHost;
+    hosts.zoneManager = &sc4::g_IZoneManagerHost;
+    hosts.commercial = &sc4::g_ICommercialHost;
+    hosts.residential = &sc4::g_IResidentialHost;
+    hosts.lotDeveloper = &sc4::g_IBaseLotDeveloperHost;
+    hosts.terrainView = &sc4::g_ITerrainViewHost;
 }

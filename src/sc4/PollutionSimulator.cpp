@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "sc4/DBSegment.h"
+
 namespace sc4 {
 
 namespace {
@@ -23,6 +25,146 @@ inline std::int32_t RoundToEven(float v) { return static_cast<std::int32_t>(std:
 }  // namespace
 
 cSC4PollutionSimulator::cSC4PollutionSimulator(IPollutionHost* host) : host_(host) {}
+
+// 0x100094c90: the original answers +0 (iid 1 / 0x877181ec), +8 (message target), +0x10 (0x89c498be)
+// and +0x18 (serializable). The port keeps a single cIGZSerializable base, so every accepted id resolves
+// to `this`; the serializable id is what the city-load serializer (SC4ReadGZSerializable) asks for.
+bool cSC4PollutionSimulator::QueryInterface(std::uint32_t iid, void** out) {
+    if (iid == 0xe4fda3d4) *out = static_cast<cIGZSerializable*>(this);
+    else if (iid == 1 || iid == 0x877181ec || iid == kGZCLSID_cSC4PollutionSimulator)
+        *out = static_cast<cIGZUnknown*>(this);
+    else return false;
+    AddRef();
+    return true;
+}
+
+// 0x100094d48: below 2 destroys the object (the original runs FinalRelease, which Shutdowns and deletes).
+std::uint32_t cSC4PollutionSimulator::Release() {
+    if (refCount_ < 2) {
+        delete this;
+        return 0;
+    }
+    return --refCount_;
+}
+
+// 0x1000961d0. PARTIAL: the original writes version 4 then, in order, the four value grids (+0x78),
+// the four source grids (+0x98), two s32 (+0xb8/+0xbc), the four occupant ilists (+0xc0/+0xd8/+0xf0/+0x108),
+// then the scalars the port keeps, then two u64 (+0x2d0/+0x2d8), two u64 (+0x250/+0x258), one double
+// (+0x268), one s32 (+0x2e4), a RandomIterator (+0x2e8) and the prop-request curve (+0x1c0). The occupant
+// lists, the two +0xb8/+0xbc counters, the four un-identified u64/double/s32 slots and the RandomIterator
+// belong to the unrecovered daily-diffusion state, so they are not serialised here — the field order of
+// the scalars below matches the binary.
+bool cSC4PollutionSimulator::Write(cIGZOStream& stream) const {
+    stream.SetUint16(4);
+    for (auto& grid : valueGrids_) SC4WriteGZSerializable(stream, static_cast<cISC4SimGridBase*>(grid.get()));
+    for (auto& grid : sourceGrids_) SC4WriteGZSerializable(stream, static_cast<cISC4SimGridBase*>(grid.get()));
+    stream.SetUint32(recyclingCenterCountSnapshot);
+    stream.SetSint32(averageAir_);
+    stream.SetSint32(averageWater_);
+    stream.SetUint32(airSum);
+    stream.SetUint32(waterSum);
+    stream.SetUint32(periodValue21c[0]);
+    stream.SetUint32(periodValue21c[1]);
+    stream.SetUint32(periodValue224[0]);
+    stream.SetUint32(periodValue224[1]);
+    stream.SetUint32(cellCount);
+    stream.SetUint16(static_cast<std::uint16_t>(averageGarbage_));
+    stream.SetUint32(monthlyIncineratorCapacity_);
+    stream.SetUint32(monthlyWasteToEnergyCapacity_);
+    stream.SetFloat32(recyclingEffect_);
+    stream.SetUint8(garbageUncollected_ ? 1 : 0);
+    stream.SetUint32(totalGarbageUncollected_);
+    stream.SetSint32(abductedPrev_);
+    stream.SetSint64(producedPrev_);
+    stream.SetSint64(importedPrev_);
+    stream.SetSint64(exportedPrev_);
+    stream.SetFloat64(recycledPrev_);
+    stream.SetSint64(incineratedPrev_);
+    stream.SetSint64(convertedPrev_);
+    stream.SetSint64(landfilledPrev_);
+    stream.SetSint64(recycledThisMonth_);
+    stream.SetSint64(wasteToEnergyThisMonth_);
+    stream.SetSint64(incineratedThisMonth_);
+    stream.SetSint64(landfilledThisMonth_);
+    stream.SetUint32(abductedThisMonth_);
+    stream.SetUint32(static_cast<std::uint32_t>(recyclingAllowance_));
+    stream.SetSint32(activeLandfillCount_);
+    stream.SetUint8(dirtyRadiation ? 1 : 0);
+    stream.SetUint8(dirtyAir ? 1 : 0);
+    stream.SetUint8(dirtyWater ? 1 : 0);
+    stream.SetUint8(dirtyGarbage ? 1 : 0);
+    stream.SetFloat32(efficiency_);
+    stream.SetUint32(static_cast<std::uint32_t>(garbageSupply_));
+    stream.SetUint32(static_cast<std::uint32_t>(garbageCapacity_));
+    return !stream.GetError();
+}
+
+// 0x100096588. PARTIAL: mirrors Write; the version gate and the occupant-list / RandomIterator / curve
+// reads belong to the unrecovered state and are left out (see Write's field list).
+bool cSC4PollutionSimulator::Read(cIGZIStream& stream) {
+    std::uint16_t version = 0;
+    stream.GetUint16(version);
+    if (version > 4) return false;
+    for (auto& grid : valueGrids_) {
+        void* raw = nullptr;
+        if (SC4ReadGZSerializable(stream, kGZIID_cISC4SimGrid, &raw, false)) {
+            grid.reset(SimGridCast<std::int16_t>(raw));   // keeps the reference the read took
+        }
+    }
+    for (auto& grid : sourceGrids_) {
+        void* raw = nullptr;
+        if (SC4ReadGZSerializable(stream, kGZIID_cISC4SimGrid, &raw, false)) {
+            grid.reset(SimGridCast<std::int16_t>(raw));   // keeps the reference the read took
+        }
+    }
+    stream.GetUint32(recyclingCenterCountSnapshot);
+    stream.GetSint32(averageAir_);
+    stream.GetSint32(averageWater_);
+    stream.GetUint32(airSum);
+    stream.GetUint32(waterSum);
+    stream.GetUint32(periodValue21c[0]);
+    stream.GetUint32(periodValue21c[1]);
+    stream.GetUint32(periodValue224[0]);
+    stream.GetUint32(periodValue224[1]);
+    stream.GetUint32(cellCount);
+    std::uint16_t avgGarbage = 0;
+    stream.GetUint16(avgGarbage);
+    averageGarbage_ = static_cast<std::int16_t>(avgGarbage);
+    stream.GetUint32(monthlyIncineratorCapacity_);
+    stream.GetUint32(monthlyWasteToEnergyCapacity_);
+    stream.GetFloat32(recyclingEffect_);
+    std::uint8_t uncollected = 0;
+    stream.GetUint8(uncollected);
+    garbageUncollected_ = uncollected != 0;
+    stream.GetUint32(totalGarbageUncollected_);
+    stream.GetSint32(abductedPrev_);
+    stream.GetSint64(producedPrev_);
+    stream.GetSint64(importedPrev_);
+    stream.GetSint64(exportedPrev_);
+    stream.GetFloat64(recycledPrev_);
+    stream.GetSint64(incineratedPrev_);
+    stream.GetSint64(convertedPrev_);
+    stream.GetSint64(landfilledPrev_);
+    stream.GetSint64(recycledThisMonth_);
+    stream.GetSint64(wasteToEnergyThisMonth_);
+    stream.GetSint64(incineratedThisMonth_);
+    stream.GetSint64(landfilledThisMonth_);
+    stream.GetUint32(abductedThisMonth_);
+    std::uint32_t recyclingAllowance = 0;
+    stream.GetUint32(recyclingAllowance);
+    recyclingAllowance_ = static_cast<std::int32_t>(recyclingAllowance);
+    stream.GetSint32(activeLandfillCount_);
+    std::uint8_t b = 0;
+    stream.GetUint8(b); dirtyRadiation = b != 0;
+    stream.GetUint8(b); dirtyAir = b != 0;
+    stream.GetUint8(b); dirtyWater = b != 0;
+    stream.GetUint8(b); dirtyGarbage = b != 0;
+    stream.GetFloat32(efficiency_);
+    std::uint32_t supply = 0, capacity = 0;
+    stream.GetUint32(supply); garbageSupply_ = static_cast<int>(supply);
+    stream.GetUint32(capacity); garbageCapacity_ = static_cast<int>(capacity);
+    return !stream.GetError();
+}
 
 void cSC4PollutionSimulator::ReadSimulatorTunableValues(const cISCPropertyHolder* exemplar) {
     tunables_ = PollutionTunables();
@@ -66,12 +208,12 @@ void cSC4PollutionSimulator::ReadSimulatorTunableValues(const cISCPropertyHolder
 void cSC4PollutionSimulator::CreateGrids() {
     for (int i = 0; i < 4; ++i) {
         if (!valueGrids_[i]) {
-            valueGrids_[i] = std::make_unique<cSC4SimGrid<std::int16_t>>();
+            valueGrids_[i] = SimGridPtr<std::int16_t>(new cSC4SimGrid<std::int16_t>());
             valueGrids_[i]->SetTractSize(2);
             valueGrids_[i]->SetInstanceID(kPollutionGridInstanceValueBase + static_cast<std::uint32_t>(i));
         }
         if (!sourceGrids_[i]) {
-            sourceGrids_[i] = std::make_unique<cSC4SimGrid<std::int16_t>>();
+            sourceGrids_[i] = SimGridPtr<std::int16_t>(new cSC4SimGrid<std::int16_t>());
             sourceGrids_[i]->SetTractSize(i == 2 ? 1 : 2);
             sourceGrids_[i]->SetInstanceID(kPollutionGridInstanceSourceBase + static_cast<std::uint32_t>(i));
         }

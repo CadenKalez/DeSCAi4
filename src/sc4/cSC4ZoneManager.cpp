@@ -16,6 +16,34 @@ cSC4ZoneManager::cSC4ZoneManager(IZoneManagerHost* host) : host_(host) {
     displayAlpha_ = 0xff;
 }
 
+// 0x10019829c — the class answers its own interface (0x67652433) and cIGZUnknown at +0, the message
+// target 2 (0x452294aa) at +8 and the serializable (0xe4fda3d4) at +0x10. The class id 0x298f9b2d is
+// not answered (as in the original).
+bool cSC4ZoneManager::QueryInterface(std::uint32_t iid, void** out) {
+    if (iid == kGZIID_cIGZSerializable) *out = static_cast<cIGZSerializable*>(this);
+    else if (iid == kGZIID_cIGZMessageTarget2) *out = static_cast<cIGZMessageTarget2*>(this);
+    else if (iid == 1 || iid == kGZIID_cISC4ZoneManager) *out = static_cast<cISC4ZoneManager*>(this);
+    else return false;
+    AddRef();
+    return true;
+}
+
+// 0x10019832c
+std::uint32_t cSC4ZoneManager::Release() {
+    if (refCount_ < 2) {
+        Shutdown();
+        delete this;
+        return 0;
+    }
+    return --refCount_;
+}
+
+// The original's DoMessage handles the zoned-building-removal message (0x99ef1142 / 0xc7729698) and
+// drives PlaceZone; that stage machine is unrecovered, so the port does not route messages here.
+bool cSC4ZoneManager::DoMessage(cIGZMessage2*) {
+    return false;
+}
+
 std::uint32_t cSC4ZoneManager::GetDevelopmentFailureCount(int zoneType, int result) const {
     if (zoneType >= 16 || result >= 19) return 0;
     auto it = failures_.find({static_cast<std::int8_t>(zoneType), static_cast<std::int8_t>(result)});

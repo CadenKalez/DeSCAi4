@@ -785,8 +785,9 @@ bool cSC4BudgetSimulator::Read(cIGZIStream& stream) {
         void* department = nullptr;
         SC4ReadGZSerializable(stream, kGZCLSID_cSC4DepartmentBudget, &department, false);
         if (department)
-            departments_[id] = static_cast<cSC4DepartmentBudget*>(static_cast<cIGZSerializable*>(
-                static_cast<cIGZUnknown*>(department)));
+            // QueryInterface(classId) answers the cISC4DepartmentBudget sub-object (+8); downcast through that type so
+            // the compiler subtracts the offset (a void/cIGZUnknown chain kept the +8 address; see Budget.cpp).
+            departments_[id] = static_cast<cSC4DepartmentBudget*>(static_cast<cISC4DepartmentBudget*>(department));
     }
     for (TaxType& tax : taxTypes_) {
         stream.GetFloat32(tax.rate);

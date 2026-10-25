@@ -16,6 +16,9 @@
 #include <memory>
 #include <vector>
 
+#include "gz/cIGZSerializable.h"
+#include "gz/cIGZIStream.h"
+#include "gz/cIGZOStream.h"
 #include "sc4/SCPropertyHelp.h"
 #include "sc4/cSC4ResponseCurve.h"
 #include "sc4/cSC4SimGrid.h"
@@ -97,9 +100,19 @@ public:
     virtual float RecyclingCapacitySlots() = 0;                        // this+0x50 vslot 0x80
 };
 
-class cSC4PollutionSimulator {
+class cSC4PollutionSimulator final : public cIGZSerializable {
 public:
     explicit cSC4PollutionSimulator(IPollutionHost* host);
+    ~cSC4PollutionSimulator() = default;
+
+    // cIGZUnknown / cIGZSerializable identity (one shared count at +0x24; the original answers +0 for
+    // iid 1 / 0x877181ec, +8 for the message target, +0x10 for 0x89c498be and +0x18 for the serializable).
+    bool QueryInterface(std::uint32_t iid, void** out) override;
+    std::uint32_t AddRef() override { return ++refCount_; }
+    std::uint32_t Release() override;
+    bool Write(cIGZOStream& stream) const override;
+    bool Read(cIGZIStream& stream) override;
+    std::uint32_t GetGZCLSID() const override { return kGZCLSID_cSC4PollutionSimulator; }
 
     // tunables + curves (ReadSimulatorTunableValues)
     void ReadSimulatorTunableValues(const cISCPropertyHolder* exemplar);
@@ -159,7 +172,6 @@ public:
     std::uint32_t GetMaxWaterPollutionLevelForUI() const { return tunables_.maxWaterForUI; }
     std::uint32_t GetMaxGarbagePollutionLevelForUI() const { return tunables_.maxGarbageForUI; }
     std::uint32_t GetMaxRadiationPollutionLevelForUI() const { return tunables_.maxRadiationForUI; }
-    std::uint32_t GetGZCLSID() const { return kGZCLSID_cSC4PollutionSimulator; }
     std::uint32_t GetRequesterSatisfactionId() const { return kPollutionRequesterSatisfactionId; }
     bool UsesCustomPropSelector() const { return false; }
     int GetRequestedShare(int x0, int z0, int x1, int z1) const;
@@ -224,9 +236,10 @@ public:
 
 private:
     IPollutionHost* host_;
+    std::uint32_t refCount_ = 0;                                        // +0x24
     PollutionTunables tunables_;
-    std::unique_ptr<cSC4SimGrid<std::int16_t>> valueGrids_[4];          // +0x78
-    std::unique_ptr<cSC4SimGrid<std::int16_t>> sourceGrids_[4];         // +0x98
+    SimGridPtr<std::int16_t> valueGrids_[4];          // +0x78
+    SimGridPtr<std::int16_t> sourceGrids_[4];         // +0x98
     cSC4ResponseCurve propRequestCurve_, garbageTransportCapacity_, ageCurve_, efficiencyCurve_, fundingEfficiencyCurve_;
     std::list<IPollutionOccupant*> waterTreatment_, incinerators_, wasteToEnergy_, recyclingCenters_;
     bool garbageUncollected_ = false;                                   // +0x244

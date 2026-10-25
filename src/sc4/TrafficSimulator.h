@@ -21,7 +21,12 @@
 #include <unordered_map>
 #include <vector>
 
+#include "gz/cIGZIStream.h"
+#include "gz/cIGZOStream.h"
+#include "gz/cIGZMessage2.h"
+#include "gz/cIGZSerializable.h"
 #include "rz/cRZRandom.h"
+#include "sc4/CommonIIDs.h"
 #include "sc4/MiscTypes.h"
 #include "sc4/SCPropertyHelp.h"
 #include "sc4/cSC4ResponseCurve.h"
@@ -32,6 +37,7 @@ class cISC4PathFinder;
 struct cSC4TripData;
 
 constexpr std::uint32_t kGZCLSID_cSC4TrafficSimulator = 0x6990c1aa;
+constexpr std::uint32_t kGZIID_cISC4TrafficSimulator = 0x68027f37;
 constexpr std::uint32_t kTrafficSimulatorType = 0x88027f0d;
 
 // messages posted to the city
@@ -207,9 +213,25 @@ struct TrafficTunables {
     float tripScaleForDisplay = 0.0f;                  // +0xf64 (also tunable 0xca76013b)
 };
 
-class cSC4TrafficSimulator {
+// The traffic simulator's own interface (class id 0x6990c1aa, iid 0x68027f37). The recovered port calls
+// the concrete methods directly, so the interface carries only the COM identity.
+class cISC4TrafficSimulator : public cIGZUnknown {
+public:
+    virtual ~cISC4TrafficSimulator() = default;
+};
+
+class cSC4TrafficSimulator : public cISC4TrafficSimulator, public cIGZMessageTarget2, public cIGZSerializable {
 public:
     cSC4TrafficSimulator(ITrafficHost* host, cRZRandom* random);
+    ~cSC4TrafficSimulator() override = default;
+
+    bool QueryInterface(std::uint32_t iid, void** out) override;
+    std::uint32_t AddRef() override { return ++refCount_; }
+    std::uint32_t Release() override;
+    bool DoMessage(cIGZMessage2* message) override;   // unrecovered
+    bool Write(cIGZOStream& stream) const override;   // unrecovered (stub)
+    bool Read(cIGZIStream& stream) override;          // unrecovered (stub)
+    std::uint32_t GetGZCLSID() const override { return kGZCLSID_cSC4TrafficSimulator; }
 
     // ---- tunables (0x100078e16, 0x10008242c, 0x100082660 is not recovered) ----
     // Returns false when the simulator exemplar is missing (nothing changes).
@@ -352,7 +374,6 @@ public:
 
     // ---- accessors ----
     static constexpr std::uint32_t GetSimulatorType() { return kTrafficSimulatorType; }
-    static constexpr std::uint32_t GetGZCLSID() { return kGZCLSID_cSC4TrafficSimulator; }
     float GetTripScale() const { return tunables_.tripScale; }
     float GetTripScaleForDisplay() const { return tunables_.tripScaleForDisplay; }
     float GetFreightScalingFactor() const { return tunables_.freightScalingFactor; }
@@ -375,6 +396,7 @@ private:
 
     ITrafficHost* host_;
     cRZRandom* random_;
+    std::uint32_t refCount_ = 0;                        // COM refcount (shared by the three sub-objects)
     TrafficTunables tunables_;
     cSC4ResponseCurve congestionToInverseSpeed_;
     cSC4ResponseCurve curveF78_, fundingCurve_, curveFB8_, curveFD8_;

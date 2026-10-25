@@ -697,10 +697,10 @@ bool cSC4CrimeSimulator::Read(cIGZIStream& stream) {
     ReleaseGrid(effectGrid_);
     void* raw = nullptr;
     SC4ReadGZSerializable(stream, kSimGridIid, &raw, false);
-    crimeGrid_ = static_cast<cSC4SimGrid<std::uint8_t>*>(static_cast<cISC4SimGridBase*>(raw));
+    crimeGrid_ = SimGridCast<std::uint8_t>(raw);
     raw = nullptr;
     SC4ReadGZSerializable(stream, kSimGridIid, &raw, false);
-    effectGrid_ = static_cast<cSC4SimGrid<std::uint8_t>*>(static_cast<cISC4SimGridBase*>(raw));
+    effectGrid_ = SimGridCast<std::uint8_t>(raw);
     stream >> iterator_;
     stream.GetUint32(unknownA0_);
     stream.GetUint32(unknownA4_);

@@ -18,13 +18,21 @@
 #include <vector>
 
 #include "gz/Bit1.h"
+#include "gz/cIGZMessage2.h"
+#include "gz/cIGZSerializable.h"
 #include "rz/cRZRandom.h"
 #include "sc4/SCPropertyHelp.h"
 #include "sc4/cSC4ResponseCurve.h"
 
+class cIGZIStream;
+class cIGZOStream;
+
 namespace sc4 {
 
 constexpr std::uint32_t kGZCLSID_cSC4PowerSimulator = 0x0990c005;
+constexpr std::uint32_t kGZIID_cISC4PowerSimulator = 0xe9e7bff5;
+constexpr std::uint32_t kPowerGridIid = 0x223e2b67;        // int16 sim grid (the power line grid)
+constexpr std::uint32_t kSupplyGridIid = 0xc9bd939a;       // uint8 sim grid (the supply grid)
 constexpr std::uint32_t kPowerPlantMaxProduced = 0x27812852;      // exemplar property: max output
 constexpr std::uint32_t kPowerPlantPowerType = 0x27812853;
 constexpr std::uint32_t kPowerPlantCurrentProduced = 0x08d9763d;
@@ -64,6 +72,10 @@ struct PowerPlantBudgetEntry {
     std::int64_t monthlyCost = 0;
 };
 
+// The primary view the city holds for this simulator (cISC4PowerSimulator, iid 0xe9e7bff5). The port only
+// answers its identity through it; the query surface lives on the concrete class.
+class cISC4PowerSimulator : public cIGZUnknown {};
+
 class IPowerHost {
 public:
     virtual ~IPowerHost() = default;
@@ -78,14 +90,34 @@ public:
     virtual PowerPlantBudgetEntry GetPlantBudgetEntry(IPowerOccupant* plant) = 0;
     virtual float DepartmentFundingFraction() = 0;                        // department +0x50
     virtual int CityDay() = 0;
+    // ---- stream seams: nested serializables the simulator reaches through the host (kept out of the sim's
+    // own translation unit so it never depends on the DB-segment layer). Wired to SC4Write/ReadGZSerializable.
+    virtual void WritePowerGrid(cIGZOStream&) {}                          // power line grid, iid 0x223e2b67
+    virtual bool ReadPowerGrid(cIGZIStream&) { return false; }
+    virtual void WriteSupplyGrid(cIGZOStream&) {}                         // supply grid, iid 0xc9bd939a
+    virtual bool ReadSupplyGrid(cIGZIStream&) { return false; }
+    virtual void WritePlant(cIGZOStream&, IPowerOccupant*) {}             // SC4WriteGZSerializable(stream, occupant)
+    virtual bool ReadPlant(cIGZIStream&, IPowerOccupant**) { return false; }
+    virtual void WritePole(cIGZOStream&, IPowerPole*) {}                  // SC4WriteGZSerializable(stream, pole)
+    virtual bool ReadPole(cIGZIStream&, IPowerPole**) { return false; }
 };
 
 struct PowerPlantEntry { IPowerOccupant* occupant = nullptr; int state = 0; };   // list node: +0x10 state, +0x18 occupant
 
-class cSC4PowerSimulator {
+class cSC4PowerSimulator : public cISC4PowerSimulator,
+                           public cIGZMessageTarget2,
+                           public cIGZSerializable {
 public:
     cSC4PowerSimulator(IPowerHost* host, cRZRandom* random);
-    ~cSC4PowerSimulator();
+    virtual ~cSC4PowerSimulator();
+
+    bool QueryInterface(std::uint32_t iid, void** out) override;
+    std::uint32_t AddRef() override { return ++refCount_; }
+    std::uint32_t Release() override;
+    std::uint32_t GetGZCLSID() const override { return kGZCLSID_cSC4PowerSimulator; }
+    bool Write(cIGZOStream& stream) const override;
+    bool Read(cIGZIStream& stream) override;
+    bool DoMessage(cIGZMessage2* message) override;
 
     // Loads defaults and then the exemplar {0x6534284a, 0xe7e2c2db, 0xc911e35b}; null = defaults.
     void ReadSimulatorTunableValues(const cISCPropertyHolder* exemplar);
@@ -153,6 +185,7 @@ public:
     int poweredConsumers9c = 0, unpoweredConsumersA0 = 0, monthlyRequirementA4 = 0;
     int plantCount = 0, overworkedPlants = 0, agedPlants = 0, distressedPlants = 0;
     std::array<int, 6> plantCountByType{};
+    int plantCountTypeExtra = 0;   // 10th plant-count slot (+0x37c)
 
     // ---- tunables ----
     float ordinanceFactor = 1.0f;           // +0x310
@@ -170,12 +203,14 @@ public:
 private:
     IPowerHost* host_;
     cRZRandom* random_;
+    std::uint32_t refCount_ = 0;                 // +0x1c (COM identity)
     int neighborhoodRadius_ = 2;
     std::uint32_t* visitedBits_ = nullptr;     // +0x328
     std::uint32_t* wireBits_ = nullptr;        // +0x330
     std::uint32_t* gridVisitedBits_ = nullptr; // +0x340
     std::uint32_t* poweredBits_ = nullptr;     // +0x348
-    std::uint32_t bitWords_ = 0;
+    std::uint32_t bitWords_ = 0;               // +0x338
+    std::vector<std::vector<std::int16_t>> consumptionMap_;   // +0xb8 (the monthly per-cell consumption map)
     bool dirty_ = false, dirtySecond_ = false, pending_ = false;
     PowerRect pendingRect_{};
     std::list<PowerPlantEntry> plants_;
@@ -187,6 +222,13 @@ private:
     int month_ = 0;
     std::array<std::array<int, kPowerTypes>, kMonthlySlots> monthlyPower_{};
     std::array<int, kPowerTypes> annualPower_{};
+    // Stream-only fields (part of the binary record; the passes that maintain them are not recovered).
+    std::int32_t monthlyValue98_ = 0;           // +0x98 monthly counter (unrecovered producer)
+    std::int64_t monthlyCostA8_ = 0;            // +0xa8 monthly power-generation cost total
+    std::uint8_t flag350_ = 0;                  // +0x350
+    std::uint8_t flag3a8_ = 0;                  // +0x3a8 (cleared by Read after loading)
+    std::int32_t value3ac_ = 0;                 // +0x3ac
+    std::uint32_t value3c4_ = 0;                // +0x3c4
 };
 
 }  // namespace sc4

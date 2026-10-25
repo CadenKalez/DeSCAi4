@@ -27,10 +27,17 @@ public:
     cISCPropertyHolder* GetTunables(const cGZPersistResourceKey&) override { return &tunables; }
     void OnZoneDisplayAlphaChanged() override { ++alphaCalls; }
     cIGZSerializable* CreateSerializable(std::uint32_t classId) override {
-        if (classId != 0x49b9e603) return nullptr;
-        auto* g = new cSC4SimGrid<std::int8_t>();
-        g->AddRef();
-        return static_cast<cIGZSerializable*>(g);
+        if (classId == 0x49b9e603) {
+            auto* g = new cSC4SimGrid<std::int8_t>();
+            g->AddRef();
+            return static_cast<cIGZSerializable*>(g);
+        }
+        if (classId == kZoneManagerClassId) {
+            auto* zm = new cSC4ZoneManager(this);
+            zm->AddRef();
+            return static_cast<cIGZSerializable*>(zm);
+        }
+        return nullptr;
     }
     cSCPropertyHolder tunables;
     int alphaCalls = 0;
@@ -118,6 +125,59 @@ int main() {
         seg->Release();
     }
     unlink(path.c_str());
+
+    // SC4ReadGZSerializable round-trips the manager through its class factory (its cIGZSerializable identity):
+    // the writer asks for the serializable (0xe4fda3d4, +0x10) and the reader creates a fresh manager from the
+    // class id and asks for the cISC4ZoneManager (0x67652433, +0), then downcasts through that interface.
+    {
+        const std::string path2 = "/tmp/sc4_zm_srlz_" + std::to_string(getpid()) + ".sc4";
+        const cGZPersistResourceKey rec2{0x77, 0x88, 0x9a};
+        auto* written = new cSC4ZoneManager(&host);
+        written->AddRef();
+        CHECK(written->Init());
+        written->SetZoneDisplayAlpha(77);
+        written->GetZoneGrid()->SetTractValue(3, 3, 7);
+        {
+            cSC4DBSegment* seg = new cSC4DBSegment();
+            seg->AddRef();
+            seg->Init();
+            cRZString p(path2.c_str());
+            seg->SetPath(p);
+            CHECK(seg->Open(false, true));
+            cISC4DBSegmentOStream* os = nullptr;
+            CHECK(seg->OpenOStream(rec2, &os, true));
+            CHECK(SC4WriteGZSerializable(*os, static_cast<cIGZUnknown*>(static_cast<cISC4ZoneManager*>(written))));
+            seg->CloseOStream(os);
+            os->Release();
+            CHECK(seg->Close());
+            seg->Release();
+        }
+        {
+            cSC4DBSegment* seg = new cSC4DBSegment();
+            seg->AddRef();
+            seg->Init();
+            cRZString p(path2.c_str());
+            seg->SetPath(p);
+            CHECK(seg->Open(true, false));
+            CHECK(seg->LoadClassObjects(0x48));
+            cISC4DBSegmentIStream* is = nullptr;
+            CHECK(seg->OpenIStream(rec2, &is));
+            void* raw = nullptr;
+            CHECK(SC4ReadGZSerializable(*is, kGZIID_cISC4ZoneManager, &raw, false));
+            CHECK(raw != nullptr);
+            auto* loaded = static_cast<cSC4ZoneManager*>(static_cast<cISC4ZoneManager*>(raw));
+            CHECK(loaded && loaded->GetGZCLSID() == kZoneManagerClassId);
+            CHECK(loaded->GetZoneDisplayAlpha() == 77 && loaded->GetZoneType(3, 3) == 7);
+            static_cast<cISC4ZoneManager*>(raw)->Release();
+            seg->CloseIStream(is);
+            is->Release();
+            CHECK(seg->Close());
+            seg->Release();
+        }
+        written->Release();
+        unlink(path2.c_str());
+    }
+
     CHECK(zm.Shutdown());
     std::printf(failures ? "FAILED (%d)\n" : "PASS sc4_zonemanager\n", failures);
     return failures != 0;

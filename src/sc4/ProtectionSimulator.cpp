@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <cmath>
 
+#include "gz/cIGZIStream.h"
+#include "gz/cIGZOStream.h"
+
 namespace sc4 {
 
 namespace {
@@ -37,13 +40,13 @@ void cSC4ProtectionSimulator::CreateGrids(int citySizeXInCells, int citySizeZInC
     (void)citySizeXInCells;
     (void)citySizeZInCells;   // the grids size themselves from the registered city (SimGridCity)
     if (!adjusted_) {
-        adjusted_ = std::make_unique<cSC4SimGrid<std::uint8_t>>();
+        adjusted_ = SimGridPtr<std::uint8_t>(new cSC4SimGrid<std::uint8_t>());
         adjusted_->SetInstanceID(kProtectionAdjustedGridInstance);
         adjusted_->SetTractSize(tractSize_);
         adjusted_->SetTractValues(0);
     }
     if (!unadjusted_) {
-        unadjusted_ = std::make_unique<cSC4SimGrid<std::int16_t>>();
+        unadjusted_ = SimGridPtr<std::int16_t>(new cSC4SimGrid<std::int16_t>());
         unadjusted_->SetInstanceID(0x49b9e605);
         unadjusted_->SetTractSize(tractSize_);
         unadjusted_->SetTractValues(0);
@@ -252,6 +255,68 @@ IProtectionStation* cSC4ProtectionSimulator::DispatchFromNearestStation(float x,
     *dispatchId = 0;
     if (best) host_->TakeStationDispatch(best);
     return best;
+}
+
+// ---- streams ------------------------------------------------------------------------------------------------------
+
+bool cSC4ProtectionSimulator::Write(cIGZOStream& stream) const {
+    stream.SetUint16(3);
+    host_->WriteGridInt16(stream, unadjusted_.get());                     // +0xa0
+    // +0x40 RandomIterator walk state is not streamed here: the operator lives in SimStreamOps.cpp, which is
+    // not linked everywhere the base is (the walk is rebuilt by CreateGrids anyway).
+    host_->WriteGridUint8(stream, adjusted_.get());                       // +0xa8
+    host_->WriteGridUint8(stream, nullptr);                               // +0xb0 third grid (unrecovered)
+    stream.SetUint32(std::uint32_t(stations_.size()));                    // +0xb8
+    for (IProtectionStation* station : stations_) host_->WriteStation(stream, station);
+    stream.SetSint32(zonedCount_);                                        // +0xd0
+    stream.SetSint32(protectionSum_);                                     // +0xd4
+    stream.SetSint32(protectedCount_);                                    // +0xd8
+    stream.SetFloat32(averageProtection_);                                // +0xdc
+    stream.SetFloat32(coverageShare_);                                    // +0xe0
+    stream.SetUint8(flagE8_ ? 1 : 0);                                     // +0xe8
+    stream.SetUint32(valueEC_);                                           // +0xec
+    stream.SetUint32(dispatchBitsInUse);                                  // +0xf0
+    return !stream.GetError();
+}
+
+bool cSC4ProtectionSimulator::Read(cIGZIStream& stream) {
+    std::uint16_t version = 0;
+    stream.GetUint16(version);
+    if (version > 3) return false;
+    cSC4SimGrid<std::int16_t>* unadjusted = nullptr;
+    host_->ReadGridInt16(stream, &unadjusted);
+    unadjusted_.reset(unadjusted);                                        // +0xa0
+    // +0x40 RandomIterator walk state skipped (see Write).
+    cSC4SimGrid<std::uint8_t>* adjusted = nullptr;
+    host_->ReadGridUint8(stream, &adjusted);
+    adjusted_.reset(adjusted);                                            // +0xa8
+    cSC4SimGrid<std::uint8_t>* third = nullptr;
+    host_->ReadGridUint8(stream, &third);                                 // +0xb0 (unrecovered)
+    if (third) third->Release();
+    std::uint32_t stationCount = 0;
+    stream.GetUint32(stationCount);
+    stations_.clear();
+    for (std::uint32_t i = 0; i < stationCount; ++i) {
+        IProtectionStation* station = nullptr;
+        host_->ReadStation(stream, &station);
+        if (station) stations_.push_back(station);
+    }
+    stream.GetSint32(zonedCount_);                                        // +0xd0
+    stream.GetSint32(protectionSum_);                                     // +0xd4
+    stream.GetSint32(protectedCount_);                                    // +0xd8
+    stream.GetFloat32(averageProtection_);                                // +0xdc
+    if (version < 3) {
+        float share = 0.0f;
+        stream.GetFloat32(share);
+        coverageShare_ = share * 0.01f;
+    } else {
+        stream.GetFloat32(coverageShare_);                                // +0xe0
+    }
+    std::uint8_t flag = 0;
+    stream.GetUint8(flag); flagE8_ = flag != 0;                           // +0xe8
+    stream.GetUint32(valueEC_);                                           // +0xec
+    stream.GetUint32(dispatchBitsInUse);                                  // +0xf0
+    return !stream.GetError();
 }
 
 }  // namespace sc4
