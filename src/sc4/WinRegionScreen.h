@@ -49,6 +49,7 @@
 #include "rz/cRZTimer.h"
 #include "s3d/Camera.h"
 #include "sc4/CameraControl.h"
+#include "sc4/Region.h"
 #include "sc4/RegionalTerrainMap.h"
 #include "sc4/SCProperty.h"
 #include "sc4/WinRegionClouds.h"
@@ -156,7 +157,7 @@ constexpr std::uint32_t kTuningCloudOpacity = 0xca383cb1;
 struct RegionViewCitySpan {
     std::int32_t left = 0, right = 0, y = 0;   // span layout not decoded; never read by the recovered code
 };
-constexpr std::size_t kRegionViewCitySize = 0xf0;
+constexpr std::size_t kRegionScreenCitySize = 0xf0;
 
 struct RegionViewCity {
     int left = 0;                                  // +0x00  x * 64 + 1 + (1 << size)   (PutCitiesInView)
@@ -180,7 +181,7 @@ struct RegionViewCity {
     int centerY = 0;                               // +0xbc
     std::uint8_t padC0_[0x30] = {};                // +0xc0..+0xef
 };
-static_assert(sizeof(RegionViewCity) == kRegionViewCitySize, "cSC4RegionViewCity is 0xf0 bytes");
+static_assert(sizeof(RegionViewCity) == kRegionScreenCitySize, "cSC4RegionViewCity is 0xf0 bytes");
 
 // ---------------------------------------------------------------------------------------------------------------
 // cISC4RegionalCity (not recovered) as this screen uses it.
@@ -317,6 +318,8 @@ public:
     virtual bool ReloadRegion() = 0;                                        // cISC4App vslot 0x60 (0)
     virtual bool RegionCellBounds(int& left, int& top, int& right, int& bottom) = 0;   // city list vslot 0xc0
     virtual int CitySnapshotSet() = 0;                                      // city list vslot 0x90
+    // region vslot 0xb8 (GetCityLocations): the city places of the active region (x, z, log2 of the edge length).
+    virtual void CityLocations(std::vector<cISC4Region::cLocation>& out) { (void)out; }
     virtual RegionCityRef* FindCity(int x, int z) = 0;                      // city list vslot 0x58 (borrowed)
     virtual RegionCityRef* FindOrCreateCity(const RegionViewCity& city, bool create) = 0;
     virtual bool LaunchRegionCityByName(const cRZString& name, RegionCityRef* city) = 0;   // cISC4App vslot 0x68

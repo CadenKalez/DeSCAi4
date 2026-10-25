@@ -95,7 +95,7 @@ bool RunBoot(bool verbose, bool keepAlive, gd::cIGZGDriver* driver, const std::f
         return true;
     };
     app->StartupHooks().bundleGameDataDirectory = [&] { return bundle + "/GameData"; };
-    for (const char* name : {"cSC4GlyphTextureManager", "cSCStringDetokenizer", "cSLWinLocationSaver", "cSC4FeatureManager", "cSC4ToolTipManager", "cSC4MissingPluginDataReporter", "cSC4Nation"})
+    for (const char* name : {"cSC4GlyphTextureManager", "cSCStringDetokenizer", "cSLWinLocationSaver", "cSC4FeatureManager", "cSC4ToolTipManager", "cSC4MissingPluginDataReporter"})   // the nation is created by the application (NativeRegion)
         app->SetServiceFactory(name, []() -> cIGZUnknown* { return new Object(); });
     cRZCmdLine line("sc4");
     framework->SetCommandLine(line);

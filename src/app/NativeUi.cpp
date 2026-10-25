@@ -44,6 +44,34 @@ std::string GameDataDir() {
 
 PngDecoder g_decodePng = nullptr;   // set by host_main.mm (ImageIO lives there)
 
+}  // namespace
+
+// The standard bitmap resources (type 0x856ddbac, PNG) of the game data, searched in the engine's package order; one counted reference.
+cGZBuffer* LoadBitmapResource(std::uint32_t group, std::uint32_t instance) {
+    if (!g_decodePng) return nullptr;
+    static std::vector<std::unique_ptr<dbpf::Package>> packages;
+    static const char* kNames[] = {"Intro.dat", "SimCity_1.dat", "SimCity_2.dat", "SimCity_3.dat", "SimCity_4.dat", "SimCity_5.dat", "EP1.dat"};
+    static std::size_t opened = 0;
+    for (std::size_t i = 0; i <= opened && i < 7; ++i) {
+        if (i == packages.size()) {   // open the next one only when the earlier ones do not have it
+            auto package = std::make_unique<dbpf::Package>();
+            package->Open(GameDataDir() + kNames[i]);
+            packages.push_back(std::move(package));
+            opened = packages.size();
+        }
+        const dbpf::Entry* entry = packages[i]->Find(0x856ddbac, group, instance);
+        std::vector<std::uint8_t> bytes;
+        if (entry && packages[i]->Read(*entry, bytes)) {
+            if (cGZBuffer* buffer = g_decodePng(bytes)) return buffer;
+        }
+    }
+    return nullptr;
+}
+
+PngDecoder DecodeFunction() { return g_decodePng; }
+
+namespace {
+
 class HostScriptServices final : public IVocabularyServices, public IScriptControlHost, public IScriptTerpHost {
 public:
     // ---- IVocabularyServices (spLocalVocab)
@@ -73,28 +101,7 @@ public:
     cIGZWin* GetMainWindow() override { return g_mgr->GetMainWindow(); }
     bool UnscriptWindow(cIGZWin*, cIGZString&) override { return false; }   // unscript_IGZWin is not recovered
     bool LoadScriptString(std::uint32_t, std::uint32_t, cIGZString&) override { return false; }   // captions fall back to the script text
-    cIGZBuffer* LoadScriptBuffer(std::uint32_t group, std::uint32_t instance) override {
-        if (std::getenv("HOST_DEBUG")) std::printf("ui: LoadScriptBuffer(%08x, %08x)\n", group, instance);
-        if (!g_decodePng) return nullptr;
-        // The packages stay open once read (each .dat is read whole by the DBPF reader), in the engine's search order.
-        static std::vector<std::unique_ptr<dbpf::Package>> packages;
-        static const char* kNames[] = {"Intro.dat", "SimCity_1.dat", "SimCity_2.dat", "SimCity_3.dat", "SimCity_4.dat", "SimCity_5.dat", "EP1.dat"};
-        static std::size_t opened = 0;
-        for (std::size_t i = 0; i <= opened && i < 7; ++i) {
-            if (i == packages.size()) {   // open the next one only when the earlier ones do not have it
-                auto package = std::make_unique<dbpf::Package>();
-                package->Open(GameDataDir() + kNames[i]);
-                packages.push_back(std::move(package));
-                opened = packages.size();
-            }
-            const dbpf::Entry* entry = packages[i]->Find(0x856ddbac, group, instance);
-            std::vector<std::uint8_t> bytes;
-            if (entry && packages[i]->Read(*entry, bytes)) {
-                if (cGZBuffer* buffer = g_decodePng(bytes)) { if (std::getenv("HOST_DEBUG")) std::printf("ui:   found in %s %ux%u\n", kNames[i], buffer->Width(), buffer->Height()); return buffer; }   // one counted reference
-            }
-        }
-        return nullptr;
-    }
+    cIGZBuffer* LoadScriptBuffer(std::uint32_t group, std::uint32_t instance) override { return LoadBitmapResource(group, instance); }
     void GetNativeResolution(int index, int& width, int& height) override {
         static const int modes[4][2] = {{1024, 768}, {1280, 1024}, {1600, 1200}, {1920, 1080}};
         width = modes[index & 3][0]; height = modes[index & 3][1];

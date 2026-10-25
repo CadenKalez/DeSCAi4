@@ -18,6 +18,11 @@ class WinMgr;
 using PngDecoder = cGZBuffer* (*)(const std::vector<std::uint8_t>&);
 void SetPngDecoder(PngDecoder decoder);
 
+// A bitmap resource {0x856ddbac, group, instance} of the game data as a CPU buffer (ARGB8888), one counted reference; null when no
+// package has it. The same decoder serves files (DecodeFunction).
+cGZBuffer* LoadBitmapResource(std::uint32_t group, std::uint32_t instance);
+PngDecoder DecodeFunction();
+
 // Registers the makers, seams and the script service. Needs RunBoot(.., keepAlive = true) to have run (GZCOM, the
 // resource manager). Returns false when a step fails (the reason is printed).
 bool InitUiScripts(WinMgr* mgr);

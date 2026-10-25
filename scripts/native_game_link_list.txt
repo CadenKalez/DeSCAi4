@@ -227,3 +227,15 @@ src/sc4/WinSmallViews.cpp
 src/sc4/EstablishCityWinProc.cpp
 src/gz/WinUtils.cpp
 
+src/sc4/BudgetUIWinProc.cpp
+src/sc4/SC4UIWindows.cpp
+src/app/NativeRegion.cpp
+src/sc4/RegionalCity.cpp
+src/sc4/BudgetSimulator.cpp
+src/rz/cRZPath.cpp
+src/sc4/Budget.cpp
+src/sc4/NeighborConnection.cpp
+src/sc4/NeighborDeal.cpp
+src/app/NativeRegionScreen.cpp
+src/sc4/WinRegionView.cpp
+src/sc4/SmallWinProcs.cpp

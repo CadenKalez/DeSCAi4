@@ -23,6 +23,8 @@
 #include "app/NativeBoot.h"
 #include "app/NativeFonts.h"
 #include "app/NativeGraphics.h"
+#include "app/NativeRegion.h"
+#include "app/NativeRegionScreen.h"
 #include "app/NativeUi.h"
 #include "app/NativeWinMgr.h"
 #include "app/NativeWinSC4App.h"
@@ -34,6 +36,8 @@
 #include "gz/WinFont.h"
 #include "render/gd/MetalGDriver.h"
 #include "sc4/App.h"
+#include "sc4/SC4UI.h"
+#include "sc4/SLBuffer.h"
 #include "sc4/ServiceLocator.h"
 #include "rz/cRZMessage2Standard.h"
 #include "sc4/WinSC4App.h"
@@ -126,6 +130,68 @@ cGZBuffer* DecodePngBytes(const std::vector<uint8_t>& png) {
     return buffer;
 }
 
+// ---- cSLBuffer's loader: every bitmap the UI names by resource key or by file ------------------------------------------------
+class BufferHost final : public ISLBufferHost {
+public:
+    bool GetBufferResource(const cGZPersistResourceKey& key, std::int32_t, bool, cIGZBuffer** out) override {
+        cGZBuffer* buffer = native::LoadBitmapResource(key.group, key.instance);   // PNG resources decode to ARGB8888, the display's 32-bit type
+        *out = buffer;
+        return buffer != nullptr;
+    }
+    bool HasResource(const cGZPersistResourceKey& key) override {
+        cGZBuffer* buffer = native::LoadBitmapResource(key.group, key.instance);
+        if (buffer) buffer->Release();
+        return buffer != nullptr;
+    }
+    bool LowQualityTextures() override { return false; }
+    bool LoadBufferFromFile(const std::string& path, std::int32_t, cIGZBuffer** out) override {
+        NSData* data = [NSData dataWithContentsOfFile:[NSString stringWithUTF8String:path.c_str()]];
+        if (!data) return false;
+        std::vector<std::uint8_t> bytes(static_cast<const std::uint8_t*>(data.bytes), static_cast<const std::uint8_t*>(data.bytes) + data.length);
+        *out = DecodePngBytes(bytes);   // ImageIO reads BMP and PNG alike
+        return *out != nullptr;
+    }
+    cIGZBuffer* CreateBuffer() override { auto* b = new cGZBuffer(); b->AddRef(); return b; }
+} gBufferHost;
+
+// nSC4UI's services: the script window builder and the window manager (the default host reaches for engine globals the app lacks)
+class UiHost final : public nSC4UI::INSC4UIHost {
+public:
+    bool PopupModalDialogsEnabled() override { return false; }
+    bool LoadExemplarString(cIGZString&, sc4::cISCPropertyHolder*, std::uint32_t, sc4::cSCStringDetokenizer*) override { return false; }
+    void MakeNumberString(std::int64_t value, cIGZString& out) override { char t[32]; std::snprintf(t, sizeof t, "%lld", (long long)value); out.AssignFromCString(t); }
+    cIGZWinMgr* WindowManager() override { return gMgr.get(); }
+    cIGZWin* CreateWindowFromScript(const cGZPersistResourceKey& key, cIGZWin* parent, std::uint32_t id) override { return native::CreateWindowFromScript(key, parent, id); }
+    bool CreateWindowFromScriptAs(const cGZPersistResourceKey& key, cIGZWin* parent, std::uint32_t id, std::uint32_t iid, void** out) override {
+        cIGZWin* window = CreateWindowFromScript(key, parent, id);
+        if (!window) return false;
+        const bool ok = window->QueryInterface(iid, out);
+        window->Release();
+        return ok;
+    }
+    cSLWinLocationSaver* WindowLocationSaver() override { return nullptr; }
+    void BeginGamePause() override {}
+    void EndGamePause() override {}
+} gUiHost;
+
+// Repaints a window and everything below it (a plain InvalidateSelf marks one window only).
+bool InvalidateTreeCallback(cIGZWin*, std::uint32_t, void* child, void*);
+void InvalidateTree(cIGZWin* window) {
+    window->InvalidateSelf();
+    window->EnumChildren(0x22ba0121, InvalidateTreeCallback, nullptr);
+}
+bool InvalidateTreeCallback(cIGZWin*, std::uint32_t, void* child, void*) { InvalidateTree(static_cast<cIGZWin*>(child)); return true; }
+
+// Debug: prints the window tree below `window` (id, visibility, area) to a depth.
+void DumpTree(cIGZWin* window, int depth, int maxDepth) {
+    const cRZRect a = window->GetArea();
+    std::printf("%*s id=%08x vis=%d area=%d,%d,%d,%d kids=%u\n", depth * 2, "", window->GetID(), window->IsVisible(), a.left, a.top, a.right, a.bottom, window->GetChildCount());
+    if (depth >= maxDepth) return;
+    struct Ctx { int depth, max; };
+    Ctx ctx{depth + 1, maxDepth};
+    window->EnumChildren(0x22ba0121, [](cIGZWin*, std::uint32_t, void* child, void* c) { auto* x = static_cast<Ctx*>(c); DumpTree(static_cast<cIGZWin*>(child), x->depth, x->max); return true; }, &ctx);
+}
+
 // ---- the frame loop ---------------------------------------------------------------------------------------------------------
 // The SDL stub's timers never fire by themselves: fire the armed one when its period has passed.
 void PumpTimers() {
@@ -181,6 +247,7 @@ void Frame() {
         if (gMessages2) gMessages2->OnTick(16);   // posted and general messages (the splash timer, screen swaps)
         app->OnTick(16);
     }
+    if (native::DrawRegionLayers()) InvalidateTree(gMgr->GetMainWindow());   // the map is drawn under the windows: they repaint over it
     gMgr->Pump();
     gMgr->Plot();
     gGraphics->Services().Tick();
@@ -188,6 +255,8 @@ void Frame() {
 
 bool Boot() {
     native::SetPngDecoder(&DecodePngBytes);
+    SetSLBufferHost(&gBufferHost);
+    nSC4UI::SetHost(&gUiHost);
     gGraphics.reset(new native::Graphics(gDriver.get(), kW, kH));
     gMgr.reset(new native::WinMgr());
     gMgr->AddRef();
@@ -226,6 +295,36 @@ bool Boot() {
         };
     });
     if (!ok) std::printf("boot: FAILED\n");
+    if (cSC4App* app = native::BootApplication()) {
+        native::RegionCallbacks callbacks;
+        callbacks.dataDirectory = std::string(std::getenv("HOME")) + "/Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/GameData/";
+        callbacks.isRegionScreenCurrent = [] { return gAppWindow && gAppWindow->CurrentScreen() && gAppWindow->CurrentScreen()->GetID() == 0xea659793; };
+        callbacks.destroyCurrentScreen = [] { if (gAppWindow) gAppWindow->DestroyCurrentScreen(); };
+        callbacks.createRegionScreen = [] { if (gAppWindow) gAppWindow->CreateRegionScreen(); };
+        native::InstallRegionServices(*app, callbacks);
+        native::RegionScreenServices screen;
+        screen.app = app;
+        screen.graphics = gGraphics.get();
+        screen.createWindowFromScript = &native::CreateWindowFromScript;
+        screen.loadBitmap = [](std::uint32_t group, std::uint32_t instance) { return native::LoadBitmapResource(group, instance); };
+        native::InstallRegionScreenHost(screen);
+        cISC4Nation* nation = native::CreateNation();
+        app->SetNation(nation);
+        std::printf("nation: regions dir \"%s\"\n", cSC4Nation::msRegionDirectory.ToChar());
+        std::printf("nation: %u regions, active %d\n", nation->GetRegionCount(), nation->GetActiveRegionIndex());
+        if (std::getenv("SC4_DEBUG")) {
+            for (std::uint32_t i = 0; i < nation->GetRegionCount(); ++i) {
+                cISC4Region* region = nation->GetRegion(i);
+                RegionCityList cities;
+                region->Init();
+                region->GetAllCities(cities);
+                std::vector<cISC4Region::cLocation> locations;
+                region->GetCityLocations(locations);
+                std::printf("  region %u locations=%zu dir=%s\n", i, locations.size(), region->GetDirectoryName()->ToChar());
+                std::printf("  region %u \"%s\": %zu cities\n", i, region->GetDirectoryName() ? region->GetDirectoryName()->ToChar() : "?", cities.size());
+            }
+        }
+    }
     if (gAppHost) gAppHost->SetMessageServer(SL::spMS2);
     gMgr->GetMainWindow()->SetBufferToDrawToRecursive();
     gMgr->GetMainWindow()->InvalidateSelf();
@@ -334,6 +433,7 @@ int main(int argc, char** argv) {
                     }
                 }
                 std::printf("debug: spMS2=%p timer id=%d interval=%u cb=%p ticks=%u\n", (void*)SL::spMS2, int(g_activeTimerId), unsigned(g_timerInterval), (void*)g_timerCallback, unsigned(g_ticks));
+                if (std::getenv("SC4_TREE")) DumpTree(gMgr->GetMainWindow(), 0, std::atoi(std::getenv("SC4_TREE")));
                 std::printf("debug: desktop children=%u visible=%d draws=%u\n", desktop->GetChildCount(), desktop->IsVisible(), gDriver->DrawCalls());
                 for (auto& kv : gDriver->UnsupportedCalls()) std::printf("debug: unsupported %s x%d\n", kv.first.c_str(), kv.second);
                 if (auto* w = native::BootApplication()) std::printf("debug: app tick ok, window=%p\n", (void*)w->GetMainWindow());

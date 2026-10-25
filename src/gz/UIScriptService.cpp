@@ -21,7 +21,7 @@ constexpr std::uint32_t kWinMgrServiceId = 0xa417445e;
 constexpr std::uint32_t kWinMgrIid = 0x000005a4;
 
 // The three pseudo tags cGZScriptTerp hands to ScriptTag (TestSetup registers their names: "children",
-// "child/ren", "define") and the two properties the define tag reads ("name", "val").
+// "/children", "define") and the two properties the define tag reads ("name", "val").
 constexpr std::uint32_t kTagChildren = 1;
 constexpr std::uint32_t kTagChildOfChildren = 2;
 constexpr std::uint32_t kTagDefine = 3;
@@ -132,13 +132,13 @@ bool cGZUIScriptService::TestSetup() {
             // The underscore tokens are registered on the interpreter before it has a script target; the plain
             // ones after. The values are the pseudo tag / property ids the parser resolves the words to.
             static constexpr struct { std::uint32_t id; const char* name; } kLocalTokens[] = {
-                {0, "_null"}, {1, "_children"}, {2, "_child/ren"}, {3, "_define"}, {4, "_name"}, {5, "_val"},
+                {0, "_null"}, {1, "_children"}, {2, "_/children"}, {3, "_define"}, {4, "_name"}, {5, "_val"},
             };
             for (const auto& token : kLocalTokens) interpreter_->AddToken(cRZString(token.name), token.id);
             settingUp_ = true;
             interpreter_->SetScriptTarget(static_cast<cIGZScriptTarget*>(this));
             static constexpr struct { std::uint32_t id; const char* name; } kTargetTokens[] = {
-                {0, "none"},           {1, "children"}, {2, "child/ren"}, {3, "define"},
+                {0, "none"},           {1, "children"}, {2, "/children"}, {3, "define"},
                 {4, "name"},           {5, "val"},      {kGZCLSID_cGZLegacyControl, "LEGACY"},
                 {0x12, "comic9"},      {0x13, "comic10"},
             };
@@ -368,7 +368,7 @@ bool cGZUIScriptService::ScriptTag(cGZScriptTerp* terp, std::uint32_t tag, tScri
             }
             return true;
         case kTagChildOfChildren:
-            // The "child/ren" pseudo tag: leave the children list again.
+            // The "/children" pseudo tag: leave the children list again.
             PopParent();
             pendingParent_ = parents_.empty() ? nullptr : parents_.back();
             return true;

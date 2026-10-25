@@ -4,9 +4,11 @@
 #include <cmath>
 #include <cstring>
 #include <limits>
+#include <set>
 
 #include "gz/WinBtn.h"
 #include "gz/WinUtils.h"
+#include "sc4/SC4UI.h"
 #include "rz/cRZMessage2Standard.h"
 #include "sc4/SCProperty.h"
 #include "sc4/SCPropertyHelp.h"
@@ -339,8 +341,10 @@ bool cSC4WinRegionScreen::Init() {   // @ 0x100237bf2 (PARTIAL)
             message->Release();
         }
 
-        // The screen takes the main window's area (0x100237d87).
-        SetArea(0, 0, GetW(), GetH());
+        // The screen takes the main window's area (0x100237d87: GetMainWindow() = vslot 0x50, then its GetW / GetH). An earlier
+        // reading used the screen's own (still empty) size, so every child was laid out in a 0 x 0 window.
+        if (cIGZWin* main = GetMainWindow()) SetArea(0, 0, main->GetW(), main->GetH());
+        else SetArea(0, 0, GetW(), GetH());
 
         // SL::spGS, one reference held (0x100237dcc..0x100237e0a).
         if (cIGZUnknown* graphicSystem = host->GraphicSystemObject()) {
@@ -570,27 +574,156 @@ void cSC4WinRegionScreen::InitApplicationServices() {   // @ 0x100238972 (PARTIA
     // and the two services come from the host here.
 }
 
-void cSC4WinRegionScreen::LoadGUI() {   // @ 0x10023927a (PARTIAL)
-    // PARTIAL: the whole 1955-byte function builds the region screen from window scripts (SC4CreateWindowFromScript
-    // 0x9ebe9ee / 0xbb0f5e7 / 0x6bb92bca), aligns the child set, wires the three panels and their buttons, reads the
-    // grid / signpost / map-mode preferences and calls UpdatePopulation. nsGZWinUtils and the script loader are
-    // recovered, but cSC4WinRegionView and the region script resources are not, so only the preference restore and the
-    // population refresh are kept.
+// (anonymous namespace)::SetupScript @ 0x10023d1b6: clears the accept-focus flag of every window of a script and points the
+// notification target of its buttons (iid 0x8810) and of windows answering iid 0xa1336cc0 at the screen; windows that answer
+// the second iid are not descended into.
+bool RegionScreenSetupScript(cIGZWin*, std::uint32_t, void* child, void* context) {
+    auto* window = static_cast<cIGZWin*>(child);
+    window->SetFlag(0x8000, false);
+    cIGZUnknown* button = nullptr;
+    if (window->QueryInterface(0x8810, reinterpret_cast<void**>(&button))) {
+        window->SetNotificationTarget(static_cast<cIGZWin*>(context));
+        button->Release();
+    }
+    cIGZUnknown* special = nullptr;
+    if (window->QueryInterface(0xa1336cc0, reinterpret_cast<void**>(&special))) {
+        window->SetNotificationTarget(static_cast<cIGZWin*>(context));
+    } else {
+        window->EnumChildren(0x22ba0121, RegionScreenSetupScript, context);
+    }
+    if (special) special->Release();
+    return true;
+}
+
+// Builds the screen's windows from the game's window scripts (96a006b0/aa920991 = the toolbar strip, /abc0ed33 = the panel
+// toggles) and wires their buttons to the screen. Recovered from the 1955-byte body; `this` is passed to the scripts as the
+// notification target through the cIGZWin view.
+void cSC4WinRegionScreen::LoadGUI() {   // @ 0x10023927a
     IRegionScreenHost* host = RegionScreenHost();
-    if (host) {
-        if (const std::uint8_t* preferences = host->Preferences()) {
-            if (view_) view_->EnableGrid(preferences[kPrefsShowGrid] != 0);
-            signpostMode_ = preferences[kPrefsSignpostMode] != 0 ? 1 : 0;
+    nSC4UI::INSC4UIHost* ui = nSC4UI::Host();
+    cIGZWin* self = static_cast<cIGZWin*>(static_cast<cGZWin*>(this));
+
+    std::set<cIGZWin*> before;
+    nSC4UI::GetWindowChildrenSet(self, before);
+    if (ui) {
+        const cGZPersistResourceKey toolbarKey{0, 0x96a006b0, 0xaa920991};
+        if (cIGZWin* root = ui->CreateWindowFromScript(toolbarKey, self, 0x09ebe9ee)) {
+            const int width = GetW(), height = GetH();
+            int x = 5;
+            if (static_cast<std::uint32_t>(height * 3) < static_cast<std::uint32_t>(width)) x = static_cast<int>(static_cast<std::uint32_t>(width) / 3) + 5;
+            root->GZWinMoveTo(x, (height + 2) - root->GetH());
+            root->PullToFront();
+            root->EnumChildren(0x22ba0121, RegionScreenSetupScript, self);
+            root->SetFlag(0x800, false);
+            root->Release();
         }
     }
+    std::set<cIGZWin*> added;
+    nSC4UI::GetWindowChildrenNotInSet(self, before, added);
+    nSC4UI::AlignWindowSetToWindow(added, self);
+
+    for (std::uint32_t id : {0x6a91dc16u, 0x6a91dc15u})
+        if (cIGZWin* window = GetChildWindowFromIDRecursive(id)) window->EnumChildren(0x22ba0121, RegionScreenSetupScript, self);
+
+    // the three info panels and their buttons (ids from DAT_100a1b808; each button is the id after its panel)
+    for (int i = 0; i < 3; ++i) {
+        const std::uint32_t id = kRegionScreenPanelIds[i];
+        if (cIGZWin* panel = GetChildWindowFromID(id)) {
+            SetMemberWindow(i, panel);
+            panel->HideWindow();
+            panel->EnumChildren(0x22ba0121, RegionScreenSetupScript, self);
+            if (cIGZWin* button = GetChildWindowFromID(id + 1)) {
+                SetMemberWindow(3 + i, button);
+                button->HideWindow();
+            }
+        }
+    }
+    if (cIGZWin* root = GetChildWindowFromID(kRegionScreenRootChildId)) {
+        root->SetFlag(0x800, true);
+        root->PullToFront();
+        root->SetFlag(0x800, false);
+    }
+    const int regionCount = host ? host->RegionCount() : 0;
+    if (regionCount < 2) {
+        if (cIGZWin* window = GetChildWindowFromIDRecursive(0x2a5b0002)) window->SetFlag(2, false);
+    }
+
+    cIGZWin* toggles = nullptr;
+    if (ui) {
+        const cGZPersistResourceKey togglesKey{0, 0x96a006b0, 0xabc0ed33};
+        toggles = ui->CreateWindowFromScript(togglesKey, self, 0x0bb0f5e7);
+    }
+    if (toggles) {
+        toggles->GZWinMoveTo((GetW() - 5) - toggles->GetW(), (GetH() - 5) - toggles->GetH());
+        toggles->PullToFront();
+        toggles->EnumChildren(0x22ba0121, RegionScreenSetupScript, self);
+        toggles->SetFlag(0x800, false);
+        toggles->HideWindow();
+        toggles->Release();
+    }
+    cIGZWin* sibling = nullptr;
+    if (toggles && nsGZWinUtils::FindSiblingAs(toggles, 0x6bb92bca, 0x22ba0121, reinterpret_cast<void**>(&sibling))) {
+        sibling->GZWinMoveTo((GetW() - 10) - sibling->GetW(), (GetH() - 10) - sibling->GetH());
+        sibling->PullToFront();
+        sibling->EnumChildren(0x22ba0121, RegionScreenSetupScript, self);
+        sibling->SetFlag(0x800, false);
+        sibling->HideWindow();
+    }
+    if (sibling) sibling->Release();
+
     UpdatePopulation();
+    if (host) {
+        if (cIGZWin* caption = GetChildWindowFromIDRecursive(0xea5bd179)) {
+            if (const char* name = host->RegionNameAt(currentRegionIndex_)) caption->SetCaption(cRZString(name));
+        }
+        const std::uint8_t* preferences = host->Preferences();
+        if (preferences) {
+            const bool grid = preferences[kPrefsShowGrid] != 0;
+            const bool signposts = preferences[kPrefsSignpostMode] != 0;
+            signpostMode_ = signposts ? 1 : 0;
+            if (view_) view_->EnableGrid(grid);
+            nsGZWinUtils::SetButtonToggleState(self, kRegionScreenGridCheckBoxId, grid);
+            nsGZWinUtils::SetButtonToggleState(self, kRegionScreenSignpostCheckBoxId, signposts);
+            int mapMode = preferences[kPrefsMapMode];
+            if (mapMode > 2) mapMode = 0;
+            for (int i = 0; i < 3; ++i) nsGZWinUtils::SetButtonToggleState(self, kRegionScreenMapModeButtonIds[i], mapMode == i);
+            if (view_) view_->SetMapMode(mapMode);
+            nsGZWinUtils::SetWindowVisible(self, 0x0bb0f5e7, mapMode != 0 && !panelsVisible_, true);
+            nsGZWinUtils::SetWindowVisible(self, 0x6bb92bca, panelsVisible_ && mapMode != 0, true);
+        }
+    }
     RestoreSignposts();
+    if (cIGZWin* window = GetChildWindowFromIDRecursive(0x4a779a1a)) {
+        window->SetFlag(1, false);
+        window->SetFlag(2, false);
+    }
 }
 
 void cSC4WinRegionScreen::PutCitiesInView() {   // @ 0x100236398 (PARTIAL)
-    // PARTIAL: needs cSC4Region's location list (region vslot 0x58->0xb8), the cSC4RegionViewCity constructor /
-    // 0xf0-byte layout (only modelled as data above) and SC4ReadCityRegionViewThumbnails (0x1001d2cf3). The final
-    // AddCity loop and ComputeBaseLimits are kept so a host that fills cities_ still gets a consistent view.
+    // One record per city place of the active region, in the original's formulas: the cell corner (x - 1 + 2^size, z - 1 + 2^size),
+    // the map position (-37.49 * (z + 2^size) + 90.51 * x, 45.25 * (z + 2^size) + 18.75 * (x + 2^size)) and the default snapshots of
+    // the city's size. PARTIAL: the draw-order sort (cCityDrawingOrderSort), the city file thumbnails (SC4ReadCityRegionViewThumbnails)
+    // and their resampling are not recovered, so every city keeps the default picture.
+    IRegionScreenHost* host = RegionScreenHost();
+    if (host) {
+        std::vector<cISC4Region::cLocation> locations;
+        host->CityLocations(locations);
+        cities_.clear();
+        for (const cISC4Region::cLocation& location : locations) {
+            RegionViewCity city;
+            const int edge = 1 << (location.size & 0x1f);
+            city.left = location.x - 1 + edge;
+            city.top = location.z - 1 + edge;
+            city.x = location.x;
+            city.z = location.z;
+            city.size = static_cast<std::uint8_t>(location.size);
+            const float zs = static_cast<float>(edge + location.z);
+            city.mapX = zs * -37.49f + static_cast<float>(location.x) * 90.51f;
+            city.mapY = zs * 45.25f + static_cast<float>(edge + location.x) * 18.75f;
+            SetCitySnapshotsToDefault(city);
+            cities_.push_back(std::move(city));
+        }
+    }
     if (view_) {
         for (const RegionViewCity& city : cities_) view_->AddCity(city);
         view_->SetSignpostType(0, 0);

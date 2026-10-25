@@ -647,8 +647,8 @@ void TestSetup() {
     FakeVocab* vocabulary = rig.host.created.front();
     CHECK_EQ(vocabulary->entries.size(), 15);
     static const struct { const char* name; std::uint32_t id; } kExpected[] = {
-        {"_null", 0},        {"_children", 1}, {"_child/ren", 2}, {"_define", 3}, {"_name", 4}, {"_val", 5},
-        {"none", 0},         {"children", 1},  {"child/ren", 2},  {"define", 3},  {"name", 4},  {"val", 5},
+        {"_null", 0},        {"_children", 1}, {"_/children", 2}, {"_define", 3}, {"_name", 4}, {"_val", 5},
+        {"none", 0},         {"children", 1},  {"/children", 2},  {"define", 3},  {"name", 4},  {"val", 5},
         {"LEGACY", 0xfa450242u}, {"comic9", 0x12}, {"comic10", 0x13},
     };
     for (std::size_t i = 0; i < 15 && i < vocabulary->entries.size(); ++i) {
@@ -689,7 +689,7 @@ void TestExecuteScriptString() {
 
     // Children / child-ren: the control becomes the parent of the following controls.
     cIGZScriptableControlSet* tree = service->ExecuteScriptString(
-        cRZString("<LEGACY 0x100=1 ><children ><LEGACY 0x100=2 ><child/ren ><LEGACY 0x100=3 >"));
+        cRZString("<LEGACY 0x100=1 ><children ><LEGACY 0x100=2 ></children ><LEGACY 0x100=3 >"));
     CHECK(tree != nullptr);
     CHECK_EQ(tree->GetSize(), 3u);
     cIGZScriptableControl* first = tree->GetByID(1);
@@ -869,7 +869,7 @@ void TestLegacyWiring() {
     CHECK_EQ(set->GetSize(), 1u);
     CHECK_EQ(wrapper->refs, 1);   // still only the parent stack
 
-    // <children> pushes the (now pending) child; <child/ren> pops it again, leaving the wrapper on top.
+    // <children> pushes the (now pending) child; </children> pops it again, leaving the wrapper on top.
     CHECK(service->ScriptTag(static_cast<cGZScriptTerp*>(terp), 1, none.list));
     CHECK_EQ(child->refs, 2);     // set + parent stack
     CHECK(service->ScriptTag(static_cast<cGZScriptTerp*>(terp), 2, none.list));
@@ -933,7 +933,7 @@ void TestCallbacks() {
     // The pending parent is now that control.
     CHECK(service->ScriptTag(static_cast<cGZScriptTerp*>(terp), 1, none.list));   // <children>
     CHECK_EQ(control->refs, 2);                                                   // set + parent stack
-    CHECK(service->ScriptTag(static_cast<cGZScriptTerp*>(terp), 2, none.list));   // <child/ren>
+    CHECK(service->ScriptTag(static_cast<cGZScriptTerp*>(terp), 2, none.list));   // </children>
     CHECK_EQ(control->refs, 1);
 
     // A failed tag creation: false, the tag-active flag stays down, so EndExecuteTag does not pop.

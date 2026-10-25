@@ -39,7 +39,7 @@
 //                           parent stack, make it the pending parent and push its vocabulary.
 //   ScriptTag(tag, params)  with a current control and a control set: SetParameters, add the control to the
 //                           set, release it. Otherwise only the three pseudo tags do something:
-//                           1 "children" push the pending parent, 2 "child/ren" pop it, 3 "define" set or
+//                           1 "children" push the pending parent, 2 "/children" pop it, 3 "define" set or
 //                           remove a token (properties 4 "name" and 5 "val"); every other tag answers false.
 //   EndExecuteTag(tag)      pop the vocabulary, but only when BeginExecuteTag succeeded (the +0x88 flag).
 //   ScriptEnd(terp, ok)     ok=false: release the set and the current control, pop a still-active tag
@@ -82,7 +82,7 @@
 //  * CreateWindowFromScript calls SetOwnControls(false) on the set it returns a window from - before
 //    releasing the set - so the caller owns the window (0x10054d3be).
 //  * TestSetup registers each special token twice, once with a leading underscore and once without
-//    ("_null"/"none", "_children"/"children", "_child/ren"/"child/ren", "_define"/"define",
+//    ("_null"/"none", "_children"/"children", "_/children"/"/children", "_define"/"define",
 //    "_name"/"name", "_val"/"val"), plus "LEGACY" -> 0xfa450242 (the legacy control class) and
 //    "comic9"/"comic10" -> 0x12/0x13 (0x10054cc48). The underscore batch is added before the script target
 //    is set, the rest after.
