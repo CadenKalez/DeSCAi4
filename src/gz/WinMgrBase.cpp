@@ -34,8 +34,15 @@ cGZWinMgrBase::cGZWinMgrBase(IWinMgrBaseHost* host)
 }
 
 cGZWinMgrBase::~cGZWinMgrBase() {
-    // The original clears the lists, releases the five window slots and the critical section by hand; the members do the same.
+    // The original clears the lists, releases the five window slots and the critical section by hand. The slots must go first:
+    // a window's destructor calls back into CleanUpWindowReferences, which reads validWindows_ - and that member is declared
+    // after the slots, so the implicit member destruction would tear the set down before the main window is released.
     keyFilters_.clear();
+    capture_ = nullptr;
+    focus_ = nullptr;
+    modal_ = nullptr;
+    mouse_ = nullptr;
+    mainWindow_ = nullptr;
 }
 
 bool cGZWinMgrBase::QueryInterface(std::uint32_t iid, void** out) {
