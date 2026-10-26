@@ -1,4 +1,5 @@
 #include "sc4/ResidentialSimulator.h"
+#include "sc4/DBSegment.h"
 
 #include <algorithm>
 
@@ -533,7 +534,96 @@ bool cSC4ResidentialSimulator::Write(cIGZOStream& stream) const {
     return !stream.GetError();
 }
 
+// 0x100204c4e: the record of a city file. Most of it is object references to the coverage / workforce grids (the unrecovered population
+// model keeps them) and to the occupants of the school / hospital lists; those are consumed here, the scalar state and the department data
+// are kept. A stream that is not a city-file segment stream (the unit tests) carries the port's own reduced format, read below.
+bool cSC4ResidentialSimulator::ReadCityRecord(cIGZIStream& stream) {
+    constexpr std::uint32_t kMaxCount = 1u << 22;
+    std::uint16_t version = 0;
+    stream.GetUint16(version);
+    if (version > 7) return false;
+    const auto skipReference = [&stream](std::uint32_t iid) {
+        void* raw = nullptr;
+        SC4ReadGZSerializable(stream, iid, &raw, false);
+        if (raw) static_cast<cIGZUnknown*>(raw)->Release();
+    };
+    const auto skipOccupantList = [&](std::uint32_t) {
+        std::uint32_t count = 0;
+        stream.GetUint32(count);
+        if (count < 10000000u)
+            for (std::uint32_t i = 0; i < count && !stream.GetError(); ++i) skipReference(0x26bb767e);   // the list clears first and ignores a larger count
+    };
+    const auto skipDepartment = [&](DepartmentData& d) {
+        float v = 0;
+        const bool scaled = version < 5;
+        for (float* field : {&d.minimumFunding, &d.strikeThreshold, &d.value08}) { stream.GetFloat32(v); *field = scaled ? v * 0.01f : v; }
+        std::int32_t days = 0;
+        stream.GetSint32(days); d.strikeDays = static_cast<std::uint32_t>(days);
+        stream.GetFloat32(v); d.strikeEndFunding = version < 6 ? v * 0.01f : v;
+        std::uint8_t onStrike = 0;
+        stream.GetUint8(onStrike); d.onStrike = onStrike != 0;
+        std::int32_t start = 0;
+        stream.GetSint32(start); d.strikeStartDay = static_cast<std::uint32_t>(start);
+        skipReference(0x223e2b67);
+        skipReference(0x223e2b67);
+        stream.GetFloat32(v); d.value90 = scaled ? v * 0.01f : v;
+        stream.GetFloat32(d.value94);
+        stream.GetUint32(d.messageId);
+    };
+    std::int32_t s32 = 0;
+    std::uint32_t u32 = 0;
+    float f32 = 0.0f;
+    stream.GetSint32(population_);                            // +0x60
+    for (int i = 0; i < 3; ++i) skipReference(0xc9bd939a);
+    stream.GetSint32(s32);
+    for (int i = 0; i < 3; ++i) skipReference(0xc9bd939a);
+    skipReference(0xc9bd939a);
+    for (int list = 0; list < 2; ++list) {                    // two vectors of grids
+        stream.GetUint32(u32);
+        if (u32 > kMaxCount) return false;
+        for (std::uint32_t i = 0; i < u32 && !stream.GetError(); ++i) skipReference(0xc9bd939a);
+    }
+    skipReference(0xc9bd939a);
+    skipReference(0xc9bd939a);
+    stream.GetSint32(s32);
+    for (int i = 0; i < 6; ++i) skipReference(0xc9bd939a);
+    stream.GetFloat32(f32);
+    stream.GetFloat32(f32);
+    stream.GetUint32(u32);
+    std::uint8_t flag = 0;
+    stream.GetUint8(flag); fundingChanged_ = flag != 0;       // +0x12c
+    stream.GetSint32(s32);
+    skipDepartment(health_);                                  // +0x160
+    skipDepartment(education_);                               // +0x200
+    for (int i = 0; i < 3; ++i) skipOccupantList(0);          // +0x2d0 / +0x2e8 / +0x300
+    for (int group = 0; group < 2; ++group) {                 // the school lists, then the hospital lists
+        stream.GetUint32(u32);
+        if (u32 > kMaxCount) return false;
+        for (std::uint32_t i = 0; i < u32 && !stream.GetError(); ++i) skipOccupantList(0);
+    }
+    skipOccupantList(0);                                      // +0x348
+    if (version >= 3) {
+        std::int8_t state = 0;                                // ScanningIterator
+        stream.GetSint8(state);
+        stream.GetSint32(s32); stream.GetSint32(s32); stream.GetUint32(u32);
+        for (int i = 0; i < 4; ++i) stream.GetSint32(s32);
+        std::uint64_t u64 = 0;
+        stream.GetUint64(u64);
+        if (version > 3) stream.GetSint32(s32);
+        if (version > 6) {
+            stream.GetUint8(flag); autoBudgetSchools_ = flag != 0;       // +0x648
+            stream.GetUint8(flag); autoBudgetHospitals_ = flag != 0;     // +0x649
+        }
+    }
+    return !stream.GetError();
+}
+
 bool cSC4ResidentialSimulator::Read(cIGZIStream& stream) {
+    void* dbStream = nullptr;
+    if (stream.QueryInterface(kGZIID_cISC4DBSegmentIStream, &dbStream) && dbStream) {
+        static_cast<cIGZUnknown*>(dbStream)->Release();
+        return ReadCityRecord(stream);
+    }
     std::uint16_t version = 0;
     stream.GetUint16(version);
     if (version > 7) return false;

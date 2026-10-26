@@ -160,6 +160,7 @@ public:
         GetRawOccupantFundingPercentages(occupant, staff, budget, education);
     }
     float GetBaseStaffEfficiency(IResidentialOccupant* occupant, bool education);
+    bool ReadCityRecord(cIGZIStream& stream);   // @ 0x100204c4e: the city-file record (grids and occupants as references)
     bool FundingChanged() const { return fundingChanged_; }
     static bool GetAutoBudget(const IResidentialOccupant* occupant);
     static void SetAutoBudget(IResidentialOccupant* occupant, bool value);
