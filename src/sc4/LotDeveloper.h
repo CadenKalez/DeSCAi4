@@ -10,6 +10,7 @@
 // +0x128 flat tolerance, +0x12c float, +0x130/+0x134 u32, +0x138/+0x139 bool, +0x13c level tolerance,
 // +0x140 maximum levelling amount, +0x148 development-cost response curve.
 #pragma once
+#include <deque>
 #include <cstdint>
 
 #include "gz/cIGZIStream.h"
@@ -93,14 +94,13 @@ public:
 class cSC4LotDeveloper : public cISC4LotDeveloper, public cIGZMessageTarget2, public cIGZSerializable {
 public:
     explicit cSC4LotDeveloper(IBaseLotDeveloperHost* host) : host_(host) {}
-    ~cSC4LotDeveloper() override = default;
 
     bool QueryInterface(std::uint32_t iid, void** out) override;
     std::uint32_t AddRef() override { return ++refCount_; }
     std::uint32_t Release() override;
     bool DoMessage(cIGZMessage2* message) override;   // unrecovered
-    bool Write(cIGZOStream& stream) const override;   // unrecovered (stub)
-    bool Read(cIGZIStream& stream) override;          // unrecovered (stub)
+    bool Write(cIGZOStream& stream) const override;   // @ 0x10014009a
+    bool Read(cIGZIStream& stream) override;          // @ 0x100140242
     std::uint32_t GetGZCLSID() const override { return kGZCLSID_cSC4LotDeveloper; }
 
     // tunables (ReadSimulatorTunableValues): reads from the simulator exemplar when it exists
@@ -129,6 +129,17 @@ private:
     std::uint32_t refCount_ = 0;               // COM refcount (shared by the three sub-objects)
     LotDeveloperTunables tunables_;
     cSC4ResponseCurve developmentCostCurve_;                           // +0x148
+    // What the city file keeps of the developer (stream version 1): the extent it was working on and the queue of buildings it
+    // was constructing with the position of the one in progress.
+    std::int32_t streamVerticesPerRow_ = 0;                            // +0x78
+    float streamCityWidth_ = 0.0f, streamCityDepth_ = 0.0f;            // +0x7c / +0x80
+    std::deque<cIGZUnknown*> constructionQueue_;                       // +0xa8 (one reference each)
+    std::uint32_t queueCursor_ = 0;                                    // +0xd8/+0xe0: the iterator, as an index into the queue
+    std::uint32_t stage_ = 0;                                          // +0xe8
+    bool flagF4_ = false;                                              // +0xf4
+public:
+    ~cSC4LotDeveloper() { for (cIGZUnknown* occupant : constructionQueue_) if (occupant) occupant->Release(); }
+private:
 };
 
 }  // namespace sc4

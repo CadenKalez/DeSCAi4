@@ -4,9 +4,16 @@
 #include <cmath>
 #include <vector>
 
+#include "gz/StreamOps.h"
+#include "sc4/DBSegment.h"
 #include "sc4/SCPropertyHelp.h"
 
 namespace sc4 {
+
+namespace {
+constexpr std::uint32_t kGZIID_cISC4BuildingOccupantQueue = 0x87dda3a9;   // the reference iid of the queue entries (0x100140242)
+constexpr std::uint32_t kMaxStreamedQueue = 1u << 20;
+}  // namespace
 
 // 0x10013eda8 — the class answers its own interface (0x4818e5d2) and cIGZUnknown at +0, the message
 // target 2 (0x452294aa) at +8 and the serializable (0xe4fda3d4) at +0x10. The class id 0xa990bfe0 is
@@ -34,13 +41,46 @@ bool cSC4LotDeveloper::DoMessage(cIGZMessage2*) {
     return false;
 }
 
-// 0x10014009a / 0x100140242 — the stream format is not recovered yet; stubbed so the class can be a
-// cIGZSerializable. See notes/ledger_pending/cSC4LotDeveloper.txt.
-bool cSC4LotDeveloper::Write(cIGZOStream&) const {
-    return false;
+// 0x10014009a: version 1, the vertices per row, the city extent, the construction queue (one serializable reference each), the
+// position of the building in progress, the stage byte and a flag.
+bool cSC4LotDeveloper::Write(cIGZOStream& stream) const {
+    stream.SetUint16(1);
+    stream.SetSint32(streamVerticesPerRow_);
+    stream.SetFloat32(streamCityWidth_);
+    stream.SetFloat32(streamCityDepth_);
+    stream.SetUint32(static_cast<std::uint32_t>(constructionQueue_.size()));
+    for (const cIGZUnknown* occupant : constructionQueue_) SC4WriteGZSerializable(stream, occupant);
+    stream.SetUint32(queueCursor_);
+    stream.SetUint8(static_cast<std::uint8_t>(stage_));
+    stream << flagF4_;
+    return !stream.GetError();
 }
-bool cSC4LotDeveloper::Read(cIGZIStream&) {
-    return false;
+
+// 0x100140242
+bool cSC4LotDeveloper::Read(cIGZIStream& stream) {
+    std::uint16_t version = 0;
+    stream.GetUint16(version);
+    if (version != 1) return false;
+    stream.GetSint32(streamVerticesPerRow_);
+    stream.GetFloat32(streamCityWidth_);
+    stream.GetFloat32(streamCityDepth_);
+    std::uint32_t count = 0;
+    stream.GetUint32(count);
+    for (cIGZUnknown* occupant : constructionQueue_) if (occupant) occupant->Release();
+    constructionQueue_.clear();
+    if (count > kMaxStreamedQueue) return false;
+    constructionQueue_.resize(count, nullptr);
+    for (cIGZUnknown*& slot : constructionQueue_) {
+        void* raw = nullptr;
+        SC4ReadGZSerializable(stream, kGZIID_cISC4BuildingOccupantQueue, &raw, false);   // one reference
+        slot = static_cast<cIGZUnknown*>(raw);
+    }
+    stream.GetUint32(queueCursor_);
+    std::uint8_t stage = 0;
+    stream.GetUint8(stage);
+    stage_ = stage;
+    stream >> flagF4_;
+    return !stream.GetError();
 }
 
 void cSC4LotDeveloper::ReadSimulatorTunableValues(const cISCPropertyHolder* exemplar) {
