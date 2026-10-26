@@ -360,6 +360,23 @@ bool cSC4View3DWin::ProcessViewCommand(std::uint32_t command) {
         case 0x6a935cc2: SetZoom(2); return false;
         case 0x6a935cc4: SetZoom(3); return false;
         case 0x6a935cc7: SetZoom(4); return false;
+        case 0x6a935cf3: case 0x6a935cf4: {                              // the building / network query tool
+            if (!host_ || !host_->CanInvokeZoningTool()) return false;
+            const int type = command == 0x6a935cf3 ? 0 : 1;
+            cSC4ViewInputControl* current = GetCurrentViewInputControl();
+            if (current && current->GetID() == (type == 0 ? 0xc7af928eu : 0xc7af928fu)) return false;   // already running
+            if (cSC4ViewInputControl* tool = host_->CreateQueryTool(type, 0x32)) {
+                tool->AddRef();
+                SetCurrentViewInputControl(tool, 0);
+                tool->Release();
+            }
+            return false;
+        }
+        case 0x6a935cf1:                                                // escape: the tool, else the tertiary then the secondary menu
+            if (!tools_.empty()) RemoveAllViewInputControls(false);
+            else if (tertiaryMenu_) CloseTertiaryMenu();
+            else if (secondaryMenu_) CloseSecondaryMenu();
+            return false;
         case 0x6a935cc9: RotateLeft(); return false;
         case 0x6a935ccc: RotateRight(); return false;
         default: return false;
@@ -1133,6 +1150,68 @@ void cSC4View3DWin::CloseSecondaryMenu() {                                  // 0
     // a reference there, while the port has to destroy it first or the pointer dangles.
     ChildDelete(menu);
     menu->Release();
+}
+
+void cSC4View3DWin::CloseTertiaryMenu() {                                   // 0x10079280e
+    cIGZWin* menu = tertiaryMenu_;
+    if (!menu) return;
+    tertiaryMenu_ = nullptr;
+    tertiaryMenuState_ = 0;
+    menu->HideWindow();
+    ChildDelete(menu);
+    menu->Release();
+}
+
+// The two menu invokers build a script window (group 0x96a006b0) as a child of the view, route its commands to the
+// view, align it to the toolbar button and show it. The tertiary one is the same with the other slot.
+void cSC4View3DWin::InvokeSecondaryMenu(std::uint32_t script, std::uint32_t windowId, std::uint32_t alignTo) {
+    RemoveAllViewInputControls(false);                                  // vslot 0xd8
+    const std::uint32_t current = secondaryMenuState_;
+    if (current != 0) {
+        CloseSecondaryMenu();
+        if (current == windowId) return;                                // the same button closes its menu
+    }
+    if (!host_) return;
+    cGZPersistResourceKey key{0, 0x96a006b0u, script};
+    cIGZWin* menu = host_->CreateWindowFromScript(key, static_cast<cIGZWin*>(static_cast<cGZWin*>(this)), windowId);
+    if (!menu) return;
+    void* gen = nullptr;
+    if (menu->QueryInterface(kGZIID_cIGZWinGenView, &gen) && gen) {
+        auto* view = static_cast<gz::cIGZWinGen*>(gen);
+        menu->AddMessageFilter(static_cast<cIGZWinMessageFilter*>(this));    // vslot 0x3a0
+        menu->SetFlag(4, false);                                        // vslot 0x30 (4, 0), (1, 0)
+        menu->SetFlag(1, false);
+        view->Release();
+    }
+    host_->AlignWindowToWindow(windowId, 0xaaaau, alignTo);
+    menu->ShowWindow();                                                 // vslot 0xb8 / 0x228
+    secondaryMenu_ = menu;
+    secondaryMenuState_ = windowId;
+}
+
+void cSC4View3DWin::InvokeTertiaryMenu(std::uint32_t script, std::uint32_t windowId, std::uint32_t alignTo) {
+    RemoveAllViewInputControls(false);
+    const std::uint32_t current = tertiaryMenuState_;
+    if (current != 0) {
+        CloseTertiaryMenu();
+        if (current == windowId) return;
+    }
+    if (!host_) return;
+    cGZPersistResourceKey key{0, 0x96a006b0u, script};
+    cIGZWin* menu = host_->CreateWindowFromScript(key, static_cast<cIGZWin*>(static_cast<cGZWin*>(this)), windowId);
+    if (!menu) return;
+    void* gen = nullptr;
+    if (menu->QueryInterface(kGZIID_cIGZWinGenView, &gen) && gen) {
+        auto* view = static_cast<gz::cIGZWinGen*>(gen);
+        menu->AddMessageFilter(static_cast<cIGZWinMessageFilter*>(this));
+        menu->SetFlag(4, false);
+        menu->SetFlag(1, false);
+        view->Release();
+    }
+    host_->AlignWindowToWindow(windowId, 0xaaaau, alignTo);
+    menu->ShowWindow();
+    tertiaryMenu_ = menu;
+    tertiaryMenuState_ = windowId;
 }
 
 void cSC4View3DWin::CreateProgressScreen(bool flag) {                       // 0x100780910
@@ -1966,12 +2045,12 @@ bool cSC4View3DWin::DoMessage(cIGZWin* window, cGZMessage& message) {
     if (message.type == 0x12) return true;                              // the size-limit notification
     if (message.type != kGZMsgCommand) return false;
     if (message.param1 == 0x287259f7u) {
-        // The button changed its state: the six panel toggles run a command, the rest is ignored.
+        // The button changed its state: the four panel toggles open or close their panel, the rest is ignored.
         switch (message.param2) {
-            case 0x2988bc85u: if (host_) host_->ExecuteCommand(0x6a935c34u); break;
-            case 0x4988bc6au: if (host_) host_->ExecuteCommand(0x6a935ca8u); break;
-            case 0xc988bc79u: if (host_) host_->ExecuteCommand(0x6a935ca4u); break;
-            case 0x8988bc94u: if (host_) host_->ExecuteCommand(0x6a935cabu); break;
+            case 0x2988bc85u: DoPanelCommandGUI(0x6a935c34u); break;
+            case 0x4988bc6au: DoPanelCommandGUI(0x6a935ca8u); break;
+            case 0xc988bc79u: DoPanelCommandGUI(0x6a935ca4u); break;
+            case 0x8988bc94u: DoPanelCommandGUI(0x6a935cabu); break;
             default: break;
         }
         return true;
@@ -2060,7 +2139,72 @@ void cSC4View3DWin::DoPanelCommandGUI(std::uint32_t command) {
 // DoTransportMenu, DoUtilitiesMenu, DoLandscapeMenu, DoVehicleMenu, DoDayNightMenu, DoDisasterCopingMenu,
 // CreateBuildingMenu and the two InvokeSecondaryMenu / InvokeTertiaryMenu flavours), none of which is recovered.
 // The menu entry points are not seams yet, so the function reports that it did not handle the message.
-void cSC4View3DWin::HandleButtonActivated(cIGZWin*, cGZMessage&) {}
+// The button ids that run a command-server command (the 21 `SL::spCommandServer vslot 0x98` calls of the original).
+struct ButtonCommand { std::uint32_t button, command; };
+constexpr ButtonCommand kButtonCommands[] = {
+    {0x8998bbdfu, 0x6a935cb5u}, {0x8a4fbaeau, 0x6a935cccu}, {0xa98f4f88u, 0x6a935e34u}, {0x8b96b73eu, 0x6a935cf4u},
+    {0x99887766u, 0x6a935cf3u}, {0xaba7ed0au, 0xabcdee11u}, {0xaa5543a1u, 0x2a94a5b6u}, {0xca58ebb7u, 0x6a935e2au},
+    {0xcb95412cu, 0x0b980587u}, {0xe999c820u, 0x6a935d36u}, {0xe9920494u, 0x6a935cbau}, {0xe99237b4u, 0x6a935dc9u},
+    {0xeb9541ebu, 0x6b98058au}, {0x2a4fbb08u, 0x6a935cc9u}, {0x4992046au, 0x6a935cb7u}, {0x6a4fbb31u, 0x6a935cb0u},
+    {0x4a4fbb60u, 0x6a935cb2u}, {0x098f4f6cu, 0x6a935e2du}, {0x0b954123u, 0x0b980581u}, {0xc998bb81u, 0x6a935cadu},
+    {0x00000044u, 0x6a935e3fu}, {0x00000043u, 0x6a935e3fu},
+};
+// The buttons that open a secondary menu window: {button, script, window id, align target}.
+struct SecondaryMenu { std::uint32_t button, script, window; };
+constexpr SecondaryMenu kSecondaryMenus[] = {
+    {0xa994824du, 0xe99237ffu, 0xc99237a0u}, {0xe991ee2fu, 0x4992f764u, 0xe992f711u},
+    {0x6991ee42u, 0x899302fcu, 0x0992fd17u}, {0x0991ee13u, 0xe9949936u, 0x69923479u},
+    {0x0991ee39u, 0xc9930681u, 0x699306edu}, {0x8991ee08u, 0x09923283u, 0x49923239u},
+    {0x49e95d2bu, 0xe9923283u, 0x49923239u}, {0xa9ed5617u, 0xaa356502u, 0xca35cbedu},
+    {0x00000036u, 0xaaa44448u, 0xca35cbedu}, {0x8a32dddbu, 0xaaa44448u, 0xca35cbedu},
+};
+
+// HandleButtonActivated (0x10078afde, 4659 bytes): the toolbar and menu buttons. Buttons that run a command go through
+// the command table; the mayor sub-panels, the day / night buttons and the secondary menus are handled here. The
+// catalog menus (zoning, roads, buildings, landscape, vehicles) need the catalog view classes and the tool classes
+// behind them (the zone and network tools are not recovered), so those buttons only close the open menu.
+void cSC4View3DWin::HandleButtonActivated(cIGZWin* sender, cGZMessage& message) {
+    const auto button = static_cast<std::uint32_t>(message.param2);
+    AddRef();
+    bool handled = false;
+    for (const ButtonCommand& entry : kButtonCommands) {
+        if (entry.button != button) continue;
+        if (entry.button == 0x2992f72cu) CloseTertiaryMenu();
+        ProcessViewCommand(entry.command);
+        handled = true;
+        break;
+    }
+    if (!handled) {
+        switch (button) {
+            case 0x49edf9b7u: case 0x00000041u: case 0x99887755u: case 0xabc54125u:
+            case 0x15200002u: case 0x15200003u:
+                ShowMayorSubPanel(button);
+                handled = true;
+                break;
+            case 0x29d27ec0u: case 0x49d27ed0u: case 0x09d27eb0u: case 0xaa9211b3u:   // the graph buttons
+                ShowMayorSubPanel(0x15200002u);
+                if (graphsViewWinProc_) graphsViewWinProc_->ShowGraphType(0xe);
+                handled = true;
+                break;
+            case 0x2992f72cu:                                          // a tertiary menu's own close button
+                CloseTertiaryMenu();
+                ProcessViewCommand(0x6a935deeu);
+                handled = true;
+                break;
+            default: break;
+        }
+    }
+    if (!handled && sender) {
+        for (const SecondaryMenu& menu : kSecondaryMenus) {
+            if (menu.button != button) continue;
+            InvokeSecondaryMenu(menu.script, menu.window, button);
+            handled = true;
+            break;
+        }
+    }
+    if (host_) host_->AfterButtonActivated();
+    Release();
+}
 
 // ==================================================================================================== tool invokers
 

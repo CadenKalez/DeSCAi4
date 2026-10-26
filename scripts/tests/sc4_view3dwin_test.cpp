@@ -2710,8 +2710,8 @@ int main() {
         message.param1 = 0x287259f7u;                            // the "changed" notification
         message.param2 = 0x4988bc6au;
         host.commands.clear();
-        CHECK(view->DoMessage(static_cast<cIGZWin*>(budgetText), message));
-        CHECK(host.commands.size() == 1 && host.commands[0] == 0x6a935ca8u);
+        CHECK(view->DoMessage(static_cast<cIGZWin*>(budgetText), message));   // runs DoPanelCommandGUI, not a command-server command
+        CHECK(host.commands.empty());
         message.param2 = 0x1234u;                                // an unknown id: nothing runs
         host.commands.clear();
         CHECK(view->DoMessage(static_cast<cIGZWin*>(budgetText), message) && host.commands.empty());

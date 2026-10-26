@@ -621,6 +621,9 @@ public:
     virtual bool IsKeyDownNow(std::uint32_t key) = 0;
     // SL::spCommandServer vslot 0x98 ExecuteCommand(id, 0, 0) (the panel buttons' commands).
     virtual void ExecuteCommand(std::uint32_t command) = 0;
+    virtual void AfterButtonActivated() {}   // the city-service tail of HandleButtonActivated (SL::spCity vslot 0x290 -> vslot 0x70), not modelled
+    virtual void AlignWindowToWindow(std::uint32_t windowId, std::uint32_t childId, std::uint32_t alignId) {}   // nSC4UI @ 0x10030aaaa
+    virtual cSC4ViewInputControl* CreateQueryTool(int type, std::uint32_t tipPeriod) { return nullptr; }   // cSC4ViewInputControlQuery @ 0x1002c1fcc
     // cSC4View3DWin::DoEstablishCityDialog @ 0x10078ff30 (PARTIAL: builds the modal city dialog).
     virtual bool ShowEstablishCityDialog() = 0;
     // SL::spCity vslot 0x240 (cSC4City::GetDisasterLayer) -> the disaster layer's vslot 0x50.
@@ -796,6 +799,9 @@ public:
                        const cIGZString* line2, int icon) override;   // @ 0x10079132c
     void ClearCursorText(std::uint32_t id) override;               // @ 0x100791772
     void CloseSecondaryMenu() override;                            // @ 0x100791d18
+    void CloseTertiaryMenu() override;                             // @ 0x10079280e
+    void InvokeSecondaryMenu(std::uint32_t script, std::uint32_t window, std::uint32_t alignTo);   // @ 0x10078c960
+    void InvokeTertiaryMenu(std::uint32_t script, std::uint32_t window, std::uint32_t alignTo);    // @ 0x10078dfdc
     void SetCursorTextPosition3D(const cS3DVector3& position) override;   // @ 0x100791cc4
 
     // --- not virtual in the original
@@ -947,6 +953,8 @@ protected:
     // The secondary menu window (+0x358) and its state word (+0x368).
     cIGZWin* secondaryMenu_ = nullptr;                  // +0x358 (referenced; CloseSecondaryMenu ChildDeletes it)
     std::uint32_t secondaryMenuState_ = 0;              // +0x368
+    cIGZWin* tertiaryMenu_ = nullptr;                   // +0x360 (referenced)
+    std::uint32_t tertiaryMenuState_ = 0;               // +0x36c
     bool contourDisplay_ = false;                       // +0x628
     int contourCallback_ = -1;                          // +0x62c (the contour layer's callback handle)
     std::unordered_map<std::uint32_t, std::uint32_t> globalEffects_;   // +0x678

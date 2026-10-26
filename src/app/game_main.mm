@@ -611,7 +611,8 @@ int main(int argc, char** argv) {
                 }
             }
             if (const char* script = std::getenv("SC4_INPUT")) {   // dev: "token:frames,..." city view input after the click
-                // tokens: left/right/up/down (held for the frames), zin/zout/rl/rr (view commands), wheel+/wheel- (at the centre)
+                // tokens: left/right/up/down (held for the frames), zin/zout/rl/rr (view commands), wheel+/wheel- (at the centre),
+                // click@XxY (a left click)
                 std::string all(script);
                 std::size_t at = 0;
                 while (at < all.size()) {
@@ -627,7 +628,13 @@ int main(int argc, char** argv) {
                         {"left", {0x6a935cd8, 0x2a94826b}}, {"right", {0x6a935ce0, 0x2a94826e}}, {"up", {0x6a935cdd, 0x2a948272}},
                         {"down", {0x6a935ce2, 0x2a948275}}, {"zin", {0x6a935cb7, 0}}, {"zout", {0x6a935cba, 0}},
                         {"rl", {0x6a935cc9, 0}}, {"rr", {0x6a935ccc, 0}}};
-                    if (name == "wheel+" || name == "wheel-")
+                    if (name.rfind("click@", 0) == 0) {   // click@XxY: one left click at a window point
+                        int cx = 0, cy = 0;
+                        std::sscanf(name.c_str() + 6, "%dx%d", &cx, &cy);
+                        gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, cx, cy, 0);
+                        gMgr->GZWinMsgPost_Mouse(kGZMsgMouseDownL, cx, cy, 0);
+                        gMgr->GZWinMsgPost_Mouse(kGZMsgMouseUpL, cx, cy, 0);
+                    } else if (name == "wheel+" || name == "wheel-")
                         gMgr->GZWinMsgPost_Mouse(kGZMsgMouseWheel, kW / 2, kH / 2, std::uint32_t(name == "wheel+" ? 120 : -120) << 16);
                     else if (auto it = kCommands.find(name); it != kCommands.end() && v)
                         v->ProcessViewCommand(it->second.first);

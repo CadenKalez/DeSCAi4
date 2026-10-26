@@ -17,6 +17,7 @@
 #include "app/NativeCityUi.h"
 #include "gz/Buffer.h"
 #include "sc4/SC4UI.h"
+#include "sc4/ViewInputControlQuery.h"
 
 namespace native {
 namespace {
@@ -115,6 +116,12 @@ struct StubView3DWin final : IView3DWinHost {
     void InitMapView(cIGZWin* window) override {}
     bool IsKeyDownNow(std::uint32_t key) override { return {}; }
     void ExecuteCommand(std::uint32_t command) override {}
+    void AlignWindowToWindow(std::uint32_t windowId, std::uint32_t childId, std::uint32_t alignId) override {
+        nSC4UI::AlignWindowToWindow(windowId, childId, alignId, nullptr);
+    }
+    cSC4ViewInputControl* CreateQueryTool(int type, std::uint32_t tipPeriod) override {
+        return new cSC4ViewInputControlQuery(static_cast<cSC4ViewInputControlQuery::EQueryType>(type), tipPeriod);
+    }
     bool ShowEstablishCityDialog() override { return {}; }
     bool DisasterAlertActive() override { return {}; }
     bool SituationAlertActive() override { return {}; }
