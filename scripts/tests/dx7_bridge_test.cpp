@@ -18,7 +18,7 @@ int main() {
     for (int i = 0; i < 16; ++i) m[i] = static_cast<float>(i);
     CHECK(r.SetTransform(kTransformWorld, m));
     CHECK(r.Snapshot().world[5] == 5.0f && r.Snapshot().view[5] == 1.0f);
-    CHECK(r.SetTransform(kTransformTexture0, m) && (r.Snapshot().flags & kFlagHasTexMatrix));
+    CHECK(r.SetTransform(kTransformTexture0, m) && (r.Snapshot().texMode & 1u));
 
     m[3] = NAN;
     CHECK(!r.SetTransform(kTransformView, m));

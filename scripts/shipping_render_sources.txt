@@ -3,6 +3,7 @@
 # src/render/{D3DDevice7,DDSurface7,D3DVertexBuffer7,DirectDraw7,D3D7Stub,DX7*,MacOpenGL,FastATIVertexProgram}.*,
 # scripts/tests/gdriver_on_gl.h.
 src/render/gd/MetalGDriver.mm
+src/render/dx7/dx7_to_metal_bridge.cpp
 src/render/gd/GDriverBase.cpp
 src/render/GDIndexOps.cpp
 src/render/SimGL.cpp

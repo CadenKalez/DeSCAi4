@@ -7,6 +7,7 @@ src/gz/BufferSimGLCache.cpp
 src/gz/Buffer.cpp
 src/rz/TileSetup.cpp
 src/render/gd/MetalGDriver.mm
+src/render/dx7/dx7_to_metal_bridge.cpp
 src/render/gd/GDriverBase.cpp
 src/render/GDIndexOps.cpp
 src/render/SimGL.cpp
@@ -609,3 +610,6 @@ src/audio/HitResourceFactory.cpp
 src/audio/HitSegmentCreators.cpp
 src/gz/cGZPropertySetSerializers.cpp
 src/gz/XmlSax.cpp
+src/app/NativeLighting.cpp
+src/app/NativeJobs.cpp
+src/jobs/JobSystem.cpp

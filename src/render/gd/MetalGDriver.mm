@@ -13,160 +13,19 @@
 #include "render/SimGL.h"
 #include "render/TextureStageData.h"
 #include "render/gd/TextureTable.h"
+#include "render/dx7/dx7_to_metal_bridge.h"
 #include "render/gd/MetalGDriver.h"
 
 namespace gd {
 
-// ---------------------------------------------------------------------------------------------------------------------
-// Shader. Specialisation is by function constants (RENDER_ARCH.md 8.2), not runtime branches:
-//   0 kAlphaTest, 1 kAlphaFunc (eGDTestFunc), 2 kTexture0.
-// Matrices arrive exactly as the game builds them (D3D row-vector convention); loading the 16 floats as columns and
-// multiplying on the left reproduces v * M. Clip space is D3D's (z in [0, w]), so there is no depth remap.
-// ---------------------------------------------------------------------------------------------------------------------
-static NSString* const kShader = @R"MSL(
-#include <metal_stdlib>
-using namespace metal;
-
-constant bool kAlphaTest [[function_constant(0)]];
-constant int  kAlphaFunc [[function_constant(1)]];
-constant bool useAlphaTest = is_function_constant_defined(kAlphaTest) ? kAlphaTest : false;
-constant int  alphaFunc    = is_function_constant_defined(kAlphaFunc) ? kAlphaFunc : 7;
-// Texture stages (D3D texture-stage operations, as cTextureStageData emits them): per stage s the function constants are
-// 3+7s on, +1 colour op, +2/+3 colour args, +4 alpha op, +5/+6 alpha args.
-constant bool s0On [[function_constant(3)]];  constant int s0Cop [[function_constant(4)]];  constant int s0Ca1 [[function_constant(5)]];
-constant int s0Ca2 [[function_constant(6)]];  constant int s0Aop [[function_constant(7)]];  constant int s0Aa1 [[function_constant(8)]];
-constant int s0Aa2 [[function_constant(9)]];
-constant bool s1On [[function_constant(10)]]; constant int s1Cop [[function_constant(11)]]; constant int s1Ca1 [[function_constant(12)]];
-constant int s1Ca2 [[function_constant(13)]]; constant int s1Aop [[function_constant(14)]]; constant int s1Aa1 [[function_constant(15)]];
-constant int s1Aa2 [[function_constant(16)]];
-constant bool stage0 = is_function_constant_defined(s0On) ? s0On : false;
-constant bool stage1 = is_function_constant_defined(s1On) ? s1On : false;
-
-struct DrawConstants {
-    float4x4 view;
-    float4x4 proj;
-    float4 textureFactor;
-    uint stride;      // bytes per vertex (0x18 or 0x20)
-    uint alphaRef;    // 0..255
-    uint pad0, pad1;
-    float4x4 texMat0;
-    float4x4 texMat1;
-    uint texMode;     // bit 0/1: stage 0/1 has a texture matrix; bit 2/3: stage 0/1 takes the camera-space position as its coordinates
-    uint texPad0, texPad1, texPad2;
-    float4 colorMul;  // ColorMultiplier / AlphaMultiplier: scales the vertex colour
-};
-struct VOut { float4 position [[position]]; float4 color; float2 uv0; float2 uv1; };
-
-vertex VOut gd_vs(uint vid [[vertex_id]], const device uchar* v [[buffer(0)]], constant DrawConstants& c [[buffer(1)]]) {
-    const device uchar* p = v + vid * c.stride;
-    float3 pos = float3(*(const device packed_float3*)p);
-    uchar4 col = *(const device uchar4*)(p + 12);
-    VOut o;
-    float4 eye = c.view * float4(pos, 1.0);
-    o.position = c.proj * eye;
-    // the game's projection matrices are OpenGL style (the Mac build ran on GL): clip z in [-w, w]; Metal wants [0, w]
-    o.position.z = (o.position.z + o.position.w) * 0.5;
-    o.color = float4(col) * (1.0 / 255.0) * c.colorMul;
-    o.uv0 = c.stride >= 0x18 ? float2(*(const device packed_float2*)(p + 16)) : float2(0.0);
-    o.uv1 = c.stride >= 0x20 ? float2(*(const device packed_float2*)(p + 24)) : o.uv0;
-    if ((c.texMode & 4u) != 0) o.uv0 = (c.texMat0 * float4(eye.xyz, 1.0)).xy;
-    else if ((c.texMode & 1u) != 0) o.uv0 = (c.texMat0 * float4(o.uv0, 0.0, 1.0)).xy;
-    if ((c.texMode & 8u) != 0) o.uv1 = (c.texMat1 * float4(eye.xyz, 1.0)).xy;
-    else if ((c.texMode & 2u) != 0) o.uv1 = (c.texMat1 * float4(o.uv1, 0.0, 1.0)).xy;
-    return o;
-}
-
-static float4 stageArg(int a, float4 diffuse, float4 current, float4 tex, float4 tf) {
-    int base = a & 0xf;
-    float4 v = base == 0 ? diffuse : (base == 1 ? current : (base == 2 ? tex : tf));
-    if ((a & 0x10) != 0) v = 1.0 - v;          // complement
-    if ((a & 0x20) != 0) v = float4(v.a);      // alpha replicate
-    return v;
-}
-static float4 stageOp(int op, float4 a1, float4 a2, float4 current, float4 diffuse, float4 tex, float4 tf, bool colour) {
-    float4 r;
-    switch (op) {
-    case 2: r = a1; break;
-    case 3: r = a2; break;
-    case 4: r = a1 * a2; break;
-    case 5: r = a1 * a2 * 2.0; break;
-    case 6: r = a1 * a2 * 4.0; break;
-    case 7: r = a1 + a2; break;
-    case 8: r = a1 + a2 - 0.5; break;
-    case 9: r = (a1 + a2 - 0.5) * 2.0; break;
-    case 12: r = a1 * diffuse.a + a2 * (1.0 - diffuse.a); break;
-    case 13: r = a1 * tex.a + a2 * (1.0 - tex.a); break;
-    case 14: r = a1 * tf.a + a2 * (1.0 - tf.a); break;
-    case 16: r = a1 * current.a + a2 * (1.0 - current.a); break;
-    case 24: r = float4(4.0 * dot(a1.rgb - 0.5, a2.rgb - 0.5)); break;
-    default: r = current; break;
-    }
-    return clamp(r, 0.0, 1.0);
-}
-static float4 runStage(int cop, int ca1, int ca2, int aop, int aa1, int aa2, float4 diffuse, float4 current, float4 tex, float4 tf) {
-    float4 out = current;
-    if (cop > 1) {
-        float4 c = stageOp(cop, stageArg(ca1, diffuse, current, tex, tf), stageArg(ca2, diffuse, current, tex, tf), current, diffuse, tex, tf, true);
-        out.rgb = c.rgb;
-    }
-    if (cop > 1 && aop > 1) {
-        float4 a = stageOp(aop, stageArg(aa1, diffuse, current, tex, tf), stageArg(aa2, diffuse, current, tex, tf), current, diffuse, tex, tf, false);
-        out.a = a.a;
-    }
-    return out;
-}
-
-fragment float4 gd_fs(VOut in [[stage_in]], constant DrawConstants& c [[buffer(1)]],
-                      texture2d<float> t0 [[texture(0)]], texture2d<float> t1 [[texture(1)]],
-                      sampler sm0 [[sampler(0)]], sampler sm1 [[sampler(1)]]) {
-    float4 diffuse = in.color;
-    float4 color = diffuse;
-    if (stage0) color = runStage(s0Cop, s0Ca1, s0Ca2, s0Aop, s0Aa1, s0Aa2, diffuse, color, t0.sample(sm0, in.uv0), c.textureFactor);
-    if (stage1) color = runStage(s1Cop, s1Ca1, s1Ca2, s1Aop, s1Aa1, s1Aa2, diffuse, color, t1.sample(sm1, in.uv1), c.textureFactor);
-    if (useAlphaTest) {
-        uint a = uint(round(color.a * 255.0));
-        bool pass;
-        switch (alphaFunc) {
-        case 0: pass = false; break;
-        case 1: pass = a <  c.alphaRef; break;
-        case 2: pass = a == c.alphaRef; break;
-        case 3: pass = a <= c.alphaRef; break;
-        case 4: pass = a >  c.alphaRef; break;
-        case 5: pass = a != c.alphaRef; break;
-        case 6: pass = a >= c.alphaRef; break;
-        default: pass = true; break;
-        }
-        if (!pass) discard_fragment();
-    }
-    if ((c.texMode & 0x100u) != 0) return float4(1.0, 0.0, 0.0, 1.0);   // debug: draw geometry in red
-    if ((c.texMode & 0x200u) != 0) return float4(in.color.rgb, 1.0);     // debug: the vertex colour only
-    if ((c.texMode & 0x400u) != 0) return float4(t0.sample(sm0, in.uv0).rgb, 1.0);   // debug: the first texture only
-    if ((c.texMode & 0x800u) != 0) return float4(fract(in.uv0), 0.0, 1.0);   // debug: the first coordinate set
-    return color;
-}
-
-// Scissored clear: a full-target quad that writes one colour and depth 'depth'.
-struct ClearConstants { float4 color; float depth; float pad[3]; };
-struct COut { float4 position [[position]]; };
-vertex COut clear_vs(uint vid [[vertex_id]], constant ClearConstants& c [[buffer(0)]]) {
-    const float2 q[6] = {float2(-1,-1), float2(1,-1), float2(-1,1), float2(1,-1), float2(1,1), float2(-1,1)};
-    COut o;
-    o.position = float4(q[vid], c.depth, 1.0);
-    return o;
-}
-fragment float4 clear_fs(COut in [[stage_in]], constant ClearConstants& c [[buffer(0)]]) { return c.color; }
-)MSL";
+// The shader is src/render/dx7/DX7Emulator.metal (embedded by scripts/gen_dx7_shader.py). Specialisation is by function
+// constants: 0 kAlphaTest, 1 kAlphaFunc (eGDTestFunc), 3+7s per texture stage (see the shader). State travels in one
+// dx7::MetalRenderState constant block recorded by dx7::StateRecorder.
+#include "render/dx7/DX7EmulatorSource.inc"
+static NSString* const kShader = [NSString stringWithUTF8String:kDX7EmulatorSource];
 
 namespace {
 
-struct DrawConstants {
-    simd_float4x4 view, proj;
-    simd_float4 textureFactor;
-    std::uint32_t stride, alphaRef, pad0, pad1;
-    simd_float4x4 texMat0, texMat1;
-    std::uint32_t texMode, texPad0, texPad1, texPad2;
-    simd_float4 colorMul;
-};
 struct ClearConstants {
     simd_float4 color;
     float depth, pad[3];
@@ -217,10 +76,10 @@ struct cMetalGDriver::Impl {
     id<MTLRenderCommandEncoder> enc = nil;
 
     // per-stage texture coordinate generation (TexStageCoord / TexStageMatrix) and the colour multiplier
-    simd_float4x4 texMat[2];
-    bool texMatOn[2] = {false, false};
-    std::uint32_t texCoordMode[2] = {0, 0};   // 0 vertex coordinates, 1 camera-space position
-    simd_float4 colorMul = {1, 1, 1, 1};
+    float colorMulRgba[4] = {1, 1, 1, 1};
+    simd_float4x4 View() const { simd_float4x4 m; const dx7::MetalRenderState st = recorder.Snapshot(); std::memcpy(&m, st.view, sizeof m); return m; }
+    simd_float4x4 Proj() const { simd_float4x4 m; const dx7::MetalRenderState st = recorder.Snapshot(); std::memcpy(&m, st.projection, sizeof m); return m; }
+    dx7::StateRecorder recorder;   // transforms, texture factor, colour multiplier, texture matrices / coordinate sources
 
     // pending target clears (applied as load actions when the next pass starts)
     bool clearColorPending = true, clearDepthPending = true;
@@ -232,9 +91,7 @@ struct cMetalGDriver::Impl {
     bool scissor = false;
 
     // matrices (modelview = target 0, projection = target 1)
-    simd_float4x4 view = matrix_identity_float4x4, proj = matrix_identity_float4x4;
     eGDMatrixTarget matrixTarget = 0;
-    simd_float4 textureFactor = simd_make_float4(1, 1, 1, 1);   // D3DRS_TEXTUREFACTOR (TexEnv with a colour)
 
     // interleaved arrays
     eGDVertexFormat format = 0;
@@ -588,20 +445,18 @@ void cMetalGDriver::TexStageCoord(eGDTexCoordSource source) {
     // SGLDX7Driver: the table index is ((source & 8) << 28) | (source >> 4): 0 = the vertex's own coordinate set, 1 = camera-space position
     const std::uint32_t index = ((source & 8) << 28) | (source >> 4);
     if (std::getenv("SC4_GDTRACE")) std::fprintf(stderr, "gd: TexStageCoord stage %u source %#x -> index %u\n", mirror_.currentStage, source, index);
-    if (impl_->stageCount > mirror_.currentStage && mirror_.currentStage < 2) impl_->texCoordMode[mirror_.currentStage] = index == 1 ? 1 : 0;
+    if (impl_->stageCount > mirror_.currentStage && mirror_.currentStage < 2) impl_->recorder.SetStageCameraSpaceCoords(mirror_.currentStage, index == 1);
 }
 
 void cMetalGDriver::TexStageMatrix(const float* m, std::uint32_t, std::uint32_t, eGDTexMatFlags) {
     const std::uint32_t stage = mirror_.currentStage;
     if (std::getenv("SC4_GDTRACE")) { if (m) std::fprintf(stderr, "gd: TexStageMatrix stage %u [%g %g %g %g | %g %g %g %g | %g %g %g %g | %g %g %g %g]\n", stage, m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11],m[12],m[13],m[14],m[15]); else std::fprintf(stderr, "gd: TexStageMatrix stage %u off\n", stage); }
     if (stage >= 2) return;
-    if (!m) { impl_->texMatOn[stage] = false; return; }
-    std::memcpy(&impl_->texMat[stage], m, sizeof(simd_float4x4));
-    impl_->texMatOn[stage] = true;
+    impl_->recorder.SetStageTransform(stage, m);
 }
 
-void cMetalGDriver::ColorMultiplier(float r, float g, float b) { impl_->colorMul = simd_make_float4(r, g, b, impl_->colorMul.w); }
-void cMetalGDriver::AlphaMultiplier(float a) { impl_->colorMul.w = a; }
+void cMetalGDriver::ColorMultiplier(float r, float g, float b) { impl_->colorMulRgba[0] = r; impl_->colorMulRgba[1] = g; impl_->colorMulRgba[2] = b; impl_->recorder.SetColorMultiplier(impl_->colorMulRgba); }
+void cMetalGDriver::AlphaMultiplier(float a) { impl_->colorMulRgba[3] = a; impl_->recorder.SetColorMultiplier(impl_->colorMulRgba); }
 
 void cMetalGDriver::TexStage(std::uint32_t stage) {
     if (stage < impl_->stageCount) cGDriverBase::TexStage(stage);
@@ -686,7 +541,7 @@ void cMetalGDriver::TexEnv(eGDTextureEnvTarget target, eGDTextureEnvParamType pa
 // The texture environment colour: the texture factor the stage operations read as their TFACTOR argument
 // (cGDriver::TexEnv(float*) sets D3DRS_TEXTUREFACTOR from it).
 void cMetalGDriver::TexEnv(eGDTextureEnvTarget, eGDTextureEnvParamType, const float* values) {
-    impl_->textureFactor = simd_make_float4(values[0], values[1], values[2], values[3]);
+    impl_->recorder.SetTextureFactor(values);
 }
 
 // cGDriver::SetCombiner (the DX7 driver's decoding): the stage switches to the combiner environment (mode 4) and takes
@@ -735,10 +590,8 @@ int cMetalGDriver::VertexFormatStride(eGDVertexFormat f) const { return nRZSimGL
 void cMetalGDriver::MatrixMode(eGDMatrixTarget t) { impl_->matrixTarget = t; }
 void cMetalGDriver::LoadMatrix(const float* m) {
     Impl& s = *impl_;
-    simd_float4x4 mat;
-    std::memcpy(&mat, m, sizeof mat);
-    if (s.matrixTarget == 0) s.view = mat;
-    else if (s.matrixTarget == 1) s.proj = mat;   // other targets are ignored by the shipped driver
+    if (s.matrixTarget == 0) s.recorder.SetTransform(dx7::kTransformView, m);
+    else if (s.matrixTarget == 1) s.recorder.SetTransform(dx7::kTransformProjection, m);   // other targets are ignored by the shipped driver
 }
 void cMetalGDriver::LoadIdentity() {
     static const float identity[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
@@ -855,10 +708,10 @@ void cMetalGDriver::DrawElements(eGDPrimType mode, int count, eGDType indexType,
         static int shown = 0;
         if (shown++ < 3 || (s.format != vf::V3F_C4UB_2T2F && shown < 400)) {
             const float* p = reinterpret_cast<const float*>(s.base);
-            simd_float4 clip = simd_mul(s.proj, simd_mul(s.view, simd_make_float4(p[0], p[1], p[2], 1.0f)));
+            simd_float4 clip = simd_mul(s.Proj(), simd_mul(s.View(), simd_make_float4(p[0], p[1], p[2], 1.0f)));
             const std::uint8_t* c = s.base + 12;
             std::fprintf(stderr, "gd: first vertex %.1f %.1f %.1f color %02x%02x%02x%02x uv %.3f %.3f -> clip %.3f %.3f %.3f %.3f\n", p[0], p[1], p[2], c[0], c[1], c[2], c[3], s.stride >= 24 ? p[4] : 0.f, s.stride >= 24 ? p[5] : 0.f, clip.x, clip.y, clip.z, clip.w);
-            const float* v = reinterpret_cast<const float*>(&s.view); const float* q = reinterpret_cast<const float*>(&s.proj);
+            const simd_float4x4 vm = s.View(), pm = s.Proj(); const float* v = reinterpret_cast<const float*>(&vm); const float* q = reinterpret_cast<const float*>(&pm);
             std::fprintf(stderr, "gd: view %.3f %.3f %.3f %.3f | %.3f %.3f %.3f %.3f | %.3f %.3f %.3f %.3f | %.3f %.3f %.3f %.3f\n", v[0],v[1],v[2],v[3],v[4],v[5],v[6],v[7],v[8],v[9],v[10],v[11],v[12],v[13],v[14],v[15]);
             std::fprintf(stderr, "gd: proj %.3f %.3f %.3f %.3f | %.3f %.3f %.3f %.3f | %.3f %.3f %.3f %.3f | %.3f %.3f %.3f %.3f\n", q[0],q[1],q[2],q[3],q[4],q[5],q[6],q[7],q[8],q[9],q[10],q[11],q[12],q[13],q[14],q[15]);
         }
@@ -904,7 +757,7 @@ void cMetalGDriver::DrawElements(eGDPrimType mode, int count, eGDType indexType,
             float mn[3] = {1e30f, 1e30f, 1e30f}, mx[3] = {-1e30f, -1e30f, -1e30f};
             for (std::size_t i = 0; i < idx.size(); ++i) {
                 const float* p = reinterpret_cast<const float*>(s.base + std::size_t(idx[i]) * s.stride);
-                simd_float4 clip = simd_mul(s.proj, simd_mul(s.view, simd_make_float4(p[0], p[1], p[2], 1.0f)));
+                simd_float4 clip = simd_mul(s.Proj(), simd_mul(s.View(), simd_make_float4(p[0], p[1], p[2], 1.0f)));
                 const float v[3] = {clip.x / clip.w, clip.y / clip.w, clip.z / clip.w};
                 for (int k = 0; k < 3; ++k) { mn[k] = std::min(mn[k], v[k]); mx[k] = std::max(mx[k], v[k]); }
             }
@@ -937,20 +790,11 @@ void cMetalGDriver::Encode(int primitive, std::size_t vertexOffset, int vertexCo
     [s.enc setRenderPipelineState:s.Pipeline(key)];
     [s.enc setDepthStencilState:s.DepthState(mirror_.depthTest, mirror_.depthFunc, mirror_.depthWrite)];
     s.SetRasterState(mirror_);
-    DrawConstants dc;
-    dc.view = s.view;
-    dc.proj = s.proj;
-    dc.textureFactor = s.textureFactor;
+    dx7::MetalRenderState dc = s.recorder.Snapshot();
     dc.stride = static_cast<std::uint32_t>(s.stride);
     dc.alphaRef = AlphaRefByte(mirror_.alphaRef);
-    dc.pad0 = dc.pad1 = 0;
-    dc.texMat0 = s.texMat[0];
-    dc.texMat1 = s.texMat[1];
-    dc.texMode = (s.texMatOn[0] ? 1u : 0u) | (s.texMatOn[1] ? 2u : 0u) | (s.texCoordMode[0] == 1 ? 4u : 0u) | (s.texCoordMode[1] == 1 ? 8u : 0u);
-    dc.texPad0 = dc.texPad1 = dc.texPad2 = 0;
     if (std::getenv("SC4_GDRED")) dc.texMode |= 0x100u;
     if (const char* mode = std::getenv("SC4_GDMODE")) dc.texMode |= static_cast<std::uint32_t>(std::atoi(mode));
-    dc.colorMul = s.colorMul;
     [s.enc setVertexBytes:&dc length:sizeof dc atIndex:1];
     [s.enc setFragmentBytes:&dc length:sizeof dc atIndex:1];
     [s.enc setVertexBuffer:s.ring[s.ringIndex] offset:vertexOffset atIndex:0];

@@ -26,7 +26,8 @@ void SetFlag(MetalRenderState& s, std::uint32_t flag, bool on) { s.flags = on ? 
 
 StateRecorder::StateRecorder() {
     std::memset(&state_, 0, sizeof state_);
-    Identity(state_.world); Identity(state_.view); Identity(state_.projection); Identity(state_.texture0);
+    Identity(state_.world); Identity(state_.view); Identity(state_.projection); Identity(state_.texMat0); Identity(state_.texMat1);
+    state_.colorMul[0] = state_.colorMul[1] = state_.colorMul[2] = state_.colorMul[3] = 1.0f;
     state_.lightDirection[2] = -1.0f;
     state_.lightDiffuse[0] = state_.lightDiffuse[1] = state_.lightDiffuse[2] = state_.lightDiffuse[3] = 1.0f;
     state_.textureFactor[0] = state_.textureFactor[1] = state_.textureFactor[2] = state_.textureFactor[3] = 1.0f;
@@ -49,7 +50,7 @@ bool StateRecorder::SetTransform(std::uint32_t state, const float* m) {
     case kTransformWorld: target = state_.world; break;
     case kTransformView: target = state_.view; break;
     case kTransformProjection: target = state_.projection; break;
-    case kTransformTexture0: target = state_.texture0; SetFlag(state_, kFlagHasTexMatrix, true); break;
+    case kTransformTexture0: target = state_.texMat0; state_.texMode |= 1u; break;
     default:
         ++unmapped_;
         std::fprintf(stderr, "dx7: unmapped transform state %#x, row0 %g %g %g %g\n", state, m[0], m[1], m[2], m[3]);
@@ -115,6 +116,45 @@ bool StateRecorder::SetFVF(std::uint32_t fvf) {
 void StateRecorder::SetTextureBound(bool bound) {
     std::lock_guard<std::mutex> lock(mutex_);
     SetFlag(state_, kFlagTexture, bound);
+}
+
+bool StateRecorder::SetStageTransform(std::uint32_t stage, const float* m) {
+    if (stage > 1) { std::fprintf(stderr, "dx7: SetStageTransform for stage %#x\n", stage); return false; }
+    std::lock_guard<std::mutex> lock(mutex_);
+    float* target = stage == 0 ? state_.texMat0 : state_.texMat1;
+    const std::uint32_t bit = 1u << stage;
+    if (!m) { state_.texMode &= ~bit; return true; }
+    for (int i = 0; i < 16; ++i) {
+        if (!std::isfinite(m[i])) {
+            std::fprintf(stderr, "dx7: SetStageTransform(%u) invalid matrix, element %d = %f\n", stage, i, m[i]);
+            return false;
+        }
+    }
+    std::memcpy(target, m, 16 * sizeof(float));
+    state_.texMode |= bit;
+    return true;
+}
+
+void StateRecorder::SetStageCameraSpaceCoords(std::uint32_t stage, bool on) {
+    if (stage > 1) return;
+    std::lock_guard<std::mutex> lock(mutex_);
+    const std::uint32_t bit = 4u << stage;
+    state_.texMode = on ? (state_.texMode | bit) : (state_.texMode & ~bit);
+}
+
+void StateRecorder::SetTextureFactor(const float rgba[4]) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::memcpy(state_.textureFactor, rgba, 4 * sizeof(float));
+}
+
+void StateRecorder::SetColorMultiplier(const float rgba[4]) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::memcpy(state_.colorMul, rgba, 4 * sizeof(float));
+}
+
+void StateRecorder::SetDebugMode(std::uint32_t bits) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    state_.texMode = (state_.texMode & 0xffu) | (bits & ~0xffu);
 }
 
 MetalRenderState StateRecorder::Snapshot() const { std::lock_guard<std::mutex> lock(mutex_); return state_; }
