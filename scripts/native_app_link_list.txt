@@ -205,3 +205,5 @@ src/lua/SCLuaHelp.cpp
 src/lua/SCLuaTableRef.cpp
 src/sc4/OccupantGroupTemplate.cpp
 src/sc4/OccupantFilters2.cpp
+src/tools/watercraft_neutral.cpp
+src/tools/automata_base_handle.cpp
