@@ -161,6 +161,8 @@ void InitCityLighting(sc4::cSTETerrain* terrain, sc4::cSC43DRender* render, sc4:
     if (!g_manager || !terrain || g_inited) return;
     g_inited = true;
     g_manager->Init();
+    SL::spLightingManager = static_cast<cIGZUnknown*>(static_cast<sc4::cISC4LightingManager*>(g_manager));   // the renderer publishes it (cSC43DRender::Init)
+    std::fprintf(stderr, "[Runtime Wire] Sub-system SL::spLightingManager successfully bound to Memory Address %p\n", static_cast<void*>(g_manager));
     float hour = 12.0f;
     if (const char* env = std::getenv("SC4_TIMEOFDAY")) hour = static_cast<float>(std::atof(env));
     else { std::time_t t = std::time(nullptr); std::tm local{}; localtime_r(&t, &local); hour = static_cast<float>(local.tm_hour) + static_cast<float>(local.tm_min) / 60.0f; }

@@ -43,6 +43,7 @@
 #include "render/gd/MetalGDriver.h"
 #include "app/NativeLighting.h"
 #include "app/NativeJobs.h"
+#include "app/NativeRuntimeWire.h"
 #include "sc4/View3DWin.h"
 #include "gz/FontServices.h"
 #include "sc4/App.h"
@@ -643,6 +644,7 @@ int main(int argc, char** argv) {
         if (!gDriver) { std::printf("no Metal device\n"); return 1; }
         Boot();
         if (shot.empty() || std::getenv("SC4_AUDIO")) StartGameAudio();
+        if (!native::VerifyRuntimeWiring(gDriver.get(), gAudio != nullptr)) { std::fprintf(stderr, "boot halted: a required dependency is not wired\n"); return 3; }
         if (const char* cityPath = std::getenv("SC4_LOADCITY")) {   // development: load one city file straight after boot and exit
             cSC4App* loadApp = native::BootApplication();
             const bool loaded = loadApp && native::LoadCityFile(*loadApp, cityPath);
