@@ -1785,6 +1785,20 @@ void cSC4View3DWin::UpdateCityName() {                                      // 0
     if (panelWindow_) nsGZWinUtils::SetWindowCaption(panelWindow_, kPanelCityNameId, name);
 }
 
+void cSC4View3DWin::UpdateSimulationClock() {                               // 0x100787e12
+    if (!dateText_ || !host_) return;
+    int day = 0, month = 0, year = 0, startYear = 0;
+    const bool ok = host_->SimulationDate(day, month, year, startYear);
+    if (!ok) return;
+    // the year since the simulation started (wrapped to four digits)
+    int clamp = startYear - 1 - year;
+    if (clamp < -10001) clamp = -10001;
+    const int shown = static_cast<int>(static_cast<unsigned>(year + 10000 + clamp - startYear) / 10000u) * -10000 + (year - startYear);
+    cRZString text;
+    host_->FormatDate(day, month, shown, text);
+    dateText_->SetCaption(text);                             // vslot 0x20
+}
+
 void cSC4View3DWin::UpdateDayNightButtons() {                               // 0x10078aa58
     const int mode = host_ ? host_->VisualTimeMode() : 0;    // SL::sp24HourClock vslot 0x30: 0 real, 1 noon, 2 midnight
     if (!secondaryMenu_) return;

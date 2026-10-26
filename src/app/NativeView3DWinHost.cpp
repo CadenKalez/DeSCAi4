@@ -7,6 +7,13 @@
 #include "sc4/View3DWin.h"
 #include "sc4/ViewInputControlCityScroll.h"
 #include "app/NativeUi.h"
+#include "app/NativeBoot.h"
+#include "sc4/App.h"
+#include "sc4/BudgetSimulator.h"
+#include "sc4/ResidentialSimulator.h"
+#include "sc4/Simulator.h"
+#include "sc4/cSC4City.h"
+#include <cstdio>
 #include "app/NativeCityUi.h"
 #include "gz/Buffer.h"
 #include "sc4/SC4UI.h"
@@ -14,10 +21,37 @@
 namespace native {
 namespace {
 using namespace sc4;
+
+cSC4City* LoadedCity() {
+    cSC4App* app = BootApplication();
+    return app ? dynamic_cast<cSC4City*>(app->GetCity()) : nullptr;
+}
+// A city component as its concrete class: through its serializable view, checked by class id (dynamic_cast is not
+// reliable across the port's translation units).
+template <class T> T* CityComponentAs(CityComponent c, std::uint32_t clsid) {
+    cSC4City* city = LoadedCity();
+    cIGZUnknown* object = city ? city->GetComponent(c) : nullptr;
+    void* raw = nullptr;
+    if (!object || !object->QueryInterface(0xe4fda3d4, &raw) || !raw) return nullptr;
+    auto* serializable = static_cast<cIGZSerializable*>(raw);
+    T* out = serializable->GetGZCLSID() == clsid ? static_cast<T*>(serializable) : nullptr;
+    serializable->Release();
+    return out;
+}
+// "1,234,567": the thousands separator of the English locale (RZ::LM() string 0, vslot 0x90).
+std::string GroupDigits(std::int64_t value) {
+    const bool negative = value < 0;
+    std::string digits = std::to_string(negative ? -value : value), out;
+    for (std::size_t i = 0; i < digits.size(); ++i) {
+        if (i && (digits.size() - i) % 3 == 0) out += ',';
+        out += digits[i];
+    }
+    return negative ? "-" + out : out;
+}
 struct StubView3DWin final : IView3DWinHost {
     cIGZMessageServer2* MessageServer2() override { return {}; }
     std::uint8_t* Preferences() override { return {}; }
-    bool CityExists() override { return true; }
+    bool CityExists() override { return LoadedCity() != nullptr; }
     void PostGameMessage(std::uint32_t type) override {}
     INotificationHelper3D* NotificationHelper() override { return {}; }
     void RegisterCommandTable() override {}
@@ -113,13 +147,33 @@ struct StubView3DWin final : IView3DWinHost {
     void SetDrawContextFrameMarker(void* drawContext, std::uint32_t frame) override {}
     void OnView3DCreate(cISC4View3DWin* view) override {}
     void OnView3DShutdown() override {}
-    void GetCityName(cIGZString& out) override {}
+    void GetCityName(cIGZString& out) override { if (cSC4City* city = LoadedCity()) city->GetCityName(out); }
     int VisualTimeMode() override { return {}; }
-    int CityPopulation() override { return {}; }
-    std::int64_t CityFunds() override { return {}; }
-    void FormatNumber(std::int64_t value, cIGZString& out) override {}
-    void MakeMoneyString(std::int64_t value, cIGZString& out) override {}
-    std::uint32_t MakeNativeColor(std::uint8_t r, std::uint8_t g, std::uint8_t b) override { return {}; }
+    int CityPopulation() override { auto* r = CityComponentAs<cSC4ResidentialSimulator>(CityComponent::ResidentialSimulator, kGZCLSID_cSC4ResidentialSimulator); return r ? r->GetPopulation() : 0; }
+    std::int64_t CityFunds() override { auto* b = CityComponentAs<cSC4BudgetSimulator>(CityComponent::BudgetSimulator, kGZCLSID_cSC4BudgetSimulator); return b ? b->GetTotalFunds() : 0; }
+    void FormatNumber(std::int64_t value, cIGZString& out) override { out.AssignFromCString(GroupDigits(value).c_str()); }
+    // SC4MakeMoneyString: the simoleon sign and the grouped amount ("§1,290,385", "-§500")
+    void MakeMoneyString(std::int64_t value, cIGZString& out) override {
+        const std::string grouped = GroupDigits(value < 0 ? -value : value);
+        out.AssignFromCString(((value < 0 ? "-\xa7" : "\xa7") + grouped).c_str());
+    }
+    bool SimulationDate(int& day, int& month, int& year, int& startYear) override {
+        auto* simulator = CityComponentAs<cSC4Simulator>(CityComponent::Simulator, kGZCLSID_cSC4Simulator);
+        if (!simulator) return false;
+        simulator->GetSimDate(&year, &month, &day, nullptr, nullptr);
+        cGZDate start;
+        simulator->GetSimStartDate(start);
+        startYear = static_cast<int>(start.Year());
+        return true;
+    }
+    // RZ::LM() vslot 0x50 (the English short date): "Jan 1, 00"
+    void FormatDate(int day, int month, int year, cIGZString& out) override {
+        static const char* const kMonths[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+        char text[32];
+        std::snprintf(text, sizeof text, "%s %d, %02d", kMonths[(month >= 1 && month <= 12) ? month - 1 : 0], day, year);
+        out.AssignFromCString(text);
+    }
+    std::uint32_t MakeNativeColor(std::uint8_t r, std::uint8_t g, std::uint8_t b) override { return 0xff000000u | (std::uint32_t(r) << 16) | (std::uint32_t(g) << 8) | b; }
     bool BudgetDialogOpen(cIGZUnknown* dialog) override { return {}; }
     void RefreshBudgetDialog(cIGZUnknown* dialog) override {}
     void ShutdownNewsTickerWinProc(cIGZUnknown* proc) override {}

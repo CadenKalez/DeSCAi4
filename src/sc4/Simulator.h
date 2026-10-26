@@ -31,6 +31,7 @@
 namespace sc4 {
 
 constexpr std::uint32_t kGZCLSID_cSC4Simulator = 0x2990c1e5;
+constexpr std::uint32_t kGZIID_cISC4Simulator = 0x8695664e;
 constexpr std::uint32_t kSID_cSC4Simulator = 0x46956659;
 constexpr std::uint32_t kMessageSimInterval = 0x66956810;         // + interval index
 constexpr std::uint32_t kMessageSimSpeedChanged = 0x4a7fb7e9;

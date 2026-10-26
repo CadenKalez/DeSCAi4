@@ -242,6 +242,11 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     view.AttachRenderStack(adapter, nullptr, control);
     view.EnablePainting(true);
     view.AddGUI();   // DoPostCityInit's city UI (the view's engine DoMessage that sends it there is not ported)
+    // ... and the toolbar readouts the date / funds / population / name messages refresh in the game
+    view.UpdateCityName();
+    view.UpdateBudget();
+    view.UpdatePopulation();
+    view.UpdateSimulationClock();
     return ok;
 }
 

@@ -672,6 +672,10 @@ public:
     virtual std::int64_t CityFunds() = 0;                             // SL::spCity vslot 0x1a0 -> vslot 0x30 (0x1007887f6)
     virtual void FormatNumber(std::int64_t value, cIGZString& out) = 0;   // RZ::LM() string 0 vslot 0x90 (0x100788046)
     virtual void MakeMoneyString(std::int64_t value, cIGZString& out) = 0;   // SC4MakeMoneyString @ 0x1000392b0
+    // UpdateSimulationClock (0x100787e12): the simulator's date (+0x238 vslot 0x30 -> day 0x78 / month 0xb8 / year 0x68) and
+    // its start date (SL::spSimulator vslot 0x28), then RZ::LM() vslot 0x50 formats day, month and the year since the start.
+    virtual bool SimulationDate(int& day, int& month, int& year, int& startYear) { (void)day; (void)month; (void)year; (void)startYear; return false; }
+    virtual void FormatDate(int day, int month, int year, cIGZString& out) { (void)day; (void)month; (void)year; (void)out; }
     virtual std::uint32_t MakeNativeColor(std::uint8_t r, std::uint8_t g, std::uint8_t b) = 0;   // RZ::GS() vslot 0x118
     virtual bool BudgetDialogOpen(cIGZUnknown* dialog) = 0;               // cSC4BudgetUIWinProc vslot 0x50 (0x10078883e)
     virtual void RefreshBudgetDialog(cIGZUnknown* dialog) = 0;            // cSC4BudgetUIWinProc vslot 0x48 (0x100788846)
@@ -825,7 +829,8 @@ public:
     void UpdateAlertBorder();                                      // @ 0x100787a1c
     void DoCityEstablished();                                      // @ 0x100786f3e
     void DoCityObliterated();                                      // @ 0x100786fbe
-    void UpdateCityName();                                         // @ 0x10078700a
+    void UpdateCityName();
+    void UpdateSimulationClock();                                  // @ 0x100787e12                                         // @ 0x10078700a
     void UpdateDayNightButtons();                                  // @ 0x10078aa58
     void UpdatePopulation();                                       // @ 0x100787fb6
     void UpdateBudget();                                           // @ 0x1007887bc

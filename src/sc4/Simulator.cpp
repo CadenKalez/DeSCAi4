@@ -64,9 +64,9 @@ std::uint32_t cSC4Simulator::Now() const {
 }
 
 bool cSC4Simulator::QueryInterface(std::uint32_t iid, void** out) {
-    if (iid == 0xe4fda3d4) *out = static_cast<cIGZSerializable*>(this);
+    if (iid == kGZIID_cISC4Simulator) *out = static_cast<cISC4Simulator*>(this);
+    else if (iid == 0xe4fda3d4) *out = static_cast<cIGZSerializable*>(this);
     else if (iid == 0x452294aa) *out = static_cast<cIGZMessageTarget2*>(this);
-    else if (iid == 1 || iid == kGZCLSID_cSC4Simulator) *out = static_cast<cISC4Simulator*>(this);
     else return cRZSystemService::QueryInterface(iid, out);
     AddRef();
     return true;
