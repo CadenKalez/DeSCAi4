@@ -169,6 +169,11 @@ sc4::cSC4ViewInputControl* CreateZoneTool(int type) {
     return tool;
 }
 
+void StartToolTick(cIGZMessageTarget2* target, std::uint32_t interval) { g_ticks.push_back({target, interval}); }
+void StopToolTick(cIGZMessageTarget2* target) {
+    g_ticks.erase(std::remove_if(g_ticks.begin(), g_ticks.end(), [&](const Tick& t) { return t.target == target; }), g_ticks.end());
+}
+
 void PumpToolTicks(int elapsedMs) {
     if (g_ticks.empty()) return;
     auto* message = new cRZMessage2Standard();

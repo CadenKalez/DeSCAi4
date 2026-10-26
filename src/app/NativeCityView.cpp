@@ -1,3 +1,4 @@
+#include "app/NativeBudgetUi.h"
 #include "app/NativeLighting.h"
 #include "sc4/Simulator.h"
 #include "app/NativeCityView.h"
@@ -275,6 +276,7 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     view.EnablePainting(true);
     native::InstallZoneTool(view, cityInterface, *render);
     native::InstallCatalogUi(view.GetWindowManager());
+    native::SetBudgetViewWindow(view.AsIGZWin());
     view.AddGUI();   // DoPostCityInit's city UI (the view's engine DoMessage that sends it there is not ported)
     // ... and the toolbar readouts the date / funds / population / name messages refresh in the game
     view.UpdateCityName();

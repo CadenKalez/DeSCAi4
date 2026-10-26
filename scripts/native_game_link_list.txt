@@ -615,3 +615,4 @@ src/app/NativeJobs.cpp
 src/jobs/JobSystem.cpp
 src/app/NativeRuntimeWire.cpp
 src/runtime/engine_lifecycle_wire.cpp
+src/app/NativeBudgetUi.cpp

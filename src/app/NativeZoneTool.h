@@ -4,6 +4,7 @@
 #include <cstdint>
 
 class cISC4City;
+class cIGZMessageTarget2;
 namespace sc4 { class cSC4View3DWin; class cSC43DRender; class cSC4ViewInputControl; }
 
 namespace native {
@@ -14,5 +15,7 @@ void InstallZoneTool(sc4::cSC4View3DWin& view, cISC4City* city, sc4::cSC43DRende
 sc4::cSC4ViewInputControl* CreateZoneTool(int type);
 // The animation timer the tool registers with: call once a frame with the elapsed milliseconds.
 void PumpToolTicks(int elapsedMs);
+void StartToolTick(cIGZMessageTarget2* target, std::uint32_t interval);
+void StopToolTick(cIGZMessageTarget2* target);
 
 }  // namespace native

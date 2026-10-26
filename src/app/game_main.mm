@@ -684,6 +684,8 @@ int main(int argc, char** argv) {
                         {"rl", {0x6a935cc9, 0}}, {"rr", {0x6a935ccc, 0}}};
                     if (name.rfind("sfx@", 0) == 0) {   // sfx@HEX: a game sound id
                         native::PlayGameSound(static_cast<std::uint32_t>(std::strtoul(name.c_str() + 4, nullptr, 16)));
+                    } else if (name.rfind("panel@", 0) == 0 && v) {   // panel@HEX: ShowPanel(index)
+                        v->ShowMayorSubPanel(static_cast<std::uint32_t>(std::strtoul(name.c_str() + 6, nullptr, 16)));
                     } else if (name.rfind("zone", 0) == 0 && name.size() > 4 && v) {   // zoneN: the zoning tool for zone type N
                         v->InvokeZoningTool(static_cast<std::uint32_t>(std::atoi(name.c_str() + 4)));
                     } else if (name.rfind("drag@", 0) == 0) {   // drag@X1xY1xX2xY2: a left drag

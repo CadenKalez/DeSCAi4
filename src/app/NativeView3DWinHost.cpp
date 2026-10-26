@@ -15,6 +15,7 @@
 #include "sc4/cSC4City.h"
 #include <cstdio>
 #include "app/NativeCityUi.h"
+#include "app/NativeBudgetUi.h"
 #include "app/NativeZoneTool.h"
 #include "app/NativeCatalogUi.h"
 #include "gz/Buffer.h"
@@ -109,7 +110,7 @@ struct StubView3DWin final : IView3DWinHost {
     gz::cIGZWinProc* CreatePanelUIWinProc() override { return {}; }
     INewsTickerWindow* CreateNewsTickerWinProc() override { return {}; }
     IMySimWindow* CreateMySimWinProc(gz::cIGZWinGen* panel) override { return native::CreateMySimWindow(panel); }
-    IBudgetUIWindow* CreateBudgetUIWinProc() override { return {}; }
+    IBudgetUIWindow* CreateBudgetUIWinProc() override { return native::CreateBudgetUiWindow(); }
     IGraphsViewWindow* CreateGraphsViewWinProc(cIGZWin* window) override { return native::CreateGraphsViewWindow(window); }
     IBuildingSelectWindow* CreateBuildingSelectWinProc(cIGZWin* window) override { return {}; }
     IAdvisorPopupQueue* CreateAdvisorPopupTracker() override { return {}; }
@@ -184,8 +185,8 @@ struct StubView3DWin final : IView3DWinHost {
         out.AssignFromCString(text);
     }
     std::uint32_t MakeNativeColor(std::uint8_t r, std::uint8_t g, std::uint8_t b) override { return 0xff000000u | (std::uint32_t(r) << 16) | (std::uint32_t(g) << 8) | b; }
-    bool BudgetDialogOpen(cIGZUnknown* dialog) override { return {}; }
-    void RefreshBudgetDialog(cIGZUnknown* dialog) override {}
+    bool BudgetDialogOpen(cIGZUnknown* dialog) override { return native::BudgetUiOpen(dialog); }
+    void RefreshBudgetDialog(cIGZUnknown* dialog) override { native::BudgetUiRefresh(dialog); }
     void ShutdownNewsTickerWinProc(cIGZUnknown* proc) override {}
     void ShutdownMySimWinProc(cIGZUnknown* proc) override {}
     void ShutdownBudgetUIWinProc(cIGZUnknown* proc) override {}
