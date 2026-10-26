@@ -26,8 +26,9 @@ const PackedStates& States() {
     return states;
 }
 
-// The uv of each corner per rotation (see the header): v0 = (a, b), v1 = (c, a), v2 = (b, d), v3 = (d, c).
-constexpr float kRotA[4] = {0, 1, 1, 0}, kRotB[4] = {0, 0, 1, 1}, kRotC[4] = {1, 1, 0, 0}, kRotD[4] = {1, 0, 0, 1};
+// The uv of each corner per rotation, the four tables at 0x100a16ad0 / ae0 / af0 / b00 (read from the binary):
+// v0 = (a, b), v1 = (c, a), v2 = (b, d), v3 = (d, c).
+constexpr float kRotA[4] = {0, 0, 1, 1}, kRotB[4] = {0, 1, 1, 0}, kRotC[4] = {1, 0, 0, 1}, kRotD[4] = {1, 1, 0, 0};
 }  // namespace
 
 ICellTextureModelHost* CellTextureModelHost() { return g_host; }

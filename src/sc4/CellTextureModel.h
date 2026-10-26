@@ -15,8 +15,6 @@
 // Port notes:
 //  * The unlocked path draws through the draw context's terrain cell helper (+0x78 vslot 0x78) in the original, which
 //    is not recovered; the port draws the same cell as its quad over the four terrain vertex altitudes.
-//  * The uv rotation tables (0x100a16ad0..0x100a16b0c) are not in the export; the four rotations are rebuilt from the
-//    way UpdateTextureRotation spreads them over the corners (rotation 0 maps u to x and v to z).
 //  * The combine path (a combine mode other than 0xff) tints with the spec colour through the lot texture combiner
 //    (0x21020000 with the mode in the first byte, then 0x0001 / 0x03); the light factor the original multiplies the
 //    colour by (the draw context's lighting, +0x68 vslot 0x50) is taken as white, and the mode-3 fallback for devices

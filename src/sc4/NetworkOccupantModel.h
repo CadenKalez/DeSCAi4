@@ -6,9 +6,7 @@
 //
 // Not ported: the one-way arrows (DrawOneWayArrow), the highlight pass (SetSelfLitShade + the highlight state), the
 // lighting refresh (UpdateLighting, flag 0x8000: the saved vertex colours are used as they are) and the add-on parts'
-// "under water" test against the terrain. The two triangle index lists (sTriangleIndices / sFlippedTriangleIndices) and
-// the two packed render states (sPackedRenderState / sPackedRenderStateNoBlend) are data the export does not show; the
-// port uses the two diagonals of the perimeter-ordered corners and a blended / unblended LEqual state.
+// "under water" test against the terrain.
 #pragma once
 #include <cstdint>
 

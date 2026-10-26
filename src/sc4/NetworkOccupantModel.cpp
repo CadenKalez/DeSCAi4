@@ -7,15 +7,17 @@ namespace sc4 {
 namespace {
 INetworkModelHost* g_host = nullptr;
 
-// The corners go round the tile, so the two diagonals give the two triangulations.
+// sTriangleIndices / sFlippedTriangleIndices (0x100a19f10 / 0x100a19f1c, read from the binary): the two
+// triangulations of the perimeter-ordered corners.
 const std::uint16_t kTriangleIndices[6] = {0, 1, 2, 0, 2, 3};
-const std::uint16_t kFlippedTriangleIndices[6] = {0, 1, 3, 1, 2, 3};
+const std::uint16_t kFlippedTriangleIndices[6] = {0, 1, 3, 3, 1, 2};
 
 struct States {
     cSC4PackedRenderState blend, noBlend;
     States() {
-        blend.PackRenderState(true, true, true, false, true, 1, false, 3, 4, 5, -1, -1.0f, 1, -1);
-        noBlend.PackRenderState(true, true, true, false, false, 1, false, 3, -1, -1, -1, -1.0f, 1, -1);
+        // cSC4NetworkOccupant::StaticInit's two states
+        blend.PackRenderState(true, true, true, true, true, 1, true, 3, 4, 5, 4, 0.1f, 1, -1);
+        noBlend.PackRenderState(true, true, true, false, false, 1, true, 3, -1, -1, -1, -1.0f, 1, -1);
     }
 };
 const States& PackedStates() {

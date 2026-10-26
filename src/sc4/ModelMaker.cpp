@@ -1731,8 +1731,7 @@ s3d::cIS3DModelInstance* cSC4ModelMaker::CreatePlaceHolderModelInstance(cISC4Occ
     const int effectiveRotation = lit ? 0 : rotation;
     std::uint32_t instanceId = base;
     if (g_utility) instanceId = g_utility->GetModelProperty1Instance(base, effectiveRotation, (facing + effectiveRotation * 3) % 4);
-    // the default "missing model" key {0x5ad0e817, type 0xa5b57f1}
-    const cGZPersistResourceKey key{0x5ad0e817, 0xa5b57f1, instanceId};
+    const cGZPersistResourceKey key{0x5ad0e817, 0xbadb57f1, instanceId};   // the standard model group
     void* raw = nullptr;
     if (!resourceManager_->GetResource(key, 0x9ad0e7e3, &raw, 0, nullptr) || !raw) return nullptr;
     auto* resource = static_cast<s3d::cIS3DResModel*>(static_cast<cIGZUnknown*>(raw));
@@ -1753,14 +1752,18 @@ s3d::cIS3DModelInstance* cSC4ModelMaker::AddModel(cISC4Occupant* occupant, const
     if (!occupant) return nullptr;
     (void)rotation;
     cISCPropertyHolder* holder = occupant->AsPropertyHolder();
+    // The model class picks the animated path (0xea123be1 / 0xaa123bf9, not ported); class 0xaa123bf9 models turn
+    // with the occupant like the lit ones (0x1003143b6).
+    const int modelClass = g_utility ? g_utility->GetOccupantModelClass(occupant) : 0;
+    const bool objectRotation = lit || modelClass == static_cast<int>(0xaa123bf9u);
     cGZPersistResourceKey modelKey = key;
     void* raw = nullptr;
     if (resourceManager_ && resourceManager_->GetResource(modelKey, 0x9ad0e7e3, &raw, 0, nullptr) && raw) {
         // the resource answered
-    } else if (resourceManager_) {
-        // the default "missing model" key {0x5ad0e817, type 0xa5b57f1} is tried next
-        modelKey.instance = 0x5ad0e817;
-        modelKey.group = 0xa5b57f1;
+    } else if (resourceManager_ && (modelKey.type != 0x5ad0e817 || modelKey.group != 0xbadb57f1)) {
+        // then the same instance as an S3D model of the standard model group {0x5ad0e817, 0xbadb57f1}
+        modelKey.type = 0x5ad0e817;
+        modelKey.group = 0xbadb57f1;
         if (!resourceManager_->GetResource(modelKey, 0x9ad0e7e3, &raw, 0, nullptr)) raw = nullptr;
     }
     s3d::cIS3DModelInstance* instance = nullptr;
@@ -1780,27 +1783,21 @@ s3d::cIS3DModelInstance* cSC4ModelMaker::AddModel(cISC4Occupant* occupant, const
         resource->CreateModelInstance(0, &instance);
         static_cast<cIGZUnknown*>(raw)->Release();
     }
-    if (!instance && (!ignoreMissingModels_ || (holder && holder->HasProperty(0x6a871b82)))) {
-        instance = CreatePlaceHolderModelInstance(occupant, currentZoom_, currentRotation_, state, lit);
+    // Port: the animated models (model class 0xea123be1 / 0xaa123bf9, or an animation key 0x29a5d1ec) have no
+    // animated-model path here, so they are left out instead of being shown as the placeholder box.
+    const bool animated = modelClass == static_cast<int>(0xea123be1u) || modelClass == static_cast<int>(0xaa123bf9u) ||
+                          key.type == 0x29a5d1ec;
+    if (!instance && !animated && (!ignoreMissingModels_ || (holder && holder->HasProperty(0x6a871b82)))) {
+        instance = CreatePlaceHolderModelInstance(occupant, currentZoom_, currentRotation_, state, objectRotation);
     }
     if (!instance) return nullptr;
     cS3DTransform transform;
-    FindModelTransform(holder, lit, state, position, offset, transform);
+    FindModelTransform(holder, objectRotation, state, position, offset, transform);
     instance->SetTransform(transform);
     if (occupant->IsFlagSet(0x10)) {
         instance->SetProperties(static_cast<int>(static_cast<std::uint32_t>(instance->GetProperties()) & 1u));
     }
     instance->SetOwner(occupant);
-    if (std::getenv("SC4_MODELDEBUG") && occupant->GetType() == kModelOccupantTypeBuilding) {
-        float lo[3], hi[3];
-        occupant->GetBoundingBox(lo, hi);
-        cS3DBoundingBox world;
-        instance->GetWorldBounds(world);
-        std::uint32_t orientation = 0;
-        int st = 0;
-        if (g_utility) g_utility->GetOccupantOrientationAndState(occupant, orientation, st);
-        std::fprintf(stderr, "model %08x/%08x: occupant %.1f..%.1f x %.1f..%.1f, model %.1f..%.1f x %.1f..%.1f, orientation %d lit %d state %d\n", modelKey.group, modelKey.instance, lo[0], hi[0], lo[2], hi[2], world.min[0], world.max[0], world.min[2], world.max[2], st, int(lit), state);
-    }
     if (cISC43DPlaceableObject* placeable = occupant->GetOrCreatePlaceableObject()) {
         placeable->AddRef();
         placeable->AddModel(reinterpret_cast<sc4::cIS3DModelInstance*>(instance));
