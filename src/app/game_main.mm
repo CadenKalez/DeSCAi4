@@ -527,7 +527,7 @@ void WritePng(const std::string& path) {
 - (BOOL)acceptsFirstResponder { return YES; }
 - (BOOL)isFlipped { return YES; }
 - (NSPoint)gz:(NSEvent*)e { NSPoint p = [self convertPoint:e.locationInWindow fromView:nil]; return NSMakePoint(p.x * kW / self.bounds.size.width, p.y * kH / self.bounds.size.height); }
-- (std::uint32_t)flags:(NSEvent*)e { return (e.modifierFlags & NSEventModifierFlagShift ? 4 : 0) | (e.modifierFlags & NSEventModifierFlagControl ? 8 : 0); }
+- (std::uint32_t)flags:(NSEvent*)e { return (e.modifierFlags & NSEventModifierFlagShift ? 4 : 0) | (e.modifierFlags & NSEventModifierFlagControl ? 8 : 0) | (([NSEvent pressedMouseButtons] & 1) ? 0x10 : 0); }   // 0x10: the left button is down (the drag tools end when it is not)
 - (void)post:(std::uint32_t)type e:(NSEvent*)e { NSPoint p = [self gz:e]; gMgr->GZWinMsgPost_Mouse(type, int(p.x), int(p.y), [self flags:e]); }
 - (void)mouseMoved:(NSEvent*)e { [self post:kGZMsgMouseMove e:e]; }
 - (void)mouseDragged:(NSEvent*)e { [self post:kGZMsgMouseMove e:e]; }

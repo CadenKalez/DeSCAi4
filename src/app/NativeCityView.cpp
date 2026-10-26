@@ -12,6 +12,7 @@
 #include "app/NativeTerrainView.h"
 #include "app/NativeModelMaker.h"
 #include "app/NativeZoneTool.h"
+#include "app/NativeCatalogUi.h"
 #include "sc4/Render3D.h"
 #include "sc4/View3DWin.h"
 #include "sc4/cSC4City.h"
@@ -260,6 +261,7 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     view.AttachRenderStack(adapter, nullptr, control);
     view.EnablePainting(true);
     native::InstallZoneTool(view, cityInterface, *render);
+    native::InstallCatalogUi(view.GetWindowManager());
     view.AddGUI();   // DoPostCityInit's city UI (the view's engine DoMessage that sends it there is not ported)
     // ... and the toolbar readouts the date / funds / population / name messages refresh in the game
     view.UpdateCityName();

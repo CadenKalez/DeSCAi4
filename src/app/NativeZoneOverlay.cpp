@@ -40,8 +40,8 @@ public:
         std::vector<Vertex> quads;   // triangles, six per cell
         auto add = [&](int x, int z, std::uint32_t argb, int alphaScale) {
             const float x0 = x * 16.0f, z0 = z * 16.0f, x1 = x0 + 16.0f, z1 = z0 + 16.0f;
-            const float y00 = g_terrain->GetAltitudeAtVertex(x, z) + 0.15f, y10 = g_terrain->GetAltitudeAtVertex(x + 1, z) + 0.15f;
-            const float y01 = g_terrain->GetAltitudeAtVertex(x, z + 1) + 0.15f, y11 = g_terrain->GetAltitudeAtVertex(x + 1, z + 1) + 0.15f;
+            const float y00 = g_terrain->GetAltitudeAtVertex(x, z) + 0.6f, y10 = g_terrain->GetAltitudeAtVertex(x + 1, z) + 0.6f;
+            const float y01 = g_terrain->GetAltitudeAtVertex(x, z + 1) + 0.6f, y11 = g_terrain->GetAltitudeAtVertex(x + 1, z + 1) + 0.6f;
             const std::uint8_t a = static_cast<std::uint8_t>(((argb >> 24) & 0xff) * alphaScale / 255);
             const std::uint8_t r = (argb >> 16) & 0xff, g = (argb >> 8) & 0xff, b = argb & 0xff;
             auto v = [&](float vx, float vy, float vz) { Vertex out{vx, vy, vz, {r, g, b, a}, 0, 0}; quads.push_back(out); };

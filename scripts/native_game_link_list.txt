@@ -574,3 +574,5 @@ src/audio/platform/AudioPlatform.cpp
 src/sc4/ViewInputControlZone.cpp
 src/app/NativeZoneTool.cpp
 src/app/NativeZoneOverlay.cpp
+src/app/NativeCatalogUi.cpp
+src/sc4/WinCalloutBox.cpp

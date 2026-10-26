@@ -802,6 +802,15 @@ public:
     void CloseTertiaryMenu() override;                             // @ 0x10079280e
     void InvokeSecondaryMenu(std::uint32_t script, std::uint32_t window, std::uint32_t alignTo);   // @ 0x10078c960
     void InvokeTertiaryMenu(std::uint32_t script, std::uint32_t window, std::uint32_t alignTo);    // @ 0x10078dfdc
+    // The scroll position and selected item a catalog menu keeps while it is closed (the original's +0x378 block).
+    struct CatalogState { std::int32_t scroll = 0; std::uint32_t selected = 0; };
+    // @ 0x10078d1be: a tool palette beside `sender`'s button `alignId`, filled with `catalog`'s items.
+    void InvokeTertiaryMenu(std::uint32_t menuId, cIGZWin* sender, std::uint32_t alignId, class cISC4WinCatalogView* catalog,
+                            std::uint32_t backgroundImage, CatalogState* state);
+    void DoZoneCatalogView(cIGZWin* sender, std::uint32_t alignId, std::uint32_t propertyFilter, std::uint32_t catalogId,
+                           CatalogState* state);                            // @ 0x100790c4a
+    void DoZoningMenu(cIGZWin* sender, std::uint32_t button);               // @ 0x10078cb24
+    void InvokeCatalogItemCommand(std::uint32_t itemType, std::uint32_t id, bool closeMenu);   // @ 0x10078410a
     void SetCursorTextPosition3D(const cS3DVector3& position) override;   // @ 0x100791cc4
 
     // --- not virtual in the original
@@ -953,6 +962,8 @@ protected:
     // The secondary menu window (+0x358) and its state word (+0x368).
     cIGZWin* secondaryMenu_ = nullptr;                  // +0x358 (referenced; CloseSecondaryMenu ChildDeletes it)
     std::uint32_t secondaryMenuState_ = 0;              // +0x368
+    CatalogState catalogStates_[8];                     // +0x378.. one per catalog menu
+    CatalogState* tertiaryState_ = nullptr;             // +0x370
     cIGZWin* tertiaryMenu_ = nullptr;                   // +0x360 (referenced)
     std::uint32_t tertiaryMenuState_ = 0;               // +0x36c
     bool contourDisplay_ = false;                       // +0x628

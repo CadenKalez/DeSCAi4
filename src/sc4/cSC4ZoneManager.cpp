@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include <cstdlib>
+
 #include "sc4/DBSegment.h"
 #include "sc4/SCPropertyHelp.h"
 #include "sc4/ZoneDeveloper.h"

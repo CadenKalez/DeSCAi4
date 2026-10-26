@@ -348,7 +348,9 @@ bool cSC4WinCatalogView::GZPaint() {
             const cRZRect source{sourceLeft, 0, sourceLeft + width, static_cast<int>(itemHeight_)};
             const cRZRect dest{drawArea_.left, y, drawArea_.left + width, y + static_cast<int>(itemHeight_)};
             if (drawBuffer_ && drawBuffer_->Lock(0x8010)) {
-                drawBuffer_->Blt(static_cast<IWinBuffer*>(icon), source, dest);   // vslot 0xf8; the icon is a buffer
+                ICatalogViewHost* host = CatalogViewHost();
+                if (!host || !host->BlitIcon(drawBuffer_, icon, source, dest))
+                    drawBuffer_->Blt(static_cast<IWinBuffer*>(icon), source, dest);   // vslot 0xf8; the icon is a buffer
                 drawBuffer_->Unlock(0x8010);
             }
             y += static_cast<int>(itemHeight_ + itemSpacing_);

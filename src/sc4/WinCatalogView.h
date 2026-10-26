@@ -34,6 +34,9 @@ public:
     virtual ~ICatalogViewHost() = default;
     virtual std::string MakeMoneyString(std::int64_t amount) = 0;   // SC4MakeMoneyString @ 0x1000392b0
     virtual void PlaySound(std::uint32_t id) = 0;                   // SL::spSS vslot 0x50 (1, id, 0, 0, 0)
+    // draw::Blt of an item's icon (a cIGZBuffer) into the window's draw buffer; false when the host has no such buffers and
+    // the window draws the icon as its own buffer type
+    virtual bool BlitIcon(IWinBuffer* target, cIGZUnknown* icon, const cRZRect& source, const cRZRect& destination) { return false; }
 };
 ICatalogViewHost* CatalogViewHost();
 void SetCatalogViewHost(ICatalogViewHost* host);

@@ -10,6 +10,10 @@
 #include "gz/WinGen.h"
 #include "gz/WinUtils.h"
 #include "sc4/WinAuraAlert.h"
+#include "sc4/SC4UI.h"
+#include "sc4/SLBuffer.h"
+#include "sc4/WinCatalogView.h"
+#include "sc4/WinTertiaryMenuFrame.h"
 #include "rz/cRZMessage2Standard.h"
 #include "sc4/SCResParser.h"
 #include "s3d/ModelInstance.h"
@@ -1155,11 +1159,125 @@ void cSC4View3DWin::CloseSecondaryMenu() {                                  // 0
 void cSC4View3DWin::CloseTertiaryMenu() {                                   // 0x10079280e
     cIGZWin* menu = tertiaryMenu_;
     if (!menu) return;
+    if (tertiaryState_) {
+        // the catalog inside the frame keeps its scroll position and selection for the next time
+        void* catalog = nullptr;
+        if (menu->GetChildAs(0x8a2cad8bu, kGZIID_cISC4WinCatalogView, &catalog) && catalog) {
+            auto* view = static_cast<cISC4WinCatalogView*>(catalog);
+            tertiaryState_->scroll = view->GetScrollPosition();
+            tertiaryState_->selected = view->GetSelectedItemID();
+            view->Release();
+        }
+    }
     tertiaryMenu_ = nullptr;
     tertiaryMenuState_ = 0;
     menu->HideWindow();
     ChildDelete(menu);
     menu->Release();
+}
+
+// InvokeTertiaryMenu with a catalog (0x10078d1be): the palette frame to the right of `sender`'s button `alignId`, the
+// catalog list inside it. The frame scrolls the catalog; the catalog reports a chosen item to the view.
+void cSC4View3DWin::InvokeTertiaryMenu(std::uint32_t menuId, cIGZWin* sender, std::uint32_t alignId,
+                                       cISC4WinCatalogView* catalog, std::uint32_t backgroundImage, CatalogState* state) {
+    if (!catalog || !sender || !host_) return;
+    const std::uint32_t current = tertiaryMenuState_;
+    if (current != 0) {
+        CloseTertiaryMenu();
+        if (current == menuId) return;                                  // the same button closes its palette
+    }
+    catalog->SetItemSize(0x2c, 0x2c, 5);                                // vslot 0x60
+    cIGZWin* catalogWindow = catalog->AsIGZWin();
+    cIGZWin* self = static_cast<cIGZWin*>(static_cast<cGZWin*>(this));
+    catalogWindow->SetNotificationTarget(self);                         // vslot 0x2b0
+    std::uint32_t rows = static_cast<std::uint32_t>(catalog->GetItemCount());
+    if (rows == 0) rows = 1;
+    if (rows > 7) rows = 8;
+    std::uint32_t shown = rows < 7 ? rows : 6;
+    if (GetH() > 600) shown = rows;                                     // a tall window shows the whole list
+    const cRZPoint size = catalog->CalcPreferredSize(shown);            // vslot 0x68
+    if (cISC4WinCalloutBox* callout = host_->CreateCalloutBox()) {      // the item names' callout
+        callout->SetTextFontStyle(0xa85f1a83);
+        callout->SetTitleFontStyle(0xe9c86c9d);
+        callout->AsIGZWin()->HideWindow();
+        if (cursorTextBox_) {
+            callout->SetBackgroundImage(cursorTextBox_->GetBackgroundImage(), 8, 5);
+            callout->SetConstraintRect(cursorTextBox_->GetConstraintRect());
+        }
+        catalog->SetCalloutBox(callout);                                // vslot 0xb0
+        callout->Release();
+    }
+    RemoveAllViewInputControls(false);
+    cIGZWin* button = sender->GetChildWindowFromID(alignId);
+    if (!button) return;
+    const int anchorX = button->GetW() / 2 + button->GetL() + sender->GetL();
+    const int anchorY = button->GetH() / 2 + button->GetT() + sender->GetT();
+    const int toolbarTop = panelWindow_ ? panelWindow_->GetT() : GetH();
+    cSLBuffer image(kView3DImageType, kView3DImageGroup, backgroundImage, 1, false);
+    image.Load();
+    auto* frame = new cSC4WinTertiaryMenuFrame(GetWindowManager());
+    frame->AddRef();
+    cISC4WinTertiaryMenuFrame* frameInterface = frame;
+    cIGZWin* frameWindow = frameInterface->AsIGZWin();
+    frameWindow->SetID(0x8a6e61e0);
+    ChildAdd(frameWindow);
+    frameInterface->SetBackgroundImage(image.GetBuffer(), 0x35, 0x19, 0x50, 0x35, 4, 0x1b, 0x1d);   // vslot 0x20
+    frameInterface->PositionFrame(size.x, size.y, anchorX, anchorY, 10, toolbarTop - 10);          // vslot 0x28
+    frameWindow->PullToFront();
+    frameWindow->ShowWindow();
+    tertiaryMenu_ = frameWindow;
+    frameWindow->AddRef();
+    tertiaryMenuState_ = menuId;
+    cRZRect content;
+    frameInterface->GetContentRect(content);                            // vslot 0x30
+    catalogWindow->SetArea(content);
+    catalogWindow->SetID(0x8a2cad8b);
+    frameWindow->ChildAdd(catalogWindow);
+    frameWindow->SetNotificationTarget(catalogWindow);
+    tertiaryState_ = state;
+    if (state) {
+        catalog->SetScrollPosition(state->scroll);
+        catalog->SetSelectedItemByID(state->selected);
+    }
+    frame->Release();
+}
+
+// DoZoneCatalogView (0x100790c4a): the zone-type list of a zoning button.
+void cSC4View3DWin::DoZoneCatalogView(cIGZWin* sender, std::uint32_t alignId, std::uint32_t propertyFilter, std::uint32_t catalogId,
+                                      CatalogState* state) {
+    cSC4WinCatalogView* catalog = nSC4UI::CreateCatalogView(0x2a3858e4, catalogId, 0, propertyFilter);
+    if (catalog) catalog->AddRef();
+    InvokeTertiaryMenu(propertyFilter + 0x8a3f003fu, sender, alignId, catalog, 0x14215ed1u, state);
+    if (catalog) catalog->Release();
+}
+
+// InvokeCatalogItemCommand (0x10078410a): the item type picks the tool family, the id the tool. PARTIAL: the landscape and
+// zoning families; flora, disasters, vehicles, networks and the lot plops need their tool classes.
+void cSC4View3DWin::InvokeCatalogItemCommand(std::uint32_t itemType, std::uint32_t id, bool closeMenu) {
+    switch (itemType) {
+        case 0x4a2b2462u:                                               // a terrain tool
+            if (closeMenu) CloseTertiaryMenu();
+            InvokeLandscapeTool(id, true);
+            break;
+        case 0x4a2b2466u:                                               // a zone type
+            if (closeMenu) CloseTertiaryMenu();
+            if (id < 0x10 && host_ && host_->CanInvokeZoningTool()) InvokeZoningTool(id);
+            break;
+        default:
+            break;
+    }
+}
+
+// DoZoningMenu (0x10078cb24): the three density lists and the de-zone / zone buttons of the zoning palette.
+void cSC4View3DWin::DoZoningMenu(cIGZWin* sender, std::uint32_t button) {
+    switch (button) {
+        case 0xa998af42u: DoZoneCatalogView(sender, button, 0x8a3f14dcu, 0x4a2b2466u, &catalogStates_[1]); break;
+        case 0xc998af00u: DoZoneCatalogView(sender, button, 0x8a3f1502u, 0x4a2b2466u, &catalogStates_[2]); break;
+        case 0x29920899u: DoZoneCatalogView(sender, button, 0x8a3f1505u, 0x4a2b2466u, &catalogStates_[0]); break;
+        case 0x30u: InvokeZoningTool(0); break;                                                                       // de-zone
+        case 0x991ee13u: InvokeSecondaryMenu(0xe9949936u, 0x69923479u, 0x991ee13u); break;
+        default: break;
+    }
 }
 
 // The two menu invokers build a script window (group 0x96a006b0) as a child of the view, route its commands to the
@@ -1184,7 +1302,8 @@ void cSC4View3DWin::InvokeSecondaryMenu(std::uint32_t script, std::uint32_t wind
         view->Release();
     }
     host_->AlignWindowToWindow(windowId, 0xaaaau, alignTo);
-    menu->ShowWindow();                                                 // vslot 0xb8 / 0x228
+    menu->PullToFront();                                                // vslot 0xb8
+    menu->ShowWindow();                                                 // vslot 0x228                                                 // vslot 0xb8 / 0x228
     secondaryMenu_ = menu;
     secondaryMenuState_ = windowId;
 }
@@ -1209,7 +1328,8 @@ void cSC4View3DWin::InvokeTertiaryMenu(std::uint32_t script, std::uint32_t windo
         view->Release();
     }
     host_->AlignWindowToWindow(windowId, 0xaaaau, alignTo);
-    menu->ShowWindow();
+    menu->PullToFront();                                                // vslot 0xb8
+    menu->ShowWindow();                                                 // vslot 0x228
     tertiaryMenu_ = menu;
     tertiaryMenuState_ = windowId;
 }
@@ -2186,6 +2306,10 @@ void cSC4View3DWin::HandleButtonActivated(cIGZWin* sender, cGZMessage& message) 
                 if (graphsViewWinProc_) graphsViewWinProc_->ShowGraphType(0xe);
                 handled = true;
                 break;
+            case 0xa998af42u: case 0xc998af00u: case 0x29920899u: case 0x30u:   // the zoning palette
+                DoZoningMenu(sender, button);
+                handled = true;
+                break;
             case 0x2992f72cu:                                          // a tertiary menu's own close button
                 CloseTertiaryMenu();
                 ProcessViewCommand(0x6a935deeu);
@@ -2430,8 +2554,7 @@ bool cSC4View3DWin::DoMessage(cGZMessage& message) {                         // 
             if (host_) host_->HandleAdviceLink(message);
         } else if (message.type == kMsgViewCommand && message.param1 == kCmdViewCatalogItem) {
             cGZWin::SetFocus();
-            if (host_) host_->InvokeCatalogItemCommand(static_cast<std::uint32_t>(message.param2),
-                                                       static_cast<std::uint32_t>(message.param3), true);
+            InvokeCatalogItemCommand(static_cast<std::uint32_t>(message.param2), static_cast<std::uint32_t>(message.param3), true);
             return true;
         }
     } else if (type > 0x6a5bdfcc) {

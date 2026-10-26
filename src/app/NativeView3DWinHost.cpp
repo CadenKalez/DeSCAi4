@@ -16,6 +16,7 @@
 #include <cstdio>
 #include "app/NativeCityUi.h"
 #include "app/NativeZoneTool.h"
+#include "app/NativeCatalogUi.h"
 #include "gz/Buffer.h"
 #include "sc4/SC4UI.h"
 #include "sc4/ViewInputControlQuery.h"
@@ -113,7 +114,7 @@ struct StubView3DWin final : IView3DWinHost {
     IBuildingSelectWindow* CreateBuildingSelectWinProc(cIGZWin* window) override { return {}; }
     IAdvisorPopupQueue* CreateAdvisorPopupTracker() override { return {}; }
     void AttachCompassWinProc(gz::cIGZWinGen* window) override {}
-    cISC4WinCalloutBox* CreateCalloutBox() override { return {}; }
+    cISC4WinCalloutBox* CreateCalloutBox() override { return native::CreateCalloutBox(); }
     gz::cIGZWinBMP* CreateWinBMP() override { return {}; }
     void InitMapView(cIGZWin* window) override {}
     bool IsKeyDownNow(std::uint32_t key) override { return {}; }
