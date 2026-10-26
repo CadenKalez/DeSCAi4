@@ -115,6 +115,8 @@ cGZBuffer* DecodePngBytes(const std::vector<uint8_t>& png) {
     CGImageRef img = src ? CGImageSourceCreateImageAtIndex(src, 0, nullptr) : nullptr;
     if (!img) return nullptr;
     const std::uint32_t w = std::uint32_t(CGImageGetWidth(img)), h = std::uint32_t(CGImageGetHeight(img));
+    const CGImageAlphaInfo alphaInfo = CGImageGetAlphaInfo(img);
+    const bool opaque = alphaInfo == kCGImageAlphaNone || alphaInfo == kCGImageAlphaNoneSkipFirst || alphaInfo == kCGImageAlphaNoneSkipLast;
     auto* buffer = new cGZBuffer();
     buffer->AddRef();
     buffer->Init(w, h, cGZBufferColorType{kBufferColorARGB8888, 32});
@@ -132,6 +134,10 @@ cGZBuffer* DecodePngBytes(const std::vector<uint8_t>& png) {
             if (a != 0 && a != 255) for (int c = 0; c < 3; ++c) row[c] = std::uint8_t(std::min(255u, (row[c] * 255u + a / 2) / a));
         }
     }
+    // The UI art marks its transparent parts in opaque magenta (the city toolbar's tiled background, for one): every image
+    // comes with that colour key, as the shipped game shows them.
+    (void)opaque;
+    buffer->SetTransparency(buffer->ConvertRGBValueToNative(0xff, 0, 0xff));
     return buffer;
 }
 
@@ -254,6 +260,8 @@ void Frame() {
     }
     const bool regionScreen = gAppWindow && gAppWindow->CurrentScreen() && gAppWindow->CurrentScreen()->GetID() == 0xea659793;
     if (regionScreen && native::DrawRegionLayers()) InvalidateTree(gMgr->GetMainWindow());   // the map is drawn under the windows: they repaint over it
+    // The city view redraws the 3D scene into the whole screen every frame, so the windows over it repaint every frame too.
+    if (gAppWindow && gAppWindow->View3D() && !regionScreen) InvalidateTree(gMgr->GetMainWindow());
     gMgr->Pump();
     gMgr->Plot();
     gGraphics->Services().Tick();

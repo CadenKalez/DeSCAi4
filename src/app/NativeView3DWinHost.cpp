@@ -1,10 +1,14 @@
 // The native IView3DWinHost (started from scripts/gen_stub_hosts.py's neutral host, now hand edited and skipped by the
-// generator): the city exists once the view is up, the zoom stops at the last level, and the right-button scroll tool
-// is the recovered cSC4ViewInputControlCityScroll. Everything else is still neutral.
+// generator): the city exists once the view is up, the zoom stops at the last level, the right-button scroll tool
+// is the recovered cSC4ViewInputControlCityScroll, and AddGUI builds its windows through the UI-script service and
+// nSC4UI's window-set helpers. Everything else is still neutral.
 #include <string>
 #include <vector>
 #include "sc4/View3DWin.h"
 #include "sc4/ViewInputControlCityScroll.h"
+#include "app/NativeUi.h"
+#include "gz/Buffer.h"
+#include "sc4/SC4UI.h"
 
 namespace native {
 namespace {
@@ -43,17 +47,23 @@ struct StubView3DWin final : IView3DWinHost {
     cIGZWin* CreateWinAnimationRecorder() override { return {}; }
     void RecorderSetAnimationOutputDirectory(cIGZWin* recorder, const cIGZString& directory, bool create) override {}
     ICityMouseRouter* CityMouseRouter() override { return {}; }
-    bool CanInvokeZoningTool() override { return {}; }
+    bool CanInvokeZoningTool() override { return true; }   // an established city: the start panel stays closed
     ITerrainEditor* TerrainEditor() override { return {}; }
     bool GraphicsSystemAllowsSelfScroll() override { return {}; }
     void RunChangeTerrainDialog(int& type) override {}
-    std::uint32_t GetWindowChildrenSet(cIGZWin* window, std::set<cIGZWin*>& children) override { return {}; }
-    std::uint32_t GetWindowChildrenNotInSet(cIGZWin* window, const std::set<cIGZWin*>& excluded, std::set<cIGZWin*>& out) override { return {}; }
-    void AlignWindowSetToWindow(const std::set<cIGZWin*>& windows, cIGZWin* parent) override {}
-    void ClearAcceptFocusFlagRecursive(cIGZWin* window) override {}
-    cIGZWin* CreateWindowFromScript(const cGZPersistResourceKey& key, cIGZWin* parent, std::uint32_t id) override { return {}; }
-    bool CreateWindowFromScript(const cGZPersistResourceKey& key, cIGZWin* parent, std::uint32_t id, std::uint32_t iid, void** out) override { return {}; }
-    cIGZBuffer* LoadImageBuffer(std::uint32_t type, std::uint32_t group, std::uint32_t instance) override { return {}; }
+    std::uint32_t GetWindowChildrenSet(cIGZWin* window, std::set<cIGZWin*>& children) override { return nSC4UI::GetWindowChildrenSet(window, children); }
+    std::uint32_t GetWindowChildrenNotInSet(cIGZWin* window, const std::set<cIGZWin*>& excluded, std::set<cIGZWin*>& out) override { return nSC4UI::GetWindowChildrenNotInSet(window, excluded, out); }
+    void AlignWindowSetToWindow(const std::set<cIGZWin*>& windows, cIGZWin* parent) override { nSC4UI::AlignWindowSetToWindow(windows, parent); }
+    void ClearAcceptFocusFlagRecursive(cIGZWin* window) override { nSC4UI::ClearAcceptFocusFlagRecursive(window); }
+    cIGZWin* CreateWindowFromScript(const cGZPersistResourceKey& key, cIGZWin* parent, std::uint32_t id) override { return native::CreateWindowFromScript(key, parent, id); }
+    bool CreateWindowFromScript(const cGZPersistResourceKey& key, cIGZWin* parent, std::uint32_t id, std::uint32_t iid, void** out) override {
+        cIGZWin* window = native::CreateWindowFromScript(key, parent, id);
+        if (!window) return false;
+        const bool ok = window->QueryInterface(iid, out);
+        window->Release();
+        return ok;
+    }
+    cIGZBuffer* LoadImageBuffer(std::uint32_t, std::uint32_t group, std::uint32_t instance) override { return native::LoadBitmapResource(group, instance); }
     cIGZWin* CreateToolbarButton() override { return {}; }
     cIGZWin* CreateCompassWindow() override { return {}; }
     void LocalisedString(std::uint32_t group, std::uint32_t instance, cRZString& out) override {}
@@ -91,7 +101,7 @@ struct StubView3DWin final : IView3DWinHost {
     bool PopupModalDialogsSafe() override { return {}; }
     bool PopupModalDialogsEnabled() override { return {}; }
     std::uint32_t SimulationFrameCounter() override { return {}; }
-    bool FilterUiCommandMessage(cGZMessage& message) override { return {}; }
+    bool FilterUiCommandMessage(cGZMessage&) override { return true; }   // no tutorial running: every message is kept
     bool HandleUrl(cIGZString* link) override { return {}; }
     void HandleAdviceLink(cGZMessage& message) override {}
     void ProcessCheatCode(std::uint32_t id, const char* cmdLine) override {}

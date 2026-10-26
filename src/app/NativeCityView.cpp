@@ -241,6 +241,7 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     sc4::SetCityScrollHost(input);
     view.AttachRenderStack(adapter, nullptr, control);
     view.EnablePainting(true);
+    view.AddGUI();   // DoPostCityInit's city UI (the view's engine DoMessage that sends it there is not ported)
     return ok;
 }
 
