@@ -319,7 +319,7 @@ int main() {
             CHECK(drv->GetVideoModeInfo(2, m) && m.width == 64 && m.height == 48 && m.id == 2);
             CHECK(!drv->GetVideoModeInfo(99, m) && drv->GetError() == 2);
             drv->GetVideoModeInfo(m);
-            CHECK(m.id == -1);                                     // no mode selected yet
+            CHECK(m.id == 0 && m.width == W && m.height == H);    // before any SetVideoMode the drawable is the current mode (the boot code reads it)
             CHECK(drv->SetVideoMode(2, nullptr, true, false));
             drv->GetVideoModeInfo(m);
             CHECK(m.id == 2 && m.width == 64);
