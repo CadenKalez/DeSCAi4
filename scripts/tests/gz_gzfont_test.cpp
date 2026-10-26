@@ -145,15 +145,16 @@ int main() {
         std::uint32_t fg = 0x00ff8040;
         CHECK(r.DrawChar(nullptr, b32, &dest, cov, &src, 4, cIGZFontRenderer::kAlpha, &fg, nullptr));
         CHECK(b32->GetPixel(3, 1) == 0 && b32->GetPixel(0, 1) == 0);
-        // exact formula for coverage 0x80 on black
+        // exact formula for coverage 0x80 on black (the port blends the colour as opaque: see BufferFontRenderer.cpp)
+        const std::uint32_t opaque = fg | 0xff000000u;
         std::uint32_t a = 0x80, ia = 0x100 - a;
-        std::uint32_t expect = ((a * (fg & 0xff00ff) + 0x800080 + 0 * ia) >> 8 & 0xff00ff) |
-                               (((fg >> 8 & 0xff00ff) * a + 0x800080 + 0 * ia) & 0xff00ff00);
+        std::uint32_t expect = ((a * (opaque & 0xff00ff) + 0x800080 + 0 * ia) >> 8 & 0xff00ff) |
+                               (((opaque >> 8 & 0xff00ff) * a + 0x800080 + 0 * ia) & 0xff00ff00);
         CHECK(b32->GetPixel(2, 1) == expect);
         // mono: only bit 7 set pixels
         b32->Fill(0, nullptr);
         r.DrawChar(nullptr, b32, &dest, cov, &src, 4, cIGZFontRenderer::kMono, &fg, nullptr);
-        CHECK(b32->GetPixel(1, 1) == fg && b32->GetPixel(2, 1) == fg && b32->GetPixel(3, 1) == 0 && b32->GetPixel(4, 1) == 0);
+        CHECK(b32->GetPixel(1, 1) == opaque && b32->GetPixel(2, 1) == opaque && b32->GetPixel(3, 1) == 0 && b32->GetPixel(4, 1) == 0);
         // palette
         std::uint32_t pal[256] = {};
         pal[0xff] = 0x111111; pal[0x80] = 0x222222; pal[0x40] = 0x333333;
