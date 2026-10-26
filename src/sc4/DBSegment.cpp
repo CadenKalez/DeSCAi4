@@ -553,16 +553,28 @@ bool cSC4COMSerializer::LoadClassObjects(std::uint32_t version) {
                             }
                             cIGZSerializable* object = nullptr;
                             if (OnGetGZSerializable(&object, id, classId)) {
+                                std::string peek;   // SC4_DUMPFAIL: the first payload bytes, taken before the read can put the stream in error
+                                if (std::getenv("SC4_DUMPFAIL")) {
+                                    const std::uint32_t at = record->GetPosition();
+                                    char text[8];
+                                    for (int k = 0; k < 96 && at + k < position + size; ++k) { std::uint8_t b = 0; stream->GetUint8(b); std::snprintf(text, sizeof text, " %02x", b); peek += text; }
+                                    record->SeekAbsolute(at);
+                                }
+                                std::string whole;   // SC4_DUMPFULL: the whole payload, kept to write out when the read fails
+                                if (std::getenv("SC4_DUMPFULL")) {
+                                    const std::uint32_t at = record->GetPosition();
+                                    for (std::uint32_t k = at; k < position + size; ++k) { std::uint8_t b = 0; stream->GetUint8(b); whole.push_back(char(b)); }
+                                    record->SeekAbsolute(at);
+                                }
                                 const bool readOk = object->Read(*stream);
                                 if (std::getenv("SC4_DEBUG") && (!readOk || stream->GetError() || record->GetPosition() != position + size))
                                     std::fprintf(stderr, "LoadClassObjects: class %08x object %u read %s, error %d, consumed %d of %u\n", classId, info.expected - n, readOk ? "ok" : "FAILED", int(stream->GetError()), int(record->GetPosition()) - int(position), size);
-                                if (!readOk && std::getenv("SC4_DUMPFAIL")) {   // the first bytes of the payload of a failing object
-                                    const std::uint32_t header = version < kWideIdVersion ? 12 : 16;
-                                    record->SeekAbsolute(position + header);
-                                    std::fprintf(stderr, "payload %08x:", classId);
-                                    for (int k = 0; k < 96 && position + header + k < position + size; ++k) { std::uint8_t b = 0; stream->GetUint8(b); std::fprintf(stderr, " %02x", b); }
-                                    std::fprintf(stderr, "\n");
+                                if (!readOk && !whole.empty()) {
+                                    char name[64];
+                                    std::snprintf(name, sizeof name, "/tmp/payload_%08x.bin", classId);
+                                    if (FILE* f = std::fopen(name, "wb")) { std::fwrite(whole.data(), 1, whole.size(), f); std::fclose(f); }
                                 }
+                                if (!readOk && !peek.empty()) std::fprintf(stderr, "payload %08x:%s\n", classId, peek.c_str());
                                 if (record->GetPosition() != position + size) record->SeekAbsolute(position + size);
                             } else {
                                 record->SeekAbsolute(position + size);

@@ -927,7 +927,8 @@ bool cSC4WeatherSimulator::Write(cIGZOStream& stream) const {
     stream << temperatureMap_;
     stream << seaModeration_;
     stream.SetUint64(static_cast<std::uint64_t>(waterAreas_.size()));
-    for (const cRZRect& area : waterAreas_) stream << area;
+    // The city file stores a water area as three 32-bit integers (a 12-byte record), not a four-integer rect.
+    for (const cRZRect& area : waterAreas_) { stream.SetSint32(area.left); stream.SetSint32(area.top); stream.SetSint32(area.right); }
     stream << cellWalk_;
     stream.SetUint32(static_cast<std::uint32_t>(cellsPerUpdate_));
     stream.SetUint32(static_cast<std::uint32_t>(seaModerationRadius_));
@@ -943,7 +944,7 @@ bool cSC4WeatherSimulator::Write(cIGZOStream& stream) const {
     stream.SetFloat32(moistureScalar_);
     stream.SetFloat32(peakExtraMoisture_);
     stream.SetFloat32(peakThreshold_);
-    stream.SetUint64(static_cast<std::uint64_t>(unused1_));
+    stream.SetUint32(unused1_);
     stream.SetFloat32(baseWindSpeed_);
     stream << baseWindDirection_;
     stream.SetFloat32(windSpeed_);
@@ -952,7 +953,7 @@ bool cSC4WeatherSimulator::Write(cIGZOStream& stream) const {
     stream << previousWindDirection_;
     stream.SetFloat32(targetWindSpeed_);
     stream << targetWindDirection_;
-    stream << random_;
+    random_.Write(stream);
     stream.SetUint32(static_cast<std::uint32_t>(ambientMonth_));
     // Note: the wind angle spread (+0x1dc) is a tunable and is not saved.
     return !stream.GetError();
@@ -1000,7 +1001,12 @@ bool cSC4WeatherSimulator::Read(cIGZIStream& stream) {
     // readers in gz/StreamOps.cpp do)
     if (areaCount >= kStreamVectorLimit) return !stream.GetError();
     waterAreas_.assign(static_cast<std::size_t>(areaCount), cRZRect{});
-    for (std::uint64_t i = 0; i < areaCount; ++i) stream >> waterAreas_[static_cast<std::size_t>(i)];
+    for (std::uint64_t i = 0; i < areaCount; ++i) {
+        cRZRect& area = waterAreas_[static_cast<std::size_t>(i)];
+        stream.GetSint32(area.left);
+        stream.GetSint32(area.top);
+        stream.GetSint32(area.right);
+    }
     stream >> cellWalk_;
     stream.GetUint32(value);
     cellsPerUpdate_ = static_cast<int>(value);
@@ -1018,9 +1024,7 @@ bool cSC4WeatherSimulator::Read(cIGZIStream& stream) {
     stream.GetFloat32(moistureScalar_);
     stream.GetFloat32(peakExtraMoisture_);
     stream.GetFloat32(peakThreshold_);
-    std::uint64_t unused = 0;
-    stream.GetUint64(unused);
-    unused1_ = static_cast<std::uint32_t>(unused);
+    stream.GetUint32(unused1_);
     stream.GetFloat32(baseWindSpeed_);
     stream >> baseWindDirection_;
     stream.GetFloat32(windSpeed_);
@@ -1043,7 +1047,7 @@ bool cSC4WeatherSimulator::Read(cIGZIStream& stream) {
         legacyGrid.clear();
         stream >> legacyGrid;
     }
-    stream >> random_;
+    random_.Read(stream);
     stream.GetUint32(value);
     ambientMonth_ = static_cast<int>(value);
     return !stream.GetError();
