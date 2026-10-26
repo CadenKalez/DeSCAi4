@@ -42,6 +42,7 @@
 #include "gz/WinFont.h"
 #include "render/gd/MetalGDriver.h"
 #include "app/NativeLighting.h"
+#include "app/NativeJobs.h"
 #include "sc4/View3DWin.h"
 #include "gz/FontServices.h"
 #include "sc4/App.h"
@@ -409,6 +410,7 @@ void StartGameAudio() {
 void Frame() {
     native::PumpToolTicks(16);
     native::TickLighting();
+    native::EndFrameJobs();
     if (gAudio) gAudio->Tick();
     PumpTimers();
     cSC4App* app = native::BootApplication();
