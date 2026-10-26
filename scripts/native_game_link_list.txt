@@ -619,3 +619,5 @@ src/app/NativeBudgetUi.cpp
 src/app/NativeCitySystems.cpp
 src/tools/watercraft_neutral.cpp
 src/tools/automata_base_handle.cpp
+src/app/NativeAutomata.cpp
+src/app/NativeAutomataList.cpp

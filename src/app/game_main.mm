@@ -41,6 +41,7 @@
 #include "gz/GZFramework.h"
 #include "gz/WinFont.h"
 #include "render/gd/MetalGDriver.h"
+#include "app/NativeAutomata.h"
 #include "app/NativeLighting.h"
 #include "app/NativeJobs.h"
 #include "app/NativeRuntimeWire.h"
@@ -411,6 +412,7 @@ void StartGameAudio() {
 void Frame() {
     native::PumpToolTicks(16);
     native::TickLighting();
+    native::TickAutomata();
     native::EndFrameJobs();
     if (gAudio) gAudio->Tick();
     PumpTimers();

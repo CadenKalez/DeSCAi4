@@ -1,3 +1,4 @@
+#include "app/NativeAutomata.h"
 #include "app/NativeCitySystems.h"
 #include "app/NativeRuntimeWire.h"
 #include "app/NativeBudgetUi.h"
@@ -201,6 +202,8 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
         std::printf("\n");
         // The occupant manager is not a cIGZInitShutdown in the port, so the city's component pass skips it; its Init
         // initialises every occupant the save restored (and lets the queries below and the model maker see them).
+        native::InstallAutomataHost();   // before the occupant manager initialises the vehicles it restored
+        { auto* c = dynamic_cast<sc4::cSC4City*>(cityInterface); if (c) native::SetAutomataRenderer(nullptr, c); }
         cIGZUnknown* om = city->GetComponent(sc4::CityComponent::OccupantManager);
         void* iface = nullptr;
         if (om && om->QueryInterface(sc4::kGZIID_cISC4OccupantManager, &iface)) {
@@ -212,7 +215,7 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
                 const float lo[3] = {-1e6f, -1e6f, -1e6f}, hi[3] = {1e6f, 1e6f, 1e6f};
                 auto* all = new sc4::cSC4OccupantFilter();
                 all->AddRef();
-                manager->IterateOccupantsByBBox([](sc4::cISC4Occupant* o, void*) { ++census[o->GetType()]; return true; }, nullptr, lo, hi,
+                manager->IterateOccupantsByBBox([](sc4::cISC4Occupant* o, void*) { static int shown = 0; if (o->GetType() == 0xc7cc75f1 && shown++ < 6) { float p[3] = {}; o->GetPosition(p); std::printf("vehicle at %.1f %.1f %.1f\n", p[0], p[1], p[2]); } ++census[o->GetType()]; return true; }, nullptr, lo, hi,
                                                 static_cast<sc4::cISC4OccupantFilter*>(all));
                 all->Release();
                 for (auto& [type, n] : census) std::printf("occupants: type %08x x%d\n", type, n);
@@ -256,6 +259,8 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     if (auto* city = dynamic_cast<sc4::cSC4City*>(cityInterface); city && ok) {
         native::InstallModelResources(driver);
         native::AttachModelMaker(*render, *city);
+        native::SetAutomataRenderer(render, city);
+        native::PostCityInitToAutomataManagers(city);
     }
 
     {

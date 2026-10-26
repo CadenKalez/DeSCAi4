@@ -16,7 +16,7 @@ void InstallAutomataAttractorStub();
 void InstallAutomataControllerStub();
 void InstallControllerManagerStub();
 void InstallAutomataManagerStub();
-void InstallAutomatonStub();
+void InstallAutomataHost();
 void InstallBudgetStub();
 void InstallBudgetDialogStub();
 void InstallBudgetUIWinProcStub();
@@ -118,7 +118,7 @@ void InstallStubHosts() {
     InstallAutomataControllerStub();
     InstallControllerManagerStub();
     InstallAutomataManagerStub();
-    InstallAutomatonStub();
+    InstallAutomataHost();   // NativeAutomata.cpp: the models, the city sizes, the terrain
     InstallBudgetStub();
     InstallBudgetDialogStub();
     InstallBudgetUIWinProcStub();

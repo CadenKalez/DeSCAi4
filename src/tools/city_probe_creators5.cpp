@@ -12,7 +12,7 @@ IVehicleHost* NewStubIVehicleHost();                      // app/hosts/IfaceIVeh
 cIGZSerializable* CreateCityProbeSerializable5(std::uint32_t classId) {
     switch (classId) {
         case 0x896e714a: {
-            auto* object = new sc4::cSC4Vehicle(sc4::NewStubITrafficAutomatonHost(), sc4::NewStubIAutomatonHost(), sc4::NewStubIVehicleHost());
+            auto* object = new sc4::cSC4Vehicle(sc4::NewStubITrafficAutomatonHost(), sc4::AutomatonHost() ? sc4::AutomatonHost() : sc4::NewStubIAutomatonHost(), sc4::NewStubIVehicleHost());
             object->AddRef();
             return object;
         }

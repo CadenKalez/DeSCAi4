@@ -91,7 +91,9 @@ int main() {
     auto put16 = [&](std::uint16_t x) { v1.push_back(x & 255); v1.push_back(x >> 8); };
     auto put32 = [&](std::uint32_t x) { for (int i = 0; i < 4; ++i) v1.push_back((x >> (8 * i)) & 255); };
     put16(1); put32(7);
-    for (int i = 0; i < 11; ++i) put32(0);
+    for (int i = 0; i < 9; ++i) put32(0);          // supply .. active
+    v1.push_back(0);                               // dirty
+    put32(0); put32(0);                            // economy and tax modifiers
     v1.push_back(25);                              // 25% -> 0.25
     PortMemoryIStream in1(v1.data(), v1.size());
     cSC4Demand legacy(&host);
