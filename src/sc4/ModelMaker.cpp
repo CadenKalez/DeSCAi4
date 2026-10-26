@@ -1558,8 +1558,9 @@ void cSC4ModelMaker::DoBuildingCompletionChanged(cISC4BuildingOccupant* building
         instance->GetWorldBounds(bounds);
         cS3DTransform transform;
         instance->GetTransform(transform);
-        float top = bounds.max[1];
-        if (completion < 1.0f) top += (bounds.min[1] - top) * missing * -1.05f;
+        // 0x10030faba: the model rests on the occupant's base; while it is being built it sinks by the unbuilt part of its height
+        float top = position[1];
+        if (completion < 1.0f) top += (bounds.max[1] - bounds.min[1]) * missing * -1.05f;
         transform.translation[0] = position[0];
         transform.translation[1] = top;
         transform.translation[2] = position[2];
