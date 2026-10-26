@@ -1,3 +1,5 @@
+#include "app/NativeLighting.h"
+#include "sc4/Simulator.h"
 #include "app/NativeCityView.h"
 
 #include <cmath>
@@ -251,6 +253,16 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     if (auto* city = dynamic_cast<sc4::cSC4City*>(cityInterface); city && ok) {
         native::InstallModelResources(driver);
         native::AttachModelMaker(*render, *city);
+    }
+
+    {
+        sc4::cSC4Simulator* simulator = nullptr;
+        if (auto* city = dynamic_cast<sc4::cSC4City*>(cityInterface)) {
+            void* iface = nullptr;
+            cIGZUnknown* component = city->GetComponent(sc4::CityComponent::Simulator);
+            if (component && component->QueryInterface(0x8695664e, &iface) && iface) { simulator = static_cast<sc4::cSC4Simulator*>(static_cast<sc4::cISC4Simulator*>(iface)); static_cast<cIGZUnknown*>(iface)->Release(); }
+        }
+        native::InitCityLighting(terrain, render, simulator);
     }
 
     auto* adapter = new RendererAdapter(render, control, driver, screen);

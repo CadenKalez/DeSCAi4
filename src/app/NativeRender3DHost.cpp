@@ -3,6 +3,7 @@
 // lighting manager, the render properties and the settings are still the renderer's own defaults.
 #include <string>
 #include <vector>
+#include "app/NativeLighting.h"
 #include "sc4/Render3D.h"
 #include "sc4/ServiceLocator.h"
 
@@ -13,7 +14,7 @@ struct StubRender3D final : IRender3DHost {
     void RegisterStaticShutdown(bool (*function)(void*), void* context) override {}
     cIGZMessageServer2* MessageServer() override { return SL::spMS2; }
     sc4::cISCPropertyHolder* RenderPropertyHolder() override { return {}; }
-    IS4LightingManager* CreateLightingManager() override { return {}; }
+    IS4LightingManager* CreateLightingManager() override { return CreateNativeLightingManager(); }
     cIGZUnknown* TerrainView() override { return {}; }
     cIGZUnknown* City() override { return {}; }
     IRender3DSettings* Settings() override { return {}; }

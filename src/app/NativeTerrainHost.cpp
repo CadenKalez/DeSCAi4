@@ -7,6 +7,8 @@
 #include <random>
 #include <vector>
 #include "app/NativeUi.h"
+#include "app/NativeLighting.h"
+#include "sc4/LightingManager.h"
 #include "gz/cGZPersistResourceManager.h"
 #include "rz/cRZIniFile.h"
 #include "gz/cIGZPersistResourceKeyList.h"
@@ -55,6 +57,12 @@ struct NativeTerrainHost final : ITerrainHost {
         // PARTIAL: one fixed sun and an ambient term; the original asks the lighting manager (SL::spLightingManager vslot 0xe0,
         // GetVertexColors) for the time-of-day colours of the vertex.
         if (std::getenv("SC4_DEBUG")) { static int rows = 0; if (rows++ < 3 || rows % 64 == 0) std::fprintf(stderr, "terrain lighting row %d x %d..%d (%d rows so far)\n", z, x, endX, rows); }
+        if (sc4::cSC4LightingManager* lighting = LightingManager()) {
+            // the third argument of cSTETerrain::DoLighting is the vertex count of the row
+            lighting->GetTerrainVertexColors(z, x, endX, reinterpret_cast<const cS3DVector3*>(normals), normalStride, static_cast<std::uint8_t*>(colours), colourStride);
+            return;
+        }
+        endX += x;
         auto* normal = reinterpret_cast<std::uint8_t*>(normals);
         auto* colour = static_cast<std::uint8_t*>(colours);
         for (std::int32_t i = x; i < endX; ++i, normal += normalStride, colour += colourStride) {

@@ -1,3 +1,5 @@
+#include "app/NativeLighting.h"
+#include "sc4/LightingManager.h"
 #include "app/NativeTerrainView.h"
 
 #include <cstdio>
@@ -93,7 +95,11 @@ public:
     void ApplyTerrainLighting(const sc4::TerrainRect& rect) override { if (terrain_) terrain_->DoLighting(rect); }
     bool HasLighting() const override { return true; }
     void GetNormalLight(const float normal[3], float rgba[4]) const override {
-        // PARTIAL: a fixed sun; the original asks the lighting manager (SL::spLightingManager).
+        if (sc4::cSC4LightingManager* lighting = native::LightingManager()) {
+            const cS3DVector3 c = lighting->GetColor(cS3DVector3{normal[0], normal[1], normal[2]});
+            rgba[0] = c.x; rgba[1] = c.y; rgba[2] = c.z; rgba[3] = 1.0f;
+            return;
+        }
         const float dot = normal[0] * 0.35f + normal[1] * 0.80f + normal[2] * 0.45f;
         const float v = 0.55f + 0.45f * (dot > 0.0f ? dot : 0.0f);
         rgba[0] = rgba[1] = rgba[2] = v > 1.0f ? 1.0f : v;
