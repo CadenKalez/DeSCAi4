@@ -1,4 +1,5 @@
 #include "sc4/PropManager.h"
+#include "sc4/DBSegment.h"
 
 #include <algorithm>
 #include <cfloat>
@@ -123,13 +124,22 @@ bool cSC4PropManager::DoMessage(std::uint32_t) { return true; }
 
 bool cSC4PropManager::Write(cIGZOStream& stream) const {
     stream.SetUint16(1);
+    SC4WriteGZSerializable(stream, nullptr);   // the tool the manager keeps (not modelled)
+    SC4WriteGZSerializable(stream, nullptr);   // the lot manager
     return !stream.GetError();
 }
 
 bool cSC4PropManager::Read(cIGZIStream& stream) {
     std::uint16_t version = 0;
     stream.GetUint16(version);
-    return version == 1 && !stream.GetError();
+    if (version != 1) return false;
+    // the two objects the manager keeps (a tool and the lot manager) are references of the record: consumed here, the port keeps neither
+    for (std::uint32_t iid : {0xc6bb8334u, 0x681905bdu}) {
+        void* raw = nullptr;
+        SC4ReadGZSerializable(stream, iid, &raw, false);
+        if (raw) static_cast<cIGZUnknown*>(raw)->Release();
+    }
+    return !stream.GetError();
 }
 
 // ------------------------------------------------------------------------------------ exemplar data

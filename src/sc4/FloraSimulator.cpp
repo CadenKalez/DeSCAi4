@@ -1,4 +1,7 @@
 #include "sc4/FloraSimulator.h"
+#include "rz/cRZRandom.h"
+#include "sc4/SimStreamOps.h"
+#include "sc4/DBSegment.h"
 
 #include <cmath>
 #include <cstring>
@@ -56,6 +59,33 @@ bool cSC4FloraSimulator::Read(cIGZIStream& stream) {
     std::uint16_t version = 0;
     stream.GetUint16(version);
     if (version != 2) return false;
+    void* dbStream = nullptr;
+    if (!stream.QueryInterface(kGZIID_cISC4DBSegmentIStream, &dbStream) || !dbStream) return !stream.GetError();   // the port's own reduced record
+    static_cast<cIGZUnknown*>(dbStream)->Release();
+    // The record of a city file: four flags, the growth parameters, the walk iterator, the seed generator and the occupants of the
+    // flora in progress. The port's flora simulator keeps none of this state yet, so it is consumed.
+    std::uint8_t u8 = 0;
+    std::uint32_t u32 = 0;
+    std::int32_t s32 = 0;
+    float f32 = 0.0f;
+    for (int i = 0; i < 4; ++i) stream.GetUint8(u8);
+    stream.GetFloat32(f32); stream.GetFloat32(f32);
+    stream.GetSint32(s32); stream.GetSint32(s32);
+    for (int i = 0; i < 4; ++i) stream.GetUint32(u32);
+    stream.GetUint8(u8);
+    RandomIterator walk;
+    stream >> walk;                                                    // +0x78
+    cRZRandom random(1);
+    random.Read(stream);                                               // +0xb8
+    stream.GetUint32(u32);                                             // +0xd8: a list of occupant references
+    if (u32 < 10000000u) {
+        for (std::uint32_t i = 0; i < u32 && !stream.GetError(); ++i) {
+            void* raw = nullptr;
+            SC4ReadGZSerializable(stream, 0x26bb767e, &raw, false);
+            if (raw) static_cast<cIGZUnknown*>(raw)->Release();
+        }
+    }
+    stream.GetFloat32(f32); stream.GetFloat32(f32);
     return !stream.GetError();
 }
 

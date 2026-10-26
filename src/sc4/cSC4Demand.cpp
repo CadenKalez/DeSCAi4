@@ -111,6 +111,7 @@ bool cSC4Demand::Write(cIGZOStream& s) const {
     s.SetFloat32(activeMin_);
     s.SetFloat32(activeMax_);
     s.SetFloat32(active_);
+    s.SetUint8(dirty_ ? 1 : 0);                 // the byte between the nine values and the two modifiers (+0x40)
     s.SetFloat32(economyModifier_);
     s.SetFloat32(taxModifier_);
     s.SetFloat32(demandCap_);
@@ -132,6 +133,9 @@ bool cSC4Demand::Read(cIGZIStream& s) {
     s.GetFloat32(activeMin_);
     s.GetFloat32(activeMax_);
     s.GetFloat32(active_);
+    std::uint8_t dirty = 0;
+    s.GetUint8(dirty);                          // +0x40
+    dirty_ = dirty != 0;
     s.GetFloat32(economyModifier_);
     s.GetFloat32(taxModifier_);
     if (version == 1) {

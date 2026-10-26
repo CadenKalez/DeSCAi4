@@ -926,9 +926,8 @@ bool cSC4WeatherSimulator::Write(cIGZOStream& stream) const {
     stream.SetFloat32(temperature_);
     stream << temperatureMap_;
     stream << seaModeration_;
-    stream.SetUint64(static_cast<std::uint64_t>(waterAreas_.size()));
-    // The city file stores a water area as three 32-bit integers (a 12-byte record), not a four-integer rect.
-    for (const cRZRect& area : waterAreas_) { stream.SetSint32(area.left); stream.SetSint32(area.top); stream.SetSint32(area.right); }
+    stream.SetUint32(static_cast<std::uint32_t>(waterAreas_.size()));   // a 32-bit count, then one four-integer rect each
+    for (const cRZRect& area : waterAreas_) stream << area;
     stream << cellWalk_;
     stream.SetUint32(static_cast<std::uint32_t>(cellsPerUpdate_));
     stream.SetUint32(static_cast<std::uint32_t>(seaModerationRadius_));
@@ -995,18 +994,13 @@ bool cSC4WeatherSimulator::Read(cIGZIStream& stream) {
     stream.GetFloat32(temperature_);
     stream >> temperatureMap_;
     stream >> seaModeration_;
-    std::uint64_t areaCount = 0;
-    stream.GetUint64(areaCount);
+    std::uint32_t areaCount = 0;
+    stream.GetUint32(areaCount);
     // (the original resizes straight from the stream; the port refuses absurd counts like the container
     // readers in gz/StreamOps.cpp do)
     if (areaCount >= kStreamVectorLimit) return !stream.GetError();
     waterAreas_.assign(static_cast<std::size_t>(areaCount), cRZRect{});
-    for (std::uint64_t i = 0; i < areaCount; ++i) {
-        cRZRect& area = waterAreas_[static_cast<std::size_t>(i)];
-        stream.GetSint32(area.left);
-        stream.GetSint32(area.top);
-        stream.GetSint32(area.right);
-    }
+    for (std::uint32_t i = 0; i < areaCount; ++i) stream >> waterAreas_[static_cast<std::size_t>(i)];
     stream >> cellWalk_;
     stream.GetUint32(value);
     cellsPerUpdate_ = static_cast<int>(value);

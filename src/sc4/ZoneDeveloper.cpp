@@ -5,6 +5,7 @@
 // original vtable slot of every such call.
 
 #include "sc4/ZoneDeveloper.h"
+#include "sc4/DBSegment.h"
 
 #include <algorithm>
 #include <cfloat>
@@ -495,14 +496,30 @@ bool cSC4ZoneDeveloper::Read(cIGZIStream& stream) {
     stream.GetUint32(countZ);
     lotMap_.resize(countX);
     std::unordered_set<cSC4Lot*> seen;
+    void* dbStream = nullptr;
+    const bool cityFile = stream.QueryInterface(kGZIID_cISC4DBSegmentIStream, &dbStream) && dbStream;
+    if (dbStream) static_cast<cIGZUnknown*>(dbStream)->Release();
     for (std::uint32_t x = 0; x < countX; ++x) {
         lotMap_[x].resize(countZ, nullptr);   // keeps pre-existing cells, like the original resize
         for (std::uint32_t z = 0; z < countZ; ++z) {
-            cSC4Lot* lot = g_host ? g_host->ReadLot(stream) : nullptr;
+            // In a city file a lot is an object reference: the object is created (and read later) by the serialization layer, and a plain
+            // lot is reached through the adapter that holds it. The adapter reference is kept for the lot's lifetime.
+            cSC4Lot* lot = nullptr;
+            cIGZUnknown* adapter = nullptr;
+            if (cityFile) {
+                void* raw = nullptr;
+                SC4ReadGZSerializable(stream, kGZIID_cIGZSerializable, &raw, false);
+                adapter = static_cast<cIGZUnknown*>(raw);
+                void* plain = nullptr;
+                if (adapter && adapter->QueryInterface(kGZIID_PlainObject, &plain) && plain) lot = static_cast<cSC4Lot*>(plain);
+                else if (adapter) { adapter->Release(); adapter = nullptr; }
+            } else {
+                lot = g_host ? g_host->ReadLot(stream) : nullptr;
+            }
             lotMap_[x][z] = lot;
             if (!lot) continue;
             if (!seen.insert(lot).second) {
-                lot->Release();   // the stream handed out a second reference for a duplicate cell
+                if (adapter) adapter->Release(); else lot->Release();   // the stream handed out a second reference for a duplicate cell
             } else {
                 lots_.push_front(lot);
                 ++lotCount_;

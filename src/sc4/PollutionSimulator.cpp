@@ -1,4 +1,5 @@
 #include "sc4/PollutionSimulator.h"
+#include "sc4/SimStreamOps.h"
 
 #include <algorithm>
 #include <cmath>
@@ -101,7 +102,98 @@ bool cSC4PollutionSimulator::Write(cIGZOStream& stream) const {
 
 // 0x100096588. PARTIAL: mirrors Write; the version gate and the occupant-list / RandomIterator / curve
 // reads belong to the unrecovered state and are left out (see Write's field list).
+// 0x100096588: the record of a city file. The eight grids are kept; the four building lists are object references (consumed: the port
+// finds the buildings through the occupant manager); the counters, totals and flags are kept under their original offsets. A stream that is
+// not a city-file segment stream (the unit tests) carries the port's own reduced record, read below.
+bool cSC4PollutionSimulator::ReadCityRecord(cIGZIStream& stream) {
+    std::uint16_t version = 0;
+    stream.GetUint16(version);
+    if (version > 4) return false;
+    for (auto& grid : valueGrids_) {
+        void* raw = nullptr;
+        if (SC4ReadGZSerializable(stream, kGZIID_cISC4SimGrid, &raw, false)) grid.reset(SimGridCast<std::int16_t>(raw));
+    }
+    for (auto& grid : sourceGrids_) {
+        void* raw = nullptr;
+        if (SC4ReadGZSerializable(stream, kGZIID_cISC4SimGrid, &raw, false)) grid.reset(SimGridCast<std::int16_t>(raw));
+    }
+    std::uint32_t u32 = 0;
+    std::int64_t s64 = 0;
+    double f64 = 0.0;
+    std::uint8_t u8 = 0;
+    stream.GetUint32(u32);                                    // +0xb8
+    stream.GetUint32(u32);                                    // +0xbc
+    for (int list = 0; list < 4; ++list) {                    // +0xc0 / +0xd8 / +0xf0 / +0x108: lists of occupants
+        stream.GetUint32(u32);
+        if (u32 < 10000000u)
+            for (std::uint32_t i = 0; i < u32 && !stream.GetError(); ++i) {
+                void* raw = nullptr;
+                SC4ReadGZSerializable(stream, 0x26bb767e, &raw, false);
+                if (raw) static_cast<cIGZUnknown*>(raw)->Release();
+            }
+    }
+    stream.GetUint32(recyclingCenterCountSnapshot);           // +0x208
+    stream.GetSint32(averageAir_);                            // +0x20c
+    stream.GetSint32(averageWater_);                          // +0x210
+    stream.GetUint32(airSum);                                 // +0x214
+    stream.GetUint32(waterSum);                               // +0x218
+    stream.GetUint32(periodValue21c[0]);                      // +0x21c
+    stream.GetUint32(periodValue21c[1]);                      // +0x220
+    stream.GetUint32(periodValue224[0]);                      // +0x224
+    stream.GetUint32(periodValue224[1]);                      // +0x228
+    stream.GetUint32(cellCount);                              // +0x22c
+    std::uint16_t avgGarbage = 0;
+    stream.GetUint16(avgGarbage); averageGarbage_ = static_cast<std::int16_t>(avgGarbage);   // +0x234
+    stream.GetUint32(monthlyIncineratorCapacity_);            // +0x238
+    stream.GetUint32(monthlyWasteToEnergyCapacity_);          // +0x23c
+    stream.GetFloat32(recyclingEffect_);                      // +0x240
+    stream.GetUint8(u8); garbageUncollected_ = u8 != 0;       // +0x244
+    stream.GetUint32(totalGarbageUncollected_);               // +0x248
+    stream.GetSint64(s64);                                    // +0x2d0
+    stream.GetSint64(s64);                                    // +0x2d8
+    if (version > 3) { stream.GetUint32(u32); abductedPrev_ = static_cast<std::int32_t>(u32); }   // +0x2c8
+    stream.GetSint64(producedPrev_);                          // +0x288
+    stream.GetSint64(importedPrev_);                          // +0x290
+    stream.GetSint64(exportedPrev_);                          // +0x298
+    stream.GetFloat64(recycledPrev_);                         // +0x2a0
+    stream.GetSint64(incineratedPrev_);                       // +0x2a8
+    stream.GetSint64(convertedPrev_);                         // +0x2b0
+    stream.GetSint64(landfilledPrev_);                        // +0x2b8
+    stream.GetSint64(s64);                                    // +0x250
+    stream.GetSint64(s64);                                    // +0x258
+    stream.GetSint64(recycledThisMonth_);                     // +0x260
+    stream.GetFloat64(f64);                                   // +0x268
+    stream.GetSint64(wasteToEnergyThisMonth_);                // +0x270
+    stream.GetSint64(incineratedThisMonth_);                  // +0x278
+    stream.GetSint64(landfilledThisMonth_);                   // +0x280
+    stream.GetUint32(abductedThisMonth_);                     // +0x2c4
+    std::int32_t allowance = 0;
+    stream.GetSint32(allowance); recyclingAllowance_ = allowance;   // +0x2c0
+    std::int32_t landfills = 0;
+    stream.GetUint32(u32); landfills = static_cast<std::int32_t>(u32); activeLandfillCount_ = landfills;   // +0x2cc
+    stream.GetUint32(u32);                                    // +0x2e4
+    RandomIterator walk;
+    stream >> walk;                                           // +0x2e8
+    stream.GetUint8(u8); dirtyRadiation = u8 != 0;            // +0x328..
+    stream.GetUint8(u8); dirtyAir = u8 != 0;
+    stream.GetUint8(u8); dirtyWater = u8 != 0;
+    stream.GetUint8(u8); dirtyGarbage = u8 != 0;
+    stream.GetFloat32(efficiency_);                           // +0x348
+    std::int32_t supply = 0, capacity = 0;
+    stream.GetSint32(supply); garbageSupply_ = supply;        // +0x34c
+    stream.GetSint32(capacity); garbageCapacity_ = capacity;  // +0x350
+    void* raw = nullptr;                                      // +0x1c0: the water grid
+    SC4ReadGZSerializable(stream, 0x223e2b67, &raw, false);
+    if (raw) static_cast<cIGZUnknown*>(raw)->Release();
+    return !stream.GetError();
+}
+
 bool cSC4PollutionSimulator::Read(cIGZIStream& stream) {
+    void* dbStream = nullptr;
+    if (stream.QueryInterface(kGZIID_cISC4DBSegmentIStream, &dbStream) && dbStream) {
+        static_cast<cIGZUnknown*>(dbStream)->Release();
+        return ReadCityRecord(stream);
+    }
     std::uint16_t version = 0;
     stream.GetUint16(version);
     if (version > 4) return false;

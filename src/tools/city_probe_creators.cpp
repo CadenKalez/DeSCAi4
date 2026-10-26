@@ -37,6 +37,8 @@
 #include "sc4/WealthRequester.h"
 #include "sc4/WeatherSimulator.h"
 #include "tools/city_probe_hosts.h"
+#include "rz/cRZString.h"
+#include "sc4/DBSegment.h"
 #include "tools/city_probe_plain.h"
 
 namespace sc4 {
@@ -51,7 +53,28 @@ public:
     void BaseActivate(bool) override {}
     void BaseDoAnimationTick(float, std::uint32_t, const ControllerTime&) override {}
     bool BaseWrite(cIGZOStream&) override { return true; }
-    bool BaseRead(cIGZIStream&) override { return true; }
+    // cSC4AutomataController::Read (@ 0x1000f9c82): the base record of every controller. The references (the occupant and the automata)
+    // are consumed; the port's generator keeps none of them.
+    bool BaseRead(cIGZIStream& stream) override {
+        const auto skipReference = [&stream]() {
+            void* raw = nullptr;
+            SC4ReadGZSerializable(stream, kGZIID_cIGZSerializable, &raw, false);
+            if (raw) static_cast<cIGZUnknown*>(raw)->Release();
+        };
+        std::uint16_t version = 0;
+        stream.GetUint16(version);
+        skipReference();                                       // the occupant
+        cRZString name;
+        stream.GetGZStr(name);
+        float f = 0;
+        for (int i = 0; i < 5; ++i) stream.GetFloat32(f);      // position (3), age, lifetime
+        std::uint32_t u = 0, count = 0;
+        stream.GetUint32(u);                                   // sound handle
+        stream.GetUint32(u);                                   // flags
+        stream.GetUint32(count);
+        for (std::uint32_t i = 0; i < count && count < 1000000u && !stream.GetError(); ++i) skipReference();
+        return !stream.GetError();
+    }
     bool CheckFlag(std::uint32_t) override { return false; }
     void GetPosition(float out[3]) override { out[0] = out[1] = out[2] = 0; }
     void GetLotFacingPoint(float out[3]) override { out[0] = out[1] = out[2] = 0; }

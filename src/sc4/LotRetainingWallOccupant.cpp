@@ -127,7 +127,16 @@ bool cSC4LotRetainingWallOccupant::Read(cIGZIStream& stream) {   // @ 0x10015cde
         }
         stream >> position_ >> size_;
         SetLot(nullptr);
-        if (g_host) lot_ = g_host->ReadLotReference(stream);
+        void* dbStream = nullptr;
+        if (stream.QueryInterface(kGZIID_cISC4DBSegmentIStream, &dbStream) && dbStream) {
+            // in a city file the lot is an object reference the lot manager resolves later: consumed here
+            static_cast<cIGZUnknown*>(dbStream)->Release();
+            void* raw = nullptr;
+            SC4ReadGZSerializable(stream, 0xe818fced, &raw, false);
+            if (raw) static_cast<cIGZUnknown*>(raw)->Release();
+        } else if (g_host) {
+            lot_ = g_host->ReadLotReference(stream);
+        }
     }
     // Quirk kept: a nested occupant record with a wrong version makes cSC4Occupant::Read return false without
     // setting the stream error, so this still reports success (and the wall fields stay untouched).

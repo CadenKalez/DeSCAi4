@@ -111,6 +111,7 @@ public:
     std::uint32_t AddRef() override { return ++refCount_; }
     std::uint32_t Release() override;
     bool Write(cIGZOStream& stream) const override;
+    bool ReadCityRecord(cIGZIStream& stream);   // @ 0x100096588
     bool Read(cIGZIStream& stream) override;
     std::uint32_t GetGZCLSID() const override { return kGZCLSID_cSC4PollutionSimulator; }
 
