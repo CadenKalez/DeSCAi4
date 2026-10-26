@@ -52,6 +52,7 @@
 #include "sc4/WinSplashScreen.h"
 #include "app/GameAudio.h"
 #include "app/NativeZoneTool.h"
+#include "app/NativeAudio.h"
 
 namespace {
 
@@ -395,8 +396,9 @@ void StartGameAudio() {
         "/Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/GameData/Sound.dat";
     if (!audio.Open(dat, error)) { std::printf("audio: %s\n", error.c_str()); return; }
     gAudio = &audio;
-    audio.NextAmbient();
-    std::printf("audio: %zu sounds, ambient %s\n", audio.SoundCount(), audio.CurrentName().c_str());
+    native::SetGameAudio(&audio);
+    native::InstallButtonSounds();
+    std::printf("audio: %zu sounds\n", audio.SoundCount());
 }
 
 void Frame() {
@@ -411,6 +413,11 @@ void Frame() {
         app->OnTick(16);
     }
     const bool regionScreen = gAppWindow && gAppWindow->CurrentScreen() && gAppWindow->CurrentScreen()->GetID() == 0xea659793;
+    if (gAudio && gAppWindow && gAppWindow->CurrentScreen()) {   // the radio follows the screen: the region station on the map, the mayor's in a city
+        static const std::string stations = std::string(std::getenv("HOME")) +
+            "/Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/GameData/Radio/Stations/";
+        gAudio->SetStation(stations + (regionScreen ? "Region" : (gAppWindow->View3D() ? "Mayor" : "Region")) + "/Music");
+    }
     if (regionScreen && native::DrawRegionLayers()) InvalidateTree(gMgr->GetMainWindow());   // the map is drawn under the windows: they repaint over it
     // The city view redraws the 3D scene into the whole screen every frame, so the windows over it repaint every frame too.
     if (gAppWindow && gAppWindow->View3D() && !regionScreen) InvalidateTree(gMgr->GetMainWindow());
@@ -531,7 +538,7 @@ void WritePng(const std::string& path) {
 - (void)post:(std::uint32_t)type e:(NSEvent*)e { NSPoint p = [self gz:e]; gMgr->GZWinMsgPost_Mouse(type, int(p.x), int(p.y), [self flags:e]); }
 - (void)mouseMoved:(NSEvent*)e { [self post:kGZMsgMouseMove e:e]; }
 - (void)mouseDragged:(NSEvent*)e { [self post:kGZMsgMouseMove e:e]; }
-- (void)mouseDown:(NSEvent*)e { if (gAudio) gAudio->PlayClick(); [self post:kGZMsgMouseDownL e:e]; }
+- (void)mouseDown:(NSEvent*)e { [self post:kGZMsgMouseDownL e:e]; }
 - (void)mouseUp:(NSEvent*)e { [self post:kGZMsgMouseUpL e:e]; }
 - (void)rightMouseDown:(NSEvent*)e { [self post:kGZMsgMouseDownR e:e]; }
 - (void)rightMouseUp:(NSEvent*)e { [self post:kGZMsgMouseUpR e:e]; }
@@ -609,7 +616,7 @@ int main(int argc, char** argv) {
         gDriver = gd::cMetalGDriver::Create((__bridge void*)layer, kW, kH);
         if (!gDriver) { std::printf("no Metal device\n"); return 1; }
         Boot();
-        if (shot.empty()) StartGameAudio();
+        if (shot.empty() || std::getenv("SC4_AUDIO")) StartGameAudio();
         if (const char* cityPath = std::getenv("SC4_LOADCITY")) {   // development: load one city file straight after boot and exit
             cSC4App* loadApp = native::BootApplication();
             const bool loaded = loadApp && native::LoadCityFile(*loadApp, cityPath);
@@ -647,7 +654,9 @@ int main(int argc, char** argv) {
                         {"left", {0x6a935cd8, 0x2a94826b}}, {"right", {0x6a935ce0, 0x2a94826e}}, {"up", {0x6a935cdd, 0x2a948272}},
                         {"down", {0x6a935ce2, 0x2a948275}}, {"zin", {0x6a935cb7, 0}}, {"zout", {0x6a935cba, 0}},
                         {"rl", {0x6a935cc9, 0}}, {"rr", {0x6a935ccc, 0}}};
-                    if (name.rfind("zone", 0) == 0 && name.size() > 4 && v) {   // zoneN: the zoning tool for zone type N
+                    if (name.rfind("sfx@", 0) == 0) {   // sfx@HEX: a game sound id
+                        native::PlayGameSound(static_cast<std::uint32_t>(std::strtoul(name.c_str() + 4, nullptr, 16)));
+                    } else if (name.rfind("zone", 0) == 0 && name.size() > 4 && v) {   // zoneN: the zoning tool for zone type N
                         v->InvokeZoningTool(static_cast<std::uint32_t>(std::atoi(name.c_str() + 4)));
                     } else if (name.rfind("drag@", 0) == 0) {   // drag@X1xY1xX2xY2: a left drag
                         int a = 0, b = 0, c = 0, d = 0;

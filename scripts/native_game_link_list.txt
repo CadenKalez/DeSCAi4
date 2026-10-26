@@ -576,3 +576,4 @@ src/app/NativeZoneTool.cpp
 src/app/NativeZoneOverlay.cpp
 src/app/NativeCatalogUi.cpp
 src/sc4/WinCalloutBox.cpp
+src/app/NativeAudio.cpp

@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include "app/NativeAudio.h"
 #include "app/NativeGraphics.h"
 #include "gz/Buffer.h"
 #include "sc4/WinCalloutBox.h"
@@ -30,7 +31,7 @@ public:
         }
         return std::string(amount < 0 ? "-\xc2\xa7" : "\xc2\xa7") + out;   // the simoleon sign
     }
-    void PlaySound(std::uint32_t) override {}
+    void PlaySound(std::uint32_t id) override { PlayGameSound(id); }
     bool BlitIcon(IWinBuffer* target, cIGZUnknown* icon, const cRZRect& source, const cRZRect& destination) override {
         if (!target || !icon) return false;
         static_cast<Buffer*>(target)->AsBuffer()->Blt(static_cast<cIGZBuffer*>(icon), source, destination, nullptr);

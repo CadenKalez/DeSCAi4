@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <vector>
 
+#include "app/NativeAudio.h"
 #include "app/NativeZoneOverlay.h"
 #include "gz/cGZPersistResourceKey.h"
 #include "rz/cRZMessage2Standard.h"
@@ -103,7 +104,7 @@ public:
                                      [&](const Tick& t) { return t.target == target && (interval == 0xffffffffu || t.interval == interval); }),
                       g_ticks.end());
     }
-    void PlaySound(std::uint32_t) override {}   // the hit-list sound ids need the AEMS audio system (not running natively)
+    void PlaySound(std::uint32_t id) override { PlayGameSound(id); }
     void LoadString(std::uint32_t group, std::uint32_t instance, std::string& out) override {
         sc4::cSLString text(cGZPersistResourceKey{0x2026960b, group, instance}, true);
         out = text.ToChar() ? text.ToChar() : "";

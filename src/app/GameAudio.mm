@@ -2,6 +2,8 @@
 #import <Foundation/Foundation.h>
 
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <set>
 
@@ -31,9 +33,10 @@ std::vector<std::uint8_t> MakeWav(const std::uint8_t* pcm, std::uint32_t size, s
 
 class AVVoice final : public AudioPlatform::IVoice {
 public:
-    explicit AVVoice(NSData* data) {
+    explicit AVVoice(NSData* data, NSString* typeHint = nil) {
         NSError* err = nil;
-        player_ = [[AVAudioPlayer alloc] initWithData:data error:&err];
+        player_ = typeHint ? [[AVAudioPlayer alloc] initWithData:data fileTypeHint:typeHint error:&err]
+                           : [[AVAudioPlayer alloc] initWithData:data error:&err];
         if (player_) [player_ prepareToPlay];
     }
     bool ok() const { return player_ != nil; }
@@ -56,7 +59,13 @@ public:
         if (!voice->ok()) { delete voice; return nullptr; }
         return voice;
     }
-    AudioPlatform::IVoice* CreateFileVoice(const char*) override { return nullptr; }
+    AudioPlatform::IVoice* CreateFileVoice(const char* path) override {
+        NSData* data = [NSData dataWithContentsOfFile:[NSString stringWithUTF8String:path]];
+        if (!data) return nullptr;
+        auto* voice = new AVVoice(data, @"public.mp3");
+        if (!voice->ok()) { delete voice; return nullptr; }
+        return voice;
+    }
     std::uint32_t AddTimer(std::uint32_t, AudioPlatform::TimerCallback, void*) override { return 0; }
     void RemoveTimer(std::uint32_t) override {}
 };
@@ -71,6 +80,7 @@ struct GameAudio::Impl {
     AVBackend backend;
     AudioPlatform::IVoice* ambient = nullptr;
     AudioPlatform::IVoice* click = nullptr;
+    std::vector<AudioPlatform::IVoice*> voices;   // the effects still playing
 
     bool Decode(std::uint32_t instance, std::vector<std::uint8_t>& pcm, GZSndWaveFormat& fmt) {
         void* raw = nullptr;
@@ -198,6 +208,73 @@ void GameAudio::PlayClick() {
     }
 }
 
+bool GameAudio::PlayTrack(std::uint32_t trackId) {
+    if (!impl_ || !impl_->segment || muted_) return false;
+    auto found = trackSound_.find(trackId);
+    if (found == trackSound_.end()) {
+        std::uint32_t sound = 0;
+        const cGZPersistResourceKey key{0x0b8d821a, 0xca4d1943, trackId};
+        const std::uint32_t size = impl_->segment->GetRecordSizeRaw(key);
+        if (size > 12 && size < 4096) {
+            std::vector<char> bytes(size + 1, 0);
+            std::uint32_t got = size;
+            impl_->segment->ReadRecordRaw(key, bytes.data(), got);
+            // "2DKT" + size, then "TKDT,2,,<sound>,<property set>,..." : the sound id is the fourth comma field
+            const char* text = std::strstr(bytes.data() + 8, "TKDT");
+            if (text) {
+                int field = 0;
+                for (const char* c = text; *c && field < 4; ++c) {
+                    if (*c == ',') {
+                        ++field;
+                        if (field == 3) sound = static_cast<std::uint32_t>(std::strtoul(c + 1, nullptr, 0));
+                    }
+                }
+            }
+        }
+        found = trackSound_.emplace(trackId, sound).first;
+    }
+    if (std::getenv("SC4_DEBUG")) std::fprintf(stderr, "audio: track %08x -> sample %08x\n", trackId, found->second);
+    if (found->second == 0) return false;
+    AudioPlatform::IVoice* voice = impl_->MakeVoice(found->second);
+    if (!voice) return false;
+    voice->SetVolume(0.8f);
+    voice->Play(0);
+    impl_->voices.push_back(voice);
+    return true;
+}
+
+void GameAudio::SetStation(const std::string& directory) {
+    if (directory == stationDirectory_) return;
+    stationDirectory_ = directory;
+    playlist_.clear();
+    nextSong_ = 0;
+    if (impl_ && impl_->ambient) { impl_->ambient->Stop(); delete impl_->ambient; impl_->ambient = nullptr; }
+    if (directory.empty()) return;
+    NSArray* names = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[NSString stringWithUTF8String:directory.c_str()] error:nil];
+    for (NSString* name in names)
+        if ([name.pathExtension.lowercaseString isEqualToString:@"mp3"]) playlist_.push_back(directory + "/" + name.UTF8String);
+    for (std::size_t i = playlist_.size(); i > 1; --i) std::swap(playlist_[i - 1], playlist_[std::rand() % i]);
+}
+
 void GameAudio::Tick() {
-    if (impl_ && impl_->ambient && !impl_->ambient->IsPlaying() && !muted_) NextAmbient();
+    if (impl_ && !playlist_.empty() && !muted_ && (!impl_->ambient || !impl_->ambient->IsPlaying())) {
+        for (std::size_t tries = 0; tries < playlist_.size(); ++tries) {
+            const std::string& path = playlist_[nextSong_++ % playlist_.size()];
+            AudioPlatform::IVoice* voice = impl_->backend.CreateFileVoice(path.c_str());
+            if (!voice) continue;
+            if (impl_->ambient) { impl_->ambient->Stop(); delete impl_->ambient; }
+            impl_->ambient = voice;
+            voice->SetVolume(0.5f);
+            voice->Play(0);
+            current_ = path;
+            if (std::getenv("SC4_DEBUG")) std::fprintf(stderr, "audio: music %s\n", path.c_str());
+            break;
+        }
+    }
+    if (impl_) {
+        for (std::size_t i = 0; i < impl_->voices.size();) {
+            if (!impl_->voices[i]->IsPlaying()) { delete impl_->voices[i]; impl_->voices.erase(impl_->voices.begin() + i); }
+            else ++i;
+        }
+    }
 }

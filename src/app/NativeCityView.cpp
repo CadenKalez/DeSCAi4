@@ -12,6 +12,7 @@
 #include "app/NativeTerrainView.h"
 #include "app/NativeModelMaker.h"
 #include "app/NativeZoneTool.h"
+#include "app/NativeAudio.h"
 #include "app/NativeCatalogUi.h"
 #include "sc4/Render3D.h"
 #include "sc4/View3DWin.h"
@@ -146,7 +147,7 @@ public:
     explicit ViewInput(sc4::cSC4View3DWin& view) { adapter_.view = &view; }
     sc4::IViewInputView* View3D() override { return &adapter_; }
     cIGZWinMgr* WindowManager() override { return adapter_.view->GetWindowManager(); }
-    void PlaySound(int, std::uint32_t) override {}
+    void PlaySound(int, std::uint32_t id) override { PlayGameSound(id); }
     bool RightButtonDown() override {
         return CGEventSourceButtonState(kCGEventSourceStateCombinedSessionState, kCGMouseButtonRight);
     }
