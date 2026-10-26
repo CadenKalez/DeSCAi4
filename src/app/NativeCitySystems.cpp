@@ -3,6 +3,8 @@
 #include <cstdio>
 
 #include "sc4/ServiceLocator.h"
+#include "sc4/Render3D.h"
+#include "sc4/View3DWin.h"
 #include "sc4/cSC4City.h"
 
 namespace native {
@@ -80,6 +82,30 @@ void BindCityServices(cISC4City* cityInterface) {
     systems = new CitySystems(city);
     SL::OnCityCreate(cityInterface, systems);
     SL::OnCityInit();
+}
+
+namespace {
+class View3DSystems final : public SL::IView3DSystems, public SL::IWinSC4App {
+public:
+    SL::IView3DSystems* View3D() override { return this; }
+    cIGZUnknown* View3DWin() override { return view_ ? static_cast<cIGZUnknown*>(static_cast<sc4::cISC4View3DWin*>(view_)) : nullptr; }
+    cIGZUnknown* Renderer() override { return render_ ? static_cast<cIGZUnknown*>(static_cast<::cISC43DRender*>(render_)) : nullptr; }
+    cIGZUnknown* ModelMaker() override { return nullptr; }         // the model maker object is not published natively yet
+    cIGZUnknown* ViewManager() override { return nullptr; }
+    cIGZUnknown* RendererViewUtilities() override { return nullptr; }   // SC4ViewUtilities is a plain class, not a COM object
+    cIGZUnknown* RendererLightingManager() override { return SL::spLightingManager; }
+    sc4::cSC4View3DWin* view_ = nullptr;
+    sc4::cSC43DRender* render_ = nullptr;
+};
+}  // namespace
+
+void BindView3DServices(sc4::cSC4View3DWin* view, sc4::cSC43DRender* render) {
+    static View3DSystems systems;
+    systems.view_ = view;
+    systems.render_ = render;
+    SL::spWinSC4App = &systems;
+    SL::OnView3DCreate(&systems);
+    SL::OnView3DInit();
 }
 
 }  // namespace native

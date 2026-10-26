@@ -1,5 +1,7 @@
 // Loading a city file in the native application (see NativeCity.h). The factory and city host are the ones the city probe
 // (src/tools/city_probe.cpp) proved against the retail files.
+#include "app/NativeCitySystems.h"
+#include "app/NativeRuntimeWire.h"
 #include "app/NativeCity.h"
 
 #include <cstdio>
@@ -26,6 +28,8 @@ void InstallCityProbeBindings();                                          // cit
 
 namespace native {
 void SetTerrainHostCity(cISC4City* city);   // NativeTerrainHost.cpp
+static cISC4City* g_hostCity = nullptr;
+static sc4::ISerializableFactory* g_serFactory = nullptr;      // the city the host creates (OnCityInitialized binds its services)
 namespace {
 
 // The city's host services. The game implements this with the framework, the message server and GZCOM; the probe only
@@ -33,9 +37,13 @@ namespace {
 struct CityHost final : sc4::ICityHost {
     std::uint32_t CreateCitySerialNumber() override { return sc4::SC4CreateCitySerialNumber(); }
     void GetCurrentLanguageAndCountry(int& language, int& country) override { language = 0; country = 0; }
-    cIGZUnknown* CreateComponent(std::uint32_t, std::uint32_t) override { return nullptr; }
+    // A component the city file did not carry: the class's GZCOM creator, asked for the interface the city keeps it as
+    // (cSC4City::CreateCityComponents -> GZCOM()->CreateInstance(classId, iid)).
+    cIGZUnknown* CreateComponent(std::uint32_t classId, std::uint32_t iid) override;
     void PostMessage(cIGZMessage2*) override {}
     void SendMessage(cIGZMessage2*) override {}
+    // cSC4City::Init has created and initialised the components: the locator's OnCityCreate / OnCityInit.
+    void OnCityInitialized() override { BindCityServices(g_hostCity); ReportCityWiring(); }
 };
 
 // Every serialized object of a city file is created from its class id, as the game's serializer does through GZCOM
@@ -47,6 +55,7 @@ struct Factory final : sc4::ISerializableFactory {
         if (classId == 0x8990c372) {                        // cSC4City: the probe's own host
             auto* city = new sc4::cSC4City(&host);
             city->AddRef();
+            g_hostCity = city;
             SetTerrainHostCity(city);
             return city;
         }
@@ -73,6 +82,38 @@ struct Factory final : sc4::ISerializableFactory {
     std::set<std::uint32_t> missing;
 };
 
+cIGZUnknown* CityHost::CreateComponent(std::uint32_t classId, std::uint32_t iid) {
+    // The serialization factory knows every class the city can hold, including the wrappers for the classes that are plain C++.
+    if (classId == 0 || !g_serFactory) return nullptr;
+    cIGZSerializable* serializable = g_serFactory->CreateSerializable(classId);
+    cIGZUnknown* result = nullptr;
+    if (serializable) {
+        void* raw = nullptr;
+        if (serializable->QueryInterface(iid, &raw) && raw) {
+            result = static_cast<cIGZUnknown*>(raw);   // one reference
+        } else {
+            // The classes the decompilation kept as plain C++ answer only their serializable view; the loaded components of the city are
+            // held the same way (every user asks the component for iid 0xe4fda3d4 and checks the class id).
+            serializable->AddRef();
+            result = static_cast<cIGZUnknown*>(static_cast<cIGZSerializable*>(serializable));
+        }
+        serializable->Release();
+    }
+    if (!result) {   // not a serializable class: the raw GZCOM creator, which hands out the primary cIGZUnknown pointer
+        const gzcom::ClassFactoryInfo* info = gzcom::FindClassFactory(classId);
+        void* object = info && info->create ? info->create() : nullptr;
+        if (object) {
+            auto* unknown = static_cast<cIGZUnknown*>(object);
+            unknown->AddRef();
+            void* raw = nullptr;
+            if (unknown->QueryInterface(iid, &raw) && raw) result = static_cast<cIGZUnknown*>(raw);
+            unknown->Release();
+        }
+    }
+    std::printf("city: create component class %08x iid %08x: %s\n", classId, iid, result ? "ok" : "no creator");
+    return result;
+}
+
 }  // namespace
 
 namespace {
@@ -88,8 +129,9 @@ bool LoadCityFile(cSC4App& app, const std::string& path) {
     if (!installed) {
         installed = true;
         sc4::SetSerializableFactory(&factory);
+        g_serFactory = &factory;
         auto& hooks = app.CityHooks();
-        hooks.createCity = []() -> cISC4City* { auto* city = new sc4::cSC4City(&cityHost); city->AddRef(); SetTerrainHostCity(city); return city; };
+        hooks.createCity = []() -> cISC4City* { auto* city = new sc4::cSC4City(&cityHost); city->AddRef(); g_hostCity = city; SetTerrainHostCity(city); return city; };
         hooks.createCitySegment = []() -> cIGZPersistDBSegment* {
             auto* segment = new sc4::cSC4DBSegment();
             segment->AddRef();

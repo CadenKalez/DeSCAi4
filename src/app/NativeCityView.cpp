@@ -286,6 +286,7 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     view.UpdatePopulation();
     view.UpdateSimulationClock();
     native::BindCityServices(cityInterface);
+    native::BindView3DServices(&view, render);
     native::ReportCityWiring();
     return ok;
 }

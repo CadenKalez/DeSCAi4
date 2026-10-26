@@ -76,7 +76,7 @@ void ReportCityWiring() {
     }
     std::cerr << "[Runtime Wire] city services bound: " << bound << " of " << total << " (see docs/WIRING.md for the host seams)" << std::endl;
     for (const ServiceEntry& entry : kServices)
-        if (entry.phase == 2) std::cerr << "[Runtime Wire]   view-phase " << entry.name << (*entry.slot ? " bound" : " pending (IView3DSystems adapter not written)") << std::endl;
+        if (entry.phase == 2) std::cerr << "[Runtime Wire]   view-phase " << entry.name << (*entry.slot ? " bound" : " pending (not a COM object, or not published natively yet)") << std::endl;
 }
 
 }  // namespace native
