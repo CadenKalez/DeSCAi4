@@ -37,7 +37,7 @@ cIGZWinMgr* WM() { return Typed(g_wm, 0xa417445e, 0x000005a4); }
 gz::cIGZWinCtrlMgr* WCM() { return Typed(g_wcm, 0xc2c2eb0f, 0x22c2eb1f); }
 cIGZUnknown* SS() { return Typed(g_ss, 0x23cecba0, 0x106077d2); }
 cIGZUnknown* SM() { return Typed(g_sm, 0x1af85bfb, 0x3af85bb7); }
-cIGZUnknown* HM() { return Typed(g_hm, 0x1b2ce671, 0xbb1bd9a8); }
+__attribute__((weak)) cIGZUnknown* HM() { return Typed(g_hm, 0x1b2ce671, 0xbb1bd9a8); }   // the Hit manager has its own typed accessor (audio/HitMan.cpp)
 cIGZUnknown* FO() { return Typed(g_fo, 0x20673960, 0x00673960); }
 cIGZLanguageManager* LM() { return Typed(g_lm, 0x441e5070, 0x0054b7d5); }
 

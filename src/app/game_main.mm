@@ -52,7 +52,9 @@
 #include "sc4/WinSplashScreen.h"
 #include "app/GameAudio.h"
 #include "app/NativeZoneTool.h"
+#include "app/NativeRegionExtras.h"
 #include "app/NativeAudio.h"
+#include "app/NativeAudioDirector.h"
 
 namespace {
 
@@ -397,6 +399,8 @@ void StartGameAudio() {
     if (!audio.Open(dat, error)) { std::printf("audio: %s\n", error.c_str()); return; }
     gAudio = &audio;
     native::SetGameAudio(&audio);
+    if (std::getenv("SC4_AUDIODIRECTORS") && native::BootFramework())
+        native::StartAudioDirectors(*native::BootFramework(), dat.substr(0, dat.rfind('/') + 1));
     native::InstallButtonSounds();
     std::printf("audio: %zu sounds\n", audio.SoundCount());
 }
@@ -486,6 +490,11 @@ bool Boot() {
         }});
         screen.loadCity = [app](const std::string& path) { return native::LoadCityFile(*app, path); };
         native::InstallRegionScreenHost(screen);
+        native::InstallRegionExtras(gDriver.get(), []() -> std::uint8_t* { return native::BootApplication() ? native::BootApplication()->GetPreferences() : nullptr; });
+        if (std::uint8_t* preferences = app->GetPreferences()) {   // the game's defaults: clouds over the region map, scrolling at the screen edges
+            preferences[sc4::kPrefsCloudsVisible] = 1;
+            preferences[sc4::kPrefsEdgeScrollEnabled] = 1;
+        }
         cISC4Nation* nation = native::CreateNation();
         app->SetNation(nation);
         std::printf("nation: regions dir \"%s\"\n", cSC4Nation::msRegionDirectory.ToChar());
@@ -546,7 +555,20 @@ void WritePng(const std::string& path) {
 // into cSC4View3DWin commands - arrows scroll, +/- and Page Up/Down zoom, comma/period rotate.
 static bool CityViewKey(NSEvent* e, bool down) {
     sc4::cSC4View3DWin* view = gAppWindow ? gAppWindow->View3D() : nullptr;
-    if (!view) return false;
+    if (!view) {   // the region screen: the arrow keys scroll the map
+        cIGZWin* screen = gAppWindow ? gAppWindow->CurrentScreen() : nullptr;
+        if (!screen || screen->GetID() != 0xea659793) return false;
+        std::uint32_t command = 0;
+        switch (e.keyCode) {
+            case 123: command = down ? sc4::kCmdRegionScrollLeft : sc4::kCmdRegionScrollLeftStop; break;
+            case 124: command = down ? sc4::kCmdRegionScrollRight : sc4::kCmdRegionScrollRightStop; break;
+            case 126: command = down ? sc4::kCmdRegionScrollUp : sc4::kCmdRegionScrollUpStop; break;
+            case 125: command = down ? sc4::kCmdRegionScrollDown : sc4::kCmdRegionScrollDownStop; break;
+            default: return false;
+        }
+        if (!(down && e.isARepeat)) static_cast<sc4::cSC4WinRegionScreen*>(screen)->ProcessCommand(command, nullptr, nullptr);
+        return true;
+    }
     std::uint32_t command = 0;
     switch (e.keyCode) {
         case 123: command = down ? 0x6a935cd8 : 0x2a94826b; break;   // left

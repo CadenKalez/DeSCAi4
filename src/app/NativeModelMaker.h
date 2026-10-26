@@ -10,6 +10,8 @@ namespace native {
 
 // Registers the S3D model factory with the resource manager (once) and makes the driver the texture target.
 void InstallModelResources(gd::cIGZGDriver* driver);
+// The driver texture of an FSH resource {0x7ab50e44, group, instance} (0 when it is missing).
+unsigned int FshTextureId(unsigned int group, unsigned int instance);
 // Builds and initialises the model maker for the loaded city; its models go into `render`.
 bool AttachModelMaker(sc4::cSC43DRender& render, sc4::cSC4City& city);
 

@@ -1,6 +1,11 @@
 #include "app/NativeAudio.h"
 
 #include "app/GameAudio.h"
+#include <cstdio>
+#include <cstdlib>
+
+#include "audio/AudioServices.h"
+#include "audio/interfaces/cIGZSnd.h"
 #include "gz/WinBtn.h"
 
 namespace native {
@@ -24,7 +29,18 @@ ButtonHost g_buttons;
 
 void SetGameAudio(GameAudio* audio) { g_audio = audio; }
 void PlayGameSound(std::uint32_t soundId) {
-    if (g_audio && soundId) g_audio->PlayTrack(soundId);
+    if (!soundId) return;
+    // The game's own path first: the sound manager builds the sound from its track definition and the hit manager plays it.
+    if (cIGZSndMgr* manager = Audio::SoundManagerService()) {
+        cIGZSnd* sound = nullptr;
+        if (manager->GetSoundById(soundId, 0, nullptr, kGZIID_cIGZSnd, reinterpret_cast<void**>(&sound)) && sound) {
+            const bool played = sound->PlayWithVolumeAndLoop(0x400, false, 0);
+            if (std::getenv("SC4_DEBUG")) std::fprintf(stderr, "audio: sound %08x played %d\n", soundId, int(played));
+            sound->Release();
+            if (played) return;
+        }
+    }
+    if (g_audio) g_audio->PlayTrack(soundId);   // the direct track lookup when the sound system is not up
 }
 void InstallButtonSounds() { gz::SetWinButtonHost(&g_buttons); }
 

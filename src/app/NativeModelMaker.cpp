@@ -503,3 +503,7 @@ bool AttachModelMaker(sc4::cSC43DRender& render, sc4::cSC4City& city) {
 }
 
 }  // namespace native
+
+namespace native {
+unsigned int FshTextureId(unsigned int group, unsigned int instance) { return TextureRecord(group, instance)->id; }
+}  // namespace native
