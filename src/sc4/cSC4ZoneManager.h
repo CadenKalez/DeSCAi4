@@ -13,6 +13,8 @@
 #pragma once
 #include <cstdint>
 #include <map>
+#include <set>
+#include <vector>
 
 #include "gz/cIGZIStream.h"
 #include "gz/cIGZOStream.h"
@@ -55,6 +57,34 @@ public:
     virtual void OnZoneDisplayAlphaChanged() {}
 };
 
+template <typename T>
+class SC4CellRegion;
+class cSC4Lot;
+
+// What PlaceZone (0x1001993a8) reaches outside the manager, one method per original call. `this+0x50` is the budget
+// simulator, +0x30 the city (occupant manager), +0x38 the prop manager, +0x40 the terrain; the lot manager, the
+// demolition simulator, the zone developer and the message server are the SL::sp* globals.
+class IZonePlacementHost {
+public:
+    virtual ~IZonePlacementHost() = default;
+    virtual std::int64_t Funds() = 0;                                    // budget vslot 0x30
+    virtual bool SpendFunds(std::int64_t cost) = 0;                      // budget vslot 0x40
+    virtual bool NetworkAt(int x, int z) = 0;                            // occupant manager vslot 0x50(x, z, 0x1f4f, 1) -> a network occupant
+    virtual bool IsWater(int x, int z) = 0;                              // terrain vslot 0x110
+    virtual float CellDevelopmentCost(int x, int z) { return 0.0f; }     // building development simulator vslot 0xe8 (the slope check)
+    virtual bool PropBlocksCell(int x, int z) { return false; }          // prop manager vslot 0x100(x, z, 0x6a11bd2b) found and not removable
+    virtual cSC4Lot* LotAt(int x, int z) = 0;                            // lot manager vslot 0x28(x, z, 0)
+    virtual void LotCells(cSC4Lot* lot, int& x0, int& z0, int& x1, int& z1) = 0;      // lot vslot 0xe
+    virtual int LotKind(cSC4Lot* lot) = 0;                               // lot vslot 0x1f: kinds 11, 12 and 15 are never rezoned
+    virtual bool LotCompatibleWithZone(cSC4Lot* lot, int zoneType) = 0;  // lot configuration vslot 0x78
+    virtual bool LotIsProtected(cSC4Lot* lot) { return false; }          // lot vslot 0x30 -> privilege test vslot 0x70(2) fails
+    virtual std::int64_t DemolishCost(const std::vector<cSC4Lot*>& lots) = 0;         // demolition vslot 0x38 (test pass)
+    virtual void DemolishLots(const std::vector<cSC4Lot*>& lots) = 0;                 // demolition vslot 0x38 (do it)
+    virtual std::int64_t LandfillCost(const SC4CellRegion<int>& region) { return 0; } // city vslot 0x270 -> vslot 0x48
+    virtual void ApplyZone(const SC4CellRegion<int>& changed, int zoneType, bool flag) = 0;   // zone developer vslot 0x30
+    virtual void PostZoneChanged(const SC4CellRegion<int>& changed, int zoneType, bool flag) = 0;   // message 0x7699455
+};
+
 // The zone manager's own interface (class id 0x298f9b2d, iid 0x67652433). The recovered port only needs
 // the COM identity; the concrete methods are called directly, so the interface carries no extra slots.
 class cISC4ZoneManager : public cIGZUnknown {
@@ -82,6 +112,14 @@ public:
 
     bool Init();
     bool Shutdown();
+
+    // 0x1001993a8. Tests (commit == false) or performs a zoning of `region`'s set cells. The region is trimmed to the
+    // cells that can take the zone. Returns whether the zoning is possible; `reason` (0 ok, 1 not enough money,
+    // 2 landfill on water, 3 too small, 4 too large, 5 blocked) and `cost` are optional outputs, `lots` collects the
+    // lots that have to be demolished.
+    bool PlaceZone(SC4CellRegion<int>& region, int zoneType, bool commit, bool freeOfCharge, bool checkTerrain,
+                   bool hasMask, bool clipToRegion, std::int64_t* cost, int* reason, std::set<cSC4Lot*>* lots);
+    void SetPlacementHost(IZonePlacementHost* host) { placement_ = host; }
 
     cSC4SimGrid<std::int8_t>* GetZoneGrid() const { return zoneGrid_.get(); }
     std::int32_t GetZoneCount(int zoneType) const { return zoneCount_[zoneType]; }
@@ -115,6 +153,7 @@ private:
     void ReadSimulatorTunableValues();
 
     IZoneManagerHost* host_;
+    IZonePlacementHost* placement_ = nullptr;
     std::uint32_t refCount_ = 0;               // COM refcount (shared by the three sub-objects)
     bool initialized_ = false;                 // +0x18
     bool countsLoaded_ = false;                // +0x20 (set by Read: Init keeps the loaded counters)

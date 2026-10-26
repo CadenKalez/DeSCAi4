@@ -4,6 +4,7 @@
 
 #include "sc4/DBSegment.h"
 #include "sc4/SCPropertyHelp.h"
+#include "sc4/ZoneDeveloper.h"
 
 namespace sc4 {
 
@@ -98,6 +99,111 @@ void cSC4ZoneManager::ReadSimulatorTunableValues() {
     cSCPropertyHelp::GetPropertyValue(tunables, 0xe94825b7, displayAlpha_);
     defaultDisplayAlpha_ = displayAlpha_;
     copy32(0xe94825b8, dragColor_);
+}
+
+namespace {
+struct ChangedCell { int type, x, z; };
+}
+
+bool cSC4ZoneManager::PlaceZone(SC4CellRegion<int>& region, int zoneType, bool commit, bool freeOfCharge, bool checkTerrain,
+                                bool hasMask, bool clipToRegion, std::int64_t* costOut, int* reasonOut,
+                                std::set<cSC4Lot*>* lotsOut) {
+    if (!placement_ || !zoneGrid_) {
+        if (costOut) *costOut = 0;
+        if (reasonOut) *reasonOut = 5;
+        return false;
+    }
+    IZonePlacementHost& host = *placement_;
+    const std::int64_t funds = host.Funds();
+    const int type = static_cast<unsigned>(zoneType) > 0xf ? 0 : zoneType;
+    int reason = 0;
+    bool ok = true;
+    std::int64_t cost = 0;
+    std::vector<ChangedCell> changed;
+    std::vector<cSC4Lot*> demolish;
+    const SC4Rect<int> r = region.bounds;
+
+    auto clearCell = [&](int x, int z) { region.ClearBit(x, z); };
+    auto fail = [&](int why) { reason = why; ok = false; };
+
+    bool aborted = false;
+    if (!hasMask) {
+        if (r.x1 - r.x0 + 1 < minSize_[type] || r.z1 - r.z0 + 1 < minSize_[type]) { fail(3); aborted = true; }
+        else if (maxSize_[type] <= r.x1 - r.x0 || maxSize_[type] <= r.z1 - r.z0) { fail(4); aborted = true; }
+    }
+    if (aborted) cost = 0;
+    for (int x = r.x0; !aborted && x <= r.x1; ++x) {
+        for (int z = r.z0; z <= r.z1; ++z) {
+            if (!region.Test(x, z)) continue;
+            int old = zoneGrid_->GetTractValue(x, z);
+            if (static_cast<unsigned>(old) > 0xf) old = 0;
+            if (host.NetworkAt(x, z) && type != 14) {
+                if (type != 0) { clearCell(x, z); continue; }   // a road cell cannot be zoned; it is left out
+            }
+            if (host.IsWater(x, z) && type != 0 && type != 12) {
+                if (type == 14) { fail(2); aborted = true; break; }
+                continue;                                         // water cells are skipped
+            }
+            if (checkTerrain && type != 0 && type != 15) {
+                const float limit = developmentCost_[type];
+                const float value = host.CellDevelopmentCost(x, z);
+                if (limit <= value && value != limit) { clearCell(x, z); continue; }
+            }
+            cSC4Lot* lot = host.LotAt(x, z);
+            if (!lot) {
+                if (host.PropBlocksCell(x, z)) { fail(5); aborted = true; break; }
+            } else {
+                if (clipToRegion) {
+                    int lx0, lz0, lx1, lz1;
+                    host.LotCells(lot, lx0, lz0, lx1, lz1);
+                    if (lx0 < r.x0 || r.x1 < lx1 || lz0 < r.z0 || r.z1 < lz1) {
+                        if (type == 14) { fail(5); aborted = true; break; }
+                        clearCell(x, z);
+                        continue;
+                    }
+                }
+                const int kind = host.LotKind(lot);
+                if (kind > 15 || ((0x9800u >> kind) & 1u) == 0) {
+                    if (type == 0 || !host.LotCompatibleWithZone(lot, type)) {
+                        if (host.LotIsProtected(lot) && checkTerrain) { clearCell(x, z); continue; }
+                        if (std::find(demolish.begin(), demolish.end(), lot) == demolish.end()) demolish.push_back(lot);
+                    }
+                } else {
+                    if (type == 14) { fail(5); aborted = true; break; }
+                    continue;                                     // plopped / airport / seaport lots keep their cells
+                }
+            }
+            changed.push_back({old, x, z});
+            if (type != old) cost += zoneParameterA_[type] + zoneParameterB_[old];
+        }
+    }
+    if (!demolish.empty()) {
+        cost += host.DemolishCost(demolish);
+        if (lotsOut) lotsOut->insert(demolish.begin(), demolish.end());
+    }
+    if (type == 14) cost += host.LandfillCost(region);
+    if (freeOfCharge) cost = 0;
+    else if (funds < cost) { reason = 1; ok = false; }
+    if (ok && commit) {
+        if (!host.SpendFunds(cost)) {
+            reason = 1;
+            ok = false;
+        } else if (!changed.empty()) {
+            SC4CellRegion<int> done = SC4CellRegion<int>::Make(r, false);
+            for (const ChangedCell& c : changed) {
+                done.SetBit(c.x, c.z);
+                zoneGrid_->SetTractValue(c.x, c.z, static_cast<std::int8_t>(type));
+                --zoneCount_[c.type];
+                ++zoneCount_[type];
+            }
+            host.DemolishLots(demolish);
+            host.ApplyZone(done, type, checkTerrain);
+            host.PostZoneChanged(done, type, checkTerrain);
+        }
+    }
+    if (costOut) *costOut = cost;
+    if (reasonOut) *reasonOut = reason;
+    return ok;
 }
 
 bool cSC4ZoneManager::Init() {

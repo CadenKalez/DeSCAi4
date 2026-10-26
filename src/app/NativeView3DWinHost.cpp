@@ -15,6 +15,7 @@
 #include "sc4/cSC4City.h"
 #include <cstdio>
 #include "app/NativeCityUi.h"
+#include "app/NativeZoneTool.h"
 #include "gz/Buffer.h"
 #include "sc4/SC4UI.h"
 #include "sc4/ViewInputControlQuery.h"
@@ -51,7 +52,8 @@ std::string GroupDigits(std::int64_t value) {
 }
 struct StubView3DWin final : IView3DWinHost {
     cIGZMessageServer2* MessageServer2() override { return {}; }
-    std::uint8_t* Preferences() override { return {}; }
+    // the preferences blob (0x1734 bytes): all defaults off (no edge scrolling)
+    std::uint8_t* Preferences() override { static std::uint8_t blob[0x1734] = {}; return blob; }
     bool CityExists() override { return LoadedCity() != nullptr; }
     void PostGameMessage(std::uint32_t type) override {}
     INotificationHelper3D* NotificationHelper() override { return {}; }
@@ -128,7 +130,7 @@ struct StubView3DWin final : IView3DWinHost {
     bool SimulatorBusy() override { return {}; }
     cIGZBuffer* CreateImageBuffer() override { return {}; }
     IAdvisorWindow* AdvisorWindow() override { return {}; }
-    cSC4ViewInputControl* CreateZoningTool(std::uint32_t type) override { return {}; }
+    cSC4ViewInputControl* CreateZoningTool(std::uint32_t type) override { return native::CreateZoneTool(static_cast<int>(type)); }
     cSC4ViewInputControl* CreateTerrainScrubberTool(std::uint32_t type, bool flag) override { return {}; }
     cSC4ViewInputControl* CreateLevelTerrainTool() override { return {}; }
     cSC4ViewInputControl* CreateCityScrollTool() override { return new cSC4ViewInputControlCityScroll(); }

@@ -51,6 +51,7 @@
 #include "sc4/WinSC4App.h"
 #include "sc4/WinSplashScreen.h"
 #include "app/GameAudio.h"
+#include "app/NativeZoneTool.h"
 
 namespace {
 
@@ -399,6 +400,7 @@ void StartGameAudio() {
 }
 
 void Frame() {
+    native::PumpToolTicks(16);
     if (gAudio) gAudio->Tick();
     PumpTimers();
     cSC4App* app = native::BootApplication();
@@ -645,7 +647,19 @@ int main(int argc, char** argv) {
                         {"left", {0x6a935cd8, 0x2a94826b}}, {"right", {0x6a935ce0, 0x2a94826e}}, {"up", {0x6a935cdd, 0x2a948272}},
                         {"down", {0x6a935ce2, 0x2a948275}}, {"zin", {0x6a935cb7, 0}}, {"zout", {0x6a935cba, 0}},
                         {"rl", {0x6a935cc9, 0}}, {"rr", {0x6a935ccc, 0}}};
-                    if (name.rfind("click@", 0) == 0) {   // click@XxY: one left click at a window point
+                    if (name.rfind("zone", 0) == 0 && name.size() > 4 && v) {   // zoneN: the zoning tool for zone type N
+                        v->InvokeZoningTool(static_cast<std::uint32_t>(std::atoi(name.c_str() + 4)));
+                    } else if (name.rfind("drag@", 0) == 0) {   // drag@X1xY1xX2xY2: a left drag
+                        int a = 0, b = 0, c = 0, d = 0;
+                        std::sscanf(name.c_str() + 5, "%dx%dx%dx%d", &a, &b, &c, &d);
+                        gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, a, b, 0);
+                        gMgr->GZWinMsgPost_Mouse(kGZMsgMouseDownL, a, b, 0);
+                        for (int step = 1; step <= 8; ++step) {
+                            gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, a + (c - a) * step / 8, b + (d - b) * step / 8, 0x10);
+                            Frame();
+                        }
+                        gMgr->GZWinMsgPost_Mouse(kGZMsgMouseUpL, c, d, 0);
+                    } else if (name.rfind("click@", 0) == 0) {   // click@XxY: one left click at a window point
                         int cx = 0, cy = 0;
                         std::sscanf(name.c_str() + 6, "%dx%d", &cx, &cy);
                         gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, cx, cy, 0);
