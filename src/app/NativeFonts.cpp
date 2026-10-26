@@ -3,6 +3,11 @@
 
 #include <sys/stat.h>
 
+#include <cstring>
+#include <fstream>
+#include <iterator>
+#include <vector>
+
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
@@ -34,7 +39,7 @@ private:
 
 class FtFace final : public IFontFace {
 public:
-    explicit FtFace(FT_Face f) : face_(f) {}
+    explicit FtFace(FT_Face f, std::vector<std::uint8_t> memory = {}) : face_(f), memory_(std::move(memory)) {}
     ~FtFace() override { FT_Done_Face(face_); }
     bool AttachFile(const std::string& p) override { return FT_Attach_File(face_, p.c_str()) == 0; }
     bool SelectCharmap(std::uint32_t tag) override { return FT_Select_Charmap(face_, FT_Encoding(tag)) == 0; }
@@ -65,6 +70,7 @@ public:
 private:
     FT_Face face_;
     FontFaceMetrics m_;
+    std::vector<std::uint8_t> memory_;   // the decoded font of an .mxf file (the face reads it in place)
 };
 
 }  // namespace
@@ -75,9 +81,29 @@ FreeTypeFontHost::FreeTypeFontHost() {
 }
 FreeTypeFontHost::~FreeTypeFontHost() { if (library_) FT_Done_FreeType(static_cast<FT_Library>(library_)); }
 
+// The game's .mxf fonts: "MXFN", a big-endian byte count and a key byte, then the TrueType file with that many leading
+// bytes XORed with the key (the game's FreeType stream, FT_New_Stream / ft_io_stream @ 0x10068e965 / 0x10068eaf1).
+bool DecodeMxf(const std::string& path, std::vector<std::uint8_t>& out) {
+    std::ifstream file(path, std::ios::binary);
+    if (!file) return false;
+    std::vector<std::uint8_t> bytes((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    if (bytes.size() < 10 || std::memcmp(bytes.data(), "MXFN", 4) != 0) return false;
+    const std::uint32_t count = (std::uint32_t(bytes[4]) << 24) | (std::uint32_t(bytes[5]) << 16) | (std::uint32_t(bytes[6]) << 8) | bytes[7];
+    const std::uint8_t key = bytes[8];
+    out.assign(bytes.begin() + 9, bytes.end());
+    for (std::size_t i = 0; i < out.size() && i < count; ++i) out[i] ^= key;
+    return true;
+}
+
 std::unique_ptr<IFontFace> FreeTypeFontHost::NewFace(const std::string& path) {
     FT_Face face = nullptr;
-    if (!library_ || FT_New_Face(static_cast<FT_Library>(library_), path.c_str(), 0, &face) != 0) return nullptr;
+    if (!library_) return nullptr;
+    std::vector<std::uint8_t> memory;
+    if (DecodeMxf(path, memory)) {
+        if (FT_New_Memory_Face(static_cast<FT_Library>(library_), memory.data(), FT_Long(memory.size()), 0, &face) != 0) return nullptr;
+        return std::make_unique<FtFace>(face, std::move(memory));
+    }
+    if (FT_New_Face(static_cast<FT_Library>(library_), path.c_str(), 0, &face) != 0) return nullptr;
     return std::make_unique<FtFace>(face);
 }
 

@@ -24,6 +24,7 @@
 #include "gz/WinStyle.h"
 #include "gz/WinText.h"
 #include "rz/COMDirectors.h"
+#include "sc4/WinMapView.h"
 #include "sc4/WinSmallViews.h"
 #include "rz/cRZString.h"
 
@@ -140,6 +141,7 @@ bool InitUiScripts(WinMgr* mgr) {
     // cSC4WinText (clsid 0xaa7cecfd) is not recovered (3 functions); a plain cGZWinText stands in for it
     gz::RegisterDirectorMaker("cSC4WinText", +[]() -> cIGZUnknown* { return MakeWin<gz::cGZWinText>(); });
     gz::RegisterDirectorMaker("cGZWinFlatRect", +[]() -> cIGZUnknown* { return MakeWin<gz::cGZWinFlatRect>(); });
+    gz::RegisterDirectorMaker("cSC4WinMapView", +[]() -> cIGZUnknown* { return MakeWin<sc4::cSC4WinMapView>(); });   // clsid 0x28c5a41f
 
     // seams
     SetVocabularyServices(&g_services);

@@ -562,6 +562,7 @@ src/app/hosts/IfaceIVehicleHost.cpp
 src/app/hosts/IfaceIPedestrianHost.cpp
 src/app/NativeCityView.cpp
 src/app/NativeModelMaker.cpp
+src/app/NativeCityUi.cpp
 src/app/NativeTerrainView.cpp
 src/s3d/FSH.cpp
 src/sc4/cSTETerrainView3DDraw.cpp

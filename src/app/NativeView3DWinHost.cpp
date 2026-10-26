@@ -7,6 +7,7 @@
 #include "sc4/View3DWin.h"
 #include "sc4/ViewInputControlCityScroll.h"
 #include "app/NativeUi.h"
+#include "app/NativeCityUi.h"
 #include "gz/Buffer.h"
 #include "sc4/SC4UI.h"
 
@@ -69,9 +70,9 @@ struct StubView3DWin final : IView3DWinHost {
     void LocalisedString(std::uint32_t group, std::uint32_t instance, cRZString& out) override {}
     gz::cIGZWinProc* CreatePanelUIWinProc() override { return {}; }
     INewsTickerWindow* CreateNewsTickerWinProc() override { return {}; }
-    IMySimWindow* CreateMySimWinProc(gz::cIGZWinGen* panel) override { return {}; }
+    IMySimWindow* CreateMySimWinProc(gz::cIGZWinGen* panel) override { return native::CreateMySimWindow(panel); }
     IBudgetUIWindow* CreateBudgetUIWinProc() override { return {}; }
-    IGraphsViewWindow* CreateGraphsViewWinProc(cIGZWin* window) override { return {}; }
+    IGraphsViewWindow* CreateGraphsViewWinProc(cIGZWin* window) override { return native::CreateGraphsViewWindow(window); }
     IBuildingSelectWindow* CreateBuildingSelectWinProc(cIGZWin* window) override { return {}; }
     IAdvisorPopupQueue* CreateAdvisorPopupTracker() override { return {}; }
     void AttachCompassWinProc(gz::cIGZWinGen* window) override {}

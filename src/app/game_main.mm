@@ -18,6 +18,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <map>
+#include <sstream>
+#include <cctype>
 #include <string>
 #include <vector>
 
@@ -40,6 +42,7 @@
 #include "gz/WinFont.h"
 #include "render/gd/MetalGDriver.h"
 #include "sc4/View3DWin.h"
+#include "gz/FontServices.h"
 #include "sc4/App.h"
 #include "sc4/SC4UI.h"
 #include "sc4/SLBuffer.h"
@@ -66,46 +69,177 @@ struct DrawFontHost final : IDrawFontRendererHost {
     void NativeColorToRGB(std::uint32_t n, std::uint8_t& r, std::uint8_t& g, std::uint8_t& b) override { r = n >> 16; g = n >> 8; b = n; }
 } gDrawFontHost;
 
+// The game's fonts: the .mxf files of GameData/Fonts (FreeType reads them through NativeFonts' MXF decoder) and the
+// [Font Styles] table of the font-style resource {0, 0x4a87bfe8, 0x2a87bffc} ("<name> = <faces>, <size>, <params>,
+// <guid>"), the specifications cSC4App::SetFontStyle hands CreateFontStyleFromSpecification (0x1003d9360). Each style
+// becomes one cGZFont; the windows ask for their style by guid.
+std::string GameFontsDirectory() {
+    return std::string(std::getenv("HOME")) +
+           "/Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/GameData/Fonts/";
+}
+
+struct FontFile { std::string path, family; bool bold = false, italic = false; };
+const std::vector<FontFile>& GameFontFiles() {
+    static std::vector<FontFile> files;
+    static bool scanned = false;
+    if (scanned) return files;
+    scanned = true;
+    NSArray* names = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[NSString stringWithUTF8String:GameFontsDirectory().c_str()] error:nil];
+    for (NSString* name in names) {
+        if (![[name.pathExtension lowercaseString] isEqualToString:@"mxf"]) continue;
+        FontFile f;
+        f.path = GameFontsDirectory() + name.UTF8String;
+        std::unique_ptr<IFontFace> face = gFontHost->NewFace(f.path);
+        if (!face) continue;
+        f.family = face->FamilyName();
+        f.bold = (face->StyleFlags() & kFontStyleFlagBold) != 0;
+        f.italic = (face->StyleFlags() & kFontStyleFlagItalic) != 0;
+        files.push_back(f);
+    }
+    return files;
+}
+
+std::string Squash(const std::string& s) {   // case and space insensitive family names ("StocletITC TT" = "Stoclet ITC TT")
+    std::string out;
+    for (char c : s) if (c != ' ') out += char(std::tolower(static_cast<unsigned char>(c)));
+    return out;
+}
+
+// The file of the first listed face that exists, preferring the requested weight / slant.
+std::string FindFontFile(const std::string& faces, bool bold, bool italic) {
+    std::stringstream list(faces);
+    std::string face;
+    while (std::getline(list, face, ',')) {
+        const std::string want = Squash(face);
+        const FontFile* best = nullptr;
+        int bestScore = -1;
+        for (const FontFile& f : GameFontFiles()) {
+            if (Squash(f.family) != want) continue;
+            const int score = (f.bold == bold ? 2 : 0) + (f.italic == italic ? 1 : 0);
+            if (score > bestScore) { best = &f; bestScore = score; }
+        }
+        if (best) return best->path;
+    }
+    return {};
+}
+
+struct StyleFont { cGZFont* font = nullptr; };
+std::map<std::uint32_t, StyleFont> gStyleFonts;
+
+cGZFont* MakeFont(const std::string& path, std::uint32_t size) {
+    auto* font = new cGZFont(gFontHost);
+    font->AddRef();
+    font->SetFilePath(cRZString(path.c_str()));
+    font->SetSize(size);
+    font->SetAntialiasing(3);
+    font->SetCodePage(8);
+    font->SetRenderer(new cGZDrawFontRenderer(&gDrawFontHost));
+    return font;
+}
+
+// One [Font Styles] line: the quoted faces, size and parameters, then the guid.
+void AddFontStyle(const std::string& line) {
+    std::vector<std::string> quoted;
+    std::size_t at = line.find('=');
+    if (at == std::string::npos) return;
+    std::size_t pos = at + 1;
+    while (quoted.size() < 3) {
+        const std::size_t open = line.find('"', pos);
+        if (open == std::string::npos) return;
+        const std::size_t close = line.find('"', open + 1);
+        if (close == std::string::npos) return;
+        quoted.push_back(line.substr(open + 1, close - open - 1));
+        pos = close + 1;
+    }
+    const std::size_t guidAt = line.find("0x", pos);
+    if (guidAt == std::string::npos) return;
+    const std::uint32_t guid = std::uint32_t(std::strtoul(line.c_str() + guidAt, nullptr, 16));
+    std::string params = quoted[2];
+    for (char& c : params) c = char(std::tolower(static_cast<unsigned char>(c)));
+    auto has = [&](const char* word) { return params.find(word) != std::string::npos; };
+    auto number = [&](const char* key, float fallback) {
+        const std::size_t k = params.find(key);
+        return k == std::string::npos ? fallback : std::strtof(params.c_str() + k + std::strlen(key), nullptr);
+    };
+    const std::string path = FindFontFile(quoted[0], has("bold"), has("italic"));
+    if (path.empty()) return;
+    cGZFont* font = MakeFont(path, std::uint32_t(std::atoi(quoted[1].c_str())));
+    font->SetScaling(number("xscale=", 1.0f), number("yscale=", 1.0f));
+    font->SetAdvanceScaling(number("xadvancescale=", 1.0f), 1.0f);
+    font->SetSpacingAdjustment(0, int(number("linespacing=", 0.0f)));
+    if (has("aa=none")) font->SetAntialiasing(1);
+    if (has("underline") || has("under|") ) font->SetStyle(4, true);
+    if (has("strikethrough")) font->SetStyle(8, true);
+    if (has("gamma=")) font->SetAntialiasingGammaCorrection(number("gamma=", 1.0f));
+    if (!font->Init()) { font->Release(); return; }
+    if (gStyleFonts[guid].font) gStyleFonts[guid].font->Release();
+    gStyleFonts[guid].font = font;
+}
+
+void LoadFontStyles() {
+    static bool loaded = false;
+    if (loaded) return;
+    std::vector<std::uint8_t> bytes;
+    if (!native::LoadResourceBytes(0, 0x4a87bfe8, 0x2a87bffc, bytes)) return;   // the resources are not up yet: try again later
+    loaded = true;
+    std::stringstream text(std::string(bytes.begin(), bytes.end()));
+    std::string line;
+    bool inStyles = false;
+    while (std::getline(text, line)) {
+        const std::size_t first = line.find_first_not_of(" \t\r`");
+        if (first == std::string::npos || line[first] == ';') continue;
+        if (line[first] == '[') { inStyles = line.find("[Font Styles]") != std::string::npos; continue; }
+        if (inStyles) AddFontStyle(line);
+    }
+    std::printf("font: %zu game font styles\n", gStyleFonts.size());
+}
+
 bool InitFont() {
     gFontHost = new native::FreeTypeFontHost();
-    gFont = new cGZFont(gFontHost);
-    gFont->AddRef();
-    gFont->SetFilePath(cRZString("/System/Library/Fonts/Supplemental/Arial.ttf"));
-    gFont->SetSize(16);
-    gFont->SetAntialiasing(3);
-    gFont->SetCodePage(8);
-    gFont->SetRenderer(new cGZDrawFontRenderer(&gDrawFontHost));
+    // Until the font-style resource can be read (it needs the game's resources), the default style's face and size.
+    std::string path = FindFontFile("Arta", false, true);
+    if (path.empty()) path = "/System/Library/Fonts/Supplemental/Arial.ttf";
+    gFont = MakeFont(path, 13);
     return gFont->Init();
 }
 
-// The one font available (Arial through cGZFont) as the window system's font object until the game's font style script is wired.
 class WinFont final : public gz::IWinFont {
 public:
+    cGZFont* font = nullptr;
     bool QueryInterface(std::uint32_t, void**) override { return false; }
     std::uint32_t AddRef() override { return 1; }
     std::uint32_t Release() override { return 1; }
-    cIGZFont* AsFont() override { return gFont; }
+    cIGZFont* AsFont() override { return font; }
     std::uint32_t DefaultTextColor() override { return 0xffffffffu; }
     std::uint32_t DefaultShadowColor() override { return 0xff000000u; }
-    std::int16_t LineHeight(int, int) override { return std::int16_t(gFont->GetLineHeight()); }
-    int CountLines(const char* t, std::uint32_t n, int width) override { return int(gFont->CalculateNumberOfLines(t, n, std::uint32_t(width))); }
-    int WrappedWidth(const char* t, std::uint32_t n, int width) override { return int(gFont->CalculateWidthOfLines(t, n, std::uint32_t(width))); }
-    void MeasureText(const char* t, std::uint32_t n, cRZRect& out) override { gFont->TextArea(t, n, out); }
-    int TextWidth(const char* t, std::uint32_t n) override { return gFont->GetStringWidth(t, n); }
+    std::int16_t LineHeight(int, int) override { return std::int16_t(font->GetLineHeight()); }
+    int CountLines(const char* t, std::uint32_t n, int width) override { return int(font->CalculateNumberOfLines(t, n, std::uint32_t(width))); }
+    int WrappedWidth(const char* t, std::uint32_t n, int width) override { return int(font->CalculateWidthOfLines(t, n, std::uint32_t(width))); }
+    void MeasureText(const char* t, std::uint32_t n, cRZRect& out) override { font->TextArea(t, n, out); }
+    int TextWidth(const char* t, std::uint32_t n) override { return font->GetStringWidth(t, n); }
     void DrawText(IWinBuffer* target, int x, int y, const char* t, std::uint32_t n, std::uint32_t color, std::uint32_t color2,
                   const cRZRect* clip, int) override {
-        gFont->DrawTextLine(static_cast<native::Buffer*>(target)->AsBuffer(), x, y, t, n, color & 0xffffffu,
-                            color2 == gz::kWinUnsetTextColor ? kFontDefaultColor : (color2 & 0xffffffu), clip, nullptr);
+        font->DrawTextLine(static_cast<native::Buffer*>(target)->AsBuffer(), x, y, t, n, color & 0xffffffu,
+                           color2 == gz::kWinUnsetTextColor ? kFontDefaultColor : (color2 & 0xffffffu), clip, nullptr);
     }
     void DrawTextBox(IWinBuffer* target, const cRZRect& box, const char* t, std::uint32_t n, std::uint32_t alignment, std::uint32_t color,
                      std::uint32_t color2, const cRZRect* clip, int) override {
-        gFont->DrawTextParagraph(static_cast<native::Buffer*>(target)->AsBuffer(), box, t, n, int(alignment), color & 0xffffffu,
-                                 color2 == gz::kWinUnsetTextColor ? kFontDefaultColor : (color2 & 0xffffffu), clip, nullptr);
+        font->DrawTextParagraph(static_cast<native::Buffer*>(target)->AsBuffer(), box, t, n, int(alignment), color & 0xffffffu,
+                                color2 == gz::kWinUnsetTextColor ? kFontDefaultColor : (color2 & 0xffffffu), clip, nullptr);
     }
 };
 struct FontSource final : gz::IWinFontSource {
-    WinFont font;
-    gz::IWinFont* Font(std::uint32_t) override { return gFont ? &font : nullptr; }
+    // never destroyed: windows still hold their fonts while the process exits
+    std::map<std::uint32_t, WinFont>& fonts = *new std::map<std::uint32_t, WinFont>();
+    gz::IWinFont* Font(std::uint32_t style) override {
+        if (!gFont) return nullptr;
+        LoadFontStyles();
+        auto it = gStyleFonts.find(style);
+        if (it == gStyleFonts.end()) it = gStyleFonts.find(gz::kWinDefaultFontStyle);
+        WinFont& f = fonts[it == gStyleFonts.end() ? 0u : it->first];
+        f.font = it == gStyleFonts.end() ? gFont : it->second.font;
+        return &f;
+    }
     bool Available() override { return gFont != nullptr; }
 } gFontSource;
 
