@@ -1,4 +1,6 @@
 #include "sc4/PlumbingSimulator.h"
+#include "sc4/SimStreamOps.h"
+#include "sc4/DBSegment.h"
 
 #include <algorithm>
 #include <cmath>
@@ -610,6 +612,19 @@ void WriteWaterProducer(cIGZOStream& stream, IPlumbingHost* host, const WaterPro
 }
 
 // cSC4PlumbingSimulator::ReadWaterProducer (0x10009d488).
+// A city-file stream carries object references the host does not resolve yet; they are consumed so the record stays in step.
+bool IsCityFileStream(cIGZIStream& stream) {
+    void* db = nullptr;
+    if (!stream.QueryInterface(kGZIID_cISC4DBSegmentIStream, &db) || !db) return false;
+    static_cast<cIGZUnknown*>(db)->Release();
+    return true;
+}
+void SkipReference(cIGZIStream& stream, std::uint32_t iid) {
+    void* raw = nullptr;
+    SC4ReadGZSerializable(stream, iid, &raw, false);
+    if (raw) static_cast<cIGZUnknown*>(raw)->Release();
+}
+
 bool ReadWaterProducer(cIGZIStream& stream, IPlumbingHost* host, WaterProducer& producer) {
     stream.GetSint32(producer.x);
     stream.GetSint32(producer.z);
@@ -622,7 +637,8 @@ bool ReadWaterProducer(cIGZIStream& stream, IPlumbingHost* host, WaterProducer& 
     stream.GetUint32(production);
     producer.capacity = int(capacity);
     producer.production = int(production);
-    host->ReadOccupant(stream, &producer.occupant);
+    if (IsCityFileStream(stream)) SkipReference(stream, 0x26bb767e);
+    else host->ReadOccupant(stream, &producer.occupant);
     return !stream.GetError();
 }
 
@@ -660,10 +676,13 @@ bool cSC4PlumbingSimulator::Read(cIGZIStream& stream) {
     std::uint16_t version = 0;
     stream.GetUint16(version);
     if (version != 4) return false;
+    const bool cityFile = IsCityFileStream(stream);
     cSC4SimGrid<std::uint8_t>* grid = nullptr;
-    host_->ReadGrid(stream, &grid); auxGrid_ = grid;                        // +0x58
+    if (cityFile) SkipReference(stream, 0xc9bd939a); else host_->ReadGrid(stream, &grid);
+    auxGrid_ = grid;                                                        // +0x58
     grid = nullptr;
-    host_->ReadGrid(stream, &grid); supplyGrid_ = grid;                     // +0x60
+    if (cityFile) SkipReference(stream, 0xc9bd939a); else host_->ReadGrid(stream, &grid);
+    supplyGrid_ = grid;                                                     // +0x60
     std::uint32_t cellsX = 0, cellsZ = 0;
     stream.GetUint32(cellsX); cellsX_ = int(cellsX);                        // +0xd0
     stream.GetUint32(cellsZ); cellsZ_ = int(cellsZ);                        // +0xd4
@@ -688,7 +707,10 @@ bool cSC4PlumbingSimulator::Read(cIGZIStream& stream) {
     ReadWaterProducer(stream, host_, current);                              // +0x1a8 (released if unused)
     currentProducer_ = nullptr;
     if (current.occupant) current.occupant->Release();                      // drop the temporary reference
-    // +0x1b0 ScanningIterator: skipped (PLUMBING-1).
+    if (cityFile) {                                                         // +0x1b0 ScanningIterator
+        ScanningIterator scan;
+        stream >> scan;
+    }
     stream.GetSint64(demand_);                                              // +0x198
     std::uint32_t pipeCount = 0;
     stream.GetUint32(pipeCount);                                            // +0x218
@@ -698,10 +720,11 @@ bool cSC4PlumbingSimulator::Read(cIGZIStream& stream) {
     pipes_.clear();
     for (std::uint32_t i = 0; i < pipeCount; ++i) {
         IPlumbingPipe* pipe = nullptr;
+        if (cityFile) { SkipReference(stream, 0x49c05b9f); continue; }
         host_->ReadPipe(stream, &pipe);
         if (pipe) pipes_.push_back(pipe);
     }
-    host_->ReadWaterGrid(stream);                                           // +0xf0 int16 water grid
+    if (cityFile) SkipReference(stream, 0x223e2b67); else host_->ReadWaterGrid(stream);   // +0xf0 int16 water grid
     gridsInitialized_ = true;
     countdown_ = 0;                                                         // +0x128 cleared on load
     stream.GetSint64(capacity_);                                            // +0x178

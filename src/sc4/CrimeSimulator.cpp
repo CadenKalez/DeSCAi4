@@ -716,7 +716,17 @@ bool cSC4CrimeSimulator::Read(cIGZIStream& stream) {
     stream.GetSint32(count);
     for (std::int32_t i = 0; i < count; ++i) {
         auto* event = new CrimeEvent();
-        event->lot = host_->ReadLot(stream);
+        // in a city file the lot is an object reference: the lot manager resolves it later, here it is consumed
+        void* dbStream = nullptr;
+        if (stream.QueryInterface(kGZIID_cISC4DBSegmentIStream, &dbStream) && dbStream) {
+            static_cast<cIGZUnknown*>(dbStream)->Release();
+            void* lot = nullptr;
+            SC4ReadGZSerializable(stream, 0xe818fced, &lot, false);
+            if (lot) static_cast<cIGZUnknown*>(lot)->Release();
+            event->lot = nullptr;
+        } else {
+            event->lot = host_->ReadLot(stream);
+        }
         stream.GetUint32(event->typeId);
         cRZString description;
         stream.GetGZStr(description);

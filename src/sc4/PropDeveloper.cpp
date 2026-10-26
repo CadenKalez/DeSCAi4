@@ -1,4 +1,5 @@
 #include "sc4/PropDeveloper.h"
+#include "sc4/SimStreamOps.h"
 
 #include <algorithm>
 #include <cmath>
@@ -284,7 +285,12 @@ void cSC4PropDeveloper::ReleaseEffectProps() {
 bool cSC4PropDeveloper::Write(cIGZOStream& stream) const {
     stream.SetUint16(5);
     stream.SetSint8(static_cast<std::int8_t>(phase_));
-    stream.SetUint8(cursorState_);       // the original writes one byte through operator<<(stream, char)
+    {
+        ScanningIterator cursor;             // +0x24: the original streams its scan cursor (the port keeps only its state byte)
+        cursor.state = static_cast<std::int8_t>(cursorState_);
+        cursor.rect = cRZRect{static_cast<std::int32_t>(0x80000000u), 0x7fffffff, static_cast<std::int32_t>(0x80000000u), 0x7fffffff};
+        stream << cursor;
+    }
     stream.SetUint8(requesterCreated_ ? 1 : 0);
     stream.SetUint32(static_cast<std::uint32_t>(requesters_.size()));
     for (cISC4PropRequester* requester : requesters_) {
@@ -342,7 +348,9 @@ bool cSC4PropDeveloper::Read(cIGZIStream& stream) {
     std::int8_t phase = 0;
     if (!stream.GetSint8(phase)) return false;
     phase_ = static_cast<std::uint8_t>(phase);
-    if (!stream.GetUint8(cursorState_)) return false;
+    ScanningIterator cursor;                                  // +0x24: the original streams its scan cursor here
+    stream >> cursor;
+    cursorState_ = static_cast<std::uint8_t>(cursor.state);
     std::uint8_t created = 0;
     if (!stream.GetUint8(created)) return false;
     requesterCreated_ = created != 0;
@@ -359,6 +367,12 @@ bool cSC4PropDeveloper::Read(cIGZIStream& stream) {
         lotManager_ = static_cast<IPropLotManagerApi*>(g_host->ReadService(stream, 0x681905bd));
         propManager_ = static_cast<IPropManagerApi*>(g_host->ReadService(stream, 0x28326f3e));
         networkLotManager_ = static_cast<IPropNetworkLotManagerApi*>(g_host->ReadService(stream, 0x89a5ba3f));
+    } else {   // no host: the three service references are still part of the record
+        for (std::uint32_t iid : {0x681905bdu, 0x28326f3eu, 0x89a5ba3fu}) {
+            void* raw = nullptr;
+            SC4ReadGZSerializable(stream, iid, &raw, false);
+            if (raw) static_cast<cIGZUnknown*>(raw)->Release();
+        }
     }
     std::uint32_t index = 0, mode = 0, batch = 0, seconds = 0;
     if (!stream.GetUint32(index) || !stream.GetUint32(mode) || !stream.GetUint32(batch) ||
