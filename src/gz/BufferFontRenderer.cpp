@@ -126,7 +126,9 @@ bool cGZBufferFontRenderer::DrawChar(cIGZFont*, void* surfaceVoid, const cRZRect
 
     if (bitsPerPixel == 0x20 || bitsPerPixel == 0x18) {
         // 24 bit surfaces are written as 32 bit pixels (kept: both cases share one path, 0x1002ba92f).
-        const std::uint32_t foreground = colors[0];
+        // Port: the text colours reach here as 0x00RRGGBB; the shipped 32-bit screen had no alpha, but the port's window
+        // buffers do (they are blended), so the coverage blend treats the colour as opaque.
+        const std::uint32_t foreground = colors[0] | 0xff000000u;
         const std::uint32_t stridePixels = surface->GetColorSurfaceStride() >> 2;
         auto* bits = static_cast<std::uint32_t*>(surface->GetColorSurfaceBits());
         if (static_cast<std::uint64_t>(height) * stridePixels == 0) return true;
