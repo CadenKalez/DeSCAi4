@@ -1,4 +1,6 @@
 #include "sc4/ProtectionSimulator.h"
+#include "gz/StreamOps.h"
+#include "sc4/DBSegment.h"
 
 #include <algorithm>
 #include <cmath>
@@ -279,7 +281,50 @@ bool cSC4ProtectionSimulator::Write(cIGZOStream& stream) const {
     return !stream.GetError();
 }
 
+// 0x1000aa362: the record of a city file. The grids and the station occupants are references (consumed here: the grids belong to the
+// unrecovered coverage model, the stations are resolved by the host elsewhere); the walk iterator and the counters are kept. A stream that is
+// not a city-file segment stream (the unit tests) carries the port's own reduced format, read below.
+bool cSC4ProtectionSimulator::ReadCityRecord(cIGZIStream& stream) {
+    std::uint16_t version = 0;
+    stream.GetUint16(version);
+    if (version > 3) return false;
+    const auto skipReference = [&stream](std::uint32_t iid) {
+        void* raw = nullptr;
+        SC4ReadGZSerializable(stream, iid, &raw, false);
+        if (raw) static_cast<cIGZUnknown*>(raw)->Release();
+    };
+    skipReference(0x223e2b67);                                            // +0xa0
+    stream >> walk_;                                                      // +0x40
+    skipReference(0xc9bd939a);                                            // +0xa8
+    skipReference(0xc9bd939a);                                            // +0xb0
+    std::uint32_t stationCount = 0;
+    stream.GetUint32(stationCount);                                       // +0xb8: the occupants of the stations
+    if (stationCount < 10000000u)
+        for (std::uint32_t i = 0; i < stationCount && !stream.GetError(); ++i) skipReference(0x26bb767e);
+    stream.GetSint32(zonedCount_);                                        // +0xd0
+    stream.GetSint32(protectionSum_);                                     // +0xd4
+    stream.GetSint32(protectedCount_);                                    // +0xd8
+    stream.GetFloat32(averageProtection_);                                // +0xdc
+    if (version < 3) {
+        float share = 0.0f;
+        stream.GetFloat32(share);
+        coverageShare_ = share * 0.01f;
+    } else {
+        stream.GetFloat32(coverageShare_);                                // +0xe0
+    }
+    std::uint8_t flag = 0;
+    stream.GetUint8(flag); flagE8_ = flag != 0;                           // +0xe8
+    stream.GetUint32(valueEC_);                                           // +0xec
+    stream.GetUint32(dispatchBitsInUse);                                  // +0xf0
+    return !stream.GetError();
+}
+
 bool cSC4ProtectionSimulator::Read(cIGZIStream& stream) {
+    void* dbStream = nullptr;
+    if (stream.QueryInterface(kGZIID_cISC4DBSegmentIStream, &dbStream) && dbStream) {
+        static_cast<cIGZUnknown*>(dbStream)->Release();
+        return ReadCityRecord(stream);
+    }
     std::uint16_t version = 0;
     stream.GetUint16(version);
     if (version > 3) return false;

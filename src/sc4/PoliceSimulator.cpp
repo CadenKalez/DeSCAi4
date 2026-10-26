@@ -1,3 +1,4 @@
+#include <vector>
 #include "sc4/PoliceSimulator.h"
 
 #include <algorithm>
@@ -101,19 +102,27 @@ bool cSC4PoliceSimulator::Read(cIGZIStream& stream) {
     void* raw = nullptr;
     SC4ReadGZSerializable(stream, kInt16GridIid, &raw, false);            // +0x128 police power grid (null)
     if (raw) static_cast<cIGZUnknown*>(raw)->Release();
+    // In a city file the jails are object references the host does not resolve yet: they are consumed so the record stays in step.
+    void* dbStream = nullptr;
+    const bool references = stream.QueryInterface(kGZIID_cISC4DBSegmentIStream, &dbStream) && dbStream;
+    if (dbStream) static_cast<cIGZUnknown*>(dbStream)->Release();
+    const auto readJail = [&](std::list<IPoliceOccupant*>& into) {
+        IPoliceOccupant* jail = nullptr;
+        if (references) {
+            void* object = nullptr;
+            SC4ReadGZSerializable(stream, 0x26bb767e, &object, false);
+            if (object) static_cast<cIGZUnknown*>(object)->Release();
+        } else if (host_->ReadOccupant(stream, &jail) && jail) {
+            into.push_back(jail);
+        }
+    };
     std::uint32_t count = 0;
     stream.GetUint32(count);                                              // +0x168 funded jails
     fundedJails_.clear();
-    for (std::uint32_t i = 0; i < count; ++i) {
-        IPoliceOccupant* jail = nullptr;
-        if (host_->ReadOccupant(stream, &jail) && jail) fundedJails_.push_back(jail);
-    }
+    for (std::uint32_t i = 0; i < count && count < 10000000u; ++i) readJail(fundedJails_);
     stream.GetUint32(count);                                              // +0x130 jails
     jails_.clear();
-    for (std::uint32_t i = 0; i < count; ++i) {
-        IPoliceOccupant* jail = nullptr;
-        if (host_->ReadOccupant(stream, &jail) && jail) jails_.push_back(jail);
-    }
+    for (std::uint32_t i = 0; i < count && count < 10000000u; ++i) readJail(jails_);
     stream.GetSint32(jailCapacity_);                                      // +0x148
     stream.GetSint32(jailPopulation_);                                    // +0x14c
     stream.GetSint32(criminals_);                                         // +0x150

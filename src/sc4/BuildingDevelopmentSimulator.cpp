@@ -1,4 +1,5 @@
 #include "sc4/BuildingDevelopmentSimulator.h"
+#include "sc4/DBSegment.h"
 
 #include <algorithm>
 #include <cmath>
@@ -419,7 +420,69 @@ bool cSC4BuildingDevelopmentSimulator::Write(cIGZOStream& stream) const {
     return !stream.GetError();
 }
 
+// 0x10014e064: the record of a city file (version 4): the growth grid and two objects as references, the per-zone developers, the lists
+// of occupants and developer types and the growth marks, the growth profiles, then the three cheat flags. References and the tables
+// the port does not model are consumed; the growth marks and the flags are kept. A stream that is not a city-file segment stream (the
+// unit tests) carries the port's own reduced format, read below.
+bool cSC4BuildingDevelopmentSimulator::ReadCityRecord(cIGZIStream& stream) {
+    constexpr std::uint32_t kMaxCount = 1u << 22;
+    if (stream.GetError()) return false;
+    std::uint16_t version = 0;
+    stream.GetUint16(version);
+    if (version != 4) return false;
+    const auto skipReference = [&stream](std::uint32_t iid) {
+        void* raw = nullptr;
+        SC4ReadGZSerializable(stream, iid, &raw, false);
+        if (raw) static_cast<cIGZUnknown*>(raw)->Release();
+    };
+    std::uint32_t u32 = 0, count = 0;
+    std::uint8_t u8 = 0;
+    skipReference(0xc9bd939a);
+    skipReference(0x797a4e8);
+    stream.GetUint32(count);                                   // the developers by key
+    if (count > kMaxCount) return false;
+    for (std::uint32_t i = 0; i < count && !stream.GetError(); ++i) { stream.GetUint32(u32); skipReference(0xe7cdd662); }
+    stream.GetUint32(count);                                   // occupants
+    if (count > kMaxCount) return false;
+    for (std::uint32_t i = 0; i < count && !stream.GetError(); ++i) skipReference(0x26bb767e);
+    stream.GetUint32(count);                                   // developer type -> byte
+    if (count > kMaxCount) return false;
+    for (std::uint32_t i = 0; i < count && !stream.GetError(); ++i) { stream.GetUint32(u32); stream.GetUint8(u8); }
+    growthMarks_.clear();
+    stream.GetUint32(count);                                   // growth marks: key -> set of cells
+    if (count > kMaxCount) return false;
+    for (std::uint32_t i = 0; i < count && !stream.GetError(); ++i) {
+        std::uint32_t key = 0, size = 0;
+        stream.GetUint32(key);
+        stream.GetUint32(size);
+        if (size > kMaxCount) return false;
+        auto& cells = growthMarks_[key];
+        for (std::uint32_t j = 0; j < size && !stream.GetError(); ++j) {
+            std::int32_t x = 0, z = 0;
+            stream.GetSint32(x);
+            stream.GetSint32(z);
+            cells.insert({x, z});
+        }
+    }
+    stream.GetUint32(count);                                   // growth profiles: developer, two ints, a byte -> count
+    if (count > kMaxCount) return false;
+    for (std::uint32_t i = 0; i < count && !stream.GetError(); ++i) {
+        std::int32_t s32 = 0;
+        skipReference(0xe7cdd662);
+        stream.GetSint32(s32); stream.GetSint32(s32); stream.GetUint8(u8); stream.GetUint32(u32);
+    }
+    stream.GetUint8(u8); cheatPlumbing_ = u8 != 0;
+    stream.GetUint8(u8); cheatPower_ = u8 != 0;
+    stream.GetUint8(u8); cheatCaps_ = u8 != 0;
+    return !stream.GetError();
+}
+
 bool cSC4BuildingDevelopmentSimulator::Read(cIGZIStream& stream) {
+    void* dbStream = nullptr;
+    if (stream.QueryInterface(kGZIID_cISC4DBSegmentIStream, &dbStream) && dbStream) {
+        static_cast<cIGZUnknown*>(dbStream)->Release();
+        return ReadCityRecord(stream);
+    }
     std::uint16_t version = 0;
     stream.GetUint16(version);
     if (version != 4) return false;

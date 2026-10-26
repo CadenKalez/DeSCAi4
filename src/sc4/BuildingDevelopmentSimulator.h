@@ -158,6 +158,7 @@ public:
     // serialized by the growth developer classes through the host)
     bool Write(cIGZOStream& stream) const;
     bool Read(cIGZIStream& stream);
+    bool ReadCityRecord(cIGZIStream& stream);   // @ 0x10014e064
 
 private:
     std::uint32_t refCount_ = 0;

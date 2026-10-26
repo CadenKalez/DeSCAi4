@@ -127,6 +127,7 @@ public:
 
     // Streams (the fire/police simulators delegate to these). Version 3.
     bool Write(cIGZOStream& stream) const;
+    bool ReadCityRecord(cIGZIStream& stream);   // @ 0x1000aa362
     bool Read(cIGZIStream& stream);
 
     cSC4SimGrid<std::uint8_t>* AdjustedGrid() const { return adjusted_.get(); }
