@@ -50,6 +50,7 @@
 #include "rz/cRZMessage2Standard.h"
 #include "sc4/WinSC4App.h"
 #include "sc4/WinSplashScreen.h"
+#include "app/GameAudio.h"
 
 namespace {
 
@@ -383,7 +384,22 @@ struct SplashHost final : sc4::ISplashScreenHost {
     void CreateRegionScreen() override { std::printf("splash: CreateRegionScreen\n"); if (gAppWindow) gAppWindow->CreateRegionScreen(); }
 } gSplashHost;
 
+// The game's sound: Sound.dat opened through the recovered persistence layer, an ambient bed that follows the screen
+// and a click on every mouse press (the interactive run only; shots stay silent).
+GameAudio* gAudio = nullptr;
+void StartGameAudio() {
+    static GameAudio audio;
+    std::string error;
+    const std::string dat = std::string(std::getenv("HOME")) +
+        "/Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/GameData/Sound.dat";
+    if (!audio.Open(dat, error)) { std::printf("audio: %s\n", error.c_str()); return; }
+    gAudio = &audio;
+    audio.NextAmbient();
+    std::printf("audio: %zu sounds, ambient %s\n", audio.SoundCount(), audio.CurrentName().c_str());
+}
+
 void Frame() {
+    if (gAudio) gAudio->Tick();
     PumpTimers();
     cSC4App* app = native::BootApplication();
     if (app) {
@@ -513,7 +529,7 @@ void WritePng(const std::string& path) {
 - (void)post:(std::uint32_t)type e:(NSEvent*)e { NSPoint p = [self gz:e]; gMgr->GZWinMsgPost_Mouse(type, int(p.x), int(p.y), [self flags:e]); }
 - (void)mouseMoved:(NSEvent*)e { [self post:kGZMsgMouseMove e:e]; }
 - (void)mouseDragged:(NSEvent*)e { [self post:kGZMsgMouseMove e:e]; }
-- (void)mouseDown:(NSEvent*)e { [self post:kGZMsgMouseDownL e:e]; }
+- (void)mouseDown:(NSEvent*)e { if (gAudio) gAudio->PlayClick(); [self post:kGZMsgMouseDownL e:e]; }
 - (void)mouseUp:(NSEvent*)e { [self post:kGZMsgMouseUpL e:e]; }
 - (void)rightMouseDown:(NSEvent*)e { [self post:kGZMsgMouseDownR e:e]; }
 - (void)rightMouseUp:(NSEvent*)e { [self post:kGZMsgMouseUpR e:e]; }
@@ -591,6 +607,7 @@ int main(int argc, char** argv) {
         gDriver = gd::cMetalGDriver::Create((__bridge void*)layer, kW, kH);
         if (!gDriver) { std::printf("no Metal device\n"); return 1; }
         Boot();
+        if (shot.empty()) StartGameAudio();
         if (const char* cityPath = std::getenv("SC4_LOADCITY")) {   // development: load one city file straight after boot and exit
             cSC4App* loadApp = native::BootApplication();
             const bool loaded = loadApp && native::LoadCityFile(*loadApp, cityPath);

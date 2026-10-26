@@ -567,3 +567,7 @@ src/app/NativeTerrainView.cpp
 src/s3d/FSH.cpp
 src/sc4/cSTETerrainView3DDraw.cpp
 src/s3d/S3DModel.cpp
+src/app/GameAudio.mm
+src/audio/SegmentDataSources.cpp
+src/audio/AudioServices.cpp
+src/audio/platform/AudioPlatform.cpp
