@@ -70,6 +70,8 @@ public:
     void DebugUnlockValue() {}
     bool DebugIsValueLocked() const { return false; }
 
+    // The state of another demand (a loaded one) without its host.
+    void CopyStateFrom(const cSC4Demand& other) { IDemandHost* host = host_; *this = other; host_ = host; }
     bool Write(cIGZOStream& stream) const;
     bool Read(cIGZIStream& stream);      // accepts versions 1 and 2 (and 0)
     std::uint32_t GetGZCLSID() const { return kDemandClassId; }

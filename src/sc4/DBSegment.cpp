@@ -556,6 +556,13 @@ bool cSC4COMSerializer::LoadClassObjects(std::uint32_t version) {
                                 const bool readOk = object->Read(*stream);
                                 if (std::getenv("SC4_DEBUG") && (!readOk || stream->GetError() || record->GetPosition() != position + size))
                                     std::fprintf(stderr, "LoadClassObjects: class %08x object %u read %s, error %d, consumed %d of %u\n", classId, info.expected - n, readOk ? "ok" : "FAILED", int(stream->GetError()), int(record->GetPosition()) - int(position), size);
+                                if (!readOk && std::getenv("SC4_DUMPFAIL")) {   // the first bytes of the payload of a failing object
+                                    const std::uint32_t header = version < kWideIdVersion ? 12 : 16;
+                                    record->SeekAbsolute(position + header);
+                                    std::fprintf(stderr, "payload %08x:", classId);
+                                    for (int k = 0; k < 96 && position + header + k < position + size; ++k) { std::uint8_t b = 0; stream->GetUint8(b); std::fprintf(stderr, " %02x", b); }
+                                    std::fprintf(stderr, "\n");
+                                }
                                 if (record->GetPosition() != position + size) record->SeekAbsolute(position + size);
                             } else {
                                 record->SeekAbsolute(position + size);

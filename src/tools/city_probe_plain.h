@@ -24,6 +24,10 @@ public:
             AddRef();
             return true;
         }
+        if (iid == kGZIID_PlainObject) {
+            *out = object_;
+            return true;   // borrowed, no reference taken
+        }
         *out = nullptr;
         return false;
     }

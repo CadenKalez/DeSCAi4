@@ -1,5 +1,7 @@
 #include "sc4/DemandSimulator.h"
 
+#include "sc4/DBSegment.h"
+
 #include <algorithm>
 #include <cmath>
 #include <set>
@@ -1301,11 +1303,27 @@ bool cSC4DemandSimulator::Read(cIGZIStream& stream) {
     stream.GetFloat32(value134_);
     std::uint32_t demandCount = 0;
     stream.GetUint32(demandCount);
+    // In a city file every demand is its own object of class 0x8990c12d and the simulator stores a reference to it (id + class id);
+    // plain streams (the unit tests) carry the demand inline.
+    void* dbStream = nullptr;
+    const bool references = stream.QueryInterface(kGZIID_cISC4DBSegmentIStream, &dbStream) && dbStream;
+    if (dbStream) static_cast<cIGZUnknown*>(dbStream)->Release();
     for (std::uint32_t i = 0; i < demandCount; ++i) {
         std::uint32_t id = 0;
         stream.GetUint32(id);
         auto* demand = new cSC4Demand(this);
-        if (!demand->Read(stream)) {
+        if (references) {
+            void* raw = nullptr;
+            if (!SC4ReadGZSerializable(stream, kGZIID_cIGZSerializable, &raw, true)) {
+                delete demand;
+                return false;
+            }
+            auto* object = static_cast<cIGZSerializable*>(raw);
+            void* plain = nullptr;
+            if (object && object->QueryInterface(kGZIID_PlainObject, &plain) && plain)
+                demand->CopyStateFrom(*static_cast<cSC4Demand*>(plain));
+            if (object) object->Release();
+        } else if (!demand->Read(stream)) {
             delete demand;
             return false;
         }
