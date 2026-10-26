@@ -1,27 +1,27 @@
-# City load: object reads that do not finish (Making Money Tutorial)
+# City load: every object read to its exact end
 
-Run `SC4_DEBUG=1 SC4_LOADCITY=<city.sc4> sc4_game` (scripts as in the session notes). `SC4_DUMPFAIL=1` prints the first 96 payload bytes of every
-failing object, `SC4_DUMPFULL=1` writes the whole payload to `/tmp/payload_<class>.bin`. Both are taken before the read, because a failed read puts
-the stream in error and every later byte reads as zero.
+All three tutorial cities (Making Money, Big City, Getting Started) load with no failing and no short object read.
+Check: `SC4_DEBUG=1 SC4_LOADCITY=<city.sc4> sc4_game` prints a `LoadClassObjects:` line only for an object whose read failed, errored or
+did not end at the object's size; the output has none. `SC4_DUMPFAIL=1` prints the first payload bytes of a bad object and `SC4_DUMPFULL=1`
+writes the whole payload to `/tmp/payload_<class>.bin`; both are taken *before* the read, because a failed read puts the stream in error and
+every later byte then reads as zero.
 
-## Fixed
-| class | name | cause |
-|---|---|---|
-| 2990bff2 | DemandSimulator | the file stores each demand as an object reference (id + class 0x8990c12d), not inline; the reads are loaded with `loadNow` and copied (plain streams in the unit tests stay inline) |
-| 2990c1bc | WeatherSimulator | a water area is 3 integers (12 bytes), and the "unused" field is 32 bits, not 64 |
+Method: the original `Read` functions were decompiled from the binary (Ghidra, `scripts/ghidra-mcp-headless.sh`), compared with the port's
+version, and the payload was parsed independently where the two disagreed.
 
-## Open (11)
-| class | name | consumed | what the payload shows | what is missing |
-|---|---|---|---|---|
-| 6990c1aa | TrafficSimulator | 12 of 272272 | version 0x28 then references | `Read` is not recovered (returns false) |
-| 6a0f82b2 | TrafficNetworkMap | 12 of 338821 | version 7, grid data | `Read` is not recovered (TRAFFICNETWORKMAP-3) |
-| a990bfe0 | LotDeveloper | 12 of 2748 | version 1, references | `Read` is not recovered (returns false) |
-| a98f9d28 | WatercraftManager | 14 of 52 | version 5 | no `IWatercraftManagerBase` / host adapter (base_ and host_ are null) |
-| 8990c09a | CrimeSimulator | 137 of 137, error | refs, iterator, events | `ICrimeHost::ReadLot` is a stub (the lot references are not resolved) |
-| 2990c05a / 6990c04f | Fire / Police | 32 of 120 / 176 | version 2 / 7, flags, floats, refs | stub service hosts (lots, buildings) |
-| 4990c013 | ResidentialSimulator | 97 of 480 | version 7, then lists of (id, class) references | the recovered `Read` expects a population and flag first; the first 5 bytes after the version are a count |
-| 8990be7a | BuildingDevelopmentSimulator | 878 of 881 | version 4, two references, 12 (key, reference) entries | the recovered `Read` has no reference fields |
-| 0990c075 | PlumbingSimulator | 16550 of 17035 | version 4, two grid references | 485 bytes unread after an error |
-| 89c48f47 | PropDeveloper | 29 of 6835 | version 5, flags, counts | needs the original `Read` |
+## What was wrong
+| class | fix |
+|---|---|
+| Demand simulator, Residential, BuildingDevelopment, Fire / Police (protection base), Crime, Plumbing, PropDeveloper, Pollution, Flora, ZoneDeveloper, PropManager | the city file stores grids, lots, occupants and helper objects as references; the port read them through hosts that did not consume them. Each `Read` now has a city-file path (taken when the stream is a DB segment stream) that reads or consumes every reference; plain streams (the unit tests) keep the port's reduced record. |
+| Weather | a water area list is a 32-bit count of four-integer rects; the "unused" field is 32 bits |
+| Traffic simulator | `Read` was not recovered; now parsed in full for versions 0x1d and up (a 32-bit field the decompilation does not show sits before the scan iterator) |
+| Traffic network map, Lot developer | `Read` / `Write` recovered |
+| Watercraft manager | its inherited automata half (a real `cSC4AutomataManager` behind `tools/automata_base_handle`) and a neutral host are connected when the city creates it |
+| Automata generators (831 objects) | the controller base record is consumed |
+| Demand object | one byte (a flag) sits between the nine values and the two modifiers |
+| Protection base | the walk iterator was skipped |
+| Lot retaining wall | the lot reference is consumed |
 
-The four unrecovered `Read` functions and the host adapters need the original decompilation (Ghidra) or per-class format analysis like the two fixes above.
+## Still consumed, not stored
+The traffic simulator and traffic network map keep none of their loaded state, and several simulators drop the object references they read
+(the grids of the unrecovered population model, building lists, automata). The record is in step; modelling that state is the next work.
