@@ -1263,7 +1263,8 @@ void cSC4View3DWin::InvokeCatalogItemCommand(std::uint32_t itemType, std::uint32
             if (closeMenu) CloseTertiaryMenu();
             if (id < 0x10 && host_ && host_->CanInvokeZoningTool()) InvokeZoningTool(id);
             break;
-        default:
+        default:                                                        // the other families are the host's
+            if (host_) host_->InvokeCatalogItemCommand(itemType, id, closeMenu);
             break;
     }
 }
