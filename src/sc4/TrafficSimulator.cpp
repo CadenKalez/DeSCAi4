@@ -5,7 +5,13 @@
 #include <cmath>
 #include <limits>
 
+#include <memory>
+#include <vector>
+
+#include "gz/StreamOps.h"
+#include "sc4/DBSegment.h"
 #include "sc4/Lot.h"
+#include "sc4/SCProperty.h"
 #include "sc4/PathFinder.h"
 
 namespace sc4 {
@@ -100,8 +106,184 @@ bool cSC4TrafficSimulator::DoMessage(cIGZMessage2*) {
 bool cSC4TrafficSimulator::Write(cIGZOStream&) const {
     return false;
 }
-bool cSC4TrafficSimulator::Read(cIGZIStream&) {
-    return false;
+// 0x10007b550. The city file's traffic record is read completely (every field, reference and nested list in the original's order and with
+// the original's version conditions). The port's traffic simulator keeps none of this state yet (the grids, accident lists, tunnel and ferry
+// tables of the original live outside the recovered class), so the values are consumed, not stored: loading a city no longer fails and
+// the records that follow stay in step. Versions below 0x24 (older than the oldest city this port was checked against) are refused.
+bool cSC4TrafficSimulator::Read(cIGZIStream& stream) {
+    constexpr std::uint32_t kMaxCount = 1u << 22;
+    std::uint16_t version = 0;
+    stream.GetUint16(version);
+    if (version < 0x24) return false;
+    std::int32_t pathTypes = 8, extraTypes = 1, edgeSets = 4, tunnelWidth = 7;   // d4, d0, ec, 68 of the original
+    stream.GetSint32(pathTypes);
+    if (version > 0x24) stream.GetSint32(extraTypes);
+    stream.GetSint32(edgeSets);
+    stream.GetSint32(tunnelWidth);
+    if (pathTypes < 0 || extraTypes < 0 || tunnelWidth < 0 || pathTypes > 1024 || extraTypes > 1024 || tunnelWidth > 1024) return false;
+
+    std::uint8_t u8 = 0;
+    std::uint16_t u16 = 0;
+    std::int16_t s16 = 0;
+    std::uint32_t u32 = 0;
+    std::int32_t s32 = 0;
+    float f32 = 0.0f;
+    double f64 = 0.0;
+    bool flag = false;
+    const auto reference = [&stream](std::uint32_t iid) {
+        void* raw = nullptr;
+        SC4ReadGZSerializable(stream, iid, &raw, false);
+        if (raw) static_cast<cIGZUnknown*>(raw)->Release();
+    };
+    const auto many = [&](std::uint32_t count, const auto& each) {
+        if (count > kMaxCount) { count = 0; stream.GetUint32(u32); }   // refuse an absurd count: force the failure below
+        for (std::uint32_t i = 0; i < count && !stream.GetError(); ++i) each();
+    };
+    const auto rangedEntry = [&]() { stream.GetFloat32(f32); stream.GetUint32(u32); stream.GetSint32(s32); stream.GetSint32(s32); stream.GetFloat32(f32); };
+
+    for (int i = 0; i < 6; ++i) reference(0xc9bd939a);          // six grids
+    std::uint32_t rows = 0, columns = 0;
+    stream.GetUint32(rows);
+    stream.GetUint32(columns);
+    if (rows > kMaxCount || columns > kMaxCount || static_cast<std::uint64_t>(rows) * columns > (1u << 26)) return false;
+    for (std::uint64_t i = static_cast<std::uint64_t>(rows) * columns; i != 0 && !stream.GetError(); --i) stream.GetUint8(u8);   // a rows x columns byte table
+    stream.GetUint32(u32);                                       // the float grids
+    many(u32, [&] { reference(0xc9bd939a); });
+    reference(0xc9bd939a);
+    reference(0xc9bd939a);
+    stream.GetUint32(u32);                                       // edge densities: key, 4 x 4 + 1 + 4 x 4 shorts
+    many(u32, [&] { stream.GetUint32(u32); for (int k = 0; k < 33; ++k) stream.GetUint16(u16); });
+    for (int i = 0; i < 9; ++i) stream.GetUint32(u32);
+    reference(0xc9bd939a);
+    reference(0xc9bd939a);
+    stream.GetUint32(u32);
+    stream.GetUint32(u32);                                       // transit switches
+    many(u32, [&] {
+        stream.GetUint32(u32);
+        reference(0x26bb767e);
+        stream.GetFloat32(f32); stream.GetFloat32(f32); stream.GetFloat32(f32);
+        stream >> flag; stream.GetUint8(u8); stream.GetUint8(u8);
+        stream.GetFloat32(f32);
+        stream.GetFloat32(f32);
+        stream.GetUint32(u32);                                   // the rules
+        many(u32, [&] { for (int b = 0; b < 5; ++b) stream >> flag; stream.GetUint16(u16); stream.GetUint16(u16); });
+        if (version >= 0x21) { stream.GetFloat32(f32); stream >> flag; }
+    });
+    reference(0x223e2b67);
+    reference(0x223e2b67);
+    std::int64_t s64 = 0;
+    stream.GetSint64(s64);
+    stream.GetFloat32(f32);
+    if (version > 0x28) stream.GetFloat32(f32);
+    stream.GetFloat32(f32);
+    stream.GetFloat64(f64);
+    if (version > 0x28) stream.GetFloat64(f64);
+    stream.GetUint32(u32);
+    stream.GetUint8(u8);
+    stream.GetSint32(s32);
+    stream.GetUint32(u32);
+    stream.GetUint32(u32);
+    stream.GetFloat32(f32);
+    for (int set = 0; set < 3; ++set) {                           // three sets of 16-bit keys
+        if (set == 2) {
+            stream.GetUint32(u32); stream.GetUint32(u32); stream.GetFloat32(f32);
+        }
+        stream.GetUint32(u32);
+        many(u32, [&] { stream.GetUint16(u16); });
+    }
+    // The real record carries one more 32-bit value between the third key set and the iterator that the decompiled function does not show
+    // (found by aligning the whole record: with it every later section parses to the exact end of the object).
+    stream.GetUint32(u32);
+    stream.GetUint8(u8);
+    {
+        std::int8_t state = 0;                                    // ScanningIterator
+        stream.GetSint8(state);
+        stream.GetSint32(s32); stream.GetSint32(s32); stream.GetUint32(u32);
+        for (int i = 0; i < 4; ++i) stream.GetSint32(s32);
+    }
+    stream >> flag;
+    for (int i = 0; i < 4; ++i) stream.GetSint32(s32);
+    stream >> flag;
+    stream.GetUint32(u32);
+    stream.GetUint32(u32);
+    stream.GetSint16(s16);
+    stream.GetSint16(s16);
+    {
+        std::int8_t state = 0;                                    // BoundaryIterator
+        stream.GetSint8(state); stream.GetSint8(state);
+        for (int i = 0; i < 7; ++i) stream.GetSint32(s32);
+    }
+    stream >> flag; stream >> flag;
+    stream.GetFloat32(f32);
+    stream.GetSint32(s32); stream.GetSint32(s32);
+    stream.GetUint32(u32);
+    for (int i = 0; i < 4; ++i) stream.GetUint32(u32);
+    stream.GetUint8(u8);
+    stream.GetUint32(u32);
+    for (int i = 0; i < 4; ++i) stream.GetSint32(s32);
+    for (int row = 0; row < 3; ++row)
+        for (std::int32_t i = 0; i < tunnelWidth && !stream.GetError(); ++i) stream.GetUint32(u32);
+    stream.GetUint8(u8); stream.GetUint8(u8);
+    stream.GetSint32(s32); stream.GetSint32(s32);
+    stream.GetSint32(s32);                                        // version > 0x18
+    for (int i = 0; i < 4; ++i) stream.GetUint32(u32);
+    for (int i = 0; i < 3; ++i) stream.GetSint32(s32);
+    for (int i = 0; i < 4; ++i) stream.GetUint32(u32);
+    if (version >= 0x28) for (int i = 0; i < 6; ++i) stream.GetUint32(u32);
+
+    for (int pass = 0; pass < 2; ++pass) {                        // the two density tables
+        for (std::int32_t i = 0; i < pathTypes && !stream.GetError(); ++i) rangedEntry();
+        if (version > 0x24) for (std::int32_t i = 0; i < extraTypes && !stream.GetError(); ++i) rangedEntry();
+        for (std::int32_t i = 0; i < pathTypes && !stream.GetError(); ++i) stream.GetUint16(u16);
+        if (version > 0x24) for (std::int32_t i = 0; i < extraTypes && !stream.GetError(); ++i) stream.GetUint16(u16);
+        stream.GetUint16(u16);
+        std::int32_t rowCount = 0;
+        stream.GetSint32(rowCount);                               // version >= 0x22: the number of rows
+        for (std::int32_t i = 0; i < rowCount && !stream.GetError(); ++i) {
+            stream.GetUint16(u16); stream.GetFloat32(f32); stream.GetSint32(s32); stream.GetSint32(s32); stream.GetFloat32(f32);
+        }
+        stream.GetFloat32(f32); stream.GetFloat32(f32);
+        stream >> flag;
+        stream.GetFloat32(f32);
+        stream.GetUint8(u8);
+    }
+    stream.GetUint32(u32);                                        // tunnels
+    many(u32, [&] {
+        stream.GetUint16(u16); stream.GetUint8(u8); stream.GetUint8(u8); stream.GetUint16(u16); stream.GetUint16(u16);
+        for (std::int32_t i = 0; i < tunnelWidth; ++i) stream.GetFloat32(f32);
+    });
+    stream.GetFloat32(f32); stream.GetFloat32(f32); stream.GetUint32(u32);
+    stream.GetFloat32(f32); stream.GetUint32(u32);
+    for (std::int32_t i = 0; i < pathTypes && !stream.GetError(); ++i) stream.GetUint32(u32);
+    stream.GetUint32(u32);
+    many(u32, [&] { stream.GetUint32(u32); });                     // up to four connection ids
+    stream.GetUint32(u32);                                        // property holders keyed by 16-bit ids
+    many(u32, [&] { stream.GetUint16(u16); cSCPropertyHolder holder; holder.Read(stream); });
+    for (std::int32_t i = 0; i < tunnelWidth && !stream.GetError(); ++i) { stream.GetUint32(u32); stream.GetUint32(u32); }
+    if (version > 0x26) stream.GetUint32(u32);
+    stream.GetUint32(u32);                                        // ferry terminals
+    many(u32, [&] {
+        for (int i = 0; i < 6; ++i) stream.GetUint8(u8);
+        stream.GetUint8(u8);
+        stream.GetUint16(u16); stream.GetUint16(u16); stream.GetUint16(u16);
+        stream.GetUint8(u8); stream.GetUint8(u8);
+        std::vector<std::uint8_t> bytes;
+        stream.GetUint32(u32);                                    // links to other terminals
+        many(u32, [&] {
+            stream.GetFloat32(f32); stream.GetSint16(s16); stream.GetSint16(s16); stream.GetUint16(u16);
+            stream >> bytes;
+            for (int i = 0; i < 4; ++i) stream.GetUint16(u16);
+        });
+        stream.GetUint32(u32);                                    // links to neighbour connections
+        many(u32, [&] {
+            stream.GetFloat32(f32);
+            for (int i = 0; i < 4; ++i) stream.GetSint16(s16);
+            stream >> bytes;
+            stream >> bytes;
+            for (int i = 0; i < 4; ++i) stream.GetUint16(u16);
+        });
+    });
+    return !stream.GetError();
 }
 
 bool cSC4TrafficSimulator::ReadSimulatorTunableValues(const cISCPropertyHolder* exemplar) {
