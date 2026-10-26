@@ -17,6 +17,7 @@ declare -a TESTS=(
  "sc4_terrain:$T/sc4_terrain_test.cpp $S/sc4/cSTETerrain.cpp $S/gz/cGZDBSegmentPackedFile.cpp $S/gz/cGZDBRecords.cpp $S/gz/cGZPersistDBSerialRecord.cpp $S/gz/cGZPersistDBSegment.cpp $S/gz/cGZPersistResourceKeyList.cpp $S/rz/cRZFile.cpp $S/rz/cRZString.cpp $S/rz/cRZFastCompression3.cpp $S/rz/cRZVariant.cpp"
  "sc4_simgrid:$T/sc4_simgrid_test.cpp $S/sc4/cSC4SimGrid.cpp $S/rz/cRZStream.cpp $S/rz/cRZString.cpp"
  "dx7_bridge:$T/dx7_bridge_test.cpp $S/render/dx7/dx7_to_metal_bridge.cpp -lpthread"
+ "engine_lifecycle:$T/engine_lifecycle_test.cpp $S/runtime/engine_lifecycle_wire.cpp -lpthread"
  "jobs:$T/jobs_test.cpp $S/jobs/JobSystem.cpp -lpthread"
  "ecs_jobsystem:$T/ecs_jobsystem_test.cpp -lpthread"
  "rz_fastcompression:$T/rz_fastcompression_test.cpp $S/rz/cRZFastCompression3.cpp $S/rz/cRZString.cpp $S/dbpf/DBPFReader.cpp"
