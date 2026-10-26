@@ -1,3 +1,5 @@
+#include "app/NativeCitySystems.h"
+#include "app/NativeRuntimeWire.h"
 #include "app/NativeBudgetUi.h"
 #include "app/NativeLighting.h"
 #include "sc4/Simulator.h"
@@ -283,6 +285,8 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     view.UpdateBudget();
     view.UpdatePopulation();
     view.UpdateSimulationClock();
+    native::BindCityServices(cityInterface);
+    native::ReportCityWiring();
     return ok;
 }
 

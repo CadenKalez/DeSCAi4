@@ -8,4 +8,7 @@ namespace native {
 // runtime::EngineLifecycle and logs "[Runtime Wire]" lines. Returns false when a required dependency is missing; the caller halts.
 bool VerifyRuntimeWiring(gd::cIGZGDriver* driver, bool audioRunning);
 
+// Prints which city-phase SL:: services are bound after the city view is up.
+void ReportCityWiring();
+
 }  // namespace native

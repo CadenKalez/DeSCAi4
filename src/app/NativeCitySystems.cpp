@@ -1,0 +1,85 @@
+#include "app/NativeCitySystems.h"
+
+#include <cstdio>
+
+#include "sc4/ServiceLocator.h"
+#include "sc4/cSC4City.h"
+
+namespace native {
+namespace {
+using sc4::CityComponent;
+
+class CitySystems final : public SL::ICitySystems {
+public:
+    explicit CitySystems(sc4::cSC4City* city) : city_(city) {}
+    cIGZUnknown* HistoryWarehouse() override { return C(CityComponent::HistoryWarehouse); }
+    cIGZUnknown* Demolition() override { return C(CityComponent::DemolitionUtility); }
+    cIGZUnknown* LotManager() override { return C(CityComponent::LotManager); }
+    cIGZUnknown* OccupantManager() override { return C(CityComponent::OccupantManager); }
+    cIGZUnknown* PropManager() override { return C(CityComponent::PropManager); }
+    cIGZUnknown* ZoneManager() override { return C(CityComponent::ZoneManager); }
+    cIGZUnknown* LotConfigurationManager() override { return C(CityComponent::LotConfigurationManager); }
+    cIGZUnknown* NetworkManager() override { return C(CityComponent::NetworkManager); }
+    cIGZUnknown* DispatchManager() override { return C(CityComponent::DispatchManager); }
+    cIGZUnknown* TrafficNetworkMap() override { return C(CityComponent::TrafficNetwork); }
+    cIGZUnknown* PropDeveloper() override { return C(CityComponent::PropDeveloper); }
+    cIGZUnknown* NetworkLotManager() override { return C(CityComponent::NetworkLotManager); }
+    cIGZUnknown* VehicleManager() override { return C(CityComponent::VehicleManager); }
+    cIGZUnknown* PedestrianManager() override { return C(CityComponent::PedestrianManager); }
+    cIGZUnknown* AircraftManager() override { return C(CityComponent::AircraftManager); }
+    cIGZUnknown* WatercraftManager() override { return C(CityComponent::WatercraftManager); }
+    cIGZUnknown* Simulator() override { return C(CityComponent::Simulator); }
+    cIGZUnknown* AuraSim() override { return C(CityComponent::AuraSimulator); }
+    cIGZUnknown* BudgetSim() override { return C(CityComponent::BudgetSimulator); }
+    cIGZUnknown* BuildingDevelopmentSim() override { return C(CityComponent::BuildingDevelopmentSimulator); }
+    cIGZUnknown* CommercialSim() override { return C(CityComponent::CommercialSimulator); }
+    cIGZUnknown* CrimeSim() override { return C(CityComponent::CrimeSimulator); }
+    cIGZUnknown* DemandSim() override { return C(CityComponent::DemandSimulator); }
+    cIGZUnknown* FireProtectionSim() override { return C(CityComponent::FireProtectionSimulator); }
+    cIGZUnknown* FlammabilitySim() override { return C(CityComponent::FlammabilitySimulator); }
+    cIGZUnknown* FloraSim() override { return C(CityComponent::FloraSimulator); }
+    cIGZUnknown* IndustrialSim() override { return C(CityComponent::IndustrialSimulator); }
+    cIGZUnknown* LandValueSim() override { return C(CityComponent::LandValueSimulator); }
+    cIGZUnknown* NeighborsSim() override { return C(CityComponent::NeighborsSimulator); }
+    cIGZUnknown* OrdinanceSim() override { return C(CityComponent::OrdinanceSimulator); }
+    cIGZUnknown* PlumbingSim() override { return C(CityComponent::PlumbingSimulator); }
+    cIGZUnknown* PoliceSim() override { return C(CityComponent::PoliceSimulator); }
+    cIGZUnknown* PollutionSim() override { return C(CityComponent::PollutionSimulator); }
+    cIGZUnknown* PowerSim() override { return C(CityComponent::PowerSimulator); }
+    cIGZUnknown* ResidentialSim() override { return C(CityComponent::ResidentialSimulator); }
+    cIGZUnknown* TrafficSim() override { return C(CityComponent::TrafficSimulator); }
+    cIGZUnknown* WeatherSim() override { return C(CityComponent::WeatherSimulator); }
+    cIGZUnknown* DisasterLayer() override { return C(CityComponent::DisasterLayer); }
+    cIGZUnknown* CivicBuildingSim() override { return C(CityComponent::CivicBuildingSimulator); }
+    cIGZUnknown* ParkManager() override { return C(CityComponent::ParkManager); }
+    cIGZUnknown* ZoneDeveloper() override { return C(CityComponent::ZoneDeveloper); }
+    cIGZUnknown* SeaportDeveloper() override { return C(CityComponent::SeaportDeveloper); }
+    cIGZUnknown* AirportDeveloper() override { return C(CityComponent::AirportDeveloper); }
+    cIGZUnknown* LandfillDeveloper() override { return C(CityComponent::LandfillDeveloper); }
+    cIGZUnknown* LotDeveloper() override { return C(CityComponent::LotDeveloper); }
+    cIGZUnknown* TractDeveloper() override { return C(CityComponent::TractDeveloper); }
+    cIGZUnknown* AdvisorSystem() override { return C(CityComponent::AdvisorSystem); }
+    cIGZUnknown* TutorialSystem() override { return C(CityComponent::TutorialSystem); }
+    cIGZUnknown* SurfaceWater() override { return C(CityComponent::SurfaceWater); }
+    cIGZUnknown* Terrain() override { return C(CityComponent::Terrain); }
+    cIGZUnknown* EffectsManager() override { return C(CityComponent::EffectsManager); }
+    cIGZUnknown* Clock24Hour() override { return C(CityComponent::Clock24Hour); }
+
+private:
+    cIGZUnknown* C(CityComponent c) { return city_ ? city_->GetComponent(c) : nullptr; }   // borrowed, as the original's locator holds them
+    sc4::cSC4City* city_;
+};
+
+}  // namespace
+
+void BindCityServices(cISC4City* cityInterface) {
+    auto* city = dynamic_cast<sc4::cSC4City*>(cityInterface);
+    if (!city) return;
+    static CitySystems* systems = nullptr;
+    delete systems;
+    systems = new CitySystems(city);
+    SL::OnCityCreate(cityInterface, systems);
+    SL::OnCityInit();
+}
+
+}  // namespace native

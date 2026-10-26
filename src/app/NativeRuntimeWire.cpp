@@ -12,6 +12,17 @@
 namespace native {
 namespace {
 
+struct ServiceEntry {
+    const char* name;
+    const void* const* slot;
+    int phase;       // 0 bound at boot, 1 bound by the city load
+    bool required;   // missing at boot halts
+};
+const ServiceEntry kServices[] = {
+#include "app/ServiceTable.inc"
+};
+
+
 class GameAudioAdapter final : public runtime::IAudioSystem {
 public:
     bool Init() override { return true; }
@@ -41,22 +52,31 @@ bool VerifyRuntimeWiring(gd::cIGZGDriver* driver, bool audioRunning) {
     hooks.wireGlobalDependencies = [&lifecycle]() {
         runtime::WireRegistry& registry = lifecycle.Registry();
         bool ok = true;
-        ok &= registry.Require("SL::spRM (resource manager)", SL::spRM);
-        ok &= registry.Require("SL::spMS2 (message server 2)", SL::spMS2);
-        // Bound by later boot steps / the city load: reported, not fatal.
-        struct Soft { const char* name; const void* value; };
-        const Soft soft[] = {
-            {"SL::spRenderProperties", SL::spRenderProperties}, {"SL::spGF (gimex factory)", SL::spGF}, {"SL::spLua", SL::spLua},
-            {"SL::spTerrain (bound at city load)", SL::spTerrain}, {"SL::spLightingManager (bound at city load)", SL::spLightingManager},
-        };
-        for (const Soft& s : soft) {
-            if (s.value) registry.Require(s.name, const_cast<void*>(s.value));
-            else std::cerr << "[Runtime Wire] note: " << s.name << " is not bound yet" << std::endl;
+        for (const ServiceEntry& entry : kServices) {
+            if (entry.phase != 0) continue;
+            void* value = const_cast<void*>(*entry.slot);
+            if (value) registry.Require(entry.name, value);
+            else if (entry.required) ok &= registry.Require(entry.name, nullptr);
+            else std::cerr << "[Runtime Wire] note: " << entry.name << " is not bound at boot" << std::endl;
         }
         return ok;
     };
     hooks.mainSimulationLoop = [] { return 0; };   // the frame loop in game_main continues after the check
     return lifecycle.Run(hooks) == 0;
+}
+
+void ReportCityWiring() {
+    int bound = 0, total = 0;
+    std::cerr << "[Runtime Wire] ---- city-phase service table ----" << std::endl;
+    for (const ServiceEntry& entry : kServices) {
+        if (entry.phase != 1) continue;
+        ++total;
+        if (*entry.slot) { ++bound; std::cerr << "[Runtime Wire]   " << entry.name << " -> " << *entry.slot << std::endl; }
+        else std::cerr << "[Runtime Wire]   " << entry.name << " UNBOUND" << std::endl;
+    }
+    std::cerr << "[Runtime Wire] city services bound: " << bound << " of " << total << " (see docs/WIRING.md for the host seams)" << std::endl;
+    for (const ServiceEntry& entry : kServices)
+        if (entry.phase == 2) std::cerr << "[Runtime Wire]   view-phase " << entry.name << (*entry.slot ? " bound" : " pending (IView3DSystems adapter not written)") << std::endl;
 }
 
 }  // namespace native
