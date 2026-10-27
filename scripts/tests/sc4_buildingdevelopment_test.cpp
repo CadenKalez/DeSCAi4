@@ -128,6 +128,69 @@ int main() {
     S::LoadBuildingProperties(*changed, 0x1001, false);
     CHECK(sim->GetBuildingProfilePtr(0x1001)->purpose == 5 && sim->IsBuildingInFamily(0x1001, 0x600) &&
           !sim->IsBuildingInFamily(0x1001, 0x500));
+
+    // growth predicates (0x100150a4c / 0x100150a86), against the original's truth tables
+    for (int zone = 0; zone < 12; ++zone) {
+        for (int stage = 0; stage < 9; ++stage) {
+            bool want = false;
+            if (zone == 3 || (zone >= 6 && zone <= 9)) want = true;
+            else if (zone == 1 || zone == 4) want = stage < 4;
+            else if (zone == 2 || zone == 5) want = stage < 7;
+            CHECK(S::GrowthStageFitsInZone(stage, static_cast<std::uint32_t>(zone)) == want);
+        }
+    }
+    CHECK(!S::GrowthStageFitsInZone(0, 10) && !S::GrowthStageFitsInZone(-5, 0xffffffffu));
+    for (std::uint32_t zone = 0; zone < 16; ++zone) {
+        for (std::uint32_t purpose = 0; purpose < 16; ++purpose) {
+            bool want = purpose == zone;
+            if (zone == 2) want = want || purpose == 1;
+            if (zone == 3) want = want || purpose == 1 || purpose == 2;
+            if (zone == 5) want = want || purpose == 4;
+            if (zone == 6) want = want || purpose == 4 || purpose == 5;
+            if (zone == 9) want = want || purpose == 8;
+            if (zone == 0xb || zone == 0xc || zone == 0xf) want = want || purpose == 0;
+            CHECK(S::BuildingFitsInZone(purpose, zone) == want);
+        }
+    }
+
+    // IsSuitableForConstruction (0x100150b0c): one failure code per branch
+    struct Lot final : IConstructionLot { std::int32_t state = 1; std::int32_t ConstructionState() override { return state; } };
+    struct City final : IConstructionSuitabilityHost {
+        std::int8_t zone = 1; Lot* lot = nullptr; std::int32_t valueClass = 3; std::uint8_t value = 50; bool power = true;
+        std::int8_t ZoneTypeAt(int, int) override { return zone; }
+        IConstructionLot* LotAt(int, int) override { return lot; }
+        std::int32_t LandValueClassAt(int, int) override { return valueClass; }
+        std::uint8_t LandValueAt(int, int) override { return value; }
+        bool HasPowerAt(int, int) override { return power; }
+    };
+    Lot lot; City city; city.lot = &lot;
+    sim->SetSuitabilityHost(&city);
+    sim->SetCheats(false, false, false);
+    ConstructionProfile plan; plan.purpose = 1; plan.landValueClass = 3; plan.x = 4; plan.z = 5;
+    ReasonForFailure reason = kReasonLotNotReady;
+    CHECK(sim->IsSuitableForConstruction(plan, reason) && reason == kReasonLotNotReady);   // success leaves the reason alone
+    city.zone = 4;   reason = kReasonLandValueRange;
+    CHECK(!sim->IsSuitableForConstruction(plan, reason) && reason == kReasonNone); city.zone = 1;
+    city.lot = nullptr;
+    CHECK(!sim->IsSuitableForConstruction(plan, reason) && reason == kReasonNoLot); city.lot = &lot;
+    city.power = false;
+    CHECK(!sim->IsSuitableForConstruction(plan, reason) && reason == kReasonNoPower);
+    sim->SetCheats(false, true, false);   // ignore power
+    CHECK(sim->IsSuitableForConstruction(plan, reason));
+    sim->SetCheats(false, false, false); city.power = true;
+    city.valueClass = 2;
+    CHECK(!sim->IsSuitableForConstruction(plan, reason) && reason == kReasonLandValueClass);
+    plan.purpose = 8;   // purposes 7..9 skip the class comparison (and fit zone 1? no: zone 1 admits purpose 1 only)
+    city.zone = 8;
+    CHECK(sim->IsSuitableForConstruction(plan, reason));
+    plan.purpose = 1; city.zone = 1; city.valueClass = 3;
+    plan.minLandValue = 40; plan.maxLandValue = 60;
+    CHECK(sim->IsSuitableForConstruction(plan, reason));
+    city.value = 39; CHECK(!sim->IsSuitableForConstruction(plan, reason) && reason == kReasonLandValueRange);
+    city.value = 61; CHECK(!sim->IsSuitableForConstruction(plan, reason) && reason == kReasonLandValueRange);
+    city.value = 60; CHECK(sim->IsSuitableForConstruction(plan, reason));
+    lot.state = 2;   CHECK(!sim->IsSuitableForConstruction(plan, reason) && reason == kReasonLotNotReady);
+    sim->SetSuitabilityHost(nullptr);
     sim->Release();
     S::StaticShutdown();
     std::puts(failures ? "sc4_buildingdevelopment: FAILED" : "sc4_buildingdevelopment ok");

@@ -8,6 +8,7 @@
 // +0xe0 construction resource counter, +0x178 stage population multiplier, +0x188 day of last successful
 // build per developer type, +0x1b0 stage multiplier table, +0x1c9..0x1cd cheat bools.
 #pragma once
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -80,6 +81,45 @@ public:
     };
     virtual void LotConfigurations(std::vector<LotConfigurationInfo>& out) = 0;
 };
+// cISC4BuildingDevelopmentSimulator::ConstructionProfile (the fields IsSuitableForConstruction reads) and its failure codes.
+struct ConstructionProfile {
+    std::uint32_t purpose = 0;               // +0x00 building purpose / zone family (7..9 skip the land value comparison)
+    std::uint32_t reserved04 = 0;            // +0x04
+    std::int32_t landValueClass = 0;         // +0x08 compared with the land value simulator's class at the cell
+    std::uint32_t reserved0c = 0;            // +0x0c
+    std::uint8_t minLandValue = 0;           // +0x10
+    std::uint8_t maxLandValue = 0;           // +0x11 (both 0 = compare the class instead of the range)
+    std::uint8_t reserved12[10] = {};        // +0x12
+    std::int32_t x = 0;                      // +0x1c
+    std::int32_t z = 0;                      // +0x20
+};
+static_assert(offsetof(ConstructionProfile, landValueClass) == 0x08 && offsetof(ConstructionProfile, minLandValue) == 0x10 &&
+              offsetof(ConstructionProfile, x) == 0x1c && offsetof(ConstructionProfile, z) == 0x20);
+enum ReasonForFailure : std::uint32_t {
+    kReasonNone = 0,              // the building does not fit the zone type at the cell
+    kReasonLandValueRange = 1,    // the land value is outside [min, max]
+    kReasonLandValueClass = 2,    // the land value class differs from the profile's
+    kReasonNoLot = 3,             // the cell has no lot
+    kReasonLotNotReady = 4,       // the lot's state (vslot 0x108) is not 1
+    kReasonNoPower = 5,           // the cell has no power (and the ignore-power cheat is off)
+};
+
+// The five city services IsSuitableForConstruction asks, one original call each (this+0x48..0x60 of the simulator).
+class IConstructionLot {
+public:
+    virtual ~IConstructionLot() = default;
+    virtual std::int32_t ConstructionState() = 0;                           // lot vslot 0x108
+};
+class IConstructionSuitabilityHost {
+public:
+    virtual ~IConstructionSuitabilityHost() = default;
+    virtual std::int8_t ZoneTypeAt(int x, int z) = 0;                       // SL::spZoneManager vslot 0x60
+    virtual IConstructionLot* LotAt(int x, int z) = 0;                      // SL::spLotManager vslot 0x28 (x, z, 1); borrowed
+    virtual std::int32_t LandValueClassAt(int x, int z) = 0;                // SL::spLandValueSim vslot 0x28
+    virtual std::uint8_t LandValueAt(int x, int z) = 0;                     // SL::spLandValueSim vslot 0x30
+    virtual bool HasPowerAt(int x, int z) = 0;                              // SL::spPowerSim vslot 0x98
+};
+
 IBuildingDevelopmentSimHost* BuildingDevelopmentSimHost();
 void SetBuildingDevelopmentSimHost(IBuildingDevelopmentSimHost* host);
 
@@ -146,6 +186,12 @@ public:
     bool IsTractUnmarked(std::uint32_t developerType, int x, int z) const;
     void ClearGrowthMarks() { growthMarks_.clear(); }
 
+    // growth predicates
+    static bool GrowthStageFitsInZone(int stage, std::uint32_t zoneType);                        // @ 0x100150a4c
+    static bool BuildingFitsInZone(std::uint32_t buildingPurpose, std::uint32_t zoneType);       // @ 0x100150a86
+    void SetSuitabilityHost(IConstructionSuitabilityHost* host) { suitability_ = host; }          // +0x48..0x60 services
+    bool IsSuitableForConstruction(const ConstructionProfile& profile, ReasonForFailure& reason) const;   // @ 0x100150b0c (vslot 0x170)
+
     // cheats
     bool CheatIgnorePlumbing() const { return cheatPlumbing_; }
     bool CheatIgnorePower() const { return cheatPower_; }
@@ -164,6 +210,7 @@ private:
     std::uint32_t refCount_ = 0;
     bool initialized_ = false;
     IConstructionResources* resources_ = nullptr;                              // +0xe0
+    IConstructionSuitabilityHost* suitability_ = nullptr;                      // +0x48..0x60 (zone, lot, land value, power)
     std::vector<float> stageMultipliers_ = std::vector<float>(8, 1.0f);        // +0x1b0
     std::map<std::int32_t, std::int32_t> lastBuildDay_;                         // +0x180
     std::map<std::uint32_t, std::set<std::pair<int, int>>> growthMarks_;       // mGrowthMarks
