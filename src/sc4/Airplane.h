@@ -121,7 +121,7 @@ public:
     bool AI_GotoDestination(const cS3DVector3& destination, float delta);   // @ 0x1006d2f12  PARTIAL
     bool AI_Land(float delta);                                        // @ 0x1006d33f8  PARTIAL
     bool AI_Stop(float delta);                                        // @ 0x1006d3f70
-    bool AI_TakeOff(float delta);                                     // @ 0x1006d40e2  PARTIAL
+    bool AI_TakeOff(float delta);                                     // @ 0x1006d40e2
     void AI_Taxi(const cS3DVector3& target, float delta);             // @ 0x1006d44cc
     int AI_ApproachAltitude(float altitude, bool useLift, float delta);   // @ 0x1006d4a0c: 1 climb, 0 hold, -1 descend
     bool AI_FollowVectorAndTurn(const cS3DVector3& inbound, const cS3DVector3& turnPoint,
@@ -209,8 +209,8 @@ private:
     float approachScale_ = 0.08f;                    // +0x3d4
     float approachFactor_ = 0.68f;                   // +0x3d8
     float field3dc_ = 0.0f;                          // +0x3dc
-    float field3e0_ = 0.0f;                          // +0x3e0
-    float field3e4_ = 0.0f;                          // +0x3e4
+    int takeOffStep_ = 0;                              // +0x3e0
+    int field3e4_ = 0;                                 // +0x3e4
     float field3e8_ = 0.0f;                          // +0x3e8
     float field3ec_ = 0.0f;                          // +0x3ec
     float field3f0_ = 0.0f;                          // +0x3f0

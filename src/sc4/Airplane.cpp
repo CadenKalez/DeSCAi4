@@ -138,7 +138,7 @@ cSC4Airplane::cSC4Airplane(IAutomatonHost* host, IAircraftHost* aircraftHost) : 
     velocity_ = cS3DVector3{0.0f, 0.0f, 0.0f};             // +0x36c
     roll_ = pitch_ = yaw_ = 0.0f;                          // +0x378/+0x37c/+0x380
     field3dc_ = 0.0f;                                      // +0x3dc
-    field3e0_ = field3e4_ = 0.0f;                          // +0x3e0
+    takeOffStep_ = field3e4_ = 0;                          // +0x3e0
     field3e8_ = field3ec_ = field3f0_ = 0.0f;              // +0x3e8
     for (cS3DVector3& point : points_) point = cS3DVector3{0.0f, 0.0f, 0.0f};   // +0x3f4..+0x423
     field424_ = 0;                                         // +0x424
@@ -657,10 +657,60 @@ bool cSC4Airplane::AI_Stop(float delta) {
     return false;
 }
 
-// @ 0x1006d40e2 PARTIAL: the take-off sequence is not ported.
+// @ 0x1006d40e2. The take-off sequence, step in +0x3e0: (0) pick a runway (PickRunwayDirection, taking off), keep the
+// position at +0x3e8, the runway start in points_[0] and a point 200 down the runway in points_[1]; (1) taxi to the
+// start, towards the foot of the perpendicular on the runway line while more than 10 off it, and stop within 3; (2)
+// turn onto the runway; (3) keep the heading and climb to 100 above the current height. True once in state 3.
 bool cSC4Airplane::AI_TakeOff(float delta) {
-    (void)delta;
-    return false;
+    switch (takeOffStep_) {
+    case 0: {
+        field3e4_ = 0;
+        field434_ = 0;
+        cS3DVector3 start = {0.0f, 0.0f, 0.0f}, direction = {0.0f, 0.0f, 0.0f};   // nS3D::k_zero
+        PickRunwayDirection(position_, start, direction, false);
+        field3e8_ = position_.x;
+        field3ec_ = position_.y;
+        field3f0_ = position_.z;
+        points_[0] = start;
+        points_[1] = {start.x + direction.x * 200.0f, start.y + direction.y * 200.0f, start.z + direction.z * 200.0f};
+        takeOffStep_ = 1;
+        break;
+    }
+    case 1: {
+        const cS3DVector3& start = points_[0];
+        const float dx = start.x - position_.x, dy = start.y - position_.y, dz = start.z - position_.z;
+        if (3.0f > std::sqrt(dz * dz + (dy * dy + dx * dx))) {
+            if (AI_Stop(delta)) takeOffStep_ = 2;
+            break;
+        }
+        const float rx = points_[1].x - start.x, ry = points_[1].y - start.y, rz = points_[1].z - start.z;
+        const float inverse = 1.0f / std::sqrt(rz * rz + (ry * ry + rx * rx));
+        const float runway[3] = {rx * inverse, ry * inverse, inverse * rz};
+        if (SC4GeometryUtilities::PointDistanceToRay(&position_.x, &start.x, runway) > 10.0f) {
+            // the foot of the perpendicular from the plane on the runway line: runway x ((start - position) x runway)
+            const cS3DVector3 c = {dy * runway[2] - dz * runway[1], dz * runway[0] - dx * runway[2],
+                                   dx * runway[1] - dy * runway[0]};
+            AI_Taxi({(runway[1] * c.z - runway[2] * c.y) + position_.x, (runway[2] * c.x - c.z * runway[0]) + position_.y,
+                     (c.y * runway[0] - c.x * runway[1]) + position_.z},
+                    delta);
+        } else {
+            AI_Taxi(start, delta);
+        }
+        break;
+    }
+    case 2:
+        if (AI_TurnToVector({points_[1].x - points_[0].x, points_[1].y - points_[0].y, points_[1].z - points_[0].z},
+                            delta))
+            takeOffStep_ = 3;
+        break;
+    case 3:
+        AI_TurnToVector({points_[1].x - points_[0].x, points_[1].y - points_[0].y, points_[1].z - points_[0].z}, delta);
+        AI_ApproachAltitude(position_.y + 100.0f, false, delta);
+        break;
+    default:
+        break;
+    }
+    return static_cast<int>(state_) == 3;
 }
 
 // @ 0x1006d44cc. Taxi towards `target` on the ground: steer[2] eases towards the turn side (clamped to +/-0.2); the
@@ -936,7 +986,7 @@ void cSC4Airplane::SetAirplaneState(AirplaneState state) {
 bool cSC4Airplane::HandleEnterState(tAutomataState* state) {
     const bool result = cSC4Aircraft::HandleEnterState(state);
     if (!state) {
-        field3e0_ = field3e4_ = 0.0f;
+        takeOffStep_ = field3e4_ = 0;
         field434_ = 0;
         field424_ = 0;
     } else {
@@ -952,7 +1002,7 @@ bool cSC4Airplane::HandleEnterState(tAutomataState* state) {
                 if (IAircraftHost* host = HostFor(*this)) host->PlayAudioEvent(8);
             }
         } else {
-            field3e0_ = field3e4_ = 0.0f;
+            takeOffStep_ = field3e4_ = 0;
             field434_ = 0;
             field424_ = 0;
         }
@@ -967,7 +1017,7 @@ bool cSC4Airplane::HandleExitState(const tAutomataState* state) {
     const bool result = cSC4Aircraft::HandleExitState(state);
     if (state && state->stateType == kAirplaneStatePlayerDrive) {
         LoadDriveParameters();
-        field3e0_ = field3e4_ = 0.0f;
+        takeOffStep_ = field3e4_ = 0;
         field434_ = 0;
         field424_ = 0;
     }

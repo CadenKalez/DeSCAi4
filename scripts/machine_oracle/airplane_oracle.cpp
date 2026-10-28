@@ -36,6 +36,13 @@ struct AirplaneOracleAccess {
     }
     static int& Phase(cSC4Airplane& p) { return p.field434_; }
     static void SetDescentSlope(cSC4Airplane& p, float slope) { p.descentSlope_ = slope; }
+    static int& TakeOffStep(cSC4Airplane& p) { return p.takeOffStep_; }
+    static void SetPoints(cSC4Airplane& p, const float* pts) {   // points_[0..3], 12 floats
+        for (int i = 0; i < 4; ++i) p.points_[i] = {pts[3 * i], pts[3 * i + 1], pts[3 * i + 2]};
+    }
+    static void TakeOffState(const cSC4Airplane& p, float* out) {   // +0x3e8 triple
+        out[0] = p.field3e8_; out[1] = p.field3ec_; out[2] = p.field3f0_;
+    }
     static void SetSlopes(cSC4Airplane& p, float climb, float descent) { p.climbSlope_ = climb; p.descentSlope_ = descent; }
     static void SetTurnRate(cSC4Airplane& p, float rate) { p.turnRate_ = rate; }
     static void Controls(const cSC4Airplane& p, float* out) {
@@ -374,6 +381,52 @@ int main() {
             } else {
                 Check(gOriginalRemoved == 1, "PickRunwayDirection odd list", t);
             }
+        }
+
+        {   // AI_TakeOff, any step, plane near the runway or off it
+            gStage = "AI_TakeOff";
+            float c[6], tune[12], o[3], v[3], pts[12];
+            for (float& x : c) x = unit(rng);
+            for (float& x : tune) x = 0.05f + 0.5f * (unit(rng) + 1);
+            o[0] = unit(rng); o[1] = 0.0f; o[2] = unit(rng);
+            for (float& x : v) x = speed(rng) * 0.2f;
+            const cS3DVector3 a = gRunways[0];
+            for (int i = 0; i < 4; ++i) {
+                pts[3 * i] = a.x + 300.0f * unit(rng); pts[3 * i + 1] = a.y; pts[3 * i + 2] = a.z + 300.0f * unit(rng);
+            }
+            const float near = t % 3 == 0 ? 2.0f : 60.0f;
+            const float position[3] = {pts[0] + near * unit(rng), pts[1] + 5.0f * unit(rng), pts[2] + near * unit(rng)};
+            const int step = static_cast<int>(rng() % 5);
+            const int st = static_cast<int>(rng() % 4);
+            std::memcpy(original + 0x314, c, sizeof c);
+            std::memcpy(original + 0x438, tune, sizeof tune);
+            std::memcpy(original + 0x8c, o, sizeof o);
+            std::memcpy(original + 0x36c, v, sizeof v);
+            std::memcpy(original + 0x74, position, sizeof position);
+            std::memcpy(original + 0x3f4, pts, sizeof pts);
+            std::memcpy(original + 0x310, &st, 4);
+            std::memcpy(original + 0x3e0, &step, 4);
+            AirplaneOracleAccess::SetMotion(port, c, tune, o, v);
+            AirplaneOracleAccess::SetPositionState(port, position, st);
+            AirplaneOracleAccess::SetPoints(port, pts);
+            AirplaneOracleAccess::TakeOffStep(port) = step;
+            const float d = 0.05f + 0.1f * (unit(rng) + 1);
+            const bool ra = Function<bool (*)(void*, float)>(0x1006d40e2)(original, d);
+            const bool rb = port.AI_TakeOff(d);
+            float mine[6], keep[3];
+            AirplaneOracleAccess::Controls(port, mine);
+            AirplaneOracleAccess::TakeOffState(port, keep);
+            int stepOriginal;
+            std::memcpy(&stepOriginal, original + 0x3e0, 4);
+            bool same = ra == rb && stepOriginal == AirplaneOracleAccess::TakeOffStep(port);
+            for (int i = 0; i < 6; ++i) same = same && Same(Field(0x314 + 4 * i), mine[i]);
+            for (int i = 0; i < 4; ++i) {
+                const cS3DVector3& q = port.ApproachPoint(i);
+                same = same && Same(Field(0x3f4 + 12 * i), q.x) && Same(Field(0x3f8 + 12 * i), q.y) &&
+                       Same(Field(0x3fc + 12 * i), q.z);
+            }
+            if (step == 0) for (int i = 0; i < 3; ++i) same = same && Same(Field(0x3e8 + 4 * i), keep[i]);
+            Check(same, "AI_TakeOff", t);
         }
 
         if (t % 8 == 0) {
