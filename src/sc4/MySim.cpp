@@ -2099,7 +2099,7 @@ void cSC4MySim::DispatchToolSetFollowCamera(bool follow) {
 bool cSC4MySim::DispatchToolCanDispatch(float x, float z) {
     IMySimHost* host = Host();
     if (!host) return false;
-    return host->TerrainCellFree(x, z);                                  // spTerrain 0x60 / 0xe8
+    return host->TerrainHeight(x, z) > host->TerrainSeaLevel();          // spTerrain 0x60 > 0xe8; the height is read first
 }
 
 bool cSC4MySim::GetLocation(float* xyz) const {

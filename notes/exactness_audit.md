@@ -7,13 +7,13 @@ The port is a transcription checked by tests; none of this proves the machine co
 
 | Evidence | Rows | Share |
 |---|---:|---:|
-| unit test only | 22,433 | 85.1% |
-| checked against the disassembly | 1,664 | 6.3% |
+| unit test only | 22,431 | 85.1% |
+| checked against the disassembly | 1,666 | 6.3% |
 | oracle (decompiled code run against the port on random inputs) | 1,149 | 4.4% |
 | no test named | 1,116 | 4.2% |
 | real game data | 3 | 0.0% |
 
-## Worklist: 4,418 functions with decompiler artifacts and only a unit test
+## Worklist: 4,412 functions with decompiler artifacts and only a unit test
 
 | Source | Functions |
 |---|---:|
@@ -29,8 +29,8 @@ The port is a transcription checked by tests; none of this proves the machine co
 | `src/gz/WinListBox.h` | 54 |
 | `src/sc4/DBSegment.cpp` | 54 |
 | `src/sc4/OccupantManager.cpp` | 54 |
-| `src/sc4/MySim.cpp` | 51 |
 | `src/sc4/TrafficAutomaton.cpp` | 51 |
+| `src/sc4/MySim.cpp` | 48 |
 | `src/gz/WinText.h` | 44 |
 | `src/gz/DrawContext.h` | 42 |
 | `src/gz/PersistASCIIWriter.cpp` | 42 |
@@ -118,7 +118,6 @@ The port is a transcription checked by tests; none of this proves the machine co
 | `src/sc4/ParticlesEffect.cpp` | 15 |
 | `src/sc4/PoliceSimulator.cpp` | 15 |
 | `src/sc4/PropDeveloper.cpp` | 15 |
-| `src/sc4/TrafficSimulator.cpp` | 15 |
 | `src/sc4/ViewInputControl.cpp` | 15 |
 | `src/sc4/VisualEffect.cpp` | 15 |
 | `src/sc4/WinCatalogView.cpp` | 15 |
@@ -151,6 +150,7 @@ The port is a transcription checked by tests; none of this proves the machine co
 | `src/sc4/PylonOccupant.cpp` | 12 |
 | `src/sc4/Simulator.cpp` | 12 |
 | `src/sc4/TextDecalOccupant.cpp` | 12 |
+| `src/sc4/TrafficSimulator.cpp` | 12 |
 | `src/sc4/WinAuraAlert.cpp` | 12 |
 | `src/sc4/SCResParser.cpp` | 12 |
 | `src/audio/HitPropertySetResource.cpp` | 10 |

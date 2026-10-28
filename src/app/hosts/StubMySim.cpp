@@ -21,7 +21,7 @@ struct StubMySim final : IMySimHost {
     bool AnyTravelConnection(int x, int z) override { return {}; }
     bool FindCommutePath(const int homeRect[4], const int jobRect[4], int& minutes) override { return {}; }
     float TerrainHeight(float x, float z) override { return {}; }
-    bool TerrainCellFree(float x, float z) override { return {}; }
+    float TerrainSeaLevel() override { return {}; }
     void StandardCellToPosition(int x, int z, float& px, float& pz) override {}
     int CityCellsX() override { return {}; }
     int CityCellsZ() override { return {}; }

@@ -348,7 +348,7 @@ public:
         // spCity vslot 0x228 -> vslot 0x30 (path finder) -> 0x28(1), 0x48(3), 0x90(1), 0x98/0xa0(cell rects),
         // 0xb8() (found) and 0xd0() (minutes)
     virtual float TerrainHeight(float x, float z) = 0;                      // spTerrain vslot 0x60
-    virtual bool TerrainCellFree(float x, float z) = 0;                     // spTerrain vslot 0xe8 (DispatchToolCanDispatch)
+    virtual float TerrainSeaLevel() = 0;                                    // spTerrain vslot 0xe8 (DispatchToolCanDispatch)
     virtual void StandardCellToPosition(int x, int z, float& px, float& pz) = 0;   // spCity vslot 0x308
     virtual int CityCellsX() = 0;                                           // spCity vslot 0x2e8
     virtual int CityCellsZ() = 0;                                           // spCity vslot 0x2f0

@@ -596,7 +596,7 @@ struct FakeHost final : IMySimHost {
     std::map<std::pair<int, int>, cISC4Occupant*> occupantsAtCell;
     std::vector<cISC4Occupant*> cityOccupants;
     float terrainHeight = 12.5f;
-    bool terrainFree = true;
+    float seaLevel = 10.0f;
     bool paused = false;
     bool simulatorTick = true;
     int hour = 10;
@@ -676,7 +676,7 @@ struct FakeHost final : IMySimHost {
         return commuteResult;
     }
     float TerrainHeight(float, float) override { return terrainHeight; }
-    bool TerrainCellFree(float, float) override { return terrainFree; }
+    float TerrainSeaLevel() override { return seaLevel; }
     void StandardCellToPosition(int x, int z, float& px, float& pz) override { px = static_cast<float>(x << 4); pz = static_cast<float>(z << 4); }
     int CityCellsX() override { return 128; }
     int CityCellsZ() override { return 128; }
@@ -1210,9 +1210,9 @@ int main() {
         CHECK(sim->State() == 6);
         CHECK(host.pylonLog.lastKind == 3);
         CHECK(sim->DispatchToolCanDispatch(10.0f, 20.0f));
-        host.terrainFree = false;
+        host.seaLevel = 12.5f;                       // equal is not above
         CHECK(!sim->DispatchToolCanDispatch(10.0f, 20.0f));
-        host.terrainFree = true;
+        host.seaLevel = 10.0f;
         sim->SetPylonVisibility(true);
         CHECK(host.pylonLog.visibility >= 1);
         host.dispatchLog.state = 2;
