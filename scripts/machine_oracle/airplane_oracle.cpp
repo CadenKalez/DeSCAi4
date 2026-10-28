@@ -45,6 +45,15 @@ struct AirplaneOracleAccess {
     }
     static int& TurnCount(cSC4Airplane& p) { return p.field424_; }
     static void SetLegStart(cSC4Airplane& p, const float* v) { p.field3e8_ = v[0]; p.field3ec_ = v[1]; p.field3f0_ = v[2]; }
+    static int& LandStep(cSC4Airplane& p) { return p.field3e4_; }
+    static void SetLanding(cSC4Airplane& p, const float* target, const float* saved) {
+        p.field428_ = target[0]; p.field42c_ = target[1]; p.field430_ = target[2];
+        p.savedPosition_ = {saved[0], saved[1], saved[2]};
+    }
+    static void Motion(const cSC4Airplane& p, float* out) {   // position, orientation, velocity
+        const cS3DVector3* v[3] = {&p.position_, &p.orientation_, &p.velocity_};
+        for (int i = 0; i < 3; ++i) { out[3 * i] = v[i]->x; out[3 * i + 1] = v[i]->y; out[3 * i + 2] = v[i]->z; }
+    }
     static void SetSlopes(cSC4Airplane& p, float climb, float descent) { p.climbSlope_ = climb; p.descentSlope_ = descent; }
     static void SetTurnRate(cSC4Airplane& p, float rate) { p.turnRate_ = rate; }
     static void Controls(const cSC4Airplane& p, float* out) {
@@ -484,6 +493,77 @@ int main() {
             for (int i = 0; i < 6; ++i) same = same && Same(Field(0x314 + 4 * i), mine[i]);
             for (int i = 0; i < 3; ++i) same = same && Same(Field(0x3e8 + 4 * i), keep[i]);
             Check(same, "AI_GotoDestination", t);
+        }
+
+        {   // AI_Land, every step, box corners around a runway, position anywhere on the approach
+            gStage = "AI_Land";
+            float c[6], tune[12], o[3], v[3], pts[12], legStart[3], target[3], saved[3];
+            for (float& x : c) x = unit(rng);
+            for (float& x : tune) x = 0.05f + 0.5f * (unit(rng) + 1);
+            o[0] = unit(rng); o[1] = 0.1f * unit(rng); o[2] = unit(rng);
+            const float fast = t % 3 == 0 ? 3.0f : 60.0f;
+            for (float& x : v) x = fast * unit(rng);
+            const float cx = gCitySize[0] * 0.5f, cz = gCitySize[1] * 0.5f;
+            for (int i = 0; i < 4; ++i) {
+                pts[3 * i] = cx + 600.0f * unit(rng); pts[3 * i + 1] = 60.0f + 50.0f * unit(rng);
+                pts[3 * i + 2] = cz + 600.0f * unit(rng);
+            }
+            target[0] = pts[9] + 300.0f * unit(rng); target[1] = pts[10]; target[2] = pts[11] + 300.0f * unit(rng);
+            const float near = t % 4 == 0 ? 3.0f : 200.0f;
+            for (int i = 0; i < 3; ++i) saved[i] = pts[9 + i] + near * unit(rng);
+            const float position[3] = {pts[9] + 400.0f * unit(rng), 40.0f + 40.0f * unit(rng), pts[11] + 400.0f * unit(rng)};
+            for (int i = 0; i < 3; ++i) legStart[i] = position[i] + 300.0f * unit(rng);
+            const int step = static_cast<int>(rng() % 6), st = static_cast<int>(rng() % 4),
+                      corner = static_cast<int>(rng() % 4), phase = static_cast<int>(rng() % 3);
+            const float slope = 0.05f + 0.1f * (unit(rng) + 1), rate = 0.1f + 0.4f * (unit(rng) + 1);
+            std::memcpy(original + 0x314, c, sizeof c);
+            std::memcpy(original + 0x438, tune, sizeof tune);
+            std::memcpy(original + 0x8c, o, sizeof o);
+            std::memcpy(original + 0x36c, v, sizeof v);
+            std::memcpy(original + 0x74, position, sizeof position);
+            std::memcpy(original + 0x3f4, pts, sizeof pts);
+            std::memcpy(original + 0x3e8, legStart, sizeof legStart);
+            std::memcpy(original + 0x428, target, sizeof target);
+            std::memcpy(original + 0x48c, saved, sizeof saved);
+            std::memcpy(original + 0x310, &st, 4);
+            std::memcpy(original + 0x3e4, &step, 4);
+            std::memcpy(original + 0x424, &corner, 4);
+            std::memcpy(original + 0x434, &phase, 4);
+            std::memcpy(original + 0x3c8, &slope, 4);
+            std::memcpy(original + 0x3cc, &rate, 4);
+            AirplaneOracleAccess::SetMotion(port, c, tune, o, v);
+            AirplaneOracleAccess::SetPositionState(port, position, st);
+            AirplaneOracleAccess::SetPoints(port, pts);
+            AirplaneOracleAccess::SetLegStart(port, legStart);
+            AirplaneOracleAccess::SetLanding(port, target, saved);
+            AirplaneOracleAccess::LandStep(port) = step;
+            AirplaneOracleAccess::TurnCount(port) = corner;
+            AirplaneOracleAccess::Phase(port) = phase;
+            AirplaneOracleAccess::SetDescentSlope(port, slope);
+            AirplaneOracleAccess::SetTurnRate(port, rate);
+            const float d = 0.05f + 0.1f * (unit(rng) + 1);
+            const bool ra = Function<bool (*)(void*, float)>(0x1006d33f8)(original, d);
+            const bool rb = port.AI_Land(d);
+            float mine[6], keep[3], motion[9];
+            AirplaneOracleAccess::Controls(port, mine);
+            AirplaneOracleAccess::TakeOffState(port, keep);
+            AirplaneOracleAccess::Motion(port, motion);
+            int ints[5];
+            for (int i = 0; i < 5; ++i) std::memcpy(&ints[i], original + (const int[]){0x3e4, 0x3e0, 0x424, 0x434, 0x310}[i], 4);
+            bool same = ra == rb && ints[0] == AirplaneOracleAccess::LandStep(port) &&
+                        ints[1] == AirplaneOracleAccess::TakeOffStep(port) && ints[2] == AirplaneOracleAccess::TurnCount(port) &&
+                        ints[3] == AirplaneOracleAccess::Phase(port) && ints[4] == static_cast<int>(port.State());
+            for (int i = 0; i < 6; ++i) same = same && Same(Field(0x314 + 4 * i), mine[i]);
+            for (int i = 0; i < 3; ++i) same = same && Same(Field(0x3e8 + 4 * i), keep[i]);
+            const int motionOffsets[3] = {0x74, 0x8c, 0x36c};
+            for (int i = 0; i < 9; ++i) same = same && Same(Field(motionOffsets[i / 3] + 4 * (i % 3)), motion[i]);
+            for (int i = 0; i < 4; ++i) {
+                const cS3DVector3& q = port.ApproachPoint(i);
+                same = same && Same(Field(0x3f4 + 12 * i), q.x) && Same(Field(0x3f8 + 12 * i), q.y) &&
+                       Same(Field(0x3fc + 12 * i), q.z);
+            }
+            // an odd runway list makes step 0 remove the plane: the original's Remove is a no-op fake here
+            if (!(step == 0 && gRunways.size() % 2 != 0)) Check(same, "AI_Land", t);
         }
 
         if (t % 8 == 0) {

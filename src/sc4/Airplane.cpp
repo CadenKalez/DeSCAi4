@@ -700,10 +700,164 @@ bool cSC4Airplane::AI_GotoDestination(const cS3DVector3& destination, float delt
     return std::sqrt(height - ground) * (speed * 0.15f) > distance;
 }
 
-// @ 0x1006d33f8 PARTIAL: the runway/approach landing sequence is not ported.
+// @ 0x1006d33f8. The landing sequence, step in +0x3e4 (jump table 0x1006d3f5c):
+//  (0) on the ground already: straight to the rollout; else pick the landing runway for the saved position (+0x48c)
+//      and build the approach box behind it; the leg starts here.
+//  (1) head for the box's far corner (points_[0]) at its height; once past it and lined up, fly the box.
+//  (2) fly the box legs (procedure turns through points_[+0x424]) down to the box heights, until level.
+//  (3) the legs again with lift, then the final approach along the runway (towards +0x428) 5 below the leg height,
+//      flaring over the threshold: position and heading blend towards the runway by the share of the last leg flown;
+//      overshooting both the runway end and the threshold restarts the approach. On the ground: rollout.
+//  (4) rollout: brake to 10, then taxi to the saved position (onto the runway line first when more than 10 off it).
+// True only when stopped within 5 of the saved position.
 bool cSC4Airplane::AI_Land(float delta) {
-    (void)delta;
-    return false;
+    IAircraftHost* host = HostFor(*this);
+    auto ceiling = [host] {   // max(tallest building, terrain clamp), MAXSS
+        if (!host) return 0.0f;
+        const float terrain = host->AltitudeClamp();
+        const float buildings = host->TallestBuildingAltitude();
+        return buildings > terrain ? buildings : terrain;
+    };
+    const cS3DVector3 runwayEnd = {field428_, field42c_, field430_};
+    switch (field3e4_) {
+    case 0: {
+        takeOffStep_ = 0;
+        if (static_cast<int>(state_) <= 1) {
+            field3e4_ = 4;
+            return false;
+        }
+        field3e8_ = position_.x;
+        field3ec_ = position_.y;
+        field3f0_ = position_.z;
+        cS3DVector3 start = {0.0f, 0.0f, 0.0f}, direction = {0.0f, 0.0f, 0.0f};   // nS3D::k_zero
+        PickRunwayDirection(savedPosition_, start, direction, true);
+        PickApproachBox(start, direction);
+        field424_ = 0;
+        field3e4_ = 1;
+        field434_ = 0;
+        return false;
+    }
+    case 1: {
+        const cS3DVector3 p0 = points_[0], p1 = points_[1];
+        const cS3DVector3 a = {p1.x - p0.x, p1.y - p0.y, p1.z - p0.z};
+        const cS3DVector3 b = {p0.x - field3e8_, p0.y - field3ec_, p0.z - field3f0_};
+        const cS3DVector3 c = {p0.x - position_.x, p0.y - position_.y, p0.z - position_.z};
+        const float ahead = c.z * a.z + (c.x * a.x + c.y * a.y);
+        const float legLength = std::sqrt(b.z * b.z + (b.x * b.x + b.y * b.y));
+        const cS3DVector3 aim = (200.0f > legLength || 0.0f > ahead)
+                                    ? cS3DVector3{(p0.x - a.x) - field3e8_, (p0.y - a.y) - field3ec_, (p0.z - a.z) - field3f0_}
+                                    : b;
+        const bool lined = AI_TurnToVector(aim, delta);
+        AI_ApproachAltitude(points_[0].y, false, delta);
+        if (ahead > 0.0f && lined) {
+            field3e4_ = 2;
+            field434_ = 0;
+        }
+        return false;
+    }
+    case 2: {
+        const int i = field424_;
+        const int next = i == 3 ? 0 : i + 1;
+        const cS3DVector3 corner = points_[i];
+        if (AI_FollowVectorAndTurn({corner.x - position_.x, corner.y - position_.y, corner.z - position_.z}, corner,
+                                   {points_[next].x - corner.x, points_[next].y - corner.y, points_[next].z - corner.z},
+                                   delta)) {
+            field424_ = next;
+            field434_ = 0;
+        }
+        const float first = points_[0].y, third = points_[2].y;
+        const float top = ceiling();
+        const float lower = top < first ? top : first;          // MINSS
+        if (AI_ApproachAltitude(lower > third ? lower : third, false, delta) == 0) field3e4_ = 3;
+        return false;
+    }
+    case 3: {
+        const int i = field424_;
+        const int previous = i == 0 ? 3 : i - 1;
+        const int next = i == 3 ? 0 : i + 1;
+        const cS3DVector3& from = points_[previous];
+        const cS3DVector3& corner = points_[i];
+        const float fx = position_.x - from.x, fz = position_.z - from.z;
+        const float flown = std::sqrt((fx * fx + 0.0f) + fz * fz);
+        const float lx = corner.x - from.x, lz = corner.z - from.z;
+        const float share = ClampControl(flown / std::sqrt((lx * lx + 0.0f) + lz * lz), 0.0f, 1.0f);
+        const float rest = 1.0f - share;
+        const float legHeight = corner.y * rest + corner.y * share;   // both ends read this corner's height
+        const float top = ceiling();
+        const float below = legHeight + -5.0f;
+        const float height = below > top ? top : below;
+        if (field424_ <= 2) {
+            if (AI_FollowVectorAndTurn({corner.x - position_.x, corner.y - position_.y, corner.z - position_.z}, corner,
+                                       {points_[next].x - corner.x, points_[next].y - corner.y,
+                                        points_[next].z - corner.z},
+                                       delta)) {
+                field424_ = next;
+                field434_ = 0;
+            }
+            AI_ApproachAltitude(height > points_[2].y ? height : points_[2].y, true, delta);
+        } else {
+            const cS3DVector3& threshold = points_[3];
+            AI_FollowRay(points_[field424_],
+                         {runwayEnd.x - threshold.x, runwayEnd.y - threshold.y, runwayEnd.z - threshold.z}, delta);
+            AI_ApproachAltitude(height, true, delta);
+            const float ahead = (threshold.z - position_.z) * velocity_.z +
+                                ((threshold.x - position_.x) * velocity_.x + (threshold.y - position_.y) * velocity_.y);
+            if (ahead > 0.0f) {
+                // flare: blend position and heading towards the runway by the share of the last leg flown
+                const float blend = ClampControl(ClampControl(share + share + -1.0f, 0.0f, 1.0f) * delta, 0.0f, 1.0f);
+                const float keep = 1.0f - blend;
+                const cS3DVector3& turn = points_[2];
+                const float lineX = turn.x * rest + share * threshold.x;
+                const float lineZ = rest * turn.z + share * threshold.z;
+                position_ = {position_.x * keep + lineX * blend, position_.y * keep + blend * height,
+                             lineZ * blend + keep * position_.z};
+                const float rx = runwayEnd.x - threshold.x, ry = runwayEnd.y - threshold.y,
+                            rz = runwayEnd.z - threshold.z;
+                const float inverse = 1.0f / std::sqrt(rz * rz + (ry * ry + rx * rx));
+                orientation_ = Normalized({orientation_.x * keep + rx * inverse * blend,
+                                           orientation_.y * keep + ry * inverse * blend,
+                                           keep * orientation_.z + inverse * rz * blend});
+                const cS3DVector3 ground = GroundDirection(orientation_);
+                const float along =
+                    velocity_.z * ground.z + (ground.y * velocity_.y + velocity_.x * ground.x);
+                velocity_.x = ground.x * along;
+                velocity_.z = along * ground.z;
+            }
+            const float pastEnd = (runwayEnd.z - position_.z) * velocity_.z +
+                                  ((runwayEnd.x - position_.x) * velocity_.x + (runwayEnd.y - position_.y) * velocity_.y);
+            if (0.0f > pastEnd &&
+                0.0f > (threshold.z - position_.z) * velocity_.z +
+                           ((threshold.x - position_.x) * velocity_.x + (threshold.y - position_.y) * velocity_.y))
+                field3e4_ = 0;
+        }
+        if (static_cast<int>(state_) <= 1) field3e4_ = 4;
+        return false;
+    }
+    case 4: {
+        if (static_cast<int>(state_) >= 2) SetAirplaneState(AirplaneState::kLanding);
+        const float speed =
+            std::sqrt(velocity_.z * velocity_.z + (velocity_.x * velocity_.x + velocity_.y * velocity_.y));
+        if (speed > 10.0f) {
+            AI_Stop(delta);
+            return false;
+        }
+        const float dx = savedPosition_.x - position_.x, dy = savedPosition_.y - position_.y,
+                    dz = savedPosition_.z - position_.z;
+        if (5.0f > std::sqrt(dz * dz + (dx * dx + dy * dy))) return AI_Stop(delta);
+        const float rx = runwayEnd.x - points_[3].x, ry = runwayEnd.y - points_[3].y, rz = runwayEnd.z - points_[3].z;
+        const float inverse = 1.0f / std::sqrt(rz * rz + (ry * ry + rx * rx));
+        const cS3DVector3 runway = {rx * inverse, inverse * ry, inverse * rz};
+        const float along = dz * runway.z + (dx * runway.x + dy * runway.y);
+        if (std::fabs(along) > 10.0f)
+            AI_Taxi({position_.x + runway.x * along, runway.y * along + position_.y, position_.z + runway.z * along},
+                    delta);
+        else
+            AI_Taxi(savedPosition_, delta);
+        return false;
+    }
+    default:
+        return false;
+    }
 }
 
 // @ 0x1006d3f70. Below a forward speed of 0.1 (velocity . orientation) every control is zeroed and the plane counts as
