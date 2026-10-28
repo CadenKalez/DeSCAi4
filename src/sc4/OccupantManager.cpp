@@ -863,4 +863,74 @@ bool cSC4OccupantManager::Read(cIGZIStream& stream) {
     return !stream.GetError();
 }
 
+// ------------------------------------------------------------------------------------- cell lists
+
+cSC4OccupantManager::Cell* cSC4OccupantManager::GetOccupantListNoClip(int x, int z, bool create) {
+    if (x < 0 || z < 0 || x >= static_cast<int>(grid_.size()) || z >= static_cast<int>(grid_[x].size())) return nullptr;   // (the original does not check)
+    Cell*& cell = grid_[x][z];
+    if (!cell && create) cell = new Cell();
+    return cell;
+}
+
+cSC4OccupantManager::Cell* cSC4OccupantManager::GetOccupantList(int x, int z, bool create) {
+    return CellAtClamped(x, z, create);
+}
+
+cSC4OccupantManager::Cell* cSC4OccupantManager::GetOccupantList(cISC4Occupant* occupant, int& x, int& z) {
+    if (occupant->AsPropertyHolder()) {
+        std::uint8_t cells[4];
+        if (!occupant->GetOccupantManagerBBox(cells)) {
+            float lo[3], hi[3];
+            occupant->GetBoundingBox(lo, hi);
+            if (1.0f < hi[0] - lo[0]) {                 // only the x extent is shrunk here (ComputeCells shrinks z too)
+                lo[0] = lo[0] + 0.1f;
+                hi[0] = hi[0] + -0.1f;
+            }
+            PositionToWorldCell(lo[0], lo[2], x, z);
+        } else {
+            x = cells[0];
+            z = cells[1];
+        }
+    }
+    return GetOccupantList(x, z, false);
+}
+
+// ------------------------------------------------------------------------------- InternalOccupantHashSet
+
+cSC4OccupantManager::InternalOccupantHashSet::InternalOccupantHashSet() = default;
+
+bool cSC4OccupantManager::InternalOccupantHashSet::RehashVectorToHashTable() {
+    std::swap(table, previous);
+    std::swap(tableSize, previousSize);
+    table.resize(0x11);
+    std::fill(table.begin(), table.end(), nullptr);
+    for (void* entry : previous) {
+        const std::uint64_t key = reinterpret_cast<std::uint64_t>(entry);
+        const std::uint64_t bucket = key % bucketCount;
+        nodes.push_front(HashNode{static_cast<HashNode*>(table[bucket]), key});
+        table[bucket] = &nodes.front();
+    }
+    return true;
+}
+
+bool cSC4OccupantManager::InternalOccupantHashSet::RehashHashTable() {
+    bucketCount = bucketCount * 2 + 1;
+    std::swap(table, previous);
+    std::swap(tableSize, previousSize);
+    table.resize(bucketCount);
+    std::fill(table.begin(), table.end(), nullptr);
+    for (void* head : previous) {
+        HashNode* node = static_cast<HashNode*>(head);
+        while (node) {
+            HashNode* next = node->next;
+            const std::uint64_t bucket = node->key % bucketCount;
+            node->next = static_cast<HashNode*>(table[bucket]);
+            table[bucket] = node;
+            node = next;
+        }
+    }
+    entryCount = 0;
+    return true;
+}
+
 }  // namespace sc4

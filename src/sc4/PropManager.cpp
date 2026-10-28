@@ -80,18 +80,38 @@ bool cSC4PropManager::StaticInit(cSC4PropManager* manager) {
     if (!g_staticInitialized) {
         g_staticInitialized = true;
         if (g_host) {
-            g_host->ForEachExemplarKey([manager](const cGZPersistResourceKey& key) {
-                cISCPropertyHolder* holder = g_host->AcquireExemplar(key);
-                if (!holder) return;
-                std::uint32_t exemplarType = 0;
-                if (holder->GetProperty(0x10, exemplarType) && exemplarType == kPropExemplarType)
-                    manager->AddPropExemplarData(key, holder);
-                g_host->ReleaseExemplar(holder);
-            });
-            g_host->PostPropExemplarDataUpdated();
+            g_host->ForEachExemplarKey([manager](const cGZPersistResourceKey& key) { AddPropExemplarDataStatic(key, manager); });
+            PostPropExemplarDataUpdatedMessage();
         }
     }
     return true;
+}
+
+void cSC4PropManager::AddPropExemplarDataStatic(const cGZPersistResourceKey& key, void* manager) {
+    if (!g_host) return;
+    cISCPropertyHolder* holder = g_host->AcquireExemplar(key);
+    if (!holder) return;
+    std::uint32_t exemplarType = 0;
+    if (holder->GetProperty(0x10, exemplarType) && exemplarType == kPropExemplarType)
+        static_cast<cSC4PropManager*>(manager)->AddPropExemplarData(key, holder);
+    g_host->ReleaseExemplar(holder);
+}
+
+void cSC4PropManager::PostPropExemplarDataUpdatedMessage() {
+    if (g_host) g_host->PostPropExemplarDataUpdated();
+}
+
+void cSC4PropManager::LoadAllStandardPropExemplarData() {
+    if (g_host) g_host->ForEachExemplarKey([this](const cGZPersistResourceKey& key) { AddPropExemplarDataStatic(key, this); });
+    PostPropExemplarDataUpdatedMessage();
+}
+
+void cSC4PropManager::DoPostViewFilterChange(PropViewFilterInformation*, PropViewFilterInformation* newFilter) {
+    IPropViewFilter* incoming = newFilter->filter;
+    if (incoming == viewFilter_) return;
+    if (incoming) incoming->AddRef();
+    if (viewFilter_) viewFilter_->Release();
+    viewFilter_ = incoming;
 }
 
 bool cSC4PropManager::StaticShutdown() {

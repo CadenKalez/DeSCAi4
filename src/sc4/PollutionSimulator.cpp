@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include "sc4/DBSegment.h"
+#include "sc4/ProtectionSimulator.h"
 
 namespace sc4 {
 
@@ -162,7 +163,7 @@ bool cSC4PollutionSimulator::ReadCityRecord(cIGZIStream& stream) {
     stream.GetSint64(s64);                                    // +0x250
     stream.GetSint64(s64);                                    // +0x258
     stream.GetSint64(recycledThisMonth_);                     // +0x260
-    stream.GetFloat64(f64);                                   // +0x268
+    stream.GetFloat64(recyclingShare268_);                    // +0x268
     stream.GetSint64(wasteToEnergyThisMonth_);                // +0x270
     stream.GetSint64(incineratedThisMonth_);                  // +0x278
     stream.GetSint64(landfilledThisMonth_);                   // +0x280
@@ -754,6 +755,105 @@ void cSC4PollutionSimulator::EndOfCycle() {
     dirtyRadiation = dirtyAir = dirtyWater = dirtyGarbage = false;
     efficiency_ = fundingEfficiencyCurve_.GetOutputValue(host_->SanitationFunding() * 100.0f) * 0.01f;
     host_->PostMessage(kMessageSanitationEfficiency, 8);
+}
+
+// ---------------------------------------------------------------------------- occupant list passes
+
+void cSC4PollutionSimulator::AgeOccupantList(std::list<IPollutionOccupant*>& list, std::uint32_t usedProperty,
+                                             std::uint32_t capacityProperty) {
+    for (IPollutionOccupant* occupant : list) {
+        cISCPropertyHolder* holder = occupant->PropertyHolder();
+        float age = 0.0f, wear = 0.0f;
+        std::uint32_t capacity = 0;
+        std::int32_t used = 0;
+        float warnAt = 99.0f, abandonAt = 99.0f;
+        const float funding = host_->SanitationFunding();
+        float load;
+        if (usedProperty == 0) {
+            load = 0.0f;
+            if (recyclingCenterCountSnapshot != 0) load = static_cast<float>(recyclingShare268_) / static_cast<float>(recyclingCenterCountSnapshot);
+        } else {
+            cSCPropertyHelp::GetPropertyValue(holder, usedProperty, used);
+            GetCurrentCapacity(capacityProperty, occupant, capacity);
+            load = 0.0f;
+            if (capacity != 0 && 0 < used) load = static_cast<float>(used) / static_cast<float>(capacity);
+        }
+        cSCPropertyHelp::GetPropertyValue(holder, kPollutionOccAge, age);
+        cSCPropertyHelp::GetPropertyValue(holder, 0xea1cf220, wear);
+        cSCPropertyHelp::GetPropertyValue(holder, 0xea1cf221, warnAt);
+        cSCPropertyHelp::GetPropertyValue(holder, 0xea1cf222, abandonAt);
+        float step = wear;
+        step = ageCurve_.GetOutputValue(funding) * step;
+        age = efficiencyCurve_.GetOutputValue(load) * step + age;
+        cSCPropertyHelp::SetPropertyValue(holder, kPollutionOccAge, age);
+        if (abandonAt <= age || warnAt <= age) {
+            if (!services_) continue;
+            float position[3];
+            occupant->Position(position);
+            IPollutionLot* lot = services_->LotAtPosition(position);
+            if (!lot) continue;
+            if (abandonAt <= age) lot->SetState(4);
+            else lot->SetState(2);
+        }
+    }
+}
+
+void cSC4PollutionSimulator::SetOccupantListUsedCapacity(std::list<IPollutionOccupant*>& list, std::uint32_t capacityProperty,
+                                                         std::uint32_t usedProperty, std::uint32_t total,
+                                                         std::uint32_t& remaining, std::uint32_t count) {
+    if (total == 0 || count == 0 || remaining == 0) return;
+    auto it = list.begin();
+    std::uint32_t budget = remaining;
+    if (total < budget) budget = total;
+    std::uint64_t share = static_cast<std::uint64_t>(budget) / count;
+    do {
+        int portion = static_cast<int>(share);
+        --count;
+        if (it == list.end()) return;
+        IPollutionOccupant* occupant = *it;
+        cISCPropertyHolder* holder = occupant->PropertyHolder();
+        std::uint32_t capacity = 0;
+        if (GetCurrentCapacity(capacityProperty, occupant, capacity) && holder->HasProperty(usedProperty)) {
+            std::uint32_t used = 0;
+            cSCPropertyHelp::GetPropertyValue(holder, usedProperty, used);
+            int room = static_cast<int>(capacity - used);
+            if (capacity < used || capacity - used == 0) room = 0;
+            if (room < portion) {
+                portion = room;
+                if (count != 0) share = static_cast<std::uint64_t>(remaining) / count;     // re-spread what is left
+            }
+            remaining -= static_cast<std::uint32_t>(portion);
+            cSCPropertyHelp::SetPropertyValue(holder, usedProperty, static_cast<std::uint32_t>(used + portion));
+        }
+        ++it;
+    } while (remaining != 0);
+}
+
+void cSC4PollutionSimulator::CalcMaintenanceCosts(std::list<IPollutionOccupant*>& list) {
+    if (!services_) return;
+    for (IPollutionOccupant* occupant : list) {
+        cISCPropertyHolder* holder = occupant->PropertyHolder();
+        std::int64_t cost = 0;
+        if (!CalcOccupantMaintenanceCost(occupant, cost)) continue;
+        PollutionBudgetRecord record;
+        record.zero = 0;
+        if (!services_->FindBudgetLineItem(holder, 0xca58edc7, record) || cost == record.cost) continue;
+        if (IPollutionDepartment* department = services_->DepartmentFor(record)) {
+            department->AddCost(cost - record.cost);
+            services_->SetBudgetLineItem(holder, record.id, cost);
+        }
+    }
+}
+
+void cSC4PollutionSimulator::AddRadiationToCity(const float position[3], float amount, float radius) {
+    if ((amount != 0.0f || std::isnan(amount)) && 0.0f < radius) {
+        cSC4SimGrid<std::int16_t>* grid = valueGrids_[kPollutionRadiation].get();
+        std::int32_t tractX = 0, tractZ = 0;
+        grid->PositionToTract(position[0], position[2], tractX, tractZ);
+        AddRadiusEffect(grid->GetGridData(), grid->GetTractCountX(), grid->GetTractCountZ(), tractX, tractZ, radius, amount, 0.0f);
+        if (visualEffectUpdate_) visualEffectUpdate_();
+        host_->PostMessage(0xda6dd35d, 0);
+    }
 }
 
 }  // namespace sc4

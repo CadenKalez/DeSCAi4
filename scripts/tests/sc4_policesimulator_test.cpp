@@ -151,6 +151,15 @@ int main() {
     host.day += 5;
     CHECK(sim.UpdateStrikingState(&station) && !cSC4PoliceSimulator::IsStationOnStrike(&station));   // funding back above 0.9 ends it
     CHECK(host.strikerRemoves == 1 && sim.EndStrike() && !sim.IsOnStrike() && sim.GetStrikeLength() == -1);
+    {   // list copies and raw values
+        std::list<IProtectionStation*> stations{nullptr};
+        std::list<IPoliceOccupant*> jails;
+        const int stationCount = sim.GetPoliceStations(stations);
+        CHECK(stationCount == int(sim.Protection().Stations().size()) && int(stations.size()) == stationCount);   // replaced, not appended
+        CHECK(sim.GetJails(jails) == int(sim.Jails().size()) && jails.size() == sim.Jails().size());
+        sim.SetPoliceRawValues(0x1122334455667788ull, 0x99);
+        CHECK(sim.GetJailDepartmentBudget() == 0x1122334455667788ull && sim.GetPolicePowerGrid() == 0x99);
+    }
     std::printf(failures ? "FAILED\n" : "sc4_policesimulator: all passed\n");
     return failures ? 1 : 0;
 }

@@ -2784,13 +2784,6 @@ cSC4OccupantFilterByGroupAndDistance,00000001006e622c,not started,cSC4OccupantFi
 cSC4OccupantFilterByNetworkFlags,00000001006e6298,not started,cSC4OccupantFilterByNetworkFlags::IsOccupantIncluded(cISC4Occupant*)
 cSC4OccupantFilterByNetworkFlags,00000001006e6370,not started,cSC4OccupantFilterByNetworkFlags::~cSC4OccupantFilterByNetworkFlags()
 cSC4OccupantFilterByNetworkFlags,00000001006e637a,not started,cSC4OccupantFilterByNetworkFlags::~cSC4OccupantFilterByNetworkFlags()
-cSC4OccupantManager,0000000100247b90,pending,"cSC4OccupantManager::GetOccupantListNoClip(int, int, bool)"
-cSC4OccupantManager,00000001002485d2,pending,"cSC4OccupantManager::GetOccupantList(int, int, bool)"
-cSC4OccupantManager,000000010024878e,pending,"cSC4OccupantManager::GetOccupantList(cISC4Occupant*, int&, int&)"
-cSC4OccupantManager::InternalOccupantHashSet,00000001002465e0,pending,cSC4OccupantManager::InternalOccupantHashSet::InternalOccupantHashSet()
-cSC4OccupantManager::InternalOccupantHashSet,0000000100246686,pending,cSC4OccupantManager::InternalOccupantHashSet::~InternalOccupantHashSet()
-cSC4OccupantManager::InternalOccupantHashSet,00000001002468e8,pending,cSC4OccupantManager::InternalOccupantHashSet::RehashVectorToHashTable()
-cSC4OccupantManager::InternalOccupantHashSet,0000000100246a4c,pending,cSC4OccupantManager::InternalOccupantHashSet::RehashHashTable()
 cSC4OptionGroup,000000010076d020,not started,cSC4OptionGroup::cSC4OptionGroup()
 cSC4ParticlesDescription,00000001005b5406,not started,cSC4ParticlesDescription::cSC4ParticlesDescription()
 cSC4ParticlesDescription,00000001005b5432,not started,cSC4ParticlesDescription::operator=(cSC4ParticlesDescription const&)
@@ -2990,21 +2983,7 @@ cSC4PoliceHelicopterDispatchSource,00000001007251fc,not started,"cSC4PoliceHelic
 cSC4PoliceHelicopterDispatchSource,0000000100725220,not started,cSC4PoliceHelicopterDispatchSource::DoOccupantInserted(cISC4Occupant*)
 cSC4PoliceHelicopterDispatchSource,0000000100725444,not started,cSC4PoliceHelicopterDispatchSource::DoOccupantRemoved(cISC4Occupant*)
 cSC4PoliceHelicopterDispatchSource,000000010072549e,not started,cSC4PoliceHelicopterDispatchSource::GetGZCLSID() const
-cSC4PoliceSimulator,00000001000a3c04,pending,"cSC4PoliceSimulator::ProtectionProcessCell(int, int, int)"
-cSC4PoliceSimulator,00000001000a3f2e,pending,cSC4PoliceSimulator::GetJailDepartmentBudget() const
-cSC4PoliceSimulator,00000001000a46a2,pending,cSC4PoliceSimulator::GetPoliceStations(ilist<cISC4Occupant*>&)
-cSC4PoliceSimulator,00000001000a46c6,pending,cSC4PoliceSimulator::GetJails(ilist<cISC4Occupant*>&)
-cSC4PoliceSimulator,00000001000a5bfa,pending,cSC4PoliceSimulator::GetPolicePowerGrid() const
 cSC4PollutionSimulator,00000001000986d8,pending,cSC4PollutionSimulator::UpdatePollutionVisualEffect()
-cSC4PollutionSimulator,0000000100099c88,pending,"cSC4PollutionSimulator::AgeOccupantList(ilist<cISC4Occupant*>&, unsigned int, unsigned int)"
-cSC4PollutionSimulator,000000010009a004,pending,"cSC4PollutionSimulator::SetOccupantListUsedCapacity(ilist<cISC4Occupant*>&, unsigned int, unsigned int, unsigned int, unsigned int&, unsigned int)"
-cSC4PollutionSimulator,000000010009a1fe,pending,cSC4PollutionSimulator::CalcMaintenanceCosts(ilist<cISC4Occupant*>&)
-cSC4PollutionSimulator,000000010009aaf4,pending,"cSC4PollutionSimulator::AddRadiationToCity(float*, float, float)"
-cSC4PollutionSimulator,000000010009ac48,pending,cSC4PollutionSimulator::GetGarbageBuildings(ilist<cISC4Occupant*>&) const
-cSC4PollutionSimulator,000000010009ae46,pending,"cSC4PollutionSimulator::GetWorstAirTract(int&, int&, int&) const"
-cSC4PollutionSimulator,000000010009ae66,pending,"cSC4PollutionSimulator::GetWorstWaterTract(int&, int&, int&) const"
-cSC4PollutionSimulator,000000010009ae86,pending,"cSC4PollutionSimulator::GetWorstGarbageTract(int&, int&, int&) const"
-cSC4PollutionSimulator,000000010009aea6,pending,cSC4PollutionSimulator::GetLandfillTileCapacity() const
 cSC4PolygonClipper<sVF_V3F_C4UB_T2F>,0000000100715368,not started,cSC4PolygonClipper<sVF_V3F_C4UB_T2F>::Allocate()
 cSC4PolygonClipper<sVF_V3F_C4UB_T2F>,000000010071542c,not started,"cSC4PolygonClipper<sVF_V3F_C4UB_T2F>::AddPrimitives(cS3DPrimitiveData*, unsigned short const*, int)"
 cSC4PolygonClipper<sVF_V3F_C4UB_T2F>,000000010071557a,not started,cSC4PolygonClipper<sVF_V3F_C4UB_T2F>::Free(cSC4PolygonClipper<sVF_V3F_C4UB_T2F>*)
@@ -3030,20 +3009,6 @@ cSC4PortDeveloper,00000001000cbf98,skipped,cSC4PortDeveloper::~cSC4PortDeveloper
 cSC4PowerLineTool,00000001002ea216,skipped,cSC4PowerLineTool::cSC4PowerLineTool()
 cSC4PowerLineTool,00000001002ed6a4,skipped,cSC4PowerLineTool::~cSC4PowerLineTool()
 cSC4PowerLineTool,00000001002ed6ae,skipped,cSC4PowerLineTool::~cSC4PowerLineTool()
-cSC4PowerSimulator,000000010021291a,pending,cSC4PowerSimulator::GetMonthlyRequirement()
-cSC4PowerSimulator,0000000100212926,pending,cSC4PowerSimulator::GetMonthlyProduction()
-cSC4PowerSimulator,0000000100212932,pending,cSC4PowerSimulator::GetMonthlyImport()
-cSC4PowerSimulator,000000010021293e,pending,cSC4PowerSimulator::GetMonthlyExport()
-cSC4PowerSimulator,000000010021294a,pending,cSC4PowerSimulator::GetMonthlyDemand()
-cSC4PowerSimulator,0000000100212956,pending,cSC4PowerSimulator::GetMonthlyConsumption()
-cSC4PowerSimulator,00000001002129b4,pending,cSC4PowerSimulator::GetUnpoweredConsumerCount()
-cSC4PowerSimulator,00000001002129c0,pending,cSC4PowerSimulator::GetPoweredConsumerCount()
-cSC4PowerSimulator,0000000100214e26,pending,cSC4PowerSimulator::GetPowerPlantCount()
-cSC4PowerSimulator,0000000100214e32,pending,cSC4PowerSimulator::GetPowerPlantCount(cISC4PowerSimulator::PowerSourceType)
-cSC4PowerSimulator,0000000100214e42,pending,cSC4PowerSimulator::GetPowerPoleCount()
-cSC4PowerSimulator,0000000100214e4e,pending,cSC4PowerSimulator::GetOverworkedPowerPlantCount()
-cSC4PowerSimulator,0000000100214e5a,pending,cSC4PowerSimulator::GetAgedPowerPlantCount()
-cSC4PowerSimulator,0000000100214e66,pending,cSC4PowerSimulator::GetDistressedPowerPlantCount()
 cSC4ProgressScreen,000000010032cce0,not started,"cSC4ProgressScreen::cSC4ProgressScreen(cRZRect const&, bool)"
 cSC4ProgressScreen,000000010032cecc,not started,"cSC4ProgressScreen::cSC4ProgressScreen(cRZRect const&, bool)"
 cSC4ProgressScreen,000000010032ceda,not started,cSC4ProgressScreen::~cSC4ProgressScreen()
@@ -3058,10 +3023,6 @@ cSC4ProgressScreen,000000010032d812,not started,"cSC4ProgressScreen::SetCaption(
 cSC4ProgressScreen,000000010032d8f4,not started,cSC4ProgressScreen::Repaint()
 cSC4ProgressScreen,000000010032dfa6,not started,cSC4ProgressScreen::DoMessage(cIGZMessage2*)
 cSC4ProgressScreen,000000010032e1c8,not started,cSC4ProgressScreen::RepaintForObliterationProgress()
-cSC4PropManager,0000000100193c06,pending,cSC4PropManager::LoadAllStandardPropExemplarData()
-cSC4PropManager,0000000100194548,pending,"cSC4PropManager::AddPropExemplarDataStatic(cGZPersistResourceKey const&, void*)"
-cSC4PropManager,00000001001945cc,pending,cSC4PropManager::PostPropExemplarDataUpdatedMessage()
-cSC4PropManager,0000000100194bb2,pending,"cSC4PropManager::DoPostViewFilterChange(cSC4ViewFilterInformation*, cSC4ViewFilterInformation*)"
 cSC4PropOccupantBurntBuilding,0000000100161760,not started,cSC4PropOccupantBurntBuilding::cSC4PropOccupantBurntBuilding()
 cSC4PropOccupantBurntBuilding,00000001001618ac,not started,cSC4PropOccupantBurntBuilding::~cSC4PropOccupantBurntBuilding()
 cSC4PropOccupantBurntBuilding,000000010016198a,not started,cSC4PropOccupantBurntBuilding::~cSC4PropOccupantBurntBuilding()

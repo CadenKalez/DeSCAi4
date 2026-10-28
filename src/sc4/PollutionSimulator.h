@@ -12,6 +12,7 @@
 // counters +0x260..+0x2cc, efficiency +0x348, supply +0x34c, capacity +0x350.
 #pragma once
 #include <cstdint>
+#include <functional>
 #include <list>
 #include <memory>
 #include <vector>
@@ -85,6 +86,32 @@ public:
     virtual ~IPollutionOccupant() = default;
     virtual cISCPropertyHolder* PropertyHolder() = 0;                  // vslot 0x30
     virtual void Position(float xyz[3]) = 0;                           // vslot 0x40
+};
+
+// City objects the occupant passes reach (lot manager, budget simulator). Optional: set with SetServices.
+class IPollutionLot {
+public:
+    virtual ~IPollutionLot() = default;
+    virtual void SetState(std::uint32_t state) = 0;                    // lot vslot 0x120 (2 = warning, 4 = abandon)
+};
+struct PollutionBudgetRecord {                                         // the 32-byte record budget sim vslot 0x198 fills
+    std::uint8_t opaque[16] = {};
+    std::int64_t cost = 0;                                             // +0x10 the cost currently booked
+    std::int32_t id = 0;                                               // +0x18 (passed back to SetBudgetLineItem)
+    std::int32_t zero = 0;                                             // +0x1c
+};
+class IPollutionDepartment {
+public:
+    virtual ~IPollutionDepartment() = default;
+    virtual void AddCost(std::int64_t delta) = 0;                      // department vslot 0x68
+};
+class IPollutionServices {
+public:
+    virtual ~IPollutionServices() = default;
+    virtual IPollutionLot* LotAtPosition(const float xyz[3]) = 0;      // spCity vslot 0x2f8 -> spLotManager vslot 0x28(x, z, 0)
+    virtual bool FindBudgetLineItem(cISCPropertyHolder* holder, std::uint32_t id, PollutionBudgetRecord& record) = 0;   // spBudgetSim vslot 0x198
+    virtual IPollutionDepartment* DepartmentFor(const PollutionBudgetRecord& record) = 0;                              // spBudgetSim vslot 0x1c8
+    virtual void SetBudgetLineItem(cISCPropertyHolder* holder, std::int32_t id, std::int64_t cost) = 0;               // spBudgetSim vslot 0x1a8
 };
 
 class IPollutionHost {
@@ -180,6 +207,27 @@ public:
     // worst tracts (x, z, value)
     struct WorstTract { std::uint16_t x = 0, z = 0; std::int32_t value = 0; };
     WorstTract worstAir, worstWater, worstGarbage;
+    void GetWorstAirTract(int& x, int& z, int& value) const { x = worstAir.x; z = worstAir.z; value = worstAir.value; }               // @ 0x10009ae46
+    void GetWorstWaterTract(int& x, int& z, int& value) const { x = worstWater.x; z = worstWater.z; value = worstWater.value; }      // @ 0x10009ae66
+    void GetWorstGarbageTract(int& x, int& z, int& value) const { x = worstGarbage.x; z = worstGarbage.z; value = worstGarbage.value; }   // @ 0x10009ae86
+    void SetServices(IPollutionServices* services) { services_ = services; }
+    // The pollution visual effect spawner (0x1000986d8, particle systems per 8x8 block) is not recovered; AddRadiationToCity
+    // calls this hook where the original calls it.
+    void SetVisualEffectUpdate(std::function<void()> hook) { visualEffectUpdate_ = std::move(hook); }
+    void AgeOccupantList(std::list<IPollutionOccupant*>& list, std::uint32_t usedProperty, std::uint32_t capacityProperty);   // @ 0x100099c88
+    void SetOccupantListUsedCapacity(std::list<IPollutionOccupant*>& list, std::uint32_t capacityProperty,
+                                     std::uint32_t usedProperty, std::uint32_t total, std::uint32_t& remaining,
+                                     std::uint32_t count);                                                                // @ 0x10009a004
+    void CalcMaintenanceCosts(std::list<IPollutionOccupant*>& list);                                                       // @ 0x10009a1fe
+    void AddRadiationToCity(const float position[3], float amount, float radius);                                          // @ 0x10009aaf4
+    // @ 0x10009aea6 (the original reads a global that the tunables load fills)
+    std::uint32_t GetLandfillTileCapacity() const { return tunables_.landfillTileCapacity; }
+    // @ 0x10009ac48: appends the incinerators, then the waste-to-energy plants, then the recycling centres.
+    void GetGarbageBuildings(std::list<IPollutionOccupant*>& out) const {
+        for (IPollutionOccupant* o : incinerators_) out.push_back(o);
+        for (IPollutionOccupant* o : wasteToEnergy_) out.push_back(o);
+        for (IPollutionOccupant* o : recyclingCenters_) out.push_back(o);
+    }
 
     // occupant lists
     std::list<IPollutionOccupant*>& WaterTreatmentList() { return waterTreatment_; }
@@ -253,6 +301,9 @@ private:
     int garbageSupply_ = 0;                                             // +0x34c
     int garbageCapacity_ = 0;                                           // +0x350
     std::int64_t producedPrev_ = 0, importedPrev_ = 0, exportedPrev_ = 0;   // +0x288..+0x298
+    double recyclingShare268_ = 0;                                      // +0x268 (read from the city record)
+    IPollutionServices* services_ = nullptr;
+    std::function<void()> visualEffectUpdate_;
     double recycledPrev_ = 0;                                           // +0x2a0
     std::int64_t incineratedPrev_ = 0, convertedPrev_ = 0, landfilledPrev_ = 0;   // +0x2a8..+0x2b8
 };

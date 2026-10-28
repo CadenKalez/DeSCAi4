@@ -7,6 +7,7 @@
 // indexed the grid with unchecked byte coordinates; this port clamps/skips out-of-range cells.
 #pragma once
 #include "sc4/CommonIIDs.h"
+#include <deque>
 #include <cstdint>
 #include <list>
 #include <memory>
@@ -194,8 +195,34 @@ public:
     std::uint32_t GetGZCLSID() const override { return kGZCLSID_cSC4OccupantManager; }
     bool DoMessage(cIGZMessage2* message) override;
 
-private:
     using Cell = std::list<std::uintptr_t>;     // tagged occupant pointers (bit 0 = single cell)
+
+    // The set the original uses to remove duplicates while it walks cells: keys are kept in a plain vector until
+    // RehashVectorToHashTable turns them into a chained hash table (17 buckets), which RehashHashTable then grows
+    // (2n+1 buckets). Nodes live in a deque and are pushed at the front. Layout: +0 bucket count, +4 entry count,
+    // +8 buckets / keys, +0x20 the previous vector, +0x38 the node deque.
+    class InternalOccupantHashSet {
+    public:
+        struct HashNode { HashNode* next; std::uint64_t key; };
+        InternalOccupantHashSet();                      // @ 0x1002465e0 (the destructor, @ 0x100246686, is the compiler's)
+        bool RehashVectorToHashTable();                 // @ 0x1002468e8
+        bool RehashHashTable();                         // @ 0x100246a4c
+        // State the callers (the cell walks) manage:
+        std::uint32_t bucketCount = 0;                  // +0
+        std::uint32_t entryCount = 0;                   // +4
+        std::vector<void*> table;                       // +8 (keys while in vector mode, bucket heads afterwards)
+        std::uint64_t tableSize = 0;                    // +0x18
+        std::vector<void*> previous;                    // +0x20
+        std::uint64_t previousSize = 0;                 // +0x30
+        std::deque<HashNode> nodes;                     // +0x38
+    };
+
+    // @ 0x100247b90 / 0x1002485d2 / 0x10024878e: the per-cell occupant lists (created on demand when `create`).
+    Cell* GetOccupantListNoClip(int x, int z, bool create);
+    Cell* GetOccupantList(int x, int z, bool create);                       // the cell is clamped to 0..0xbf
+    Cell* GetOccupantList(cISC4Occupant* occupant, int& x, int& z);        // the list of the occupant's first cell
+
+private:
 
     Cell* CellAtClamped(int x, int z, bool create);
     Cell* CellAt(int x, int z) const;           // null outside the grid

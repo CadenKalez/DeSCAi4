@@ -190,6 +190,14 @@ public:
     std::size_t GetPoliceStationCount() const { return protection_.Stations().size(); }
     std::size_t GetJailCount() const { return jails_.size(); }
     const std::list<IPoliceOccupant*>& Jails() const { return jails_; }
+    void ProtectionProcessCell(int, int, int) {}                      // @ 0x1000a3c04 (the original returns at once)
+    int GetPoliceStations(std::list<IProtectionStation*>& out) { return cSC4ProtectionSimulator::CopyOccupantList(out, protection_.Stations()); }   // @ 0x1000a46a2
+    int GetJails(std::list<IPoliceOccupant*>& out) { return cSC4ProtectionSimulator::CopyOccupantList(out, jails_); }          // @ 0x1000a46c6
+    // @ 0x1000a3f2e / 0x1000a5bfa: the original returns the 8-byte values at +0x128 and +0xb0 (the stream code treats
+    // +0x128 as a serialised grid pointer; neither producer is recovered), kept as raw values.
+    std::uint64_t GetJailDepartmentBudget() const { return value128_; }
+    std::uint64_t GetPolicePowerGrid() const { return value0b0_; }
+    void SetPoliceRawValues(std::uint64_t at128, std::uint64_t at0b0) { value128_ = at128; value0b0_ = at0b0; }
     float GetAverageCoverage() const { return protection_.AverageProtection(); }
     float GetPercentCoverage() const { return protection_.CoverageShare(); }
 
@@ -205,7 +213,7 @@ public:
 private:
     // IProtectionHost (the base's vslot hooks)
     bool GetStationEffect(IProtectionStation* station, ProtectionEffect& effect) override;
-    void OnAdjustedCell(int, int, int) override {}
+    void OnAdjustedCell(int x, int z, int radius) override { ProtectionProcessCell(x, z, radius); }
     void OnPassFinished() override { ProtectionEndOfCycle(); }
     void SetStationDispatchMask(IProtectionStation* station, std::uint32_t mask) override;
     void SetStationDispatchOffset(IProtectionStation* station, std::uint32_t offset) override;
@@ -240,6 +248,7 @@ private:
     int arrestsPrev_ = 0, crimesPrev_ = 0, arrestsThisMonth_ = 0, crimesThisMonth_ = 0, unjailedAdded_ = 0;
     bool onStrike_ = false;
     int strikeStart_ = 0;
+    std::uint64_t value128_ = 0, value0b0_ = 0;   // +0x128, +0xb0
 };
 
 }  // namespace sc4

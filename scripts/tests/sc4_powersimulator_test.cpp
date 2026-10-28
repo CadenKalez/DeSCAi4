@@ -262,6 +262,20 @@ int main() {
         CHECK(m.GetAnnualConsumptionByPowerType(2) == 9);
     }
 
+    {   // statistics getters return the counters at their original offsets
+        cSC4PowerSimulator g(&host, &random);
+        g.monthlyProduction80 = 1; g.monthlyConsumption84 = 2; g.monthlyImport88 = 3; g.monthlyExport8c = 4;
+        g.monthlyDemand90 = 5; g.poweredConsumers9c = 6; g.unpoweredConsumersA0 = 7; g.monthlyRequirementA4 = 8;
+        g.plantCount = 9; g.overworkedPlants = 10; g.agedPlants = 11; g.distressedPlants = 12;
+        g.plantCountByType[2] = 13; g.plantCountTypeExtra = 14; g.SetPoleCount(15);
+        CHECK(g.GetMonthlyProduction() == 1 && g.GetMonthlyConsumption() == 2 && g.GetMonthlyImport() == 3 &&
+              g.GetMonthlyExport() == 4 && g.GetMonthlyDemand() == 5 && g.GetPoweredConsumerCount() == 6 &&
+              g.GetUnpoweredConsumerCount() == 7 && g.GetMonthlyRequirement() == 8);
+        CHECK(g.GetPowerPlantCount() == 9 && g.GetOverworkedPowerPlantCount() == 10 && g.GetAgedPowerPlantCount() == 11 &&
+              g.GetDistressedPowerPlantCount() == 12 && g.GetPowerPlantCount(2) == 13 && g.GetPowerPlantCount(9) == 14 &&
+              g.GetPowerPlantCount(7) == 0 && g.GetPowerPoleCount() == 15);
+    }
+
     if (failures) return 1;
     std::printf("sc4_powersimulator: all passed\n");
     return 0;

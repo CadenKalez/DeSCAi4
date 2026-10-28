@@ -124,6 +124,14 @@ public:
     bool CanDispatch(float x, float z, bool* enough);
     IProtectionStation* DispatchFromNearestStation(float x, float z, std::uint32_t* dispatchId);
     const std::list<IProtectionStation*>& Stations() const { return stations_; }
+    // @ 0x1000aadce: replaces `out` with a copy of `source` (the original also takes a reference on each entry; the
+    // port's occupants are borrowed) and returns the number copied.
+    template <class T>
+    static int CopyOccupantList(std::list<T*>& out, const std::list<T*>& source) {
+        out.clear();
+        for (T* occupant : source) out.push_back(occupant);
+        return static_cast<int>(out.size());
+    }
 
     // Streams (the fire/police simulators delegate to these). Version 3.
     bool Write(cIGZOStream& stream) const;

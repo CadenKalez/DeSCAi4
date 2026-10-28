@@ -68,6 +68,17 @@ public:
     std::uint32_t refs = 1;
 };
 
+// cSC4ViewFilterInformation as DoPostViewFilterChange sees it: its first field is a counted filter object.
+class IPropViewFilter {
+public:
+    virtual ~IPropViewFilter() = default;
+    virtual std::uint32_t AddRef() = 0;       // vslot 0x08
+    virtual std::uint32_t Release() = 0;      // vslot 0x10
+};
+struct PropViewFilterInformation {
+    IPropViewFilter* filter = nullptr;
+};
+
 class IPropManagerHost {
 public:
     virtual ~IPropManagerHost() = default;
@@ -149,6 +160,13 @@ public:
     bool RemoveBuildingProps(int x, int z);
     bool RemoveBuildingProp(cISC4Occupant* building, cISC4Occupant* prop);
 
+    // @ 0x100193c06: feeds every exemplar of the prop type to AddPropExemplarDataStatic, then announces the update.
+    void LoadAllStandardPropExemplarData();
+    static void AddPropExemplarDataStatic(const cGZPersistResourceKey& key, void* manager);   // @ 0x100194548
+    static void PostPropExemplarDataUpdatedMessage();                                         // @ 0x1001945cc
+    // @ 0x100194bb2: keeps the new filter object (+0x40), taking a reference on it and dropping the old one.
+    void DoPostViewFilterChange(PropViewFilterInformation* oldFilter, PropViewFilterInformation* newFilter);
+
     static bool StaticInit(cSC4PropManager* manager);
     static bool StaticShutdown();
 
@@ -162,6 +180,7 @@ private:
 
     std::uint32_t refCount_ = 0;
     bool initialized_ = false;
+    IPropViewFilter* viewFilter_ = nullptr;     // +0x40
     std::uint32_t usageFilter_ = 0;             // +0x30 object's field +0x14: which usage a query accepts
 };
 

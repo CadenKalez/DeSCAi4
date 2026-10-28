@@ -187,6 +187,26 @@ public:
     std::array<int, 6> plantCountByType{};
     int plantCountTypeExtra = 0;   // 10th plant-count slot (+0x37c)
 
+    // cISC4PowerSimulator statistics getters (each returns one counter of the object)
+    std::uint32_t GetMonthlyRequirement() const { return std::uint32_t(monthlyRequirementA4); }       // @ 0x10021291a (+0xa4)
+    std::uint32_t GetMonthlyProduction() const { return std::uint32_t(monthlyProduction80); }         // @ 0x100212926 (+0x80)
+    std::uint32_t GetMonthlyImport() const { return std::uint32_t(monthlyImport88); }                 // @ 0x100212932 (+0x88)
+    std::uint32_t GetMonthlyExport() const { return std::uint32_t(monthlyExport8c); }                 // @ 0x10021293e (+0x8c)
+    std::uint32_t GetMonthlyDemand() const { return std::uint32_t(monthlyDemand90); }                 // @ 0x10021294a (+0x90)
+    std::uint32_t GetMonthlyConsumption() const { return std::uint32_t(monthlyConsumption84); }       // @ 0x100212956 (+0x84)
+    std::uint32_t GetUnpoweredConsumerCount() const { return std::uint32_t(unpoweredConsumersA0); }   // @ 0x1002129b4 (+0xa0)
+    std::uint32_t GetPoweredConsumerCount() const { return std::uint32_t(poweredConsumers9c); }       // @ 0x1002129c0 (+0x9c)
+    std::uint32_t GetPowerPlantCount() const { return std::uint32_t(plantCount); }                    // @ 0x100214e26 (+0x354)
+    // @ 0x100214e32: the original indexes ten counters at +0x358; slots 6..8 are not modelled (they read 0 here)
+    std::uint32_t GetPowerPlantCount(std::uint32_t type) const {
+        if (type < plantCountByType.size()) return std::uint32_t(plantCountByType[type]);
+        return type == 9 ? std::uint32_t(plantCountTypeExtra) : 0;
+    }
+    std::uint32_t GetPowerPoleCount() const { return poleCount_; }                                    // @ 0x100214e42 (+0x31c)
+    std::uint32_t GetOverworkedPowerPlantCount() const { return std::uint32_t(overworkedPlants); }    // @ 0x100214e4e (+0x380)
+    std::uint32_t GetAgedPowerPlantCount() const { return std::uint32_t(agedPlants); }                // @ 0x100214e5a (+0x384)
+    std::uint32_t GetDistressedPowerPlantCount() const { return std::uint32_t(distressedPlants); }    // @ 0x100214e66 (+0x388)
+
     // ---- tunables ----
     float ordinanceFactor = 1.0f;           // +0x310
     float value318 = 1.1f;                  // +0x318

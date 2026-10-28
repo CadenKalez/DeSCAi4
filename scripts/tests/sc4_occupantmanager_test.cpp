@@ -43,6 +43,18 @@ int main() {
     CHECK(!m->InsertOccupant(a, 0));
     CHECK(a->IsFlagSet(1) && a->IsInitialized());
     CHECK(!m->IsCellEmpty(64, 64) && m->IsCellEmpty(0, 0));
+    {   // per-cell lists
+        auto* list = m->GetOccupantList(64, 64, false);
+        CHECK(list && !list->empty());
+        CHECK(m->GetOccupantListNoClip(64, 64, false) == list);
+        CHECK(m->GetOccupantList(-5, -5, false) == m->GetOccupantListNoClip(0, 0, false));        // clamped into the grid
+        CHECK(m->GetOccupantList(500, 500, false) == m->GetOccupantListNoClip(191, 191, false));
+        CHECK(m->GetOccupantListNoClip(150, 150, false) == nullptr);
+        auto* created = m->GetOccupantListNoClip(150, 150, true);
+        CHECK(created && created->empty() && m->GetOccupantListNoClip(150, 150, false) == created);
+        int lx = -1, lz = -1;
+        CHECK(m->GetOccupantList(a, lx, lz) == list && lx == 64 && lz == 64);                   // the cell the occupant was filed under
+    }
 
     float lo[3] = {0, -1e9f, 0}, hi[3] = {1000, 1e9f, 1000};
     OccupantList all;
@@ -79,6 +91,24 @@ int main() {
     CHECK(m->GetBoundingCells(100, 100, cells, count) == 8 && count == 8);
     CHECK(m->GetBoundingCells(0, 0, cells, count) == 3);
 
+    {   // the duplicate-removing set
+        cSC4OccupantManager::InternalOccupantHashSet set;
+        set.bucketCount = 17;
+        set.table = {reinterpret_cast<void*>(std::uintptr_t{5}), reinterpret_cast<void*>(std::uintptr_t{22}),
+                     reinterpret_cast<void*>(std::uintptr_t{39})};                              // 5, 22, 39 all hash to bucket 5
+        CHECK(set.RehashVectorToHashTable() && set.table.size() == 0x11 && set.nodes.size() == 3);
+        auto* head = static_cast<cSC4OccupantManager::InternalOccupantHashSet::HashNode*>(set.table[5]);
+        CHECK(head && head->key == 39 && head->next->key == 22 && head->next->next->key == 5 && !head->next->next->next);
+        set.entryCount = 7;
+        CHECK(set.RehashHashTable() && set.bucketCount == 35 && set.table.size() == 35 && set.entryCount == 0);
+        int total = 0;
+        for (void* bucket : set.table)
+            for (auto* node = static_cast<cSC4OccupantManager::InternalOccupantHashSet::HashNode*>(bucket); node; node = node->next) {
+                ++total;
+                CHECK(set.table[node->key % 35] != nullptr);
+            }
+        CHECK(total == 3 && set.table[5] != nullptr && set.table[22] != nullptr && set.table[4] != nullptr);   // 5%35, 22%35, 39%35
+    }
     a->Release(); b->Release();
     m->Release();
     std::puts(failures ? "sc4_occupantmanager: FAILED" : "sc4_occupantmanager: ok");

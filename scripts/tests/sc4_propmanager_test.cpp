@@ -173,6 +173,26 @@ int main() {
     const float all[4] = {0, 0, 1000, 1000};
     CHECK(mgr->RemoveCityProps(all));
     mgr->RemoveLotProps(nullptr);
+    {   // reloading all prop exemplars announces the update; a new view filter replaces the old one with the counts kept
+        const int before = pmh.posted;
+        mgr->LoadAllStandardPropExemplarData();
+        CHECK(pmh.posted == before + 1);
+        struct Filter final : IPropViewFilter {
+            int refs = 0;
+            std::uint32_t AddRef() override { return ++refs; }
+            std::uint32_t Release() override { return --refs; }
+        } first, second;
+        PropViewFilterInformation none, a, b;
+        a.filter = &first; b.filter = &second;
+        mgr->DoPostViewFilterChange(&none, &a);
+        CHECK(first.refs == 1);
+        mgr->DoPostViewFilterChange(&a, &a);                                      // same filter: nothing changes
+        CHECK(first.refs == 1);
+        mgr->DoPostViewFilterChange(&a, &b);
+        CHECK(first.refs == 0 && second.refs == 1);
+        mgr->DoPostViewFilterChange(&b, &none);                                   // a null filter drops the held one
+        CHECK(second.refs == 0);
+    }
     mgr->Release();
     cSC4PropManager::StaticShutdown();
     std::puts(failures ? "sc4_propmanager: FAILED" : "sc4_propmanager ok");
