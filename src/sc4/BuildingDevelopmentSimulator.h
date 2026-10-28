@@ -11,6 +11,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <list>
+#include <unordered_set>
 #include <map>
 #include <set>
 #include <unordered_map>
@@ -89,11 +91,14 @@ struct ConstructionProfile {
     std::uint32_t reserved0c = 0;            // +0x0c
     std::uint8_t minLandValue = 0;           // +0x10
     std::uint8_t maxLandValue = 0;           // +0x11 (both 0 = compare the class instead of the range)
-    std::uint8_t reserved12[10] = {};        // +0x12
+    std::uint8_t reserved12[2] = {};         // +0x12
+    std::uint32_t buildingType = 0;          // +0x14 building type PlopBuilding places
+    std::int32_t rotation = 0;               // +0x18
     std::int32_t x = 0;                      // +0x1c
     std::int32_t z = 0;                      // +0x20
 };
 static_assert(offsetof(ConstructionProfile, landValueClass) == 0x08 && offsetof(ConstructionProfile, minLandValue) == 0x10 &&
+              offsetof(ConstructionProfile, buildingType) == 0x14 && offsetof(ConstructionProfile, rotation) == 0x18 &&
               offsetof(ConstructionProfile, x) == 0x1c && offsetof(ConstructionProfile, z) == 0x20);
 enum ReasonForFailure : std::uint32_t {
     kReasonNone = 0,              // the building does not fit the zone type at the cell
@@ -118,6 +123,84 @@ public:
     virtual std::int32_t LandValueClassAt(int x, int z) = 0;                // SL::spLandValueSim vslot 0x28
     virtual std::uint8_t LandValueAt(int x, int z) = 0;                     // SL::spLandValueSim vslot 0x30
     virtual bool HasPowerAt(int x, int z) = 0;                              // SL::spPowerSim vslot 0x98
+};
+
+// ---- placement services (the city objects the original reaches through SL:: globals and this+0x30..0xd8) --------
+class IBuildingTypeFilter {                                                 // cISC4BuildingTypeFilter
+public:
+    virtual ~IBuildingTypeFilter() = default;
+    virtual bool Accepts(std::uint32_t buildingType) = 0;                   // vslot 0x18
+};
+class IPlacedOccupant {                                                     // a building / foundation occupant being added
+public:
+    virtual ~IPlacedOccupant() = default;
+    virtual cISCPropertyHolder* PropertyHolder() = 0;                       // vslot 0x18 -> vslot 0x30
+};
+class IPlacedFoundation : public IPlacedOccupant {                          // cISC4FoundationOccupant
+public:
+    virtual std::uint32_t FoundationType() = 0;                             // vslot 0x20
+    virtual void SetFoundationType(std::uint32_t type) = 0;                 // vslot 0x28
+    virtual void SetHeight(float height) = 0;                               // vslot 0x38
+    virtual void SetSize(const float size[3]) = 0;                          // vslot 0x40
+    virtual void SetStyle(int style) = 0;                                   // vslot 0x50
+    virtual void SetRotation(int rotation) = 0;                             // vslot 0x60
+    virtual void SetPosition(const float position[3]) = 0;                  // vslot 0x98
+    virtual void ApplyExemplar(cISCPropertyHolder* exemplar) = 0;           // the 0xac2b5f7 interface, vslot 0x18
+    virtual void FinishPlacement() = 0;                                     // secondary base (+8) vslot 0x18
+};
+class IPlacedBuilding : public IPlacedOccupant {                            // cISC4BuildingOccupant slots AddNewBuildingOccupant uses
+public:
+    virtual void SetBuildingType(std::uint32_t type) = 0;                   // vslot 0x28
+    virtual void SetBounds(const float minimum[3], const float maximum[3]) = 0;   // vslot 0x40
+    virtual void SetRotation(int rotation) = 0;                             // vslot 0x78
+    virtual void FinishPlacement() = 0;                                     // vslot 0xc8
+    virtual void SetPosition(const float position[3]) = 0;                  // vslot 0xe0
+    virtual void GetBounds(float minimum[3], float maximum[3]) = 0;         // vslot 0xe8
+};
+class IGrowthDeveloperRef {                                                 // cISC4GrowthDeveloper
+public:
+    virtual ~IGrowthDeveloperRef() = default;
+    virtual void Init(cISCPropertyHolder* properties) = 0;                  // vslot 0x18
+};
+// One pending demolition of the decline plan (a node of the list at this+0x110).
+class IDeclineSource {
+public:
+    virtual ~IDeclineSource() = default;
+    virtual float Condition() = 0;                                          // vslot 0x90 -> vslot 0x60
+};
+struct DeclineEntry {
+    std::uint32_t day = 0;                                                  // +0x10 first day the entry may run
+    std::int32_t a = 0, b = 0;                                              // +0x14, +0x18
+    IDeclineSource* source = nullptr;                                       // +0x20
+    std::uint8_t flag = 0;                                                  // +0x28
+};
+struct TractOutcome {                                                       // cISC4TractDeveloper::Outcome argument (its inner list is empty)
+    IDeclineSource* source = nullptr;
+    std::int32_t a = 0, b = 0;
+    std::uint8_t flag = 0;
+};
+class ITractDeveloperRef {                                                  // cISC4TractDeveloper
+public:
+    virtual ~ITractDeveloperRef() = default;
+    virtual int ExecuteOutcome(const TractOutcome& outcome) = 0;            // vslot 0x30
+};
+class IBuildingPlacementServices {
+public:
+    virtual ~IBuildingPlacementServices() = default;
+    virtual IPlacedBuilding* CreateBuilding() = 0;                          // new cSC4BuildingOccupant, one reference held
+    virtual void ReleaseBuilding(IPlacedBuilding* building) = 0;            // vslot 0x10
+    virtual IPlacedFoundation* CreateFoundation() = 0;                      // new cSC4FoundationOccupant, one reference held
+    virtual void ReleaseFoundation(IPlacedFoundation* foundation) = 0;
+    virtual float FoundationSurfaceHeight(const int cells[4], int which) = 0;   // this+0xd8 vslot 0x80(cells, which, 1)
+    virtual void LoadBuildingProperties(IPlacedBuilding& building, std::uint32_t type) = 0;
+    virtual IGrowthDeveloperRef* CreateGrowthDeveloper() = 0;               // new cSC4GrowthDeveloper (reference-initialised)
+    virtual float SurfaceHeightForFootprint(const float rect[4]) = 0;       // this+0xd8 vslot 0x88(rect, 0, 1)
+    virtual void CellToPosition(int x, int z, float& px, float& pz) = 0;    // city (this+0x30) vslot 0x308
+    virtual void PositionToCell(float x, float z, int& cx, int& cz) = 0;    // city vslot 0x2f8
+    virtual float TerrainHeight(float x, float z) = 0;                      // this+0x68 vslot 0x60
+    virtual bool OccupantAtCell(int cx, int cz, std::uint32_t kindMask) = 0;   // occupant manager (this+0x38) vslot 0x100
+    virtual bool AddOccupant(IPlacedOccupant* occupant, bool flag) = 0;     // occupant manager vslot 0xa0
+    virtual bool RemoveOccupant(IPlacedOccupant* occupant, bool a, bool b) = 0;   // occupant manager vslot 0xa8
 };
 
 IBuildingDevelopmentSimHost* BuildingDevelopmentSimHost();
@@ -146,6 +229,8 @@ public:
     static void SetBuildingCategoryFlags(BuildingProfile& profile, const cISCPropertyHolder& exemplar);
 
     // catalogue
+    static void InitStaticDataFromExemplar(const cGZPersistResourceKey& key, void* context);   // @ 0x10014c46a
+    static void PostBuildingTypesUpdatedMessage();                                           // @ 0x10014c534
     static bool StaticInit();
     static bool StaticShutdown();
     static bool AddBuildingData(const cGZPersistResourceKey& key);
@@ -169,6 +254,36 @@ public:
     cRZString& GetBuildingName(std::uint32_t type) const;
     cRZString& GetExemplarName(std::uint32_t type) const;
     float GetMaxCapacity(int zoneType, std::uint32_t purpose, std::uint32_t wealth) const;   // @ 0x1001533ee: returns a float (the stored value truncated to int, then converted back)
+
+    // placement
+    void SetPlacementServices(IBuildingPlacementServices* services) { placement_ = services; }
+    void SetCityCells(int x, int z) { cityCellsX_ = x; cityCellsZ_ = z; }                       // +0x74, +0x78
+    bool LocationIsOKForNewBuilding(std::uint32_t type, float x, float z);                     // @ 0x100150c2a (vslot 0x28)
+    bool AddNewBuildingOccupant(IPlacedBuilding* building);                                     // @ 0x100150d3e (vslot 0x30)
+    IPlacedBuilding* AddNewBuildingOccupant(std::uint32_t type, float* position, int rotation); // @ 0x100150d7a (vslot 0x38)
+    void AddNewBuildingOccupant(std::uint32_t type, int x, int z, int rotation);                // @ 0x100151146 (vslot 0x40)
+    void PlopBuilding(const ConstructionProfile& profile);                                      // @ 0x100150c0c (vslot 0x178)
+    void GetStandardCityCellArea(const float rect[4], int out[4]) const;                        // @ 0x100150cc6
+    bool AddNewFoundationOccupant(IPlacedOccupant* foundation);
+    bool AddNewFoundationOccupant(std::uint32_t type, int style, float* position, float width, float depth,
+                                  int rotation, float baseHeight);                              // @ 0x100151d84 (vslot 0xb8)
+    bool LoadFoundationProperties(IPlacedFoundation* foundation, std::uint32_t type);           // @ 0x100151fc4 (vslot 0xd0)                                 // @ 0x100151d48 (vslot 0xb0)
+    void DemolishFoundationOccupant(IPlacedOccupant* foundation, std::uint32_t reason);        // @ 0x1001522ce (vslot 0xc0)
+    std::int64_t GetCostOfOccupantDemolition(IPlacedBuilding* building, std::uint32_t) const;   // @ 0x1001511da (vslot 0x48)
+    std::int64_t GetCostOfOccupantDemolition(IPlacedFoundation*, std::uint32_t) const { return 0; }   // @ 0x100152302 (vslot 0xc8)
+    int GetBuildingTypesByFilter(std::unordered_set<std::uint32_t>& out, IBuildingTypeFilter* filter) const;   // @ 0x1001513ca
+
+    // developers
+    void CreateDeveloper(cISCPropertyHolder* properties);                                       // @ 0x10014e664
+    IGrowthDeveloperRef* GetDeveloper(std::uint32_t developerType) const;                       // @ 0x10015359a (vslot 0x108)
+    IGrowthDeveloperRef* GetDeveloper(std::uint32_t purpose, std::int32_t wealth) const;        // @ 0x100153572 (vslot 0x100)
+    const std::map<std::uint32_t, IGrowthDeveloperRef*>& GetDevelopers() const { return developers_; }   // +0xb8
+    ITractDeveloperRef* GetTractDeveloper() const { return tractDeveloper_; }                   // +0xd0
+    void SetTractDeveloper(ITractDeveloperRef* developer) { tractDeveloper_ = developer; }
+    void* GetBuildingMap() const { return buildingMap_; }                                       // +0x80
+    void SetBuildingMap(void* map) { buildingMap_ = map; }
+    void AddDeclineEntry(const DeclineEntry& entry) { declinePlan_.push_back(entry); }          // list at +0x110
+    void ExecuteDeclinePlan();                                                                  // @ 0x10015001a
 
     // construction resources (the counter object is owned by the city)
     void SetConstructionResources(IConstructionResources* resources) { resources_ = resources; }
@@ -210,6 +325,12 @@ private:
     std::uint32_t refCount_ = 0;
     bool initialized_ = false;
     IConstructionResources* resources_ = nullptr;                              // +0xe0
+    IBuildingPlacementServices* placement_ = nullptr;
+    int cityCellsX_ = 0, cityCellsZ_ = 0;                                       // +0x74, +0x78
+    std::map<std::uint32_t, IGrowthDeveloperRef*> developers_;                  // +0xb8
+    ITractDeveloperRef* tractDeveloper_ = nullptr;                              // +0xd0
+    void* buildingMap_ = nullptr;                                               // +0x80
+    std::list<DeclineEntry> declinePlan_;                                       // +0x110
     IConstructionSuitabilityHost* suitability_ = nullptr;                      // +0x48..0x60 (zone, lot, land value, power)
     std::vector<float> stageMultipliers_ = std::vector<float>(8, 1.0f);        // +0x1b0
     std::map<std::int32_t, std::int32_t> lastBuildDay_;                         // +0x180

@@ -231,22 +231,29 @@ bool cSC4BuildingDevelopmentSimulator::IsSuitableForConstruction(const Construct
     return true;
 }
 
+void cSC4BuildingDevelopmentSimulator::InitStaticDataFromExemplar(const cGZPersistResourceKey& key, void*) {
+    if (!g_host) return;
+    cISCPropertyHolder* exemplar = g_host->AcquireExemplar(key);
+    if (!exemplar) return;
+    std::uint32_t exemplarType = 0;
+    if (cSCPropertyHelp::GetPropertyValue(exemplar, 0x10, exemplarType)) {
+        if (exemplarType == kExemplarTypeBuilding) AddBuildingData(key);
+        else if (exemplarType == kExemplarTypeFoundation) AddFoundationData(key);
+        else if (exemplarType == kExemplarTypeLotRetainingWall) AddLotRetainingWallData(key);
+    }
+    g_host->ReleaseExemplar(exemplar);
+}
+
+void cSC4BuildingDevelopmentSimulator::PostBuildingTypesUpdatedMessage() {
+    if (g_host) g_host->PostBuildingTypesUpdated();
+}
+
 bool cSC4BuildingDevelopmentSimulator::StaticInit() {
     if (!g_staticInitialized) {
         g_staticInitialized = true;
         if (g_host) {
-            g_host->ForEachExemplarKey([](const cGZPersistResourceKey& key) {
-                cISCPropertyHolder* exemplar = g_host->AcquireExemplar(key);
-                if (!exemplar) return;
-                std::uint32_t exemplarType = 0;
-                if (exemplar->GetProperty(0x10, exemplarType)) {
-                    if (exemplarType == kExemplarTypeBuilding) AddBuildingData(key);
-                    else if (exemplarType == kExemplarTypeFoundation) AddFoundationData(key);
-                    else if (exemplarType == kExemplarTypeLotRetainingWall) AddLotRetainingWallData(key);
-                }
-                g_host->ReleaseExemplar(exemplar);
-            });
-            g_host->PostBuildingTypesUpdated();
+            g_host->ForEachExemplarKey([](const cGZPersistResourceKey& key) { InitStaticDataFromExemplar(key, nullptr); });
+            PostBuildingTypesUpdatedMessage();
         }
         CalculateMaxCapacity();
     }
@@ -576,6 +583,187 @@ bool cSC4BuildingDevelopmentSimulator::Read(cIGZIStream& stream) {
     stream.GetUint8(b); cheatPower_ = b != 0;
     stream.GetUint8(b); cheatCaps_ = b != 0;
     return !stream.GetError();
+}
+
+// ------------------------------------------------------------------------------------------ placement
+
+bool cSC4BuildingDevelopmentSimulator::LocationIsOKForNewBuilding(std::uint32_t type, float x, float z) {
+    if (!IsBuildingTypeValid(type) || !placement_) return false;
+    int cellX = 0, cellZ = 0;
+    placement_->PositionToCell(x, z, cellX, cellZ);
+    return !placement_->OccupantAtCell(cellX, cellZ, 0x278128a0);
+}
+
+void cSC4BuildingDevelopmentSimulator::GetStandardCityCellArea(const float rect[4], int out[4]) const {
+    for (int i = 0; i < 4; ++i) out[i] = static_cast<int>(rect[i] * 0.0625f);
+    if (out[0] < 0) out[0] = 0;
+    if (out[1] < 0) out[1] = 0;
+    if (cityCellsX_ <= static_cast<int>(rect[2] * 0.0625f)) out[2] = cityCellsX_ - 1;
+    if (cityCellsZ_ <= static_cast<int>(rect[3] * 0.0625f)) out[3] = cityCellsZ_ - 1;
+}
+
+bool cSC4BuildingDevelopmentSimulator::AddNewBuildingOccupant(IPlacedBuilding* building) {
+    return placement_ ? placement_->AddOccupant(building, false) : false;
+}
+
+IPlacedBuilding* cSC4BuildingDevelopmentSimulator::AddNewBuildingOccupant(std::uint32_t type, float* position, int rotation) {
+    if (!placement_ || !IsBuildingTypeValid(type)) return nullptr;
+    if (!LocationIsOKForNewBuilding(type, position[0], position[2])) return nullptr;
+    IPlacedBuilding* building = placement_->CreateBuilding();
+    building->SetBuildingType(type);
+    placement_->LoadBuildingProperties(*building, type);
+    float minimum[3], maximum[3];
+    building->GetBounds(minimum, maximum);
+    if ((static_cast<unsigned>(rotation) | 2u) == 3) {                  // a quarter turn swaps the footprint's x and z
+        std::swap(minimum[0], minimum[2]);
+        std::swap(maximum[0], maximum[2]);
+    }
+    building->SetBounds(minimum, maximum);
+    const float halfX = (maximum[0] - minimum[0]) * 0.5f;
+    const float halfZ = (maximum[2] - minimum[2]) * 0.5f;
+    float area[4] = {(position[0] - halfX) + 0.5f, (position[2] - halfZ) + 0.5f,
+                     (halfX + position[0]) + -0.5f, (halfZ + position[2]) + -0.5f};
+    int cells[4];
+    GetStandardCityCellArea(area, cells);
+    if (position[1] <= 0.0f && position[1] != 0.0f) {                   // a negative height asks for the surface under the footprint
+        const float footprint[4] = {minimum[0], minimum[2], maximum[0], maximum[2]};
+        position[1] = placement_->SurfaceHeightForFootprint(footprint);
+    }
+    building->SetPosition(position);
+    building->SetRotation(rotation);
+    building->FinishPlacement();
+    const bool added = AddNewBuildingOccupant(building);
+    placement_->ReleaseBuilding(building);
+    return added ? building : nullptr;
+}
+
+void cSC4BuildingDevelopmentSimulator::AddNewBuildingOccupant(std::uint32_t type, int x, int z, int rotation) {
+    if (!placement_) return;
+    float position[3];
+    placement_->CellToPosition(x, z, position[0], position[2]);
+    position[1] = placement_->TerrainHeight(position[0], position[2]);
+    AddNewBuildingOccupant(type, position, rotation);
+}
+
+void cSC4BuildingDevelopmentSimulator::PlopBuilding(const ConstructionProfile& profile) {
+    AddNewBuildingOccupant(profile.buildingType, profile.x, profile.z, profile.rotation);
+}
+
+bool cSC4BuildingDevelopmentSimulator::AddNewFoundationOccupant(IPlacedOccupant* foundation) {
+    return placement_ ? placement_->AddOccupant(foundation, false) : false;
+}
+
+std::int64_t cSC4BuildingDevelopmentSimulator::GetCostOfOccupantDemolition(IPlacedBuilding* building, std::uint32_t) const {
+    std::int64_t cost = 0;
+    cSCPropertyHelp::GetPropertyValue(building->PropertyHolder(), 0x99afacd, cost);
+    return cost;
+}
+
+bool cSC4BuildingDevelopmentSimulator::LoadFoundationProperties(IPlacedFoundation* foundation, std::uint32_t type) {
+    cISCPropertyHolder* properties = foundation->PropertyHolder();
+    if (type == 0) type = foundation->FoundationType();
+    auto it = g_foundationKeys.find(type);
+    if (it == g_foundationKeys.end() || !g_host) return false;
+    cISCPropertyHolder* exemplar = g_host->AcquireExemplar(it->second);
+    if (!exemplar) return false;
+    foundation->ApplyExemplar(exemplar);
+    float height = 0.0f;
+    if (cSCPropertyHelp::GetPropertyValue(properties, 0x88fcc3e3, height)) foundation->SetHeight(height);
+    g_host->ReleaseExemplar(exemplar);
+    return true;
+}
+
+bool cSC4BuildingDevelopmentSimulator::AddNewFoundationOccupant(std::uint32_t type, int style, float* position,
+                                                                float width, float depth, int rotation, float baseHeight) {
+    if (!placement_) return false;
+    IPlacedFoundation* foundation = placement_->CreateFoundation();
+    foundation->SetFoundationType(type);
+    bool added = false;
+    if (LoadFoundationProperties(foundation, type)) {
+        const float area[4] = {(position[0] - width * 0.5f) + 0.5f, (position[2] - depth * 0.5f) + 0.5f,
+                               width * 0.5f + position[0] + -0.5f, depth * 0.5f + position[2] + -0.5f};
+        int cells[4];
+        GetStandardCityCellArea(area, cells);
+        float top = position[1];
+        if (top < 0.0f) {
+            top = placement_->FoundationSurfaceHeight(cells, 0);
+            position[1] = top;
+        }
+        float bottom = baseHeight;
+        if (bottom < 0.0f) {
+            bottom = placement_->FoundationSurfaceHeight(cells, 1);
+            top = position[1];
+        }
+        const float difference = top - bottom;
+        const float size[3] = {width, 0.5f <= difference ? difference : 0.5f, depth};
+        foundation->SetPosition(position);
+        foundation->SetSize(size);
+        foundation->SetStyle(style);
+        foundation->SetRotation(rotation);
+        foundation->FinishPlacement();
+        added = AddNewFoundationOccupant(foundation);
+    }
+    placement_->ReleaseFoundation(foundation);
+    return added;
+}
+
+void cSC4BuildingDevelopmentSimulator::DemolishFoundationOccupant(IPlacedOccupant* foundation, std::uint32_t) {
+    if (placement_) placement_->RemoveOccupant(foundation, true, false);
+}
+
+int cSC4BuildingDevelopmentSimulator::GetBuildingTypesByFilter(std::unordered_set<std::uint32_t>& out,
+                                                                IBuildingTypeFilter* filter) const {
+    int accepted = 0;
+    for (const auto& kv : g_buildingKeys) {
+        if (filter && !filter->Accepts(kv.first)) continue;
+        out.insert(kv.first);
+        ++accepted;
+    }
+    return accepted;
+}
+
+// ------------------------------------------------------------------------------------------ developers
+
+IGrowthDeveloperRef* cSC4BuildingDevelopmentSimulator::GetDeveloper(std::uint32_t developerType) const {
+    auto it = developers_.find(developerType);
+    return it == developers_.end() ? nullptr : it->second;
+}
+
+IGrowthDeveloperRef* cSC4BuildingDevelopmentSimulator::GetDeveloper(std::uint32_t purpose, std::int32_t wealth) const {
+    return GetDeveloper(GetDeveloperType(purpose, wealth));
+}
+
+void cSC4BuildingDevelopmentSimulator::CreateDeveloper(cISCPropertyHolder* properties) {
+    std::uint32_t developerType = 0;
+    cSCPropertyHelp::GetPropertyValue(properties, 0x21, developerType);
+    if (developerType == 0) return;
+    if (IGrowthDeveloperRef* existing = GetDeveloper(developerType)) {
+        existing->Init(properties);
+    } else if (placement_) {
+        IGrowthDeveloperRef* developer = placement_->CreateGrowthDeveloper();
+        developer->Init(properties);
+        developers_[developerType] = developer;
+    }
+    lastBuildDay_[static_cast<std::int32_t>(developerType)] = g_host ? g_host->SimulatorDay() : 0;
+}
+
+void cSC4BuildingDevelopmentSimulator::ExecuteDeclinePlan() {
+    const std::uint32_t today = static_cast<std::uint32_t>(g_host ? g_host->SimulatorDay() : 0);
+    for (auto it = declinePlan_.begin(); it != declinePlan_.end();) {
+        if (today < it->day) { ++it; continue; }                         // not due yet
+        if (static_cast<int>(it->source->Condition()) < -0x13) {
+            TractOutcome outcome;
+            outcome.source = it->source;
+            outcome.a = it->a;
+            outcome.b = it->b;
+            outcome.flag = it->flag;
+            const int result = tractDeveloper_ ? tractDeveloper_->ExecuteOutcome(outcome) : 0;
+            it = declinePlan_.erase(it);
+            if (result > 0) return;                                      // one successful decline per call
+        } else {
+            it = declinePlan_.erase(it);
+        }
+    }
 }
 
 }  // namespace sc4
