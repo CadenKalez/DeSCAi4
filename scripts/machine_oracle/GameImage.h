@@ -18,7 +18,7 @@
 
 namespace machine_oracle {
 
-constexpr std::uint64_t kImageAddress = 0x100000000ull, kBase = 0x300000000ull;
+constexpr std::uint64_t kImageAddress = 0x100000000ull, kBase = 0x200000000000ull;
 constexpr std::uint64_t kTextAddress = kBase, kTextSize = 0xa65000;
 constexpr std::uint64_t kDataAddress = kBase + 0xa65000, kDataSize = 0x135000, kDataFileOffset = 10899456,
                         kDataFileSize = 774144;

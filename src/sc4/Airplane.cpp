@@ -9,6 +9,7 @@
 #include <cstring>
 
 #include "sc4/AutomataStates.h"
+#include "sc4/GeometryUtilities.h"
 #include "sc4/OccupantFilters3.h"
 
 namespace sc4 {
@@ -69,6 +70,18 @@ struct AirplaneBasis {
     }
 };
 
+// (v < lo) ? lo : min(hi, v), the clamp of the compiled MINSS / CMPLTSS pairs
+float ClampControl(float v, float lo, float hi) {
+    const float capped = hi < v ? hi : v;
+    return v < lo ? lo : capped;
+}
+
+// 1 / |(x, z)| with the y term added as 0 (x^2 + 0, then + z^2), and the vector scaled by it (y becomes 0 * scale)
+cS3DVector3 GroundDirection(const cS3DVector3& v) {
+    const float inverse = 1.0f / std::sqrt(v.z * v.z + (v.x * v.x + 0.0f));
+    return {v.x * inverse, inverse * 0.0f, v.z * inverse};
+}
+
 // One controller step of the roll/pitch towards `target`, at most `step` either way (MINSS / CMPLTSS).
 float StepTowards(float current, float target, float step) {
     const float delta = target - current;
@@ -104,13 +117,6 @@ void AssignEffect(IAirplaneEffect*& slot, IAirplaneEffect* value) {
     IAirplaneEffect* old = slot;
     slot = value;
     if (old) old->Release();
-}
-
-float Clamp(float value, float limit) {
-    // The original's mask idiom: value < -limit ? -limit : min(value, limit) (NaN keeps the positive limit).
-    float result = (value <= limit) ? value : limit;
-    if (value < -limit) result = -limit;
-    return result;
 }
 
 }  // namespace
@@ -630,9 +636,24 @@ bool cSC4Airplane::AI_Land(float delta) {
     return false;
 }
 
-// @ 0x1006d3f70 PARTIAL: the SIMD control easing is not ported.
+// @ 0x1006d3f70. Below a forward speed of 0.1 (velocity . orientation) every control is zeroed and the plane counts as
+// stopped. Otherwise the controls ease (at tuning * delta per step) towards full roll input, no pitch or yaw input, a
+// reverse throttle of -0.03 * speed clamped to [-1, 0], full lift and nothing at +0x328.
 bool cSC4Airplane::AI_Stop(float delta) {
-    (void)delta;
+    const float speed = velocity_.z * orientation_.z + (velocity_.x * orientation_.x + velocity_.y * orientation_.y);
+    if (0.1f > speed) {
+        for (float& c : controlWish_) c = 0.0f;
+        controlAim_ = 0.0f;
+        controlAim2_ = 0.0f;
+        return true;
+    }
+    const float brake = speed * -0.03f;
+    const float capped = 0.0f < brake ? 0.0f : brake;
+    const float targets[4] = {1.0f, 0.0f, 0.0f, brake < -1.0f ? -1.0f : capped};   // INSERTPS 0x34: lane 3
+    const float rates[4] = {tunings_[3], tunings_[2], tunings_[10], tunings_[0]};   // +0x444 +0x440 +0x460 +0x438
+    for (int i = 0; i < 4; ++i) controlWish_[i] = StepTowards(controlWish_[i], targets[i], rates[i] * delta);
+    controlAim_ = StepTowards(controlAim_, 1.0f, tunings_[5] * delta);     // +0x44c
+    controlAim2_ = StepTowards(controlAim2_, 0.0f, delta * tunings_[11]);  // +0x464
     return false;
 }
 
@@ -642,36 +663,138 @@ bool cSC4Airplane::AI_TakeOff(float delta) {
     return false;
 }
 
-// @ 0x1006d44cc PARTIAL: runway taxiing is not ported.
+// @ 0x1006d44cc. Taxi towards `target` on the ground: steer[2] eases towards the turn side (clamped to +/-0.2); the
+// throttle aims at a slow crawl while the heading is more than 12 degrees off (-0.002 * speed in [-0.1, 0]), otherwise
+// at 0.02 * distance - 0.1 * speed in [-0.2, 0.03]; every other control eases to 0.
 void cSC4Airplane::AI_Taxi(const cS3DVector3& target, float delta) {
-    (void)target;
-    (void)delta;
+    const float dx = target.x - position_.x, dy = target.y - position_.y, dz = target.z - position_.z;
+    const cS3DVector3 toTarget = GroundDirection({dx, dy, dz});
+    const cS3DVector3 nose = GroundDirection(orientation_);
+    const float speed = std::sqrt(velocity_.z * velocity_.z + (velocity_.y * velocity_.y + velocity_.x * velocity_.x));
+    const float turnSide = toTarget.z * nose.x - toTarget.x * nose.z;
+    const float cosine = (nose.y * toTarget.y + toTarget.x * nose.x) + nose.z * toTarget.z;
+    const float angle = std::acos(ClampControl(cosine, -1.0f, 1.0f));
+    controlWish_[2] = StepTowards(controlWish_[2], ClampControl(turnSide, -0.2f, 0.2f), tunings_[10] * delta);
+    float throttle;
+    if (angle > 0.20943952f) {
+        throttle = ClampControl(speed * -0.002f, -0.1f, 0.0f);
+    } else {
+        const float distance = std::sqrt((dx * dx + dy * dy) + dz * dz);
+        throttle = ClampControl(speed * -0.1f + distance * 0.02f, -0.2f, 0.03f);
+    }
+    controlWish_[3] = StepTowards(controlWish_[3], throttle, tunings_[0] * delta);
+    controlWish_[1] = StepTowards(controlWish_[1], 0.0f, tunings_[2] * delta);
+    controlWish_[0] = StepTowards(controlWish_[0], 0.0f, tunings_[3] * delta);
+    controlAim_ = StepTowards(controlAim_, 0.0f, tunings_[5] * delta);
+    controlAim2_ = StepTowards(controlAim2_, 0.0f, delta * tunings_[11]);
 }
 
-// @ 0x1006d4a0c PARTIAL: the altitude approach controller is not ported.
-bool cSC4Airplane::AI_ApproachAltitude(float altitude, bool flag, float delta) {
-    (void)altitude;
-    (void)flag;
-    (void)delta;
-    return false;
+// @ 0x1006d4a0c. Altitude hold: lift (+0x324) eases towards `useLift`, +0x328 towards 0. Within 5 of `altitude` the
+// roll input only fights a vertical speed beyond 0.5 (towards -/+ tuning +0x45c) and the throttle aims at +0x454 (with
+// lift) or full; above it (error > 0) the input climbs and the throttle doubles +0x454; below it the input aims at
+// +0x458 down to an error of -5, then full down, with throttle +0x454. Returns 0 holding, 1 climbing, -1 descending.
+// The controls are clamped afterwards to [-1, 1] (the throttle's floor is +0x43c on the ground).
+int cSC4Airplane::AI_ApproachAltitude(float altitude, bool useLift, float delta) {
+    const float throttleStep = tunings_[0] * delta;   // +0x438
+    controlAim_ = StepTowards(controlAim_, static_cast<float>(useLift), throttleStep);
+    controlAim2_ = StepTowards(controlAim2_, 0.0f, tunings_[11] * delta);   // +0x464
+    const float error = altitude - position_.y;
+    float& input = controlWish_[0];
+    float throttleTarget;
+    int result;
+    if (5.0f > std::fabs(error)) {
+        const float vertical = velocity_.y;
+        const float limit = tunings_[9];   // +0x45c
+        if (-0.5f > vertical) {
+            if (limit > input) input = StepTowards(input, limit, tunings_[3] * 0.1f * delta);
+        } else if (vertical > 0.5f && input > -limit) {
+            input = StepTowards(input, -limit, tunings_[3] * 0.1f * delta);
+        }
+        throttleTarget = useLift ? tunings_[7] : 1.0f;
+        result = 0;
+    } else if (error > 0.0f) {
+        input = StepTowards(input, 1.0f, tunings_[3] * 0.1f * delta);
+        throttleTarget = useLift ? tunings_[7] + tunings_[7] : 1.0f;
+        result = 1;
+    } else {
+        if (error > -5.0f) input = StepTowards(input, tunings_[8], delta * tunings_[3]);   // no 0.1 here
+        else input = StepTowards(input, -1.0f, tunings_[3] * 0.1f * delta);
+        throttleTarget = tunings_[7];
+        result = -1;
+    }
+    controlWish_[3] = StepTowards(controlWish_[3], throttleTarget, throttleStep);
+    for (int i = 0; i < 3; ++i) controlWish_[i] = ClampControl(controlWish_[i], -1.0f, 1.0f);
+    controlWish_[3] = ClampControl(controlWish_[3], static_cast<int>(state_) >= 2 ? tunings_[1] : -1.0f, 1.0f);
+    controlAim_ = ClampControl(controlAim_, 0.0f, 1.0f);
+    controlAim2_ = ClampControl(controlAim2_, -tunings_[9], tunings_[9]);
+    return result;
 }
 
-// @ 0x1006d4df8 PARTIAL: the follow-vector controller is not ported.
-bool cSC4Airplane::AI_FollowVectorAndTurn(const cS3DVector3& position, const cS3DVector3& direction,
-                                          const cS3DVector3& up, float delta) {
-    (void)position;
-    (void)direction;
-    (void)up;
-    (void)delta;
-    return false;
+// @ 0x1006d4df8. A procedure turn through `turnPoint`, phase in +0x434: (0) follow the inbound ray until the distance
+// left along the nose, at the current ground speed, is under twice the time to turn the angle between the legs at the
+// turn rate (+0x3cc), capped at 5; (1) bank towards the outbound heading (steer[1] only beyond 2 degrees off) until
+// within 6 degrees; (2) follow the outbound ray. True while on the outbound leg.
+bool cSC4Airplane::AI_FollowVectorAndTurn(const cS3DVector3& inbound, const cS3DVector3& turnPoint,
+                                          const cS3DVector3& outbound, float delta) {
+    const cS3DVector3 out = GroundDirection(outbound);
+    const cS3DVector3 nose = GroundDirection(orientation_);
+    if (field434_ == 0) {
+        const cS3DVector3 in = GroundDirection(inbound);
+        const float legCosine = ClampControl(in.z * out.z + (in.y * out.y + in.x * out.x), -1.0f, 1.0f);
+        const float dx = turnPoint.x - position_.x, dz = turnPoint.z - position_.z;
+        const float turnTime = std::acos(legCosine) / turnRate_;
+        const float along = dz * nose.z + (nose.y * 0.0f + dx * nose.x);
+        const float eta = along / std::sqrt(velocity_.z * velocity_.z + (velocity_.x * velocity_.x + 0.0f));
+        const float lead = turnTime + turnTime;
+        if ((5.0f < lead ? 5.0f : lead) > eta) {
+            field434_ = 1;
+        } else {
+            AI_FollowRay(turnPoint, inbound, delta);
+            return false;
+        }
+    }
+    if (field434_ == 1) {
+        const float turnSide = out.z * nose.x - out.x * nose.z;
+        const float angle = std::acos(ClampControl(out.z * nose.z + (out.y * nose.y + out.x * nose.x), -1.0f, 1.0f));
+        if (angle > 0.034906585f) controlWish_[1] = StepTowards(controlWish_[1], turnSide, tunings_[2] * delta);
+        controlWish_[2] = StepTowards(controlWish_[2], turnSide, tunings_[10] * delta);
+        if (!(0.10471976f > angle)) return false;
+        field434_ = 2;
+    } else if (field434_ != 2) {
+        return false;
+    }
+    AI_FollowRay(turnPoint, outbound, delta);
+    return true;
 }
 
-// @ 0x1006d51a2 PARTIAL: the ray follower is not ported.
+// @ 0x1006d51a2. Follow the ground projection of the ray (origin, direction): steer[1] eases towards the side of the
+// ray scaled by the distance (1 at 100 and beyond), steer[2] towards the heading error ((1 - cos) or (cos - 1) by the
+// turn side, * 1.5) plus 0.001 * distance beyond 5. True once within 5 of the ray and within 6 degrees of its heading.
 bool cSC4Airplane::AI_FollowRay(const cS3DVector3& origin, const cS3DVector3& direction, float delta) {
-    (void)origin;
-    (void)direction;
-    (void)delta;
-    return false;
+    const float dx = direction.x, dz = direction.z;
+    const float inverse3 = 1.0f / std::sqrt((dx * dx + 0.0f) + dz * dz);
+    const float ray3[3] = {dx * inverse3, inverse3 * 0.0f, dz * inverse3};
+    const float inverse2 = 1.0f / std::sqrt(dz * dz + dx * dx);
+    const float ray2[2] = {dx * inverse2, inverse2 * dz};
+    const float origin3[3] = {origin.x, 0.0f, origin.z};
+    const float origin2[2] = {origin.x, origin.z};
+    const float inverseNose = 1.0f / std::sqrt(orientation_.z * orientation_.z + (orientation_.x * orientation_.x + 0.0f));
+    const float nose[3] = {inverseNose * orientation_.x, inverseNose * 0.0f, inverseNose * orientation_.z};
+    const float point3[3] = {position_.x, 0.0f, position_.z};
+    const float point2[2] = {position_.x, position_.z};
+
+    const float distance = SC4GeometryUtilities::PointDistanceToRay(point3, origin3, ray3);
+    const float side = 0.0f < SC4GeometryUtilities::PointRelativeToRay2D(point2, origin2, ray2) ? 1.0f : -1.0f;
+    const float offset = ClampControl(0.01f * distance, 0.0f, 1.0f) * side;
+    controlWish_[1] = StepTowards(controlWish_[1], offset, tunings_[2] * delta);   // +0x440
+
+    const float turnSide = nose[0] * ray3[2] - nose[2] * ray3[0];
+    const float cosine = ClampControl(nose[2] * ray3[2] + (nose[1] * ray3[1] + nose[0] * ray3[0]), -1.0f, 1.0f);
+    const float angle = std::acos(cosine);
+    float turn = (0.0f < turnSide ? 1.0f - cosine : -1.0f + cosine) * 0.5f * 3.0f;
+    if (distance > 5.0f) turn = turn + side * 0.001f * distance;
+    controlWish_[2] = StepTowards(controlWish_[2], turn, delta * tunings_[10]);   // +0x460
+    return 5.0f > distance && 0.10471976f > angle;
 }
 
 // @ 0x1006d258c PARTIAL: needs cSC4AircraftManager::GetRunwayList (unrecovered).
@@ -698,33 +821,16 @@ bool cSC4Airplane::TranslatePlayerDriveCommands(tAutomataStatePlayerDrive* state
 // @ 0x1006d4852. Steer the 2D heading towards `vector`: ease +0x318 towards the cross product when the angle is over 2
 // degrees, then ease +0x31c towards it (clamped to +/-0.2 while not landing/taking off); true when within ~6 degrees.
 bool cSC4Airplane::AI_TurnToVector(const cS3DVector3& vector, float delta) {
-    const float tx = vector.x;
-    const float tz = vector.z;
-    const float ox = orientation_.x;
-    const float oz = orientation_.z;
-    const float invTarget = 1.0f / std::sqrt(tz * tz + tx * tx + 0.0f);
-    const float invOrientation = 1.0f / std::sqrt(oz * oz + ox * ox + 0.0f);
-    const float nx = tx * invTarget;
-    const float onx = ox * invOrientation;
-    const float onz = oz * invOrientation;
-    const float cross = invTarget * tz * onx - nx * invOrientation * oz;
-    const float dot = invOrientation * 0.0f * invTarget * 0.0f + nx * onx + onz * invTarget * tz;
-    float clampedDot = (dot <= 1.0f) ? dot : 1.0f;
-    if (dot < -1.0f) clampedDot = -1.0f;
-    const float angle = std::acos(clampedDot);
-    if (0.034906585f < angle) {
-        const float maxStep = tunings_[2] * delta;   // +0x440
-        const float diff = cross - controlWish_[1];
-        controlWish_[1] += Clamp(diff, maxStep);     // +0x318
-    }
-    float target = cross;
-    if (state_ < AirplaneState::kTakingOff) {
-        target = (cross <= 0.2f) ? cross : 0.2f;
-        if (cross < -0.2f) target = -0.2f;
-    }
-    const float maxStep = tunings_[10] * delta;      // +0x460
-    controlWish_[2] += Clamp(target - controlWish_[2], maxStep);   // +0x31c
-    return angle < 0.10471976f;
+    // the ground directions and their products in the machine code's grouping (oracle-checked, like AI_Taxi)
+    const cS3DVector3 toTarget = GroundDirection(vector);
+    const cS3DVector3 nose = GroundDirection(orientation_);
+    const float turnSide = toTarget.z * nose.x - toTarget.x * nose.z;
+    const float cosine = (nose.y * toTarget.y + toTarget.x * nose.x) + nose.z * toTarget.z;
+    const float angle = std::acos(ClampControl(cosine, -1.0f, 1.0f));
+    if (angle > 0.034906585f) controlWish_[1] = StepTowards(controlWish_[1], turnSide, tunings_[2] * delta);   // +0x440
+    const float target = static_cast<int>(state_) <= 1 ? ClampControl(turnSide, -0.2f, 0.2f) : turnSide;
+    controlWish_[2] = StepTowards(controlWish_[2], target, delta * tunings_[10]);   // +0x460
+    return 0.10471976f > angle;
 }
 
 // @ 0x1006d0be2.

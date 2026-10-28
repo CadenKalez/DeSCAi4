@@ -119,13 +119,13 @@ public:
     void AI_PursueGoal(float delta);                                  // @ 0x1006ce990  PARTIAL
     bool AI_GotoDestination(const cS3DVector3& destination, float delta);   // @ 0x1006d2f12  PARTIAL
     bool AI_Land(float delta);                                        // @ 0x1006d33f8  PARTIAL
-    bool AI_Stop(float delta);                                        // @ 0x1006d3f70  PARTIAL
+    bool AI_Stop(float delta);                                        // @ 0x1006d3f70
     bool AI_TakeOff(float delta);                                     // @ 0x1006d40e2  PARTIAL
-    void AI_Taxi(const cS3DVector3& target, float delta);             // @ 0x1006d44cc  PARTIAL
-    bool AI_ApproachAltitude(float altitude, bool flag, float delta); // @ 0x1006d4a0c  PARTIAL
-    bool AI_FollowVectorAndTurn(const cS3DVector3& position, const cS3DVector3& direction,
-                                const cS3DVector3& up, float delta);  // @ 0x1006d4df8  PARTIAL
-    bool AI_FollowRay(const cS3DVector3& origin, const cS3DVector3& direction, float delta);   // @ 0x1006d51a2  PARTIAL
+    void AI_Taxi(const cS3DVector3& target, float delta);             // @ 0x1006d44cc
+    int AI_ApproachAltitude(float altitude, bool useLift, float delta);   // @ 0x1006d4a0c: 1 climb, 0 hold, -1 descend
+    bool AI_FollowVectorAndTurn(const cS3DVector3& inbound, const cS3DVector3& turnPoint,
+                                const cS3DVector3& outbound, float delta);   // @ 0x1006d4df8
+    bool AI_FollowRay(const cS3DVector3& origin, const cS3DVector3& direction, float delta);   // @ 0x1006d51a2
     void PickRunwayDirection(const cS3DVector3& position, cS3DVector3& start, cS3DVector3& end,
                              bool flag);                          // @ 0x1006d258c  PARTIAL
     void PickApproachBox(const cS3DVector3& start, const cS3DVector3& end);   // @ 0x1006d2932  PARTIAL

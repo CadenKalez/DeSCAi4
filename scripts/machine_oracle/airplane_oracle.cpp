@@ -20,6 +20,25 @@ struct AirplaneOracleAccess {
         p.climbScale_ = f[13]; p.descentScale_ = f[14]; p.climbAngle_ = f[15]; p.descentAngle_ = f[16];
         p.takeoffAngle_ = f[17]; p.tunings_[7] = f[18]; p.tunings_[8] = f[19];
     }
+    // controls (+0x314..+0x328), the twelve tunings (+0x438), orientation (+0x8c) and velocity (+0x36c)
+    static void SetMotion(cSC4Airplane& p, const float* controls, const float* tunings, const float* orientation,
+                          const float* velocity) {
+        for (int i = 0; i < 4; ++i) p.controlWish_[i] = controls[i];
+        p.controlAim_ = controls[4]; p.controlAim2_ = controls[5];
+        for (int i = 0; i < 12; ++i) p.tunings_[i] = tunings[i];
+        p.orientation_ = {orientation[0], orientation[1], orientation[2]};
+        p.velocity_ = {velocity[0], velocity[1], velocity[2]};
+    }
+    static void SetPositionState(cSC4Airplane& p, const float* position, int state) {
+        p.position_ = {position[0], position[1], position[2]};
+        p.state_ = static_cast<AirplaneState>(state);
+    }
+    static int& Phase(cSC4Airplane& p) { return p.field434_; }
+    static void SetTurnRate(cSC4Airplane& p, float rate) { p.turnRate_ = rate; }
+    static void Controls(const cSC4Airplane& p, float* out) {
+        for (int i = 0; i < 4; ++i) out[i] = p.controlWish_[i];
+        out[4] = p.controlAim_; out[5] = p.controlAim2_;
+    }
 };
 }  // namespace sc4
 
@@ -115,6 +134,84 @@ int main() {
                     Same(Field(0x378), port.Roll()) && Same(Field(0x37c), port.Pitch()) && Same(Field(0x380), port.Yaw());
         for (int i = 0; i < 9; ++i) same = same && Same(tOriginal.rotation[i], tPort.rotation[i / 3][i % 3]);
         Check(same, "UpdateOrientation", t);
+
+        {   // AI_Stop
+            float c[6], tune[12], o[3], v[3];
+            for (float& x : c) x = unit(rng);
+            for (float& x : tune) x = 0.05f + 0.5f * (unit(rng) + 1);
+            for (float& x : o) x = unit(rng);
+            for (float& x : v) x = speed(rng) * (t % 5 == 0 ? 0.001f : 1.0f);
+            std::memcpy(original + 0x314, c, sizeof c);
+            std::memcpy(original + 0x438, tune, sizeof tune);
+            std::memcpy(original + 0x8c, o, sizeof o);
+            std::memcpy(original + 0x36c, v, sizeof v);
+            AirplaneOracleAccess::SetMotion(port, c, tune, o, v);
+            const bool a = Function<bool (*)(void*, float)>(0x1006d3f70)(original, delta);
+            const bool b = port.AI_Stop(delta);
+            float mine[6];
+            AirplaneOracleAccess::Controls(port, mine);
+            bool same = a == b;
+            for (int i = 0; i < 6; ++i) same = same && Same(Field(0x314 + 4 * i), mine[i]);
+            Check(same, "AI_Stop", t);
+
+            // AI_ApproachAltitude on the same motion state
+            const float position[3] = {speed(rng), 100.0f + speed(rng) * (t % 3 == 0 ? 0.05f : 1.0f), speed(rng)};
+            const int st = static_cast<int>(rng() % 4);
+            for (float& x : c) x = unit(rng) * 1.3f;
+            std::memcpy(original + 0x314, c, sizeof c);
+            std::memcpy(original + 0x74, position, sizeof position);
+            std::memcpy(original + 0x310, &st, 4);
+            AirplaneOracleAccess::SetMotion(port, c, tune, o, v);
+            AirplaneOracleAccess::SetPositionState(port, position, st);
+            const bool lift = rng() & 1;
+            const int ra = Function<int (*)(void*, float, bool, float)>(0x1006d4a0c)(original, 100.0f, lift, delta);
+            const int rb = port.AI_ApproachAltitude(100.0f, lift, delta);
+            AirplaneOracleAccess::Controls(port, mine);
+            same = ra == rb;
+            for (int i = 0; i < 6; ++i) same = same && Same(Field(0x314 + 4 * i), mine[i]);
+            Check(same, "AI_ApproachAltitude", t);
+
+            // the steering helpers: same motion state, random geometry
+            const float pa[3] = {speed(rng), speed(rng) * 0.1f, speed(rng)};
+            float pb[3] = {unit(rng), unit(rng) * 0.2f, unit(rng)};
+            const float pe[3] = {unit(rng), unit(rng) * 0.2f, unit(rng)};
+            if (t % 9 == 0) { pb[0] = o[0] + 0.01f * unit(rng); pb[2] = o[2]; }
+            auto reset = [&] {
+                std::memcpy(original + 0x314, c, sizeof c);
+                AirplaneOracleAccess::SetMotion(port, c, tune, o, v);
+            };
+            auto compare = [&](bool ra2, bool rb2, const char* what) {
+                AirplaneOracleAccess::Controls(port, mine);
+                bool ok = ra2 == rb2;
+                for (int i = 0; i < 6; ++i) ok = ok && Same(Field(0x314 + 4 * i), mine[i]);
+                Check(ok, what, t);
+            };
+            const cS3DVector3 va{pa[0], pa[1], pa[2]}, vb{pb[0], pb[1], pb[2]}, ve{pe[0], pe[1], pe[2]};
+            reset();
+            compare(Function<bool (*)(void*, const float*, const float*, float)>(0x1006d51a2)(original, pa, pb, delta),
+                    port.AI_FollowRay(va, vb, delta), "AI_FollowRay");
+            reset();
+            compare(Function<bool (*)(void*, const float*, float)>(0x1006d4852)(original, pb, delta),
+                    port.AI_TurnToVector(vb, delta), "AI_TurnToVector");
+            reset();
+            Function<void (*)(void*, const float*, float)>(0x1006d44cc)(original, pa, delta);
+            port.AI_Taxi(va, delta);
+            compare(true, true, "AI_Taxi");
+            const int phase = static_cast<int>(rng() % 4);
+            const float rate = 0.05f + 0.5f * (unit(rng) + 1);
+            reset();
+            std::memcpy(original + 0x434, &phase, 4);
+            std::memcpy(original + 0x3cc, &rate, 4);
+            AirplaneOracleAccess::Phase(port) = phase;
+            AirplaneOracleAccess::SetTurnRate(port, rate);
+            const bool fa = Function<bool (*)(void*, const float*, const float*, const float*, float)>(0x1006d4df8)(
+                original, pb, pa, pe, delta);
+            const bool fb = port.AI_FollowVectorAndTurn(vb, va, ve, delta);
+            int phaseOriginal;
+            std::memcpy(&phaseOriginal, original + 0x434, 4);
+            Check(phaseOriginal == AirplaneOracleAccess::Phase(port), "AI_FollowVectorAndTurn phase", t);
+            compare(fa, fb, "AI_FollowVectorAndTurn");
+        }
 
         if (t % 8 == 0) {
             SetOriginal(f, 3);
