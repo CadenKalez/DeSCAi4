@@ -397,8 +397,10 @@ void cSC4DepartmentBudget::RecalculateAllLineItemCurrentExpenses() {
                 if (static_cast<std::uint32_t>(item.departmentId) != departmentId_) continue;
                 auto it = totals.find(static_cast<std::uint32_t>(item.lineItemId));
                 if (it == totals.end()) continue;
+                // the Mac build forms localFunding * 100 first (0x100245113); the Windows build multiplies
+                // cost * localFunding first (OpenSC4 budget.md 7.2), which can round to another float
                 it->second = static_cast<std::int64_t>(static_cast<float>(it->second) +
-                                                       static_cast<float>(item.cost) * item.localFunding * 100.0f);
+                                                       static_cast<float>(item.cost) * (item.localFunding * 100.0f));
                 ++counted;
             }
         }
@@ -464,17 +466,18 @@ void cSC4DepartmentBudget::SetLocalFullFunding(cISCPropertyHolder* object, std::
     const std::int64_t delta = cost - item.cost;
     g_host->ChangeBudgetItemCost(object, item.purpose, cost);
     const std::int32_t amountDelta = static_cast<std::int32_t>(
-        std::floor(static_cast<float>(delta) * item.localFunding * 100.0f + 0.5f));
+        std::floor(static_cast<float>(delta) * (item.localFunding * 100.0f) + 0.5f));   // percent first, as the original
     const std::int64_t ideal = GetIdealMonthlyFunding();
     float percentage;
     if (ideal + delta == 0) {
         percentage = 1.0f;
     } else {
         const std::int32_t current = static_cast<std::int32_t>(
-            std::floor(static_cast<float>(ideal) * fundingPercentage_ * 100.0f + 0.5f));
+            std::floor(static_cast<float>(ideal) * (fundingPercentage_ * 100.0f) + 0.5f));
         percentage = (static_cast<float>(static_cast<std::int64_t>(current) + amountDelta) /
                       static_cast<float>(ideal + delta)) * 0.01f;
     }
+    // the original reads lineItems_[id] (operator[]) and calls through it unchecked; a missing line would crash there
     cSC4LineItem* line = GetLineItem(static_cast<std::uint32_t>(item.lineItemId));
     if (line) {
         line->AddToFullExpenses(delta);

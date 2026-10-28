@@ -69,11 +69,12 @@ public:
     virtual void AddHistory(std::uint32_t historyId, std::int64_t value) = 0;
     // budget department record for an occupant: false when it has none
     virtual bool FundingFraction(IPoliceOccupant* occupant, std::uint32_t propertyId, float& fraction) = 0;
+    // the same record's cost (budget simulator vslot 0x198 on the occupant's property holder, record +0x10)
+    virtual bool FundingInfo(IPoliceOccupant* occupant, std::uint32_t propertyId, int& cost, float& fraction) = 0;
     virtual float DepartmentBudgetFraction() = 0;          // police department +0x50
     virtual void SetStrikerGroup(IPoliceOccupant* occupant, bool add) = 0;
     virtual void SetJailbreakGroup(IPoliceOccupant* occupant, bool add) = 0;
     virtual void RegisterFundedStation(IPoliceOccupant* occupant, std::uint32_t propertyId, bool add) = 0;
-    virtual bool HasDispatchPower() = 0;
     // services forwarded to the protection base
     virtual int AvailableDispatchCount(std::uint32_t purpose) = 0;
     virtual std::vector<std::uint32_t> ActiveDispatches(std::uint32_t purpose) = 0;
@@ -182,6 +183,7 @@ public:
     void DoOccupantInserted(IPoliceOccupant* occupant);
     void DoOccupantRemoved(IPoliceOccupant* occupant);
     void DoOccupantChanged(IPoliceOccupant* occupant);
+    bool ProtectionGetStationFunding(IPoliceOccupant* station, int* cost) const;
     IPoliceOccupant* GetNearestStation(float x, float z);
     int GetTotalDispatchCount();
     static bool GetDispatchesAtStation(IPoliceOccupant* station, std::uint32_t* mask, std::uint32_t* baseCall,

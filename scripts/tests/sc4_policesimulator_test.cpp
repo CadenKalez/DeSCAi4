@@ -42,11 +42,14 @@ struct Host : IPoliceHost {
     void PostMessage(std::uint32_t m, IPoliceOccupant*) override { ++messages[m]; }
     void AddHistory(std::uint32_t id, std::int64_t v) override { history[id] = v; }
     bool FundingFraction(IPoliceOccupant*, std::uint32_t, float& f) override { f = funding; return hasRecord; }
+    std::uint32_t fundingInfoProperty = 0;
+    bool FundingInfo(IPoliceOccupant*, std::uint32_t property, int& cost, float& f) override {
+        fundingInfoProperty = property; cost = 4321; f = funding; return hasRecord;
+    }
     float DepartmentBudgetFraction() override { return funding; }
     void SetStrikerGroup(IPoliceOccupant*, bool add) override { (add ? strikerAdds : strikerRemoves)++; }
     void SetJailbreakGroup(IPoliceOccupant*, bool add) override { (add ? jailbreakAdds : jailbreakRemoves)++; }
     void RegisterFundedStation(IPoliceOccupant*, std::uint32_t, bool) override {}
-    bool HasDispatchPower() override { return true; }
     int AvailableDispatchCount(std::uint32_t) override { return 5; }
     std::vector<std::uint32_t> ActiveDispatches(std::uint32_t) override { return {}; }
     bool GetDispatch(std::uint32_t, ProtectionDispatchInfo&) override { return false; }
@@ -105,6 +108,15 @@ int main() {
     CHECK(sim.IsJail(&jail));
     sim.DoOccupantInserted(&jail);
     CHECK(sim.GetJailCount() == 1 && sim.GetJailCapacity() == 100);
+    CHECK(host.messages[kPoliceMessageStationsChanged] == 1);   // a jail is not a station: no 0xa949569a
+    sim.DoOccupantChanged(&jail);
+    CHECK(host.messages[kPoliceMessageStationsChanged] == 1);
+    sim.DoOccupantChanged(&station);
+    CHECK(host.messages[kPoliceMessageStationsChanged] == 2);
+    int cost = 0;
+    CHECK(sim.ProtectionGetStationFunding(&station, nullptr));
+    CHECK(sim.ProtectionGetStationFunding(&station, &cost) && cost == 4321 &&
+          host.fundingInfoProperty == kPoliceStationFundingProperty);
     sim.SetCriminalCount(50);
     sim.RecalculateCriminalStatistics();
     CHECK(sim.GetJailPopulation() == 50 && sim.GetJailedPercentage() == 0.5f);

@@ -263,11 +263,11 @@ public:
     void PostMessage(std::uint32_t message, IPoliceOccupant* occupant) override { Seam("IPoliceHost::PostMessage");}
     void AddHistory(std::uint32_t historyId, std::int64_t value) override { Seam("IPoliceHost::AddHistory");}
     bool FundingFraction(IPoliceOccupant* occupant, std::uint32_t propertyId, float& fraction) override { Seam("IPoliceHost::FundingFraction"); return false; }
+    bool FundingInfo(IPoliceOccupant* occupant, std::uint32_t propertyId, int& cost, float& fraction) override { Seam("IPoliceHost::FundingInfo"); return false; }
     float DepartmentBudgetFraction() override { Seam("IPoliceHost::DepartmentBudgetFraction"); return 0; }
     void SetStrikerGroup(IPoliceOccupant* occupant, bool add) override { Seam("IPoliceHost::SetStrikerGroup");}
     void SetJailbreakGroup(IPoliceOccupant* occupant, bool add) override { Seam("IPoliceHost::SetJailbreakGroup");}
     void RegisterFundedStation(IPoliceOccupant* occupant, std::uint32_t propertyId, bool add) override { Seam("IPoliceHost::RegisterFundedStation");}
-    bool HasDispatchPower() override { Seam("IPoliceHost::HasDispatchPower"); return false; }
     int AvailableDispatchCount(std::uint32_t purpose) override { Seam("IPoliceHost::AvailableDispatchCount"); return {}; }
     std::vector<std::uint32_t> ActiveDispatches(std::uint32_t purpose) override { Seam("IPoliceHost::ActiveDispatches"); return {}; }
     bool GetDispatch(std::uint32_t id, ProtectionDispatchInfo& info) override { Seam("IPoliceHost::GetDispatch"); return false; }

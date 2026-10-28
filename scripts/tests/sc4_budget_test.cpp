@@ -121,6 +121,32 @@ int main() {
           copy->GetDisplayFlags() == 6);
     copy->Release();
 
+    // full recalculation: the Mac build forms localFunding * 100 first, so 900 at 13 % sums to exactly 11700 (117);
+    // multiplying 900 * 0.13f first (the Windows order) gives 11699.999 and 116 (needs -ffp-contract=off to show)
+    {
+        auto* d2 = new cSC4DepartmentBudget();
+        d2->AddRef();
+        d2->SetDepartmentID(8);
+        CHECK(d2->Init());
+        cSC4LineItem* line = d2->CreateLineItem(30, true);
+        auto* pc = new cSCPropertyHolder();
+        pc->AddRef();
+        BudgetItem ic; ic.departmentId = 8; ic.lineItemId = 30; ic.cost = 900; ic.purpose = 3; ic.localFunding = 1.0f;
+        host.items[std::make_pair<cISCPropertyHolder*, std::uint32_t>(pc, 3)] = ic;
+        d2->AddLocallyFundedObject(pc, 3);
+        d2->SetFundingPercentage(0.13f, 0);
+        host.items[std::make_pair<cISCPropertyHolder*, std::uint32_t>(pc, 3)].localFunding = 0.13f;
+        line->SetType(0);                             // only local expense lines (type 0) are summed
+        line->SetCurrentExpenses(5);                  // must be recomputed
+        d2->RecalculateAllLineItemCurrentExpenses();
+        CHECK(line->GetCurrentExpenses() == 117);
+        d2->RemoveLocallyFundedObject(pc, 3);
+        host.items.erase(std::make_pair<cISCPropertyHolder*, std::uint32_t>(pc, 3));
+        pc->Release();
+        d2->Shutdown();
+        d2->Release();
+    }
+
     PortMemoryOStream out2;
     CHECK(dept->Write(out2));
     CHECK(dept->GetLineItem(10) == fixed && dept->GetLineItem(99) == nullptr);

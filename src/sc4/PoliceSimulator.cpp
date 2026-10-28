@@ -518,10 +518,12 @@ int cSC4PoliceSimulator::GetJailbreakBuildings(std::list<IPoliceOccupant*>& out)
 bool cSC4PoliceSimulator::IsPoliceStation(IPoliceOccupant* occupant) { return occupant->PropertyHolder()->HasProperty(kPoliceStationRadius); }
 bool cSC4PoliceSimulator::IsJail(IPoliceOccupant* occupant) { return occupant->PropertyHolder()->HasProperty(kPoliceJailCapacity); }
 
+// The three occupant hooks post 0xa949569a (data: the simulator) only for police stations: vslot 0xb0 is
+// IsPoliceStation(occupant); the decompile drops the occupant argument (it is in RSI, checked against the disassembly).
 void cSC4PoliceSimulator::DoOccupantInserted(IPoliceOccupant* occupant) {
     protection_.DoOccupantInserted(occupant);
     if (occupant->OccupantType() != kProtectionBuildingOccupantType) return;
-    if (host_->HasDispatchPower()) host_->PostMessage(kPoliceMessageStationsChanged, nullptr);
+    if (IsPoliceStation(occupant)) host_->PostMessage(kPoliceMessageStationsChanged, nullptr);
     if (!IsJail(occupant)) return;
     jails_.push_back(occupant);
     float fraction = 0.0f;
@@ -545,12 +547,22 @@ void cSC4PoliceSimulator::DoOccupantRemoved(IPoliceOccupant* occupant) {
         RecalculateCriminalStatistics();
     }
     protection_.DoOccupantRemoved(occupant);
-    if (host_->HasDispatchPower()) host_->PostMessage(kPoliceMessageStationsChanged, nullptr);
+    if (IsPoliceStation(occupant)) host_->PostMessage(kPoliceMessageStationsChanged, nullptr);
 }
 
 void cSC4PoliceSimulator::DoOccupantChanged(IPoliceOccupant* occupant) {
     protection_.DoOccupantChanged(occupant);
-    if (host_->HasDispatchPower()) host_->PostMessage(kPoliceMessageStationsChanged, nullptr);
+    if (IsPoliceStation(occupant)) host_->PostMessage(kPoliceMessageStationsChanged, nullptr);
+}
+
+// 0x1000a5826: a null cost succeeds without asking the budget; otherwise the budget record's cost (+0x10).
+bool cSC4PoliceSimulator::ProtectionGetStationFunding(IPoliceOccupant* station, int* cost) const {
+    if (!cost) return true;
+    int c = 0;
+    float f = 0.0f;
+    if (!host_->FundingInfo(station, kPoliceStationFundingProperty, c, f)) return false;
+    *cost = c;
+    return true;
 }
 
 IPoliceOccupant* cSC4PoliceSimulator::GetNearestStation(float x, float z) {
