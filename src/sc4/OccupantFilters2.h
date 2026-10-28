@@ -46,7 +46,8 @@ public:
     bool IsOccupantTypeIncluded(std::uint32_t type) override { return types_.count(type) != 0; }
     bool Write(cIGZOStream& stream) const override;
     bool Read(cIGZIStream& stream) override;
-    void AddType(std::uint32_t type) { types_.insert(type); }
+    void AddOccupantType(std::uint32_t type) { types_.insert(type); }        // @ 0x10030d52c (the original's own hash set)
+    void AddType(std::uint32_t type) { AddOccupantType(type); }
 
 private:
     std::unordered_set<std::uint32_t> types_;

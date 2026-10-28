@@ -53,6 +53,13 @@ bool cSC4LotConfigurationManager::QueryInterface(std::uint32_t iid, void** out) 
 
 // ---------------------------------------------------------------------------------- static registry
 
+void cSC4LotConfigurationManager::LoadAllStandardLotConfigurations() {
+    if (g_host)
+        g_host->ForEachLotConfigurationKey([this](const cGZPersistResourceKey& key) {
+            if (key.group == kLotConfigurationGroup) AddLotConfiguration(key);
+        });
+}
+
 bool cSC4LotConfigurationManager::StaticInit(cSC4LotConfigurationManager* manager) {
     const std::uint32_t detail = g_host ? g_host->PreferencesDetail() : 0;
     if (!g_staticInitialized || g_staticInitDetail != detail) {

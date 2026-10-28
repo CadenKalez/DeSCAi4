@@ -12,6 +12,7 @@ public:
     std::uint32_t AddRef() override { return ++refCount_; }
     std::uint32_t Release() override;
 
+    static void InsertKeyCallback(const cGZPersistResourceKey& key, void* list);   // @ 0x10032b5e8: appends to the list in `list`
     bool Insert(const cGZPersistResourceKey& key) override;
     bool Insert(const cIGZPersistResourceKeyList& other) override;
     bool Erase(const cGZPersistResourceKey& key) override;

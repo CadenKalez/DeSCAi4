@@ -37,7 +37,7 @@ int main() {
     CHECK(types.GetGZCLSID() == 0xe9c75ee8);
 
     cSC4OccupantTypesFilterHashed hashed;
-    hashed.AddType(7); hashed.AddType(8);
+    hashed.AddType(7); hashed.AddOccupantType(8); hashed.AddOccupantType(8);
     PortMemoryOStream os2;
     CHECK(hashed.Write(os2));
     cSC4OccupantTypesFilterHashed hashedRead;

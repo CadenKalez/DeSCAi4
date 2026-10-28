@@ -14,7 +14,10 @@
 // ---- value types used only by the stream operators --------------------------------------------------
 struct cRZRect { std::int32_t left = 0, top = 0, right = 0, bottom = 0; };
 struct cS3DVector2 { float x = 0, y = 0; };
-struct cS3DVector3 { float x = 0, y = 0, z = 0; };
+struct cS3DVector3 {
+    float x = 0, y = 0, z = 0;
+    void SetValues(float a, float b, float c) { x = a; y = b; z = c; }   // @ 0x100628210
+};
 // 16 bytes; SC4DrawContext keeps eleven of them as highlight colours (+0x88).
 struct cS3DVector4 { float x = 0, y = 0, z = 0, w = 0; };
 struct cS3DBoundingBox { float min[3] = {0, 0, 0}, max[3] = {0, 0, 0}; };

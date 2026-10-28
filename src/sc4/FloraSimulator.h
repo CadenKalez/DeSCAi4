@@ -77,6 +77,7 @@ public:
     static bool StaticInit();
     static bool StaticShutdown();
     static void LoadAllStandardFloraTypes();
+    static void PostFloraTypesUpdatedMessage();          // @ 0x1000c05f8
     static void AddStaticFloraDataFromResource(const cGZPersistResourceKey& key);   // AddStaticFloraDataStatic
     static bool AddStaticFloraData(cSC4StaticFloraData* data);      // takes a reference; false when the type exists
     static bool AddStaticFloraData(const cGZPersistResourceKey& key, cISCResExemplar* exemplar);

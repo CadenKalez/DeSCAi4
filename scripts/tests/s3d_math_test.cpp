@@ -145,6 +145,9 @@ int main() {
         CHECK(float(tag) == 2.5f);
     }
     {
+        cS3DVector3 sv;
+        sv.SetValues(1.5f, -2.0f, 3.25f);
+        CHECK(sv.x == 1.5f && sv.y == -2.0f && sv.z == 3.25f);
         cS3DTransform t;
         nS3D::Rotate(t, {0, 0, 2.0f}, 1.5707964f);      // the axis is normalised; a quarter turn about z
         CHECK(t.flags == 4 && t.changeCounter == 1);

@@ -130,8 +130,12 @@ void cSC4FloraSimulator::LoadAllStandardFloraTypes() {
     if (g_host) {
         g_host->EnumerateFloraResources(
             [](const cGZPersistResourceKey& key, void*) { AddStaticFloraDataFromResource(key); }, nullptr);
-        g_host->PostFloraTypesUpdated();
+        PostFloraTypesUpdatedMessage();
     }
+}
+
+void cSC4FloraSimulator::PostFloraTypesUpdatedMessage() {
+    if (g_host) g_host->PostFloraTypesUpdated();
 }
 
 void cSC4FloraSimulator::AddStaticFloraDataFromResource(const cGZPersistResourceKey& key) {

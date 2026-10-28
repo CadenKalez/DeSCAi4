@@ -23,12 +23,12 @@ bool cGZPersistResourceKeyList::Insert(const cGZPersistResourceKey& key) {
 }
 
 bool cGZPersistResourceKeyList::Insert(const cIGZPersistResourceKeyList& other) {
-    other.EnumKeys(
-        [](const cGZPersistResourceKey& key, void* self) {
-            static_cast<cGZPersistResourceKeyList*>(self)->keys_.push_back(key);
-        },
-        this);
+    other.EnumKeys(InsertKeyCallback, this);
     return true;
+}
+
+void cGZPersistResourceKeyList::InsertKeyCallback(const cGZPersistResourceKey& key, void* list) {
+    static_cast<cGZPersistResourceKeyList*>(list)->keys_.push_back(key);
 }
 
 bool cGZPersistResourceKeyList::Erase(const cGZPersistResourceKey& key) {

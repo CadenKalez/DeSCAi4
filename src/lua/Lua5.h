@@ -18,6 +18,7 @@ class cGZLua5 : public cGZLua5Thread, public ILua5Owner {
 public:
     cGZLua5(ILuaApi& api, ILuaCompat& compat, IThreadFactory* factory, const char* compatScript);
     ~cGZLua5() override;
+    cGZLua5Thread* AsIGZLua5Thread() { return this; }          // @ 0x1005e8710 (the thread base, +0x10)
 
     // ILua5Owner (the cIGZLua5 view)
     void AddRef() override { cGZLua5Thread::AddRef(); }

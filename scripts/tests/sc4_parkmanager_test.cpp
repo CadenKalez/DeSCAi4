@@ -121,6 +121,25 @@ int main() {
     CHECK(m2->Parks().size() == 1 && parkA.refs == 1);
     m2->Shutdown();
     CHECK(parkB.refs == 1 && zoo.refs == 1 && m2->Parks().empty());
+    {   // the lot lookup goes through the environment; without one there is no lot
+        struct LotEnv final : IParkEnvironment {
+            int lot = 0;
+            cSC4BudgetSimulator* Budget() override { return nullptr; }
+            cISCPropertyHolder* TuningExemplar() override { return nullptr; }
+            void SetLotCondition(cISC4Occupant*, std::uint32_t) override {}
+            void StartZooEscape(cISC4Occupant*) override {}
+            void* LotWhereOccupantResides(cISC4Occupant*) override { return &lot; }
+            void AddMonthlyAgent(cIGZMessageTarget2*) override {}
+            void RemoveAgent(cIGZMessageTarget2*) override {}
+        } lotEnv;
+        cSC4ParkManager pm;
+        IParkEnvironment* previous = ParkEnvironment();
+        SetParkEnvironment(nullptr);
+        CHECK(pm.GetLotWhereOccupantResides(nullptr) == nullptr);
+        SetParkEnvironment(&lotEnv);
+        CHECK(pm.GetLotWhereOccupantResides(nullptr) == &lotEnv.lot);
+        SetParkEnvironment(previous);
+    }
     if (failures == 0) std::puts("sc4_parkmanager: all passed");
     return failures ? 1 : 0;
 }

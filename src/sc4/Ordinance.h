@@ -10,6 +10,7 @@
 // enabled, +0xe0 monthly adjusted income.
 #pragma once
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <string>
 #include <vector>
@@ -55,6 +56,8 @@ public:
     virtual int ResidentialIncomeBase() = 0;                                          // residential simulator vslot 0x80
     virtual std::string LoadString(const cGZPersistResourceKey& key) = 0;             // cSLString
     virtual void PostMessage(std::uint32_t type, std::uint32_t id, std::uint32_t flag) = 0;
+    // Calls back for every exemplar key of the ordinance type (resource manager vslot 0x90 / 0x38 enumeration).
+    virtual void ForEachOrdinanceKey(const std::function<void(const cGZPersistResourceKey&)>&) {}
 };
 IOrdinanceHost* OrdinanceHost();
 void SetOrdinanceHost(IOrdinanceHost* host);
@@ -165,6 +168,7 @@ public:
     bool AddOrdinance(cISC4Ordinance* ordinance);
     bool RemoveOrdinance(cISC4Ordinance* ordinance);
     void CreateStandardOrdinance(const cGZPersistResourceKey& key);
+    void LoadAllStandardOrdinances();                                // @ 0x100798ecc
     void AddOrdinanceData(const cGZPersistResourceKey& key);         // AddOrdinanceDataStatic body
     cISC4Ordinance* GetOrdinanceByID(std::uint32_t id) const;
     cISC4Ordinance* GetOrdinanceByName(const std::string& name) const;

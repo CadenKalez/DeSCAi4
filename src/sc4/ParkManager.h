@@ -39,6 +39,8 @@ public:
     virtual cISCPropertyHolder* TuningExemplar() = 0;                     // exemplar 0x6534284a / 0x67cd5fa1 / 0x8a4805bc
     virtual void SetLotCondition(cISC4Occupant* occupant, std::uint32_t condition) = 0;   // lot under the occupant
     virtual void StartZooEscape(cISC4Occupant* zoo) = 0;                  // automata controllers of occupant group "zoomanji"
+    // city position -> cell, then the lot manager's lot at that cell (spCity vslot 0x2f8, spLotManager vslot 0x28); the lot is opaque here
+    virtual void* LotWhereOccupantResides(cISC4Occupant*) { return nullptr; }
     virtual void AddMonthlyAgent(cIGZMessageTarget2* target) = 0;         // simulator AddAgent(target, 6, "cSC4ParkManager", 2)
     virtual void RemoveAgent(cIGZMessageTarget2* target) = 0;
 };
@@ -68,6 +70,10 @@ public:
     void DoOccupantInserted(cISC4Occupant* occupant);
     void DoOccupantRemoved(cISC4Occupant* occupant);
     void BeginZooEscape();
+    void* GetLotWhereOccupantResides(cISC4Occupant* occupant) {             // @ 0x1000c9c92
+        IParkEnvironment* env = ParkEnvironment();
+        return env ? env->LotWhereOccupantResides(occupant) : nullptr;
+    }
 
     const std::list<cISC4Occupant*>& Parks() const { return parks_; }
     const std::list<cISC4Occupant*>& Zoos() const { return zoos_; }

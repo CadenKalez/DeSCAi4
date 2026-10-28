@@ -5,10 +5,10 @@
 # DeSCAi4
 
 <!-- progress:start -->
-![decompiled](https://img.shields.io/badge/decompiled-82.4%25-green)
+![decompiled](https://img.shields.io/badge/decompiled-82.6%25-green)
 
-`████████████████░░░░` **82.4%** — 22,149 of 26,880 game functions recovered, 4,731 remaining (details: [notes/progress.md](notes/progress.md))
-![macOS port](https://img.shields.io/badge/macOS_port-83.2%25-blue) **83.2%** of the 26,597 functions the macOS port needs (22,139 recovered; 80% = 21,278)
+`█████████████████░░░` **82.6%** — 22,212 of 26,880 game functions recovered, 4,668 remaining (details: [notes/progress.md](notes/progress.md))
+![macOS port](https://img.shields.io/badge/macOS_port-83.5%25-blue) **83.5%** of the 26,597 functions the macOS port needs (22,202 recovered; 80% = 21,278)
 <!-- progress:end -->
 
 A **hand-written C++20 decompilation of a 2003 city-building simulation game** (the retail macOS build, v1.2.1

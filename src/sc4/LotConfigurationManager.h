@@ -118,6 +118,7 @@ public:
     void GetObjectIDArray(const cSC4LotConfigurationObject* object, std::vector<std::uint32_t>& out) const;
     void InitBuildingInformation(cSC4LotConfiguration* configuration) const;
 
+    void LoadAllStandardLotConfigurations();                  // @ 0x1006c33b6
     static bool StaticInit(cSC4LotConfigurationManager* manager);
     static bool StaticShutdown();
 

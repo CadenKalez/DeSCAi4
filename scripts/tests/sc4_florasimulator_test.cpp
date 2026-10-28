@@ -156,6 +156,11 @@ int main() {
     CHECK(cSC4FloraSimulator::StaticShutdown());
     CHECK(!sim.IsFloraTypeValid(0x10));
     a->Release();
+    {
+        const int before = host.posted;
+        cSC4FloraSimulator::PostFloraTypesUpdatedMessage();
+        CHECK(host.posted == before + 1);
+    }
     b->Release();
     std::printf(failures ? "FAILED\n" : "sc4_floraSimulator: all passed\n");
     return failures ? 1 : 0;

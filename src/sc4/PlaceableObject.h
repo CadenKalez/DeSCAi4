@@ -39,6 +39,9 @@ public:
     std::uint32_t GetModels(cIS3DModelInstance** out, std::uint32_t& count) override;
     bool AddModel(cIS3DModelInstance* model) override;
     bool RemoveModel(cIS3DModelInstance* model) override;
+    // @ 0x100120752: reallocates the array that holds the models after the first one, keeping the existing entries. The
+    // port keeps every model in one vector, so this only reserves room for `capacity` models behind the first.
+    void ResizeModelInstanceArray(int capacity) { models_.reserve(static_cast<std::size_t>(capacity) + 1); }
     bool AddOverlay(std::uint32_t overlayId) override;
     void SetVisibility(bool visible) override;
     void SetOverlaysVisible(bool visible) override;

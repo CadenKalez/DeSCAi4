@@ -291,7 +291,6 @@ class,address,status,name
 (free),000000010001aa03,not started,"RZSetEnvironmentVariable(char const*, char const*)"
 (free),000000010001aa1a,not started,RZGetCurrentAppPath(cIGZString&)
 (free),000000010001ab57,not started,"RZGetCurrentAppPath(char*, unsigned int)"
-(free),000000010001b2e3,pending,"ConvertStringEncoding_via_UTF16(void const*, unsigned int, int, void*, unsigned int&, int)"
 (free),0000000100027479,not started,"spawnv(int, char const*, char* const*)"
 (free),00000001000274df,not started,"RZSpawnWait(char const*, char const*, ...)"
 (free),0000000100028c58,not started,GetTrueName(cRZString const&)
@@ -637,7 +636,6 @@ class,address,status,name
 (free),00000001007a1f87,not started,"s_sim_name_exch(void*, cIGZVariant&, bool, cISC4GameDataRegistry*)"
 (free),00000001007a787b,not started,SendMySimsChangedMessage()
 (free),00000001007ab7e0,partial,GZCOM_CreatecSC4MySimAgentSimulator()
-(free),00000001007b0fd0,pending,"SetDestWinForDragAndDropManager(cIGZWin*, unsigned int, void*, void*)"
 (free),00000001007b6a10,not started,_STREAM_kill
 AspyrDXTTools,000000010047924c,not started,"AspyrDXTTools::GetColorBlockColors(AspyrDXTTools::DXTColBlock*, AspyrDXTTools::Color8888*, AspyrDXTTools::Color8888*, AspyrDXTTools::Color8888*, AspyrDXTTools::Color8888*, bool)"
 AspyrDXTTools,0000000100479398,not started,"AspyrDXTTools::DecodeAlphaExplicit(unsigned int*, AspyrDXTTools::DXTAlphaBlockExplicit*, int, int, unsigned int)"
@@ -752,7 +750,6 @@ cGZGraphicSystem::cCanvasMessageTarget,000000010061f9ee,not started,"cGZGraphicS
 cGZGraphicSystem::cCanvasMessageTarget,000000010061f9f6,not started,cGZGraphicSystem::cCanvasMessageTarget::AddRef()
 cGZGraphicSystem::cCanvasMessageTarget,000000010061fa02,not started,cGZGraphicSystem::cCanvasMessageTarget::Release()
 cGZGraphicSystem::cCanvasMessageTarget,000000010061fa0e,not started,cGZGraphicSystem::cCanvasMessageTarget::DoMessage(cIGZMessage2*)
-cGZLua5,00000001005e8710,pending,cGZLua5::AsIGZLua5Thread()
 cGZLua5CommandGenerator,00000001006952e0,not started,cGZLua5CommandGenerator::cGZLua5CommandGenerator()
 cGZLua5CommandGenerator,00000001006953dc,not started,cGZLua5CommandGenerator::cGZLua5CommandGenerator()
 cGZLua5CommandGenerator,00000001006953e6,not started,cGZLua5CommandGenerator::~cGZLua5CommandGenerator()
@@ -783,7 +780,6 @@ cGZMiscCommandSystemSupport,0000000100708b4c,not started,cGZMiscCommandSystemSup
 cGZMiscCommandSystemSupport,0000000100708fd2,not started,cGZMiscCommandSystemSupport::Shutdown()
 cGZMiscCommandSystemSupport,0000000100709802,not started,cGZMiscCommandSystemSupport::DoMessage(cIGZMessage2*)
 cGZMiscCommandSystemSupport::MessageWaitInfo,000000010070c4b0,not started,cGZMiscCommandSystemSupport::MessageWaitInfo::MessageWaitInfo(cGZMiscCommandSystemSupport::MessageWaitInfo const&)
-cGZPersistResourceKeyList,000000010032b5e8,pending,"cGZPersistResourceKeyList::InsertKeyCallback(cGZPersistResourceKey const&, void*)"
 "cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>",000000010047724a,pending,"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>::HandleStartCdataSection()"
 "cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>",0000000100477252,pending,"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>::HandleEndCdataSection()"
 "cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>",000000010047725a,pending,"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>::HandleStartNamespaceDecl(char const*, char const*)"
@@ -835,14 +831,6 @@ cGZRegistry,0000000100063cec,not started,cGZRegistry::AddRef()
 cGZRegistry,0000000100063d12,not started,cGZRegistry::Release()
 cGZResManCOMDirector,00000001004dd19c,partial,cGZResManCOMDirector::OnStart(cIGZCOM*)
 cGZScriptCOMDirector,00000001005237fc,partial,cGZScriptCOMDirector::OnStart(cIGZCOM*)
-cGZSndMgr,00000001004a8180,pending,cGZSndMgr::UnregisterSnd(unsigned int)
-cGZSndMgr,00000001004a8600,pending,cGZSndMgr::UnregisterSnd(cIGZSnd*)
-cGZSndMgr,00000001004ab100,pending,cGZSndMgr::RemoveSndDataSourceCreator(cIGZSndDataSourceCreator*)
-cGZSndMgr,00000001004ab840,pending,cGZSndMgr::RemoveSndDataSourceCreator(unsigned int)
-cGZSndMgr,00000001004add00,pending,cGZSndMgr::UnregisterSndDataSource(unsigned int)
-cGZSndMgr,00000001004ae0d0,pending,cGZSndMgr::UnregisterSndDataSource(cIGZSndDataSource*)
-cGZSndSegmentDataSourceXA,000000010046f2de,pending,cGZSndSegmentDataSourceXA::DecompressXAFrameMono()
-cGZSndSegmentDataSourceXA,000000010046f430,pending,cGZSndSegmentDataSourceXA::DecompressXAFrameStereo()
 cGZSoundCOMDirector,000000010043cb7c,partial,cGZSoundCOMDirector::OnStart(cIGZCOM*)
 cGZSoundCOMDirector,000000010043cd56,partial,cGZSoundCOMDirector::PostAppInit()
 cGZSoundCOMDirector,000000010043ce0e,partial,cGZSoundCOMDirector::PreAppShutdown()
@@ -992,8 +980,6 @@ cGZWinKeyAcceleratorResFactory,00000001004e641e,not started,"cGZWinKeyAccelerato
 cGZWinKeyAcceleratorResFactory,00000001004e6434,not started,"cGZWinKeyAcceleratorResFactory::SerialWrite(cIGZPersistResource&, cIGZPersistDBSerialRecord&)"
 cGZWinKeyAcceleratorResFactory,00000001004e644a,not started,cGZWinKeyAcceleratorResFactory::~cGZWinKeyAcceleratorResFactory()
 cGZWinKeyAcceleratorResFactory,00000001004e6454,not started,cGZWinKeyAcceleratorResFactory::~cGZWinKeyAcceleratorResFactory()
-cGZWinListBox,0000000100274836,pending,cGZWinListBox::emit_dblclick_msg()
-cGZWinListBox,00000001002748b8,pending,cGZWinListBox::send_dblclick_msg()
 cGZWinLuaScriptBrowser,000000010064cf9c,not started,cGZWinLuaScriptBrowser::~cGZWinLuaScriptBrowser()
 cGZWinLuaScriptBrowser,000000010064cfa6,not started,cGZWinLuaScriptBrowser::~cGZWinLuaScriptBrowser()
 cGZWinLuaScriptBrowser,000000010064cfd4,not started,"cGZWinLuaScriptBrowser::SendMsg(cIGZWin*, cGZMessage&)"
@@ -1115,11 +1101,6 @@ cGZWinMgrW32::cMouseMessageTarget,0000000100621884,not started,"cGZWinMgrW32::cM
 cGZWinMgrW32::cMouseMessageTarget,000000010062188c,not started,cGZWinMgrW32::cMouseMessageTarget::AddRef()
 cGZWinMgrW32::cMouseMessageTarget,0000000100621898,not started,cGZWinMgrW32::cMouseMessageTarget::Release()
 cGZWinMgrW32::cMouseMessageTarget,00000001006218a4,not started,cGZWinMgrW32::cMouseMessageTarget::DoMessage(cIGZMessage2*)
-cGZWinOptGrp,000000010027d1aa,pending,"cGZWinOptGrp::enumfunc_enable(cIGZWin*, unsigned int, void*, void*)"
-cGZWinOptGrp,000000010027ddec,pending,cGZWinOptGrp::get_min_max_info_auto(cRZRect&)
-cGZWinOptGrp,000000010027e05e,pending,cGZWinOptGrp::get_min_max_info_manual(cRZRect&)
-cGZWinOptGrp,000000010027e29e,pending,"cGZWinOptGrp::enumfunc_btnfont(cIGZWin*, unsigned int, void*, void*)"
-cGZWinOptGrp,000000010027e476,pending,"cGZWinOptGrp::enumfunc_btncolors(cIGZWin*, unsigned int, void*, void*)"
 cGZWinProcShowProperties,000000010069be42,not started,"cGZWinProcShowProperties::cGZWinProcShowProperties(cIGZWin*, cIGZWinProcSpy*)"
 cGZWinProcShowProperties,000000010069bf08,not started,cGZWinProcShowProperties::~cGZWinProcShowProperties()
 cGZWinProcShowProperties,000000010069c040,not started,cGZWinProcShowProperties::~cGZWinProcShowProperties()
@@ -1173,12 +1154,8 @@ cGZWinRTDGraphEntry,0000000100308c5e,not started,cGZWinRTDGraphEntry::Shutdown()
 cGZWinRTDGraphEntry,0000000100308c92,not started,cGZWinRTDGraphEntry::GZPaint()
 cGZWinRTDGraphEntry,0000000100309256,not started,"cGZWinRTDGraphEntry::GZOnKeyDown(unsigned int, unsigned int)"
 cGZWinRTDGraphEntry,000000010030926c,not started,"cGZWinRTDGraphEntry::GZOnMouseMove(int, int, unsigned int)"
-cGZWinScrollbar,000000010027a420,pending,cGZWinScrollbar::scrollbar_paint_bmp()
-cGZWinScrollbar,000000010027a760,pending,cGZWinScrollbar::scrollbar_paint_flat()
 cGZWinSlider,000000010027ba24,pending,cGZWinSlider::slider_paint_flat()
 cGZWinSlider,000000010027bbea,pending,cGZWinSlider::slider_paint_bmp()
-cGZWinSpinner,0000000100279374,pending,cGZWinSpinner::paint_btns_flat(int)
-cGZWinSpinner,0000000100279444,pending,cGZWinSpinner::paint_btns_image(int)
 cGZWinSpyFinder,000000010069f82e,not started,cGZWinSpyFinder::Init()
 cGZWinSpyFinder,000000010069f8b0,not started,cGZWinSpyFinder::GZPaint()
 cGZWinSpyFinder,000000010069f95c,not started,"cGZWinSpyFinder::GZOnMouseUpL(int, int, unsigned int)"
@@ -1212,7 +1189,6 @@ cGZWinTestService,00000001004d9ff6,not started,"cGZWinTestService::GZOnMouseUpL(
 cGZWinTestService,00000001004da03a,not started,"cGZWinTestService::GZOnMouseMove(int, int, unsigned int)"
 cGZWinTestService,00000001004da094,not started,cGZWinTestService::~cGZWinTestService()
 cGZWinTestService,00000001004da0f8,not started,cGZWinTestService::~cGZWinTestService()
-cGZWinTextEdit,00000001002616dc,pending,"cGZWinTextEdit::AddUndoRecordForTextTextDeletion(cGZWinTextEdit::InsertionPosition const&, unsigned int, char const*, unsigned int)"
 cGZWinToolTip,000000010052129c,not started,cGZWinToolTip::~cGZWinToolTip()
 cGZWinToolTip,00000001005212ea,not started,cGZWinToolTip::~cGZWinToolTip()
 cGZWinToolTip,00000001005212f4,not started,cGZWinToolTip::~cGZWinToolTip()
@@ -1257,8 +1233,6 @@ cGZWinTreeViewDrag,000000010051f33e,not started,cGZWinTreeViewDrag::~cGZWinTreeV
 cGZWinTreeViewDrag,000000010051f348,not started,cGZWinTreeViewDrag::~cGZWinTreeViewDrag()
 cGarbageHeap,00000001000aca22,not started,cGarbageHeap::~cGarbageHeap()
 cGarbageHeap,00000001000aca28,not started,cGarbageHeap::~cGarbageHeap()
-cHitChannel,0000000100484456,pending,cHitChannel::HasRegisterVal(int) const
-cHitTrackPlayer,000000010047fe56,pending,cHitTrackPlayer::HasRegisterVal(int) const
 cIGZBuffer,0000000100653c72,not started,cIGZBuffer::~cIGZBuffer()
 cIGZBuffer,0000000100653c78,not started,cIGZBuffer::~cIGZBuffer()
 cIGZMessageTarget2,00000001003f5510,not started,cIGZMessageTarget2::cIGZMessageTarget2()
@@ -1380,8 +1354,6 @@ cRZNetCommandGenerator,000000010064e072,not started,"cRZNetCommandGenerator::Exe
 cRZNetCommandGenerator,000000010064e180,not started,"cRZNetCommandGenerator::WriteCommandOutput(cRZNetStreamSocket&, cRZString const&, cRZString const&, cRZNetCommandGenerator::CommunicationProtocol)"
 cRZNetCommandGenerator,000000010064e3b8,not started,"cRZNetCommandGenerator::DecodeHTTPCommandLine(cRZString const&, cRZString&)"
 cRZNetCommandGenerator,000000010064e4e0,not started,"cRZNetCommandGenerator::ReadLine(cRZNetStreamSocket&, cRZString&, cRZString&, unsigned int)"
-cRZPath,00000001006a27b0,pending,cRZPath::FixDirectoryString(cRZString&) const
-cRZPath,00000001006a285a,pending,cRZPath::FixExtensionString(cRZString&) const
 "cRZSlabAllocator<14, 16>",0000000100410dc2,not started,"cRZSlabAllocator<14, 16>::Alloc(unsigned int)"
 "cRZSlabAllocator<14, 16>",00000001004110da,not started,"cRZSlabAllocator<14, 16>::Free(void*, unsigned int)"
 "cRZSlabAllocator<14, 16>",00000001004113f0,not started,"cRZSlabAllocator<14, 16>::Clear()"
@@ -1429,21 +1401,6 @@ cRZUnknownAutoPtr<cRZSparseMatrix<WinGridRowData>>,000000010054bb32,not started,
 cRZUnknownAutoPtr<cRZSparseMatrix<WinGridRowData>>,000000010054bb4c,not started,cRZUnknownAutoPtr<cRZSparseMatrix<WinGridRowData>>::AddRef()
 cRZUnknownAutoPtr<cRZSparseMatrix<WinGridRowData>>,000000010054bb5a,not started,cRZUnknownAutoPtr<cRZSparseMatrix<WinGridRowData>>::Release()
 cRZUnknownAutoPtr<cRZSparseMatrix<WinGridRowData>>,000000010054bb9e,not started,cRZUnknownAutoPtr<cRZSparseMatrix<WinGridRowData>>::~cRZUnknownAutoPtr()
-cRZVariant,000000010004c730,pending,cRZVariant::AsUintPtr()
-cRZVariant,000000010004c760,pending,cRZVariant::AsChar()
-cRZVariant,000000010004c76a,pending,cRZVariant::AsChar() const
-cRZVariant,000000010004f962,pending,cRZVariant::SetValUintPtr(unsigned long)
-cRZVariant,000000010004fb94,pending,cRZVariant::GetValChar(char&) const
-cRZVariant,000000010004fc2a,pending,cRZVariant::GetValChar() const
-cRZVariant,000000010004fc4e,pending,cRZVariant::SetValChar(char)
-cRZVariant,000000010004fc84,pending,cRZVariant::GetValRZUnicodeChar(unsigned short&) const
-cRZVariant,000000010004fd20,pending,cRZVariant::GetValRZUnicodeChar() const
-cRZVariant,000000010004fd46,pending,cRZVariant::SetValRZUnicodeChar(unsigned short)
-cRZVariant,000000010004fd7c,pending,cRZVariant::GetValRZChar(char&) const
-cRZVariant,000000010004fe12,pending,cRZVariant::GetValRZChar() const
-cRZVariant,000000010004fef8,pending,cRZVariant::AsVoidPtr()
-cRZVariant,0000000100051c68,pending,cRZVariant::AsUintPtr() const
-cRZVariant,0000000100051c88,pending,cRZVariant::AsVoidPtr() const
 cRZWinKeyAcceleratorRes,00000001004e3d4a,not started,cRZWinKeyAcceleratorRes::~cRZWinKeyAcceleratorRes()
 cRZWinKeyAcceleratorRes,00000001004e3dd6,not started,cRZWinKeyAcceleratorRes::~cRZWinKeyAcceleratorRes()
 cRZWinKeyAcceleratorRes,00000001004e3e46,not started,cRZWinKeyAcceleratorRes::SerialRead(cIGZPersistDBSerialRecord&)
@@ -1557,14 +1514,12 @@ cS3DTextureBindingFactory,000000010030793e,not started,cS3DTextureBindingFactory
 cS3DTextureBindingFactory,00000001003079d2,not started,cS3DTextureBindingFactory::TextureDensityDebug(bool)
 cS3DTextureBindingFactory,00000001003079de,not started,cS3DTextureBindingFactory::SetLodOffset(unsigned int)
 cS3DTextureBindingFactory,00000001003079ea,not started,cS3DTextureBindingFactory::SetInternalTextureBitDepth(unsigned int)
-cS3DVector3,0000000100628210,pending,"cS3DVector3::SetValues(float, float, float)"
 cSC16ColumnGridEntryView,0000000100526a1e,not started,cSC16ColumnGridEntryView::Create()
 cSC16ColumnGridEntryView,0000000100526a74,not started,cSC16ColumnGridEntryView::Init()
 cSC16ColumnGridEntryView,000000010052743a,not started,cSC16ColumnGridEntryView::SetValue(cIGZVariant const&)
 cSC16ColumnGridEntryView,000000010052745a,not started,cSC16ColumnGridEntryView::GetValue(cIGZVariant&)
 cSC16ColumnGridEntryView,0000000100527c10,not started,cSC16ColumnGridEntryView::~cSC16ColumnGridEntryView()
 cSC16ColumnGridEntryView,0000000100527c1a,not started,cSC16ColumnGridEntryView::~cSC16ColumnGridEntryView()
-cSC43DPlaceableObject,0000000100120752,pending,cSC43DPlaceableObject::ResizeModelInstanceArray(int)
 cSC43DRender,0000000100769718,skipped,"cSC43DRender::TakeSnapshot(cIGZBuffer**, bool)"
 cSC43DRender,0000000100769760,skipped,"cSC43DRender::TakeSnapshot(cIGZString&, bool)"
 cSC4AdvisorCitySituations,00000001006a7cb4,not started,cSC4AdvisorCitySituations::~cSC4AdvisorCitySituations()
@@ -1888,8 +1843,6 @@ cSC4CrimeSimulator,00000001001fceda,not started,cSC4CrimeSimulator::~cSC4CrimeSi
 cSC4CrimeSimulator,00000001001fcf08,not started,"cSC4CrimeSimulator::QueryInterface(unsigned int, void**)"
 cSC4CrimeSimulator,00000001001fcf84,not started,cSC4CrimeSimulator::AddRef()
 cSC4CrimeSimulator,00000001001fcfbc,not started,cSC4CrimeSimulator::Release()
-cSC4CrimeSimulator,00000001001fd15c,pending,cSC4CrimeSimulator::LoadAllCrimeTypesFromExemplars()
-cSC4CrimeSimulator,00000001001ff2b8,pending,cSC4CrimeSimulator::LoadCrimeTypeFromExemplar(cGZPersistResourceKey const&)
 cSC4DecalDescription,000000010056c540,not started,cSC4DecalDescription::cSC4DecalDescription()
 cSC4DecalDescription,000000010057af84,not started,cSC4DecalDescription::cSC4DecalDescription(cSC4DecalDescription const&)
 cSC4DecalEffect,00000001005f0fd0,not started,cSC4DecalEffect::cSC4DecalEffect()
@@ -2273,7 +2226,6 @@ cSC4FireTruck,0000000100510820,not started,cSC4FireTruck::~cSC4FireTruck()
 cSC4FireTruck,000000010051084e,not started,cSC4FireTruck::GetGZCLSID() const
 cSC4FireTruck,0000000100510866,not started,cSC4FireTruck::GetDispatchType() const
 cSC4FireTruck,0000000100510a4c,not started,cSC4FireTruck::~cSC4FireTruck()
-cSC4FloraSimulator,00000001000c05f8,pending,cSC4FloraSimulator::PostFloraTypesUpdatedMessage()
 cSC4FoundationModel,000000010035f09c,not started,cSC4FoundationModel::cSC4FoundationModel()
 cSC4FoundationModel,000000010035f19c,not started,cSC4FoundationModel::~cSC4FoundationModel()
 cSC4FoundationModel,000000010035f22e,not started,cSC4FoundationModel::~cSC4FoundationModel()
@@ -2370,7 +2322,6 @@ cSC4LotConfigurationFilterByBuildingType,00000001003c1f3c,not started,cSC4LotCon
 cSC4LotConfigurationFilterMonopoly,00000001003c1d6c,not started,cSC4LotConfigurationFilterMonopoly::~cSC4LotConfigurationFilterMonopoly()
 cSC4LotConfigurationFilterMonopoly,00000001003c1d76,not started,cSC4LotConfigurationFilterMonopoly::~cSC4LotConfigurationFilterMonopoly()
 cSC4LotConfigurationFilterMonopoly,00000001003c1da4,not started,cSC4LotConfigurationFilterMonopoly::IsLotConfigurationIncluded(cISC4LotConfiguration*)
-cSC4LotConfigurationManager,00000001006c33b6,pending,cSC4LotConfigurationManager::LoadAllStandardLotConfigurations()
 cSC4MadCowPlayerWin,00000001006371f6,not started,cSC4MadCowPlayerWin::SuspendMovie()
 cSC4MadCowPlayerWin,0000000100637224,not started,cSC4MadCowPlayerWin::ResumeMovie()
 cSC4MapUtilities,00000001000d7f88,not started,"cSC4MapUtilities::FloodFillDistanceSetup(cISC4SimGrid<unsigned char>*, cISC4SimGrid<unsigned char> const*, unsigned char)"
@@ -2721,7 +2672,6 @@ cSC4NetworkORFilter,00000001002eee4c,not started,cSC4NetworkORFilter::cSC4Networ
 cSC4NetworkORFilter,00000001002eee88,not started,cSC4NetworkORFilter::IsOccupantIncluded(cISC4Occupant*)
 cSC4NetworkORFilter,00000001002eef5e,not started,cSC4NetworkORFilter::~cSC4NetworkORFilter()
 cSC4NetworkORFilter,00000001002eef68,not started,cSC4NetworkORFilter::~cSC4NetworkORFilter()
-cSC4NetworkOccupant,000000010019f878,pending,cSC4NetworkOccupant::SetPathIDOverride(unsigned int)
 cSC4NetworkOccupantModelInstance,0000000100714a7c,not started,cSC4NetworkOccupantModelInstance::cSC4NetworkOccupantModelInstance()
 cSC4NetworkOccupantModelInstance,0000000100714aec,not started,cSC4NetworkOccupantModelInstance::~cSC4NetworkOccupantModelInstance()
 cSC4NetworkOccupantModelInstance,0000000100714b56,not started,cSC4NetworkOccupantModelInstance::~cSC4NetworkOccupantModelInstance()
@@ -2863,11 +2813,7 @@ cSC4OccupantFilterByGroupAndDistance,00000001006e622c,not started,cSC4OccupantFi
 cSC4OccupantFilterByNetworkFlags,00000001006e6298,not started,cSC4OccupantFilterByNetworkFlags::IsOccupantIncluded(cISC4Occupant*)
 cSC4OccupantFilterByNetworkFlags,00000001006e6370,not started,cSC4OccupantFilterByNetworkFlags::~cSC4OccupantFilterByNetworkFlags()
 cSC4OccupantFilterByNetworkFlags,00000001006e637a,not started,cSC4OccupantFilterByNetworkFlags::~cSC4OccupantFilterByNetworkFlags()
-cSC4OccupantTypesFilterHashed,000000010030d52c,pending,cSC4OccupantTypesFilterHashed::AddOccupantType(unsigned int)
 cSC4OptionGroup,000000010076d020,not started,cSC4OptionGroup::cSC4OptionGroup()
-cSC4OrdinanceSimple,0000000100797380,pending,cSC4OrdinanceSimple::GetRetracmentIncome() const
-cSC4OrdinanceSimulator,0000000100798ecc,pending,cSC4OrdinanceSimulator::LoadAllStandardOrdinances()
-cSC4ParkManager,00000001000c9c92,pending,cSC4ParkManager::GetLotWhereOccupantResides(cISC4Occupant*)
 cSC4ParticlesDescription,00000001005b5406,not started,cSC4ParticlesDescription::cSC4ParticlesDescription()
 cSC4ParticlesDescription,00000001005b5432,not started,cSC4ParticlesDescription::operator=(cSC4ParticlesDescription const&)
 cSC4ParticlesDescription,00000001005b590c,not started,cSC4ParticlesDescription::AddRef()
@@ -4688,12 +4634,6 @@ nSC4Networks::cIntRule,000000010022d466,not started,"nSC4Networks::cIntRule::Tes
 nSC4Networks::cIntRule,000000010022d93c,not started,nSC4Networks::cIntRule::GetTypeAtOrigin() const
 nSCRes::cBlockCommandT<cSC4EffectsParser>,00000001005cbe10,not started,nSCRes::cBlockCommandT<cSC4EffectsParser>::EndBlock(nSCRes::cICommandParser*)
 nSCRes::cBlockCommandT<cSC4RuleParser>,000000010056f2bc,not started,nSCRes::cBlockCommandT<cSC4RuleParser>::EndBlock(nSCRes::cICommandParser*)
-nSGLDX7,000000010060c38c,pending,"nSGLDX7::GenerateIndexedTriListForIndexedQuads(int, unsigned int*, unsigned short*, unsigned int*, unsigned int*)"
-nSGLDX7,000000010060c49c,pending,"nSGLDX7::GenerateIndexedTriListForIndexedQuads(int, unsigned short*, unsigned short*, unsigned int*, unsigned int*)"
-nSGLDX7,000000010060c5a2,pending,"nSGLDX7::GenerateIndexedTriListForIndexedQuads(int, unsigned char*, unsigned short*, unsigned int*, unsigned int*)"
-nSGLDX7,000000010060c6ca,pending,"nSGLDX7::GenerateIndexedTriListForIndexedQuadStrip(int, unsigned int*, unsigned short*, unsigned int*, unsigned int*)"
-nSGLDX7,000000010060c7d8,pending,"nSGLDX7::GenerateIndexedTriListForIndexedQuadStrip(int, unsigned short*, unsigned short*, unsigned int*, unsigned int*)"
-nSGLDX7,000000010060c8eb,pending,"nSGLDX7::GenerateIndexedTriListForIndexedQuadStrip(int, unsigned char*, unsigned short*, unsigned int*, unsigned int*)"
 nSGLDX7::cTextureManager,000000010060b13c,not started,nSGLDX7::cTextureManager::cTextureManager()
 nSGLDX7::cTextureManager,000000010060b190,not started,nSGLDX7::cTextureManager::~cTextureManager()
 nSGLDX7::cTextureManager,000000010060b236,not started,nSGLDX7::cTextureManager::~cTextureManager()
@@ -4712,8 +4652,6 @@ nSGLDX7::cVertexBuffer,000000010060980e,not started,nSGLDX7::cVertexBuffer::Allo
 nSGLDX7::cVertexBuffer,0000000100609958,not started,nSGLDX7::cVertexBuffer::ContinueVertices(int)
 nSGLDX7::cVertexBuffer,000000010060999a,not started,nSGLDX7::cVertexBuffer::ReleaseVertices()
 nSGLDX7::cVertexBuffer,00000001006099e0,not started,"nSGLDX7::cVertexBuffer::DrawPrim(IDirect3DDevice7*, nSGLDX7::cPrimitive const&)"
-nsGZLua5CompatWithLua4,000000010069715a,pending,nsGZLua5CompatWithLua4::Lua4EventToMetaMehod(char const*)
-nsGZLua5CompatWithLua4,00000001006975f7,pending,"nsGZLua5CompatWithLua4::lua_PushUserTag(lua_State*, void*, int)"
 nsIGZLua5::cStackPosSaver,0000000100298208,not started,nsIGZLua5::cStackPosSaver::cStackPosSaver(cIGZLua5Thread*)
 nsIGZLua5::cStackPosSaver,0000000100298298,not started,nsIGZLua5::cStackPosSaver::~cStackPosSaver()
 nsTexUtil,00000001002ff2dd,not started,"nsTexUtil::SetupTexture(cIGZBuffer*, cIGZGDriver*, unsigned int&, bool, cRZRect const*, unsigned int*, unsigned int*)"
@@ -4728,5 +4666,4 @@ tCompactNeighborInfo,00000001001af470,not started,"tCompactNeighborInfo::GetRota
 tControllerTemplate,00000001000fbfea,not started,tControllerTemplate::~tControllerTemplate()
 tControllerTemplate,00000001000fc17c,not started,tControllerTemplate::~tControllerTemplate()
 tControllerTemplate,00000001000fc186,not started,tControllerTemplate::~tControllerTemplate()
-tControllerTime,00000001000f5aae,pending,tControllerTime::operator+=(float)
 tKeyEffect,00000001001e2d58,not started,tKeyEffect::tKeyEffect(tKeyEffect const&)

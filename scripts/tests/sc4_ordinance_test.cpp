@@ -8,6 +8,8 @@ class Host final : public IOrdinanceHost {
 public:
     int year = 2000, base = 1000;
     std::vector<std::uint32_t> msgs;
+    int enumerated = 0;
+    void ForEachOrdinanceKey(const std::function<void(const cGZPersistResourceKey&)>& fn) override { ++enumerated; cGZPersistResourceKey key; fn(key); fn(key); }
     cISCResExemplar* LoadExemplar(const cGZPersistResourceKey&) override { return nullptr; }
     int CurrentYear() override { return year; }
     int ResidentialIncomeBase() override { return base; }
@@ -51,6 +53,8 @@ int main() {
     CHECK(sim->SetOrdinanceAvailable(1, false) && !a->IsOn());     // unavailable forces off
     CHECK(sim->RemoveOrdinance(b) && !sim->GetOrdinanceByID(2));
     CHECK(sim->DoMessage(0x66956810));
+    sim->LoadAllStandardOrdinances();                      // walks the host's ordinance exemplars (here two keys that load nothing)
+    CHECK(host.enumerated == 1);
     a->Release(); b->Release(); sim->Release();
     std::printf(failures ? "FAILED\n" : "OK\n");
     return failures != 0;

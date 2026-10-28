@@ -123,6 +123,7 @@ public:
     void SetConnectionNodeEdgeTypes(std::uint32_t a, std::uint32_t b);
     std::uint32_t GetConnectionPathIDOverride();
     void SetConnectionPathIDOverride(std::uint32_t id);
+    void SetPathIDOverride(std::uint32_t id) { pathOverride_ = id; }              // @ 0x10019f878 (+0x1b8)
     std::uint32_t GetPathIDOverride() const { return pathOverride_; }   // 0x10019f884 (vslot 0x1a0)
     bool IsImmovable() const { return HasNetworkFlag(kNetworkFlagImmovable); }
     void SetImmovable(bool on) { on ? SetNetworkFlag(kNetworkFlagImmovable) : ClearNetworkFlag(kNetworkFlagImmovable); }

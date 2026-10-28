@@ -115,6 +115,8 @@ int main() {
     CHECK(r->GetEdgeTypesFlag(1) == 0x00000103 && r->HasNetworkFlag(kNetworkFlagPiece));
     // (property values only travel through DB segment streams; the record itself keeps the path override id)
     r->Release();
+    n->SetPathIDOverride(0x1234);
+    CHECK(n->GetPathIDOverride() == 0x1234);
     n->Release();
     std::puts(failures ? "sc4_networkoccupant: FAILED" : "sc4_networkoccupant ok");
     return failures != 0;

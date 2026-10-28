@@ -8,7 +8,8 @@ namespace {
 class Host final : public ILotConfigurationManagerHost {
 public:
     std::uint8_t PreferencesDetail() override { return 1; }
-    void ForEachLotConfigurationKey(const std::function<void(const cGZPersistResourceKey&)>&) override {}
+    int enumerated = 0;
+    void ForEachLotConfigurationKey(const std::function<void(const cGZPersistResourceKey&)>&) override { ++enumerated; }
     bool IsBuildingType(std::uint32_t id) override { return id >= 100 && id < 200; }
     bool BuildingTypeExists(std::uint32_t id) override { return IsBuildingType(id); }
     bool BuildingFootprint(std::uint32_t id, SC4Footprint& out) override {
@@ -133,6 +134,14 @@ int main() {
     CHECK(m2->Read(is));
     m2->Release();
     mgr->Release();
+    {
+        const int before = host.enumerated;
+        auto* loader = new cSC4LotConfigurationManager();
+        loader->AddRef();
+        loader->LoadAllStandardLotConfigurations();
+        CHECK(host.enumerated == before + 1);
+        loader->Release();
+    }
     cSC4LotConfigurationManager::StaticShutdown();
     std::puts(failures ? "sc4_lotconfigurationmanager: FAILED" : "sc4_lotconfigurationmanager ok");
     return failures != 0;

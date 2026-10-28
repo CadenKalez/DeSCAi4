@@ -37,6 +37,7 @@ int main() {
     Model a, b, c;
     CHECK(obj->GetModelCount() == 0 && !obj->IsVisible());
     obj->AddModel(&a); obj->AddModel(&b); obj->AddModel(&c);
+    obj->ResizeModelInstanceArray(8);                                          // keeps the models
     CHECK(obj->GetModelCount() == 3 && a.refs == 1 && b.refs == 1 && host.log.empty());
     cIS3DModelInstance* got[2]; std::uint32_t n = 2;
     CHECK(obj->GetModels(got, n) == 2 && n == 2 && got[0] == &a && got[1] == &b);

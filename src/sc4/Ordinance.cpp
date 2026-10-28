@@ -339,6 +339,10 @@ void cSC4OrdinanceSimulator::CreateStandardOrdinance(const cGZPersistResourceKey
     ordinance->Release();
 }
 
+void cSC4OrdinanceSimulator::LoadAllStandardOrdinances() {
+    if (g_host) g_host->ForEachOrdinanceKey([this](const cGZPersistResourceKey& key) { AddOrdinanceData(key); });
+}
+
 void cSC4OrdinanceSimulator::AddOrdinanceData(const cGZPersistResourceKey& key) {
     if (!g_host) return;
     cISCResExemplar* exemplar = g_host->LoadExemplar(key);
