@@ -658,7 +658,8 @@ bool cSC4PlumbingSimulator::Write(cIGZOStream& stream) const {
     stream.SetUint32(std::uint32_t(pollutedSources_));                      // +0x23c
     for (const WaterProducer& producer : producers_) WriteWaterProducer(stream, host_, producer);
     WriteWaterProducer(stream, host_, currentProducer_ ? *currentProducer_ : WaterProducer{});
-    // +0x1b0 ScanningIterator (the DoIdle flood-fill walk) is not recovered (PLUMBING-1); skipped symmetrically.
+    // +0x1b0 ScanningIterator: the live walk of DoIdle's flood fill is not modelled yet (PLUMBING-1), so a fresh one is written.
+    stream << ScanningIterator{};
     stream.SetSint64(demand_);                                              // +0x198
     stream.SetUint32(std::uint32_t(pipes_.size()));                         // +0x218
     stream.SetUint32(std::uint32_t(distressedPipes_));                      // +0x21c
@@ -707,10 +708,8 @@ bool cSC4PlumbingSimulator::Read(cIGZIStream& stream) {
     ReadWaterProducer(stream, host_, current);                              // +0x1a8 (released if unused)
     currentProducer_ = nullptr;
     if (current.occupant) current.occupant->Release();                      // drop the temporary reference
-    if (cityFile) {                                                         // +0x1b0 ScanningIterator
-        ScanningIterator scan;
-        stream >> scan;
-    }
+    ScanningIterator scan;                                                  // +0x1b0 (not kept, see PLUMBING-1)
+    stream >> scan;
     stream.GetSint64(demand_);                                              // +0x198
     std::uint32_t pipeCount = 0;
     stream.GetUint32(pipeCount);                                            // +0x218
