@@ -35,10 +35,11 @@
 //  * DoPlayerDriveTick divides the distance moved by the *unclamped* delta (0x1006cf77c).
 //  * SetDispatchState sends callback event 7; DoMessage always returns true.
 //
-// PARTIAL: the flight model proper is left for a follow-up slice (CalculateForces / UpdateOrientation / UpdatePhysics /
-// DetectCollisions / CalculateClimbSlope / CalculateDescentSlope / CalculateTurnRate / the AI_* helpers except
-// AI_TurnToVector / PickRunwayDirection / PickApproachBox / TranslatePlayerDriveCommands). Their bodies are the smallest
-// safe stand-ins and are listed under PARTIAL in notes/ledger_pending/cSC4Airplane.txt. AI_TurnToVector is recovered.
+// PARTIAL: UpdatePhysics, DetectCollisions, AI_PursueGoal, AI_GotoDestination, AI_Land, AI_TakeOff,
+// PickRunwayDirection and TranslatePlayerDriveCommands are still stand-ins; they need the runway list
+// (cSC4AircraftManager::GetRunwayList, unrecovered), the manager's weighted random choice and the audio/effect
+// services as host seams. Everything else in the flight model is transcribed from the disassembly and bit-identical to
+// the retail code in scripts/run_machine_oracle.sh airplane.
 #pragma once
 #include <cstdint>
 
@@ -104,7 +105,7 @@ public:
     void LoadPlayerDriveParameters();                                 // @ 0x1006cd5dc
     void LoadDriveParameters();                                       // @ 0x1006cd84a
 
-    // ---- flight model (PARTIAL unless noted) ---------------------------------------------------------------------
+    // ---- flight model (PARTIAL where noted) ---------------------------------------------------------------------
     float CalculateClimbSlope();                                      // @ 0x1006cdbb2
     float CalculateDescentSlope();                                    // @ 0x1006cde04
     float CalculateTurnRate();                                        // @ 0x1006ce05e
