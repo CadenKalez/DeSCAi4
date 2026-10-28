@@ -56,6 +56,9 @@ void SetTranslation(cS3DTransform& t, const cS3DVector3& position);          // 
 bool SetOrientationEuler(cS3DTransform& t, const cS3DVector3& angles);
 // Orients the +Z axis along `forward` with `up` as the up hint (columns: side, up', forward).
 void SetOrientationForwardUp(cS3DTransform& t, const cS3DVector3& forward, const cS3DVector3& up);
+// cS3DTransform::Rotate (0x1001e4198): turns the rotation by `radians` about `axis` (normalised first). The unit
+// quaternion uses the half angle times -0.5, and the rotation becomes rotation * R(quaternion).
+void Rotate(cS3DTransform& t, const cS3DVector3& axis, float radians);
 void ModelPointToWorldPoint(const cS3DTransform& t, cS3DVector3& p);
 void ModelVectorToWorldVector(const cS3DTransform& t, cS3DVector3& v);
 

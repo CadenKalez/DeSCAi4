@@ -265,6 +265,35 @@ void ResetRotation(cS3DTransform& t) {
 }
 }  // namespace
 
+void Rotate(cS3DTransform& t, const cS3DVector3& axis, float radians) {
+    const float half = radians * -0.5f;
+    const float lengthSquared = axis.z * axis.z + (axis.y * axis.y + axis.x * axis.x);
+    const float inverse = 1.0f / std::sqrt(lengthSquared);
+    const float ax = axis.x * inverse, ay = axis.y * inverse, az = axis.z * inverse;
+    const float s = std::sin(half), w = std::cos(half);
+    const float qx = ax * s, qy = ay * s, qz = az * s;
+    const float xx2 = qx * qx + qx * qx, yy2 = qy * qy + qy * qy, zz2 = qz * qz + qz * qz;
+    const float xz2 = qx * qz + qx * qz, xy2 = qx * qy + qx * qy, yz2 = qy * qz + qy * qz;
+    const float wx2 = w * qx + w * qx, wy2 = w * qy + w * qy, wz2 = w * qz + w * qz;
+    const float r0 = (1.0f - yy2) - zz2, r1 = xy2 + wz2, r2 = xz2 - wy2;
+    const float r3 = xy2 - wz2, r4 = (1.0f - xx2) - zz2, r5 = yz2 + wx2;
+    const float r6 = xz2 + wy2, r7 = yz2 - wx2, r8 = (1.0f - xx2) - yy2;
+    const float m0 = t.rotation[0][0], m1 = t.rotation[0][1], m2 = t.rotation[0][2];
+    const float m3 = t.rotation[1][0], m4 = t.rotation[1][1], m5 = t.rotation[1][2];
+    const float m6 = t.rotation[2][0], m7 = t.rotation[2][1], m8 = t.rotation[2][2];
+    t.rotation[0][0] = (m0 * r0 + m1 * r3) + m2 * r6;
+    t.rotation[0][1] = (m0 * r1 + m1 * r4) + m2 * r7;
+    t.rotation[0][2] = (m0 * r2 + m1 * r5) + m2 * r8;
+    t.rotation[1][0] = (m3 * r0 + m4 * r3) + m5 * r6;
+    t.rotation[1][1] = (m4 * r4 + m3 * r1) + m5 * r7;
+    t.rotation[1][2] = (m4 * r5 + m3 * r2) + m5 * r8;
+    t.rotation[2][0] = (m7 * r3 + m6 * r0) + m8 * r6;
+    t.rotation[2][1] = (m7 * r4 + m6 * r1) + m8 * r7;
+    t.rotation[2][2] = (m6 * r2 + m7 * r5) + m8 * r8;
+    t.flags = std::uint8_t(t.flags | kTransformRotation);
+    t.changeCounter = std::uint8_t(t.changeCounter + 1);
+}
+
 bool SetOrientationEuler(cS3DTransform& t, const cS3DVector3& a) {
     const bool hasX = IsSet(a.x), hasY = IsSet(a.y), hasZ = IsSet(a.z);
     if (!hasX && !hasY && !hasZ) return false;

@@ -144,6 +144,18 @@ int main() {
         nS3D::S3DBlockTag tag{2.5f};
         CHECK(float(tag) == 2.5f);
     }
+    {
+        cS3DTransform t;
+        nS3D::Rotate(t, {0, 0, 2.0f}, 1.5707964f);      // the axis is normalised; a quarter turn about z
+        CHECK(t.flags == 4 && t.changeCounter == 1);
+        CHECK(Near(t.rotation[0][0], 0, 1e-6f) && Near(t.rotation[0][1], -1, 1e-6f) && Near(t.rotation[1][0], 1, 1e-6f));
+        CHECK(Near(t.rotation[2][2], 1, 1e-6f) && Near(t.rotation[0][2], 0, 1e-6f));
+        cS3DTransform e;
+        nS3D::SetOrientationEuler(e, {nS3D::kOrientationUnset, nS3D::kOrientationUnset, 0.7f});
+        cS3DTransform r;
+        nS3D::Rotate(r, {0, 0, 1}, 0.7f);
+        for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) CHECK(Near(r.rotation[i][j], e.rotation[i][j], 1e-6f));
+    }
     if (failures) return 1;
     std::printf("s3d_math: all passed\n");
 }

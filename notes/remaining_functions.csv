@@ -1700,9 +1700,6 @@ cSC4Blimp,00000001006d669a,not started,"cSC4Blimp::GetNewDirection(cS3DVector3 c
 cSC4Blimp,00000001006d6790,not started,cSC4Blimp::GetModelResourceInstance()
 cSC4Blimp,00000001006d679c,not started,cSC4Blimp::~cSC4Blimp()
 cSC4Blimp,00000001006d67a6,not started,cSC4Blimp::~cSC4Blimp()
-cSC4BuildingDevelopmentSimulator,0000000100150a4c,pending,"cSC4BuildingDevelopmentSimulator::GrowthStageFitsInZone(int, unsigned int)"
-cSC4BuildingDevelopmentSimulator,0000000100150a86,pending,"cSC4BuildingDevelopmentSimulator::BuildingFitsInZone(unsigned int, unsigned int)"
-cSC4BuildingDevelopmentSimulator,0000000100150b0c,pending,"cSC4BuildingDevelopmentSimulator::IsSuitableForConstruction(cISC4BuildingDevelopmentSimulator::ConstructionProfile const&, cISC4BuildingDevelopmentSimulator::ReasonForFailure&) const"
 cSC4Bus,0000000100506b34,not started,cSC4Bus::cSC4Bus()
 cSC4Bus,0000000100506bb8,not started,cSC4Bus::Init()
 cSC4Bus,0000000100506bd0,not started,cSC4Bus::Shutdown()
@@ -2957,10 +2954,6 @@ cSC4PipeTool,00000001001936ee,not started,cSC4PipeTool::~cSC4PipeTool()
 cSC4PipeTool,0000000100193742,not started,cSC4PipeTool::~cSC4PipeTool()
 cSC4PipeTool,00000001001937ca,not started,cSC4PipeTool::NetworkGZIID()
 cSC4PlumbingSimulator,000000010009c1b8,pending,cSC4PlumbingSimulator::Init()
-cSC4PlumbingSimulator,000000010009cdd8,pending,cSC4PlumbingSimulator::Write(cIGZOStream&) const
-cSC4PlumbingSimulator,000000010009d00c,pending,"cSC4PlumbingSimulator::WriteWaterProducer(cIGZOStream&, cSC4PlumbingSimulator::WaterProducer const&) const"
-cSC4PlumbingSimulator,000000010009d0a6,pending,cSC4PlumbingSimulator::Read(cIGZIStream&)
-cSC4PlumbingSimulator,000000010009d488,pending,"cSC4PlumbingSimulator::ReadWaterProducer(cIGZIStream&, cSC4PlumbingSimulator::WaterProducer&)"
 cSC4PlumbingSimulator,000000010009d7a6,pending,cSC4PlumbingSimulator::DoIdle(unsigned int)
 cSC4PoliceHelicopterDispatchSource,00000001007246c6,not started,cSC4PoliceHelicopterDispatchSource::cSC4PoliceHelicopterDispatchSource()
 cSC4PoliceHelicopterDispatchSource,0000000100724736,not started,cSC4PoliceHelicopterDispatchSource::~cSC4PoliceHelicopterDispatchSource()
@@ -4065,20 +4058,6 @@ cSC4WinNetworkLotEditor,00000001003d659a,not started,"cSC4WinNetworkLotEditor::S
 cSC4WinNetworkLotEditor,00000001003d663e,not started,cSC4WinNetworkLotEditor::~cSC4WinNetworkLotEditor()
 cSC4WinNetworkLotEditor,00000001003d6648,not started,cSC4WinNetworkLotEditor::~cSC4WinNetworkLotEditor()
 cSC4WinNetworkLotEditor,00000001003d671c,not started,cSC4WinNetworkLotEditor::~cSC4WinNetworkLotEditor()
-cSC4WinRCI,0000000100464bfe,not started,cSC4WinRCI::cSC4WinRCI()
-cSC4WinRCI,0000000100464c68,not started,cSC4WinRCI::~cSC4WinRCI()
-cSC4WinRCI,0000000100464cde,not started,cSC4WinRCI::~cSC4WinRCI()
-cSC4WinRCI,0000000100464d4c,not started,"cSC4WinRCI::QueryInterface(unsigned int, void**)"
-cSC4WinRCI,0000000100464db6,not started,cSC4WinRCI::AddRef()
-cSC4WinRCI,0000000100464de0,not started,cSC4WinRCI::Release()
-cSC4WinRCI,0000000100464e0a,not started,cSC4WinRCI::AsIGZWin()
-cSC4WinRCI,0000000100464e14,not started,cSC4WinRCI::Init()
-cSC4WinRCI,0000000100464e78,not started,cSC4WinRCI::Shutdown()
-cSC4WinRCI,0000000100464ed8,not started,cSC4WinRCI::SetColor(unsigned int)
-cSC4WinRCI,0000000100464ee4,not started,"cSC4WinRCI::SetDemandType(unsigned int*, int)"
-cSC4WinRCI,0000000100464f14,not started,cSC4WinRCI::RethinkBar()
-cSC4WinRCI,0000000100465056,not started,cSC4WinRCI::DoMessage(cIGZMessage2*)
-cSC4WinRCI,00000001004650d6,not started,cSC4WinRCI::GZPaint()
 cSC4WinSnapshotAlbum,0000000100398e48,not started,cSC4WinSnapshotAlbum::cSC4WinSnapshotAlbum()
 cSC4WinSnapshotAlbum,0000000100399622,not started,cSC4WinSnapshotAlbum::~cSC4WinSnapshotAlbum()
 cSC4WinSnapshotAlbum,0000000100399766,not started,cSC4WinSnapshotAlbum::~cSC4WinSnapshotAlbum()
@@ -4146,25 +4125,6 @@ cSC4WinSnapshotTaker,00000001003a1236,not started,cSC4WinSnapshotTaker::TakeSnap
 cSC4WinSnapshotTaker,00000001003a15f2,not started,"cSC4WinSnapshotTaker::ShowSnapshotAlbum(bool, bool, cIGZWin*, cIGZString*)"
 cSC4WinSnapshotTaker,00000001003a17f0,not started,"cSC4WinSnapshotTaker::AddNewGraphicForCurrentCity(cSC4WinSnapshotAlbum*, cRZString const&, bool)"
 cSC4WinSnapshotTaker,00000001003a197c,not started,cSC4WinSnapshotTaker::GetGraphicInfoForCurrentCity(cRZString&)
-cSC4WinTrendBar,00000001004653c0,not started,cSC4WinTrendBar::cSC4WinTrendBar()
-cSC4WinTrendBar,000000010046549c,not started,cSC4WinTrendBar::cSC4WinTrendBar()
-cSC4WinTrendBar,00000001004654a6,not started,cSC4WinTrendBar::~cSC4WinTrendBar()
-cSC4WinTrendBar,0000000100465566,not started,cSC4WinTrendBar::~cSC4WinTrendBar()
-cSC4WinTrendBar,000000010046557e,not started,cSC4WinTrendBar::~cSC4WinTrendBar()
-cSC4WinTrendBar,00000001004655ba,not started,"cSC4WinTrendBar::QueryInterface(unsigned int, void**)"
-cSC4WinTrendBar,0000000100465624,not started,cSC4WinTrendBar::AddRef()
-cSC4WinTrendBar,000000010046564e,not started,cSC4WinTrendBar::Release()
-cSC4WinTrendBar,0000000100465678,not started,cSC4WinTrendBar::AsIGZWin()
-cSC4WinTrendBar,0000000100465682,not started,cSC4WinTrendBar::Init()
-cSC4WinTrendBar,0000000100465704,not started,cSC4WinTrendBar::Shutdown()
-cSC4WinTrendBar,0000000100465786,not started,"cSC4WinTrendBar::SetArtwork(cIGZBuffer*, cIGZBuffer*)"
-cSC4WinTrendBar,0000000100465852,not started,"cSC4WinTrendBar::SetDataSource(unsigned int, float, float)"
-cSC4WinTrendBar,00000001004659b6,not started,cSC4WinTrendBar::UpdateValue(float)
-cSC4WinTrendBar,0000000100465a4e,not started,"cSC4WinTrendBar::SetDataSource(unsigned int, cSC4ResponseCurve const&)"
-cSC4WinTrendBar,0000000100465b18,not started,cSC4WinTrendBar::DoMessage(cIGZMessage2*)
-cSC4WinTrendBar,0000000100465bda,not started,cSC4WinTrendBar::UpdateTrend(float)
-cSC4WinTrendBar,0000000100465c92,not started,cSC4WinTrendBar::InterpolateValue(float)
-cSC4WinTrendBar,0000000100465d38,not started,cSC4WinTrendBar::GZPaint()
 cSC4ZoneDeveloper,0000000100131ecc,skipped,"cSC4ZoneDeveloper::CanCreatePloppedLot(SC4Rect<int>, int, cISC4LotConfiguration*)"
 cSC4ZoneDeveloper,0000000100132396,skipped,"cSC4ZoneDeveloper::CheckLotTerrainConstraints(SC4Rect<int>, int, cISC4LotConfiguration*)"
 cSC4ZoomRotationModelChangeOccupantFilter,00000001002c119a,not started,cSC4ZoomRotationModelChangeOccupantFilter::cSC4ZoomRotationModelChangeOccupantFilter()
@@ -4627,6 +4587,9 @@ nGZLog::cOutputBackEnd,000000010068fbce,not started,nGZLog::cOutputBackEnd::Name
 nGZLog::cOutputBackEnd,000000010068fbea,not started,"nGZLog::cOutputBackEnd::QueryInterface(unsigned int, void**)"
 nGZLog::cOutputBackEnd,000000010068fc0c,not started,nGZLog::cOutputBackEnd::AddRef()
 nGZLog::cOutputBackEnd,000000010068fc1a,not started,nGZLog::cOutputBackEnd::Release()
+nS3D,000000010032aac0,pending,"nS3D::CreateTextureFromBuffer(cIGZBuffer*, cS3DTextureBinding**, cRZRect const*)"
+nS3D,000000010032acc8,pending,"nS3D::CreateTextureFromText(char const*, cS3DTextureBinding**, cIGZFont*, cRZPoint*, cS3DRect2D*, bool)"
+nS3D,000000010032b09d,pending,"nS3D::CreateCompressedTextureFromTextBuffer(cIGZBuffer*, cS3DTextureBinding**)"
 nS3D::S3DBlockTag,00000001003f4940,not started,nS3D::S3DBlockTag::S3DBlockTag(float)
 nS3D::S3DBlockTag,00000001003f7d10,not started,nS3D::S3DBlockTag::S3DBlockTag(float)
 nSC4Networks::cIntRule,0000000100190768,not started,nSC4Networks::cIntRule::~cIntRule()

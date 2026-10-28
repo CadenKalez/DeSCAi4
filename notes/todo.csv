@@ -1017,8 +1017,8 @@ CLASS-ibasic_string<char>,ibasic_string<char>,"recover 1 remaining function(s) (
 CLASS-nGZLog,nGZLog,"recover 20 remaining function(s) (20 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-nGZLog,nGZLog,finish 14 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-nRZSimGL,nRZSimGL,finish 6 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
-CLASS-nS3D,nS3D,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-nS3D,nS3D,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,done,notes/ledger.csv
+CLASS-nS3D,nS3D,"recover 5 remaining function(s) (2 not started, 3 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-nS3D,nS3D,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-nSC4Networks,nSC4Networks,"recover 10 remaining function(s) (10 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-nSC4UI,nSC4UI,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-nSC4UI,nSC4UI,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
