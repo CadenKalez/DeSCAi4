@@ -1,6 +1,9 @@
 // cSC4Airplane — see Airplane.h for the recovered layout, quirks and the PARTIAL list.
 #include "sc4/Airplane.h"
 
+// The flight model is transcribed from the disassembly in its single-precision operation order; never contract to FMA.
+#pragma STDC FP_CONTRACT OFF
+
 #include <cfloat>
 #include <cmath>
 #include <cstring>
@@ -17,6 +20,61 @@ const char* const kSkywritingEffectNames[6] = {
 };
 
 namespace {
+
+// ---- flight-model math, in the operation order of the inlined S3D code (checked against 0x1006cff10) ----------------
+// nS3D::k_one (0x100b8f8fc) over the length; the squared length sums z^2 + (y^2 + x^2).
+cS3DVector3 Normalized(const cS3DVector3& v) {
+    const float inverse = 1.0f / std::sqrt(v.z * v.z + (v.y * v.y + v.x * v.x));
+    return {v.x * inverse, v.y * inverse, v.z * inverse};
+}
+
+// The rotation terms of the quaternion (axis * sin, cos), as cS3DTransform::Rotate forms them.
+struct QuatTerms {
+    float r[9];
+    QuatTerms(const cS3DVector3& axis, float s, float w) {
+        const float qx = axis.x * s, qy = axis.y * s, qz = axis.z * s;
+        const float xx2 = qx * qx + qx * qx, yy2 = qy * qy + qy * qy, zz2 = qz * qz + qz * qz;
+        const float xz2 = qx * qz + qx * qz, xy2 = qx * qy + qx * qy, yz2 = qy * qz + qy * qz;
+        const float wx2 = w * qx + w * qx, wy2 = w * qy + w * qy, wz2 = w * qz + w * qz;
+        r[0] = (1.0f - yy2) - zz2; r[1] = xy2 + wz2; r[2] = xz2 - wy2;
+        r[3] = xy2 - wz2; r[4] = (1.0f - xx2) - zz2; r[5] = yz2 + wx2;
+        r[6] = xz2 + wy2; r[7] = yz2 - wx2; r[8] = (1.0f - xx2) - yy2;
+    }
+    cS3DVector3 Apply(const cS3DVector3& v) const {
+        return {(v.x * r[0] + v.y * r[1]) + v.z * r[2], (v.x * r[3] + v.y * r[4]) + v.z * r[5],
+                (v.x * r[6] + v.y * r[7]) + v.z * r[8]};
+    }
+};
+
+QuatTerms AxisAngle(const cS3DVector3& unitAxis, float halfAngle) {
+    return QuatTerms(unitAxis, std::sin(halfAngle), std::cos(halfAngle));   // ___sincosf_stret
+}
+
+// The plane's basis for roll / pitch / yaw, inlined identically in CalculateForces and UpdateOrientation: the model
+// facing (0x100b8fa10) and up (0x100b8fa00) axes rolled about the model's +X (0x100b8fa1c), yawed about world up
+// (0x100b8fa28), the up axis then pitched about the new nose; columns c = |up x nose|, d = nose x c, nose.
+struct AirplaneBasis {
+    cS3DVector3 yawedNose;   // before normalising (UpdateOrientation hands it back)
+    cS3DVector3 nose, c, d;
+    AirplaneBasis(float roll, float pitch, float yaw) {
+        const cS3DVector3& f = kAircraftModelFacing;
+        const cS3DVector3& u = kAircraftModelSide;
+        const QuatTerms rollTerms = AxisAngle(Normalized(kAircraftModelUp), roll * 0.5f);
+        const QuatTerms yawTerms = AxisAngle(Normalized(kAircraftWorldUp), yaw * 0.5f);
+        yawedNose = yawTerms.Apply(rollTerms.Apply(f));
+        nose = Normalized(yawedNose);
+        const cS3DVector3 up = AxisAngle(nose, pitch * -0.5f).Apply(yawTerms.Apply(rollTerms.Apply(u)));
+        c = Normalized({nose.z * up.y - nose.y * up.z, up.z * nose.x - up.x * nose.z, up.x * nose.y - up.y * nose.x});
+        d = {nose.y * c.z - nose.z * c.y, nose.z * c.x - nose.x * c.z, nose.x * c.y - nose.y * c.x};
+    }
+};
+
+// One controller step of the roll/pitch towards `target`, at most `step` either way (MINSS / CMPLTSS).
+float StepTowards(float current, float target, float step) {
+    const float delta = target - current;
+    const float capped = step < delta ? step : delta;
+    return (delta < -step ? -step : capped) + current;
+}
 
 // The kUninit3DVector sentinel (bits 0xffffffff / 0x01ffffff / 0x4f5f4090, see TrafficAutomaton.h).
 cS3DVector3 UninitVector() {
@@ -375,32 +433,179 @@ void cSC4Airplane::LoadDriveParameters() {
 // ---- PARTIAL flight model -------------------------------------------------------------------------------------------
 // The force/velocity/quaternion core is not ported yet (ledger PARTIAL); the stand-ins keep the call graph honest.
 
-// @ 0x1006cdbb2 PARTIAL: needs CalculateForces/UpdateOrientation (not ported).
-float cSC4Airplane::CalculateClimbSlope() { return 0.0f; }
-
-// @ 0x1006cde04 PARTIAL: needs CalculateForces/UpdateOrientation (not ported).
-float cSC4Airplane::CalculateDescentSlope() { return 0.0f; }
-
-// @ 0x1006ce05e PARTIAL: needs CalculateForces/UpdateOrientation (not ported).
-float cSC4Airplane::CalculateTurnRate() { return 0.0f; }
-
-// @ 0x1006cff10 PARTIAL: the 3.2 KB quaternion/lift/drag pipeline is not ported.
-cS3DVector3 cSC4Airplane::CalculateForces(const cS3DVector3& orientation, const cS3DVector3& velocity,
-                                          const AirplaneControls& controls) const {
-    (void)orientation;
-    (void)velocity;
-    (void)controls;
-    return cS3DVector3{0.0f, 0.0f, 0.0f};
+// The trial flight of CalculateClimbSlope / CalculateDescentSlope / CalculateTurnRate (inlined in each): the velocity
+// gains force / mass * 0.1 (capped at the high speed limit, zeroed below 1e-4), then UpdateOrientation turns the plane
+// for 0.1 s from the old velocity, writing the new nose into `forward`. Returns the new velocity's y change.
+bool cSC4Airplane::TrialFlightStep(cS3DVector3& velocity, cS3DVector3& forward, const AirplaneControls& controls) {
+    const cS3DVector3 force = CalculateForces(velocity, forward, controls);
+    const float inverseMass = 1.0f / mass_;
+    cS3DVector3 next = {velocity.x + inverseMass * force.x * 0.1f, velocity.y + inverseMass * force.y * 0.1f,
+                        velocity.z + inverseMass * force.z * 0.1f};
+    const float lengthSquared = next.z * next.z + (next.x * next.x + next.y * next.y);
+    const float length = std::sqrt(lengthSquared);
+    float scale = 1.0f;
+    bool rescale = false;
+    if (0.0001f > length) {
+        if (lengthSquared > 0.0f) { scale = 0.0f / length; rescale = true; }
+    } else if (lengthSquared > 0.0f && length > maxSpeedHigh_) {
+        scale = maxSpeedHigh_ / length;
+        rescale = true;
+    }
+    if (rescale) next = {next.x * scale, next.y * scale, next.z * scale};
+    const float change = std::fabs(next.y - velocity.y);
+    cS3DTransform scratch;
+    UpdateOrientation(velocity, forward, controls, scratch, 0.1f);
+    velocity = next;
+    return 0.05f > change;
 }
 
-// @ 0x1006d14e8 PARTIAL: the orientation quaternion integration is not ported; the identity transform is left alone.
-void cSC4Airplane::UpdateOrientation(const cS3DVector3& direction, cS3DVector3& velocity,
+// @ 0x1006cdbb2. Fly at the low speed limit along (0, sin, cos) of +0x3ac with full throttle and lift until the vertical
+// speed settles (at most 100 steps); the slope is |vy / vz|.
+float cSC4Airplane::CalculateClimbSlope() {
+    const float s = std::sin(climbAngle_), c = std::cos(climbAngle_);
+    cS3DVector3 forward = {0.0f, s, c};
+    cS3DVector3 velocity = {maxSpeedLow_ * 0.0f, maxSpeedLow_ * s, maxSpeedLow_ * c};
+    AirplaneControls controls;
+    controls.steer[0] = 1.0f;
+    controls.throttle = 1.0f;
+    controls.lift = 1.0f;
+    for (int steps = 100; steps != 0; --steps)
+        if (TrialFlightStep(velocity, forward, controls)) break;
+    return std::fabs(velocity.y / velocity.z);
+}
+
+// @ 0x1006cde04. The same trial flight with steer[0] = -1 and the throttle of tuning +0x454.
+float cSC4Airplane::CalculateDescentSlope() {
+    const float s = std::sin(climbAngle_), c = std::cos(climbAngle_);
+    cS3DVector3 forward = {0.0f, s, c};
+    cS3DVector3 velocity = {maxSpeedLow_ * 0.0f, maxSpeedLow_ * s, maxSpeedLow_ * c};
+    AirplaneControls controls;
+    controls.steer[0] = -1.0f;
+    controls.throttle = tunings_[7];
+    controls.lift = 1.0f;
+    for (int steps = 100; steps != 0; --steps)
+        if (TrialFlightStep(velocity, forward, controls)) break;
+    return std::fabs(velocity.y / velocity.z);
+}
+
+// @ 0x1006ce05e. A banked turn (steer {+0x458, 1, 1}, throttle +0x454): after each step the nose's turn, acos of its
+// dot product with the previous nose (clamped to [-1, 1]) over 0.1 s, until the rate changes by less than 0.001.
+float cSC4Airplane::CalculateTurnRate() {
+    const float s = std::sin(climbAngle_), c = std::cos(climbAngle_);
+    cS3DVector3 forward = {0.0f, s, c};
+    cS3DVector3 velocity = {maxSpeedLow_ * 0.0f, s * maxSpeedLow_, maxSpeedLow_ * c};
+    AirplaneControls controls;
+    controls.steer[0] = tunings_[8];
+    controls.steer[1] = 1.0f;
+    controls.steer[2] = 1.0f;
+    controls.throttle = tunings_[7];
+    controls.lift = 1.0f;
+    cS3DVector3 previous = {0.0f, s, c};
+    float rate = 0.0f;
+    for (int steps = 100; steps != 0; --steps) {
+        TrialFlightStep(velocity, forward, controls);   // its vertical-speed test is not used here
+        const float dot = previous.z * forward.z + (previous.x * forward.x + previous.y * forward.y);
+        const float capped = 1.0f < dot ? 1.0f : dot;
+        const float newRate = std::acos(dot < -1.0f ? -1.0f : capped) / 0.1f;
+        const bool settled = 0.001f > std::fabs(newRate - rate);
+        previous = forward;
+        rate = newRate;
+        if (settled) break;
+    }
+    return rate;
+}
+
+// @ 0x1006cff10. The net force on the plane for `velocity` (the nose direction `forward` stands in while it is below
+// 1e-4): the model's facing/up axes rolled (+0x378, about the model's +X), yawed (+0x380, about world up) and pitched
+// (+0x37c, about the rolled nose) give the wing's lift axis; lift follows the angle between velocity and nose through the
+// +0x3d0..+0x3dc curve, thrust is +0x3b8 * throttle along the nose (cut when reversing against the motion in states 0/1),
+// drag opposes the velocity and, below take-off speed, a ground term holds the plane up against gravity.
+cS3DVector3 cSC4Airplane::CalculateForces(const cS3DVector3& velocity, const cS3DVector3& forward,
+                                          const AirplaneControls& controls) const {
+    const float thrustScale = field3b8_;
+    const float dragReference = 0.5f * maxSpeedHigh_ * maxSpeedHigh_ * dragArea_ * 0.1f;
+    const float speed = std::sqrt(velocity.z * velocity.z + (velocity.x * velocity.x + velocity.y * velocity.y));
+    const cS3DVector3& heading = speed < 0.0001f ? forward : velocity;
+    const cS3DVector3 unitHeading = Normalized(heading);
+
+    // the model's side axis (kModelFacing x the 0x100b8fa00 axis) carried into the plane's basis is the wing axis
+    const cS3DVector3& f = kAircraftModelFacing;
+    const cS3DVector3& u = kAircraftModelSide;
+    const cS3DVector3 side = {f.y * u.z - f.z * u.y, f.z * u.x - f.x * u.z, f.x * u.y - f.y * u.x};
+    const AirplaneBasis basis(roll_, pitch_, yaw_);
+    const cS3DVector3& c = basis.c;
+    const cS3DVector3& d = basis.d;
+    const cS3DVector3& nose = basis.nose;
+    const cS3DVector3 wing = Normalized({(c.x * side.x + d.x * side.y) + nose.x * side.z,
+                                         (c.y * side.x + d.y * side.y) + nose.y * side.z,
+                                         (c.z * side.x + d.z * side.y) + nose.z * side.z});
+
+    // angle of attack between the heading and the nose, from their elevations
+    const float cosine = unitHeading.y * forward.y +
+                         std::sqrt(1.0f - unitHeading.y * unitHeading.y) * std::sqrt(1.0f - forward.y * forward.y);
+    const float capped = 1.0f < cosine ? 1.0f : cosine;
+    float angle = std::acos(cosine < -1.0f ? -1.0f : capped);
+    const float halfPi = 1.5707964f;
+    const float cappedAngle = halfPi < angle ? halfPi : angle;
+    angle = angle < 0.0f ? 0.0f : cappedAngle;
+
+    const float pressure = 0.5f * speed * speed * dragArea_ * (controls.lift * field3bc_ + 1.0f);
+    float base, slope;
+    if (approachAngle_ >= angle) {
+        base = approachScale_;
+        slope = ((approachFactor_ - approachScale_) * angle) / approachAngle_;
+    } else {
+        base = approachFactor_;
+        slope = ((field3dc_ - approachFactor_) * (angle - approachAngle_)) / (halfPi - approachAngle_);
+    }
+    const float lift = (slope + base) * pressure;
+    const float liftX = (unitHeading.z * wing.y - unitHeading.y * wing.z) * lift;
+    const float liftY = (wing.z * unitHeading.x - unitHeading.z * wing.x) * lift;
+    const float liftZ = (wing.x * unitHeading.y - wing.y * unitHeading.x) * lift;
+
+    float thrust = thrustScale * controls.throttle;
+    const int state = static_cast<int>(state_);
+    if (controls.throttle < 0.0f && state < 2 &&
+        (velocity.x * forward.x + velocity.y * forward.y) + velocity.z * forward.z < 0.0f)
+        thrust = 0.0f;   // no reverse thrust against the motion while flying or landing
+    const float gravity = -9.8f * mass_;
+    const float drag = (angle * angle + 0.1f) * ((thrustScale / dragReference) * pressure);
+    float ground = 0.0f;
+    if (state <= 1 && -gravity > liftY) ground = (1.0f - liftY / -gravity) * (speed * 0.1f * mass_);
+    const float resist = drag + ground;
+    return {((liftX + 0.0f) + forward.x * thrust) - unitHeading.x * resist,
+            ((gravity + liftY) + forward.y * thrust) - unitHeading.y * resist,
+            ((liftZ + 0.0f) + forward.z * thrust) - unitHeading.z * resist};
+}
+
+// @ 0x1006d14e8. Steps roll (+0x378) towards (steer[0] + value14) * +0x3ac and, on the ground (states 2/3), pitch
+// (+0x37c) towards steer[1] * +0x3b0, each by at most rate * delta (+0x394 / +0x398); while flying or landing the pitch
+// is reset to 0 and the roll only moves at or above the low speed limit (+0x38c). Yaw (+0x380) advances by
+// delta * steer[2] * +0x3b4, twice as fast in the air. `transform` receives the plane's basis (four rotation updates in
+// the original: change counter + 4, rotation flag) and `heading` the yawed, unnormalised nose.
+void cSC4Airplane::UpdateOrientation(const cS3DVector3& direction, cS3DVector3& heading,
                                      const AirplaneControls& controls, cS3DTransform& transform, float delta) {
-    (void)direction;
-    (void)velocity;
-    (void)controls;
-    (void)transform;
-    (void)delta;
+    const int state = static_cast<int>(state_);
+    const bool slow = state <= 1 &&
+        maxSpeedLow_ > std::sqrt(direction.z * direction.z + (direction.x * direction.x + direction.y * direction.y));
+    if (!slow) {
+        roll_ = StepTowards(roll_, (controls.steer[0] + controls.value14) * climbAngle_, climbScale_ * delta);
+        if (state > 1) pitch_ = StepTowards(pitch_, controls.steer[1] * descentAngle_, descentScale_ * delta);
+    }
+    if (slow || state <= 1) pitch_ = 0.0f;
+    float turn = delta * controls.steer[2] * takeoffAngle_;
+    if (state < 2) turn = turn + turn;
+    yaw_ = turn + yaw_;
+
+    const AirplaneBasis basis(roll_, pitch_, yaw_);
+    for (int i = 0; i < 3; ++i) {
+        transform.rotation[i][0] = (&basis.c.x)[i];
+        transform.rotation[i][1] = (&basis.d.x)[i];
+        transform.rotation[i][2] = (&basis.nose.x)[i];
+    }
+    transform.flags = std::uint8_t(transform.flags | 4);
+    transform.changeCounter = std::uint8_t(transform.changeCounter + 4);
+    heading = basis.yawedNose;
 }
 
 // @ 0x1006cee14 PARTIAL: the airport/runway-aware flight step is not ported.

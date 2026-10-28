@@ -365,9 +365,11 @@ int main() {
         CHECK_NEAR(plane->Tuning(0), 0.015f);
         CHECK_NEAR(plane->Tuning(9), 0.02f);
         CHECK_NEAR(plane->Tuning(2), 0.2f);          // constructor default, untouched by the blocks
-        CHECK_NEAR(plane->ClimbSlope(), 0.0f);       // PARTIAL helpers return 0
-        CHECK_NEAR(plane->DescentSlope(), 0.0f);
-        CHECK_NEAR(plane->TurnRate(), 0.0f);
+        // the trial flights Init runs (bit-exact against the retail code: scripts/run_machine_oracle.sh airplane);
+        // libm may differ in the last bit between architectures, so the unit test only checks the neighbourhood
+        CHECK(std::fabs(plane->ClimbSlope() - 0.522453f) < 1e-4f);
+        CHECK(std::fabs(plane->DescentSlope() - 0.670485f) < 1e-4f);
+        CHECK(std::fabs(plane->TurnRate() - 0.707178f) < 1e-4f);
         CHECK(plane->State() == AirplaneState::kFlying);
         CHECK(plane->EffectPlanepropStill() != nullptr);
         CHECK(AsFake(plane->EffectPlanepropStill())->refs == 1);

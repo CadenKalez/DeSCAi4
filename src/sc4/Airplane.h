@@ -67,11 +67,13 @@ enum class AirplaneState : std::int32_t {
     kTaxiing = 3,   // on the ground
 };
 
-// cSC4Airplane::Controls (0x10 bytes): the steering/velocity vector handed to CalculateForces and UpdateOrientation.
-// UpdatePhysics passes this+0x36c, i.e. the velocity (3 floats) followed by the roll angle at +0x378.
+// cSC4Airplane::Controls (0x18 bytes): the control inputs handed to CalculateForces and UpdateOrientation. UpdatePhysics
+// passes this+0x314 (the eased controls, +0x320 the throttle the propeller effect reads, +0x324/+0x328 the targets).
 struct AirplaneControls {
-    cS3DVector3 direction;   // +0x00
-    float value0c = 0.0f;    // +0x0c
+    float steer[3] = {0.0f, 0.0f, 0.0f};   // +0x00..+0x08 (read by UpdateOrientation)
+    float throttle = 0.0f;                 // +0x0c: thrust = +0x3b8 * throttle
+    float lift = 0.0f;                     // +0x10: lift scale 1 + lift * +0x3bc
+    float value14 = 0.0f;                  // +0x14
 };
 
 class cSC4Airplane final : public cSC4Aircraft {
@@ -103,13 +105,13 @@ public:
     void LoadDriveParameters();                                       // @ 0x1006cd84a
 
     // ---- flight model (PARTIAL unless noted) ---------------------------------------------------------------------
-    float CalculateClimbSlope();                                      // @ 0x1006cdbb2  PARTIAL
-    float CalculateDescentSlope();                                    // @ 0x1006cde04  PARTIAL
-    float CalculateTurnRate();                                        // @ 0x1006ce05e  PARTIAL
-    cS3DVector3 CalculateForces(const cS3DVector3& orientation, const cS3DVector3& velocity,
-                                const AirplaneControls& controls) const;   // @ 0x1006cff10  PARTIAL
-    void UpdateOrientation(const cS3DVector3& direction, cS3DVector3& velocity, const AirplaneControls& controls,
-                           cS3DTransform& transform, float delta);    // @ 0x1006d14e8  PARTIAL
+    float CalculateClimbSlope();                                      // @ 0x1006cdbb2
+    float CalculateDescentSlope();                                    // @ 0x1006cde04
+    float CalculateTurnRate();                                        // @ 0x1006ce05e
+    cS3DVector3 CalculateForces(const cS3DVector3& velocity, const cS3DVector3& forward,
+                                const AirplaneControls& controls) const;   // @ 0x1006cff10
+    void UpdateOrientation(const cS3DVector3& direction, cS3DVector3& heading, const AirplaneControls& controls,
+                           cS3DTransform& transform, float delta);    // @ 0x1006d14e8
     void UpdatePhysics(float delta);                                  // @ 0x1006cee14  PARTIAL
     void DetectCollisions();                                          // @ 0x1006d0cd0  PARTIAL
     void SetAirplaneState(AirplaneState state);                       // @ 0x1006d0be2
@@ -161,6 +163,11 @@ public:
     const float* ControlWish() const { return controlWish_; }
 
 private:
+    friend struct AirplaneOracleAccess;   // scripts/machine_oracle/airplane_oracle.cpp sets the flight fields
+
+    // one 0.1 s step of the trial flight the slope and turn-rate calculations run; true once `settled` says so
+    bool TrialFlightStep(cS3DVector3& velocity, cS3DVector3& forward, const AirplaneControls& controls);
+
     AirplaneState state_ = AirplaneState::kFlying;   // +0x310
     float controlWish_[4] = {0.0f, 0.0f, 0.0f, 0.0f};   // +0x314..+0x320 (AI_Stop's eased controls)
     float controlAim_ = 0.0f;                        // +0x324
