@@ -34,6 +34,7 @@ struct AirplaneOracleAccess {
         p.state_ = static_cast<AirplaneState>(state);
     }
     static int& Phase(cSC4Airplane& p) { return p.field434_; }
+    static void SetDescentSlope(cSC4Airplane& p, float slope) { p.descentSlope_ = slope; }
     static void SetTurnRate(cSC4Airplane& p, float rate) { p.turnRate_ = rate; }
     static void Controls(const cSC4Airplane& p, float* out) {
         for (int i = 0; i < 4; ++i) out[i] = p.controlWish_[i];
@@ -46,6 +47,43 @@ using namespace sc4;
 using namespace machine_oracle;
 
 namespace {
+// the city the original's services and the port's host both describe
+float gCitySize[2] = {1024.0f, 2048.0f}, gAltitudeClamp = 300.0f, gTallestBuilding = 250.0f;
+
+struct OracleAircraftHost final : IAircraftHost {
+    bool TerrainPointInBounds(float, float) override { return true; }
+    float TerrainHeight(float, float) override { return 0.0f; }
+    float WaterHeight(float, float) override { return 0.0f; }
+    float DefaultAltitude() override { return 0.0f; }
+    float AltitudeClamp() override { return gAltitudeClamp; }
+    float TallestBuildingAltitude() override { return gTallestBuilding; }
+    bool LotAltitudeAt(const cS3DVector3&, float*) override { return false; }
+    float CitySizeX() override { return gCitySize[0]; }
+    float CitySizeZ() override { return gCitySize[1]; }
+    int CityCellCountX() override { return 64; }
+    int CityCellCountZ() override { return 128; }
+    void WorldToCell(float, float, std::int32_t& x, std::int32_t& z) override { x = z = 0; }
+    bool FindFireOccupant(const cS3DVector3&, const cS3DVector3&, cISC4OccupantFilter*, cS3DVector3&) override { return false; }
+    double RandomDoubleRange(double lo, double) override { return lo; }
+    const float* FindDriveParameters(IAutomataGroupTemplate*) override { return nullptr; }
+    const float* FindPlayerDriveParameters(IAutomataGroupTemplate*) override { return nullptr; }
+    IAirplaneEffect* CreateEffect(const cRZString&) override { return nullptr; }
+    bool FindRegPointTransform(const cRZString&, cS3DVector3&) override { return false; }
+    float EffectsWaterHeight(float, float) override { return 0.0f; }
+    bool DisasterActive() override { return false; }
+    float DisasterSpeedMultiplier() override { return 1.0f; }
+    bool SimulatorPaused() override { return false; }
+    bool SimulatorAdvancing() override { return true; }
+    int ViewZoom() override { return 5; }
+    void PlayAudioEvent(std::uint32_t) override {}
+    void StopAudioEvent(std::uint32_t) override {}
+};
+float CitySizeX(void*) { return gCitySize[0]; }
+float CitySizeZ(void*) { return gCitySize[1]; }
+float AltitudeClamp(void*) { return gAltitudeClamp; }
+float TallestBuilding(void*) { return gTallestBuilding; }
+FakeService city, terrain, effects;
+
 // original offsets of the fields AirplaneOracleAccess::Set fills, in the same order
 constexpr int kOffsets[20] = {0x378, 0x37c, 0x380, 0x384, 0x388, 0x38c, 0x390, 0x3b8, 0x3bc, 0x3d0,
                               0x3d4, 0x3d8, 0x3dc, 0x394, 0x398, 0x3ac, 0x3b0, 0x3b4, 0x454, 0x458};
@@ -80,6 +118,14 @@ int main() {
     At<float>(0x100b8fa1c) = 1.0f; At<float>(0x100b8fa20) = 0.0f; At<float>(0x100b8fa24) = 0.0f;
     At<float>(0x100b8fa28) = 0.0f; At<float>(0x100b8fa2c) = 1.0f; At<float>(0x100b8fa30) = 0.0f;   // kWorldUp
 
+    city.Set(0x2c8, reinterpret_cast<const void*>(&CitySizeX));
+    city.Set(0x2d0, reinterpret_cast<const void*>(&CitySizeZ));
+    city.Install(0x100b21308);                                         // SL::spCity
+    terrain.Set(0xb0, reinterpret_cast<const void*>(&AltitudeClamp));
+    terrain.Install(0x100b21318);                                      // SL::spTerrain
+    effects.Set(0x50, reinterpret_cast<const void*>(&TallestBuilding));
+    effects.Install(0x100b21368);                                      // SL::spEffectsManager
+
     using Forces = void* (*)(float*, void*, const float*, const float*, const float*);
     using Orientation = void (*)(void*, const float*, float*, const float*, void*, float);
     using Scalar = float (*)(void*);
@@ -90,7 +136,8 @@ int main() {
 
     std::mt19937 rng(20261028);
     std::uniform_real_distribution<float> angle(-1.6f, 1.6f), unit(-1.0f, 1.0f), speed(-80.0f, 80.0f);
-    cSC4Airplane port;
+    OracleAircraftHost host;
+    cSC4Airplane port(nullptr, &host);
     const int trials = 4000;
     for (int t = 0; t < trials; ++t) {
         // realistic parameters around the constructor defaults, plus random flight attitude
@@ -211,6 +258,30 @@ int main() {
             std::memcpy(&phaseOriginal, original + 0x434, 4);
             Check(phaseOriginal == AirplaneOracleAccess::Phase(port), "AI_FollowVectorAndTurn phase", t);
             compare(fa, fb, "AI_FollowVectorAndTurn");
+        }
+
+        {   // PickApproachBox: runway end anywhere around the city, any heading, random city
+            gCitySize[0] = 500.0f + 1500.0f * (unit(rng) + 1);
+            gCitySize[1] = 500.0f + 1500.0f * (unit(rng) + 1);
+            gAltitudeClamp = 200.0f + 100.0f * unit(rng);
+            gTallestBuilding = 200.0f + 150.0f * unit(rng);
+            const float slope = 0.05f + 0.2f * (unit(rng) + 1);
+            std::memcpy(original + 0x3c8, &slope, 4);
+            AirplaneOracleAccess::SetDescentSlope(port, slope);
+            const float end[3] = {gCitySize[0] * (unit(rng) + 1) * 0.6f, 20.0f + 30.0f * unit(rng),
+                                  gCitySize[1] * (unit(rng) + 1) * 0.6f};
+            float dir[3] = {unit(rng), 0.0f, unit(rng)};
+            const float len = std::sqrt(dir[0] * dir[0] + dir[2] * dir[2]);
+            dir[0] /= len; dir[2] /= len;
+            Function<void (*)(void*, const float*, const float*)>(0x1006d2932)(original, end, dir);
+            port.PickApproachBox({end[0], end[1], end[2]}, {dir[0], dir[1], dir[2]});
+            bool same = true;
+            for (int i = 0; i < 4; ++i) {
+                const cS3DVector3& q = port.ApproachPoint(i);
+                same = same && Same(Field(0x3f4 + 12 * i), q.x) && Same(Field(0x3f8 + 12 * i), q.y) &&
+                       Same(Field(0x3fc + 12 * i), q.z);
+            }
+            Check(same, "PickApproachBox", t);
         }
 
         if (t % 8 == 0) {

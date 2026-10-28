@@ -805,10 +805,43 @@ void cSC4Airplane::PickRunwayDirection(const cS3DVector3& position, cS3DVector3&
     (void)flag;
 }
 
-// @ 0x1006d2932 PARTIAL: needs the runway list and cS4AircraftManager helpers (unrecovered).
-void cSC4Airplane::PickApproachBox(const cS3DVector3& start, const cS3DVector3& end) {
-    (void)start;
-    (void)end;
+// @ 0x1006d2932. The approach box behind the runway end `runwayEnd` along `direction`: points_[3] is the runway end,
+// [2] a leg back along the runway, [1] a leg across it (towards the city centre), [0] a leg forward again, each clipped
+// to the world; the heights descend at +0x3c8 along the box. The leg is the climb from the runway end to the higher of
+// the terrain clamp and the tallest building at that slope, capped by the larger city side, at least 500.
+void cSC4Airplane::PickApproachBox(const cS3DVector3& runwayEnd, const cS3DVector3& direction) {
+    IAircraftHost* host = HostFor(*this);
+    if (!host) return;
+    const float sizeX = host->CitySizeX(), sizeZ = host->CitySizeZ();
+    const float largerSide = sizeZ > sizeX ? sizeZ : sizeX;   // MAXSS
+    const float centreX = sizeX * 0.5f, centreZ = sizeZ * 0.5f;
+    const cS3DVector3& w = kAircraftWorldUp;
+    const cS3DVector3& d = direction;
+    cS3DVector3 across = Normalized({w.z * d.y - w.y * d.z, d.z * w.x - w.z * d.x, d.x * w.y - w.x * d.y});
+    const float facing = (centreZ - runwayEnd.z) * across.z +
+                         ((0.0f - runwayEnd.y) * across.y + (centreX - runwayEnd.x) * across.x);
+    if (!(facing > 0.0f)) across = {-across.x, -across.y, -across.z};
+    const float terrain = host->AltitudeClamp();
+    const float buildings = host->TallestBuildingAltitude();
+    const float ceiling = buildings > terrain ? buildings : terrain;   // MAXSS
+    const float climb = (ceiling - runwayEnd.y) / descentSlope_;
+    const float leg = climb < 500.0f ? 500.0f : (largerSide < climb ? largerSide : climb);
+    auto distance = [](const cS3DVector3& a, const cS3DVector3& b) {
+        const float dx = a.x - b.x, dy = a.y - b.y, dz = a.z - b.z;
+        return std::sqrt(dz * dz + (dy * dy + dx * dx));
+    };
+    points_[3] = runwayEnd;
+    cS3DVector3 p = {runwayEnd.x - d.x * leg, runwayEnd.y - d.y * leg, runwayEnd.z - d.z * leg};
+    ClipToWorld(p);
+    float run = distance(p, points_[3]) + 0.0f;
+    points_[2] = {p.x, descentSlope_ * run + runwayEnd.y, p.z};
+    p = {across.x * leg + p.x, across.y * leg + points_[2].y, leg * across.z + p.z};
+    ClipToWorld(p);
+    run = distance(p, points_[2]) + run;
+    points_[1] = {p.x, descentSlope_ * run + runwayEnd.y, p.z};
+    p = {d.x * leg + p.x, d.y * leg + points_[1].y, d.z * leg + p.z};
+    ClipToWorld(p);
+    points_[0] = {p.x, (distance(p, points_[1]) + run) * descentSlope_ + runwayEnd.y, p.z};
 }
 
 // @ 0x1006cf894 PARTIAL: the player-drive control translation (1.6 KB, effect timers + tween) is not ported.

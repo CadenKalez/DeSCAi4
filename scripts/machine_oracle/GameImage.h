@@ -56,4 +56,13 @@ inline void BindStub(std::uint64_t stub, const void* function) {
 
 template <typename F> F Function(std::uint64_t address) { return reinterpret_cast<F>(Here(address)); }
 
+// A stand-in for a service the original reaches through a global pointer (SL::sp*): an object whose first qword points
+// at a slot table. Set(offset, fn) fills the slot the original calls as `call [vtable + offset]` (fn takes `this`).
+struct FakeService {
+    void** vtable = slots;
+    void* slots[256] = {};
+    void Set(int offset, const void* fn) { slots[offset / 8] = const_cast<void*>(fn); }
+    void Install(std::uint64_t global) { At<void*>(global) = this; }
+};
+
 }  // namespace machine_oracle

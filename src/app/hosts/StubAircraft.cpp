@@ -12,6 +12,7 @@ struct StubAircraft final : IAircraftHost {
     float WaterHeight(float x, float z) override { return {}; }
     float DefaultAltitude() override { return {}; }
     float AltitudeClamp() override { return {}; }
+    float TallestBuildingAltitude() override { return {}; }
     bool LotAltitudeAt(const cS3DVector3& position, float* altitude) override { return {}; }
     float CitySizeX() override { return {}; }
     float CitySizeZ() override { return {}; }

@@ -180,6 +180,7 @@ struct FakeAircraftHost final : IAircraftHost {
     float WaterHeight(float, float) override { return waterHeight; }
     float DefaultAltitude() override { return defaultAltitude; }
     float AltitudeClamp() override { return altitudeClamp; }
+    float TallestBuildingAltitude() override { return 0.0f; }
     bool LotAltitudeAt(const cS3DVector3&, float* altitude) override {
         if (!lotFound) return false;
         *altitude = lotAltitude;

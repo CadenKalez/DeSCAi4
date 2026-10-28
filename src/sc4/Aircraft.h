@@ -70,6 +70,7 @@ public:
     virtual float WaterHeight(float x, float z) = 0;              // slot 0xf8
     virtual float DefaultAltitude() = 0;                          // slot 0xe8 (query failed)
     virtual float AltitudeClamp() = 0;                            // slot 0xb0 (ClipToWorld's upper margin base)
+    virtual float TallestBuildingAltitude() = 0;                  // SL::spEffectsManager slot 0x50
     // ---- SL::spLotManager -------------------------------------------------------------------------------------------
     // lot manager slot 0x30 finds the lot at the point; if the lot's slot 0x60 has bit 0 set its slot 0x80 is the
     // altitude GetAltitude returns instead of the terrain/water maximum.
