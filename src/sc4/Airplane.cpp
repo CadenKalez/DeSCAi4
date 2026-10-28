@@ -797,12 +797,45 @@ bool cSC4Airplane::AI_FollowRay(const cS3DVector3& origin, const cS3DVector3& di
     return 5.0f > distance && 0.10471976f > angle;
 }
 
-// @ 0x1006d258c PARTIAL: needs cSC4AircraftManager::GetRunwayList (unrecovered).
-void cSC4Airplane::PickRunwayDirection(const cS3DVector3& position, cS3DVector3& start, cS3DVector3& end, bool flag) {
-    (void)position;
-    (void)start;
-    (void)end;
-    (void)flag;
+// @ 0x1006d258c. Picks a runway end near `position`: each end of each runway (pairs in the manager's list) is weighted
+// by its clearance looking down the runway, less the climb slope (the descent slope when `landing`), floored at 0; the
+// manager's random source picks one weighted end. Taking off starts at the other end and heads towards the pick;
+// landing starts at the pick. +0x428 keeps the end headed for. No runway pair: the plane removes itself (vslot 0x68).
+void cSC4Airplane::PickRunwayDirection(const cS3DVector3& position, cS3DVector3& start, cS3DVector3& direction,
+                                       bool landing) {
+    IAircraftHost* host = HostFor(*this);
+    if (!host) return;
+    std::vector<cS3DVector3> ends;
+    host->GetRunwayList(position, ends);
+    const int count = static_cast<int>(ends.size());
+    if (count < 2 || (count & 1) != 0) {
+        Remove(false);
+        return;
+    }
+    std::vector<double> weights(static_cast<std::size_t>(count), 0.0);
+    const float margin = landing ? descentSlope_ : climbSlope_;
+    for (std::size_t i = 0; i < ends.size(); i += 2) {
+        const cS3DVector3& a = ends[i];
+        const cS3DVector3& b = ends[i + 1];
+        const float dx = b.x - a.x, dz = b.z - a.z;
+        const float inverse = 1.0f / std::sqrt((dx * dx + 0.0f) + dz * dz);
+        const cS3DVector3 along = {dx * inverse, inverse * 0.0f, dz * inverse};
+        const float fromA = EvaluateClearance(a, along) - margin;
+        weights[i] = fromA > 0.0f ? fromA : 0.0f;   // MAXSS with 0
+        const float fromB = EvaluateClearance(b, {-along.x, -along.y, -along.z}) - margin;
+        weights[i + 1] = fromB > 0.0f ? fromB : 0.0f;
+    }
+    const std::uint32_t pick = host->RandomWeightedChoice(static_cast<std::uint32_t>(count), weights.data());
+    const std::uint32_t other = pick - 1 + (~(pick * 2) & 2);   // the runway's other end
+    const cS3DVector3 from = ends[landing ? pick : other];
+    const cS3DVector3 to = ends[landing ? other : pick];
+    start = from;
+    const float dx = to.x - from.x, dy = to.y - from.y, dz = to.z - from.z;
+    const float inverse = 1.0f / std::sqrt(dz * dz + (dy * dy + dx * dx));
+    direction = {dx * inverse, dy * inverse, inverse * dz};
+    field428_ = to.x;
+    field42c_ = to.y;
+    field430_ = to.z;
 }
 
 // @ 0x1006d2932. The approach box behind the runway end `runwayEnd` along `direction`: points_[3] is the runway end,

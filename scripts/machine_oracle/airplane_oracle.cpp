@@ -6,6 +6,7 @@
 #include <cstring>
 #include <dlfcn.h>
 #include <random>
+#include <vector>
 
 #include "GameImage.h"
 #include "sc4/Airplane.h"
@@ -35,6 +36,7 @@ struct AirplaneOracleAccess {
     }
     static int& Phase(cSC4Airplane& p) { return p.field434_; }
     static void SetDescentSlope(cSC4Airplane& p, float slope) { p.descentSlope_ = slope; }
+    static void SetSlopes(cSC4Airplane& p, float climb, float descent) { p.climbSlope_ = climb; p.descentSlope_ = descent; }
     static void SetTurnRate(cSC4Airplane& p, float rate) { p.turnRate_ = rate; }
     static void Controls(const cSC4Airplane& p, float* out) {
         for (int i = 0; i < 4; ++i) out[i] = p.controlWish_[i];
@@ -50,11 +52,20 @@ namespace {
 // the city the original's services and the port's host both describe
 float gCitySize[2] = {1024.0f, 2048.0f}, gAltitudeClamp = 300.0f, gTallestBuilding = 250.0f;
 
+// a sloped terrain with a lake level, an effect-height field and a runway list, the same for both sides
+bool InBounds(float x, float z) { return x >= 0.0f && z >= 0.0f && x <= gCitySize[0] && z <= gCitySize[1]; }
+float Height(float x, float z) { return 20.0f + 0.013f * x - 0.021f * z; }
+float Water(float x, float) { return 15.0f + 0.001f * x; }
+float EffectHeight(float x, float z) { return Height(x, z) + 0.05f * (x - z); }
+std::vector<cS3DVector3> gRunways;
+std::uint32_t gPick = 0;
+std::vector<double> gWeightsOriginal, gWeightsPort;
+
 struct OracleAircraftHost final : IAircraftHost {
-    bool TerrainPointInBounds(float, float) override { return true; }
-    float TerrainHeight(float, float) override { return 0.0f; }
-    float WaterHeight(float, float) override { return 0.0f; }
-    float DefaultAltitude() override { return 0.0f; }
+    bool TerrainPointInBounds(float x, float z) override { return InBounds(x, z); }
+    float TerrainHeight(float x, float z) override { return Height(x, z); }
+    float WaterHeight(float x, float z) override { return Water(x, z); }
+    float DefaultAltitude() override { return 7.0f; }
     float AltitudeClamp() override { return gAltitudeClamp; }
     float TallestBuildingAltitude() override { return gTallestBuilding; }
     bool LotAltitudeAt(const cS3DVector3&, float*) override { return false; }
@@ -69,7 +80,12 @@ struct OracleAircraftHost final : IAircraftHost {
     const float* FindPlayerDriveParameters(IAutomataGroupTemplate*) override { return nullptr; }
     IAirplaneEffect* CreateEffect(const cRZString&) override { return nullptr; }
     bool FindRegPointTransform(const cRZString&, cS3DVector3&) override { return false; }
-    float EffectsWaterHeight(float, float) override { return 0.0f; }
+    float EffectsWaterHeight(float x, float z) override { return EffectHeight(x, z); }
+    void GetRunwayList(const cS3DVector3&, std::vector<cS3DVector3>& out) override { out = gRunways; }
+    std::uint32_t RandomWeightedChoice(std::uint32_t count, const double* weights) override {
+        gWeightsPort.assign(weights, weights + count);
+        return gPick;
+    }
     bool DisasterActive() override { return false; }
     float DisasterSpeedMultiplier() override { return 1.0f; }
     bool SimulatorPaused() override { return false; }
@@ -82,7 +98,25 @@ float CitySizeX(void*) { return gCitySize[0]; }
 float CitySizeZ(void*) { return gCitySize[1]; }
 float AltitudeClamp(void*) { return gAltitudeClamp; }
 float TallestBuilding(void*) { return gTallestBuilding; }
-FakeService city, terrain, effects;
+FakeService city, terrain, effects, effectMaps, lots, originalVtable;
+bool InBoundsSlot(void*, float x, float z) { return InBounds(x, z); }
+float HeightSlot(void*, float x, float z) { return Height(x, z); }
+float WaterSlot(void*, float x, float z) { return Water(x, z); }
+float DefaultSlot(void*) { return 7.0f; }
+void* NoLot(void*, const float*) { return nullptr; }
+void* EffectMapsSlot(void*) { return &effectMaps; }
+float EffectHeightSlot(void*, float x, float z, int) { return EffectHeight(x, z); }
+int managerObject;
+void* ManagerSlot(void*) { return &managerObject; }
+void RunwayListHook(void*, const float*, std::vector<cS3DVector3>* out) { *out = gRunways; }
+std::uint32_t WeightedChoiceHook(void*, std::uint32_t count, const double* weights) {
+    gWeightsOriginal.assign(weights, weights + count);
+    return gPick;
+}
+int gOriginalRemoved = 0;
+void RemoveSlot(void*, bool) { ++gOriginalRemoved; }
+void* NewHook(std::size_t n) { return ::operator new(n); }
+void DeleteHook(void* p) { ::operator delete(p); }
 
 // original offsets of the fields AirplaneOracleAccess::Set fills, in the same order
 constexpr int kOffsets[20] = {0x378, 0x37c, 0x380, 0x384, 0x388, 0x38c, 0x390, 0x3b8, 0x3bc, 0x3d0,
@@ -107,6 +141,7 @@ void Check(bool ok, const char* what, int trial) {
 }  // namespace
 
 int main() {
+    InstallCrashReport();
     if (!MapGame("game-binaries/MacOS/Sim City 4 Deluxe Editionsub")) return 2;
     BindStub(0x10092af3a, dlsym(RTLD_DEFAULT, "__sincosf_stret"));
     BindStub(0x10092af8e, reinterpret_cast<const void*>(static_cast<float (*)(float)>(&acosf)));
@@ -124,7 +159,25 @@ int main() {
     terrain.Set(0xb0, reinterpret_cast<const void*>(&AltitudeClamp));
     terrain.Install(0x100b21318);                                      // SL::spTerrain
     effects.Set(0x50, reinterpret_cast<const void*>(&TallestBuilding));
+    effects.Set(0x48, reinterpret_cast<const void*>(&EffectMapsSlot));
     effects.Install(0x100b21368);                                      // SL::spEffectsManager
+    effectMaps.Set(0x30, reinterpret_cast<const void*>(&EffectHeightSlot));
+    terrain.Set(0x58, reinterpret_cast<const void*>(&InBoundsSlot));
+    terrain.Set(0x60, reinterpret_cast<const void*>(&HeightSlot));
+    terrain.Set(0xe8, reinterpret_cast<const void*>(&DefaultSlot));
+    terrain.Set(0xf8, reinterpret_cast<const void*>(&WaterSlot));
+    lots.Set(0x30, reinterpret_cast<const void*>(&NoLot));
+    lots.Install(0x100b21340);                                         // SL::spLotManager
+    city.Set(0x168, reinterpret_cast<const void*>(&ManagerSlot));      // the aircraft manager
+    originalVtable.Set(0x68, reinterpret_cast<const void*>(&RemoveSlot));   // cSC4Automaton::Remove
+    if (!Hook(0x10050175a, reinterpret_cast<const void*>(&RunwayListHook)) ||      // cSC4AircraftManager::GetRunwayList
+        !Hook(0x10003da38, reinterpret_cast<const void*>(&WeightedChoiceHook))) {  // RandomUint32WeightedChoice
+        std::perror("hook");
+        return 2;
+    }
+    BindStub(0x10092aebc, reinterpret_cast<const void*>(&NewHook));
+    BindStub(0x10092aeb0, reinterpret_cast<const void*>(&DeleteHook));
+    BindStub(0x10092b432, reinterpret_cast<const void*>(&memcpy));
 
     using Forces = void* (*)(float*, void*, const float*, const float*, const float*);
     using Orientation = void (*)(void*, const float*, float*, const float*, void*, float);
@@ -260,6 +313,7 @@ int main() {
             compare(fa, fb, "AI_FollowVectorAndTurn");
         }
 
+        gStage = "PickApproachBox";
         {   // PickApproachBox: runway end anywhere around the city, any heading, random city
             gCitySize[0] = 500.0f + 1500.0f * (unit(rng) + 1);
             gCitySize[1] = 500.0f + 1500.0f * (unit(rng) + 1);
@@ -282,6 +336,44 @@ int main() {
                        Same(Field(0x3fc + 12 * i), q.z);
             }
             Check(same, "PickApproachBox", t);
+        }
+
+        {   // PickRunwayDirection: one to four runways inside the city, a random pick
+            const int runways = 1 + static_cast<int>(rng() % 4);
+            gRunways.clear();
+            for (int r = 0; r < 2 * runways; ++r)
+                gRunways.push_back({gCitySize[0] * 0.5f * (unit(rng) + 1), 10.0f + 5.0f * unit(rng),
+                                    gCitySize[1] * 0.5f * (unit(rng) + 1)});
+            if (t % 50 == 0) gRunways.pop_back();   // odd list: the plane removes itself
+            gPick = static_cast<std::uint32_t>(rng() % gRunways.size());
+            const float climbSlope = 0.1f * (unit(rng) + 1), descentSlope = 0.1f * (unit(rng) + 1);
+            std::memcpy(original + 0x3c4, &climbSlope, 4);
+            std::memcpy(original + 0x3c8, &descentSlope, 4);
+            AirplaneOracleAccess::SetSlopes(port, climbSlope, descentSlope);
+            void* vtable = originalVtable.slots;   // the object's first qword is its slot table
+            std::memcpy(original, &vtable, 8);
+            const bool landing = rng() & 1;
+            const float where[3] = {100.0f, 50.0f, 100.0f};
+            float startO[3] = {0, 0, 0}, dirO[3] = {0, 0, 0};
+            gOriginalRemoved = 0;
+            gWeightsOriginal.clear();
+            gWeightsPort.clear();
+            gStage = "PickRunwayDirection original";
+            Function<void (*)(void*, const float*, float*, float*, bool)>(0x1006d258c)(original, where, startO, dirO,
+                                                                                         landing);
+            cS3DVector3 startP, dirP;
+            if (gRunways.size() % 2 == 0) {
+                port.PickRunwayDirection({where[0], where[1], where[2]}, startP, dirP, landing);
+                const cS3DVector3 target = port.RunwayTarget();
+                bool same = gOriginalRemoved == 0 && gWeightsOriginal.size() == gWeightsPort.size() &&
+                            std::memcmp(gWeightsOriginal.data(), gWeightsPort.data(), 8 * gWeightsPort.size()) == 0 &&
+                            Same(startO[0], startP.x) && Same(startO[1], startP.y) && Same(startO[2], startP.z) &&
+                            Same(dirO[0], dirP.x) && Same(dirO[1], dirP.y) && Same(dirO[2], dirP.z) &&
+                            Same(Field(0x428), target.x) && Same(Field(0x42c), target.y) && Same(Field(0x430), target.z);
+                Check(same, "PickRunwayDirection", t);
+            } else {
+                Check(gOriginalRemoved == 1, "PickRunwayDirection odd list", t);
+            }
         }
 
         if (t % 8 == 0) {

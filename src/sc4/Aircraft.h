@@ -27,6 +27,7 @@
 // vtable slot is in each comment). The automaton-level services stay on IAutomatonHost (Automaton.h).
 #pragma once
 #include <cstdint>
+#include <vector>
 
 #include "gz/StreamOps.h"
 #include "sc4/Automaton.h"
@@ -71,6 +72,10 @@ public:
     virtual float DefaultAltitude() = 0;                          // slot 0xe8 (query failed)
     virtual float AltitudeClamp() = 0;                            // slot 0xb0 (ClipToWorld's upper margin base)
     virtual float TallestBuildingAltitude() = 0;                  // SL::spEffectsManager slot 0x50
+    // cSC4AircraftManager (SL::spCity slot 0x168): the runway end points near `position`, two per runway
+    virtual void GetRunwayList(const cS3DVector3& position, std::vector<cS3DVector3>& out) = 0;
+    // cSC4AircraftManager::mpRandom->RandomUint32WeightedChoice(count, weights)
+    virtual std::uint32_t RandomWeightedChoice(std::uint32_t count, const double* weights) = 0;
     // ---- SL::spLotManager -------------------------------------------------------------------------------------------
     // lot manager slot 0x30 finds the lot at the point; if the lot's slot 0x60 has bit 0 set its slot 0x80 is the
     // altitude GetAltitude returns instead of the terrain/water maximum.

@@ -13,6 +13,8 @@ struct StubAircraft final : IAircraftHost {
     float DefaultAltitude() override { return {}; }
     float AltitudeClamp() override { return {}; }
     float TallestBuildingAltitude() override { return {}; }
+    void GetRunwayList(const cS3DVector3& position, std::vector<cS3DVector3>& out) override {}
+    std::uint32_t RandomWeightedChoice(std::uint32_t count, const double* weights) override { return {}; }
     bool LotAltitudeAt(const cS3DVector3& position, float* altitude) override { return {}; }
     float CitySizeX() override { return {}; }
     float CitySizeZ() override { return {}; }

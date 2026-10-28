@@ -13,6 +13,8 @@
 #include <cstdio>
 #include <cstring>
 #include <fcntl.h>
+#include <signal.h>
+#include <sys/ucontext.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -44,6 +46,25 @@ inline bool MapGame(const char* path) {
     return ok && mprotect(text, kTextSize, PROT_READ | PROT_EXEC) == 0;
 }
 
+// What the harness is doing, printed if the original code faults (lldb cannot attach to a Rosetta process).
+inline const char* gStage = "start";
+inline void CrashReport(int sig, siginfo_t* info, void* context) {
+    const auto* uc = static_cast<ucontext_t*>(context);
+    const std::uint64_t rip = uc->uc_mcontext->__ss.__rip;
+    const std::uint64_t original = rip >= kBase && rip < kBase + 0xb9a000 ? rip - kBase + kImageAddress : 0;
+    std::fprintf(stderr, "signal %d in stage '%s': fault address %p, rip %#llx (original %#llx)\n", sig, gStage,
+                 info->si_addr, static_cast<unsigned long long>(rip), static_cast<unsigned long long>(original));
+    _exit(3);
+}
+inline void InstallCrashReport() {
+    struct sigaction action = {};
+    action.sa_sigaction = CrashReport;
+    action.sa_flags = SA_SIGINFO;
+    sigaction(SIGSEGV, &action, nullptr);
+    sigaction(SIGBUS, &action, nullptr);
+    sigaction(SIGILL, &action, nullptr);
+}
+
 template <typename T> T& At(std::uint64_t address) { return *reinterpret_cast<T*>(Here(address)); }
 
 // An import stub is `jmp qword ptr [rip + disp32]`; point its slot at `function`.
@@ -55,6 +76,18 @@ inline void BindStub(std::uint64_t stub, const void* function) {
 }
 
 template <typename F> F Function(std::uint64_t address) { return reinterpret_cast<F>(Here(address)); }
+
+// Redirect a whole original function to `function` (same calling convention): its entry becomes
+// `movabs rax, function; jmp rax`. For callees that are not under test or reach services that cannot be faked.
+inline bool Hook(std::uint64_t address, const void* function) {
+    auto* code = reinterpret_cast<std::uint8_t*>(Here(address));
+    auto* page = reinterpret_cast<std::uint8_t*>(reinterpret_cast<std::uintptr_t>(code) & ~std::uintptr_t(0xfff));
+    if (mprotect(page, 0x2000, PROT_READ | PROT_WRITE) != 0) return false;
+    code[0] = 0x48; code[1] = 0xb8;
+    std::memcpy(code + 2, &function, 8);
+    code[10] = 0xff; code[11] = 0xe0;
+    return mprotect(page, 0x2000, PROT_READ | PROT_EXEC) == 0;
+}
 
 // A stand-in for a service the original reaches through a global pointer (SL::sp*): an object whose first qword points
 // at a slot table. Set(offset, fn) fills the slot the original calls as `call [vtable + offset]` (fn takes `this`).

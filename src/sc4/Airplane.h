@@ -127,8 +127,8 @@ public:
     bool AI_FollowVectorAndTurn(const cS3DVector3& inbound, const cS3DVector3& turnPoint,
                                 const cS3DVector3& outbound, float delta);   // @ 0x1006d4df8
     bool AI_FollowRay(const cS3DVector3& origin, const cS3DVector3& direction, float delta);   // @ 0x1006d51a2
-    void PickRunwayDirection(const cS3DVector3& position, cS3DVector3& start, cS3DVector3& end,
-                             bool flag);                          // @ 0x1006d258c  PARTIAL
+    void PickRunwayDirection(const cS3DVector3& position, cS3DVector3& start, cS3DVector3& direction,
+                             bool landing);                       // @ 0x1006d258c
     void PickApproachBox(const cS3DVector3& runwayEnd, const cS3DVector3& direction);   // @ 0x1006d2932
     bool TranslatePlayerDriveCommands(tAutomataStatePlayerDrive* state, float milliseconds);   // @ 0x1006cf894  PARTIAL
     float EvaluateClearance(const cS3DVector3& start, const cS3DVector3& direction) const;      // @ 0x1006d2454
@@ -154,6 +154,7 @@ public:
     const cS3DVector3& SavedPosition() const { return savedPosition_; }
     const cS3DVector3& DestinationCopy() const { return destinationCopy_; }
     const cS3DVector3& ApproachPoint(int i) const { return points_[i]; }   // +0x3f4 + 12 * i
+    cS3DVector3 RunwayTarget() const { return {field428_, field42c_, field430_}; }   // +0x428
     float Tuning(int index) const { return tunings_[index]; }
     float Mass() const { return mass_; }
     float ClimbSlope() const { return climbSlope_; }
