@@ -1456,7 +1456,9 @@ std::vector<unsigned char> MakeReadStream() {
     };
     u16(5);   // version
     u8(2);    // phase
-    u8(0);    // cursor state
+    u8(0);    // scan cursor: state
+    u32(0); u32(0); u32(0);                                      // x, z, remaining
+    u32(0x80000000u); u32(0x7fffffffu); u32(0x80000000u); u32(0x7fffffffu);   // the cursor's rectangle
     u8(0);    // requester created
     u32(0);   // requesters
     u32(3);   // animation index
@@ -1484,7 +1486,9 @@ void TestStreams() {
         const std::vector<unsigned char> expected = {
             5, 0,           // version
             1,              // phase
-            0,              // cursor state
+            0,              // scan cursor: state
+            0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,                // x, z, remaining
+            0, 0, 0, 0x80,  0xff, 0xff, 0xff, 0x7f,  0, 0, 0, 0x80,  0xff, 0xff, 0xff, 0x7f,   // rectangle
             1,              // requester created
             1, 0, 0, 0,     // one requester (its own bytes are skipped on a plain stream)
             0, 0, 0, 0,     // animation index

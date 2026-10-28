@@ -168,7 +168,7 @@ public:
     const BuildingProfile* GetBuildingProfilePtr(std::uint32_t type) const;
     cRZString& GetBuildingName(std::uint32_t type) const;
     cRZString& GetExemplarName(std::uint32_t type) const;
-    std::uint32_t GetMaxCapacity(int zoneType, std::uint32_t purpose, std::uint32_t wealth) const;
+    float GetMaxCapacity(int zoneType, std::uint32_t purpose, std::uint32_t wealth) const;   // @ 0x1001533ee: returns a float (the stored value truncated to int, then converted back)
 
     // construction resources (the counter object is owned by the city)
     void SetConstructionResources(IConstructionResources* resources) { resources_ = resources; }

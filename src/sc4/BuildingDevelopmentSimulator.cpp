@@ -323,11 +323,11 @@ void cSC4BuildingDevelopmentSimulator::CalculateMaxCapacity() {
     }
 }
 
-std::uint32_t cSC4BuildingDevelopmentSimulator::GetMaxCapacity(int zoneType, std::uint32_t purpose,
-                                                               std::uint32_t wealth) const {
+float cSC4BuildingDevelopmentSimulator::GetMaxCapacity(int zoneType, std::uint32_t purpose,
+                                                       std::uint32_t wealth) const {
     auto it = g_zoneCapacity.find({zoneType, GetBuildingMapKey(purpose, wealth)});
-    if (it == g_zoneCapacity.end()) return 0;
-    return static_cast<std::uint32_t>(static_cast<std::int32_t>(it->second));
+    if (it == g_zoneCapacity.end()) return 0.0f;
+    return static_cast<float>(static_cast<std::int32_t>(it->second));   // cvttss2si then cvtsi2ss
 }
 
 void cSC4BuildingDevelopmentSimulator::GetAllBuildingTypes(std::vector<std::uint32_t>& out) const { CopyKeyList(g_buildingKeys, out); }

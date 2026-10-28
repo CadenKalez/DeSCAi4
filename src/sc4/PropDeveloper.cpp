@@ -300,6 +300,8 @@ bool cSC4PropDeveloper::Write(cIGZOStream& stream) const {
         g_host->WriteService(stream, lotManager_);
         g_host->WriteService(stream, propManager_);
         g_host->WriteService(stream, networkLotManager_);
+    } else {   // no host: the three service references are still part of the record (written as absent)
+        for (int i = 0; i < 3; ++i) SC4WriteGZSerializable(stream, nullptr);
     }
     stream.SetUint32(animationIndex_);
     stream.SetUint32(static_cast<std::uint32_t>(animationMode_));
