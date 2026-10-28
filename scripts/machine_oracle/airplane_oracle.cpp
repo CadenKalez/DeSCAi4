@@ -43,6 +43,8 @@ struct AirplaneOracleAccess {
     static void TakeOffState(const cSC4Airplane& p, float* out) {   // +0x3e8 triple
         out[0] = p.field3e8_; out[1] = p.field3ec_; out[2] = p.field3f0_;
     }
+    static int& TurnCount(cSC4Airplane& p) { return p.field424_; }
+    static void SetLegStart(cSC4Airplane& p, const float* v) { p.field3e8_ = v[0]; p.field3ec_ = v[1]; p.field3f0_ = v[2]; }
     static void SetSlopes(cSC4Airplane& p, float climb, float descent) { p.climbSlope_ = climb; p.descentSlope_ = descent; }
     static void SetTurnRate(cSC4Airplane& p, float rate) { p.turnRate_ = rate; }
     static void Controls(const cSC4Airplane& p, float* out) {
@@ -427,6 +429,61 @@ int main() {
             }
             if (step == 0) for (int i = 0; i < 3; ++i) same = same && Same(Field(0x3e8 + 4 * i), keep[i]);
             Check(same, "AI_TakeOff", t);
+        }
+
+        {   // AI_GotoDestination: air and ground states, destinations near and far, any turn progress
+            gStage = "AI_GotoDestination";
+            float c[6], tune[12], o[3], v[3], pts[12], legStart[3];
+            for (float& x : c) x = unit(rng);
+            for (float& x : tune) x = 0.05f + 0.5f * (unit(rng) + 1);
+            o[0] = unit(rng); o[1] = 0.1f * unit(rng); o[2] = unit(rng);
+            for (float& x : v) x = speed(rng);
+            for (float& x : pts) x = 500.0f * (unit(rng) + 1);
+            const float position[3] = {gCitySize[0] * 0.5f * (unit(rng) + 1), 150.0f + 100.0f * unit(rng),
+                                       gCitySize[1] * 0.5f * (unit(rng) + 1)};
+            const float reach = t % 2 ? 300.0f : 1500.0f;
+            const float dest[3] = {position[0] + reach * unit(rng), 50.0f + 40.0f * unit(rng), position[2] + reach * unit(rng)};
+            for (int i = 0; i < 3; ++i) legStart[i] = position[i] + (t % 4 ? 400.0f : 50.0f) * unit(rng);
+            const int st = static_cast<int>(rng() % 6), turns = static_cast<int>(rng() % 2),
+                      phase = static_cast<int>(rng() % 3), step = 1 + static_cast<int>(rng() % 3);
+            const float slope = 0.05f + 0.1f * (unit(rng) + 1), rate = 0.1f + 0.4f * (unit(rng) + 1);
+            std::memcpy(original + 0x314, c, sizeof c);
+            std::memcpy(original + 0x438, tune, sizeof tune);
+            std::memcpy(original + 0x8c, o, sizeof o);
+            std::memcpy(original + 0x36c, v, sizeof v);
+            std::memcpy(original + 0x74, position, sizeof position);
+            std::memcpy(original + 0x3f4, pts, sizeof pts);
+            std::memcpy(original + 0x3e8, legStart, sizeof legStart);
+            std::memcpy(original + 0x310, &st, 4);
+            std::memcpy(original + 0x424, &turns, 4);
+            std::memcpy(original + 0x434, &phase, 4);
+            std::memcpy(original + 0x3e0, &step, 4);
+            std::memcpy(original + 0x3c8, &slope, 4);
+            std::memcpy(original + 0x3cc, &rate, 4);
+            AirplaneOracleAccess::SetMotion(port, c, tune, o, v);
+            AirplaneOracleAccess::SetPositionState(port, position, st);
+            AirplaneOracleAccess::SetPoints(port, pts);
+            AirplaneOracleAccess::SetLegStart(port, legStart);
+            AirplaneOracleAccess::TurnCount(port) = turns;
+            AirplaneOracleAccess::Phase(port) = phase;
+            AirplaneOracleAccess::TakeOffStep(port) = step;
+            AirplaneOracleAccess::SetDescentSlope(port, slope);
+            AirplaneOracleAccess::SetTurnRate(port, rate);
+            const float d = 0.05f + 0.1f * (unit(rng) + 1);
+            const bool ra = Function<bool (*)(void*, const float*, float)>(0x1006d2f12)(original, dest, d);
+            const bool rb = port.AI_GotoDestination({dest[0], dest[1], dest[2]}, d);
+            float mine[6], keep[3];
+            AirplaneOracleAccess::Controls(port, mine);
+            AirplaneOracleAccess::TakeOffState(port, keep);
+            int ints[4];
+            std::memcpy(&ints[0], original + 0x424, 4);
+            std::memcpy(&ints[1], original + 0x434, 4);
+            std::memcpy(&ints[2], original + 0x3e0, 4);
+            bool same = ra == rb && ints[0] == AirplaneOracleAccess::TurnCount(port) &&
+                        ints[1] == AirplaneOracleAccess::Phase(port) && ints[2] == AirplaneOracleAccess::TakeOffStep(port);
+            for (int i = 0; i < 6; ++i) same = same && Same(Field(0x314 + 4 * i), mine[i]);
+            for (int i = 0; i < 3; ++i) same = same && Same(Field(0x3e8 + 4 * i), keep[i]);
+            Check(same, "AI_GotoDestination", t);
         }
 
         if (t % 8 == 0) {

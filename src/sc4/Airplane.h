@@ -118,7 +118,7 @@ public:
     void SetAirplaneState(AirplaneState state);                       // @ 0x1006d0be2
     bool AI_TurnToVector(const cS3DVector3& vector, float delta);     // @ 0x1006d4852
     void AI_PursueGoal(float delta);                                  // @ 0x1006ce990  PARTIAL
-    bool AI_GotoDestination(const cS3DVector3& destination, float delta);   // @ 0x1006d2f12  PARTIAL
+    bool AI_GotoDestination(const cS3DVector3& destination, float delta);   // @ 0x1006d2f12
     bool AI_Land(float delta);                                        // @ 0x1006d33f8  PARTIAL
     bool AI_Stop(float delta);                                        // @ 0x1006d3f70
     bool AI_TakeOff(float delta);                                     // @ 0x1006d40e2

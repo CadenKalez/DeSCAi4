@@ -623,11 +623,81 @@ void cSC4Airplane::DetectCollisions() {}
 // @ 0x1006ce990 PARTIAL: the goal selection (fire search / landing / take-off) is not ported.
 void cSC4Airplane::AI_PursueGoal(float delta) { (void)delta; }
 
-// @ 0x1006d2f12 PARTIAL: waypoint following is not ported.
+// @ 0x1006d2f12. Fly to `destination`; on the ground (states 0..2) this only runs the take-off and answers false. In
+// the air the leg starts at +0x3e8 (reset to the plane when it is within 640 of the destination but already past it).
+// Beyond 640 from the leg start the plane turns straight at the destination. Within it, a waypoint 640 to the side of
+// the leg start sets up a turn: first a turn towards it (+0x424 counts it), then a procedure turn through it onto the
+// destination; heading away from the destination after the turn restarts the leg. The altitude follows the
+// destination's height, held above the terrain clamp and the tallest building except within the descent slope's reach.
+// True when on the final leg and close enough to descend: sqrt(height above the ground there) * 0.15 * speed > distance.
 bool cSC4Airplane::AI_GotoDestination(const cS3DVector3& destination, float delta) {
-    (void)destination;
-    (void)delta;
-    return false;
+    if (static_cast<int>(state_) <= 2) {
+        AI_TakeOff(delta);
+        return false;
+    }
+    cS3DVector3 origin = {field3e8_, field3ec_, field3f0_};
+    const float ux = destination.x - origin.x, uy = destination.y - origin.y, uz = destination.z - origin.z;
+    const float legLength = std::sqrt(uz * uz + (uy * uy + ux * ux));
+    const float inverseLeg = 1.0f / legLength;
+    const cS3DVector3 leg = {ux * inverseLeg, inverseLeg * uy, inverseLeg * uz};
+    const float wx = destination.x - position_.x, wy = destination.y - position_.y, wz = destination.z - position_.z;
+    const float distance = std::sqrt(wz * wz + (wy * wy + wx * wx));
+    const float inverseTo = 1.0f / distance;
+    const cS3DVector3 to = {wx * inverseTo, inverseTo * wy, inverseTo * wz};
+    if (640.0f > distance && -0.5f > leg.z * to.z + (leg.x * to.x + leg.y * to.y)) {
+        field3e8_ = position_.x;
+        field3ec_ = position_.y;
+        field3f0_ = position_.z;
+        field434_ = 0;
+        origin = position_;
+    }
+    bool arrived;
+    if (640.0f > legLength) {
+        const cS3DVector3& w = kAircraftWorldUp;
+        const cS3DVector3 side = Normalized({leg.y * w.z - leg.z * w.y, leg.z * w.x - w.z * leg.x, leg.x * w.y - leg.y * w.x});
+        cS3DVector3 waypoint = {origin.x + side.x * 640.0f, origin.y + side.y * 640.0f, side.z * 640.0f + origin.z};
+        ClipToWorld(waypoint);
+        if (field424_ == 0) {
+            if (AI_TurnToVector({waypoint.x - field3e8_, waypoint.y - field3ec_, waypoint.z - field3f0_}, delta)) {
+                ++field424_;
+                field434_ = 0;
+            }
+            arrived = false;
+        } else {
+            arrived = AI_FollowVectorAndTurn(
+                {waypoint.x - position_.x, waypoint.y - position_.y, waypoint.z - position_.z}, waypoint,
+                {destination.x - waypoint.x, destination.y - waypoint.y, destination.z - waypoint.z}, delta);
+            if (field434_ == 2 &&
+                -0.5f > to.z * orientation_.z + (to.x * orientation_.x + to.y * orientation_.y)) {
+                field3e8_ = position_.x;
+                field3ec_ = position_.y;
+                field3f0_ = position_.z;
+                field424_ = 0;
+                field434_ = 0;
+            }
+        }
+    } else {
+        arrived = AI_TurnToVector({destination.x - position_.x, destination.y - position_.y, destination.z - position_.z},
+                                  delta);
+    }
+
+    IAircraftHost* host = HostFor(*this);
+    float target = destination.y;
+    if (host) {
+        const float terrain = host->AltitudeClamp();
+        const float buildings = host->TallestBuildingAltitude();
+        const float ceiling = buildings > terrain ? buildings : terrain;   // MAXSS
+        if (ceiling > target) {
+            const float reach = target + descentSlope_ * distance;
+            target = reach > ceiling ? ceiling : reach;
+        }
+    }
+    AI_ApproachAltitude(target, false, delta);
+    const float speed = std::sqrt(velocity_.z * velocity_.z + (velocity_.x * velocity_.x + velocity_.y * velocity_.y));
+    const float height = position_.y;
+    const float ground = GetAltitude(destination);
+    if (!arrived) return false;
+    return std::sqrt(height - ground) * (speed * 0.15f) > distance;
 }
 
 // @ 0x1006d33f8 PARTIAL: the runway/approach landing sequence is not ported.
