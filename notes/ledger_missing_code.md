@@ -676,3 +676,16 @@ needs a look before its row is trusted. Rows demoted to `pending` already: the t
 ## src/gz/WinHTML.cpp|h (1)
 
 - `0x1005690a4` PeriodicWindowRedrawCallback(void*)
+
+## Triage result
+
+Every row above was looked at. Outcome:
+
+- **Set back to `pending`** (no code exists): the 62 simulator rows (since recovered except `UpdatePollutionVisualEffect`),
+  the three `nS3D::CreateTexture*` builders and 93 further rows: the property-set XML handlers, `cGZSndMgr` Unregister/Remove
+  overloads, the `cRZVariant` char and pointer accessors, `cS3DShapeFile` frame functions, window paint helpers, the XA
+  decompressors, the standard ordinance / lot configuration loaders and similar. They are back in `remaining_functions.csv`.
+- **Left as `recovered` on purpose** (the code exists under another shape): the 76 `cRegk*` constructors of
+  `cSC4RenderProperties` (one registration table), the 45 `cSC4City` service getters (one enum-keyed accessor), the 24
+  `GZCOM_Interface<>` and 19 `ProcessTwoGridsWithCallback<>` template instantiations, and the `nsTexelOp` converters
+  (camel-case names).

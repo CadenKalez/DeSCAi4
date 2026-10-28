@@ -4,8 +4,8 @@ AUDIO-MUSIC-1,(audio),"After cSC4AudioEventHandler: wire cSC4WinRegionScreen to 
 AUDIT-1,(audit),1378 ledger rows (314 classes) still name no verification. Repair = point each at a registered test or oracle (scripts/ledger_audit.py lists them by class); do not edit evidence to claim a test that does not cover them,,done,notes/ledger_audit.md
 CITYLOAD-1,(boot),"city_probe (src/tools/city_probe.cpp) boots the app with 9 segments and reaches cSC4App::LoadCity, but the app-record read fails: cSC4App::Read needs stream version 2 then SC4ReadGZSerializable(cISC4City 0x66ba4db5). The serializable factory is now registered (SetSerializableFactory, cSC4City class id 0x8990c372) and cSC4DBSegment::Open does open the serializer with mode 1, so the next thing to check is the record's own contents/version - investigate with otool on 0x100045576 (cSC4App::Read) before changing anything",,open,src/tools/city_probe.cpp
 ODR-1,(build),"OccupantManager.h and NetworkTool.h both define kGZIID_cIGZMessageTarget2, so the two headers cannot be included in one TU; move the constant to a single shared header",,open,src/sc4/OccupantManager.h
-CLASS-(free),(free),"recover 357 remaining function(s) (255 not started, 102 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-(free),(free),finish 106 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-(free),(free),"recover 360 remaining function(s) (255 not started, 105 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-(free),(free),finish 118 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 GZCOM-1,(gz),"Regenerate the GZCOM tables (scripts/gen_gzcom.py) so the recovered creators stop returning null: cSC4AirportDeveloper 0x1000c8034, cSC4SeaportDeveloper, cSC4NetworkLotManager 0x100404d80, cSC4TutorialSystem 0x10005f086, cSC4GrowthDeveloper 0x100156020, cSC4WeatherSimulator, cSC4DemandSimulator",,open,src/gz/GZCOM.cpp
 TRAP-ROWS-1,(ledger),"clang trap stubs (pushq %rbp; movq %rsp,%rbp; ud2) must stay skipped: e.g. cSC4AutomataController D1Ev/D0Ev at 0x1000f8658/0x1000f865e are unreachable because FinalRelease jmpq *0x20(%rax) always reaches a concrete subclass's deleting dtor. Do not count them as outstanding in CLASS- todo rows",,open,notes/ledger.csv
 CLASS-AspyrDXTTools,AspyrDXTTools,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -82,6 +82,8 @@ LEDGER-cGZCanvasW32,cGZCanvasW32,finish 2 partial/pending function(s) (see notes
 LEDGER-cGZCheatCodeManager,cGZCheatCodeManager,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZCommandSystemSupport,cGZCommandSystemSupport,"recover 6 remaining function(s) (6 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZDBSegmentDirectoryFiles,cGZDBSegmentDirectoryFiles,finish 5 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cGZDBSerialRecordAsIGZFile,cGZDBSerialRecordAsIGZFile,"recover 3 remaining function(s) (0 not started, 3 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cGZDBSerialRecordAsIGZFile,cGZDBSerialRecordAsIGZFile,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZDrawCOMDirector,cGZDrawCOMDirector,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZDrawCOMDirector,cGZDrawCOMDirector,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cGZDrawContext,cGZDrawContext,finish 28 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
@@ -118,6 +120,8 @@ FONTSYS-3,cGZFontSys,"Unverified/deviation: per-font size ranges are looked up w
 FONTSYS-4,cGZFontSys,Add std::less<cRZString> ordering equivalent check: maps use strcmp order (StringLess); the original uses cRZString operator< whose exact case rule was not confirmed,,open,src/gz/FontSys.h
 CLASS-cGZFontSysLibraryInitializer,cGZFontSysLibraryInitializer,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZFramework,cGZFramework,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cGZGimexFactory,cGZGimexFactory,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cGZGimexFactory,cGZGimexFactory,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZGraphicCOMDirector,cGZGraphicCOMDirector,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZGraphicCOMDirector,cGZGraphicCOMDirector,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZGraphicSystem,cGZGraphicSystem,"recover 4 remaining function(s) (4 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -130,7 +134,8 @@ LEDGER-cGZLegacyControl,cGZLegacyControl,finish 11 partial/pending function(s) (
 LEGACY-1,cGZLegacyControl,Recover cRZStringArray (variant vtbl 0x100b0ecb8) so InterpretPropertiesGZWinCommon can write the seven comment strings at 0x108..0x10f,,open,src/gz/LegacyControl.cpp
 LEGACY-2,cGZLegacyControl,"InterpretPropertiesGZWinBtn: tip resource {6a231eaa,0a6cf0d3} is replaced in the original by a CFBundle localised string (ImportTooltipReplacement); add a host seam",,open,src/gz/LegacyControl.cpp
 LEGACY-3,cGZLegacyControl,InterpretPropertiesGZWinTextEdit reads the outline switch (0xf019) without testing the lookup: an absent property leaves a stale stack value in the original; the port uses 0,,open,src/gz/LegacyControl.cpp
-LEDGER-cGZLua5,cGZLua5,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cGZLua5,cGZLua5,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cGZLua5,cGZLua5,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZLua5CommandGenerator,cGZLua5CommandGenerator,"recover 15 remaining function(s) (15 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZLua5DebugInfo,cGZLua5DebugInfo,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZLuaScriptServer,cGZLuaScriptServer,"recover 43 remaining function(s) (43 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
@@ -146,10 +151,13 @@ PBUFRESFAC-2,cGZPersistBufferResourceFactory,"Quirks kept: version 1 records wit
 PBUFRESFAC-3,cGZPersistBufferResourceFactory,"SerialRead assumes (dynamic_cast) the target is a cGZPersistBufferResource, as the original assumes by calling vslot 0x78",,open,src/gz/PersistBufferResourceFactory.cpp
 MULTIPACK-1,cGZPersistDBSegmentMultiPackedFiles,AddFileKeyEnumerate (0x1004eb687) was ledgered as recovered but has no counterpart in the source: recover the key-enumeration callback,,open,src/gz/cGZPersistDBSegmentMultiPackedFiles.cpp
 LEDGER-cGZPersistDBSerialRecord,cGZPersistDBSerialRecord,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cGZPersistResourceKeyList,cGZPersistResourceKeyList,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cGZPersistResourceKeyList,cGZPersistResourceKeyList,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZPlayList,cGZPlayList,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 PLAYLIST-1,cGZPlayList,Quirks kept: PLS drops the last entry unless a line follows; m3u path-prefix test uses a found-index as bool; ExtM3U stops at the first non-#EXTINF line; Open returns the parser result for ext m3u/pls. Check against real playlists the game ships,,open,src/gz/PlayList.h
 PLAYLIST-2,cGZPlayList,Deviations to verify: GetLine consumes the text when no line end follows (original returns the same line forever); Open NUL-terminates the file buffer before Strncpy (original reads unterminated memory),,open,src/gz/PlayList.cpp
 CLASS-cGZPlayListEntry,cGZPlayListEntry,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+"CLASS-cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>","cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>","recover 7 remaining function(s) (0 not started, 7 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZRTDEntry,cGZRTDEntry,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZRTDValueEntry,cGZRTDValueEntry,"recover 7 remaining function(s) (7 not started, 0 partial/pending); bases still unfinished: cGZRTDEntry",CLASS-cGZRTDEntry,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZRealtimeDebugDisplay,cGZRealtimeDebugDisplay,"recover 19 remaining function(s) (19 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -165,6 +173,10 @@ CLASS-cGZScriptVocab,cGZScriptVocab,"recover 13 remaining function(s) (13 not st
 VOCAB-1,cGZScriptVocab,"LegacyControl.h's IVocabulary declared its two AddTranslation overloads in the wrong slot order (uint at 0x18); fixed to the binary's order (variant 0x18, uint 0x20) — check the other reinterpret_cast sites",,done,src/gz/LegacyControl.h
 CLASS-cGZScriptableControlSet,cGZScriptableControlSet,"recover 18 remaining function(s) (18 not started, 0 partial/pending); bases still unfinished: cGZArray<cIGZScriptableControl*>",CLASS-cGZArray<cIGZScriptableControl*>,done,scripts/export_class.py + notes/remaining_functions.csv
 SCSET-1,cGZScriptableControlSet,"the control array is a std::vector, not the unrecovered cGZArray<cIGZScriptableControl*>; AsGZArray answers the vector",,open,src/gz/ScriptableControlSet.h
+CLASS-cGZSndMgr,cGZSndMgr,"recover 6 remaining function(s) (0 not started, 6 partial/pending); bases still unfinished: cIGZSndMgr, cIGZSndUpdateTarget","CLASS-cIGZSndMgr,CLASS-cIGZSndUpdateTarget",open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cGZSndMgr,cGZSndMgr,finish 6 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cGZSndSegmentDataSourceXA,cGZSndSegmentDataSourceXA,"recover 2 remaining function(s) (0 not started, 2 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cGZSndSegmentDataSourceXA,cGZSndSegmentDataSourceXA,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZSoundCOMDirector,cGZSoundCOMDirector,"recover 3 remaining function(s) (0 not started, 3 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZSoundCOMDirector,cGZSoundCOMDirector,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZToolCommandSystemSupport,cGZToolCommandSystemSupport,"recover 8 remaining function(s) (8 not started, 0 partial/pending); bases still unfinished: cGZCommandSystemSupport",CLASS-cGZCommandSystemSupport,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -175,7 +187,8 @@ LEDGER-cGZUIScriptCOMDirector,cGZUIScriptCOMDirector,finish 5 partial/pending fu
 CLASS-cGZUIScriptService,cGZUIScriptService,"recover 29 remaining function(s) (29 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWWWSystem,cGZWWWSystem,"recover 51 remaining function(s) (51 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZWin32COMDirector,cGZWin32COMDirector,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
-LEDGER-cGZWinBtn,cGZWinBtn,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cGZWinBtn,cGZWinBtn,"recover 3 remaining function(s) (0 not started, 3 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cGZWinBtn,cGZWinBtn,finish 5 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cGZWinCOMDirector,cGZWinCOMDirector,finish 20 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZWinColorPicker2,cGZWinColorPicker2,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZWinCombo,cGZWinCombo,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
@@ -194,6 +207,8 @@ WINFB-7,cGZWinFileBrowser,hook IFileBrowserHost to RZ::GS() (vslots 0x118/0x120)
 CLASS-cGZWinFolderRow,cGZWinFolderRow,"recover 21 remaining function(s) (20 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinFolders,cGZWinFolders,"recover 23 remaining function(s) (23 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cGZWinFolders,cGZWinFolders,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cGZWinGen,cGZWinGen,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cGZWinGen,cGZWinGen,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cGZWinGenTitleBar,cGZWinGenTitleBar,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZWinGrid,cGZWinGrid,"recover 189 remaining function(s) (189 not started, 0 partial/pending); bases still unfinished: cIGZWinGrid",CLASS-cIGZWinGrid,done,scripts/export_class.py + notes/remaining_functions.csv
 GRID-1,cGZWinGrid,"Recover cGZWinGrid (189 functions, 0x10025086a..0x10025ef00) now that cRZSparseMatrix exists; the 9.4k-line export is in work/gz/cGZWinGrid.txt",,open,src/gz/WinGrid.h
@@ -208,12 +223,14 @@ CLASS-cGZWinIMEProxy,cGZWinIMEProxy,"recover 27 remaining function(s) (27 not st
 IMEPROXY-1,cGZWinIMEProxy,"Finish StartCandidateList (0x1001f8588): construct cGZWinIMECandidateList directly instead of IIMEProxyHost::CreateCandidateListWindow (the class landed after this function was written), then promote the row",,open,src/gz/WinIMEProxy.cpp
 LEDGER-cGZWinIMEProxy,cGZWinIMEProxy,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZWinKeyAcceleratorResFactory,cGZWinKeyAcceleratorResFactory,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cGZWinListBox,cGZWinListBox,"recover 2 remaining function(s) (0 not started, 2 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cGZWinListBox,cGZWinListBox,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZWinLuaScriptBrowser,cGZWinLuaScriptBrowser,"recover 3 remaining function(s) (3 not started, 0 partial/pending); bases still unfinished: cGZWinFileBrowser",CLASS-cGZWinFileBrowser,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cGZWinLuaScriptConsole,cGZWinLuaScriptConsole,"recover 22 remaining function(s) (22 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cGZWinLuaScriptView,cGZWinLuaScriptView,"recover 38 remaining function(s) (38 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cGZWinLuaScriptConsole,cGZWinLuaScriptConsole,"recover 22 remaining function(s) (22 not started, 0 partial/pending); bases still unfinished: cGZWinGen, cIGZMessageTarget2","CLASS-cGZWinGen,CLASS-cIGZMessageTarget2",open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cGZWinLuaScriptView,cGZWinLuaScriptView,"recover 38 remaining function(s) (38 not started, 0 partial/pending); bases still unfinished: cGZWinGen, cIGZMessageTarget2","CLASS-cGZWinGen,CLASS-cIGZMessageTarget2",open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinLuaScriptViewBreakpoints,cGZWinLuaScriptViewBreakpoints,"recover 6 remaining function(s) (6 not started, 0 partial/pending); bases still unfinished: cGZWinLuaScriptViewGeneral",CLASS-cGZWinLuaScriptViewGeneral,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinLuaScriptViewCallStack,cGZWinLuaScriptViewCallStack,"recover 6 remaining function(s) (6 not started, 0 partial/pending); bases still unfinished: cGZWinLuaScriptViewGeneral",CLASS-cGZWinLuaScriptViewGeneral,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cGZWinLuaScriptViewGeneral,cGZWinLuaScriptViewGeneral,"recover 14 remaining function(s) (14 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cGZWinLuaScriptViewGeneral,cGZWinLuaScriptViewGeneral,"recover 14 remaining function(s) (14 not started, 0 partial/pending); bases still unfinished: cGZWinGen",CLASS-cGZWinGen,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinLuaScriptViewVariables,cGZWinLuaScriptViewVariables,"recover 7 remaining function(s) (7 not started, 0 partial/pending); bases still unfinished: cGZWinLuaScriptViewGeneral",CLASS-cGZWinLuaScriptViewGeneral,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinMgrBase,cGZWinMgrBase,"recover 66 remaining function(s) (66 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 WINMGR-1,cGZWinMgrBase,recover the platform manager (cGZWinMgrW32 or the Mac equivalent) that implements PostWinMessage (vslot 0x48) and RunModalLoop (vslot 0x220); the base leaves both pure,,open,src/gz/WinMgrBase.h
@@ -226,23 +243,35 @@ WINMGR-7,cGZWinMgrBase,"GZWinMsgPost_Keyboard forwards an undefined fourth regis
 WINMGR-8,cGZWinMgrBase,GZMsgBox: a COM-supplied message box (class 0x593) that is not a gz::cGZWinMsgBox cannot be driven because cIGZWinMsgBox only exposes AsIGZWin; add CreateDlg (vslot 0x30) to cIGZWinMsgBox,,open,src/gz/WinMgrBase.cpp
 WINMGR-9,cGZWinMgrBase,"the walks over the valid-window hash (broadcast post, InvalidateAllWindows) use a snapshot instead of the live libc++ node chain; the iteration order of a std::unordered_set differs from the original",,open,src/gz/WinMgrBase.cpp
 CLASS-cGZWinMgrW32,cGZWinMgrW32,"recover 25 remaining function(s) (25 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cGZWinOptGrp,cGZWinOptGrp,"recover 5 remaining function(s) (0 not started, 5 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cGZWinOptGrp,cGZWinOptGrp,finish 5 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cGZWinPieMenu,cGZWinPieMenu,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZWinProcShowProperties,cGZWinProcShowProperties,"recover 10 remaining function(s) (10 not started, 0 partial/pending); bases still unfinished: cIGZWinProc",CLASS-cIGZWinProc,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinProcSpy,cGZWinProcSpy,"recover 17 remaining function(s) (17 not started, 0 partial/pending); bases still unfinished: cIGZWinProc",CLASS-cIGZWinProc,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinProcSpyMessages,cGZWinProcSpyMessages,"recover 10 remaining function(s) (10 not started, 0 partial/pending); bases still unfinished: cIGZWinProc",CLASS-cIGZWinProc,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinRTDEntry,cGZWinRTDEntry,"recover 8 remaining function(s) (8 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinRTDGraphEntry,cGZWinRTDGraphEntry,"recover 8 remaining function(s) (8 not started, 0 partial/pending); bases still unfinished: cGZWinRTDEntry",CLASS-cGZWinRTDEntry,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cGZWinScrollbar,cGZWinScrollbar,"recover 2 remaining function(s) (0 not started, 2 partial/pending); bases still unfinished: cGZWinSlider",CLASS-cGZWinSlider,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cGZWinScrollbar,cGZWinScrollbar,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cGZWinSlider,cGZWinSlider,"recover 2 remaining function(s) (0 not started, 2 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cGZWinSlider,cGZWinSlider,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cGZWinSpinner,cGZWinSpinner,"recover 2 remaining function(s) (0 not started, 2 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cGZWinSpinner,cGZWinSpinner,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZWinSpyFinder,cGZWinSpyFinder,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinSpyHotKeyFilter,cGZWinSpyHotKeyFilter,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinSpyMessageFilterBreak,cGZWinSpyMessageFilterBreak,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinTestService,cGZWinTestService,"recover 15 remaining function(s) (15 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cGZWinTextEdit,cGZWinTextEdit,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cGZWinTextEdit,cGZWinTextEdit,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cGZWinTextTicker,cGZWinTextTicker,"recover 30 remaining function(s) (30 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinToolTip,cGZWinToolTip,"recover 18 remaining function(s) (18 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinToolTipMgr,cGZWinToolTipMgr,"recover 16 remaining function(s) (16 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinTreeView,cGZWinTreeView,"recover 1 remaining function(s) (1 not started, 0 partial/pending); bases still unfinished: cIGZWinTreeView",CLASS-cIGZWinTreeView,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGZWinTreeViewDrag,cGZWinTreeViewDrag,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cGarbageHeap,cGarbageHeap,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-cHTMLDocument,cHTMLDocument,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cHTMLDocument,cHTMLDocument,finish 5 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cHitChannel,cHitChannel,"recover 1 remaining function(s) (0 not started, 1 partial/pending); bases still unfinished: cIGZSnd, cIGZSnd3D, cIGZSndDataSourceHolder, cIGZSndUpdateTarget","CLASS-cIGZSnd,CLASS-cIGZSnd3D,CLASS-cIGZSndDataSourceHolder,CLASS-cIGZSndUpdateTarget",open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cHitChannel,cHitChannel,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cHitIniFile,cHitIniFile,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cHitList,cHitList,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,done,notes/ledger.csv
 LEDGER-cHitMan,cHitMan,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
@@ -250,7 +279,8 @@ HITRES-1,cHitResource<T>,"Recover Read/Write (through the DB-record interface, i
 CLASS-cHitResource<cHitList>,cHitResource<cHitList>,"recover 3 remaining function(s) (0 not started, 3 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cHitResource<cHitTrackPlayer>,cHitResource<cHitTrackPlayer>,"recover 3 remaining function(s) (0 not started, 3 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cHitTrackDataBlock,cHitTrackDataBlock,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
-LEDGER-cHitTrackPlayer,cHitTrackPlayer,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cHitTrackPlayer,cHitTrackPlayer,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cHitTrackPlayer,cHitTrackPlayer,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cIGZBuffer,cIGZBuffer,"recover 2 remaining function(s) (2 not started, 0 partial/pending); bases still unfinished: cIGZUnknown",CLASS-cIGZUnknown,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cIGZMessageTarget2,cIGZMessageTarget2,"recover 1 remaining function(s) (1 not started, 0 partial/pending); bases still unfinished: cIGZUnknown",CLASS-cIGZUnknown,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cIGZSnd,cIGZSnd,"recover 1 remaining function(s) (1 not started, 0 partial/pending); bases still unfinished: cIGZUnknown",CLASS-cIGZUnknown,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -287,6 +317,8 @@ MYSIMFILTER-2,cMySimBuildingFilter,Quirk kept: the reference obtained by QueryIn
 CLASS-cMySimPylonFilter,cMySimPylonFilter,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cPortLot,cPortLot,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cPortTypeConfig,cPortTypeConfig,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cPropertySetUint32XmlReader,cPropertySetUint32XmlReader,"recover 6 remaining function(s) (0 not started, 6 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cPropertySetUint32XmlReader,cPropertySetUint32XmlReader,finish 6 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cPylonFilter,cPylonFilter,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cRZAutoCursor,cRZAutoCursor,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cRZAutoMsg2Notification,cRZAutoMsg2Notification,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -312,6 +344,8 @@ CLASS-cRZMessage2ZoneChange,cRZMessage2ZoneChange,"recover 3 remaining function(
 CLASS-cRZNameLookup,cRZNameLookup,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cRZNameLookupThreadShutdown,cRZNameLookupThreadShutdown,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cRZNetCommandGenerator,cRZNetCommandGenerator,"recover 19 remaining function(s) (19 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cRZPath,cRZPath,"recover 2 remaining function(s) (0 not started, 2 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cRZPath,cRZPath,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cRZRGBColorConverter,cRZRGBColorConverter,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 RGBCONV-1,cRZRGBColorConverter,"Convert handles only 2/3/4 byte formats (8 bit sources do nothing, as in the original); the converter lives in gz/ here though the class name suggests rz/",,open,src/gz/RGBColorConverter.cpp
 CLASS-cRZRadio,cRZRadio,"recover 53 remaining function(s) (53 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
@@ -351,7 +385,8 @@ CLASS-cRZUnknownAutoObject<ivector<cISC4Occupant*>>,cRZUnknownAutoObject<ivector
 CLASS-cRZUnknownAutoPtr<cRZSparseMatrix<WinGridCellData>>,cRZUnknownAutoPtr<cRZSparseMatrix<WinGridCellData>>,"recover 4 remaining function(s) (4 not started, 0 partial/pending); bases still unfinished: cIGZUnknown",CLASS-cIGZUnknown,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cRZUnknownAutoPtr<cRZSparseMatrix<WinGridColData>>,cRZUnknownAutoPtr<cRZSparseMatrix<WinGridColData>>,"recover 4 remaining function(s) (4 not started, 0 partial/pending); bases still unfinished: cIGZUnknown",CLASS-cIGZUnknown,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cRZUnknownAutoPtr<cRZSparseMatrix<WinGridRowData>>,cRZUnknownAutoPtr<cRZSparseMatrix<WinGridRowData>>,"recover 4 remaining function(s) (4 not started, 0 partial/pending); bases still unfinished: cIGZUnknown",CLASS-cIGZUnknown,open,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-cRZVariant,cRZVariant,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cRZVariant,cRZVariant,"recover 15 remaining function(s) (0 not started, 15 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cRZVariant,cRZVariant,finish 17 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cRZWinKeyAcceleratorRes,cRZWinKeyAcceleratorRes,"recover 11 remaining function(s) (11 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cRemoveSubTreeVisitor,cRemoveSubTreeVisitor,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cS3DCamera,cS3DCamera,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
@@ -374,14 +409,18 @@ CLASS-cS3DResModelFactory,cS3DResModelFactory,"recover 3 remaining function(s) (
 CLASS-cS3DResSpriteAnim,cS3DResSpriteAnim,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DResSpriteAnimFactory,cS3DResSpriteAnimFactory,"recover 8 remaining function(s) (8 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DResSpriteAnimTable,cS3DResSpriteAnimTable,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cS3DShapeFile,cS3DShapeFile,"recover 5 remaining function(s) (0 not started, 5 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cS3DShapeFile,cS3DShapeFile,"recover 8 remaining function(s) (0 not started, 8 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 FSH-1,cS3DShapeFile,"s3d::FshFile is a reader, not a faithful cS3DShapeFile: recover Close, SwapDirectoryAndFrames, Open(cIGZPersistDBSerialRecord*), OpenInfoOnly, DumpShapeFile and GetCurrentFramePaletteInfo (palette attachments for code 0x7b) as the real class",,open,src/s3d/FSH.h
-LEDGER-cS3DShapeFile,cS3DShapeFile,finish 6 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cS3DShapeFile,cS3DShapeFile,finish 9 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cS3DTextureBinding,cS3DTextureBinding,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cS3DTextureBindingFactory,cS3DTextureBindingFactory,"recover 33 remaining function(s) (33 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cS3DTransform,cS3DTransform,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,done,notes/ledger.csv
 LEDGER-cS3DTriangleIterator,cS3DTriangleIterator,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cS3DVector3,cS3DVector3,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cS3DVector3,cS3DVector3,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC16ColumnGridEntryView,cSC16ColumnGridEntryView,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC43DPlaceableObject,cSC43DPlaceableObject,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC43DPlaceableObject,cSC43DPlaceableObject,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 BACKINGSTORE-1,cSC43DRender,The translated blit now exists twice: cSC43DRender::Save/RestoreBackingStore members and cSC43DBackingStore in src/sc4/BackingStore.cpp; make one delegate to the other (needs BackingStore.cpp on the sc4_3drender test line),,open,src/sc4/Render3D.cpp
 CLASS-cSC43DRender,cSC43DRender,"recover 2 remaining function(s) (0 not started, 2 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC43DRender,cSC43DRender,finish 15 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
@@ -510,7 +549,7 @@ CLASS-cSC4ConstructionOccupant,cSC4ConstructionOccupant,"recover 2 remaining fun
 LEDGER-cSC4ConstructionOccupant,cSC4ConstructionOccupant,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4ControllerGrid,cSC4ControllerGrid,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4CoverageRadiusEffectHelper,cSC4CoverageRadiusEffectHelper,"recover 8 remaining function(s) (8 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4CrimeSimulator,cSC4CrimeSimulator,"recover 5 remaining function(s) (5 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4CrimeSimulator,cSC4CrimeSimulator,"recover 7 remaining function(s) (5 not started, 2 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4DecalDescription,cSC4DecalDescription,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4DecalEffect,cSC4DecalEffect,"recover 16 remaining function(s) (16 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4DeleteCityDialog,cSC4DeleteCityDialog,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -549,7 +588,8 @@ CLASS-cSC4FileTokenizer,cSC4FileTokenizer,"recover 3 remaining function(s) (3 no
 CLASS-cSC4FirePlaneDispatchSource,cSC4FirePlaneDispatchSource,"recover 28 remaining function(s) (28 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4FireProtectionSimulator,cSC4FireProtectionSimulator,finish 5 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4FireTruck,cSC4FireTruck,"recover 24 remaining function(s) (24 not started, 0 partial/pending); bases still unfinished: cSC4EmergencyVehicle",CLASS-cSC4EmergencyVehicle,open,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-cSC4FloraSimulator,cSC4FloraSimulator,finish 45 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cSC4FloraSimulator,cSC4FloraSimulator,"recover 1 remaining function(s) (0 not started, 1 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4FloraSimulator,cSC4FloraSimulator,finish 46 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4FoundationModel,cSC4FoundationModel,"recover 16 remaining function(s) (16 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4GameOfLifeSimulator,cSC4GameOfLifeSimulator,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4GeometrySourcedParticlesEffect,cSC4GeometrySourcedParticlesEffect,"recover 23 remaining function(s) (23 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -572,11 +612,14 @@ CLASS-cSC4LineGraph,cSC4LineGraph,"recover 4 remaining function(s) (4 not starte
 LEDGER-cSC4LineGraph,cSC4LineGraph,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4LoadRegionDialog,cSC4LoadRegionDialog,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4LocalGridHelper,cSC4LocalGridHelper,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-cSC4Lot,cSC4Lot,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cSC4Lot,cSC4Lot,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4Lot,cSC4Lot,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4LotBaseTextureOccupant,cSC4LotBaseTextureOccupant,"recover 26 remaining function(s) (26 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4LotConfigurationEditor,cSC4LotConfigurationEditor,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4LotConfigurationFilterByBuildingType,cSC4LotConfigurationFilterByBuildingType,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4LotConfigurationFilterMonopoly,cSC4LotConfigurationFilterMonopoly,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4LotConfigurationManager,cSC4LotConfigurationManager,"recover 1 remaining function(s) (0 not started, 1 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4LotConfigurationManager,cSC4LotConfigurationManager,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cSC4LotDeveloper,cSC4LotDeveloper,finish 108 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4LotPropFilter,cSC4LotPropFilter,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4LotRetainingWallModel,cSC4LotRetainingWallModel,"recover 20 remaining function(s) (20 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
@@ -617,7 +660,8 @@ CLASS-cSC4MyStreetSim,cSC4MyStreetSim,"recover 23 remaining function(s) (23 not 
 CLASS-cSC4MyStreetSimInputControl,cSC4MyStreetSimInputControl,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4Nation,cSC4Nation,"recover 29 remaining function(s) (29 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4Nation,cSC4Nation,finish 3 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
-LEDGER-cSC4NeighborConnection,cSC4NeighborConnection,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cSC4NeighborConnection,cSC4NeighborConnection,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4NeighborConnection,cSC4NeighborConnection,finish 5 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4NeighborsSimulator,cSC4NeighborsSimulator,"recover 55 remaining function(s) (55 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,done,scripts/export_class.py + notes/remaining_functions.csv
 NEIGHBORS-1,cSC4NeighborsSimulator,"Wire GZCOM_CreatecSC4NeighborsSimulator (currently a non-weak stub) through SimHostRegistry + a host field, and verify Write/Read nested connection records against a real DB segment",,open,src/sc4/NeighborsSimulator.cpp
 CLASS-cSC4NetworkBridgeOccupant,cSC4NetworkBridgeOccupant,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -632,7 +676,8 @@ CLASS-cSC4NetworkManager,cSC4NetworkManager,"recover 39 remaining function(s) (3
 LEDGER-cSC4NetworkManager,cSC4NetworkManager,finish 7 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 NETMGR-1,cSC4NetworkManager,"Wire GZCOM_CreatecSC4NetworkManager (still returns nullptr) and finish the 7 partials: DoMessage's underground-height fan-out, Retrofit's occupant slots, RemoveOrReplaceOccupant's tool GetCellInfo, the intersection queries and AutoconnectLotNodes",,open,src/sc4/NetworkManager.cpp
 CLASS-cSC4NetworkORFilter,cSC4NetworkORFilter,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-cSC4NetworkOccupant,cSC4NetworkOccupant,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cSC4NetworkOccupant,cSC4NetworkOccupant,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4NetworkOccupant,cSC4NetworkOccupant,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4NetworkOccupantModelInstance,cSC4NetworkOccupantModelInstance,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4NetworkOccupantWithPreBuiltModel,cSC4NetworkOccupantWithPreBuiltModel,"recover 33 remaining function(s) (33 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4NetworkPreview,cSC4NetworkPreview,"recover 16 remaining function(s) (16 not started, 0 partial/pending); bases still unfinished: cSC4ViewObject3D",CLASS-cSC4ViewObject3D,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -657,8 +702,16 @@ CLASS-cSC4OccupantGroupTemplate,cSC4OccupantGroupTemplate,"recover 11 remaining 
 OGT-1,cSC4OccupantGroupTemplate,"Hook IOccupantGroupHost::RandomDouble (cRZRandom seeded from the clock); the script system (cSC4AutomataScriptSystem) must fill parent/groupId/classId/chance_/controllerTemplates_/animOffsets/keyEffects; tKeyEffect is by offsets (+8,+0x30,+0x58 strings, +0x78 value)",CLASS-cSC4AutomataScriptSystem,open,src/sc4/OccupantGroupTemplate.h
 CLASS-cSC4OccupantManager,cSC4OccupantManager,"recover 7 remaining function(s) (0 not started, 7 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4OccupantManager,cSC4OccupantManager,finish 7 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,done,notes/ledger.csv
+CLASS-cSC4OccupantTypesFilterHashed,cSC4OccupantTypesFilterHashed,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4OccupantTypesFilterHashed,cSC4OccupantTypesFilterHashed,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4OptionGroup,cSC4OptionGroup,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4OrdinanceLegalizeGambling,cSC4OrdinanceLegalizeGambling,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cSC4OrdinanceSimple,cSC4OrdinanceSimple,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4OrdinanceSimple,cSC4OrdinanceSimple,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cSC4OrdinanceSimulator,cSC4OrdinanceSimulator,"recover 1 remaining function(s) (0 not started, 1 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4OrdinanceSimulator,cSC4OrdinanceSimulator,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-cSC4ParkManager,cSC4ParkManager,"recover 1 remaining function(s) (0 not started, 1 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4ParkManager,cSC4ParkManager,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4ParticlesDescription,cSC4ParticlesDescription,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4ParticlesDescriptionBase,cSC4ParticlesDescriptionBase,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4ParticlesEffect,cSC4ParticlesEffect,"recover 52 remaining function(s) (52 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
@@ -890,13 +943,13 @@ CLASS-cSC4WinLoadHeightField,cSC4WinLoadHeightField,"recover 12 remaining functi
 T-WLHF-1,cSC4WinLoadHeightField,"hook ILoadHeightFieldHost: GZCOM()->vslot 0x18(0x1aa52ea4,0x3aa52e64) browser creation, browser vslot 0x248 SetGutters (cGZWinFileBrowser::SetGutters is non-virtual in our class), cSLString(0x6a231eaa,0x4a9f1428) title",,open,src/sc4/WinLoadHeightField.h
 T-WLHF-2,cSC4WinLoadHeightField,EndDialog return value (window manager vslot 0x48) is used as DoMessage's result in the original; our cIGZWinMgr::EndDialog is void so DoMessage returns true after it,,open,src/sc4/WinLoadHeightField.cpp
 T-WLHF-3,cSC4WinLoadHeightField,quirk kept at 0x1003d24d0: Shutdown does not call cGZWin::Shutdown; Init returns false (init flag already set) when the browser cannot be created,,open,src/sc4/WinLoadHeightField.cpp
-CLASS-cSC4WinLotConfigurationChooser,cSC4WinLotConfigurationChooser,"recover 20 remaining function(s) (20 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4WinLotConfigurationEditor,cSC4WinLotConfigurationEditor,"recover 15 remaining function(s) (0 not started, 15 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4WinLotConfigurationChooser,cSC4WinLotConfigurationChooser,"recover 20 remaining function(s) (20 not started, 0 partial/pending); bases still unfinished: cGZWinGen",CLASS-cGZWinGen,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4WinLotConfigurationEditor,cSC4WinLotConfigurationEditor,"recover 15 remaining function(s) (0 not started, 15 partial/pending); bases still unfinished: cGZWinGen",CLASS-cGZWinGen,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4WinLotConfigurationEditor,cSC4WinLotConfigurationEditor,finish 10 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4WinMapView,cSC4WinMapView,"recover 37 remaining function(s) (37 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4WinMapView,cSC4WinMapView,finish 8 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4WinMiniMap,cSC4WinMiniMap,"recover 35 remaining function(s) (35 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,done,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4WinNetworkLotChooser,cSC4WinNetworkLotChooser,"recover 17 remaining function(s) (17 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4WinNetworkLotChooser,cSC4WinNetworkLotChooser,"recover 17 remaining function(s) (17 not started, 0 partial/pending); bases still unfinished: cGZWinGen",CLASS-cGZWinGen,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinNetworkLotEditor,cSC4WinNetworkLotEditor,"recover 17 remaining function(s) (17 not started, 0 partial/pending); bases still unfinished: cSC4WinLotConfigurationEditor",CLASS-cSC4WinLotConfigurationEditor,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WinRCI,cSC4WinRCI,"recover 14 remaining function(s) (14 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,done,scripts/export_class.py + notes/remaining_functions.csv
 WINRCI-1,cSC4WinRCI,"SetDemandType: the original copies count ids into a 16-entry array with no bound (over 16 overwrites the count and sums behind it); the port keeps 16. Only the toolbar calls it with 3 ids, so check the callers before keeping the clamp",,open,src/sc4/WinRCI.cpp
@@ -1030,8 +1083,10 @@ CLASS-nSC4Networks,nSC4Networks,"recover 10 remaining function(s) (10 not starte
 CLASS-nSC4UI,nSC4UI,"recover 12 remaining function(s) (12 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-nSC4UI,nSC4UI,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-nSCRes,nSCRes,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-nSGLDX7,nSGLDX7,"recover 18 remaining function(s) (18 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-LEDGER-nSGLDX7,nSGLDX7,finish 17 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-nSGLDX7,nSGLDX7,"recover 24 remaining function(s) (18 not started, 6 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-nSGLDX7,nSGLDX7,finish 23 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+CLASS-nsGZLua5CompatWithLua4,nsGZLua5CompatWithLua4,"recover 2 remaining function(s) (0 not started, 2 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-nsGZLua5CompatWithLua4,nsGZLua5CompatWithLua4,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-nsIGZLua5,nsIGZLua5,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-nsSC4TutorialSystem,nsSC4TutorialSystem,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-nsTexUtil,nsTexUtil,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -1057,6 +1112,7 @@ CLASS-tCompactNeighborInfo,tCompactNeighborInfo,"recover 2 remaining function(s)
 CLASS-tControllerQInfo,tControllerQInfo,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 MGR-6,tControllerQInfo,Hook automaton vslot 0x188 (SetLeader) and vslot 0x180 (GetLeader) to the real cISC4Automaton,CLASS-cSC4AutomataManager,open,src/sc4/AutomataController.h
 CLASS-tControllerTemplate,tControllerTemplate,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-tControllerTime,tControllerTime,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-tControllerTime,tControllerTime,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-tControllerTime,tControllerTime,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-tHtRange,tHtRange,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-tKeyEffect,tKeyEffect,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
