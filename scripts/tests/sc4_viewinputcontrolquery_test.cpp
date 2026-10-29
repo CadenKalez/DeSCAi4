@@ -323,7 +323,45 @@ struct PortDeveloperFake final : IQueryPortDeveloper {
 };
 
 // ---- the simulators the ported rows use -------------------------------------------------------------------
-struct Power final : IQueryPowerSim { bool powered = false; bool IsPowered(cISC4Occupant*) override { return powered; } };
+struct Power final : IQueryPowerSim {
+    bool powered = false;
+    bool IsPowered(cISC4Occupant*) override { return powered; }
+    std::uint32_t capacity = 0, used = 0, maxProduced = 0;
+    float efficiency = 0.0f, condition = 0.0f, funding = 0.0f, setFunding = -1.0f;
+    std::int64_t monthlyCost = 0;
+    bool fundingOk = true, costOk = true;
+    int setCalls = 0;
+    void GetOccupantPowerProduced(cISC4Occupant*, std::uint32_t& c, std::uint32_t& u) override { c = capacity; u = used; }
+    void GetOccupantMaxPowerProduced(cISC4Occupant*, std::uint32_t& out) override { out = maxProduced; }
+    float GetCurrentPlantEfficiencyPercent(cISC4Occupant*) override { return efficiency; }
+    float GetCurrentPlantConditionPercent(cISC4Occupant*) override { return condition; }
+    bool GetMonthlyPowerGenerationCost(cISC4Occupant*, std::int64_t& cost) override { cost = monthlyCost; return costOk; }
+    bool GetPowerPlantFundingPercentage(cISC4Occupant*, float& f) override { f = funding; return fundingOk; }
+    void SetPowerPlantFundingPercentage(cISC4Occupant*, float f) override { setFunding = f; ++setCalls; }
+};
+struct PollutionFake final : IQueryPollutionSim {
+    std::int64_t produced = 0, recycled = 0, landfilled = 0;
+    int centres = 0;
+    float scale = 1.0f, maxCapacity = 0.0f, currentCapacity = 0.0f, efficiency = 0.0f;
+    std::uint32_t incUsed = 0, incCurrent = 0, wteUsed = 0;
+    std::int64_t GarbageProducedPrevMonth() override { return produced; }
+    std::int64_t GarbageRecycledPrevMonth() override { return recycled; }
+    std::int64_t GarbageLandfilledPrevMonth() override { return landfilled; }
+    int RecyclingCenterCount() override { return centres; }
+    float GarbageScalingFactor() override { return scale; }
+    void RecyclingCenterMaxCapacity(cISC4Occupant*, float& o) override { o = maxCapacity; }
+    void RecyclingCenterCurrentCapacity(cISC4Occupant*, float& o) override { o = currentCapacity; }
+    bool CurrentOccupantEfficiency(cISC4Occupant*, float& o) override { o = efficiency; return true; }
+    void IncineratorUsedCapacity(cISC4Occupant*, std::uint32_t& o) override { o = incUsed; }
+    void WasteToEnergyUsedCapacity(cISC4Occupant*, std::uint32_t& o) override { o = wteUsed; }
+    void IncineratorCurrentCapacity(cISC4Occupant*, std::uint32_t& o) override { o = incCurrent; }
+};
+struct LandfillFake final : IQueryLandfillDeveloper {
+    std::uint32_t usage = 0, capacity = 0;
+    std::int64_t budget = 0;
+    void GetLandfillUsage(std::uint32_t& u, std::uint32_t& c) override { u = usage; c = capacity; }
+    std::int64_t GetCurrentBudget() override { return budget; }
+};
 struct Plumbing final : IQueryPlumbingSim { bool watered = false; bool IsWatered(cISC4Occupant*) override { return watered; } };
 struct Aura final : IQueryAuraSim { std::int8_t value = 0; std::int8_t GetAura(int, int) override { return value; } };
 struct Sim final : IQuerySimulator { std::uint32_t frame = 0; std::uint32_t FrameCount() override { return frame; } };
@@ -515,6 +553,10 @@ struct Host final : IViewInputHost, IQueryHost {
     IQueryPortDeveloper* AirportDeveloper() override { return &airport; }
     IQueryPortDeveloper* SeaportDeveloper() override { return &seaport; }
     Power power;
+    PollutionFake pollution;
+    LandfillFake landfill;
+    IQueryPollutionSim* PollutionSim() override { return &pollution; }
+    IQueryLandfillDeveloper* LandfillDeveloper() override { return &landfill; }
     Plumbing plumbing;
     Aura aura;
     Sim sim;
@@ -1270,6 +1312,118 @@ int main() {
         CHECK(!cSC4ViewInputControlQuery::SetOrGetHospitalLocalStaffFunding(dialog, 0x1002, false, &occupant));
         CHECK(host.residential.fundingCalls == 3);
         host.residential.hospitalAnswers = true;
+        delete dialog;
+    }
+
+    // --- M4: landfill / incinerator / recycling / power rows -------------------------------------------------------
+    {
+        auto* dialog = new cGZWin(&host.mgr);
+        auto* label = new gz::cGZWinText(&host.mgr);
+        label->SetID(0x1007);
+        auto* meter = new gz::cGZWinBMP(&host.mgr);
+        meter->SetID(0x1001);
+        auto* slider = new gz::cGZWinSlider(&host.mgr);
+        slider->SetID(0x1002);
+        slider->SetMinimumValue(0);
+        slider->SetMaximumValue(100);
+        auto* money = new gz::cGZWinText(&host.mgr);
+        money->SetID(0x1102);
+        CHECK(dialog->ChildAdd(label) && dialog->ChildAdd(meter) && dialog->ChildAdd(slider) && dialog->ChildAdd(money));
+        TestOccupant occupant;
+        auto meterOf = [&]() {
+            cIGZVariant* value = nullptr;
+            float result = -1.0f;
+            if (meter->AsIGZWin()->GetParam(0xea563ab0, &value) && value) { result = value->GetValFloat32(); value->Release(); }
+            return result;
+        };
+        auto text = [&]() { return std::string(label->GetCaption().ToChar()); };
+        // landfill: usage meter (full to 80 %, empty at capacity), the month's trash, the developer's budget through the dispatcher
+        host.landfill.capacity = 1000;
+        host.landfill.usage = 800;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetLandfillUsage(dialog, 0x1001, true, 0, 0) && std::fabs(meterOf() - 1.0f) < 1e-6f);
+        host.landfill.usage = 900;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetLandfillUsage(dialog, 0x1001, true, 0, 0));
+        CHECK(std::fabs(meterOf() - 100.0f / (1000.0f * 0.19999999f)) < 1e-6f);
+        host.landfill.capacity = 0;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetLandfillUsage(dialog, 0x1001, true, 0, 0) && std::fabs(meterOf()) < 1e-6f);
+        host.pollution.landfilled = 250;
+        host.pollution.scale = 2.5f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetLandfillNetTrashThisMonth(dialog, 0x1007, true, 0, 0) && text() == "625");
+        cSC4ViewInputControlQuery::tCellInfo info;
+        host.landfill.budget = 321;
+        auto* budgetLabel = new gz::cGZWinText(&host.mgr);
+        budgetLabel->SetID(0x1028);
+        CHECK(dialog->ChildAdd(budgetLabel));
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetControlValue(dialog, 0x1028, true, &info));
+        CHECK(std::string(budgetLabel->GetCaption().ToChar()) == "321");
+        // incinerator: efficiency as whole percent on the meter, used over capacity, trash scaled by the garbage factor
+        host.pollution.efficiency = 0.876f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetIncineratorEfficiency(dialog, 0x1001, true, &occupant) && std::fabs(meterOf() - 87.0f) < 1e-6f);
+        host.pollution.incUsed = 30;
+        host.pollution.incCurrent = 120;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetIncineratorPercentCapacity(dialog, 0x1007, true, &occupant) && text() == "25%");
+        host.pollution.incCurrent = 0;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetIncineratorPercentCapacity(dialog, 0x1007, true, &occupant) && text() == "0%");
+        host.pollution.scale = 1.5f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetIncineratorTrashIncinerated(dialog, 0x1007, true, &occupant) && text() == "45");
+        host.pollution.wteUsed = 10;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWasteToEnergyTrashIncinerated(dialog, 0x1007, true, &occupant) && text() == "15");
+        // recycling: current over maximum (at most 1), the recycled share over the current capacity, the centres' share
+        host.pollution.maxCapacity = 200.0f;
+        host.pollution.currentCapacity = 50.0f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRecyclingCenterEfficiency(dialog, 0x1001, true, &occupant) && std::fabs(meterOf() - 0.25f) < 1e-6f);
+        host.pollution.currentCapacity = 400.0f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRecyclingCenterEfficiency(dialog, 0x1001, true, &occupant) && std::fabs(meterOf() - 1.0f) < 1e-6f);
+        host.pollution.currentCapacity = 0.0f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRecyclingCenterEfficiency(dialog, 0x1001, true, &occupant) && std::fabs(meterOf()) < 1e-6f);
+        host.pollution.produced = 1000;
+        host.pollution.recycled = 100;
+        host.pollution.currentCapacity = 0.5f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRecyclingCenterPercentCapacity(dialog, 0x1007, true, &occupant) && text() == "20%");   // 0.1 / 0.5
+        host.pollution.currentCapacity = 0.05f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRecyclingCenterPercentCapacity(dialog, 0x1007, true, &occupant) && text() == "100%");   // clamped
+        host.pollution.centres = 0;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRecyclingCenterTrashRecycled(dialog, 0x1007, true, &occupant) && text() == "0");
+        host.pollution.centres = 4;
+        host.pollution.scale = 2.0f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRecyclingCenterTrashRecycled(dialog, 0x1007, true, &occupant) && text() == "50");   // 2 * 100 / 4
+        // power plants and their waste-to-energy twins
+        host.power.efficiency = 0.6f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetPowerPlantEfficiency(dialog, 0x1001, true, &occupant) && std::fabs(meterOf() - 0.6f) < 1e-6f);
+        host.power.efficiency = 0.9f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWasteToEnergyEfficiency(dialog, 0x1001, true, &occupant) && std::fabs(meterOf() - 0.9f) < 1e-6f);
+        host.power.capacity = 400;
+        host.power.used = 100;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetPowerPlantCurrentPowerOutputCapacity(dialog, 0x1007, true, &occupant) && text() == "400");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWasteToEnergyPowerUsed(dialog, 0x1007, true, &occupant) && text() == "100");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetPowerPlantPercentCapacity(dialog, 0x1007, true, &occupant) && text() == "25%");
+        host.power.capacity = 0;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWasteToEnergyPercentCapacity(dialog, 0x1007, true, &occupant) && text() == "0%");
+        host.power.maxProduced = 750;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetPowerPlantMaxPowerOutputCapacity(dialog, 0x1007, true, &occupant) && text() == "750");
+        host.power.condition = 0.876f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetPowerPlantPercentCondition(dialog, 0x1007, true, &occupant) && text() == "87%");
+        host.power.capacity = 400;
+        host.power.monthlyCost = 1000;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetPowerPlantCostPerUnit(dialog, 0x1007, true, &occupant));   // 1000 / 400 = 2.5
+        CHECK(text().find("2.50") != std::string::npos);   // the fake host's float money formatter appends the amount to a fixed prefix
+        // the funding slider: the plant's fraction rounded to a percent, its monthly cost; moving it stores the fraction
+        host.power.funding = 0.755f;
+        host.power.monthlyCost = 2000;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetPowerPlantLocalFunding(dialog, 0x1002, true, &occupant));
+        int sliderValue = 0;
+        CHECK(cSC4ViewInputControlQuery::GetSliderControlValue(dialog, 0x1002, sliderValue) && sliderValue == 76);
+        host.power.fundingOk = false;
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetPowerPlantLocalFunding(dialog, 0x1002, true, &occupant));
+        host.power.fundingOk = true;
+        host.power.costOk = false;
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetPowerPlantLocalFunding(dialog, 0x1002, true, &occupant));
+        host.power.costOk = true;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetPowerPlantLocalFunding(dialog, 0x1002, false, &occupant));
+        CHECK(host.power.setCalls == 1 && std::fabs(host.power.setFunding - 0.76f) < 1e-6f);
+        // every row is set-only: clearing answers true
+        CHECK(cSC4ViewInputControlQuery::SetOrGetPowerPlantEfficiency(dialog, 0x1001, false, &occupant));
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRecyclingCenterTrashRecycled(dialog, 0x1007, false, &occupant));
         delete dialog;
     }
 

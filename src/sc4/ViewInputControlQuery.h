@@ -22,10 +22,10 @@
 // PARTIAL (see notes/ledger_pending/cSC4ViewInputControlQuery.txt): the tip/describe text builders
 // (Get*SummaryInfo, GetBuildingOccupantTipInfo, GetBuildingOccupantTrafficInfo, GetNetworkOccupantTrafficInfo,
 // DescribePick/DescribeCell/DescribeBuilding/DescribeDemand/DescribePopulation, WriteDetailedDebugInfo and the
-// headline/trip-volume/path helpers) and the row handlers for the simulators that are not recovered yet (water, garbage/recycling, transit, landmark, RCI/growth-developer) are declared but not
+// headline/trip-volume/path helpers) and the row handlers for the simulators that are not recovered yet (water building, transit, landmark, RCI/growth-developer) are declared but not
 // implemented. The fire, police/jail, park/occupant-cost and neighbour-connection rows — everything whose simulator
 // (cSC4FireProtectionSimulator, cSC4PoliceSimulator, cSC4BudgetSimulator, cSC4NeighborsSimulator) is recovered — are
-// ported, as are the school, hospital and library rows, the airport and seaport rows (usage, capacity, traffic meter, maintenance), the dialog enumeration callbacks (EnumFunc*) and the recovered control-id -> row handler table.
+// ported, as are the school, hospital, library, landfill, incinerator, recycling, waste-to-energy and power plant rows, the airport and seaport rows (usage, capacity, traffic meter, maintenance), the dialog enumeration callbacks (EnumFunc*) and the recovered control-id -> row handler table.
 #pragma once
 #include <cstdint>
 #include <vector>
@@ -139,6 +139,39 @@ class IQueryPowerSim {
 public:
     virtual ~IQueryPowerSim() = default;
     virtual bool IsPowered(cISC4Occupant* occupant) = 0;   // vslot 0xf8
+    // The power plant rows (cSC4PowerSimulator, recovered). Defaults answer "nothing" so a host only overrides what it has.
+    virtual void GetOccupantPowerProduced(cISC4Occupant*, std::uint32_t& capacity, std::uint32_t& used) { capacity = used = 0; }   // 0x108
+    virtual void GetOccupantMaxPowerProduced(cISC4Occupant*, std::uint32_t& out) { out = 0; }                                   // 0x110
+    virtual float GetCurrentPlantEfficiencyPercent(cISC4Occupant*) { return 0.0f; }                                              // 0x168
+    virtual float GetCurrentPlantConditionPercent(cISC4Occupant*) { return 0.0f; }                                               // 0x170
+    virtual bool GetMonthlyPowerGenerationCost(cISC4Occupant*, std::int64_t&) { return false; }                                  // 0x188
+    virtual bool GetPowerPlantFundingPercentage(cISC4Occupant*, float&) { return false; }                                        // 0x190
+    virtual void SetPowerPlantFundingPercentage(cISC4Occupant*, float) {}                                                        // 0x198
+};
+
+// SL::spPollutionSim (cSC4PollutionSimulator, recovered): garbage, recycling and incinerator figures.
+class IQueryPollutionSim {
+public:
+    virtual ~IQueryPollutionSim() = default;
+    virtual std::int64_t GarbageProducedPrevMonth() { return 0; }        // 0x118
+    virtual std::int64_t GarbageRecycledPrevMonth() { return 0; }        // 0x130
+    virtual std::int64_t GarbageLandfilledPrevMonth() { return 0; }      // 0x148
+    virtual int RecyclingCenterCount() { return 0; }                     // 0x160
+    virtual float GarbageScalingFactor() { return 0.0f; }                // 0x180
+    virtual void RecyclingCenterMaxCapacity(cISC4Occupant*, float& out) { out = 0.0f; }      // 0x1b0
+    virtual void RecyclingCenterCurrentCapacity(cISC4Occupant*, float& out) { out = 0.0f; }  // 0x1b8
+    virtual bool CurrentOccupantEfficiency(cISC4Occupant*, float& out) { out = 0.0f; return false; }   // 0x1c8
+    virtual void IncineratorUsedCapacity(cISC4Occupant*, std::uint32_t& out) { out = 0; }          // 0x1d0
+    virtual void WasteToEnergyUsedCapacity(cISC4Occupant*, std::uint32_t& out) { out = 0; }        // 0x1d8
+    virtual void IncineratorCurrentCapacity(cISC4Occupant*, std::uint32_t& out) { out = 0; }       // 0x1e0
+};
+
+// SL::spLandfillDeveloper (also SL::spCity slot 0x270).
+class IQueryLandfillDeveloper {
+public:
+    virtual ~IQueryLandfillDeveloper() = default;
+    virtual void GetLandfillUsage(std::uint32_t& usage, std::uint32_t& capacity) { usage = capacity = 0; }   // 0x50
+    virtual std::int64_t GetCurrentBudget() { return 0; }                                                    // 0x40
 };
 class IQueryPlumbingSim {
 public:
@@ -263,6 +296,8 @@ public:
     virtual IQueryBudgetSim* BudgetSim() = 0;                 // SL::spBudgetSim
     virtual IQueryNeighborsSim* NeighborsSim() = 0;           // SL::spNeighborsSim
     virtual IQueryTrafficSim* TrafficSim() = 0;               // SL::spTrafficSim
+    virtual IQueryPollutionSim* PollutionSim() { return nullptr; }                // SL::spPollutionSim
+    virtual IQueryLandfillDeveloper* LandfillDeveloper() { return nullptr; }       // SL::spLandfillDeveloper
     virtual IQueryPortDeveloper* AirportDeveloper() { return nullptr; }   // SL::spCity slot 0x268
     virtual IQueryPortDeveloper* SeaportDeveloper() { return nullptr; }   // SL::spCity slot 0x260
     virtual IQueryPathView* CreatePathView() = 0;             // new cSC4PathView + Init
@@ -414,6 +449,31 @@ public:
     static bool SetOrGetHospitalDoctorCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7a2c
     static bool SetOrGetHospitalBedCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7a7e
     static bool SetOrGetHospitalPatientCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7ad0
+    // --- landfill / incinerator / recycling / power rows ---
+    static bool SetOrGetLandfillUsage(cIGZWin* win, std::uint32_t id, bool set, int x, int z);   // @ 0x1002d7b7c
+    static bool SetOrGetLandfillNetTrashThisMonth(cIGZWin* win, std::uint32_t id, bool set, int x, int z);   // @ 0x1002d7c22
+    static bool SetOrGetIncineratorEfficiency(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7c92
+    static bool SetOrGetIncineratorPercentCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7cfe
+    static bool SetOrGetIncineratorTrashIncinerated(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7d84
+    static bool SetOrGetRecyclingCenterEfficiency(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7e5c
+    static bool SetOrGetRecyclingCenterPercentCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7ef6
+    static bool SetOrGetRecyclingCenterTrashRecycled(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7fc8
+    static bool SetOrGetWasteToEnergyEfficiency(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8064
+    static bool SetOrGetPowerPlantEfficiency(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d80a2
+    static bool SetOrGetWasteToEnergyPercentCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d80e0
+    static bool SetOrGetPowerPlantPercentCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d80ee
+    static bool SetOrGetWasteToEnergyMaxPowerOutputCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8162
+    static bool SetOrGetPowerPlantMaxPowerOutputCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d81ae
+    static bool SetOrGetWasteToEnergyCurrentPowerOutputCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d81fa
+    static bool SetOrGetPowerPlantCurrentPowerOutputCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8208
+    static bool SetOrGetWasteToEnergyPowerUsed(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8264
+    static bool SetOrGetPowerPlantPowerUsed(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8272
+    static bool SetOrGetWasteToEnergyCostPerUnit(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d82ca
+    static bool SetOrGetPowerPlantCostPerUnit(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d82d8
+    static bool SetOrGetWasteToEnergyTrashIncinerated(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8378
+    static bool SetOrGetWasteToEnergyPercentCondition(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d83f4
+    static bool SetOrGetPowerPlantPercentCondition(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d843e
+    static bool SetOrGetPowerPlantLocalFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8488
     static bool SetOrGetNeighborConnectionNeighborCityName(cIGZWin* win, std::uint32_t id, bool set, int x, int z,
                                                            int connectionType);                     // @ 0x1002d90d6
     static bool SetOrGetNeighborConnectionNeighborCityMayorName(cIGZWin* win, std::uint32_t id, bool set, int x,

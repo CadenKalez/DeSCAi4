@@ -1136,6 +1136,223 @@ bool cSC4ViewInputControlQuery::SetOrGetHospitalLocalAmbulanceFunding(cIGZWin* w
     return EducationFunding(win, id, set, occupant, true, true, &SetOrGetHospitalLocalAmbulanceFunding, nullptr, 0);
 }
 
+// ---- landfill / incinerator / recycling / power rows ------------------------------------------------------------------------
+namespace {
+IQueryPollutionSim* PollutionSim() { IQueryHost* host = QueryHost(); return host ? host->PollutionSim() : nullptr; }
+IQueryPowerSim* PowerSim() { IQueryHost* host = QueryHost(); return host ? host->PowerSim() : nullptr; }
+IQueryLandfillDeveloper* Landfill() { IQueryHost* host = QueryHost(); return host ? host->LandfillDeveloper() : nullptr; }
+// full up to 80 % use, then falling to empty at capacity (compiled constants 0.8f / 0.19999999f); no capacity leaves it empty
+float UsageMeter(std::uint32_t usage, std::uint32_t capacity) {
+    if (capacity == 0) return 0.0f;
+    const float capacityF = static_cast<float>(capacity);
+    if (static_cast<float>(usage) <= capacityF * 0.8f) return 1.0f;
+    const float free = capacity > usage ? static_cast<float>(static_cast<std::uint64_t>(capacity - usage)) : 0.0f;
+    return free / (capacityF * 0.19999999f);
+}
+std::uint32_t TruncatedUnsigned(float value) { return static_cast<std::uint32_t>(static_cast<std::int64_t>(value)); }
+}  // namespace
+
+// @ 0x1002d7b7c
+bool cSC4ViewInputControlQuery::SetOrGetLandfillUsage(cIGZWin* win, std::uint32_t id, bool set, int, int) {
+    if (!set) return true;
+    std::uint32_t usage = 0, capacity = 0;
+    if (IQueryLandfillDeveloper* landfill = Landfill()) landfill->GetLandfillUsage(usage, capacity);
+    SetPerformanceMeterValue(win, id, UsageMeter(usage, capacity));
+    return true;
+}
+// @ 0x1002d7c22: last month's landfilled garbage scaled by the garbage factor
+bool cSC4ViewInputControlQuery::SetOrGetLandfillNetTrashThisMonth(cIGZWin* win, std::uint32_t id, bool set, int, int) {
+    if (!set) return true;
+    IQueryPollutionSim* pollution = PollutionSim();
+    if (!pollution) return false;
+    const std::int64_t landfilled = pollution->GarbageLandfilledPrevMonth();
+    const float scale = pollution->GarbageScalingFactor();
+    return SetStaticControlNumeric(win, id, TruncatedUnsigned(scale * static_cast<float>(landfilled)));
+}
+
+// @ 0x1002d7c92: the meter takes the efficiency as a whole number of percent
+bool cSC4ViewInputControlQuery::SetOrGetIncineratorEfficiency(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    float efficiency = 0.0f;
+    if (IQueryPollutionSim* pollution = PollutionSim()) pollution->CurrentOccupantEfficiency(occupant, efficiency);
+    return SetPerformanceMeterValue(win, id, static_cast<float>(TruncatedUnsigned(efficiency * 100.0f)));
+}
+// @ 0x1002d7cfe
+bool cSC4ViewInputControlQuery::SetOrGetIncineratorPercentCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    std::uint32_t used = 0, capacity = 0, percent = 0;
+    if (IQueryPollutionSim* pollution = PollutionSim()) {
+        pollution->IncineratorUsedCapacity(occupant, used);
+        pollution->IncineratorCurrentCapacity(occupant, capacity);
+    }
+    if (capacity != 0) percent = (used * 100u) / capacity;
+    return SetStaticControlNumericPercent(win, id, percent);
+}
+// @ 0x1002d7d84
+bool cSC4ViewInputControlQuery::SetOrGetIncineratorTrashIncinerated(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    std::uint32_t used = 0;
+    float scale = 0.0f;
+    if (IQueryPollutionSim* pollution = PollutionSim()) {
+        pollution->IncineratorUsedCapacity(occupant, used);
+        scale = pollution->GarbageScalingFactor();
+    }
+    return SetStaticControlNumeric(win, id, TruncatedUnsigned(scale * static_cast<float>(used)));
+}
+// @ 0x1002d8378
+bool cSC4ViewInputControlQuery::SetOrGetWasteToEnergyTrashIncinerated(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    std::uint32_t used = 0;
+    float scale = 0.0f;
+    if (IQueryPollutionSim* pollution = PollutionSim()) {
+        pollution->WasteToEnergyUsedCapacity(occupant, used);
+        scale = pollution->GarbageScalingFactor();
+    }
+    return SetStaticControlNumeric(win, id, TruncatedUnsigned(scale * static_cast<float>(used)));
+}
+
+// @ 0x1002d7e5c: current over maximum capacity, at most 1
+bool cSC4ViewInputControlQuery::SetOrGetRecyclingCenterEfficiency(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    float maximum = 0.0f, current = 0.0f;
+    if (IQueryPollutionSim* pollution = PollutionSim()) {
+        pollution->RecyclingCenterMaxCapacity(occupant, maximum);
+        pollution->RecyclingCenterCurrentCapacity(occupant, current);
+    }
+    float efficiency = 0.0f;
+    if (current > 0.0f) efficiency = current / maximum;   // kSC4PercentageZero
+    return SetPerformanceMeterValue(win, id, efficiency < 1.0f ? efficiency : 1.0f);
+}
+// @ 0x1002d7ef6: the share of the garbage that was recycled, over the centre's current capacity, as a percent
+bool cSC4ViewInputControlQuery::SetOrGetRecyclingCenterPercentCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryPollutionSim* pollution = PollutionSim();
+    float recycledShare = 0.0f, current = 0.0f;
+    if (pollution) {
+        const std::int64_t produced = pollution->GarbageProducedPrevMonth();
+        const std::int64_t recycled = pollution->GarbageRecycledPrevMonth();
+        if (produced != 0) recycledShare = static_cast<float>(recycled) / static_cast<float>(produced);
+        pollution->RecyclingCenterCurrentCapacity(occupant, current);
+    }
+    float fraction = 0.0f;
+    if (current > 0.0f) {
+        fraction = recycledShare / current;
+        if (fraction > 1.0f) fraction = 1.0f;
+    }
+    return SetStaticControlNumericPercent(win, id, TruncatedUnsigned(fraction * 100.0f));
+}
+// @ 0x1002d7fc8: the recycled garbage shared between the recycling centres
+bool cSC4ViewInputControlQuery::SetOrGetRecyclingCenterTrashRecycled(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant*) {
+    if (!set) return true;
+    IQueryPollutionSim* pollution = PollutionSim();
+    std::uint32_t result = 0;
+    if (pollution) {
+        const std::int64_t recycled = pollution->GarbageRecycledPrevMonth();
+        const float scale = pollution->GarbageScalingFactor();
+        const int centres = pollution->RecyclingCenterCount();
+        if (centres != 0) result = static_cast<std::uint32_t>(static_cast<std::int64_t>(scale * static_cast<float>(recycled)) / centres);
+    }
+    return SetStaticControlNumeric(win, id, result);
+}
+
+// @ 0x1002d8064 and its power plant twin @ 0x1002d80a2
+bool cSC4ViewInputControlQuery::SetOrGetPowerPlantEfficiency(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryPowerSim* power = PowerSim();
+    return SetPerformanceMeterValue(win, id, power ? power->GetCurrentPlantEfficiencyPercent(occupant) : 0.0f);
+}
+bool cSC4ViewInputControlQuery::SetOrGetWasteToEnergyEfficiency(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return SetOrGetPowerPlantEfficiency(win, id, set, occupant);
+}
+// @ 0x1002d80ee (the waste-to-energy plant @ 0x1002d80e0 forwards): used over capacity as a whole percent
+bool cSC4ViewInputControlQuery::SetOrGetPowerPlantPercentCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    std::uint32_t capacity = 0, used = 0, percent = 0;
+    if (IQueryPowerSim* power = PowerSim()) power->GetOccupantPowerProduced(occupant, capacity, used);
+    if (capacity != 0) percent = (used * 100u) / capacity;
+    return SetStaticControlNumericPercent(win, id, percent);
+}
+bool cSC4ViewInputControlQuery::SetOrGetWasteToEnergyPercentCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return SetOrGetPowerPlantPercentCapacity(win, id, set, occupant);
+}
+// @ 0x1002d81ae / 0x1002d8162: always answers true, even when the number could not be shown
+bool cSC4ViewInputControlQuery::SetOrGetPowerPlantMaxPowerOutputCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (set) {
+        std::uint32_t maximum = 0;
+        if (IQueryPowerSim* power = PowerSim()) power->GetOccupantMaxPowerProduced(occupant, maximum);
+        SetStaticControlNumeric(win, id, maximum);
+    }
+    return true;
+}
+bool cSC4ViewInputControlQuery::SetOrGetWasteToEnergyMaxPowerOutputCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return SetOrGetPowerPlantMaxPowerOutputCapacity(win, id, set, occupant);
+}
+// @ 0x1002d8208 (twin @ 0x1002d81fa): the first figure of the produced pair
+bool cSC4ViewInputControlQuery::SetOrGetPowerPlantCurrentPowerOutputCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    std::uint32_t capacity = 0, used = 0;
+    if (IQueryPowerSim* power = PowerSim()) power->GetOccupantPowerProduced(occupant, capacity, used);
+    return SetStaticControlNumeric(win, id, capacity);
+}
+bool cSC4ViewInputControlQuery::SetOrGetWasteToEnergyCurrentPowerOutputCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return SetOrGetPowerPlantCurrentPowerOutputCapacity(win, id, set, occupant);
+}
+// @ 0x1002d8272 (twin @ 0x1002d8264): the second figure of the produced pair
+bool cSC4ViewInputControlQuery::SetOrGetPowerPlantPowerUsed(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (set) {
+        std::uint32_t capacity = 0, used = 0;
+        if (IQueryPowerSim* power = PowerSim()) power->GetOccupantPowerProduced(occupant, capacity, used);
+        SetStaticControlNumeric(win, id, used);
+    }
+    return true;
+}
+bool cSC4ViewInputControlQuery::SetOrGetWasteToEnergyPowerUsed(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return SetOrGetPowerPlantPowerUsed(win, id, set, occupant);
+}
+// @ 0x1002d82d8 (twin @ 0x1002d82ca): the monthly cost over the first figure of the produced pair
+bool cSC4ViewInputControlQuery::SetOrGetPowerPlantCostPerUnit(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    std::uint32_t capacity = 0, used = 0;
+    double perUnit = 0.0;
+    IQueryPowerSim* power = PowerSim();
+    if (power) power->GetOccupantPowerProduced(occupant, capacity, used);
+    if (capacity != 0) {
+        std::int64_t cost = 0;
+        if (power) power->GetMonthlyPowerGenerationCost(occupant, cost);
+        perUnit = static_cast<double>(cost) / static_cast<double>(capacity);
+    }
+    return SetStaticControlSimoleonsFloat(win, id, perUnit);
+}
+bool cSC4ViewInputControlQuery::SetOrGetWasteToEnergyCostPerUnit(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return SetOrGetPowerPlantCostPerUnit(win, id, set, occupant);
+}
+// @ 0x1002d843e (twin @ 0x1002d83f4)
+bool cSC4ViewInputControlQuery::SetOrGetPowerPlantPercentCondition(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryPowerSim* power = PowerSim();
+    const float condition = power ? power->GetCurrentPlantConditionPercent(occupant) : 0.0f;
+    return SetStaticControlNumericPercent(win, id, TruncatedUnsigned(condition * 100.0f));
+}
+bool cSC4ViewInputControlQuery::SetOrGetWasteToEnergyPercentCondition(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return SetOrGetPowerPlantPercentCondition(win, id, set, occupant);
+}
+// @ 0x1002d8488: the funding slider shows the plant's funding fraction and monthly cost; moving it stores the fraction
+bool cSC4ViewInputControlQuery::SetOrGetPowerPlantLocalFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    IQueryPowerSim* power = PowerSim();
+    if (set) {
+        float fraction = 0.0f;
+        std::int64_t cost = 0;
+        if (!power || !power->GetPowerPlantFundingPercentage(occupant, fraction)) return false;
+        if (!power->GetMonthlyPowerGenerationCost(occupant, cost)) return false;
+        return SetSliderControlValue(win, id, 1, 0, RoundedPercentForSlider(fraction), cost, occupant,
+                                     &SetOrGetPowerPlantLocalFunding, nullptr, 0);
+    }
+    int value = 0;
+    GetSliderControlValue(win, id, value);
+    if (power) power->SetPowerPlantFundingPercentage(occupant, static_cast<float>(value) * 0.01f);
+    return true;
+}
+
 // @ 0x1002daf96
 // PARTIAL: the original is a switch over the cell-based control ids (0x1011..0x1015 airport/seaport traffic, 0x1026 /
 // 0x1027 landfill, 0x1028 the landfill developer's monthly cost, 0x104b..0x104e the neighbour-connection rows and
@@ -1146,6 +1363,8 @@ bool cSC4ViewInputControlQuery::SetOrGetControlValue(cIGZWin* win, std::uint32_t
     if (!info) return false;
     const std::uint32_t rowId = static_cast<std::uint32_t>(info->idOffset);
     switch (id) {
+    case 0x1026: SetOrGetLandfillUsage(win, 0x1026, set, info->x, info->z); return false;
+    case 0x1027: SetOrGetLandfillNetTrashThisMonth(win, 0x1027, set, info->x, info->z); return false;
     case 0x1011: SetOrGetAirportAirTrafficVolume(win, 0x1011, set, info->x, info->z); return false;
     case 0x1013: SetOrGetAirportMaintenanceCost(win, 0x1013, set, info->x, info->z); return false;
     case 0x1015: SetOrGetSeaportSeaTrafficVolume(win, 0x1015, set, info->x, info->z); return false;
@@ -1154,6 +1373,12 @@ bool cSC4ViewInputControlQuery::SetOrGetControlValue(cIGZWin* win, std::uint32_t
     case 0x107c: SetOrGetAirportCapacity(win, 0x107c, set, info->x, info->z); return false;
     case 0x107d: SetOrGetSeaportUsage(win, 0x107d, set, info->x, info->z); return false;
     case 0x107e: SetOrGetSeaportCapacity(win, 0x107e, set, info->x, info->z); return false;
+    case 0x1028:
+        if (set) {
+            IQueryLandfillDeveloper* landfill = Landfill();
+            SetStaticControlSimoleons(win, 0x1028, landfill ? landfill->GetCurrentBudget() : 0);
+        }
+        return false;
     case 0x104b:
         SetOrGetNeighborConnectionNeighborCityName(win, rowId + 0x104b, set, info->x, info->z, info->connectionType);
         return false;
@@ -1337,11 +1562,11 @@ cSC4ViewInputControlQuery::tSetOrGetFn const cSC4ViewInputControlQuery::kRowFunc
     &cSC4ViewInputControlQuery::SetOrGetSchoolStudentCount, &cSC4ViewInputControlQuery::SetOrGetMuseumExhibitTicketsAvailable, &cSC4ViewInputControlQuery::SetOrGetLibraryBooksBorrowedCount, &cSC4ViewInputControlQuery::SetOrGetLibraryBooksInCollectionCount,   // 0x101c..0x101f
     &cSC4ViewInputControlQuery::SetOrGetHospitalGrade, &cSC4ViewInputControlQuery::SetOrGetHospitalLocalStaffFunding, &cSC4ViewInputControlQuery::SetOrGetHospitalLocalAmbulanceFunding, &cSC4ViewInputControlQuery::SetOrGetHospitalDoctorCount,   // 0x1020..0x1023
     &cSC4ViewInputControlQuery::SetOrGetHospitalBedCount, &cSC4ViewInputControlQuery::SetOrGetHospitalPatientCount, nullptr, nullptr,   // 0x1024..0x1027
-    nullptr, nullptr, nullptr, nullptr,   // 0x1028..0x102b
-    nullptr, nullptr, nullptr, nullptr,   // 0x102c..0x102f
-    nullptr, nullptr, nullptr, nullptr,   // 0x1030..0x1033
-    nullptr, nullptr, nullptr, nullptr,   // 0x1034..0x1037
-    nullptr, nullptr, nullptr, nullptr,   // 0x1038..0x103b
+    nullptr, &cSC4ViewInputControlQuery::SetOrGetIncineratorEfficiency, &cSC4ViewInputControlQuery::SetOrGetIncineratorPercentCapacity, &cSC4ViewInputControlQuery::SetOrGetIncineratorTrashIncinerated,   // 0x1028..0x102b
+    nullptr, &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyEfficiency, &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyPercentCapacity, &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyMaxPowerOutputCapacity,   // 0x102c..0x102f
+    &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyCurrentPowerOutputCapacity, &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyPowerUsed, &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyCostPerUnit, &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyTrashIncinerated,   // 0x1030..0x1033
+    &cSC4ViewInputControlQuery::SetOrGetPowerPlantEfficiency, &cSC4ViewInputControlQuery::SetOrGetPowerPlantPercentCapacity, &cSC4ViewInputControlQuery::SetOrGetPowerPlantMaxPowerOutputCapacity, &cSC4ViewInputControlQuery::SetOrGetPowerPlantCurrentPowerOutputCapacity,   // 0x1034..0x1037
+    &cSC4ViewInputControlQuery::SetOrGetPowerPlantPowerUsed, &cSC4ViewInputControlQuery::SetOrGetPowerPlantCostPerUnit, nullptr, nullptr,   // 0x1038..0x103b
     nullptr, nullptr, nullptr, nullptr,   // 0x103c..0x103f
     nullptr, nullptr, nullptr, nullptr,   // 0x1040..0x1043
     nullptr, nullptr, nullptr, nullptr,   // 0x1044..0x1047
@@ -1350,8 +1575,8 @@ cSC4ViewInputControlQuery::tSetOrGetFn const cSC4ViewInputControlQuery::kRowFunc
     nullptr, nullptr, nullptr, nullptr,   // 0x1050..0x1053
     nullptr, nullptr, nullptr, nullptr,   // 0x1054..0x1057
     &cSC4ViewInputControlQuery::SetOrGetResidentialBuildingMayorApproval, nullptr, nullptr, nullptr,   // 0x1058..0x105b
-    nullptr, nullptr, nullptr, nullptr,   // 0x105c..0x105f
-    nullptr, nullptr, nullptr, nullptr,   // 0x1060..0x1063
+    nullptr, nullptr, &cSC4ViewInputControlQuery::SetOrGetRecyclingCenterEfficiency, &cSC4ViewInputControlQuery::SetOrGetRecyclingCenterPercentCapacity,   // 0x105c..0x105f
+    &cSC4ViewInputControlQuery::SetOrGetRecyclingCenterTrashRecycled, &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyPercentCondition, &cSC4ViewInputControlQuery::SetOrGetPowerPlantPercentCondition, &cSC4ViewInputControlQuery::SetOrGetPowerPlantLocalFunding,   // 0x1060..0x1063
     nullptr, nullptr, nullptr, nullptr,   // 0x1064..0x1067
     nullptr, nullptr, nullptr, nullptr,   // 0x1068..0x106b
     &cSC4ViewInputControlQuery::SetOrGetOccupantCost, nullptr, nullptr, nullptr,   // 0x106c..0x106f
