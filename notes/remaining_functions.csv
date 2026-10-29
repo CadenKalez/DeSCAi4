@@ -2729,61 +2729,6 @@ cSC4PathView,000000010077d0f6,not started,"cSC4PathView::SetPathTexture(unsigned
 cSC4PathView,000000010077d168,not started,cSC4PathView::AddPathVertex(cS3DVector3 const&)
 cSC4PathView,000000010077d2c6,not started,"cSC4PathView::CalcMiterJoint(cS3DVector3 const&, cS3DVector3 const&, cS3DVector3 const&, cS3DVector3&, cS3DVector3&)"
 cSC4PathView,000000010077d428,not started,"cSC4PathView::DrawArrowhead(SC4DrawContext*, cS3DVector3&, cS3DVector3&, unsigned int)"
-cSC4PatrolCar,000000010050e98c,not started,cSC4PatrolCar::cSC4PatrolCar()
-cSC4PatrolCar,000000010050ea04,not started,cSC4PatrolCar::Shutdown()
-cSC4PatrolCar,000000010050ea20,not started,cSC4PatrolCar::ReleaseRiotPolice()
-cSC4PatrolCar,000000010050eaa6,not started,cSC4PatrolCar::HandleReachedRouteDestination()
-cSC4PatrolCar,000000010050eab0,not started,cSC4PatrolCar::GetEffectiveRadius() const
-cSC4PatrolCar,000000010050eb14,not started,cSC4PatrolCar::CloseEnoughToDispatchDestination() const
-cSC4PatrolCar,000000010050eb1e,not started,cSC4PatrolCar::HandleCrewFinished()
-cSC4PatrolCar,000000010050eb46,not started,cSC4PatrolCar::SetDispatchState(cISC4DispatchManager::tDispatchState)
-cSC4PatrolCar,000000010050ec86,not started,cSC4PatrolCar::CreateRiotPolice()
-cSC4PatrolCar,000000010050edc8,not started,cSC4PatrolCar::DoHandlingEventTick(float)
-cSC4PatrolCar,000000010050ee38,not started,cSC4PatrolCar::Write(cIGZOStream&) const
-cSC4PatrolCar,000000010050eeb0,not started,cSC4PatrolCar::Read(cIGZIStream&)
-cSC4PatrolCar,000000010050ef76,not started,cSC4PatrolCar::HandleEnterState(tAutomataState*)
-cSC4PatrolCar,000000010050efba,not started,cSC4PatrolCar::DoStateTick(float)
-cSC4PatrolCar,000000010050f00e,not started,cSC4PatrolCar::DoArrestTick(float)
-cSC4PatrolCar,000000010050f28a,not started,cSC4PatrolCar::HandleExitState(tAutomataState const*)
-cSC4PatrolCar,000000010050f2e6,not started,cSC4PatrolCar::~cSC4PatrolCar()
-cSC4PatrolCar,000000010050f516,not started,cSC4PatrolCar::~cSC4PatrolCar()
-cSC4PatrolCar,000000010050f544,not started,cSC4PatrolCar::GetGZCLSID() const
-cSC4PatrolCar,000000010050f5ac,not started,cSC4PatrolCar::GetDispatchType() const
-cSC4Pedestrian,00000001000f117c,not started,"cSC4Pedestrian::HandleCrowdReactionEvent(cS3DVector3&, unsigned int)"
-cSC4Pedestrian,00000001000f140a,not started,"cSC4Pedestrian::cSC4Pedestrian(cSC4PedestrianManager*, cGZPersistResourceKey)"
-cSC4Pedestrian,00000001000f1610,not started,"cSC4Pedestrian::cSC4Pedestrian(cSC4PedestrianManager*, cGZPersistResourceKey)"
-cSC4Pedestrian,00000001000f1792,not started,cSC4Pedestrian::Init()
-cSC4Pedestrian,00000001000f17f2,not started,cSC4Pedestrian::Shutdown()
-cSC4Pedestrian,00000001000f180a,not started,"cSC4Pedestrian::MoveTo(float const*, float const*)"
-cSC4Pedestrian,00000001000f187a,not started,"cSC4Pedestrian::DoAnimationTick(unsigned int, float)"
-cSC4Pedestrian,00000001000f190a,not started,cSC4Pedestrian::ChooseNewDestination()
-cSC4Pedestrian,00000001000f1a98,not started,cSC4Pedestrian::HandleEnterState(tAutomataState*)
-cSC4Pedestrian,00000001000f1ca8,not started,"cSC4Pedestrian::DoRiotLeaderTick(float, bool)"
-cSC4Pedestrian,00000001000f1fe0,not started,cSC4Pedestrian::HandleExitState(tAutomataState const*)
-cSC4Pedestrian,00000001000f201a,not started,cSC4Pedestrian::DoStateTick(float)
-cSC4Pedestrian,00000001000f2124,not started,cSC4Pedestrian::DoBeeLineTick(float)
-cSC4Pedestrian,00000001000f21c2,not started,cSC4Pedestrian::DoCrowdTick(float)
-cSC4Pedestrian,00000001000f2470,not started,cSC4Pedestrian::DoQueueTick(float)
-cSC4Pedestrian,00000001000f2602,not started,cSC4Pedestrian::DoStrikeTick(float)
-cSC4Pedestrian,00000001000f293a,not started,cSC4Pedestrian::DoRiotFollowerTick(float)
-cSC4Pedestrian,00000001000f2cb2,not started,cSC4Pedestrian::DoIgniteTick(float)
-cSC4Pedestrian,00000001000f2de8,not started,"cSC4Pedestrian::MoveForwardWithCollision(cS3DVector3&, float)"
-cSC4Pedestrian,00000001000f2ffa,not started,"cSC4Pedestrian::TestCollisionExpensive(cS3DVector3&, float)"
-cSC4Pedestrian,00000001000f328e,not started,cSC4Pedestrian::VerifyNetworkOccupant()
-cSC4Pedestrian,00000001000f3334,not started,cSC4Pedestrian::HandleNetworkOccupantRemoved()
-cSC4Pedestrian,00000001000f338c,not started,cSC4Pedestrian::UpdateAnimation(float)
-cSC4Pedestrian,00000001000f34d8,not started,"cSC4Pedestrian::UpdateOrientation(cS3DVector3 const&, float*)"
-cSC4Pedestrian,00000001000f3562,not started,cSC4Pedestrian::SlowDownForStopLight()
-cSC4Pedestrian,00000001000f3568,not started,cSC4Pedestrian::RecalculatePathOffset()
-cSC4Pedestrian,00000001000f35a8,not started,cSC4Pedestrian::HandleStopped()
-cSC4Pedestrian,00000001000f3626,not started,cSC4Pedestrian::Write(cIGZOStream&) const
-cSC4Pedestrian,00000001000f36ce,not started,cSC4Pedestrian::Read(cIGZIStream&)
-cSC4Pedestrian,00000001000f3796,not started,"cSC4Pedestrian::QueryInterface(unsigned int, void**)"
-cSC4Pedestrian,00000001000f385e,not started,cSC4Pedestrian::GetTrafficAutomataManager()
-cSC4Pedestrian,00000001000f3c00,not started,cSC4Pedestrian::GetRadius() const
-cSC4Pedestrian,00000001000f3c22,not started,cSC4Pedestrian::~cSC4Pedestrian()
-cSC4Pedestrian,00000001000f3c2c,not started,cSC4Pedestrian::~cSC4Pedestrian()
-cSC4Pedestrian,00000001000f3c6a,not started,cSC4Pedestrian::GetGZCLSID() const
 cSC4PedestrianManager,00000001000f0cc0,not started,cSC4PedestrianManager::cSC4PedestrianManager()
 cSC4PedestrianManager,00000001000f0e3c,not started,cSC4PedestrianManager::cSC4PedestrianManager()
 cSC4PedestrianManager,00000001000f0e46,not started,cSC4PedestrianManager::Init()

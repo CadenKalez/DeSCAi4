@@ -19,6 +19,7 @@
 #include "sc4/TrafficNetworkMap.h"
 #include "sc4/Ambulance.h"
 #include "sc4/EmergencyVehicle.h"
+#include "sc4/PatrolCar.h"
 #include "sc4/Pedestrian.h"
 #include "sc4/SpecialVehicles.h"
 #include "sc4/Vehicle.h"
@@ -1181,6 +1182,141 @@ void TestEmergencyVehicle() {
     ev->Release();
 }
 
+// ---- cSC4PatrolCar ------------------------------------------------------------------------------------------------------------
+struct FakeCrew final : cIGZUnknown {
+    int refs = 0;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return ++refs; }
+    std::uint32_t Release() override { return --refs; }
+};
+
+struct FakeParticipant final : ICrimeParticipant {
+    int* remaining = nullptr;
+    int arrests = 0;
+    void Arrest(bool on) override { if (on) { ++arrests; --*remaining; } }
+};
+
+struct FakePatrolHost final : IPatrolCarHost {
+    bool riot = false, stationKnown = true;
+    float competence = 0.5f, radius = 40.0f;
+    cSC4Automaton* criminal = nullptr;
+    int participantsLeft = 0;
+    FakeParticipant participant;
+    FakeCrew crew;
+    int created = 0, setups = 0, removed = 0, replaced = 0;
+    float setupCompetence = -1.0f;
+    std::uint32_t replacedInstance = 0;
+    FakePatrolHost() { participant.remaining = &participantsLeft; }
+    bool RiotInProgress() override { return riot; }
+    bool PoliceCompetence(cIGZUnknown*, float& value) override { value = competence; return stationKnown; }
+    bool StationRadius(cIGZUnknown*, float& value) override { value = radius; return stationKnown; }
+    cSC4Automaton* FindCrimeAutomaton(const cS3DVector3&, float) override { return criminal; }
+    ICrimeParticipant* FindCrimeParticipant(const cS3DVector3&, float) override { return participantsLeft > 0 ? &participant : nullptr; }
+    cIGZUnknown* NewRiotPolice(cSC4PatrolCar&) override { ++created; return &crew; }
+    void SetupRiotPolice(cIGZUnknown*, float c) override { ++setups; setupCompetence = c; }
+    void RemoveRiotPolice(cIGZUnknown*) override { ++removed; }
+    void ReplaceArrestModel(cSC4PatrolCar&, const cGZPersistResourceKey& key) override { ++replaced; replacedInstance = key.instance; }
+};
+
+void TestPatrolCar() {
+    World world;
+    FakeEmergencyHost emergencyHost;
+    FakePatrolHost patrol;
+    auto* car = new cSC4PatrolCar(&world.host, &world.automatonHost, nullptr, &emergencyHost, &patrol);
+    car->AddRef();
+    CHECK(car->GetGZCLSID() == 0x4a222b98 && car->GetDispatchType() == 0);
+    CHECK(car->GetEffectiveRadius() == 16.0f);                       // no dispatch source: the default reach
+    auto* source = new FakeBaseOccupant();
+    car->SetDispatchSource(source);
+    source->refs--;
+    CHECK(car->GetEffectiveRadius() == 40.0f);
+    patrol.stationKnown = false;
+    CHECK(car->GetEffectiveRadius() == 16.0f);
+    patrol.stationKnown = true;
+
+    // a blocked call (1) and a call being handled during a riot bring the crew; the crew is counted by the car
+    car->CreateRiotPolice();
+    CHECK(patrol.created == 1 && patrol.setups == 1 && patrol.setupCompetence == 0.5f && car->RiotPolice() == &patrol.crew && patrol.crew.refs == 1);
+    car->CreateRiotPolice();
+    CHECK(patrol.created == 1);                                       // one crew per car
+    car->ReleaseRiotPolice();
+    CHECK(patrol.removed == 1 && car->RiotPolice() == nullptr && patrol.crew.refs == 0);
+    car->HandleCrewFinished();
+    CHECK(car->GetDispatchState() == 2 && patrol.removed == 1);       // nothing to remove: the manager is not asked
+
+    patrol.stationKnown = false;
+    car->SetDispatchState(1);                                          // blocked: crew with the default competence
+    CHECK(car->RiotPolice() == &patrol.crew && patrol.setupCompetence == 1.0f);
+    patrol.stationKnown = true;
+    car->SetDispatchState(3);                                          // driving to the call: the crew is released
+    CHECK(car->RiotPolice() == nullptr);
+
+    // at the call (5): during a riot the crew comes; otherwise a criminal in reach starts the arrest state, none the idle state
+    patrol.riot = true;
+    car->SetDispatchStateRaw(0);
+    car->SetDispatchState(5);
+    CHECK(car->RiotPolice() == &patrol.crew);
+    patrol.riot = false;
+    car->SetDispatchStateRaw(0);
+    car->SetDispatchState(5);
+    CHECK(car->RiotPolice() == nullptr && car->GetState() && car->GetState()->stateType == kStateIdleTick && car->GetState()->timer == 2000.0f);
+    car->PopState();
+    patrol.participantsLeft = 2;
+    car->SetDispatchStateRaw(0);
+    car->SetDispatchState(5);
+    CHECK(car->GetState() && car->GetState()->stateType == kPatrolStateArrest);
+
+    // the arrest state: the timer counts down, then everybody in reach is arrested and the competence picks the animation
+    car->GetState()->timer = 1000.0f;
+    patrol.participantsLeft = 3;
+    CHECK(car->DoStateTick(400.0f) && car->GetState()->timer == 600.0f && patrol.participant.arrests == 0 && patrol.replaced == 0);
+    CHECK(car->DoStateTick(700.0f));
+    CHECK(patrol.participant.arrests == 3 && patrol.participantsLeft == 0);
+    patrol.participantsLeft = 50;
+    patrol.participant.arrests = 0;
+    car->GetState()->timer = 1.0f;
+    car->DoStateTick(2.0f);
+    CHECK(patrol.participant.arrests == 5);                           // at most five arrests per tick
+    patrol.participantsLeft = 0;
+
+    // a lone criminal automaton fades out and walks away when nobody can be arrested
+    cSC4Vehicle* thief = MakeVehicle(world);
+    patrol.criminal = thief;
+    car->GetState()->timer = 1.0f;
+    car->DoStateTick(2.0f);
+    CHECK(thief->GetState() && thief->GetState()->stateType == kStateIdleTick && thief->GetState()->timer == 5000.0f);
+    patrol.criminal = nullptr;
+    thief->ClearStateStack();
+    thief->Release();
+
+    // the exit of the arrest state restarts the first animation; the player taking the wheel drops the crew
+    CHECK(!car->HandleExitState(nullptr));
+    car->CreateRiotPolice();
+    tAutomataStatePlayerDrive drive;
+    drive.stateType = kStatePlayerDrive;
+    CHECK(car->HandleEnterState(&drive) && car->RiotPolice() == nullptr);
+
+    // the stream: version 2, the emergency vehicle's record, the crew (null here)
+    PortMemoryOStream out;
+    CHECK(car->Write(out));
+    PortMemoryIStream in(out.bytes().data(), out.bytes().size());
+    auto* copy = new cSC4PatrolCar(&world.host, &world.automatonHost, nullptr, &emergencyHost, &patrol);
+    copy->AddRef();
+    CHECK(copy->Read(in) && copy->RiotPolice() == nullptr);
+    const std::uint8_t badVersion[2] = {9, 0};
+    PortMemoryIStream bad(badVersion, sizeof(badVersion));
+    CHECK(!copy->Read(bad));
+    copy->Release();
+
+    // shutting down releases the crew first
+    car->CreateRiotPolice();
+    const int before = patrol.removed;
+    car->ClearStateStack();
+    car->Shutdown();
+    CHECK(patrol.removed == before + 1 && car->RiotPolice() == nullptr);
+    car->Release();
+}
+
 // ---- cSC4Pedestrian ----------------------------------------------------------------------------------------------------
 struct FakePedestrianHost final : IPedestrianHost {
     FakeTrafficHost traffic;
@@ -1375,6 +1511,7 @@ int main() {
     TestLotIntersection();
     TestPlayerDriveTickAndOffRoad();
     TestEmergencyVehicle();
+    TestPatrolCar();
     TestPedestrian();
     if (failures == 0) {
         std::printf("sc4_vehicle: ok\n");
