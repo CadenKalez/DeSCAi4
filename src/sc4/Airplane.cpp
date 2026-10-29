@@ -1,4 +1,4 @@
-// cSC4Airplane — see Airplane.h for the recovered layout, quirks and the PARTIAL list.
+// cSC4Airplane — see Airplane.h for the recovered layout and quirks.
 #include "sc4/Airplane.h"
 
 // The flight model is transcribed from the disassembly in its single-precision operation order; never contract to FMA.
@@ -174,7 +174,7 @@ bool cSC4Airplane::Init() {
     const cS3DVector3 savedOrientation = orientation_;
     const float facing[3] = {kAircraftModelFacing.x, kAircraftModelFacing.y, kAircraftModelFacing.z};
     SetOrientation(facing);
-    climbSlope_ = CalculateClimbSlope();      // +0x3c4 (PARTIAL helper)
+    climbSlope_ = CalculateClimbSlope();      // +0x3c4
     descentSlope_ = CalculateDescentSlope();  // +0x3c8
     turnRate_ = CalculateTurnRate();          // +0x3cc
     state_ = AirplaneState::kFlying;          // 0
@@ -323,8 +323,8 @@ bool cSC4Airplane::DoAnimationTick(std::uint32_t data, float milliseconds) {
     EnableActiveSound(activeSound);
     UpdateActiveSound(milliseconds);
     if (GetBehavior() != kAirplaneStatePlayerDrive) {
-        AI_PursueGoal(step);    // PARTIAL helper
-        UpdatePhysics(step);    // PARTIAL helper
+        AI_PursueGoal(step);
+        UpdatePhysics(step);
         UpdateLighting();
         UpdateEffects();
         FinishMove(true, true);
@@ -436,8 +436,7 @@ void cSC4Airplane::LoadDriveParameters() {
     field3dc_ = (values[0x11] != 0.0f) ? values[0x11] : 0.0f;   // +0x3dc
 }
 
-// ---- PARTIAL flight model -------------------------------------------------------------------------------------------
-// The force/velocity/quaternion core is not ported yet (ledger PARTIAL); the stand-ins keep the call graph honest.
+// ---- flight model ----------------------------------------------------------------------------------------------------
 
 // The trial flight of CalculateClimbSlope / CalculateDescentSlope / CalculateTurnRate (inlined in each): the velocity
 // gains force / mass * 0.1 (capped at the high speed limit, zeroed below 1e-4), then UpdateOrientation turns the plane
@@ -1498,11 +1497,96 @@ void cSC4Airplane::PickApproachBox(const cS3DVector3& runwayEnd, const cS3DVecto
     points_[0] = {p.x, (distance(p, points_[1]) + run) * descentSlope_ + runwayEnd.y, p.z};
 }
 
-// @ 0x1006cf894 PARTIAL: the player-drive control translation (1.6 KB, effect timers + tween) is not ported.
+// @ 0x1006cf894. The player's commands (history entries >= 0 are held keys) drive the controls: 0/1 throttle up/down
+// (released, it decays in states 0/1), 2/3 bank (three times as fast back through centre; released, it decays and snaps
+// to 0 under 0.01), 5 pull up with lift, 6 dive (with 1 also: climb towards +0x458 and ease the throttle to +0x454),
+// otherwise the pitch and lift decay and the trim (+0x328) follows the vertical speed; 7 fires the "jetbomb" effect
+// once armed (+0x22b). The controls are clamped as in AI_ApproachAltitude; the speed tween follows the speed, and the
+// record gets the steering (x100), the reverse thrust (capped at 0.04 * speed) and the bank angle for the model.
 bool cSC4Airplane::TranslatePlayerDriveCommands(tAutomataStatePlayerDrive* state, float milliseconds) {
-    (void)state;
-    (void)milliseconds;
-    return false;
+    cSC4Automaton::TranslatePlayerDriveCommands(state, milliseconds);
+    float* h = state->history;
+    if (h[7] >= 0.0f) {
+        IAutomatonEffects* effects = Effects();
+        if (effects) effects->UpdatePlacement();
+        if (state->wakeStarted22b && effects && effects->StartNamedEffects(cRZString("jetbomb"), 0, false)) {
+            state->effectDelay20c = 0;
+            state->wakeStarted22b = 0;
+            ++state->animStage1a4;
+        }
+    }
+    const float s = milliseconds * 0.001f;
+    const float decay = 1.0f - s > 0.0f ? 1.0f - s : 0.0f;   // MAXSS
+    float& throttle = controlWish_[3];
+    if (h[0] >= 0.0f) throttle = tunings_[0] * s + throttle;
+    else if (h[1] >= 0.0f) throttle = throttle - tunings_[0] * s;
+    else if (static_cast<int>(state_) <= 1) throttle = throttle * decay;
+    const float decay2 = 1.0f - (s + s) > 0.0f ? 1.0f - (s + s) : 0.0f;
+    const float rates[2] = {tunings_[2], tunings_[10]};   // +0x440 +0x460
+    float bank = controlWish_[1], yawInput = controlWish_[2];
+    if (h[2] >= 0.0f) {
+        bank = bank - s * (0.0f < bank ? 3.0f * rates[0] : rates[0]);
+        yawInput = yawInput - s * (0.0f < yawInput ? 3.0f * rates[1] : rates[1]);
+    } else if (h[3] >= 0.0f) {
+        bank = s * (bank < 0.0f ? 3.0f * rates[0] : rates[0]) + bank;
+        yawInput = s * (yawInput < 0.0f ? 3.0f * rates[1] : rates[1]) + yawInput;
+    } else {
+        bank = bank * decay2;
+        if (std::fabs(bank) < 0.01f) bank = 0.0f;
+        yawInput = yawInput * decay2;
+        if (0.01f > std::fabs(yawInput)) yawInput = 0.0f;
+    }
+    controlWish_[1] = bank;
+    controlWish_[2] = yawInput;
+    const int driveState = static_cast<int>(state_);
+    if (driveState <= 1) {
+        controlWish_[1] = 0.0f;
+        bank = 0.0f;
+    }
+    float& pitch = controlWish_[0];
+    if (h[5] >= 0.0f) {
+        pitch = tunings_[3] * s + pitch;
+        controlAim_ = s * tunings_[5] + controlAim_;
+        controlAim2_ = decay2 * controlAim2_;
+    } else if (h[6] >= 0.0f) {
+        if (h[1] >= 0.0f) {
+            pitch = tunings_[8] > pitch ? pitch + tunings_[4] * s : tunings_[8];
+            controlAim_ = tunings_[6] * s + controlAim_;
+            if (throttle > tunings_[7]) throttle = throttle - s * tunings_[0];
+        } else {
+            pitch = pitch - s * tunings_[4];
+        }
+        controlAim2_ = decay2 * controlAim2_;
+    } else {
+        const float liftDecay = -0.2f * s + 1.0f > 0.0f ? -0.2f * s + 1.0f : 0.0f;
+        const float lift = liftDecay * controlAim_;
+        controlAim_ = std::fabs(lift) < 0.01f ? 0.0f : lift;
+        pitch = decay * pitch;
+        if (0.01f > std::fabs(pitch)) {
+            pitch = 0.0f;
+            if (-1.0f > velocity_.y) controlAim2_ = s * tunings_[11] + controlAim2_;
+            else if (velocity_.y > 1.0f) controlAim2_ = controlAim2_ - s * tunings_[11];
+        }
+    }
+    pitch = ClampControl(pitch, -1.0f, 1.0f);
+    controlWish_[1] = ClampControl(bank, -1.0f, 1.0f);
+    controlWish_[2] = ClampControl(yawInput, -1.0f, 1.0f);
+    throttle = ClampControl(throttle, driveState >= 2 ? tunings_[1] : -1.0f, 1.0f);
+    controlAim_ = ClampControl(controlAim_, 0.0f, 1.0f);
+    controlAim2_ = ClampControl(controlAim2_, -tunings_[9], tunings_[9]);
+
+    const float speed = std::sqrt(velocity_.z * velocity_.z + (velocity_.y * velocity_.y + velocity_.x * velocity_.x));
+    SetSpeed(0.001f * speed, 0.0f);
+    state->steering6c = controlWish_[1] * 100.0f;
+    float reverse = throttle;
+    if (!(throttle >= 0.0f)) {
+        const float back = -throttle, cap = speed * 0.04f;
+        reverse = back > cap ? cap : back;
+    }
+    state->value3c = reverse;
+    state->steerVisual264 = controlWish_[1] * descentAngle_;   // +0x3b0
+    state->steerRate260 = descentAngle_;
+    return true;
 }
 
 // @ 0x1006d4852. Steer the 2D heading towards `vector`: ease +0x318 towards the cross product when the angle is over 2

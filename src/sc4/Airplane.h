@@ -35,11 +35,9 @@
 //  * DoPlayerDriveTick divides the distance moved by the *unclamped* delta (0x1006cf77c).
 //  * SetDispatchState sends callback event 7; DoMessage always returns true.
 //
-// PARTIAL: UpdatePhysics, DetectCollisions, AI_PursueGoal, AI_GotoDestination, AI_Land, AI_TakeOff,
-// PickRunwayDirection and TranslatePlayerDriveCommands are still stand-ins; they need the runway list
-// (cSC4AircraftManager::GetRunwayList, unrecovered), the manager's weighted random choice and the audio/effect
-// services as host seams. Everything else in the flight model is transcribed from the disassembly and bit-identical to
-// the retail code in scripts/run_machine_oracle.sh airplane.
+// The flight model, the AI helpers and the player-drive translation are transcribed from the disassembly; the float
+// code is bit-identical to the retail code in scripts/run_machine_oracle.sh airplane (AI_PursueGoal, a dispatcher over
+// the automaton's own state stack, is checked against the disassembly and the unit test).
 #pragma once
 #include <cstdint>
 
@@ -105,7 +103,7 @@ public:
     void LoadPlayerDriveParameters();                                 // @ 0x1006cd5dc
     void LoadDriveParameters();                                       // @ 0x1006cd84a
 
-    // ---- flight model (PARTIAL where noted) ---------------------------------------------------------------------
+    // ---- flight model ---------------------------------------------------------------------------------------------
     float CalculateClimbSlope();                                      // @ 0x1006cdbb2
     float CalculateDescentSlope();                                    // @ 0x1006cde04
     float CalculateTurnRate();                                        // @ 0x1006ce05e
@@ -130,7 +128,7 @@ public:
     void PickRunwayDirection(const cS3DVector3& position, cS3DVector3& start, cS3DVector3& direction,
                              bool landing);                       // @ 0x1006d258c
     void PickApproachBox(const cS3DVector3& runwayEnd, const cS3DVector3& direction);   // @ 0x1006d2932
-    bool TranslatePlayerDriveCommands(tAutomataStatePlayerDrive* state, float milliseconds);   // @ 0x1006cf894  PARTIAL
+    bool TranslatePlayerDriveCommands(tAutomataStatePlayerDrive* state, float milliseconds);   // @ 0x1006cf894
     float EvaluateClearance(const cS3DVector3& start, const cS3DVector3& direction) const;      // @ 0x1006d2454
     bool FindFireNearLocation(const cS3DVector3& location, cS3DVector3& fire) const;            // @ 0x1006d2db0
 

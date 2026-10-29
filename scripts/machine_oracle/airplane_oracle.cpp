@@ -10,6 +10,7 @@
 
 #include "GameImage.h"
 #include "sc4/Airplane.h"
+#include "sc4/AutomataStates.h"
 
 namespace sc4 {
 struct AirplaneOracleAccess {
@@ -56,6 +57,8 @@ struct AirplaneOracleAccess {
     }
     static void SetAttitude(cSC4Airplane& p, float roll, float pitch, float yaw) { p.roll_ = roll; p.pitch_ = pitch; p.yaw_ = yaw; }
     static void SetBox(cSC4Airplane& p, const float* box) { std::memcpy(p.boundingBox_, box, sizeof p.boundingBox_); }
+    static void SetState(cSC4Airplane& p, int state) { p.state_ = static_cast<AirplaneState>(state); }
+    static void SetBankLimit(cSC4Airplane& p, float value) { p.descentAngle_ = value; }
     static void SetSlopes(cSC4Airplane& p, float climb, float descent) { p.climbSlope_ = climb; p.descentSlope_ = descent; }
     static void SetTurnRate(cSC4Airplane& p, float rate) { p.turnRate_ = rate; }
     static void Controls(const cSC4Airplane& p, float* out) {
@@ -168,6 +171,8 @@ bool QueryByFilter(void*, OccupantList* list, const float* lo, const float* hi, 
 void ReleaseList(void*, OccupantList*) {}
 void ClearList(OccupantList* list) { list->prev = list->next = reinterpret_cast<ListNode*>(list); list->size = 0; }
 FakeService occupants;
+bool BaseTranslate(void*, void*, float) { return true; }   // cSC4Automaton::TranslatePlayerDriveCommands: port stand-in
+void NoPlacement(void*) {}
 int gOriginalRemoved = 0;
 void RemoveSlot(void*, bool) { ++gOriginalRemoved; }
 void* NewHook(std::size_t n) { return ::operator new(n); }
@@ -244,6 +249,9 @@ int main() {
     At<long*>(0x100a657c8) = &gStackGuard;                              // the ___stack_chk_guard GOT slot
     originalVtable.slots[0x258 / 8] = reinterpret_cast<void*>(Here(0x100107148));   // cSC4Automaton::GetBoundingBox
     if (!Hook(0x1000a5c20, reinterpret_cast<const void*>(&ClearList))) return 2;    // the occupant list's clear
+    if (!Hook(0x10010978e, reinterpret_cast<const void*>(&BaseTranslate)) ||
+        !Hook(0x1001e3e84, reinterpret_cast<const void*>(&NoPlacement)))
+        return 2;
     if (!Hook(0x10050175a, reinterpret_cast<const void*>(&RunwayListHook)) ||      // cSC4AircraftManager::GetRunwayList
         !Hook(0x10003da38, reinterpret_cast<const void*>(&WeightedChoiceHook))) {  // RandomUint32WeightedChoice
         std::perror("hook");
@@ -710,6 +718,47 @@ int main() {
             const int motionOffsets[3] = {0x74, 0x8c, 0x36c};
             for (int i = 0; i < 9; ++i) same = same && Same(Field(motionOffsets[i / 3] + 4 * (i % 3)), motion[i]);
             Check(same, "DetectCollisions", t);
+        }
+
+        {   // TranslatePlayerDriveCommands: random held keys and controls in every state
+            gStage = "TranslatePlayerDriveCommands";
+            float c[6], tune[12], v[3], o[3] = {1.0f, 0.0f, 0.0f};
+            for (float& x : c) x = 1.2f * unit(rng);
+            if (t % 5 == 0) for (float& x : c) x *= 0.005f;
+            for (float& x : tune) x = 0.05f + 0.5f * (unit(rng) + 1);
+            for (float& x : v) x = 20.0f * unit(rng);
+            const int st = static_cast<int>(rng() % 4);
+            alignas(16) unsigned char record[0x2a0] = {};
+            tAutomataStatePlayerDrive drive;
+            for (int i = 0; i < 13; ++i) {
+                drive.history[i] = (rng() % 3 == 0) ? 0.5f * (unit(rng) + 1) : -1.0f;
+                std::memcpy(record + 0xa8 + 4 * i, &drive.history[i], 4);
+            }
+            const float bank = 0.5f + unit(rng) * 0.4f;
+            std::memcpy(original + 0x314, c, sizeof c);
+            std::memcpy(original + 0x438, tune, sizeof tune);
+            std::memcpy(original + 0x36c, v, sizeof v);
+            std::memcpy(original + 0x310, &st, 4);
+            std::memcpy(original + 0x3b0, &bank, 4);
+            std::memset(original + 0x30c, 0, 1);
+            AirplaneOracleAccess::SetMotion(port, c, tune, o, v);
+            AirplaneOracleAccess::SetState(port, st);
+            AirplaneOracleAccess::SetBankLimit(port, bank);
+            const float ms = 5.0f + 60.0f * (unit(rng) + 1);
+            Function<bool (*)(void*, void*, float)>(0x1006cf894)(original, record, ms);
+            port.TranslatePlayerDriveCommands(&drive, ms);
+            float mine[6];
+            AirplaneOracleAccess::Controls(port, mine);
+            bool same = true;
+            for (int i = 0; i < 6; ++i) same = same && Same(Field(0x314 + 4 * i), mine[i]);
+            float out[4];
+            std::memcpy(&out[0], record + 0x3c, 4);
+            std::memcpy(&out[1], record + 0x6c, 4);
+            std::memcpy(&out[2], record + 0x260, 4);
+            std::memcpy(&out[3], record + 0x264, 4);
+            same = same && Same(out[0], drive.value3c) && Same(out[1], drive.steering6c) &&
+                   Same(out[2], drive.steerRate260) && Same(out[3], drive.steerVisual264);
+            Check(same, "TranslatePlayerDriveCommands", t);
         }
 
         if (t % 8 == 0) {

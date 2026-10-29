@@ -203,6 +203,15 @@ public:
     virtual void* FindRegEffect(const cRZString& effect) = 0;                       // @ 0x1001e4f0e
     virtual void RemoveRegEffect(const cRZString& effect) = 0;                      // @ 0x1001e4f4c
     virtual void Shutdown() = 0;                                                    // @ 0x1001e3d58
+    // cSC4ModelRegEffects::Update() @ 0x1001e3e84: re-place the registered effects at the model's transform. The
+    // default does nothing (hosts without per-model effect placement).
+    virtual void UpdatePlacement() {}
+    // cSC4ModelRegEffects::StartNamedEffects' result (true when a registered effect of that name, any case, started).
+    // The default starts through StartNamed and approximates the result with FindRegEffect.
+    virtual bool StartNamedEffects(const cRZString& effect, int transition, bool loop) {
+        StartNamed(effect, transition, loop);
+        return FindRegEffect(effect) != nullptr;
+    }
 };
 
 // The occupant group template of the automata script system (cSC4OccupantGroupTemplate); only the fields
