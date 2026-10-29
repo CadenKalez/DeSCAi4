@@ -620,8 +620,92 @@ void cSC4Airplane::UpdatePhysics(float delta) { (void)delta; }
 // @ 0x1006d0cd0 PARTIAL: the collision sweep is not ported.
 void cSC4Airplane::DetectCollisions() {}
 
-// @ 0x1006ce990 PARTIAL: the goal selection (fire search / landing / take-off) is not ported.
-void cSC4Airplane::AI_PursueGoal(float delta) { (void)delta; }
+// @ 0x1006ce990. Runs the current behaviour (jump table 0x1006cedf4 over behaviours 0x32..0x39):
+//  0x32 land (dispatch state 6 unless already 0/4; on landing: state 0 and pop);
+//  0x33 fly to the destination (+0x80, clipped to the world; pop when it is the unset sentinel or reached);
+//  0x35 skywrite: dispatch state 5, start a 2 s timer and spend one landing count, pop when the timer ran out;
+//  0x39 look for a fire near +0x470: with landing counts left, dispatch state 3 and push skywrite then go-to (popping
+//       first when no fire is found); with none left, dispatch state 4 and push landing.
+// Any other behaviour pops (unless 0). Then states 2 and up push landing; state 1 brakes (AI_Stop); in state 0 a plane
+// off the lot of its saved position (+0x48c) fades out, then reappears there at rest and fades in.
+void cSC4Airplane::AI_PursueGoal(float delta) {
+    IAircraftHost* host = HostFor(*this);
+    const float fade = host ? host->OpacityFadeSeconds() : 1.0f;   // read only where the original reads it
+    auto push = [this](std::uint32_t behaviour) { PushState(behaviour, nullptr, -1.0f, false, 0, 0, nullptr); };
+    const std::uint32_t behaviour = GetBehavior();
+    switch (behaviour) {
+    case 0x32:
+        if ((dispatchState_ | 4) != 4) SetDispatchState(6);
+        if (AI_Land(delta)) {
+            SetDispatchState(0);
+            PopState();
+        }
+        return;
+    case 0x33: {
+        ClipToWorld(destination_);
+        const cS3DVector3 unset = UninitVector();   // 0x100b22550
+        auto far = [](float a, float b) {
+            const float d = a - b;
+            return !(0.0001f > (d < 0.0f ? -d : d));
+        };
+        if (!far(destination_.x, unset.x) && !far(destination_.y, unset.y) && !far(destination_.z, unset.z)) {
+            PopState();
+            return;
+        }
+        if (AI_GotoDestination(destination_, delta)) PopState();
+        return;
+    }
+    case 0x35:
+        SetDispatchState(5);
+        if (!skywritingActive_) {
+            skywritingActive_ = true;
+            skywritingTimer_ = 2.0f;
+            --stateCounter_;
+            return;
+        }
+        if (!(skywritingTimer_ <= 0.0f)) return;   // JC after UCOMISS 0, timer: also while NaN
+        skywritingActive_ = false;
+        PopState();
+        return;
+    case 0x39: {
+        const bool found = FindFireNearLocation(destinationCopy_, destination_);
+        if (stateCounter_ <= 0) {
+            SetDispatchState(4);
+            push(0x32);
+            return;
+        }
+        if (!found) PopState();
+        SetDispatchState(3);
+        if (!found) push(0x32);
+        push(0x35);
+        push(0x33);
+        return;
+    }
+    default:
+        if (behaviour != 0) PopState();
+        break;
+    }
+    if (static_cast<int>(state_) >= 2) {
+        push(0x32);
+        return;
+    }
+    if (static_cast<int>(state_) == 1) AI_Stop(delta);
+    if (static_cast<int>(state_) != 0 || !host) return;
+    if (host->LotAt(position_) == host->LotAt(savedPosition_)) return;
+    const float opacity = GetOpacity();
+    if (opacity == 0.0f) {
+        position_ = savedPosition_;
+        const float lengthSquared =
+            velocity_.z * velocity_.z + (velocity_.x * velocity_.x + velocity_.y * velocity_.y);
+        if (lengthSquared > 0.0f) {
+            const float scale = 0.0f / std::sqrt(lengthSquared);
+            velocity_ = {velocity_.x * scale, velocity_.y * scale, velocity_.z * scale};
+        }
+        SetOpacity(1.0f, fade);
+    } else if (opacity == 1.0f) {
+        SetOpacity(0.0f, fade);
+    }
+}
 
 // @ 0x1006d2f12. Fly to `destination`; on the ground (states 0..2) this only runs the take-off and answers false. In
 // the air the leg starts at +0x3e8 (reset to the plane when it is within 640 of the destination but already past it).

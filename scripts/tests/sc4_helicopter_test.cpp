@@ -183,6 +183,8 @@ struct FakeAircraftHost final : IAircraftHost {
     float TallestBuildingAltitude() override { return 0.0f; }
     void GetRunwayList(const cS3DVector3&, std::vector<cS3DVector3>&) override {}
     std::uint32_t RandomWeightedChoice(std::uint32_t, const double*) override { return 0; }
+    const void* LotAt(const cS3DVector3&) override { return nullptr; }
+    float OpacityFadeSeconds() override { return 1.0f; }
     bool LotAltitudeAt(const cS3DVector3&, float* altitude) override {
         if (!lotFound) return false;
         *altitude = lotAltitude;

@@ -207,6 +207,11 @@ struct FakeAircraftHost final : IAircraftHost {
     std::vector<cS3DVector3> runways;
     void GetRunwayList(const cS3DVector3&, std::vector<cS3DVector3>& out) override { out = runways; }
     std::uint32_t RandomWeightedChoice(std::uint32_t, const double*) override { return 0; }
+    const void* lotHere = nullptr;
+    const void* lotSaved = nullptr;
+    const void* LotAt(const cS3DVector3& p) override { return p.x == savedLotX ? lotSaved : lotHere; }
+    float savedLotX = -1.0e9f;
+    float OpacityFadeSeconds() override { return 1.0f; }
     bool LotAltitudeAt(const cS3DVector3&, float* altitude) override {
         if (!lotFound) return false;
         *altitude = lotAltitude;
@@ -785,6 +790,34 @@ int main() {
         CHECK(!plane->AI_TurnToVector(cS3DVector3{1.0f, 0.0f, 0.0f}, 0.1f));
         CHECK_NEAR(plane->ControlWish()[1], -0.02f);
         CHECK_NEAR(plane->ControlWish()[2], -0.02f);
+        CHECK(plane->Release() == 0);
+    }
+
+    // ---- AI_PursueGoal: skywriting, fire search and the fallback branch ----------------------------------------
+    {
+        Fixture f;
+        cSC4Airplane* plane = f.Make();
+        CHECK(plane->Init());
+        CHECK(plane->PushState(0x35, nullptr, -1.0f, false, 0, 0, nullptr));
+        const int counter = plane->StateCounter();
+        plane->AI_PursueGoal(0.1f);
+        CHECK(plane->GetDispatchState() == 5 && plane->SkywritingActive());
+        CHECK_NEAR(plane->SkywritingTimer(), 2.0f);
+        CHECK(plane->StateCounter() == counter - 1);
+        plane->AI_PursueGoal(0.1f);                      // timer still running: nothing pops
+        CHECK(plane->GetBehavior() == 0x35 && plane->SkywritingActive());
+        CHECK(plane->PopState());
+        // no fire found with landing counts left: pop, then land / skywrite / go to, dispatch state 3
+        CHECK(plane->PushState(0x39, nullptr, -1.0f, false, 0, 0, nullptr));
+        plane->AI_PursueGoal(0.1f);
+        CHECK(plane->GetDispatchState() == 3 && plane->GetBehavior() == 0x33);
+        CHECK(plane->PopState() && plane->GetBehavior() == 0x35);
+        CHECK(plane->PopState() && plane->GetBehavior() == 0x32);
+        CHECK(plane->PopState());
+        // any other behaviour pops
+        CHECK(plane->PushState(0x34, nullptr, -1.0f, false, 0, 0, nullptr));
+        plane->AI_PursueGoal(0.1f);
+        CHECK(plane->GetBehavior() != 0x34);
         CHECK(plane->Release() == 0);
     }
 

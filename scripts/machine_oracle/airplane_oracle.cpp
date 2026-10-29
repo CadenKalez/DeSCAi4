@@ -104,6 +104,8 @@ struct OracleAircraftHost final : IAircraftHost {
         gWeightsPort.assign(weights, weights + count);
         return gPick;
     }
+    const void* LotAt(const cS3DVector3&) override { return nullptr; }
+    float OpacityFadeSeconds() override { return 1.0f; }
     bool DisasterActive() override { return false; }
     float DisasterSpeedMultiplier() override { return 1.0f; }
     bool SimulatorPaused() override { return false; }

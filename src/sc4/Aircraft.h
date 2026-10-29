@@ -76,6 +76,9 @@ public:
     virtual void GetRunwayList(const cS3DVector3& position, std::vector<cS3DVector3>& out) = 0;
     // cSC4AircraftManager::mpRandom->RandomUint32WeightedChoice(count, weights)
     virtual std::uint32_t RandomWeightedChoice(std::uint32_t count, const double* weights) = 0;
+    // SL::spLotManager slot 0x30: the lot at a point, compared only by identity (null when none)
+    virtual const void* LotAt(const cS3DVector3& position) = 0;
+    virtual float OpacityFadeSeconds() = 0;                        // automata tuning params +0x134
     // ---- SL::spLotManager -------------------------------------------------------------------------------------------
     // lot manager slot 0x30 finds the lot at the point; if the lot's slot 0x60 has bit 0 set its slot 0x80 is the
     // altitude GetAltitude returns instead of the terrain/water maximum.
