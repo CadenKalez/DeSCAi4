@@ -870,6 +870,144 @@ bool cSC4ViewInputControlQuery::SetPerformanceMeterValue(cIGZWin* win, std::uint
     return true;
 }
 
+// ---- airport / seaport rows ------------------------------------------------------------------------------------------------
+// The occupant forms read the occupant's bounding city cells (vslot 0x58) and pass the first cell to the cell form; no occupant
+// answers false. The cell forms look the lot up (lot manager vslot 0x28, flag 0) and ask the port developer.
+namespace {
+bool PortCellOfOccupant(cISC4Occupant* occupant, int& x, int& z) {
+    if (!occupant) return false;
+    SC4CellRect cells{};
+    occupant->GetBoundingCityCells(cells);
+    x = cells.x0;
+    z = cells.z0;
+    return true;
+}
+IQueryLot* PortLotAt(int x, int z) {
+    IQueryHost* host = QueryHost();
+    return host && host->LotManager() ? host->LotManager()->GetLotAtCell(x, z, 0) : nullptr;
+}
+// The traffic meter: full below 80 % use, then falling linearly to empty at capacity (the compiled constants are 0.8f and
+// 0.19999999f). An unanswered or zero-capacity developer leaves the meter empty.
+float PortTrafficMeter(IQueryPortDeveloper* developer, IQueryLot* lot) {
+    float meter = 0.0f;
+    if (!lot || !developer) return meter;
+    std::uint32_t usage = 0, capacity = 0;
+    if (!developer->GetUsageAndCapacity(lot, usage, capacity) || capacity == 0) return meter;
+    const float capacityF = static_cast<float>(capacity);
+    if (static_cast<float>(usage) <= 0.8f * capacityF) return 1.0f;
+    const float free = capacity > usage ? static_cast<float>(static_cast<std::uint64_t>(capacity - usage)) : 0.0f;
+    return free / (capacityF * 0.19999999f);
+}
+bool PortNumeric(cIGZWin* win, std::uint32_t id, bool set, IQueryPortDeveloper* developer, int x, int z, bool wantCapacity) {
+    if (!set) return true;
+    IQueryLot* lot = PortLotAt(x, z);
+    if (!lot) return false;
+    std::uint32_t usage = 0, capacity = 0;
+    if (developer) developer->GetUsageAndCapacity(lot, usage, capacity);
+    return cSC4ViewInputControlQuery::SetStaticControlNumeric(win, id, wantCapacity ? capacity : usage);
+}
+bool PortMaintenance(cIGZWin* win, std::uint32_t id, bool set, IQueryPortDeveloper* developer, int x, int z) {
+    if (!set) return true;
+    IQueryLot* lot = PortLotAt(x, z);
+    if (!lot || !developer) return false;
+    return cSC4ViewInputControlQuery::SetStaticControlSimoleons(win, id, developer->GetMaintenanceCost(lot));
+}
+IQueryPortDeveloper* Airport() { IQueryHost* host = QueryHost(); return host ? host->AirportDeveloper() : nullptr; }
+IQueryPortDeveloper* Seaport() { IQueryHost* host = QueryHost(); return host ? host->SeaportDeveloper() : nullptr; }
+}  // namespace
+
+
+// @ 0x1002d655a
+bool cSC4ViewInputControlQuery::SetOrGetAirportOccupantAirTrafficVolume(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    int x = 0, z = 0;
+    if (!PortCellOfOccupant(occupant, x, z)) return false;
+    return SetOrGetAirportAirTrafficVolume(win, id, set, x, z);
+}
+
+// @ 0x1002d6a9e
+bool cSC4ViewInputControlQuery::SetOrGetAirportOccupantMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    int x = 0, z = 0;
+    if (!PortCellOfOccupant(occupant, x, z)) return false;
+    return SetOrGetAirportMaintenanceCost(win, id, set, x, z);
+}
+
+// @ 0x1002d6b6e
+bool cSC4ViewInputControlQuery::SetOrGetAirportOccupantUsage(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    int x = 0, z = 0;
+    if (!PortCellOfOccupant(occupant, x, z)) return false;
+    return SetOrGetAirportUsage(win, id, set, x, z);
+}
+
+// @ 0x1002d6c4c
+bool cSC4ViewInputControlQuery::SetOrGetAirportOccupantCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    int x = 0, z = 0;
+    if (!PortCellOfOccupant(occupant, x, z)) return false;
+    return SetOrGetAirportCapacity(win, id, set, x, z);
+}
+
+// @ 0x1002d6d2a
+bool cSC4ViewInputControlQuery::SetOrGetSeaportOccupantUsage(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    int x = 0, z = 0;
+    if (!PortCellOfOccupant(occupant, x, z)) return false;
+    return SetOrGetSeaportUsage(win, id, set, x, z);
+}
+
+// @ 0x1002d6e08
+bool cSC4ViewInputControlQuery::SetOrGetSeaportOccupantCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    int x = 0, z = 0;
+    if (!PortCellOfOccupant(occupant, x, z)) return false;
+    return SetOrGetSeaportCapacity(win, id, set, x, z);
+}
+
+// @ 0x1002d6ee6
+bool cSC4ViewInputControlQuery::SetOrGetSeaportOccupantSeaTrafficVolume(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    int x = 0, z = 0;
+    if (!PortCellOfOccupant(occupant, x, z)) return false;
+    return SetOrGetSeaportSeaTrafficVolume(win, id, set, x, z);
+}
+
+// @ 0x1002d7016
+bool cSC4ViewInputControlQuery::SetOrGetSeaportOccupantMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    int x = 0, z = 0;
+    if (!PortCellOfOccupant(occupant, x, z)) return false;
+    return SetOrGetSeaportMaintenanceCost(win, id, set, x, z);
+}
+
+// @ 0x1002d65ae
+bool cSC4ViewInputControlQuery::SetOrGetAirportAirTrafficVolume(cIGZWin* win, std::uint32_t id, bool set, int x, int z) {
+    if (!set) return true;
+    return SetPerformanceMeterValue(win, id, PortTrafficMeter(Airport(), PortLotAt(x, z)));
+}
+// @ 0x1002d6f3a
+bool cSC4ViewInputControlQuery::SetOrGetSeaportSeaTrafficVolume(cIGZWin* win, std::uint32_t id, bool set, int x, int z) {
+    if (!set) return true;
+    return SetPerformanceMeterValue(win, id, PortTrafficMeter(Seaport(), PortLotAt(x, z)));
+}
+// @ 0x1002d6af2
+bool cSC4ViewInputControlQuery::SetOrGetAirportMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, int x, int z) {
+    return PortMaintenance(win, id, set, Airport(), x, z);
+}
+// @ 0x1002d706a
+bool cSC4ViewInputControlQuery::SetOrGetSeaportMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, int x, int z) {
+    return PortMaintenance(win, id, set, Seaport(), x, z);
+}
+// @ 0x1002d6bc2
+bool cSC4ViewInputControlQuery::SetOrGetAirportUsage(cIGZWin* win, std::uint32_t id, bool set, int x, int z) {
+    return PortNumeric(win, id, set, Airport(), x, z, false);
+}
+// @ 0x1002d6ca0
+bool cSC4ViewInputControlQuery::SetOrGetAirportCapacity(cIGZWin* win, std::uint32_t id, bool set, int x, int z) {
+    return PortNumeric(win, id, set, Airport(), x, z, true);
+}
+// @ 0x1002d6d7e
+bool cSC4ViewInputControlQuery::SetOrGetSeaportUsage(cIGZWin* win, std::uint32_t id, bool set, int x, int z) {
+    return PortNumeric(win, id, set, Seaport(), x, z, false);
+}
+// @ 0x1002d6e5c
+bool cSC4ViewInputControlQuery::SetOrGetSeaportCapacity(cIGZWin* win, std::uint32_t id, bool set, int x, int z) {
+    return PortNumeric(win, id, set, Seaport(), x, z, true);
+}
+
 // @ 0x1002daf96
 // PARTIAL: the original is a switch over the cell-based control ids (0x1011..0x1015 airport/seaport traffic, 0x1026 /
 // 0x1027 landfill, 0x1028 the landfill developer's monthly cost, 0x104b..0x104e the neighbour-connection rows and
@@ -880,6 +1018,14 @@ bool cSC4ViewInputControlQuery::SetOrGetControlValue(cIGZWin* win, std::uint32_t
     if (!info) return false;
     const std::uint32_t rowId = static_cast<std::uint32_t>(info->idOffset);
     switch (id) {
+    case 0x1011: SetOrGetAirportAirTrafficVolume(win, 0x1011, set, info->x, info->z); return false;
+    case 0x1013: SetOrGetAirportMaintenanceCost(win, 0x1013, set, info->x, info->z); return false;
+    case 0x1015: SetOrGetSeaportSeaTrafficVolume(win, 0x1015, set, info->x, info->z); return false;
+    case 0x1078: SetOrGetSeaportMaintenanceCost(win, 0x1078, set, info->x, info->z); return false;
+    case 0x107b: SetOrGetAirportUsage(win, 0x107b, set, info->x, info->z); return false;
+    case 0x107c: SetOrGetAirportCapacity(win, 0x107c, set, info->x, info->z); return false;
+    case 0x107d: SetOrGetSeaportUsage(win, 0x107d, set, info->x, info->z); return false;
+    case 0x107e: SetOrGetSeaportCapacity(win, 0x107e, set, info->x, info->z); return false;
     case 0x104b:
         SetOrGetNeighborConnectionNeighborCityName(win, rowId + 0x104b, set, info->x, info->z, info->connectionType);
         return false;
@@ -1057,8 +1203,8 @@ cSC4ViewInputControlQuery::tSetOrGetFn const cSC4ViewInputControlQuery::kRowFunc
     &cSC4ViewInputControlQuery::SetOrGetFireStationMaintenanceCost, nullptr, &cSC4ViewInputControlQuery::SetOrGetPoliceStationEffectiveness, &cSC4ViewInputControlQuery::SetOrGetPoliceStationArrestCount,   // 0x1004..0x1007
     &cSC4ViewInputControlQuery::SetOrGetPoliceStationCrimeCount, &cSC4ViewInputControlQuery::SetOrGetPoliceStationLocalFunding, &cSC4ViewInputControlQuery::SetOrGetPoliceStationPatrolCarCount, &cSC4ViewInputControlQuery::SetOrGetPoliceStationMaintenanceCost,   // 0x1008..0x100b
     &cSC4ViewInputControlQuery::SetOrGetJailCondition, &cSC4ViewInputControlQuery::SetOrGetJailCellCount, &cSC4ViewInputControlQuery::SetOrGetJailInmateCount, &cSC4ViewInputControlQuery::SetOrGetJailMaintenanceCost,   // 0x100c..0x100f
-    &cSC4ViewInputControlQuery::SetOrGetParkMaintenanceCost, nullptr, nullptr, nullptr,   // 0x1010..0x1013
-    nullptr, nullptr, nullptr, nullptr,   // 0x1014..0x1017
+    &cSC4ViewInputControlQuery::SetOrGetParkMaintenanceCost, &cSC4ViewInputControlQuery::SetOrGetAirportOccupantAirTrafficVolume, nullptr, &cSC4ViewInputControlQuery::SetOrGetAirportOccupantMaintenanceCost,   // 0x1010..0x1013
+    nullptr, &cSC4ViewInputControlQuery::SetOrGetSeaportOccupantSeaTrafficVolume, nullptr, nullptr,   // 0x1014..0x1017
     nullptr, nullptr, nullptr, nullptr,   // 0x1018..0x101b
     nullptr, nullptr, nullptr, nullptr,   // 0x101c..0x101f
     nullptr, nullptr, nullptr, nullptr,   // 0x1020..0x1023
@@ -1083,8 +1229,8 @@ cSC4ViewInputControlQuery::tSetOrGetFn const cSC4ViewInputControlQuery::kRowFunc
     &cSC4ViewInputControlQuery::SetOrGetOccupantCost, nullptr, nullptr, nullptr,   // 0x106c..0x106f
     nullptr, nullptr, nullptr, nullptr,   // 0x1070..0x1073
     nullptr, nullptr, &cSC4ViewInputControlQuery::SetOrGetOccupantIsPowered, &cSC4ViewInputControlQuery::SetOrGetOccupantIsWatered,   // 0x1074..0x1077
-    nullptr, &cSC4ViewInputControlQuery::SetOrGetWhyOccupantAbandoned, &cSC4ViewInputControlQuery::SetOrGetOccupantIsHistorical, nullptr,   // 0x1078..0x107b
-    nullptr, nullptr, nullptr,   // 0x107c..0x107e
+    &cSC4ViewInputControlQuery::SetOrGetSeaportOccupantMaintenanceCost, &cSC4ViewInputControlQuery::SetOrGetWhyOccupantAbandoned, &cSC4ViewInputControlQuery::SetOrGetOccupantIsHistorical, &cSC4ViewInputControlQuery::SetOrGetAirportOccupantUsage,   // 0x1078..0x107b
+    &cSC4ViewInputControlQuery::SetOrGetAirportOccupantCapacity, &cSC4ViewInputControlQuery::SetOrGetSeaportOccupantUsage, &cSC4ViewInputControlQuery::SetOrGetSeaportOccupantCapacity,   // 0x107c..0x107e
 };
 
 // @ 0x1002db37e: apply the message filter to the child, then recurse through the same callback.

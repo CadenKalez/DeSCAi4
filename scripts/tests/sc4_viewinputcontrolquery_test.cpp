@@ -141,7 +141,8 @@ struct TestOccupant final : cISC4Occupant, IQueryBuildingOccupant {
     void GetPosition(float* xyz) override { xyz[0] = 64.0f; xyz[1] = 0.0f; xyz[2] = 128.0f; }
     void SetPosition(const float*) override {}
     void GetBoundingBox(float*, float*) override {}
-    void GetBoundingCityCells(SC4CellRect&) override {}
+    SC4CellRect cityCells{3, 4, 5, 6};
+    void GetBoundingCityCells(SC4CellRect& r) override { r = cityCells; }
     void SetRemovalFlags(int) override {}
     void UnsetRemovalFlags(int) override {}
     bool CanRemove(int) override { return true; }
@@ -310,6 +311,15 @@ struct LotMgr final : IQueryLotManager {
     int occupantLookups = 0, cellLookups = 0;
     IQueryLot* GetLotForOccupant(cISC4Occupant*) override { ++occupantLookups; return byOccupant; }
     IQueryLot* GetLotAtCell(int, int, int) override { ++cellLookups; return byCell; }
+};
+
+struct PortDeveloperFake final : IQueryPortDeveloper {
+    std::uint32_t usage = 0, capacity = 0;
+    bool answers = true;
+    std::int64_t maintenance = 0;
+    IQueryLot* lastLot = nullptr;
+    bool GetUsageAndCapacity(IQueryLot* lot, std::uint32_t& u, std::uint32_t& c) override { lastLot = lot; u = usage; c = capacity; return answers; }
+    std::int64_t GetMaintenanceCost(IQueryLot* lot) override { lastLot = lot; return maintenance; }
 };
 
 // ---- the simulators the ported rows use -------------------------------------------------------------------
@@ -489,6 +499,9 @@ struct Host final : IViewInputHost, IQueryHost {
     Callout* callout = nullptr;
     FakeRenderer renderer;
     LotMgr lots;
+    PortDeveloperFake airport, seaport;
+    IQueryPortDeveloper* AirportDeveloper() override { return &airport; }
+    IQueryPortDeveloper* SeaportDeveloper() override { return &seaport; }
     Power power;
     Plumbing plumbing;
     Aura aura;
@@ -1076,6 +1089,79 @@ int main() {
         CHECK(cSC4ViewInputControlQuery::SetOrGetOccupantCost(dialog, 0x1007, false, &occupant));   // set-only
 
         dialog->Release();
+    }
+
+    // --- M2: airport / seaport rows -----------------------------------------------------------------------------
+    {
+        auto* dialog = new cGZWin(&host.mgr);
+        auto* label = new gz::cGZWinText(&host.mgr);
+        label->SetID(0x1007);
+        auto* meter = new gz::cGZWinBMP(&host.mgr);
+        meter->SetID(0x1001);
+        CHECK(dialog->ChildAdd(label) && dialog->ChildAdd(meter));
+        TestOccupant occupant;   // its first city cell is (3, 4)
+        Lot lot;
+        host.lots.byCell = &lot;
+        auto meterOf = [&]() {
+            cIGZVariant* value = nullptr;
+            float result = -1.0f;
+            if (meter->AsIGZWin()->GetParam(0xea563ab0, &value) && value) { result = value->GetValFloat32(); value->Release(); }
+            return result;
+        };
+        // usage and capacity print the developer's numbers; reading (set = false) does nothing and answers true
+        host.airport.usage = 30; host.airport.capacity = 120;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetAirportOccupantUsage(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "30" && host.airport.lastLot == &lot);
+        CHECK(cSC4ViewInputControlQuery::SetOrGetAirportOccupantCapacity(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "120");
+        host.seaport.usage = 7; host.seaport.capacity = 9;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetSeaportOccupantUsage(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "7");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetSeaportCapacity(dialog, 0x1007, true, 3, 4));
+        CHECK(std::string(label->GetCaption().ToChar()) == "9");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetAirportUsage(dialog, 0x1007, false, 3, 4));
+        // no lot under the cell, or no occupant: false
+        host.lots.byCell = nullptr;
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetAirportUsage(dialog, 0x1007, true, 3, 4));
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetAirportOccupantUsage(dialog, 0x1007, true, nullptr));
+        host.lots.byCell = &lot;
+        // maintenance is a simoleon amount
+        host.airport.maintenance = 1500;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetAirportOccupantMaintenanceCost(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "1500");   // the fake host formats money as a bare number
+        host.seaport.maintenance = 42;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetSeaportMaintenanceCost(dialog, 0x1007, true, 3, 4));
+        CHECK(std::string(label->GetCaption().ToChar()).find("42") != std::string::npos);
+        // traffic meter: full up to 80 % use, then (capacity - usage) / (capacity * 0.2), empty at or over capacity
+        host.airport.capacity = 100;
+        host.airport.usage = 80;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetAirportOccupantAirTrafficVolume(dialog, 0x1001, true, &occupant));
+        CHECK(std::fabs(meterOf() - 1.0f) < 1e-6f);
+        host.airport.usage = 90;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetAirportAirTrafficVolume(dialog, 0x1001, true, 3, 4));
+        CHECK(std::fabs(meterOf() - 10.0f / (100.0f * 0.19999999f)) < 1e-6f);
+        host.airport.usage = 150;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetAirportAirTrafficVolume(dialog, 0x1001, true, 3, 4));
+        CHECK(std::fabs(meterOf()) < 1e-6f);
+        host.seaport.capacity = 0;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetSeaportSeaTrafficVolume(dialog, 0x1001, true, 3, 4));
+        CHECK(std::fabs(meterOf()) < 1e-6f);
+        host.airport.answers = false;   // a developer that has nothing for the lot leaves the meter empty
+        CHECK(cSC4ViewInputControlQuery::SetOrGetAirportAirTrafficVolume(dialog, 0x1001, true, 3, 4));
+        CHECK(std::fabs(meterOf()) < 1e-6f);
+        host.airport.answers = true;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetAirportAirTrafficVolume(dialog, 0x1001, false, 3, 4));   // reading answers true
+        // the dispatcher routes the cell rows by control id and always answers false
+        cSC4ViewInputControlQuery::tCellInfo info;
+        info.x = 3; info.z = 4;
+        host.airport.usage = 12; host.airport.capacity = 50;
+        auto* usageLabel = new gz::cGZWinText(&host.mgr);
+        usageLabel->SetID(0x107b);
+        CHECK(dialog->ChildAdd(usageLabel));
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetControlValue(dialog, 0x107b, true, &info));
+        CHECK(std::string(usageLabel->GetCaption().ToChar()) == "12");
+        host.lots.byCell = nullptr;
+        delete dialog;
     }
 
     // --- N: neighbour-connection rows ----------------------------------------------------------------------

@@ -22,11 +22,10 @@
 // PARTIAL (see notes/ledger_pending/cSC4ViewInputControlQuery.txt): the tip/describe text builders
 // (Get*SummaryInfo, GetBuildingOccupantTipInfo, GetBuildingOccupantTrafficInfo, GetNetworkOccupantTrafficInfo,
 // DescribePick/DescribeCell/DescribeBuilding/DescribeDemand/DescribePopulation, WriteDetailedDebugInfo and the
-// headline/trip-volume/path helpers) and the row handlers for the simulators that are not recovered yet (airport,
-// seaport, school, hospital, water, garbage/recycling, transit, landmark, RCI/growth-developer) are declared but not
+// headline/trip-volume/path helpers) and the row handlers for the simulators that are not recovered yet (school, hospital, water, garbage/recycling, transit, landmark, RCI/growth-developer) are declared but not
 // implemented. The fire, police/jail, park/occupant-cost and neighbour-connection rows — everything whose simulator
 // (cSC4FireProtectionSimulator, cSC4PoliceSimulator, cSC4BudgetSimulator, cSC4NeighborsSimulator) is recovered — are
-// ported, as are the dialog enumeration callbacks (EnumFunc*) and the recovered control-id -> row handler table.
+// ported, as are the airport and seaport rows (usage, capacity, traffic meter, maintenance), the dialog enumeration callbacks (EnumFunc*) and the recovered control-id -> row handler table.
 #pragma once
 #include <cstdint>
 #include <vector>
@@ -220,6 +219,15 @@ public:
     virtual std::uint8_t CongestionCell(int x, int z) = 0;
 };
 
+// SL::spCity slot 0x268 (the airport developer) and slot 0x260 (the seaport developer): the rows only ask a lot's usage and
+// capacity (vslot 0x60) and its monthly maintenance cost (vslot 0x70).
+class IQueryPortDeveloper {
+public:
+    virtual ~IQueryPortDeveloper() = default;
+    virtual bool GetUsageAndCapacity(IQueryLot* lot, std::uint32_t& usage, std::uint32_t& capacity) = 0;   // vslot 0x60
+    virtual std::int64_t GetMaintenanceCost(IQueryLot* lot) = 0;                                          // vslot 0x70
+};
+
 // Everything else: one adapter implements this for the game, a fake for the test.
 class IQueryHost {
 public:
@@ -239,6 +247,8 @@ public:
     virtual IQueryBudgetSim* BudgetSim() = 0;                 // SL::spBudgetSim
     virtual IQueryNeighborsSim* NeighborsSim() = 0;           // SL::spNeighborsSim
     virtual IQueryTrafficSim* TrafficSim() = 0;               // SL::spTrafficSim
+    virtual IQueryPortDeveloper* AirportDeveloper() { return nullptr; }   // SL::spCity slot 0x268
+    virtual IQueryPortDeveloper* SeaportDeveloper() { return nullptr; }   // SL::spCity slot 0x260
     virtual IQueryPathView* CreatePathView() = 0;             // new cSC4PathView + Init
     virtual cISC4WinCalloutBox* CreateCalloutBox() = 0;       // new cSC4WinCalloutBox (0x1003c5f5c)
     // SC4CreateWindowFromScript(instance, parent, id, iid, out) (@ 0x100039bf7)
@@ -355,6 +365,23 @@ public:
 
     // neighbour-connection rows
     static IQueryNeighborCity* FindCityOnOtherSideOfConnection(int connectionType, int x, int z);   // @ 0x1002d906e
+    // --- airport / seaport rows: the occupant form reads the occupant's first city cell and calls the cell form ---
+    static bool SetOrGetAirportOccupantAirTrafficVolume(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d655a
+    static bool SetOrGetAirportAirTrafficVolume(cIGZWin* win, std::uint32_t id, bool set, int x, int z);   // @ 0x1002d65ae
+    static bool SetOrGetAirportOccupantMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d6a9e
+    static bool SetOrGetAirportMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, int x, int z);   // @ 0x1002d6af2
+    static bool SetOrGetAirportOccupantUsage(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d6b6e
+    static bool SetOrGetAirportUsage(cIGZWin* win, std::uint32_t id, bool set, int x, int z);   // @ 0x1002d6bc2
+    static bool SetOrGetAirportOccupantCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d6c4c
+    static bool SetOrGetAirportCapacity(cIGZWin* win, std::uint32_t id, bool set, int x, int z);   // @ 0x1002d6ca0
+    static bool SetOrGetSeaportOccupantUsage(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d6d2a
+    static bool SetOrGetSeaportUsage(cIGZWin* win, std::uint32_t id, bool set, int x, int z);   // @ 0x1002d6d7e
+    static bool SetOrGetSeaportOccupantCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d6e08
+    static bool SetOrGetSeaportCapacity(cIGZWin* win, std::uint32_t id, bool set, int x, int z);   // @ 0x1002d6e5c
+    static bool SetOrGetSeaportOccupantSeaTrafficVolume(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d6ee6
+    static bool SetOrGetSeaportSeaTrafficVolume(cIGZWin* win, std::uint32_t id, bool set, int x, int z);   // @ 0x1002d6f3a
+    static bool SetOrGetSeaportOccupantMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7016
+    static bool SetOrGetSeaportMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, int x, int z);   // @ 0x1002d706a
     static bool SetOrGetNeighborConnectionNeighborCityName(cIGZWin* win, std::uint32_t id, bool set, int x, int z,
                                                            int connectionType);                     // @ 0x1002d90d6
     static bool SetOrGetNeighborConnectionNeighborCityMayorName(cIGZWin* win, std::uint32_t id, bool set, int x,
