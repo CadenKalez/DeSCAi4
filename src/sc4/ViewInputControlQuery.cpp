@@ -1434,6 +1434,53 @@ bool cSC4ViewInputControlQuery::SetOrGetWaterBuildingPercentCondition(cIGZWin* w
     return SetStaticControlNumericPercent(win, id, percent);
 }
 
+// ---- landmark rows / the transit station's global funding ---------------------------------------------------------------------
+namespace {
+constexpr std::uint32_t kPurposeTransitFunding = 0xc921ceeb;   // the department the transit rows read (GetDepartmentBudget argument)
+constexpr std::uint32_t kPropLandmarkBudgetPurpose = 0xaa59670c;
+constexpr std::uint32_t kPropLandmarkHomage = 0xaa5c23fa;
+IQueryBudgetSim* BudgetSim() { IQueryHost* host = QueryHost(); return host ? host->BudgetSim() : nullptr; }
+}  // namespace
+
+// @ 0x1002d8e3c: the department's funding fraction as a whole percent (0 without a department)
+bool cSC4ViewInputControlQuery::SetOrGetTransitStationGlobalFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant*) {
+    if (!set) return true;
+    IQueryBudgetSim* budget = BudgetSim();
+    float fraction = 0.0f;
+    std::uint32_t percent = 0;
+    if (budget && budget->DepartmentFundingFraction(kPurposeTransitFunding, fraction)) percent = TruncatedUnsigned(fraction * 100.0f);
+    return SetStaticControlNumericPercent(win, id, percent);
+}
+// @ 0x1002d8e9e: the landmark's budget item cost
+bool cSC4ViewInputControlQuery::SetOrGetLandmarkFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryBudgetSim::Item item;
+    if (IQueryBudgetSim* budget = BudgetSim()) budget->GetBudgetItemForPurpose(occupant->AsPropertyHolder(), kPropLandmarkBudgetPurpose, item);
+    return SetStaticControlSimoleons(win, id, item.cost);
+}
+// @ 0x1002d8f14: the item's cost scaled by its department's funding fraction (float multiply, truncated)
+bool cSC4ViewInputControlQuery::SetOrGetLandmarkMaintenance(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryBudgetSim* budget = BudgetSim();
+    IQueryBudgetSim::Item item;
+    float fraction = 0.0f;
+    if (budget) {
+        budget->GetBudgetItemForPurpose(occupant->AsPropertyHolder(), kPropLandmarkBudgetPurpose, item);
+        budget->DepartmentFundingFraction(item.department, fraction);
+    }
+    return SetStaticControlSimoleons(win, id, static_cast<std::int64_t>(static_cast<float>(item.cost) * fraction));
+}
+// @ 0x1002d8fc4: the landmark's homage text, a string named by a resource key property
+bool cSC4ViewInputControlQuery::SetOrGetLandmarkHomage(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    cGZPersistResourceKey key;
+    if (!host || !cSCPropertyHelp::GetPropertyValue(occupant->AsPropertyHolder(), kPropLandmarkHomage, key)) return false;
+    cRZString text;
+    host->LoadString(key.group, key.instance, text);
+    return SetStaticControlText(win, id, text);
+}
+
 // @ 0x1002daf96
 // PARTIAL: the original is a switch over the cell-based control ids (0x1011..0x1015 airport/seaport traffic, 0x1026 /
 // 0x1027 landfill, 0x1028 the landfill developer's monthly cost, 0x104b..0x104e the neighbour-connection rows and
@@ -1650,8 +1697,8 @@ cSC4ViewInputControlQuery::tSetOrGetFn const cSC4ViewInputControlQuery::kRowFunc
     &cSC4ViewInputControlQuery::SetOrGetPowerPlantPowerUsed, &cSC4ViewInputControlQuery::SetOrGetPowerPlantCostPerUnit, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingEfficiency, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingUsagePercent,   // 0x1038..0x103b
     &cSC4ViewInputControlQuery::SetOrGetWaterBuildingMaxCapacity, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingCurrentCapacity, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingWaterUsed, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingCostPerUnit,   // 0x103c..0x103f
     &cSC4ViewInputControlQuery::SetOrGetWaterBuildingPumpCondition, nullptr, nullptr, nullptr,   // 0x1040..0x1043
-    nullptr, nullptr, nullptr, nullptr,   // 0x1044..0x1047
-    nullptr, nullptr, nullptr, nullptr,   // 0x1048..0x104b
+    nullptr, nullptr, &cSC4ViewInputControlQuery::SetOrGetTransitStationGlobalFunding, &cSC4ViewInputControlQuery::SetOrGetLandmarkFunding,   // 0x1044..0x1047
+    nullptr, &cSC4ViewInputControlQuery::SetOrGetLandmarkMaintenance, &cSC4ViewInputControlQuery::SetOrGetLandmarkHomage, nullptr,   // 0x1048..0x104b
     nullptr, nullptr, nullptr, nullptr,   // 0x104c..0x104f
     nullptr, nullptr, nullptr, nullptr,   // 0x1050..0x1053
     nullptr, nullptr, nullptr, nullptr,   // 0x1054..0x1057

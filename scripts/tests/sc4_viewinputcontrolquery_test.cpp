@@ -474,6 +474,12 @@ struct BudgetSimFake final : IQueryBudgetSim {
         out = cost;
         return true;
     }
+    Item item;
+    float departmentFraction = 0.0f;
+    bool departmentOk = true;
+    std::uint32_t lastPurpose = 0, lastDepartment = 0;
+    bool GetBudgetItemForPurpose(cISCPropertyHolder*, std::uint32_t purpose, Item& out) override { lastPurpose = purpose; out = item; return true; }
+    bool DepartmentFundingFraction(std::uint32_t department, float& f) override { lastDepartment = department; f = departmentFraction; return departmentOk; }
 };
 
 struct NeighborCityFake final : IQueryNeighborCity {
@@ -1503,6 +1509,40 @@ int main() {
         CHECK(!cSC4ViewInputControlQuery::SetOrGetWaterBuildingPumpCondition(dialog, 0x1007, true, &occupant));
         CHECK(cSC4ViewInputControlQuery::SetOrGetWaterBuildingMaxCapacity(dialog, 0x1007, false, &occupant));
         host.plumbing.infoOk = true;
+        delete dialog;
+    }
+
+    // --- M6: landmark rows and the transit station's global funding ------------------------------------------------
+    {
+        auto* dialog = new cGZWin(&host.mgr);
+        auto* label = new gz::cGZWinText(&host.mgr);
+        label->SetID(0x1007);
+        CHECK(dialog->ChildAdd(label));
+        TestOccupant occupant;
+        Holder holder;
+        occupant.holder = &holder;
+        auto text = [&]() { return std::string(label->GetCaption().ToChar()); };
+        host.budgetSim.departmentFraction = 0.876f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetTransitStationGlobalFunding(dialog, 0x1007, true, &occupant) && text() == "87%");
+        CHECK(host.budgetSim.lastDepartment == 0xc921ceeb);
+        host.budgetSim.departmentOk = false;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetTransitStationGlobalFunding(dialog, 0x1007, true, &occupant) && text() == "0%");
+        host.budgetSim.departmentOk = true;
+        host.budgetSim.item.department = 7;
+        host.budgetSim.item.cost = 12000;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetLandmarkFunding(dialog, 0x1007, true, &occupant) && text() == "12000");
+        CHECK(host.budgetSim.lastPurpose == 0xaa59670c);
+        host.budgetSim.departmentFraction = 0.5f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetLandmarkMaintenance(dialog, 0x1007, true, &occupant) && text() == "6000");
+        CHECK(host.budgetSim.lastDepartment == 7);
+        // the homage is the string the key property names
+        host.strings.clear();
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetLandmarkHomage(dialog, 0x1007, true, &occupant));   // no property
+        holder.id = 0xaa5c23fa;
+        holder.values = {0x2026bd2b, 0xea5524eb, 0x1234abcd};
+        CHECK(cSC4ViewInputControlQuery::SetOrGetLandmarkHomage(dialog, 0x1007, true, &occupant));
+        CHECK(host.strings.size() == 1 && host.strings[0] == 0x1234abcd);
+        CHECK(cSC4ViewInputControlQuery::SetOrGetLandmarkHomage(dialog, 0x1007, false, &occupant));
         delete dialog;
     }
 

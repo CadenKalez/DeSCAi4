@@ -249,6 +249,11 @@ public:
     virtual ~IQueryBudgetSim() = default;
     // vslot 0x198: (property holder, budget value id, out) -> out is a 0x18-byte record; its +0x10 qword is the cost.
     virtual bool OccupantValueCost(cISCPropertyHolder* holder, std::uint32_t value, std::int64_t& cost) = 0;
+    // vslot 0x198 GetBudgetItemForPurpose(holder, purpose, item): the item's department (+0) and monthly cost (+0x10).
+    struct Item { std::uint32_t department = 0; std::int64_t cost = 0; };
+    virtual bool GetBudgetItemForPurpose(cISCPropertyHolder*, std::uint32_t purpose, Item& item) { (void)purpose; item = Item{}; return false; }
+    // vslot 0xd8 GetDepartmentBudget(department) -> vslot 0x50: the department's funding fraction.
+    virtual bool DepartmentFundingFraction(std::uint32_t department, float& fraction) { (void)department; fraction = 0.0f; return false; }
 };
 
 // cISC4RegionalCity as the neighbour-connection rows read it (RegionalCity.h: vslots 0x108 / 0x118).
@@ -490,6 +495,11 @@ public:
     static bool SetOrGetWaterBuildingCostPerUnit(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d87c0
     static bool SetOrGetWaterBuildingPumpCondition(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8860
     static bool SetOrGetWaterBuildingPercentCondition(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d894c
+    // --- landmark rows and the transit station's global funding ---
+    static bool SetOrGetTransitStationGlobalFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8e3c
+    static bool SetOrGetLandmarkFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);       // @ 0x1002d8e9e
+    static bool SetOrGetLandmarkMaintenance(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8f14
+    static bool SetOrGetLandmarkHomage(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);        // @ 0x1002d8fc4
     static bool SetOrGetNeighborConnectionNeighborCityName(cIGZWin* win, std::uint32_t id, bool set, int x, int z,
                                                            int connectionType);                     // @ 0x1002d90d6
     static bool SetOrGetNeighborConnectionNeighborCityMayorName(cIGZWin* win, std::uint32_t id, bool set, int x,
