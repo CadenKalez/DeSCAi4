@@ -5,12 +5,14 @@ import csv, pathlib, re, subprocess, sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 src = (ROOT/"src/sc4/ViewInputControlQuery.cpp").read_text().splitlines()
 defined = {}
-stubStart = next((i for i, l in enumerate(src) if 'PARTIAL text builders' in l), len(src))
+stubStart = len(src)
 for i, line in enumerate(src):
     m = re.match(r"^[A-Za-z0-9_:<>\*& ]*?cSC4ViewInputControlQuery::(~?\w+)\(", line)
     if m and not line.startswith("//"):
-        window = "\n".join(src[max(0, i-8):i])
-        defined.setdefault(m.group(1), []).append("PARTIAL" in window or i >= stubStart)
+        j = i
+        while j > 0 and src[j - 1].lstrip().startswith("//"): j -= 1   # the comment block directly above the definition
+        window = "\n".join(src[j:i])
+        defined.setdefault(m.group(1), []).append("PARTIAL" in window )
 partial = []
 for r in csv.DictReader((ROOT/"notes/ledger.csv").open()):
     m = re.search(r"ViewInputControlQuery::(~?\w+)\(", r["symbol"])

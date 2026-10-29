@@ -127,9 +127,11 @@ struct TestOccupant final : cISC4Occupant, IQueryBuildingOccupant {
     Holder* holder = nullptr;
     std::uint16_t profileCapacity = 0;
     std::uint16_t GetProfileCapacity() override { return profileCapacity; }
+    IQueryNetworkOccupant* network = nullptr;   // answered to iid 0xa821ef94 (one reference taken by the tool, released by it)
 
     bool QueryInterface(std::uint32_t iid, void** out) override {
         if (iid == 0x87dda3a9) { *out = static_cast<IQueryBuildingOccupant*>(this); return true; }
+        if (iid == 0xa821ef94 && network) { *out = network; return true; }
         if (iid == 0x26bb767e) { *out = static_cast<cISC4Occupant*>(this); return true; }
         return false;
     }
@@ -376,6 +378,9 @@ struct Plumbing final : IQueryPlumbingSim {
     bool watered = false;
     bool IsWatered(cISC4Occupant*) override { return watered; }
     bool infoOk = true, conditionOk = true, upkeepOk = true;
+    int pipes = 0, distressedPipes = 0;
+    int GetNumPipes() override { return pipes; }
+    int GetNumDistressedPipes() override { return distressedPipes; }
     std::uint32_t current = 0, maximum = 0, used = 0;
     float efficiency = 0.0f, condition = 0.0f;
     bool pump = false;
@@ -411,6 +416,14 @@ struct GrowthDeveloperFake final : IQueryGrowthDeveloper {
     GrowthDeveloperFake() {
         for (int i = 0; i < 9; ++i) curves[i].SetResponseCurveData(std::vector<SC4Point>{SC4Point{0.0f, 0.0f}, SC4Point{300.0f, 300.0f}});   // identity
     }
+};
+struct NetworkFake final : IQueryNetworkOccupant {
+    std::uint32_t types = 0;   // bit per network type
+    int refs = 1;
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return ++refs; }
+    std::uint32_t Release() override { return --refs; }
+    bool IsOfType(std::uint32_t type) const override { return (types >> type) & 1u; }
 };
 struct LandValueFake final : IQueryLandValueSim {
     int type = 0, x = -1, z = -1;
@@ -622,6 +635,17 @@ struct Host final : IViewInputHost, IQueryHost {
     Plumbing plumbing;
     Aura aura;
     LandValueFake landValue;
+    bool water = false;
+    std::uint32_t zone = 0xff;
+    bool TerrainCellHasWater(int, int) override { return water; }
+    std::uint32_t ZoneTypeAt(int, int) override { return zone; }
+    bool exemplarOk = false;
+    std::uint32_t exemplarProperty = 0;
+    bool LoadExemplarString(cIGZString& out, cISCPropertyHolder*, std::uint32_t property) override {
+        exemplarProperty = property;
+        if (exemplarOk) out.AssignFromCString("exemplar name");
+        return exemplarOk;
+    }
     GrowthDeveloperFake developer;
     bool hasDeveloper = true;
     std::uint16_t pollutionMaps[4] = {};
@@ -1835,6 +1859,73 @@ int main() {
         CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingPollution(dialog, 0x1007, false, &occupant));
         CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingPollution(dialog, 0x1007, true, nullptr));
         delete dialog;
+    }
+
+    // --- M10: tip summaries (prop / flora / network / terrain) -----------------------------------------------------
+    {
+        auto* tool = new cSC4ViewInputControlQuery(cSC4ViewInputControlQuery::kQueryBuilding, 250);
+        TestOccupant occupant;
+        Holder holder;
+        occupant.holder = &holder;
+        tool->SetHoveredOccupantForTest(&occupant);
+        // prop / flora: the property 0x899afbad, else the exemplar's localized name, else property 0x20
+        cRZString title;
+        holder.id = 0;
+        host.exemplarOk = true;
+        tool->GetPropOccupantSummaryInfo(title);
+        CHECK(std::string(title.ToChar()) == "exemplar name" && host.exemplarProperty == 0x8a416a99);
+        host.exemplarOk = false;
+        cRZString none;
+        tool->GetFloraOccupantSummaryInfo(none);
+        CHECK(none.Strlen() == 0);
+        // network: the first kind the piece is of, in the order road, rail, ...; the pipe network adds the pipe counts in debug mode
+        NetworkFake network;
+        occupant.network = &network;
+        host.strings.clear();
+        cRZString netTitle, netText;
+        network.types = (1u << 8) | (1u << 6);
+        tool->GetNetworkOccupantSummaryInfo(netTitle, netText);
+        CHECK(host.strings.size() == 1 && host.strings[0] == 0x8b8c5cbd);   // type 8 comes before type 6
+        network.types = 1u << 6;
+        host.strings.clear();
+        tool->GetNetworkOccupantSummaryInfo(netTitle, netText);
+        CHECK(host.strings.size() == 1 && host.strings[0] == 0x8b8c5cd0);
+        network.types = 1u << 5;   // a type no row names: nothing loaded
+        host.strings.clear();
+        tool->GetNetworkOccupantSummaryInfo(netTitle, netText);
+        CHECK(host.strings.empty());
+        network.types = 1u << 4;
+        host.plumbing.pipes = 40;
+        host.plumbing.distressedPipes = 3;
+        host.debug = true;
+        host.keys = {0x10, 0x11, 0x12};
+        host.strings.clear();
+        tool->GetNetworkOccupantSummaryInfo(netTitle, netText);
+        CHECK(host.strings.size() == 1 && host.strings[0] == 0x0a558a0a && std::string(netText.ToChar()) == "Distressed Pipes: 3 / 40\n");
+        host.debug = false;
+        host.keys.clear();
+        // terrain: nothing over water; the zone word goes to the text (to the title for zones 0 and 0xf), a lot adds its headlines
+        host.city.cellX = 4;
+        host.city.cellZ = 6;
+        tool->SetPickPositionForTest(70.0f, 0.0f, 100.0f);
+        cRZString terrainTitle, terrainText;
+        host.water = true;
+        host.strings.clear();
+        tool->GetTerrainSummaryInfo(terrainTitle, terrainText);
+        CHECK(host.strings.empty());
+        host.water = false;
+        host.zone = 3;
+        tool->GetTerrainSummaryInfo(terrainTitle, terrainText);
+        CHECK(host.strings.size() == 2 && host.strings[0] == 0x6a5bbca6 && host.strings[1] == 0x8a5bbe12);
+        host.zone = 0;
+        host.strings.clear();
+        tool->GetTerrainSummaryInfo(terrainTitle, terrainText);
+        CHECK(host.strings.size() == 2 && host.strings[1] == 0xaa5bbde4);   // zone 0 replaces the title
+        host.zone = 0xff;
+        host.strings.clear();
+        tool->GetTerrainSummaryInfo(terrainTitle, terrainText);
+        CHECK(host.strings.size() == 1);   // an unknown zone: only the terrain title
+        tool->Release();
     }
 
     // --- N: neighbour-connection rows ----------------------------------------------------------------------

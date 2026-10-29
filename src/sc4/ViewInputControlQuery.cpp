@@ -2459,25 +2459,88 @@ bool cSC4ViewInputControlQuery::SetOrGetNeighborConnectionCongestion(cIGZWin* wi
     return SetStaticControlNumericPercent(win, id, static_cast<std::uint32_t>(static_cast<std::int64_t>(percent)));
 }
 
-// --- PARTIAL text builders ---------------------------------------------------------------------------------
-// None of these is implemented yet; they are declared so the message plumbing compiles. Every one of them needs
-// unrecovered neighbours (listed in the ledger PARTIAL section), so they leave the strings empty.
+// --- text builders that are still empty stubs (each marked PARTIAL; QUERY-6) ------------------------------------
+// They are declared so the message plumbing compiles and leave their strings empty.
+// PARTIAL stub (QUERY-6)
 void cSC4ViewInputControlQuery::GetBuildingOccupantTrafficInfo(cRZString&, cRZString&, std::uint32_t& icon) {
     icon = 0;
 }
+// PARTIAL stub (QUERY-6)
 void cSC4ViewInputControlQuery::GetNetworkOccupantTrafficInfo(cRZString&, cRZString&) {}
+// PARTIAL stub (QUERY-6)
 void cSC4ViewInputControlQuery::GetBuildingOccupantTipInfo(cRZString&, cRZString&, std::uint32_t& icon,
                                                            std::uint32_t& meter, float&) {
     icon = 0;
     meter = 0;
 }
-void cSC4ViewInputControlQuery::GetNetworkOccupantSummaryInfo(cRZString&, cRZString&) {}
-void cSC4ViewInputControlQuery::GetPropOccupantSummaryInfo(cRZString&) {}
-void cSC4ViewInputControlQuery::GetFloraOccupantSummaryInfo(cRZString&) {}
-void cSC4ViewInputControlQuery::GetTerrainSummaryInfo(cRZString&, cRZString&) {}
+// @ 0x1002c5558 / 0x1002c55ae: the property's name, else the exemplar's localized name, else the plain property 0x20
+void cSC4ViewInputControlQuery::GetPropOccupantSummaryInfo(cRZString& title) {
+    IQueryHost* host = QueryHost();
+    cISCPropertyHolder* holder = occupant_->AsPropertyHolder();
+    if (cSCPropertyHelp::GetPropertyValue(holder, 0x899afbad, title)) return;
+    if (host && host->LoadExemplarString(title, holder, 0x8a416a99)) return;
+    cSCPropertyHelp::GetPropertyValue(holder, 0x20, title);
+}
+void cSC4ViewInputControlQuery::GetFloraOccupantSummaryInfo(cRZString& title) { GetPropOccupantSummaryInfo(title); }
+
+// @ 0x1002c515c: the network piece's kind as a word, tried in the order road(2), rail(8), ... ; the pipe network adds the pipe counts in debug
+void cSC4ViewInputControlQuery::GetNetworkOccupantSummaryInfo(cRZString& title, cRZString& text) {
+    IQueryHost* host = QueryHost();
+    void* raw = nullptr;
+    if (!host || !occupant_ || !occupant_->QueryInterface(0xa821ef94, &raw)) return;
+    auto* network = static_cast<IQueryNetworkOccupant*>(raw);
+    // {network type, string instance}; the first type the piece is of wins
+    static constexpr struct { std::uint32_t type, instance; } kKinds[] = {
+        {2, 0xaa5589fb}, {8, 0x8b8c5cbd}, {0xc, 0x2be09c9e}, {0, 0x6a5589d4}, {1, 0x4a5589f3}, {10, 0x4bd9fdd8},
+        {0xb, 0xcbe09c9b}, {9, 0x0be09ca2}, {3, 0x8a558a04}, {4, 0x0a558a0a}, {7, 0x8a558a10}, {6, 0x8b8c5cd0}};
+    for (const auto& kind : kKinds) {
+        if (!network->IsOfType(kind.type)) continue;
+        host->LoadString(kStringGroup, kind.instance, title);
+        if (kind.type == 4 && IsDebugQueryEnabled()) {   // the pipe network
+            IQueryPlumbingSim* plumbing = host->PlumbingSim();
+            const int distressed = plumbing ? plumbing->GetNumDistressedPipes() : 0;
+            const int pipes = plumbing ? plumbing->GetNumPipes() : 0;
+            text.Sprintf("Distressed Pipes: %d / %d\n", distressed, pipes);
+        }
+        break;
+    }
+    network->Release();
+}
+
+// @ 0x1002cfb90: PARTIAL (QUERY-6) - the lot headline builder (1,700 lines of decompile over a dozen simulators) is not recovered, so a lot
+// adds no headlines yet.
+void cSC4ViewInputControlQuery::GetLotHeadlines(IQueryLot*, std::multimap<int, cRZString>&) {}
+
+// @ 0x1002c5604 PARTIAL (GetLotHeadlines): over land the title is "terrain", the zone type names the ground below it (zone 0 and 0xf replace the
+// title instead of filling the text, as compiled), then the three most important headlines of the lot under the cell are appended to the text.
+void cSC4ViewInputControlQuery::GetTerrainSummaryInfo(cRZString& title, cRZString& text) {
+    IQueryHost* host = QueryHost();
+    if (!host || !host->City()) return;
+    int cellX = 0, cellZ = 0;
+    host->City()->PositionToCell(pickX_, pickZ_, cellX, cellZ);
+    if (host->TerrainCellHasWater(cellX, cellZ)) return;
+    const std::uint32_t zone = host->ZoneTypeAt(cellX, cellZ);
+    host->LoadString(kStringGroup, 0x6a5bbca6, title);
+    static constexpr std::uint32_t kZoneStrings[16] = {0xaa5bbde4, 0x0a5bbdef, 0xaa5bbe08, 0x8a5bbe12, 0x6a5bbe1f, 0x6a5bbe29, 0xaa5bbe33, 0x0a5bbe3c,
+                                                       0xca5bbe4a, 0x0a5bbe51, 0x6a5bbe61, 0xaa5bbe69, 0x2a5bbe6f, 0xca5bbe78, 0x2a5bbe80, 0x2a5bbe85};
+    if (zone < 16) host->LoadString(kStringGroup, kZoneStrings[zone], (zone == 0 || zone == 0xf) ? title : text);
+    IQueryLot* lot = host->LotManager() ? host->LotManager()->GetLotAtCell(cellX, cellZ, 0) : nullptr;
+    if (!lot) return;
+    std::multimap<int, cRZString> headlines;
+    GetLotHeadlines(lot, headlines);
+    int appended = 0;
+    for (auto it = headlines.rbegin(); it != headlines.rend() && appended < 3; ++it, ++appended) {
+        if (text.Strlen() != 0) text.AppendString(cRZString("\n"));
+        text.AppendString(it->second);
+    }
+}
+// PARTIAL stub (QUERY-6)
 void cSC4ViewInputControlQuery::DescribePick(int, int, cRZString&, cRZString&, cRZString&, bool) {}
+// PARTIAL stub (QUERY-6)
 void cSC4ViewInputControlQuery::GetOccupantPaths() {}
+// PARTIAL stub (QUERY-6)
 void cSC4ViewInputControlQuery::ShowAllRoutesThatIntersectCityRect(const SC4CellRect&) {}
+// PARTIAL stub (QUERY-6)
 void cSC4ViewInputControlQuery::WriteDetailedDebugInfo(int, int) {}
 
 }  // namespace sc4

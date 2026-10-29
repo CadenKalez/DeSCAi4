@@ -28,6 +28,7 @@
 // ported, as are the school, hospital, library, landfill, incinerator, recycling, waste-to-energy, power plant, water building, landmark and transit station rows, the airport and seaport rows (usage, capacity, traffic meter, maintenance), the dialog enumeration callbacks (EnumFunc*) and the recovered control-id -> row handler table.
 #pragma once
 #include <cstdint>
+#include <map>
 #include <vector>
 
 #include "gz/WinInterfaces.h"
@@ -149,6 +150,12 @@ public:
     virtual std::int8_t GetAura(int cellX, int cellZ) = 0;   // vslot 0x28
     virtual std::int8_t GetMayorRating() { return 0; }       // vslot 0x40 (the goofy stat rows feed it to a curve)
 };
+// cISC4NetworkOccupant (iid 0xa821ef94) as the network tip reads it: vslot 0xb0 IsOfType(network type).
+class IQueryNetworkOccupant : public cIGZUnknown {
+public:
+    virtual bool IsOfType(std::uint32_t networkType) const = 0;
+};
+
 // SL::spLandValueSim vslot 0x28 GetLandValueType(x, z): 0..3.
 class IQueryLandValueSim {
 public:
@@ -207,6 +214,8 @@ class IQueryPlumbingSim {
 public:
     virtual ~IQueryPlumbingSim() = default;
     virtual bool IsWatered(cISC4Occupant* occupant) = 0;   // vslot 0x48
+    virtual int GetNumPipes() { return 0; }                // vslot 0x90
+    virtual int GetNumDistressedPipes() { return 0; }      // vslot 0x98
     // The water building rows (cSC4PlumbingSimulator, recovered). Defaults answer "no data".
     // vslot 0xc0 GetWaterProducerInfo(occupant, current, maximum, efficiency, pumpWorking, used): a null out is skipped.
     virtual bool GetWaterProducerInfo(cISC4Occupant*, std::uint32_t* current, std::uint32_t* maximum, float* efficiency, bool* pumpWorking,
@@ -353,6 +362,10 @@ public:
     virtual std::uint8_t TripLengthValue(int x, int z) { (void)x; (void)z; return 0; }                         // SL::spTrafficSim 0x68
     // FindBestDeveloper(lot) 0x1002cf948: the growth developer whose building type or cell suits the lot; null when none.
     virtual IQueryGrowthDeveloper* FindBestDeveloper(IQueryLot* lot) { (void)lot; return nullptr; }
+    virtual bool TerrainCellHasWater(int x, int z) { (void)x; (void)z; return false; }   // SL::spCity vslot 0x2a0 (terrain) -> vslot 0x110
+    virtual std::uint32_t ZoneTypeAt(int x, int z) { (void)x; (void)z; return 0xff; }     // SL::spZoneManager vslot 0x60
+    // SC4LoadExemplarString @ 0x100121132: the localized string the property names; false when it has none.
+    virtual bool LoadExemplarString(cIGZString& out, cISCPropertyHolder* holder, std::uint32_t property) { (void)out; (void)holder; (void)property; return false; }
     virtual IQueryLandValueSim* LandValueSim() { return nullptr; }                // SL::spLandValueSim
     // SL::spRM vslot 0x18 GetResource(key, 0xa52160f5): the exemplar's property holder, null when the resource is missing.
     virtual cISCPropertyHolder* GetTuningProperties(const cGZPersistResourceKey& key) { (void)key; return nullptr; }
@@ -608,10 +621,12 @@ public:
     void GetNetworkOccupantTrafficInfo(cRZString& text, cRZString& title);
     void GetBuildingOccupantTipInfo(cRZString& text, cRZString& title, std::uint32_t& icon, std::uint32_t& meter,
                                     float& meterValue);
-    void GetNetworkOccupantSummaryInfo(cRZString& text, cRZString& title);
-    void GetPropOccupantSummaryInfo(cRZString& text);
-    void GetFloraOccupantSummaryInfo(cRZString& text);
-    void GetTerrainSummaryInfo(cRZString& text, cRZString& title);
+    void GetNetworkOccupantSummaryInfo(cRZString& title, cRZString& text);
+    void GetPropOccupantSummaryInfo(cRZString& title);
+    void GetFloraOccupantSummaryInfo(cRZString& title);
+    void GetTerrainSummaryInfo(cRZString& title, cRZString& text);
+    // @ 0x1002cfb90 (PARTIAL: still an empty stub, QUERY-6): a lot's headline sentences keyed by importance
+    static void GetLotHeadlines(IQueryLot* lot, std::multimap<int, cRZString>& headlines);
     void DescribePick(int x, int y, cRZString& line1, cRZString& line2, cRZString& line3, bool detailed);
     void GetOccupantPaths();
     void ShowAllRoutesThatIntersectCityRect(const SC4CellRect& rect);
@@ -633,6 +648,8 @@ public:
     cRZCallbackTimer& TipTimer() { return tipTimer_; }
     cISC4WinCalloutBox* CalloutBox() const { return callout_; }
     void SetCityCellRect(const SC4CellRect& rect) { cityCellRect_ = rect; }
+    void SetHoveredOccupantForTest(cISC4Occupant* occupant) { occupant_ = occupant; }   // no reference is taken
+    void SetPickPositionForTest(float x, float y, float z) { pickX_ = x; pickY_ = y; pickZ_ = z; }
 
 protected:
     // The two windows of the network-mode legend come from this script instance (original: resource group 0x96a006b0,
