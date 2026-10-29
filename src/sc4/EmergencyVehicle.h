@@ -90,7 +90,8 @@ public:
     bool ValidateNetworkOccupant();                                           // @ 0x1002f5a26
     void SendPathBlockedMessage();                                            // @ 0x1002f5c36
     void SetDispatchState(std::uint32_t state) override;                      // 0xc8  @ 0x1002f796c
-    virtual std::uint32_t GetDispatchType() const = 0;                        // 0x638 (pure: Ambulance, GetawayVan, ... answer it)
+    virtual std::uint32_t GetDispatchType() const = 0;                        // 0x638 (pure: the subclasses answer it)
+    virtual float GetEffectiveRadius() const = 0;                             // 0x640 (pure)
     virtual void ShowEmergencyLights(bool on);                               // 0x648 (seam: IEmergencyVehicleHost)
 
     // ---- accessors for the tests and the subclasses ----

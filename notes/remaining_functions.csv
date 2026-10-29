@@ -1573,14 +1573,6 @@ cSC4AircraftManager,000000010050234e,not started,cSC4AircraftManager::GetGZCLSID
 cSC4Airplane,00000001006ccf26,skipped,cSC4Airplane::cSC4Airplane()
 cSC4Airplane,00000001006d552e,skipped,cSC4Airplane::~cSC4Airplane()
 cSC4Airplane,00000001006d5538,skipped,cSC4Airplane::~cSC4Airplane()
-cSC4Ambulance,00000001006d5e3c,not started,cSC4Ambulance::cSC4Ambulance()
-cSC4Ambulance,00000001006d5ea8,not started,cSC4Ambulance::GetEffectiveRadius() const
-cSC4Ambulance,00000001006d5eb6,not started,cSC4Ambulance::Write(cIGZOStream&) const
-cSC4Ambulance,00000001006d5f6a,not started,cSC4Ambulance::Read(cIGZIStream&)
-cSC4Ambulance,00000001006d608a,not started,cSC4Ambulance::~cSC4Ambulance()
-cSC4Ambulance,00000001006d616e,not started,cSC4Ambulance::~cSC4Ambulance()
-cSC4Ambulance,00000001006d619c,not started,cSC4Ambulance::GetGZCLSID() const
-cSC4Ambulance,00000001006d61b4,not started,cSC4Ambulance::GetDispatchType() const
 cSC4AnimationCoordinator,000000010035871c,not started,cSC4AnimationCoordinator::cSC4AnimationCoordinator()
 cSC4AnimationCoordinator,0000000100358784,not started,cSC4AnimationCoordinator::~cSC4AnimationCoordinator()
 cSC4AnimationCoordinator,00000001003588c4,not started,cSC4AnimationCoordinator::Shutdown()

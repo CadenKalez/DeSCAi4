@@ -17,6 +17,7 @@
 #include "sc4/Occupant.h"
 #include "sc4/PathInfo.h"
 #include "sc4/TrafficNetworkMap.h"
+#include "sc4/Ambulance.h"
 #include "sc4/EmergencyVehicle.h"
 #include "sc4/Vehicle.h"
 
@@ -942,6 +943,7 @@ void TestPlayerDriveTickAndOffRoad() {
 struct TestEmergencyCar final : cSC4EmergencyVehicle {
     using cSC4EmergencyVehicle::cSC4EmergencyVehicle;
     std::uint32_t GetDispatchType() const override { return 7; }
+    float GetEffectiveRadius() const override { return 80.0f; }
 };
 
 struct FakeEmergencyHost final : IEmergencyVehicleHost {
@@ -1041,6 +1043,25 @@ void TestEmergencyVehicle() {
     CHECK(ev->DoRepathingTick(16.0f) && ev->RepathCount() == 3 && ev->GetMarkedForRemove());   // past the limit: removed
     road->Release();
     info->Release();
+
+    // the ambulance: type 7, radius 80, a version-1 wrapper around the emergency record
+    {
+        auto* ambulance = new cSC4Ambulance(&world.host, &world.automatonHost, nullptr, &emergencyHost);
+        ambulance->AddRef();
+        ambulance->SetCallNumber(77);
+        CHECK(ambulance->GetDispatchType() == 7 && ambulance->GetEffectiveRadius() == 80.0f && ambulance->GetGZCLSID() == 0x6c1acde1);
+        PortMemoryOStream stream;
+        CHECK(ambulance->Write(stream));
+        PortMemoryIStream back(stream.bytes().data(), stream.bytes().size());
+        auto* twin = new cSC4Ambulance(&world.host, &world.automatonHost, nullptr, &emergencyHost);
+        twin->AddRef();
+        CHECK(twin->Read(back) && twin->GetCallNumber() == 77);
+        const std::uint8_t wrong[2] = {2, 0};
+        PortMemoryIStream wrongStream(wrong, sizeof(wrong));
+        CHECK(!twin->Read(wrongStream));
+        twin->Release();
+        ambulance->Release();
+    }
 
     // attraction: emergency mode drops the attraction controller instead of updating it
     ev->UpdateAttraction();
