@@ -141,7 +141,7 @@ Generated from notes/ledger.csv and a source scan (2026-10-29).
 
 ## Fakes and shortcuts on the native path
 
-- Lighting time of day comes from the machine clock (or SC4_TIMEOFDAY), not the simulator's game clock (NativeLighting.cpp).
+- Lighting time of day now follows the recovered cSC424HourClock (visual time = game time, advanced by OnIdle each frame at the 100x magnification). The city carries no clock component natively, so NativeLighting.cpp runs its own instance started at 10:00 (the HUD's value); the loaded city's saved clock time, the clock's hour messages and the HUD readout are not connected to it. SC4_TIMEOFDAY still overrides.
 - Occupant shadows: data side recovered and wired (CreateOccupantShadow -> cSTEOverlayManager::AddShadow -> projection through the recovered lighting manager);
   drawing is the port's own terrain-conforming quad pass (NativeShadowOverlay.cpp, SC4_NOSHADOWS disables) that sets up the DrawShadows state (render state, alpha test, combiner 0, stage-0 projection); the second texture stage (soft-edge mask 0xaa592b77 with the shadow matrix) and the falloff by location are not driven, and the culling uses the visible ground rectangle instead of the overlay manager's spatial index.
 - Water tick not registered with the simulator (AnimateWater does not run); IsNavigable answers (network/lot/occupant) are stubs.

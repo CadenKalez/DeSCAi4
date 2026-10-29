@@ -3,6 +3,8 @@
 #include "app/NativeRuntimeWire.h"
 #include "app/NativeBudgetUi.h"
 #include "app/NativeLighting.h"
+#include "sc4/CommonIIDs.h"
+#include "sc4/cSC424HourClock.h"
 #include "sc4/Simulator.h"
 #include "app/NativeCityView.h"
 
@@ -263,6 +265,11 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
             void* iface = nullptr;
             cIGZUnknown* component = city->GetComponent(sc4::CityComponent::Simulator);
             if (component && component->QueryInterface(0x8695664e, &iface) && iface) { simulator = static_cast<sc4::cSC4Simulator*>(static_cast<sc4::cISC4Simulator*>(iface)); static_cast<cIGZUnknown*>(iface)->Release(); }
+        }
+        if (auto* city = dynamic_cast<sc4::cSC4City*>(cityInterface)) {   // the sun follows the 24-hour clock component's visual time
+            void* plain = nullptr;
+            cIGZUnknown* clock = city->GetComponent(sc4::CityComponent::Clock24Hour);
+            if (clock && clock->QueryInterface(sc4::kGZIID_PlainObject, &plain) && plain) native::SetLightingClock(static_cast<sc4::cSC424HourClock*>(plain));
         }
         native::InitCityLighting(terrain, render, simulator);
     }

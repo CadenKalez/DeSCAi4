@@ -14,6 +14,7 @@
 #include "gz/cGZPersistResourceManager.h"
 #include "sc4/Exemplar.h"
 #include "sc4/LightingManager.h"
+#include "sc4/cSC424HourClock.h"
 #include "sc4/Render3D.h"
 #include "sc4/RenderProperties.h"
 #include "sc4/ServiceLocator.h"
@@ -32,6 +33,19 @@ sc4::cSC4LightingManager* g_manager = nullptr;
 bool g_inited = false;
 bool g_relight = false;
 float g_lastHour = -1.0f;
+sc4::cSC424HourClock* g_clock = nullptr;
+
+class ClockHost final : public sc4::IClockHost {
+public:
+    void PostMessage(std::uint32_t, std::uint32_t, std::uint32_t) override {}   // nobody listens to the hour messages natively yet
+};
+
+// The hour the sun is at: the clock's visual time (hours, fractional), else the simulator's hour and minute counters.
+float SunHour() {
+    if (g_clock) return g_clock->GetVisualTimePercentage() * 24.0f;
+    if (g_simulator) return static_cast<float>(g_simulator->Counter(3) % 24) + static_cast<float>(g_simulator->Counter(2) % 60) / 60.0f;
+    return 12.0f;
+}
 
 class ColorMap final : public ILightingColorMap {
 public:
@@ -153,6 +167,11 @@ IS4LightingManager* CreateNativeLightingManager() {
     return CreateLightingManagerView(g_manager);
 }
 
+void SetLightingClock(sc4::cSC424HourClock* clock) {
+    g_clock = clock;
+    if (clock && std::getenv("SC4_DEBUG")) std::fprintf(stderr, "clock: game %u:%02u visual %u:%02u mode %d paused %d\n", clock->GetHour(), clock->GetMinute(), clock->GetVisualHour(), clock->GetVisualMinute(), int(clock->GetVisualTimeMode()), clock->IsPaused());
+}
+
 cSC4LightingManager* LightingManager() { return g_inited ? g_manager : nullptr; }
 
 void InitCityLighting(sc4::cSTETerrain* terrain, sc4::cSC43DRender* render, sc4::cSC4Simulator* simulator) {
@@ -162,6 +181,16 @@ void InitCityLighting(sc4::cSTETerrain* terrain, sc4::cSC43DRender* render, sc4:
     if (!g_manager || !terrain || g_inited) return;
     g_inited = true;
     g_manager->Init();
+    if (!g_clock) {   // the city carries no clock component natively: run the recovered 24-hour clock ourselves, starting at the HUD's 10:00
+        static ClockHost clockHost;
+        static sc4::cSC424HourClock ownClock(&clockHost);
+        ownClock.Init();
+        ownClock.SetHour(10);
+        ownClock.SetMinute(0);
+        ownClock.SetVisualTimeMode(sc4::cSC424HourClock::kVisualNoon);   // pin then release: the visual time takes the game time at once
+        ownClock.SetVisualTimeMode(sc4::cSC424HourClock::kVisualReal);
+        g_clock = &ownClock;
+    }
     {   // the terrain-changed message (posted to the city, so it would arrive after the models are made): the manager needs the terrain's size and heights now
         auto* message = new cRZMessage2Standard();
         message->AddRef();
@@ -173,7 +202,7 @@ void InitCityLighting(sc4::cSTETerrain* terrain, sc4::cSC43DRender* render, sc4:
     std::fprintf(stderr, "[Runtime Wire] Sub-system SL::spLightingManager successfully bound to Memory Address %p\n", static_cast<void*>(g_manager));
     float hour = 12.0f;
     if (const char* env = std::getenv("SC4_TIMEOFDAY")) hour = static_cast<float>(std::atof(env));
-    else { std::time_t t = std::time(nullptr); std::tm local{}; localtime_r(&t, &local); hour = static_cast<float>(local.tm_hour) + static_cast<float>(local.tm_min) / 60.0f; }
+    else hour = SunHour();
     g_manager->SetTimeOfDay(hour);
     g_lastHour = hour;
     TerrainRect all{0, 0, static_cast<std::int32_t>(terrain->CellCountX()), static_cast<std::int32_t>(terrain->CellCountZ())};
@@ -187,11 +216,10 @@ void TickLighting() {
     const std::time_t now = std::time(nullptr);
     if (now == lastCheck) return;
     lastCheck = now;
+    if (g_clock) g_clock->OnIdle(0);   // the game clock advances with real time at its magnification
     float hour = g_lastHour;
-    if (!std::getenv("SC4_TIMEOFDAY")) {   // the game's "real time" visual mode: the machine's clock
-        std::tm local{};
-        localtime_r(&now, &local);
-        hour = static_cast<float>(local.tm_hour) + static_cast<float>(local.tm_min) / 60.0f;
+    if (!std::getenv("SC4_TIMEOFDAY")) {   // the day cycle follows the game clock: the simulator's hour and minute counters (the HUD clock)
+        hour = SunHour();
     }
     if (hour != g_lastHour) {
         g_lastHour = hour;
