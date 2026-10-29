@@ -19,6 +19,8 @@
 #include "sc4/Exemplar.h"
 #include "sc4/cSTETerrain.h"
 #include "sc4/SurfaceWater.h"
+#include "sc4/MySimAgentSimulator.h"
+#include "sc4/AdvisorSystem.h"
 #include "gz/GZCOM.h"
 #include "platform/Unwired.h"
 
@@ -90,6 +92,34 @@ struct NativeSurfaceWaterHost final : ISurfaceWaterHost {
     IWaterCellOccupant* AsCellOccupant(cIGZUnknown*) override { SC4_UNWIRED("ISurfaceWaterHost::AsCellOccupant"); return nullptr; }
     const void* LotAtCell(int, int) override { SC4_UNWIRED("ISurfaceWaterHost::LotAtCell (lot manager)"); return nullptr; }
     void OccupantsInCell(int, int, std::uint32_t, std::vector<IWaterCellOccupant*>&) override { SC4_UNWIRED("ISurfaceWaterHost::OccupantsInCell (occupant manager)"); }
+};
+
+// The MySim agent simulator's services on the native application.
+struct NativeMySimAgentHost final : IMySimAgentHost {
+    void Advisors(std::vector<MySimAdvisorEntry>& out) override {
+        out.clear();
+        cIGZUnknown* object = Component(CityComponent::AdvisorSystem);
+        void* raw = nullptr;
+        if (!object || !object->QueryInterface(kGZIID_cISC4AdvisorSystem, &raw) || !raw) return;
+        auto* system = static_cast<cISC4AdvisorSystem*>(raw);
+        if (AdvisorMap* advisors = system->GetAdvisors())
+            for (auto& entry : *advisors)
+                if (entry.second) out.push_back({entry.second.get(), entry.second->GetID()});
+        system->Release();
+    }
+    cISC4MySim* AsMySim(cIGZUnknown* object) override {
+        void* raw = nullptr;
+        if (!object || !object->QueryInterface(kGZIID_cISC4MySimLink, &raw)) return nullptr;
+        return static_cast<cISC4MySim*>(raw);
+    }
+    cIGZMessageServer2* Messages() override { return SL::spMS2; }
+    void RegisterGameData(cSC4MySimAgentSimulator&) override { SC4_UNWIRED("cSC4MySimAgentSimulator game data registry (get_sim / get_count for Lua): cISC4GameDataRegistry is not recovered"); }
+    void UnregisterGameData(cSC4MySimAgentSimulator&) override {}
+    bool RiotInProgress() override { SC4_UNWIRED("IMySimAgentHost::RiotInProgress (spCity vslot 0x240 -> 0x50)"); return false; }
+    void CellCenter(int cellX, int cellZ, float& x, float& z) override {
+        if (cSC4City* city = City4()) city->CellCenterToPosition(cellX, cellZ, x, z);
+        else { x = 0; z = 0; }
+    }
 };
 struct NativeTerrainHost final : ITerrainHost {
     cIGZMessageServer2* Messages() override { return SL::spMS2; }
@@ -226,7 +256,7 @@ struct NativeTerrainHost final : ITerrainHost {
 };
 }  // namespace
 
-void InstallTerrainStub() { static NativeTerrainHost s; static NativeSurfaceWaterHost water; sc4::SetTerrainHost(&s); gzcom::SetSurfaceWaterHost(&water); }
+void InstallTerrainStub() { static NativeTerrainHost s; static NativeSurfaceWaterHost water; static NativeMySimAgentHost agent; sc4::SetTerrainHost(&s); gzcom::SetSurfaceWaterHost(&water); gzcom::SetMySimAgentHost(&agent); }
 void SetTerrainHostCity(cISC4City* city) { g_city = city; }
 
 }  // namespace native

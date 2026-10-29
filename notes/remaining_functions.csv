@@ -2313,36 +2313,8 @@ cSC4ModelRegEffects,00000001001e4eac,not started,cSC4ModelRegEffects::FindRegEff
 cSC4ModelRegEffects,00000001001e4ed6,not started,cSC4ModelRegEffects::RemoveRegEffect(cRZString const&)
 cSC4ModelRegEffects,00000001001e4f42,not started,cSC4ModelRegEffects::InitEffectsList()
 cSC4ModelRegEffects,00000001001e577e,not started,cSC4ModelRegEffects::GetModel() const
-cSC4MySimAgentSimulator,00000001007ab82e,not started,cSC4MySimAgentSimulator::cSC4MySimAgentSimulator()
-cSC4MySimAgentSimulator,00000001007ab99c,not started,cSC4MySimAgentSimulator::~cSC4MySimAgentSimulator()
-cSC4MySimAgentSimulator,00000001007aba32,not started,cSC4MySimAgentSimulator::~cSC4MySimAgentSimulator()
-cSC4MySimAgentSimulator,00000001007aba3c,not started,cSC4MySimAgentSimulator::~cSC4MySimAgentSimulator()
-cSC4MySimAgentSimulator,00000001007aba6a,not started,"cSC4MySimAgentSimulator::QueryInterface(unsigned int, void**)"
-cSC4MySimAgentSimulator,00000001007abad0,not started,cSC4MySimAgentSimulator::AddRef()
-cSC4MySimAgentSimulator,00000001007abafa,not started,cSC4MySimAgentSimulator::Release()
-cSC4MySimAgentSimulator,00000001007abba8,not started,cSC4MySimAgentSimulator::Init()
-cSC4MySimAgentSimulator,00000001007ac070,not started,"cSC4MySimAgentSimulator::s_get_sim(void*, cIGZCommandParameterSet*, cIGZCommandParameterSet*, cISC4GameDataRegistry*)"
-cSC4MySimAgentSimulator,00000001007ac154,not started,"cSC4MySimAgentSimulator::s_get_sim_count(void*, cIGZCommandParameterSet*, cIGZCommandParameterSet*, cISC4GameDataRegistry*)"
-cSC4MySimAgentSimulator,00000001007ac1f8,not started,cSC4MySimAgentSimulator::Shutdown()
-cSC4MySimAgentSimulator,00000001007ac3f6,not started,cSC4MySimAgentSimulator::Write(cIGZOStream&) const
-cSC4MySimAgentSimulator,00000001007ac44e,not started,cSC4MySimAgentSimulator::Read(cIGZIStream&)
-cSC4MySimAgentSimulator,00000001007ac4d2,not started,cSC4MySimAgentSimulator::DoMessage(cIGZMessage2*)
-cSC4MySimAgentSimulator,00000001007acc0e,not started,cSC4MySimAgentSimulator::DoBuildingAdded(cISC4Occupant*)
-cSC4MySimAgentSimulator,00000001007acca2,not started,cSC4MySimAgentSimulator::DoFireAdded(cISC4Occupant*)
-cSC4MySimAgentSimulator,00000001007acd18,not started,cSC4MySimAgentSimulator::DoBuildingChanged(cISC4Occupant*)
-cSC4MySimAgentSimulator,00000001007acdac,not started,"cSC4MySimAgentSimulator::DoBuildingRemoved(cISC4Occupant*, unsigned int)"
-cSC4MySimAgentSimulator,00000001007ace74,not started,cSC4MySimAgentSimulator::DoHourChange(unsigned int)
-cSC4MySimAgentSimulator,00000001007acefa,not started,cSC4MySimAgentSimulator::DoDisasterStarted(cIGZMessage2Standard*)
-cSC4MySimAgentSimulator,00000001007acf76,not started,"cSC4MySimAgentSimulator::DoPipeBurst(int, int)"
-cSC4MySimAgentSimulator,00000001007acfce,not started,"cSC4MySimAgentSimulator::DoTornado(int, int)"
-cSC4MySimAgentSimulator,00000001007ad144,not started,cSC4MySimAgentSimulator::SetActiveUIPanelSim(int)
-cSC4MySimAgentSimulator,00000001007ad190,not started,cSC4MySimAgentSimulator::GetActiveUIPanelSim(int&)
-cSC4MySimAgentSimulator,00000001007ad1c2,not started,"cSC4MySimAgentSimulator::MoveIn(cRZString&, bool, unsigned char, cRZString&, unsigned int, cRZString&, unsigned char)"
-cSC4MySimAgentSimulator,00000001007ad24c,not started,cSC4MySimAgentSimulator::TrackLocation(cISC4MySim*)
-cSC4MySimAgentSimulator,00000001007ad2ce,not started,cSC4MySimAgentSimulator::HideLocation()
-cSC4MySimAgentSimulator,00000001007ad324,not started,cSC4MySimAgentSimulator::MySimLivesHere(cISC4BuildingOccupant*)
-cSC4MySimAgentSimulator,00000001007ad37a,not started,cSC4MySimAgentSimulator::CancelMoveIn()
-cSC4MySimAgentSimulator,00000001007ad384,not started,cSC4MySimAgentSimulator::GetGZCLSID() const
+cSC4MySimAgentSimulator,00000001007ac070,pending,"cSC4MySimAgentSimulator::s_get_sim(void*, cIGZCommandParameterSet*, cIGZCommandParameterSet*, cISC4GameDataRegistry*)"
+cSC4MySimAgentSimulator,00000001007ac154,pending,"cSC4MySimAgentSimulator::s_get_sim_count(void*, cIGZCommandParameterSet*, cIGZCommandParameterSet*, cISC4GameDataRegistry*)"
 cSC4MySimBalloonWinProc,00000001006ab090,not started,cSC4MySimBalloonWinProc::start_balloon_sound()
 cSC4MySimBalloonWinProc,00000001006ab27c,not started,cSC4MySimBalloonWinProc::stop_balloon_sound(bool)
 cSC4MySimBalloonWinProc,00000001006ab31e,not started,cSC4MySimBalloonWinProc::cSC4MySimBalloonWinProc(cISC4MySim*)
