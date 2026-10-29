@@ -6,6 +6,8 @@
 
 #include "gz/StreamOps.h"
 #include "sc4/DBSegment.h"
+#include "sc4/BuildingOccupant.h"
+#include "sc4/Lot.h"
 #include "sc4/SCPropertyHelp.h"
 
 namespace sc4 {
@@ -286,4 +288,52 @@ std::int64_t cSC4LotDeveloper::GetLotDevelopmentCost(const LotCellRect& area) co
                                      static_cast<float>((area.x1 + 1) - area.x0) * perCell);
 }
 
+LotCellRect cSC4LotDeveloper::RectOfLot(const cSC4Lot& lot) {
+    return {lot.RectByte(0), lot.RectByte(1), lot.RectByte(2), lot.RectByte(3)};
+}
+bool cSC4LotDeveloper::IsLotDeveloped(const cSC4Lot& lot) const { return IsAreaDeveloped(RectOfLot(lot)); }
+bool cSC4LotDeveloper::IsLotFlat(const cSC4Lot& lot, bool includeWater) const { return IsAreaFlat(RectOfLot(lot), includeWater); }
+float cSC4LotDeveloper::GetLotAltitudeRange(const cSC4Lot& lot, bool includeWater) const {
+    return GetAreaAltitudeRange(RectOfLot(lot), includeWater);
+}
+float cSC4LotDeveloper::GetLotSlope(const cSC4Lot& lot, bool includeWater) const { return GetAreaSlope(RectOfLot(lot), includeWater); }
+float cSC4LotDeveloper::GetOccupantSlope(void* occupant, bool includeWater) const {
+    LotCellRect area;
+    GetOccupantCellCoverage(occupant, area);
+    return GetAreaSlope(area, includeWater);
+}
+
+std::uint32_t cSC4LotDeveloper::TestCondition(cSC4Lot& lot) const {
+    static const std::int32_t kStepDown[4] = {1, 1, 2, 3};                   // 0x100a18ec0
+    const int state = lot.GetState();
+    std::uint32_t condition = lot.GetCondition();
+    std::int32_t grade;
+    if (state == 4) {
+        if (condition == 0) condition = 1;
+        if (static_cast<std::uint32_t>(lot.GetDaysSinceLastStateChange()) <= tunables_.conditionThreshold) return condition;
+        if (3 < condition) return condition;
+        grade = kStepDown[condition];
+    } else {
+        if (state != 3) return condition;
+        const BuildingProfile* profile = gates_ ? gates_->ProfileOfBuilding(lot.GetBuildingType(false)) : nullptr;
+        std::int32_t gap = static_cast<std::int32_t>(profile ? profile->wealth : 0) - static_cast<std::int32_t>(lot.GetOccupantWealth());
+        const bool behind = gap < static_cast<std::int32_t>(condition - 1);
+        if (behind || tunables_.conditionThreshold < static_cast<std::uint32_t>(lot.GetDaysSinceLastStateChange())) {
+            const float occupancy = lot.GetOccupancy();
+            if (occupancy < tunables_.ratioB || (behind && occupancy < tunables_.ratioC)) gap = gap + 1;
+        }
+        grade = 2;
+        if (gap < 3) grade = gap;
+        if (grade == 0) {
+            std::int32_t counter = 0;
+            if (!lot.Properties().HasProperty(kLotPropFailureCounter)) return 0;
+            cSCPropertyHelp::GetPropertyValue(&lot.Properties(), kLotPropFailureCounter, counter);
+            return counter != 0 ? 1u : 0u;
+        }
+        if (grade < 0) return condition;
+    }
+    return static_cast<std::uint32_t>(grade + 1);
+}
+
 }  // namespace sc4
+

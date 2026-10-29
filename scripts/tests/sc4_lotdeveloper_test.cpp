@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <vector>
 
+#include "sc4/Lot.h"
 #include "sc4/LotDeveloper.h"
 #include "sc4/SCPropertyHelp.h"
 static int failures = 0;
@@ -100,6 +101,42 @@ int main() {
     dev3.ReadSimulatorTunableValues(nullptr);
     CHECK(dev3.Tunables().ratioB == 0.4f);
     ex->Release();
+    {   // the lot forms read the lot's cell rectangle
+        cSC4Lot lot(3, 2, 2, 4, 0);                                      // cells x 3..4, z 2..5
+        CHECK(cSC4LotDeveloper::RectOfLot(lot).x0 == 3 && cSC4LotDeveloper::RectOfLot(lot).z1 == 5);
+        dev.Tunables().flatTolerance = 0.0f;
+        CHECK(!dev.IsLotDeveloped(lot));
+        CHECK(!dev.IsLotFlat(lot, false));
+        CHECK(dev.GetLotAltitudeRange(lot, false) == dev.GetAreaAltitudeRange(area, false));
+        CHECK(dev.GetLotSlope(lot, false) == dev.GetAreaSlope(area, false));
+        CHECK(dev.GetOccupantSlope(nullptr, false) == dev.GetAreaSlope(cover, false));
+    }
+    {   // TestCondition
+        struct Gates final : ILotGateServices {
+            BuildingProfile profile;
+            const BuildingProfile* ProfileOfBuilding(std::uint32_t) override { return &profile; }
+        } gates;
+        dev.SetGateServices(&gates);
+        cSC4Lot lot(3, 2, 2, 4, 0);
+        lot.SetState(2, 0, 0);
+        lot.SetCondition(2);
+        CHECK(dev.TestCondition(lot) == 2);                              // states other than 3 and 4 keep their condition
+        lot.SetState(4, 0, 0);
+        lot.SetCondition(0);
+        CHECK(dev.TestCondition(lot) == 1);                              // an abandoned lot with condition 0 counts as 1; no time has passed
+        // state 3: the wealth gap and the occupancy decide
+        gates.profile.wealth = 2;
+        lot.SetState(3, 1, 0);
+        lot.SetCondition(3);                                             // gap 1 < 3 - 1: behind; empty (occupancy 0 < 0.4) adds one
+        CHECK(dev.TestCondition(lot) == 3);
+        gates.profile.wealth = 1;                                        // gap 0 with condition 3: behind again, the extra step gives grade 1
+        CHECK(dev.TestCondition(lot) == 2);
+        lot.SetCondition(1);                                             // gap 0, condition 1: not behind, grade 0 -> the failure counter
+        CHECK(dev.TestCondition(lot) == 0);
+        cSCPropertyHelp::SetPropertyValue(&lot.Properties(), kLotPropFailureCounter, std::int32_t(5));
+        CHECK(dev.TestCondition(lot) == 1);
+        dev.SetGateServices(nullptr);
+    }
     std::printf(failures ? "FAILED\n" : "sc4_lotdeveloper: all passed\n");
     return failures ? 1 : 0;
 }

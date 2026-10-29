@@ -23,6 +23,8 @@
 
 namespace sc4 {
 
+class cSC4Lot;
+struct BuildingProfile;
 constexpr std::uint32_t kGZCLSID_cSC4LotDeveloper = 0xa990bfe0;
 constexpr std::uint32_t kGZIID_cISC4LotDeveloper = 0x4818e5d2;
 constexpr std::uint32_t kLotDeveloperTunablesKeyType = 0xe7e2c2db;     // exemplar key {type, group, instance}
@@ -62,6 +64,14 @@ struct LotDeveloperTunables {
     float maxLevelling = 0;                 // +0x140
     std::uint32_t value0f0 = 0, value0ec = 0;
 };
+
+// The building development simulator calls the Test* gates make (this+0x28 in the original).
+class ILotGateServices {
+public:
+    virtual ~ILotGateServices() = default;
+    virtual const BuildingProfile* ProfileOfBuilding(std::uint32_t buildingType) = 0;     // vslot 0x138 (borrowed)
+};
+constexpr std::uint32_t kLotPropFailureCounter = 0xe999b11f;       // lot property: consecutive failed power tests
 
 class IBaseLotDeveloperHost {
 public:
@@ -118,14 +128,29 @@ public:
     bool AttemptAreaLevelling(const LotCellRect& area, float unusedHeight, bool includeWater, bool flag, float maxSlope,
                               void* lot);
     void GetOccupantCellCoverage(void* occupant, LotCellRect& out) const;
-    bool IsAreaDeveloped(const LotCellRect&) const { return false; }
+    bool IsAreaDeveloped(const LotCellRect&) const { return false; }        // @ 0x1001476bc (the original returns 0)
+    // The lot forms: each reads the lot's cell rectangle (lot vslot 0x70 -> bytes +0x40..+0x43) and calls the area version.
+    static LotCellRect RectOfLot(const cSC4Lot& lot);
+    bool IsLotDeveloped(const cSC4Lot& lot) const;                                   // @ 0x1001476c4
+    bool IsLotFlat(const cSC4Lot& lot, bool includeWater) const;                     // @ 0x1001477ac
+    float GetLotAltitudeRange(const cSC4Lot& lot, bool includeWater) const;          // @ 0x1001478a6
+    float GetLotSlope(const cSC4Lot& lot, bool includeWater) const;                  // @ 0x100147a92
+    float GetOccupantSlope(void* occupant, bool includeWater) const;                 // @ 0x100147ad4
     bool IsAreaFlat(const LotCellRect& area, bool includeWater) const;
     float GetAreaAltitudeRange(const LotCellRect& area, bool includeWater) const;
     float GetAreaSlope(const LotCellRect& area, bool includeWater) const;
     std::int64_t GetLotDevelopmentCost(const LotCellRect& area) const;
 
+    // ---- lot condition gate (@ 0x1001483c8): the condition grade the lot should have now. An abandoned lot (state 4) that has
+    // stood long enough steps down one grade through {1, 1, 2, 3}; a lot in state 3 steps by the gap between the building's
+    // wealth and its occupants' and by its occupancy; everything else keeps its condition.
+    void SetGateServices(ILotGateServices* services) { gates_ = services; }
+    std::uint32_t TestCondition(cSC4Lot& lot) const;
+
+
 private:
     IBaseLotDeveloperHost* host_;
+    ILotGateServices* gates_ = nullptr;
     std::uint32_t refCount_ = 0;               // COM refcount (shared by the three sub-objects)
     LotDeveloperTunables tunables_;
     cSC4ResponseCurve developmentCostCurve_;                           // +0x148

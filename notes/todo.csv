@@ -620,7 +620,7 @@ CLASS-cSC4LotConfigurationFilterByBuildingType,cSC4LotConfigurationFilterByBuild
 CLASS-cSC4LotConfigurationFilterMonopoly,cSC4LotConfigurationFilterMonopoly,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4LotConfigurationManager,cSC4LotConfigurationManager,"recover 1 remaining function(s) (0 not started, 1 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4LotConfigurationManager,cSC4LotConfigurationManager,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,done,notes/ledger.csv
-LEDGER-cSC4LotDeveloper,cSC4LotDeveloper,finish 108 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
+LEDGER-cSC4LotDeveloper,cSC4LotDeveloper,finish 102 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4LotPropFilter,cSC4LotPropFilter,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4LotRetainingWallModel,cSC4LotRetainingWallModel,"recover 20 remaining function(s) (20 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4LotRetainingWallOccupant,cSC4LotRetainingWallOccupant,"recover 33 remaining function(s) (33 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
