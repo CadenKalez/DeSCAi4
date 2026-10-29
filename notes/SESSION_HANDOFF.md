@@ -165,3 +165,10 @@ refused (the reference mode is the only one). Milestone: **M1 reached** (region 
 **M2 reached for rendering** (a retail city loads and draws terrain, buildings, props). First failing step of the mission scenario:
 **terraform** (no tool is driven yet; the scenario's tail lists the steps as TODO). Note `cSC4App::Run` itself is not recovered; the frame
 loop is the port's own driver around the recovered tick, as the host owns the platform event pump.
+
+## Queued by the user (2026-10-29, during the road-tool work)
+
+"Later fix the renderer and the partials and stubs that it has." Not started. Scope when picked up: the Metal render path (`cMetalGDriver`,
+`cSC43DRender`, the RENDER3D model queue, `SC4DrawContext`, lighting / shadows per RENDER_STATUS.md) and every stub, fake, recovered-partial
+row and unwired seam on that path (use `scripts/unwired_report.py` after a `--script scenarios/first_city.txt` run, and the partial rows of the
+render classes in `notes/ledger.csv`). Do it after the road tool lands.
