@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "sc4/Render3D.h"
+#include "app/NativeShadowOverlay.h"
 #include "app/NativeUi.h"
 #include "gz/cGZPersistResourceManager.h"
 #include "gz/cIGZPersistDBSerialRecord.h"
@@ -411,6 +412,10 @@ public:
     sc4::cISC4LotManager* LotManager() override { return nullptr; }
     cIGZUnknown* BuildingDevelopmentSim() override { return g_city ? g_city->GetComponent(sc4::CityComponent::BuildingDevelopmentSimulator) : nullptr; }
     cIGZUnknown* Terrain() override { return g_city ? g_city->GetComponent(sc4::CityComponent::Terrain) : nullptr; }
+    int ShadowRenderQuality() override { const char* q = std::getenv("SC4_SHADOWQ"); return q ? std::atoi(q) : 5; }
+    float ShadowMinimumHeight() override { return 0.0f; }
+    float ShadowViewScale() override { return 1.0f; }
+    sc4::IShadowOverlay* ShadowOverlay(int) override { return native::TheShadowOverlay(); }
     sc4::cISC4OccupantFilter* CurrentViewFilter() override {
         auto* all = new sc4::cSC4OccupantFilter();   // every occupant is in view
         all->AddRef();
@@ -487,6 +492,7 @@ void InstallModelResources(gd::cIGZGDriver* driver) {
 bool AttachModelMaker(sc4::cSC43DRender& render, sc4::cSC4City& city) {
     g_render = &render;
     g_city = &city;
+    if (sc4::cSTETerrain* terrain = Terrain()) AttachShadowOverlay(render, *terrain);
     static ModelInstanceHost instanceHost;
     static PlaceableHost placeableHost;
     static ModelMakerHost makerHost;

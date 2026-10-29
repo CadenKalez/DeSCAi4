@@ -256,13 +256,7 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     const bool ok = render->Init();
     render->SetBackingStoreEnabled(false);   // the Metal driver keeps no backing store yet: a restore would replay whatever the screen held
     std::printf("city view: renderer %s\n", ok ? "up" : "FAILED");
-    if (auto* city = dynamic_cast<sc4::cSC4City*>(cityInterface); city && ok) {
-        native::InstallModelResources(driver);
-        native::AttachModelMaker(*render, *city);
-        native::SetAutomataRenderer(render, city);
-        native::PostCityInitToAutomataManagers(city);
-    }
-
+    // the lighting manager first: the model maker's shadows project through it as the models load
     {
         sc4::cSC4Simulator* simulator = nullptr;
         if (auto* city = dynamic_cast<sc4::cSC4City*>(cityInterface)) {
@@ -272,6 +266,13 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
         }
         native::InitCityLighting(terrain, render, simulator);
     }
+    if (auto* city = dynamic_cast<sc4::cSC4City*>(cityInterface); city && ok) {
+        native::InstallModelResources(driver);
+        native::AttachModelMaker(*render, *city);
+        native::SetAutomataRenderer(render, city);
+        native::PostCityInitToAutomataManagers(city);
+    }
+
 
     auto* adapter = new RendererAdapter(render, control, driver, screen);
     static ViewInput* input = nullptr;

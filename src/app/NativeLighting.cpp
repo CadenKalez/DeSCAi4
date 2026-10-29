@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "app/NativeUi.h"
+#include "rz/cRZMessage2Standard.h"
 #include "gz/Buffer.h"
 #include "gz/cGZPersistResourceManager.h"
 #include "sc4/Exemplar.h"
@@ -161,6 +162,13 @@ void InitCityLighting(sc4::cSTETerrain* terrain, sc4::cSC43DRender* render, sc4:
     if (!g_manager || !terrain || g_inited) return;
     g_inited = true;
     g_manager->Init();
+    {   // the terrain-changed message (posted to the city, so it would arrive after the models are made): the manager needs the terrain's size and heights now
+        auto* message = new cRZMessage2Standard();
+        message->AddRef();
+        message->SetType(sc4::kLightingMessageTerrainChanged);
+        g_manager->DoMessage(message);
+        message->Release();
+    }
     SL::spLightingManager = static_cast<cIGZUnknown*>(static_cast<sc4::cISC4LightingManager*>(g_manager));   // the renderer publishes it (cSC43DRender::Init)
     std::fprintf(stderr, "[Runtime Wire] Sub-system SL::spLightingManager successfully bound to Memory Address %p\n", static_cast<void*>(g_manager));
     float hour = 12.0f;
