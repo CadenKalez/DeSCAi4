@@ -120,3 +120,23 @@ float at +0x1c), `+0x58` std::list<int>, `+0x70/0x74` flags, `+0x78` cRZCellMap<
 (class 0x49b9e604, 0x4be3618b). Write: u16 version 1, terrain serializable, then `SaveWaterInfo` (autosave stream 0x8a91e7ef/0xe98f9525,
 version 4: vertex count, then per vertex 4 floats, a cS3DVector3, 1 float). Read accepts version < 2. Messages registered:
 0x26d31ec1/4/5, 0x89d3e9f3, 0x99ef1142/3. `IsNavigable` is a spiral search over city cells using six services.
+
+
+## Addendum 2 (same day): water first
+
+`SC4_LOADCITY` on Konradshohe and both "New City" saves now ends with **0 classes missing**. Recovered: `cSTESurfaceWater`
+(`src/sc4/SurfaceWater.*`, creator `gz/gzcom_creators/cSTESurfaceWater.cpp`, host `ISurfaceWaterHost`) and `cSC4MySimAgentSimulator`
+(`src/sc4/MySimAgentSimulator.*`, host `IMySimAgentHost`). Both hosts are installed by `InstallTerrainStub()` in `src/app/NativeTerrainHost.cpp`.
+The "no cIGZSerializable" lines for `cSC4EffectsManager` / `cSC4DisasterLayer` were noise: those classes answer only their own interface, as
+in the original, and are made by the raw creator; the loader no longer lists them as missing.
+
+**Unwired on this path (listed):** `cSTESurfaceWater` — `UpdateNeighborConnections` (0x10072efca), `UpdateFloodWaters` (0x10072fb5c),
+`FindLocalMinimumOrWater` (0x1007303b0), `Rain` / `Rain_Static` / `GetBasinVertices` (0x100730820/882), tick registration (spSimulator
+vslot 0x98 / ATM vslot 0x28: the water never animates), and the host answers for network occupants, lots and occupants (`IsNavigable`
+therefore sees no bridges or lots). Divergence: the terrain model keeps channels 0 and 0x1c of every vertex in its own arrays; `SyncTerrain()`
+copies them (land depth clamped to 0). `cSC4MySimAgentSimulator` — the Lua `get_sim` / `get_count` callbacks (`cISC4GameDataRegistry` not
+recovered) and `RiotInProgress`. Patrol car / fire truck: no host.
+
+**Next targets:** (1) the water simulation functions above (UpdateFloodWaters is ~2 KB of float code, FindLocalMinimumOrWater ~1.1 KB,
+UpdateNeighborConnections ~1.4 KB: use `scripts/disasm.py`, test with the terrain fixture in `sc4_surfacewater_test.cpp`); (2) the game loop in
+`src/experimental_host/pending/` (M1); (3) `cSC4RiotPolice` + `cSC4SimFireCrew` (44 functions) so the emergency vehicles' crews exist.
