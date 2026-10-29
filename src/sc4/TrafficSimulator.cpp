@@ -107,19 +107,20 @@ bool cSC4TrafficSimulator::Write(cIGZOStream&) const {
     return false;
 }
 // 0x10007b550. The city file's traffic record is read completely (every field, reference and nested list in the original's order and with
-// the original's version conditions). The port's traffic simulator keeps none of this state yet (the grids, accident lists, tunnel and ferry
+// the original's version conditions, from version 0x13 up). The port's traffic simulator keeps none of this state yet (the grids, accident lists, tunnel and ferry
 // tables of the original live outside the recovered class), so the values are consumed, not stored: loading a city no longer fails and
-// the records that follow stay in step. Versions below 0x1d (older than any city this port was checked against) are refused.
+// the records that follow stay in step. Versions below 0x13 are refused, as in the original.
 bool cSC4TrafficSimulator::Read(cIGZIStream& stream) {
     constexpr std::uint32_t kMaxCount = 1u << 22;
     std::uint16_t version = 0;
     stream.GetUint16(version);
-    if (version < 0x1d) return false;
+    if (version < 0x13) return false;
     std::int32_t pathTypes = 8, extraTypes = 1, edgeSets = 4, tunnelWidth = 7;   // d4, d0, ec, 68 of the original
-    stream.GetSint32(pathTypes);
-    if (version > 0x24) stream.GetSint32(extraTypes);
-    stream.GetSint32(edgeSets);
-    stream.GetSint32(tunnelWidth);
+    if (version >= 0x18) {
+        stream.GetSint32(pathTypes);
+        if (version > 0x24) stream.GetSint32(extraTypes);
+        if (version >= 0x1c) { stream.GetSint32(edgeSets); stream.GetSint32(tunnelWidth); }
+    }
     if (pathTypes < 0 || extraTypes < 0 || tunnelWidth < 0 || pathTypes > 1024 || extraTypes > 1024 || tunnelWidth > 1024) return false;
 
     std::uint8_t u8 = 0;
@@ -152,7 +153,12 @@ bool cSC4TrafficSimulator::Read(cIGZIStream& stream) {
     reference(0xc9bd939a);
     reference(0xc9bd939a);
     stream.GetUint32(u32);                                       // edge densities: key, 4 x 4 + 1 + 4 x 4 shorts
-    many(u32, [&] { stream.GetUint32(u32); for (int k = 0; k < 33; ++k) stream.GetUint16(u16); });
+    many(u32, [&] {
+        stream.GetUint32(u32);
+        // before version 0x14 the 33 shorts are stored as floats, followed by one more float the original reads and drops
+        if (version < 0x14) for (int k = 0; k < 34; ++k) stream.GetFloat32(f32);
+        else for (int k = 0; k < 33; ++k) stream.GetUint16(u16);
+    });
     for (int i = 0; i < 9; ++i) stream.GetUint32(u32);
     reference(0xc9bd939a);
     reference(0xc9bd939a);
@@ -162,12 +168,15 @@ bool cSC4TrafficSimulator::Read(cIGZIStream& stream) {
         stream.GetUint32(u32);
         reference(0x26bb767e);
         stream.GetFloat32(f32); stream.GetFloat32(f32); stream.GetFloat32(f32);
+        if (version < 0x1d) { stream.GetUint32(u32); many(u32, [&] { stream.GetUint8(u8); }); }   // the old rule list: bytes
         stream >> flag; stream.GetUint8(u8); stream.GetUint8(u8);
         stream.GetFloat32(f32);
         stream.GetFloat32(f32);
-        stream.GetUint32(u32);                                   // the rules
-        many(u32, [&] { for (int b = 0; b < 5; ++b) stream >> flag; stream.GetUint16(u16); stream.GetUint16(u16); });
-        if (version >= 0x21) { stream.GetFloat32(f32); stream >> flag; }
+        if (version >= 0x1d) {
+            stream.GetUint32(u32);                               // the rules
+            many(u32, [&] { for (int b = 0; b < 5; ++b) stream >> flag; stream.GetUint16(u16); stream.GetUint16(u16); });
+            if (version >= 0x21) { stream.GetFloat32(f32); stream >> flag; }
+        }
     });
     reference(0x223e2b67);
     reference(0x223e2b67);
@@ -176,7 +185,7 @@ bool cSC4TrafficSimulator::Read(cIGZIStream& stream) {
     stream.GetFloat32(f32);
     if (version > 0x28) stream.GetFloat32(f32);
     stream.GetFloat32(f32);
-    stream.GetFloat64(f64);
+    if (version < 0x16) stream.GetFloat32(f32); else stream.GetFloat64(f64);   // widened to a double when stored
     if (version > 0x28) stream.GetFloat64(f64);
     stream.GetUint32(u32);
     stream.GetUint8(u8);
@@ -184,16 +193,17 @@ bool cSC4TrafficSimulator::Read(cIGZIStream& stream) {
     stream.GetUint32(u32);
     stream.GetUint32(u32);
     stream.GetFloat32(f32);
-    for (int set = 0; set < 3; ++set) {                           // three sets of 16-bit keys
-        if (set == 2) {
-            stream.GetUint32(u32); stream.GetUint32(u32); stream.GetFloat32(f32);
-        }
+    for (int set = 0; set < 2; ++set) {                           // two sets of 16-bit keys
         stream.GetUint32(u32);
         many(u32, [&] { stream.GetUint16(u16); });
     }
-    // The real record carries one more 32-bit value between the third key set and the iterator that the decompiled function does not show
-    // (found by aligning the whole record: with it every later section parses to the exact end of the object).
-    stream.GetUint32(u32);
+    if (version > 0x19) {                                         // later versions: two values, a float and two more key sets
+        stream.GetUint32(u32); stream.GetUint32(u32); stream.GetFloat32(f32);
+        for (int set = 0; set < 2; ++set) {
+            stream.GetUint32(u32);
+            many(u32, [&] { stream.GetUint16(u16); });
+        }
+    }
     stream.GetUint8(u8);
     {
         std::int8_t state = 0;                                    // ScanningIterator
@@ -246,7 +256,7 @@ bool cSC4TrafficSimulator::Read(cIGZIStream& stream) {
         stream.GetFloat32(f32); stream.GetFloat32(f32);
         stream >> flag;
         stream.GetFloat32(f32);
-        stream.GetUint8(u8);
+        if (version >= 0x15) stream.GetUint8(u8);
     }
     stream.GetUint32(u32);                                        // tunnels
     many(u32, [&] {
@@ -254,14 +264,16 @@ bool cSC4TrafficSimulator::Read(cIGZIStream& stream) {
         for (std::int32_t i = 0; i < tunnelWidth; ++i) stream.GetFloat32(f32);
     });
     stream.GetFloat32(f32); stream.GetFloat32(f32); stream.GetUint32(u32);
-    stream.GetFloat32(f32); stream.GetUint32(u32);
+    if (version >= 0x15) { stream.GetFloat32(f32); stream.GetUint32(u32); }
     for (std::int32_t i = 0; i < pathTypes && !stream.GetError(); ++i) stream.GetUint32(u32);
     stream.GetUint32(u32);
     many(u32, [&] { stream.GetUint32(u32); });                     // up to four connection ids
     stream.GetUint32(u32);                                        // property holders keyed by 16-bit ids
     many(u32, [&] { stream.GetUint16(u16); cSCPropertyHolder holder; holder.Read(stream); });
+    if (version < 0x1b) return !stream.GetError();                // older records end here
     for (std::int32_t i = 0; i < tunnelWidth && !stream.GetError(); ++i) { stream.GetUint32(u32); stream.GetUint32(u32); }
     if (version > 0x26) stream.GetUint32(u32);
+    if (version <= 0x1d) return !stream.GetError();               // no ferry terminals before version 0x1e
     stream.GetUint32(u32);                                        // ferry terminals
     many(u32, [&] {
         if (version < 0x20) stream.GetUint16(u16);
