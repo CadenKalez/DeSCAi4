@@ -1685,13 +1685,6 @@ cSC4Automaton,000000010010c916,pending,"cSC4Automaton::sPlayAnim(void*, cIGZComm
 cSC4Automaton,000000010010caae,pending,"cSC4Automaton::sPlaySfx(void*, cIGZCommandParameterSet*, cIGZCommandParameterSet*, cISC4GameDataRegistry*)"
 cSC4Automaton,000000010010cb64,pending,"cSC4Automaton::sPushState(void*, cIGZCommandParameterSet*, cIGZCommandParameterSet*, cISC4GameDataRegistry*)"
 cSC4Automaton::AutomataOBB,00000001000fd88e,skipped,"cSC4Automaton::AutomataOBB::AutomataOBB(cSC4Automaton*, cS3DVector3, float)"
-cSC4Blimp,00000001006d65ba,not started,cSC4Blimp::cSC4Blimp()
-cSC4Blimp,00000001006d6640,not started,cSC4Blimp::Init()
-cSC4Blimp,00000001006d6692,not started,"cSC4Blimp::DoAnimationTick(unsigned int, float)"
-cSC4Blimp,00000001006d669a,not started,"cSC4Blimp::GetNewDirection(cS3DVector3 const&, cS3DVector3&)"
-cSC4Blimp,00000001006d6790,not started,cSC4Blimp::GetModelResourceInstance()
-cSC4Blimp,00000001006d679c,not started,cSC4Blimp::~cSC4Blimp()
-cSC4Blimp,00000001006d67a6,not started,cSC4Blimp::~cSC4Blimp()
 cSC4Bus,0000000100506b34,not started,cSC4Bus::cSC4Bus()
 cSC4Bus,0000000100506bb8,not started,cSC4Bus::Init()
 cSC4Bus,0000000100506bd0,not started,cSC4Bus::Shutdown()

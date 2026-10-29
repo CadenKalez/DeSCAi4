@@ -14,6 +14,7 @@
 #include "rz/PortMemoryStreams.h"
 #include "rz/cRZMessage2Standard.h"
 #include "sc4/Airplane.h"
+#include "sc4/Blimp.h"
 #include "sc4/AutomataStates.h"
 
 static int failures = 0;
@@ -845,6 +846,27 @@ int main() {
         CHECK(plane->EffectIndicate() == nullptr);
         CHECK(plane->EffectDrop() == nullptr);
         CHECK(plane->Release() == 0);
+    }
+
+    // ---- the blimp ------------------------------------------------------------------------------------------------
+    {
+        Fixture f;
+        f.aircraftHost.randomValues[0] = 34.0;
+        f.aircraftHost.randomValues[1] = 56.0;
+        auto* blimp = new cSC4Blimp(&f.automatonHost, &f.aircraftHost);
+        blimp->AddRef();
+        CHECK(blimp->GetModelResourceInstance() == 0x0818f120);
+        CHECK(blimp->DoAnimationTick(0, 33.0f));                         // does nothing and says so
+        f.aircraftHost.randomCalls = 0;
+        cS3DVector3 from;
+        from.x = 10.0f; from.y = 7.0f; from.z = 20.0f;
+        cS3DVector3 heading;
+        blimp->GetNewDirection(from, heading);
+        const float length = std::sqrt((24.0f * 24.0f + 0.0f * 0.0f) + 36.0f * 36.0f);
+        CHECK(std::fabs(heading.x - 24.0f * (1.0f / length)) < 1e-7f && heading.y == 0.0f && std::fabs(heading.z - (1.0f / length) * 36.0f) < 1e-7f);
+        CHECK(f.aircraftHost.randomCalls == 2);                          // x then z, nothing else
+        CHECK(blimp->Init() && blimp->Init());                           // the second call changes nothing
+        blimp->Release();
     }
 
     std::printf(failures == 0 ? "sc4_airplane: all checks passed\n" : "sc4_airplane: %d FAILURES\n", failures);
