@@ -22,10 +22,10 @@
 // PARTIAL (see notes/ledger_pending/cSC4ViewInputControlQuery.txt): the tip/describe text builders
 // (Get*SummaryInfo, GetBuildingOccupantTipInfo, GetBuildingOccupantTrafficInfo, GetNetworkOccupantTrafficInfo,
 // DescribePick/DescribeCell/DescribeBuilding/DescribeDemand/DescribePopulation, WriteDetailedDebugInfo and the
-// headline/trip-volume/path helpers) and the row handlers for the simulators that are not recovered yet (school, hospital, water, garbage/recycling, transit, landmark, RCI/growth-developer) are declared but not
+// headline/trip-volume/path helpers) and the row handlers for the simulators that are not recovered yet (water, garbage/recycling, transit, landmark, RCI/growth-developer) are declared but not
 // implemented. The fire, police/jail, park/occupant-cost and neighbour-connection rows — everything whose simulator
 // (cSC4FireProtectionSimulator, cSC4PoliceSimulator, cSC4BudgetSimulator, cSC4NeighborsSimulator) is recovered — are
-// ported, as are the airport and seaport rows (usage, capacity, traffic meter, maintenance), the dialog enumeration callbacks (EnumFunc*) and the recovered control-id -> row handler table.
+// ported, as are the school, hospital and library rows, the airport and seaport rows (usage, capacity, traffic meter, maintenance), the dialog enumeration callbacks (EnumFunc*) and the recovered control-id -> row handler table.
 #pragma once
 #include <cstdint>
 #include <vector>
@@ -152,10 +152,26 @@ public:
     virtual ~IQuerySimulator() = default;
     virtual std::uint32_t FrameCount() = 0;                                     // 0x30 -> simulator vslot 0xd0
 };
+// What GetSchoolQueryData / GetHospitalQueryData (vslots 0xd0 / 0xd8) fill in for one school or hospital. The original record is a
+// 0x50-byte tQueryData that starts with the building name; the rows only read these fields.
+struct QueryEducationRecord {
+    std::uint32_t count = 0;        // +0x38 students / patients / books borrowed
+    float grade = 0.0f;             // +0x3c the meter value
+    float staffFunding = 0.0f;      // +0x40 fraction
+    std::int32_t staffCost = 0;     // +0x44 monthly cost at full funding
+    float secondFunding = 0.0f;     // +0x48 buses (school) / ambulances (hospital)
+    std::int32_t secondCost = 0;    // +0x4c
+};
 class IQueryResidentialSim {
 public:
     virtual ~IQueryResidentialSim() = default;
     virtual void SetQueryCell(int cellX4, int cellZ4) = 0;                      // vslot 0x1d8
+    virtual bool GetSchoolQueryData(cISC4Occupant*, QueryEducationRecord&) { return false; }     // vslot 0xd0
+    virtual bool GetHospitalQueryData(cISC4Occupant*, QueryEducationRecord&) { return false; }   // vslot 0xd8
+    // vslot 0xe0 EstimateCurrentOccupantCapacity: desks / beds / books in the collection / tickets in `first`, teachers / doctors in `second`.
+    virtual void EstimateCurrentOccupantCapacity(cISC4Occupant*, std::uint32_t& first, std::uint32_t& second) { first = second = 0; }
+    // vslot 0x98 SetOccupantFundingPercentages(occupant, staff, second, education): staff and bus/ambulance fractions.
+    virtual void SetOccupantFundingPercentages(cISC4Occupant*, float, float, bool) {}
 };
 
 // SL::spFireProtectionSim (cSC4FireProtectionSimulator, recovered: FireProtectionSimulator.h). The row handlers only
@@ -382,6 +398,22 @@ public:
     static bool SetOrGetSeaportSeaTrafficVolume(cIGZWin* win, std::uint32_t id, bool set, int x, int z);   // @ 0x1002d6f3a
     static bool SetOrGetSeaportOccupantMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7016
     static bool SetOrGetSeaportMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, int x, int z);   // @ 0x1002d706a
+    // --- school / hospital / library rows (the residential simulator's query data) ---
+    static bool SetOrGetSchoolGrade(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7142
+    static bool SetOrGetSchoolLocalStaffFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d71fc
+    static bool SetOrGetSchoolLocalBusFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7346
+    static bool SetOrGetSchoolTeacherCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d748c
+    static bool SetOrGetSchoolDeskCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d74de
+    static bool SetOrGetSchoolStudentCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7530
+    static bool SetOrGetMuseumExhibitTicketsAvailable(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d75dc
+    static bool SetOrGetLibraryBooksBorrowedCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d75ea
+    static bool SetOrGetLibraryBooksInCollectionCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7696
+    static bool SetOrGetHospitalGrade(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d76e8
+    static bool SetOrGetHospitalLocalStaffFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d77a2
+    static bool SetOrGetHospitalLocalAmbulanceFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d78e8
+    static bool SetOrGetHospitalDoctorCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7a2c
+    static bool SetOrGetHospitalBedCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7a7e
+    static bool SetOrGetHospitalPatientCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d7ad0
     static bool SetOrGetNeighborConnectionNeighborCityName(cIGZWin* win, std::uint32_t id, bool set, int x, int z,
                                                            int connectionType);                     // @ 0x1002d90d6
     static bool SetOrGetNeighborConnectionNeighborCityMayorName(cIGZWin* win, std::uint32_t id, bool set, int x,

@@ -330,6 +330,18 @@ struct Sim final : IQuerySimulator { std::uint32_t frame = 0; std::uint32_t Fram
 struct ResSim final : IQueryResidentialSim {
     int calls = 0, x = 0, z = 0;
     void SetQueryCell(int cx, int cz) override { ++calls; x = cx; z = cz; }
+    QueryEducationRecord school, hospital;
+    bool schoolAnswers = true, hospitalAnswers = true;
+    std::uint32_t first = 0, second = 0;
+    int capacityCalls = 0, fundingCalls = 0;
+    float lastStaff = -1.0f, lastSecond = -1.0f;
+    bool lastEducation = false;
+    bool GetSchoolQueryData(cISC4Occupant*, QueryEducationRecord& r) override { r = school; return schoolAnswers; }
+    bool GetHospitalQueryData(cISC4Occupant*, QueryEducationRecord& r) override { r = hospital; return hospitalAnswers; }
+    void EstimateCurrentOccupantCapacity(cISC4Occupant*, std::uint32_t& a, std::uint32_t& b) override { ++capacityCalls; a = first; b = second; }
+    void SetOccupantFundingPercentages(cISC4Occupant*, float staff, float other, bool education) override {
+        ++fundingCalls; lastStaff = staff; lastSecond = other; lastEducation = education;
+    }
 };
 
 // ---- the fire / police / budget / neighbour / traffic seams the new rows read ------------------------------
@@ -1161,6 +1173,103 @@ int main() {
         CHECK(!cSC4ViewInputControlQuery::SetOrGetControlValue(dialog, 0x107b, true, &info));
         CHECK(std::string(usageLabel->GetCaption().ToChar()) == "12");
         host.lots.byCell = nullptr;
+        delete dialog;
+    }
+
+    // --- M3: school / hospital / library rows --------------------------------------------------------------------
+    {
+        auto* dialog = new cGZWin(&host.mgr);
+        auto* label = new gz::cGZWinText(&host.mgr);
+        label->SetID(0x1007);
+        auto* meter = new gz::cGZWinBMP(&host.mgr);
+        meter->SetID(0x1001);
+        auto* staffSlider = new gz::cGZWinSlider(&host.mgr);
+        staffSlider->SetID(0x1002);
+        auto* busSlider = new gz::cGZWinSlider(&host.mgr);
+        busSlider->SetID(0x1003);
+        staffSlider->SetMinimumValue(0);   // the dialog script gives the sliders their 0..100 range
+        staffSlider->SetMaximumValue(100);
+        busSlider->SetMinimumValue(0);
+        busSlider->SetMaximumValue(100);
+        auto* staffMoney = new gz::cGZWinText(&host.mgr);
+        staffMoney->SetID(0x1102);
+        CHECK(dialog->ChildAdd(label) && dialog->ChildAdd(meter) && dialog->ChildAdd(staffSlider) && dialog->ChildAdd(busSlider));
+        CHECK(dialog->ChildAdd(staffMoney));
+        TestOccupant occupant;
+        auto meterOf = [&]() {
+            cIGZVariant* value = nullptr;
+            float result = -1.0f;
+            if (meter->AsIGZWin()->GetParam(0xea563ab0, &value) && value) { result = value->GetValFloat32(); value->Release(); }
+            return result;
+        };
+        // grade meters read the record's grade; clearing answers true; no data answers false
+        host.residential.school.grade = 0.6f;
+        host.residential.hospital.grade = 0.3f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetSchoolGrade(dialog, 0x1001, true, &occupant));
+        CHECK(std::fabs(meterOf() - 0.6f) < 1e-6f);
+        CHECK(cSC4ViewInputControlQuery::SetOrGetHospitalGrade(dialog, 0x1001, true, &occupant));
+        CHECK(std::fabs(meterOf() - 0.3f) < 1e-6f);
+        CHECK(cSC4ViewInputControlQuery::SetOrGetSchoolGrade(dialog, 0x1001, false, &occupant));
+        host.residential.schoolAnswers = false;
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetSchoolGrade(dialog, 0x1001, true, &occupant));
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetSchoolStudentCount(dialog, 0x1007, true, &occupant));
+        host.residential.schoolAnswers = true;
+        // counts come from the record; the library reads the school record, the hospital its own
+        host.residential.school.count = 321;
+        host.residential.hospital.count = 77;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetSchoolStudentCount(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "321");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetLibraryBooksBorrowedCount(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "321");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetHospitalPatientCount(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "77");
+        // capacities: the first value is desks / beds / books / tickets, the second teachers / doctors; the simulator is asked even when clearing
+        host.residential.first = 40;
+        host.residential.second = 6;
+        host.residential.capacityCalls = 0;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetSchoolDeskCount(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "40");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetSchoolTeacherCount(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "6");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetMuseumExhibitTicketsAvailable(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "40");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetLibraryBooksInCollectionCount(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "40");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetHospitalBedCount(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "40");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetHospitalDoctorCount(dialog, 0x1007, true, &occupant));
+        CHECK(std::string(label->GetCaption().ToChar()) == "6");
+        const int callsBefore = host.residential.capacityCalls;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetSchoolDeskCount(dialog, 0x1007, false, &occupant));
+        CHECK(host.residential.capacityCalls == callsBefore + 1);
+        // funding sliders: the fraction is rounded to the nearest percent (0.755 -> 76, not 75), the amount row follows
+        host.residential.school.staffFunding = 0.755f;
+        host.residential.school.staffCost = 1000;
+        host.residential.school.secondFunding = 0.5f;
+        host.residential.school.secondCost = 400;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetSchoolLocalStaffFunding(dialog, 0x1002, true, &occupant));
+        int sliderValue = 0;
+        CHECK(cSC4ViewInputControlQuery::GetSliderControlValue(dialog, 0x1002, sliderValue) && sliderValue == 76);
+        CHECK(std::string(staffMoney->GetCaption().ToChar()) == "760");
+        // moving the staff slider keeps the bus fraction from the record; moving the bus slider keeps the staff one
+        busSlider->SetValue(30);
+        staffSlider->SetValue(20);
+        CHECK(cSC4ViewInputControlQuery::SetOrGetSchoolLocalStaffFunding(dialog, 0x1002, false, &occupant));
+        CHECK(host.residential.fundingCalls == 1 && host.residential.lastEducation);
+        CHECK(std::fabs(host.residential.lastStaff - 0.2f) < 1e-6f && std::fabs(host.residential.lastSecond - 0.5f) < 1e-6f);
+        CHECK(cSC4ViewInputControlQuery::SetOrGetSchoolLocalBusFunding(dialog, 0x1003, false, &occupant));
+        CHECK(host.residential.fundingCalls == 2);
+        CHECK(std::fabs(host.residential.lastStaff - 0.755f) < 1e-6f && std::fabs(host.residential.lastSecond - 0.3f) < 1e-6f);
+        // the hospital stores with the education flag off
+        host.residential.hospital.staffFunding = 0.25f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetHospitalLocalAmbulanceFunding(dialog, 0x1003, false, &occupant));
+        CHECK(host.residential.fundingCalls == 3 && !host.residential.lastEducation);
+        CHECK(std::fabs(host.residential.lastStaff - 0.25f) < 1e-6f);
+        // no data for the occupant: false and nothing stored
+        host.residential.hospitalAnswers = false;
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetHospitalLocalStaffFunding(dialog, 0x1002, false, &occupant));
+        CHECK(host.residential.fundingCalls == 3);
+        host.residential.hospitalAnswers = true;
         delete dialog;
     }
 

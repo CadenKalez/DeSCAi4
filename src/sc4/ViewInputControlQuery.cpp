@@ -814,6 +814,18 @@ bool cSC4ViewInputControlQuery::SetStaticControlSimoleonsFloat(cIGZWin* win, std
     return SetStaticControlText(win, id, text);
 }
 
+namespace {
+// The sliders take fraction * 100 rounded to the nearest even integer: the compiled code adds 1.5 * 2^23 in float and reads the
+// low mantissa bits back (@ 0x1002d5e6c, 0x1002d60e4, 0x1002d7267 ...).
+int RoundedPercentForSlider(float fraction) {
+#pragma clang fp contract(off)   // the multiply and the add round separately on x86 (an arm64 fused multiply-add would not)
+    const float shifted = fraction * 100.0f + 12582912.0f;
+    std::uint32_t bits;
+    std::memcpy(&bits, &shifted, sizeof bits);
+    return static_cast<int>(bits + 0xb4c00000u);
+}
+}  // namespace
+
 // @ 0x1002d54a0
 bool cSC4ViewInputControlQuery::SetSliderControlValue(cIGZWin* win, std::uint32_t id, int minimum, int maximum,
                                                       int value, std::int64_t money, cISC4Occupant* occupant,
@@ -1006,6 +1018,122 @@ bool cSC4ViewInputControlQuery::SetOrGetSeaportUsage(cIGZWin* win, std::uint32_t
 // @ 0x1002d6e5c
 bool cSC4ViewInputControlQuery::SetOrGetSeaportCapacity(cIGZWin* win, std::uint32_t id, bool set, int x, int z) {
     return PortNumeric(win, id, set, Seaport(), x, z, true);
+}
+
+// ---- school / hospital / library rows ---------------------------------------------------------------------------------------
+namespace {
+IQueryResidentialSim* ResidentialSim() { IQueryHost* host = QueryHost(); return host ? host->ResidentialSim() : nullptr; }
+bool GetEducationRecord(cISC4Occupant* occupant, bool hospital, QueryEducationRecord& record) {
+    IQueryResidentialSim* sim = ResidentialSim();
+    if (!sim) return false;
+    return hospital ? sim->GetHospitalQueryData(occupant, record) : sim->GetSchoolQueryData(occupant, record);
+}
+std::uint32_t gSchoolSliderIds[4] = {0x101a, 0x101b, 0x101d, 0x101f};   // 0x100b05330: rows refreshed when the staff slider moves
+std::uint32_t gHospitalSliderIds[4] = {0x1023, 0x1024, 0, 0};           // 0x100b05340
+// The meter rows: the grade of the school or hospital, false when the simulator has no data for the occupant.
+bool EducationGrade(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant, bool hospital) {
+    if (!set) return true;
+    QueryEducationRecord record;
+    if (!GetEducationRecord(occupant, hospital, record)) return false;
+    return cSC4ViewInputControlQuery::SetPerformanceMeterValue(win, id, record.grade);
+}
+// The count rows (students, patients, books borrowed): the record's count, printed when the simulator answered.
+bool EducationCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant, bool hospital) {
+    QueryEducationRecord record;
+    bool answered = GetEducationRecord(occupant, hospital, record);
+    if (set && answered) answered = cSC4ViewInputControlQuery::SetStaticControlNumeric(win, id, record.count);
+    return answered;
+}
+// The capacity rows ask the simulator whether or not they print.
+bool EducationCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant, bool wantSecond) {
+    std::uint32_t first = 0, second = 0;
+    if (IQueryResidentialSim* sim = ResidentialSim()) sim->EstimateCurrentOccupantCapacity(occupant, first, second);
+    if (!set) return true;
+    return cSC4ViewInputControlQuery::SetStaticControlNumeric(win, id, wantSecond ? second : first);
+}
+// The funding sliders: set shows the record's fraction and cost; get reads the slider back (percent * 0.01) and stores both
+// fractions, the one that moved and the other from the record.
+bool EducationFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant, bool hospital, bool second,
+                      cSC4ViewInputControlQuery::tSetOrGetFn self, std::uint32_t* ids, std::uint32_t idCount) {
+    QueryEducationRecord record;
+    if (!GetEducationRecord(occupant, hospital, record)) return false;
+    if (set) {
+        const float fraction = second ? record.secondFunding : record.staffFunding;
+        const std::int32_t cost = second ? record.secondCost : record.staffCost;
+        cSC4ViewInputControlQuery::SetSliderControlValue(win, id, 1, 0, RoundedPercentForSlider(fraction),
+                                                         static_cast<std::int64_t>(static_cast<std::uint32_t>(cost)), occupant, self, ids,
+                                                         idCount);
+        return true;
+    }
+    int value = 0;
+    cSC4ViewInputControlQuery::GetSliderControlValue(win, id, value);
+    const float moved = static_cast<float>(value) * 0.01f;
+    if (IQueryResidentialSim* sim = ResidentialSim())
+        sim->SetOccupantFundingPercentages(occupant, second ? record.staffFunding : moved, second ? moved : record.secondFunding,
+                                           !hospital);
+    return true;
+}
+}  // namespace
+
+// @ 0x1002d7142
+bool cSC4ViewInputControlQuery::SetOrGetSchoolGrade(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return EducationGrade(win, id, set, occupant, false);
+}
+// @ 0x1002d76e8
+bool cSC4ViewInputControlQuery::SetOrGetHospitalGrade(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return EducationGrade(win, id, set, occupant, true);
+}
+// @ 0x1002d7530
+bool cSC4ViewInputControlQuery::SetOrGetSchoolStudentCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return EducationCount(win, id, set, occupant, false);
+}
+// @ 0x1002d75ea (the library reads the school record's count too)
+bool cSC4ViewInputControlQuery::SetOrGetLibraryBooksBorrowedCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return EducationCount(win, id, set, occupant, false);
+}
+// @ 0x1002d7ad0
+bool cSC4ViewInputControlQuery::SetOrGetHospitalPatientCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return EducationCount(win, id, set, occupant, true);
+}
+// @ 0x1002d748c
+bool cSC4ViewInputControlQuery::SetOrGetSchoolTeacherCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return EducationCapacity(win, id, set, occupant, true);
+}
+// @ 0x1002d74de
+bool cSC4ViewInputControlQuery::SetOrGetSchoolDeskCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return EducationCapacity(win, id, set, occupant, false);
+}
+// @ 0x1002d75dc: the museum's tickets are the desk count
+bool cSC4ViewInputControlQuery::SetOrGetMuseumExhibitTicketsAvailable(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return SetOrGetSchoolDeskCount(win, id, set, occupant);
+}
+// @ 0x1002d7696
+bool cSC4ViewInputControlQuery::SetOrGetLibraryBooksInCollectionCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return EducationCapacity(win, id, set, occupant, false);
+}
+// @ 0x1002d7a2c
+bool cSC4ViewInputControlQuery::SetOrGetHospitalDoctorCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return EducationCapacity(win, id, set, occupant, true);
+}
+// @ 0x1002d7a7e
+bool cSC4ViewInputControlQuery::SetOrGetHospitalBedCount(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return EducationCapacity(win, id, set, occupant, false);
+}
+// @ 0x1002d71fc
+bool cSC4ViewInputControlQuery::SetOrGetSchoolLocalStaffFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return EducationFunding(win, id, set, occupant, false, false, &SetOrGetSchoolLocalStaffFunding, gSchoolSliderIds, 4);
+}
+// @ 0x1002d7346
+bool cSC4ViewInputControlQuery::SetOrGetSchoolLocalBusFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return EducationFunding(win, id, set, occupant, false, true, &SetOrGetSchoolLocalBusFunding, nullptr, 0);
+}
+// @ 0x1002d77a2
+bool cSC4ViewInputControlQuery::SetOrGetHospitalLocalStaffFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return EducationFunding(win, id, set, occupant, true, false, &SetOrGetHospitalLocalStaffFunding, gHospitalSliderIds, 4);
+}
+// @ 0x1002d78e8
+bool cSC4ViewInputControlQuery::SetOrGetHospitalLocalAmbulanceFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return EducationFunding(win, id, set, occupant, true, true, &SetOrGetHospitalLocalAmbulanceFunding, nullptr, 0);
 }
 
 // @ 0x1002daf96
@@ -1204,11 +1332,11 @@ cSC4ViewInputControlQuery::tSetOrGetFn const cSC4ViewInputControlQuery::kRowFunc
     &cSC4ViewInputControlQuery::SetOrGetPoliceStationCrimeCount, &cSC4ViewInputControlQuery::SetOrGetPoliceStationLocalFunding, &cSC4ViewInputControlQuery::SetOrGetPoliceStationPatrolCarCount, &cSC4ViewInputControlQuery::SetOrGetPoliceStationMaintenanceCost,   // 0x1008..0x100b
     &cSC4ViewInputControlQuery::SetOrGetJailCondition, &cSC4ViewInputControlQuery::SetOrGetJailCellCount, &cSC4ViewInputControlQuery::SetOrGetJailInmateCount, &cSC4ViewInputControlQuery::SetOrGetJailMaintenanceCost,   // 0x100c..0x100f
     &cSC4ViewInputControlQuery::SetOrGetParkMaintenanceCost, &cSC4ViewInputControlQuery::SetOrGetAirportOccupantAirTrafficVolume, nullptr, &cSC4ViewInputControlQuery::SetOrGetAirportOccupantMaintenanceCost,   // 0x1010..0x1013
-    nullptr, &cSC4ViewInputControlQuery::SetOrGetSeaportOccupantSeaTrafficVolume, nullptr, nullptr,   // 0x1014..0x1017
-    nullptr, nullptr, nullptr, nullptr,   // 0x1018..0x101b
-    nullptr, nullptr, nullptr, nullptr,   // 0x101c..0x101f
-    nullptr, nullptr, nullptr, nullptr,   // 0x1020..0x1023
-    nullptr, nullptr, nullptr, nullptr,   // 0x1024..0x1027
+    nullptr, &cSC4ViewInputControlQuery::SetOrGetSeaportOccupantSeaTrafficVolume, nullptr, &cSC4ViewInputControlQuery::SetOrGetSchoolGrade,   // 0x1014..0x1017
+    &cSC4ViewInputControlQuery::SetOrGetSchoolLocalStaffFunding, &cSC4ViewInputControlQuery::SetOrGetSchoolLocalBusFunding, &cSC4ViewInputControlQuery::SetOrGetSchoolTeacherCount, &cSC4ViewInputControlQuery::SetOrGetSchoolDeskCount,   // 0x1018..0x101b
+    &cSC4ViewInputControlQuery::SetOrGetSchoolStudentCount, &cSC4ViewInputControlQuery::SetOrGetMuseumExhibitTicketsAvailable, &cSC4ViewInputControlQuery::SetOrGetLibraryBooksBorrowedCount, &cSC4ViewInputControlQuery::SetOrGetLibraryBooksInCollectionCount,   // 0x101c..0x101f
+    &cSC4ViewInputControlQuery::SetOrGetHospitalGrade, &cSC4ViewInputControlQuery::SetOrGetHospitalLocalStaffFunding, &cSC4ViewInputControlQuery::SetOrGetHospitalLocalAmbulanceFunding, &cSC4ViewInputControlQuery::SetOrGetHospitalDoctorCount,   // 0x1020..0x1023
+    &cSC4ViewInputControlQuery::SetOrGetHospitalBedCount, &cSC4ViewInputControlQuery::SetOrGetHospitalPatientCount, nullptr, nullptr,   // 0x1024..0x1027
     nullptr, nullptr, nullptr, nullptr,   // 0x1028..0x102b
     nullptr, nullptr, nullptr, nullptr,   // 0x102c..0x102f
     nullptr, nullptr, nullptr, nullptr,   // 0x1030..0x1033
@@ -1344,8 +1472,8 @@ bool cSC4ViewInputControlQuery::SetOrGetFireStationLocalFunding(cIGZWin* win, st
         int cost = 0;
         float fraction = 0.0f;
         fire->StationFunding(occupant, &cost, &fraction);
-        // The original truncates the percentage through the 1.5*2^23 magic constant, i.e. trunc(fraction * 100).
-        SetSliderControlValue(win, id, 1, 0, static_cast<int>(fraction * 100.0f), cost, occupant,
+        // The compiled code adds 1.5 * 2^23 in float and reads the mantissa back: fraction * 100 rounded to the nearest even integer.
+        SetSliderControlValue(win, id, 1, 0, RoundedPercentForSlider(fraction), cost, occupant,
                               &cSC4ViewInputControlQuery::SetOrGetFireStationLocalFunding, nullptr, 0);
     } else {
         int value = 0;
@@ -1419,7 +1547,7 @@ bool cSC4ViewInputControlQuery::SetOrGetPoliceStationLocalFunding(cIGZWin* win, 
         int cost = 0;
         float fraction = 0.0f;
         police->StationFunding(occupant, &cost, &fraction);
-        SetSliderControlValue(win, id, 1, 0, static_cast<int>(fraction * 100.0f), cost, occupant,
+        SetSliderControlValue(win, id, 1, 0, RoundedPercentForSlider(fraction), cost, occupant,
                               &cSC4ViewInputControlQuery::SetOrGetPoliceStationLocalFunding, nullptr, 0);
     } else {
         int value = 0;
