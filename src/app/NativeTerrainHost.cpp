@@ -18,6 +18,9 @@
 #include "sc4/cSC4City.h"
 #include "sc4/Exemplar.h"
 #include "sc4/cSTETerrain.h"
+#include "sc4/SurfaceWater.h"
+#include "gz/GZCOM.h"
+#include "platform/Unwired.h"
 
 namespace native {
 namespace {
@@ -45,6 +48,48 @@ public:
     bool IsKeyIncluded(const cGZPersistResourceKey& key) override { return key.type == type_ && key.group == group_; }
 private:
     std::uint32_t type_, group_;
+};
+
+// The surface water's services on the native application. What the city can answer today is answered; the rest logs SC4_UNWIRED.
+cSTESurfaceWater* WaterOf(cIGZUnknown* object) {
+    void* serializable = nullptr;
+    if (!object || !object->QueryInterface(kGZIID_cISTESurfaceWater, &serializable) || !serializable) return nullptr;
+    auto* water = static_cast<cSTESurfaceWater*>(static_cast<cIGZSerializable*>(serializable));
+    static_cast<cIGZSerializable*>(serializable)->Release();
+    return water;
+}
+
+struct NativeSurfaceWaterHost final : ISurfaceWaterHost {
+    cSTETerrain* Terrain() override {
+        cIGZUnknown* object = Component(CityComponent::Terrain);
+        void* serializable = nullptr;
+        if (!object || !object->QueryInterface(0xab953253, &serializable) || !serializable) return nullptr;
+        auto* terrain = static_cast<cSTETerrain*>(static_cast<cIGZSerializable*>(serializable));
+        static_cast<cIGZSerializable*>(serializable)->Release();
+        return terrain;
+    }
+    bool CityInitialized() override { cSC4City* city = City4(); return city && city->CellCountX() > 0; }   // PARTIAL: spCity vslot 0xb0 is the city's "initialised" flag
+    void PositionToCell(float x, float z, int& cx, int& cz) override { cx = static_cast<int>(x * 0.0625f); cz = static_cast<int>(z * 0.0625f); }
+    int CitySizeX() override { cSC4City* city = City4(); return city ? city->CellCountX() : 0; }
+    int CitySizeZ() override { cSC4City* city = City4(); return city ? city->CellCountZ() : 0; }
+    bool CellInCity(int x, int z) override { return x >= 0 && z >= 0 && x < CitySizeX() && z < CitySizeZ(); }   // PARTIAL: spCity vslot 0x318 not verified
+    void AddNotifications(cSTESurfaceWater& water) override {
+        if (!SL::spMS2) return;
+        for (std::uint32_t id : {kWaterMsgCityCell1, kWaterMsgCityCell4, kWaterMsgCityCell5, kWaterMsgNetworkBuilt, kWaterMsgOccupantAdded, kWaterMsgOccupantMoved})
+            SL::spMS2->AddNotification(static_cast<cIGZMessageTarget2*>(&water), id);
+    }
+    void RemoveNotifications(cSTESurfaceWater& water) override {
+        if (!SL::spMS2) return;
+        for (std::uint32_t id : {kWaterMsgCityCell1, kWaterMsgCityCell4, kWaterMsgCityCell5, kWaterMsgNetworkBuilt, kWaterMsgOccupantAdded, kWaterMsgOccupantMoved})
+            SL::spMS2->RemoveNotification(static_cast<cIGZMessageTarget2*>(&water), id);
+    }
+    void RegisterTicks(cSTESurfaceWater&) override { SC4_UNWIRED("cSTESurfaceWater tick registration (spSimulator vslot 0x98, ATM vslot 0x28): the water never animates"); }
+    void UnregisterTicks(cSTESurfaceWater&) override {}
+    IWaterNetworkOccupant* NetworkOccupantAt(int, int, std::uint32_t, bool) override { SC4_UNWIRED("ISurfaceWaterHost::NetworkOccupantAt (traffic network map)"); return nullptr; }
+    IWaterNetworkOccupant* AsNetworkOccupant(cIGZUnknown*) override { SC4_UNWIRED("ISurfaceWaterHost::AsNetworkOccupant"); return nullptr; }
+    IWaterCellOccupant* AsCellOccupant(cIGZUnknown*) override { SC4_UNWIRED("ISurfaceWaterHost::AsCellOccupant"); return nullptr; }
+    const void* LotAtCell(int, int) override { SC4_UNWIRED("ISurfaceWaterHost::LotAtCell (lot manager)"); return nullptr; }
+    void OccupantsInCell(int, int, std::uint32_t, std::vector<IWaterCellOccupant*>&) override { SC4_UNWIRED("ISurfaceWaterHost::OccupantsInCell (occupant manager)"); }
 };
 struct NativeTerrainHost final : ITerrainHost {
     cIGZMessageServer2* Messages() override { return SL::spMS2; }
@@ -84,7 +129,7 @@ struct NativeTerrainHost final : ITerrainHost {
     cIGZUnknown* CityEffectsManager() override { return Component(CityComponent::EffectsManager); }
     cIGZUnknown* Simulator() override { return Component(CityComponent::Simulator); }
     cIGZUnknown* SurfaceWater() override { return Component(CityComponent::SurfaceWater); }
-    bool SurfaceWaterInit() override { return {}; }
+    bool SurfaceWaterInit() override { cSTESurfaceWater* water = WaterOf(Component(CityComponent::SurfaceWater)); return water && water->Init(); }
     void RegisterWithSimulator(cSTETerrain* terrain) override {}
     void UnregisterFromSimulator(cSTETerrain* terrain) override {}
     void AddToAutomataManager(cSTETerrain* terrain) override {}
@@ -181,7 +226,7 @@ struct NativeTerrainHost final : ITerrainHost {
 };
 }  // namespace
 
-void InstallTerrainStub() { static NativeTerrainHost s; sc4::SetTerrainHost(&s); }
+void InstallTerrainStub() { static NativeTerrainHost s; static NativeSurfaceWaterHost water; sc4::SetTerrainHost(&s); gzcom::SetSurfaceWaterHost(&water); }
 void SetTerrainHostCity(cISC4City* city) { g_city = city; }
 
 }  // namespace native

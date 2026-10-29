@@ -927,6 +927,7 @@ public:
     std::uint32_t VertexCountZ() const { return vertsZ_; }
     std::uint32_t VertexCount() const { return totalVerts_; }
     std::int32_t GetVertIndex(std::int32_t x, std::int32_t z) const { return z * static_cast<std::int32_t>(vertsX_) + x; }
+    std::int32_t NeighborOffset(int direction) const { return neighborOffsets_[direction]; }   // +0xa4..+0xc0: index delta of neighbour `direction`
     void GetVertex(std::int32_t index, std::int32_t& x, std::int32_t& z) const {
         z = static_cast<std::int32_t>(static_cast<std::uint32_t>(index) / vertsX_);
         x = static_cast<std::int32_t>(static_cast<std::uint32_t>(index) % vertsX_);

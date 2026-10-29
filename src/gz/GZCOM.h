@@ -8,6 +8,7 @@
 
 namespace sc4 {
 class ICityHost;
+class ISurfaceWaterHost;
 }  // namespace sc4
 
 namespace gzcom {
@@ -17,6 +18,7 @@ namespace gzcom {
 void SetCityHost(sc4::ICityHost* host);
 sc4::ICityHost* CityHost();
 void SetCityCreator(void* (*creator)());
+void SetSurfaceWaterHost(sc4::ISurfaceWaterHost* host);   // gzcom_creators/cSTESurfaceWater.cpp
 
 struct ClassFactoryInfo {
     const char* className;

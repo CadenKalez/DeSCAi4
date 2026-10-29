@@ -545,7 +545,7 @@ void* GZCOM_CreatecSC4FirePlaneDispatchSource() { SC4_UNWIRED("GZCOM_CreatecSC4F
 // original allocates 0x58 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4PoliceHelicopterDispatchSource() { SC4_UNWIRED("GZCOM_CreatecSC4PoliceHelicopterDispatchSource"); return nullptr; }
 // original allocates 0xa8 bytes; the class is not recovered yet
-void* GZCOM_CreatecSTESurfaceWater() { SC4_UNWIRED("GZCOM_CreatecSTESurfaceWater"); return nullptr; }
+__attribute__((weak)) void* GZCOM_CreatecSTESurfaceWater() { SC4_UNWIRED("GZCOM_CreatecSTESurfaceWater"); return nullptr; }
 // weak fallback: GZCOMCreators*.cpp provide the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSTETerrain() { SC4_UNWIRED("GZCOM_CreatecSTETerrain"); return nullptr; }
 // weak fallback: GZCOMCreators7.cpp provides the real constructor-backed creator when linked

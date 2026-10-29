@@ -1042,7 +1042,8 @@ LEDGER-cSTEOverlayManager,cSTEOverlayManager,finish 5 partial/pending function(s
 OVERLAY-1,cSTEOverlayManager,Hook SC4DrawContext -> IOverlayDrawContext (the draw context has no ITerrainDrawContext adapter yet),,open,src/sc4/OverlayManager.cpp
 OVERLAY-2,cSTEOverlayManager,Hook cSTETerrainView3D -> IOverlayHost (GetCullingInfo 0x10074e162 + the six mesh-subset draws) and recover the shadow projector behind spRenderer+0x48,,open,src/sc4/OverlayManager.cpp
 CLASS-cSTESelectedTerrainArea,cSTESelectedTerrainArea,"recover 18 remaining function(s) (18 not started, 0 partial/pending); bases still unfinished: cSC4ViewObject3D",CLASS-cSC4ViewObject3D,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSTESurfaceWater,cSTESurfaceWater,"recover 35 remaining function(s) (35 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSTESurfaceWater,cSTESurfaceWater,"recover 5 remaining function(s) (0 not started, 5 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSTESurfaceWater,cSTESurfaceWater,finish 11 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSTETerrain,cSTETerrain,"recover 4 remaining function(s) (0 not started, 4 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSTETerrain,cSTETerrain,finish 4 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 TERRAIN-1,cSTETerrain,"Lifecycle: Init/Shutdown/StaticInit/QueryInterface/Release, ReadTerrainIniFile, ReadTuningParameters",,open,src/sc4/cSTETerrain.h
