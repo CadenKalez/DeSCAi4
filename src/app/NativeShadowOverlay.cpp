@@ -9,6 +9,7 @@
 #include "sc4/DrawContext.h"
 #include "sc4/PackedRenderState.h"
 #include "sc4/Render3D.h"
+#include "app/NativeModelMaker.h"
 #include "sc4/CellTextureModel.h"
 #include "sc4/LightingManager.h"
 #include "sc4/ModelMaker.h"
@@ -119,7 +120,7 @@ public:
 };
 Adapter g_adapter;
 
-struct Vertex { float x, y, z; std::uint8_t rgba[4]; float u, v; };
+struct Vertex { float x, y, z; std::uint8_t rgba[4]; float u, v; };   // V3F_C4UB_T2F: the projected model texture (the soft-edge stage 1 of DrawShadows is not driven: see CENSUS)
 
 class DrawObject final : public cISC4ViewObject3D {
 public:
@@ -154,11 +155,16 @@ public:
             const int x0 = std::max(viewX0, overlay.rect.left), z0 = std::max(viewZ0, overlay.rect.top);
             const int x1 = std::min(viewX1, overlay.rect.right), z1 = std::min(viewZ1, overlay.rect.bottom);
             if (x1 <= x0 || z1 <= z0) continue;
+            // DrawShadows: the strength falls off with the location of the rectangle's centre (land pass), and a faint shadow is skipped
+            const cS3DVector2 centre{8.0f * static_cast<float>(overlay.rect.left + overlay.rect.right), 8.0f * static_cast<float>(overlay.rect.top + overlay.rect.bottom)};
+            const float strengthHere = std::clamp(strength * service->ShadowFalloff(centre), 0.0f, 1.0f);
+            if (strengthHere < 0.05f) continue;
+            const std::uint8_t overlayAlpha = static_cast<std::uint8_t>(strengthHere * 255.0f);
             const cS3DMatrix4& m = overlay.texMatrix;   // stage 0 of DrawShadows: world position -> the model texture's coordinates (the projection)
             std::vector<Vertex>& triangles = byTexture[dbg ? 0 : overlay.texture->GlTextureId()];
             auto vertex = [&](int x, int z) {
                 const float wx = x * 16.0f, wz = z * 16.0f, wy = g_terrain->GetAltitudeAtVertex(x, z) + 0.6f;
-                Vertex out{wx, wy, wz, {dbg ? std::uint8_t(255) : std::uint8_t(0), 0, 0, dbg ? std::uint8_t(255) : alpha}, 0, 0};
+                Vertex out{wx, wy, wz, {dbg ? std::uint8_t(255) : std::uint8_t(0), 0, 0, dbg ? std::uint8_t(255) : overlayAlpha}, 0, 0};
                 const float w = wx * m.m[0][3] + wy * m.m[1][3] + wz * m.m[2][3] + m.m[3][3];
                 const float inverseW = (w > 1e-6f || w < -1e-6f) ? 1.0f / w : 1.0f;
                 out.u = (wx * m.m[0][0] + wy * m.m[1][0] + wz * m.m[2][0] + m.m[3][0]) * inverseW;
