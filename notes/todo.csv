@@ -567,7 +567,7 @@ CLASS-cSC4DisasterInstanceRiot,cSC4DisasterInstanceRiot,"recover 27 remaining fu
 CLASS-cSC4DisasterInstanceVolcano,cSC4DisasterInstanceVolcano,"recover 29 remaining function(s) (29 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4DispatchManager,cSC4DispatchManager,"recover 37 remaining function(s) (37 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4DispatchVehicleView,cSC4DispatchVehicleView,"recover 30 remaining function(s) (30 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2, cSC4ViewObject3D","CLASS-cIGZMessageTarget2,CLASS-cSC4ViewObject3D",open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4DummyAutoOccupant,cSC4DummyAutoOccupant,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4DummyAutoOccupant,cSC4DummyAutoOccupant,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4DummyOccupant,cSC4DummyOccupant,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4DynamicLimitTimer,cSC4DynamicLimitTimer,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4DynamicParticleDescription,cSC4DynamicParticleDescription,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -1007,7 +1007,7 @@ LEDGER-cSCResExemplar,cSCResExemplar,finish 8 partial/pending function(s) (see n
 LEDGER-cSCResExemplarCohort,cSCResExemplarCohort,finish 8 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cSCResExemplarCohortFactory,cSCResExemplarCohortFactory,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 LEDGER-cSCResExemplarFactory,cSCResExemplarFactory,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
-CLASS-cSCResFilterFixedGroupAndTypeId,cSCResFilterFixedGroupAndTypeId,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSCResFilterFixedGroupAndTypeId,cSCResFilterFixedGroupAndTypeId,"recover 7 remaining function(s) (7 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSCResKeyInputView,cSCResKeyInputView,"recover 21 remaining function(s) (21 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSCResKeyTableEntryView,cSCResKeyTableEntryView,"recover 31 remaining function(s) (31 not started, 0 partial/pending); bases still unfinished: cSCResCatBaseView",CLASS-cSCResCatBaseView,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSCResourceCatalogView,cSCResourceCatalogView,"recover 34 remaining function(s) (34 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv

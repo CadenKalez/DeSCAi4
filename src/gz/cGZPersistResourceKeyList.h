@@ -64,3 +64,7 @@ public:
 private:
     std::uint32_t type_, group_;
 };
+// cSCResFilterFixedGroupAndTypeId (0x100201404, IsKeyIncluded @ 0x1002014a8, QueryInterface @ 0x1002014dc, AddRef / Release through cRZUnknown):
+// keeps the keys whose first field is the constructor's first argument and whose second field is its second argument, which is
+// exactly this filter. The SC terrain code builds it as (0x6534284a, 0x89c2a517).
+using cSCResFilterFixedGroupAndTypeId = cGZPersistResourceKeyFilterByTypeAndGroup;

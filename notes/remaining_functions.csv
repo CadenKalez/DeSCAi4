@@ -1990,12 +1990,6 @@ cSC4DispatchVehicleView,00000001002343d8,not started,cSC4DispatchVehicleView::Do
 cSC4DispatchVehicleView,000000010023446c,not started,"cSC4DispatchVehicleView::QueryInterface(unsigned int, void**)"
 cSC4DispatchVehicleView,00000001002344fe,not started,cSC4DispatchVehicleView::AddRef()
 cSC4DispatchVehicleView,000000010023450c,not started,cSC4DispatchVehicleView::Release()
-cSC4DummyAutoOccupant,00000001005f919a,not started,cSC4DummyAutoOccupant::~cSC4DummyAutoOccupant()
-cSC4DummyAutoOccupant,00000001005f9e8e,not started,cSC4DummyAutoOccupant::GetPosition(float*)
-cSC4DummyAutoOccupant,00000001005f9ea6,not started,cSC4DummyAutoOccupant::SetPosition(float const*)
-cSC4DummyAutoOccupant,00000001005f9ebe,not started,"cSC4DummyAutoOccupant::GetBoundingBox(float*, float*)"
-cSC4DummyAutoOccupant,00000001005f9ef4,not started,cSC4DummyAutoOccupant::IsOccupantGroup(unsigned int) const
-cSC4DummyAutoOccupant,00000001005f9f00,not started,cSC4DummyAutoOccupant::~cSC4DummyAutoOccupant()
 cSC4DummyOccupant,0000000100575a1a,not started,cSC4DummyOccupant::GetPosition(float*)
 cSC4DummyOccupant,0000000100575a32,not started,cSC4DummyOccupant::SetPosition(float const*)
 cSC4DummyOccupant,0000000100575a4a,not started,"cSC4DummyOccupant::GetBoundingBox(float*, float*)"
@@ -4189,13 +4183,6 @@ cSCResCatalogPickerView,000000010052bf8c,not started,cSCResCatalogPickerView::Ge
 cSCResCatalogPickerView,000000010052bf98,not started,cSCResCatalogPickerView::~cSCResCatalogPickerView()
 cSCResCatalogPickerView,000000010052bfa2,not started,cSCResCatalogPickerView::~cSCResCatalogPickerView()
 cSCResCatalogPickerView,000000010052c066,not started,cSCResCatalogPickerView::~cSCResCatalogPickerView()
-cSCResFilterFixedGroupAndTypeId,00000001002013ec,not started,cSCResFilterFixedGroupAndTypeId::AddRef()
-cSCResFilterFixedGroupAndTypeId,0000000100201404,not started,"cSCResFilterFixedGroupAndTypeId::cSCResFilterFixedGroupAndTypeId(unsigned int, unsigned int)"
-cSCResFilterFixedGroupAndTypeId,0000000100201444,not started,cSCResFilterFixedGroupAndTypeId::~cSCResFilterFixedGroupAndTypeId()
-cSCResFilterFixedGroupAndTypeId,0000000100201464,not started,cSCResFilterFixedGroupAndTypeId::~cSCResFilterFixedGroupAndTypeId()
-cSCResFilterFixedGroupAndTypeId,00000001002014a8,not started,cSCResFilterFixedGroupAndTypeId::IsKeyIncluded(cGZPersistResourceKey const&)
-cSCResFilterFixedGroupAndTypeId,00000001002014dc,not started,"cSCResFilterFixedGroupAndTypeId::QueryInterface(unsigned int, void**)"
-cSCResFilterFixedGroupAndTypeId,0000000100201524,not started,cSCResFilterFixedGroupAndTypeId::Release()
 cSCResKeyInputView,000000010035adac,not started,cSCResKeyInputView::cSCResKeyInputView(cGZPersistResourceKey const&)
 cSCResKeyInputView,000000010035ae3a,not started,cSCResKeyInputView::~cSCResKeyInputView()
 cSCResKeyInputView,000000010035aea4,not started,cSCResKeyInputView::~cSCResKeyInputView()

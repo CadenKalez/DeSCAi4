@@ -265,6 +265,11 @@ int main(int argc, char** argv) {
         multi->Release();
     }
 
+    {   // cSCResFilterFixedGroupAndTypeId is the type-and-group filter: first field = first argument, second field = second
+        cSCResFilterFixedGroupAndTypeId filter(0x6534284a, 0x89c2a517);
+        cGZPersistResourceKey hit{0x6534284a, 0x89c2a517, 1}, wrongGroup{0x6534284a, 1, 1}, wrongType{1, 0x89c2a517, 1};
+        CHECK(filter.IsKeyIncluded(hit) && !filter.IsKeyIncluded(wrongGroup) && !filter.IsKeyIncluded(wrongType));
+    }
     std::filesystem::remove_all(dir);
     if (failures) { std::printf("%d failure(s)\n", failures); return 1; }
     std::puts("gz_packedfile: all tests passed");

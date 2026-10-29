@@ -2,6 +2,7 @@
 #include <set>
 
 #include "rz/PortMemoryStreams.h"
+#include "sc4/DummyAutoOccupant.h"
 #include "sc4/Occupant.h"
 
 static int failures = 0;
@@ -74,6 +75,18 @@ int main() {
     static_cast<cIGZSerializable*>(raw)->Release();
     CHECK(!o->QueryInterface(0x12345678, &raw));
     o->Release();
+    {   // the dummy automaton target: position, a zero-size box and one group
+        cSC4DummyAutoOccupant dummy;
+        const float where[3] = {1.0f, 2.0f, 3.0f};
+        dummy.SetPosition(where);
+        float p[3], lo[3], hi[3];
+        dummy.GetPosition(p);
+        dummy.GetBoundingBox(lo, hi);
+        CHECK(p[0] == 1.0f && p[1] == 2.0f && p[2] == 3.0f);
+        CHECK(lo[0] == 1.0f && hi[2] == 3.0f && lo[1] == hi[1]);
+        dummy.SetGroup(0x4410);
+        CHECK(dummy.IsOccupantGroup(0x4410) && !dummy.IsOccupantGroup(0x4411));
+    }
     std::puts(failures ? "sc4_occupant: FAILED" : "sc4_occupant: ok");
     return failures != 0;
 }
