@@ -8,4 +8,10 @@ click 520 320
 wait-city 1500
 expect-city
 shot work/scenario_city.png
-# TODO (not wired yet): terraform, build a road, zone residential, place a power plant, watch buildings grow, save, reload
+frames 100
+# zone residential (the zoning tool paints the green zone overlay; no building follows until the simulation runs)
+input zone1:10,drag@300x300x420x360:5
+frames 60
+shot work/scenario_zone.png
+# TODO (not driven or not working yet), in mission order: terraform, build a road (cSC4NetworkTool is partial), place a power plant,
+# run the simulation until buildings grow (growth host stubs), save, reload
