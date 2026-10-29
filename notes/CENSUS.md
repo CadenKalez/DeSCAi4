@@ -142,7 +142,12 @@ Generated from notes/ledger.csv and a source scan (2026-10-29).
 ## Fakes and shortcuts on the native path
 
 - Lighting time of day now follows the recovered cSC424HourClock (visual time = game time, advanced by OnIdle each frame at the 100x magnification). The city carries no clock component natively, so NativeLighting.cpp runs its own instance started at 10:00 (the HUD's value); the loaded city's saved clock time, the clock's hour messages and the HUD readout are not connected to it. SC4_TIMEOFDAY still overrides.
-- Occupant shadows: data side recovered and wired (CreateOccupantShadow -> cSTEOverlayManager::AddShadow -> projection through the recovered lighting manager);
-  drawing is the port's own terrain-conforming quad pass (NativeShadowOverlay.cpp, SC4_NOSHADOWS disables) that sets up the DrawShadows state (render state, alpha test, combiner 0, stage-0 projection); the falloff by location is applied per shadow; the second texture stage (soft-edge mask, instance 0xaa592b77 of group 0x1abe787d, on the shadow matrix) is not driven because the Metal driver's second stage made the shadows vanish and left the UI draws white; and the culling uses the visible ground rectangle instead of the overlay manager's spatial index.
+- Occupant shadows (2026-10-29, second pass): drawn by the port's own terrain-conforming quad pass (NativeShadowOverlay.cpp; the original
+  draws the terrain mesh subsets with camera-space texgen) with the DrawShadows state on both stages: stage 0 the model texture through
+  texMatrix (repeat), stage 1 the 4x4 soft-edge mask 0xaa592b77/0x1abe787d through shadowMatrix (clamp), culled by the terrain view's
+  draw-frustum rows, removed / hidden with their occupant (placeable host RemoveOverlay / SetOverlayVisible). Port choices still open: the
+  shadow RGB is the lighting manager's shadow colour in the vertex colour (the original's combiner selects the terrain vertex colour and
+  is not reproduced), the blend alpha carries strength * falloff (the alpha test is rescaled so the pass/fail set matches the original),
+  batches by (texture, strength) instead of per overlay, and no water pass (shadows over water are not drawn).
 - Water tick not registered with the simulator (AnimateWater does not run); IsNavigable answers (network/lot/occupant) are stubs.
 - Region and city UI panels beyond the tutorial path (many WinRegionScreen / WinMapView PARTIAL markers).

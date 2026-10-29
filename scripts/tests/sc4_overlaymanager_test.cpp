@@ -242,7 +242,7 @@ struct FakeDC : IOverlayDrawContext {
     }
     void SetTexColor(const cS3DVector4& c) override {
         char buffer[64];
-        std::snprintf(buffer, sizeof(buffer), "color%.2f", c.x);
+        std::snprintf(buffer, sizeof(buffer), "color%.2f/%.2f", c.x, c.w);
         log.push_back(buffer);
     }
     void SetTexCombiner(const gd::cGDCombiner& c, int stage) override {
@@ -899,9 +899,12 @@ static void TestDrawPass(FakeHost& host) {
         CHECK(accurate.Has("filter1/1/0"));
         CHECK(accurate.Has("comb01030100/0"));
         CHECK(accurate.Has("texstate1/1"));
-        CHECK(accurate.Has("wrap2/2/0") && accurate.Has("wrap3/3/0"));
+        CHECK(accurate.Has("wrap2/2/1") && accurate.Has("wrap3/3/0"));   // the mask stage gets 2/2, the model texture 3/3
         CHECK(accurate.Has("xform1/0.031,-3.500"));                   // inverseView * shadowMatrix
         CHECK(accurate.Has("afunc6/1.000"));                          // scale * falloff * intensity
+        bool fadedAlpha = false;                                      // the colour's alpha carries scale * falloff (0.5)
+        for (const std::string& entry : accurate.log) fadedAlpha |= entry.rfind("color", 0) == 0 && entry.size() > 5 && entry.substr(entry.find('/')) == "/0.50";
+        CHECK(fadedAlpha);
         CHECK(host.shadow.falloffCalls == 1);
         CHECK(manager.ShadowsDrawn() == 1);
     }

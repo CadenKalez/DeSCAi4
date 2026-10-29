@@ -188,3 +188,27 @@ Next for shadows (the chain): `cSC4ModelMaker::CreateOccupantShadow` (0x100313a0
 - Still to do for shadows to be visible: implement `IShadowOverlay` over the native cSTEOverlayManager (AddShadow vslot 0x58 needs IOverlayTexture/
   IOverlayHost/IOverlayDrawContext wired in the terrain view) and return it, plus quality/min-height/view-scale, from the native ModelMakerHost.
 - Rounding order of the 90-degree row fix-up is not oracle-checked (row is recovered-partial).
+
+## Addendum 7: shadows debugged (2026-10-29)
+The user reported the shadows did not render properly. Found and fixed on the path (each checked with screenshots, `SC4_ZOOM` / `SC4_FOCUS`
+shots of the Making Money tutorial city, ~30 s per run):
+- **Depth offset -2 instead of DrawShadows' +3**: the quads sat behind the terrain; at close zoom nothing drew.
+- **Culling by the y = 0 ground-plane rectangle**: the terrain is ~300 m up, so at zoom 4 every shadow was culled. Now the terrain view's
+  draw-frustum rows (`native::TerrainCullingInfo`, cSTETerrainView3D::GetCullingInfo), as SDSFindOverlaysToDraw reads them.
+- **Shadows never removed**: the placeable host's `RemoveOverlay` / `SetOverlayVisible` were empty, every zoom change added a full new set
+  (2.5k -> 5k). Now routed to the overlay manager (RemoveAll 0x100120bc2 / DoOverlayVisibilityChange 0x100120a16, vslots 0x78 / 0x80).
+- **No soft-edge mask stage**: models whose texture is an atlas (most trees) cast the neighbouring pictures as extra shadows. Stage 1 now
+  carries the 4x4 mask through `shadowMatrix` (vertex format 11, V3F_C4UB_2T2F).
+- **Wrap mode**: GD wrap 2 is clamp and 3 repeat (nSGLDX7 ApplyState: 2 -> D3DTADDRESS_CLAMP, 3 -> WRAP); stage 0 now uses 3 as the binary.
+- **UI turned white** when stage 1 was used: the pass left stage 1 current in the driver; it now ends with `SetDefaultRenderState()`.
+- **Alpha test**: buildings with partial texture alpha (the coal plant) failed it because the port multiplies the strength into the vertex
+  alpha; the reference is now `threshold * a * a`, which keeps the original's pass/fail set (`tex.a * mask.a >= threshold * a`).
+- **Recovered DrawShadows (OverlayManager.cpp) had three transcription bugs** (false positive, ledger row 0x10072aee0 downgraded to
+  recovered-partial / needs differential): the mask wrap went to stage 0, the single-stage branch used texMatrix instead of shadowMatrix,
+  and `scale * falloff` was not stored into the colour's alpha before SetTexColor. Test updated (sc4_overlaymanager).
+Dev switches in NativeShadowOverlay.cpp: `SC4_SHADOWDBG=1` (untextured red rectangles), `=2` (textured + masked, red, full strength),
+`SC4_NOSHADOWMASK`, `SC4_SHADOWDEPTH=n`, `SC4_SHADOWLOG=tall|x,z` (per-mesh points / uv / rect). Build note: `native_autolink.py` links to
+`$TMPDIR/native_link_probe` unless `NATIVE_OUT=$PWD/build/sc4_game` is set (build/sc4_game was stale before).
+Not done / open: shadow RGB and blend follow the port's choice, not the original's combiner (see CENSUS); no shadows over water (the
+water-pass manager is not created); a crash in the automata tick (`cSC4AutomataControllerManager::DoMessage` null controller, reached by
+zooming in three times in a scenario) lives in another agent's uncommitted NativeAutomataManagers.cpp and was left alone.

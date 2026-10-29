@@ -1082,7 +1082,7 @@ void cSTEOverlayManager::DrawShadows(const cS3DMatrix4& inverseView, IOverlayDra
         dc.EnableTextureStateFlag(true, stage);
         dc.SetTexture(shadowTexture_->GlTextureId(), stage);
         dc.SetTexFiltering(0, 0, stage);
-        dc.SetTexWrapModes(2, 2);
+        dc.SetTexWrapModes(2, 2, stage);   // 0x10072b046: the mask's stage (ecx = r13), not stage 0
         dc.SetTexCombiner(secondStage_ == 4 ? shadowCombiner1_ : shadowCombiner0_, stage);
     }
     dc.SetDepthOffset(3);
@@ -1091,7 +1091,8 @@ void cSTEOverlayManager::DrawShadows(const cS3DMatrix4& inverseView, IOverlayDra
         cOverlay& overlay = overlays_[id];
         if (overlay.freeLink != -1 || (overlay.flags & 9u) != 9u) continue;
         if (secondStage_ == 4) {
-            const cS3DMatrix4 transform = inverseView * overlay.texMatrix;
+            // one stage: the mask alone on stage 0, through the overlay's shadowMatrix (+0x64, 0x10072b0d3)
+            const cS3DMatrix4 transform = inverseView * overlay.shadowMatrix;
             dc.SetTexTransform4(transform, 0);
         } else {
             dc.SetTexture(overlay.texture ? overlay.texture->GlTextureId() : 0, 0);
@@ -1105,8 +1106,11 @@ void cSTEOverlayManager::DrawShadows(const cS3DMatrix4& inverseView, IOverlayDra
                                      cellSize_ * 0.5f * static_cast<float>(overlay.rect.top + overlay.rect.bottom)};
             float alpha = scale;
             if (!drawWaterPass_ && shadow) alpha *= shadow->ShadowFalloff(centre);
-            if (alpha < 0.05f) continue;
+            if (static_cast<double>(alpha) < 0.05) continue;
             if (0.0f < intensity) dc.SetAlphaFunc(6, alpha * intensity);
+            // the faded strength is stored over the colour's alpha (-0x54 is color.w) before SetTexColor (0x10072b25e); the
+            // colour stays modified for the overlays after this one
+            color.w = alpha;
             dc.SetTexColor(color);
         }
         if (!drawWaterPass_) {

@@ -253,6 +253,14 @@ private:
 
 }  // namespace
 
+sc4::cSTETerrainView3D* g_terrainView = nullptr;
+
+bool TerrainCullingInfo(int& rowBegin, int& rowEnd, const std::int32_t*& colStart, const std::int32_t*& colEnd) {
+    if (!g_terrainView) return false;
+    g_terrainView->GetCullingInfo(&rowBegin, &rowEnd, &colStart, &colEnd);
+    return colStart && colEnd;
+}
+
 bool AttachTerrainView(sc4::cSC43DRender& render, sc4::cSTETerrain& terrain, gd::cIGZGDriver* driver) {
     g_driver = driver;
     static ViewHost host;
@@ -281,6 +289,7 @@ bool AttachTerrainView(sc4::cSC43DRender& render, sc4::cSTETerrain& terrain, gd:
     const bool ok = view->Init(&terrain);
     std::printf("city view: terrain view %s\n", ok ? "up" : "FAILED");
     if (!ok) return false;
+    g_terrainView = view;
     // AddViewObject's list ids: 2 = drawn before the static view (view pass 0: the terrain), 0 = after it (view pass 2: the water)
     render.AddViewObject(new PassObject(render, *view, 0), 2, 100);
     render.AddViewObject(new PassObject(render, *view, 1), 0, 100);

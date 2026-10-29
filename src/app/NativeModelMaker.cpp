@@ -315,8 +315,8 @@ public:
     void RemoveModelFromRenderer(sc4::cIS3DModelInstance* model) override {
         if (g_render) g_render->RemoveModel(reinterpret_cast<s3d::cIS3DModelInstance*>(model));
     }
-    void RemoveOverlay(std::uint32_t) override {}
-    void SetOverlayVisible(std::uint32_t, bool) override {}
+    void RemoveOverlay(std::uint32_t id) override { RemoveShadowOverlay(id); }
+    void SetOverlayVisible(std::uint32_t id, bool visible) override { SetShadowOverlayEnabled(id, visible); }
 };
 
 sc4::cSTETerrain* Terrain() {
