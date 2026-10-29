@@ -212,6 +212,7 @@ struct FakeAircraftHost final : IAircraftHost {
     const void* LotAt(const cS3DVector3& p) override { return p.x == savedLotX ? lotSaved : lotHere; }
     float savedLotX = -1.0e9f;
     float OpacityFadeSeconds() override { return 1.0f; }
+    bool CellHasWater(std::uint32_t, std::uint32_t) override { return false; }
     bool LotAltitudeAt(const cS3DVector3&, float* altitude) override {
         if (!lotFound) return false;
         *altitude = lotAltitude;

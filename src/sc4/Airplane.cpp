@@ -614,8 +614,161 @@ void cSC4Airplane::UpdateOrientation(const cS3DVector3& direction, cS3DVector3& 
     heading = basis.yawedNose;
 }
 
-// @ 0x1006cee14 PARTIAL: the airport/runway-aware flight step is not ported.
-void cSC4Airplane::UpdatePhysics(float delta) { (void)delta; }
+// @ 0x1006cee14. One physics step: cap the speed at +0x390 (zero it below 1e-4), integrate the forces over `delta`
+// (trapezoid for the position), then settle against the ground. Taxiing (3) without a runway nearby, the plane is held
+// clearance (10, or 30 when player-driven) above the ground; taking off (2) above it becomes taxiing; reaching the
+// ground in the air lands it unless over water (state 1), outside the terrain it taxis. On the ground (0/1) the plane
+// sits on the terrain: off a runway, on a lot, outside the terrain, over water or on a slope over 22.5 degrees it
+// stops where it is; otherwise, rising faster than the low speed limit it takes off (2), slower it levels (+0x378
+// takes the slope, vertical speed 0). Then collisions, the world clip, the orientation step (on the ground the velocity
+// follows the nose and a plane at rest with no throttle or yaw input parks, state 0) and the model transform.
+void cSC4Airplane::UpdatePhysics(float delta) {
+    IAircraftHost* host = HostFor(*this);
+    auto controls = [this] {   // the controls at this+0x314, as the original passes them
+        AirplaneControls c;
+        for (int i = 0; i < 3; ++i) c.steer[i] = controlWish_[i];
+        c.throttle = controlWish_[3];
+        c.lift = controlAim_;
+        c.value14 = controlAim2_;
+        return c;
+    };
+    const float lengthSquared = velocity_.z * velocity_.z + (velocity_.x * velocity_.x + velocity_.y * velocity_.y);
+    const float speed = std::sqrt(lengthSquared);   // before the cap: the take-off / level tests use it
+    if (0.0001f > speed) {
+        if (lengthSquared > 0.0f) {
+            const float scale = 0.0f / speed;
+            velocity_ = {velocity_.x * scale, velocity_.y * scale, velocity_.z * scale};
+        }
+    } else if (lengthSquared > 0.0f && speed > maxSpeedHigh_) {
+        const float scale = maxSpeedHigh_ / speed;
+        velocity_ = {velocity_.x * scale, velocity_.y * scale, velocity_.z * scale};
+    }
+    const cS3DVector3 force = CalculateForces(velocity_, orientation_, controls());
+    const float inverseMass = 1.0f / mass_;
+    const float vx = velocity_.x, vy = velocity_.y, vz = velocity_.z;
+    float nvx = vx + delta * (force.x * inverseMass);
+    float nvy = inverseMass * force.y * delta + vy;
+    float nvz = vz + delta * (force.z * inverseMass);
+    const float half = 0.5f * delta;
+    cS3DVector3 next = {(vx + nvx) * half + position_.x, (vy + nvy) * half + position_.y,
+                        (vz + nvz) * half + position_.z};
+    const bool inBounds = host && host->TerrainPointInBounds(next.x, next.z);
+    const float ground = GetAltitude(next);
+    bool nearRunway = false;
+    if (inBounds) {
+        std::vector<cS3DVector3> runways;
+        host->GetRunwayList(position_, runways);
+        nearRunway = !runways.empty();
+        if (!nearRunway) {
+            host->GetRunwayList({position_.x + nvx, position_.y + nvy, position_.z + nvz}, runways);
+            nearRunway = !runways.empty();
+        }
+    }
+    auto waterAt = [host](const cS3DVector3& p) {
+        std::int32_t cellX = 0, cellZ = 0;
+        host->WorldToCell(p.x, p.z, cellX, cellZ);
+        return host->CellHasWater(static_cast<std::uint32_t>(cellX), static_cast<std::uint32_t>(cellZ));
+    };
+
+    int state = static_cast<int>(state_);
+    bool onGround = state == 0 && !(controlWish_[3] > 0.0001f) && !(std::fabs(controlWish_[2]) > 0.0001f);
+    if (!onGround) {
+        if (state == 0) {
+            SetAirplaneState(AirplaneState::kLanding);
+            state = static_cast<int>(state_);
+        }
+        const float hover = (IsPlayerDriving() ? 30.0f : 10.0f) + ground;   // table 0x100a28ce8
+        float floor;
+        bool decided = true;
+        if (!nearRunway && state == 3) {
+            if (hover > next.y) {
+                next.y = hover;
+                if (0.0f > nvy) nvy = 0.0f;
+                floor = hover;
+            } else {
+                floor = next.y;
+            }
+        } else if (state == 2 && next.y > hover) {
+            state_ = AirplaneState::kTaxiing;
+            state = 3;
+            floor = next.y;
+        } else if (state <= 1) {
+            onGround = true;
+            decided = false;
+        } else {
+            floor = next.y;
+        }
+        if (decided && ground >= floor) {
+            next.y = ground;
+            if (inBounds) {
+                if (!waterAt(next)) SetAirplaneState(AirplaneState::kLanding);
+            } else if (state != 3) {
+                state_ = AirplaneState::kTaxiing;
+            }
+        }
+    }
+    if (onGround) {
+        next.y = ground;
+        const bool onLot = !nearRunway && host && host->LotAt(next) != nullptr;
+        const bool water = inBounds && waterAt(next);
+        float slope = 0.0f;
+        if (!nearRunway) {
+            const float dx = next.x - position_.x, dy = next.y - position_.y, dz = next.z - position_.z;
+            const float moved = std::sqrt(dz * dz + (dx * dx + dy * dy));
+            cS3DVector3 dir = orientation_;
+            if (!(0.1f > moved)) {
+                const float inverse = 1.0f / moved;
+                dir = {dx * inverse, dy * inverse, dz * inverse};
+            }
+            const float flat = std::sqrt(dir.z * dir.z + (dir.x * dir.x + 0.0f));
+            cS3DVector3 level = {dir.x, 0.0f, dir.z};
+            if (flat > 0.0001f) {
+                const float inverse = 1.0f / flat;
+                level = {dir.x * inverse, 0.0f * inverse, dir.z * inverse};
+            }
+            const float cosine = level.z * dir.z + (dir.x * level.x + level.y * dir.y);
+            const float angle = std::acos(ClampControl(cosine, -1.0f, 1.0f));
+            slope = dir.y < 0.0f ? -angle : angle;
+        }
+        if (onLot || !inBounds || water || slope > 0.39269909f) {
+            next = position_;   // blocked: stay and stop
+            const float moving = (nvx * nvx + nvy * nvy) + nvz * nvz;
+            if (moving > 0.0f) {
+                const float scale = 0.0f / std::sqrt(moving);
+                nvx = nvx * scale;
+                nvy = nvy * scale;
+                nvz = scale * nvz;
+            }
+        } else if (nvy > 0.0f && speed > maxSpeedLow_) {
+            if (state_ != AirplaneState::kTakingOff) state_ = AirplaneState::kTakingOff;
+        } else if (maxSpeedLow_ > speed) {
+            roll_ = slope;
+            nvy = 0.0f;
+        }
+    }
+
+    position_ = next;
+    velocity_ = {nvx, nvy, nvz};
+    DetectCollisions();
+    ClipToWorld(position_);
+    cS3DTransform transform;
+    UpdateOrientation(velocity_, orientation_, controls(), transform, delta);
+    if (static_cast<int>(state_) <= 1) {
+        const int settled = static_cast<int>(state_);
+        const float along =
+            orientation_.z * velocity_.z + (velocity_.y * orientation_.y + velocity_.x * orientation_.x);
+        velocity_ = {orientation_.x * along, along * orientation_.y, along * orientation_.z};
+        if (settled == 1 && 0.0001f > std::fabs(controlWish_[3]) && 0.0001f > std::fabs(controlWish_[2]) &&
+            0.1f > std::sqrt(velocity_.z * velocity_.z + (velocity_.x * velocity_.x + velocity_.y * velocity_.y)))
+            SetAirplaneState(AirplaneState::kFlying);
+    }
+    transform.translation[0] = position_.x;
+    transform.translation[1] = position_.y;
+    transform.translation[2] = position_.z;
+    transform.flags = std::uint8_t(transform.flags | 1);
+    transform.changeCounter = std::uint8_t(transform.changeCounter + 1);
+    SetTransform(transform);
+}
 
 // @ 0x1006d0cd0 PARTIAL: the collision sweep is not ported.
 void cSC4Airplane::DetectCollisions() {}

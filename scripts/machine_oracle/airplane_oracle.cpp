@@ -54,6 +54,7 @@ struct AirplaneOracleAccess {
         const cS3DVector3* v[3] = {&p.position_, &p.orientation_, &p.velocity_};
         for (int i = 0; i < 3; ++i) { out[3 * i] = v[i]->x; out[3 * i + 1] = v[i]->y; out[3 * i + 2] = v[i]->z; }
     }
+    static void SetAttitude(cSC4Airplane& p, float roll, float pitch, float yaw) { p.roll_ = roll; p.pitch_ = pitch; p.yaw_ = yaw; }
     static void SetSlopes(cSC4Airplane& p, float climb, float descent) { p.climbSlope_ = climb; p.descentSlope_ = descent; }
     static void SetTurnRate(cSC4Airplane& p, float rate) { p.turnRate_ = rate; }
     static void Controls(const cSC4Airplane& p, float* out) {
@@ -75,6 +76,7 @@ bool InBounds(float x, float z) { return x >= 0.0f && z >= 0.0f && x <= gCitySiz
 float Height(float x, float z) { return 20.0f + 0.013f * x - 0.021f * z; }
 float Water(float x, float) { return 15.0f + 0.001f * x; }
 float EffectHeight(float x, float z) { return Height(x, z) + 0.05f * (x - z); }
+bool WaterCell(std::uint32_t x, std::uint32_t z) { return (x * 7 + z * 3) % 5 == 0; }
 std::vector<cS3DVector3> gRunways;
 std::uint32_t gPick = 0;
 std::vector<double> gWeightsOriginal, gWeightsPort;
@@ -91,7 +93,7 @@ struct OracleAircraftHost final : IAircraftHost {
     float CitySizeZ() override { return gCitySize[1]; }
     int CityCellCountX() override { return 64; }
     int CityCellCountZ() override { return 128; }
-    void WorldToCell(float, float, std::int32_t& x, std::int32_t& z) override { x = z = 0; }
+    void WorldToCell(float x, float z, std::int32_t& cx, std::int32_t& cz) override { cx = int(x / 16.0f); cz = int(z / 16.0f); }
     bool FindFireOccupant(const cS3DVector3&, const cS3DVector3&, cISC4OccupantFilter*, cS3DVector3&) override { return false; }
     double RandomDoubleRange(double lo, double) override { return lo; }
     const float* FindDriveParameters(IAutomataGroupTemplate*) override { return nullptr; }
@@ -106,6 +108,7 @@ struct OracleAircraftHost final : IAircraftHost {
     }
     const void* LotAt(const cS3DVector3&) override { return nullptr; }
     float OpacityFadeSeconds() override { return 1.0f; }
+    bool CellHasWater(std::uint32_t x, std::uint32_t z) override { return WaterCell(x, z); }
     bool DisasterActive() override { return false; }
     float DisasterSpeedMultiplier() override { return 1.0f; }
     bool SimulatorPaused() override { return false; }
@@ -133,6 +136,11 @@ std::uint32_t WeightedChoiceHook(void*, std::uint32_t count, const double* weigh
     gWeightsOriginal.assign(weights, weights + count);
     return gPick;
 }
+void PositionToCellSlot(void*, float x, float z, int* cx, int* cz) { *cx = int(x / 16.0f); *cz = int(z / 16.0f); }
+bool CellHasWaterSlot(void*, std::uint32_t x, std::uint32_t z) { return WaterCell(x, z); }
+void NoCollisions(void*) {}
+unsigned char gOriginalTransform[0x40];
+void SetTransformSlot(void*, const void* transform) { std::memcpy(gOriginalTransform, transform, sizeof gOriginalTransform); }
 int gOriginalRemoved = 0;
 void RemoveSlot(void*, bool) { ++gOriginalRemoved; }
 void* NewHook(std::size_t n) { return ::operator new(n); }
@@ -190,6 +198,10 @@ int main() {
     lots.Install(0x100b21340);                                         // SL::spLotManager
     city.Set(0x168, reinterpret_cast<const void*>(&ManagerSlot));      // the aircraft manager
     originalVtable.Set(0x68, reinterpret_cast<const void*>(&RemoveSlot));   // cSC4Automaton::Remove
+    originalVtable.Set(0x290, reinterpret_cast<const void*>(&SetTransformSlot));   // cSC4Automaton::SetTransform
+    city.Set(0x2f8, reinterpret_cast<const void*>(&PositionToCellSlot));
+    terrain.Set(0x110, reinterpret_cast<const void*>(&CellHasWaterSlot));
+    if (!Hook(0x1006d0cd0, reinterpret_cast<const void*>(&NoCollisions))) return 2;   // DetectCollisions: port stand-in
     if (!Hook(0x10050175a, reinterpret_cast<const void*>(&RunwayListHook)) ||      // cSC4AircraftManager::GetRunwayList
         !Hook(0x10003da38, reinterpret_cast<const void*>(&WeightedChoiceHook))) {  // RandomUint32WeightedChoice
         std::perror("hook");
@@ -566,6 +578,56 @@ int main() {
             }
             // an odd runway list makes step 0 remove the plane: the original's Remove is a no-op fake here
             if (!(step == 0 && gRunways.size() % 2 != 0)) Check(same, "AI_Land", t);
+        }
+
+        {   // UpdatePhysics: every state, on and above the terrain, with and without runways nearby
+            gStage = "UpdatePhysics";
+            SetOriginal(f, 0);
+            AirplaneOracleAccess::Set(port, f, 0);
+            float c[6], tune[12], o[3], v[3];
+            for (float& x : c) x = unit(rng);
+            if (t % 3 == 0) { c[2] = 0.0f; c[3] = 0.0f; }
+            for (float& x : tune) x = 0.05f + 0.5f * (unit(rng) + 1);
+            o[0] = unit(rng); o[1] = 0.2f * unit(rng); o[2] = unit(rng);
+            const float fast = t % 4 == 0 ? 0.05f : 40.0f;
+            for (float& x : v) x = fast * unit(rng);
+            const bool outside = t % 13 == 0;
+            const float px = outside ? -50.0f : gCitySize[0] * 0.5f * (unit(rng) + 1);
+            const float pz = gCitySize[1] * 0.5f * (unit(rng) + 1);
+            const float position[3] = {px, Height(px, pz) + (t % 2 ? 0.5f : 25.0f) * (unit(rng) + 1), pz};
+            const int st = static_cast<int>(rng() % 4);
+            std::memcpy(original + 0x314, c, sizeof c);
+            std::memcpy(original + 0x438, tune, sizeof tune);
+            std::memcpy(original + 0x8c, o, sizeof o);
+            std::memcpy(original + 0x36c, v, sizeof v);
+            std::memcpy(original + 0x74, position, sizeof position);
+            std::memcpy(original + 0x310, &st, 4);
+            void* vtable = originalVtable.slots;
+            std::memcpy(original, &vtable, 8);
+            AirplaneOracleAccess::SetMotion(port, c, tune, o, v);
+            AirplaneOracleAccess::SetPositionState(port, position, st);
+            const std::vector<cS3DVector3> keepRunways = gRunways;
+            if (t % 2) gRunways.clear();
+            const float d = 0.02f + 0.05f * (unit(rng) + 1);
+            std::memset(gOriginalTransform, 0, sizeof gOriginalTransform);
+            Function<void (*)(void*, float)>(0x1006cee14)(original, d);
+            port.UpdatePhysics(d);
+            gRunways = keepRunways;
+            float mine[6], motion[9];
+            AirplaneOracleAccess::Controls(port, mine);
+            AirplaneOracleAccess::Motion(port, motion);
+            int stateOriginal;
+            std::memcpy(&stateOriginal, original + 0x310, 4);
+            bool same = stateOriginal == static_cast<int>(port.State()) && Same(Field(0x378), port.Roll()) &&
+                        Same(Field(0x37c), port.Pitch()) && Same(Field(0x380), port.Yaw());
+            for (int i = 0; i < 6; ++i) same = same && Same(Field(0x314 + 4 * i), mine[i]);
+            const int motionOffsets[3] = {0x74, 0x8c, 0x36c};
+            for (int i = 0; i < 9; ++i) same = same && Same(Field(motionOffsets[i / 3] + 4 * (i % 3)), motion[i]);
+            float translation[3];
+            std::memcpy(translation, gOriginalTransform + 0x28, sizeof translation);
+            same = same && gOriginalTransform[1] == 5 && gOriginalTransform[0] == 5 && Same(translation[0], motion[0]) &&
+                   Same(translation[1], motion[1]) && Same(translation[2], motion[2]);
+            Check(same, "UpdatePhysics", t);
         }
 
         if (t % 8 == 0) {

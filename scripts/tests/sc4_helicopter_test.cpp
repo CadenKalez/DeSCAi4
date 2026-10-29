@@ -185,6 +185,7 @@ struct FakeAircraftHost final : IAircraftHost {
     std::uint32_t RandomWeightedChoice(std::uint32_t, const double*) override { return 0; }
     const void* LotAt(const cS3DVector3&) override { return nullptr; }
     float OpacityFadeSeconds() override { return 1.0f; }
+    bool CellHasWater(std::uint32_t, std::uint32_t) override { return false; }
     bool LotAltitudeAt(const cS3DVector3&, float* altitude) override {
         if (!lotFound) return false;
         *altitude = lotAltitude;

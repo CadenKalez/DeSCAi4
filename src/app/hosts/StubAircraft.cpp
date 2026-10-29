@@ -17,6 +17,7 @@ struct StubAircraft final : IAircraftHost {
     std::uint32_t RandomWeightedChoice(std::uint32_t count, const double* weights) override { return {}; }
     const void* LotAt(const cS3DVector3& position) override { return {}; }
     float OpacityFadeSeconds() override { return {}; }
+    bool CellHasWater(std::uint32_t cellX, std::uint32_t cellZ) override { return {}; }
     bool LotAltitudeAt(const cS3DVector3& position, float* altitude) override { return {}; }
     float CitySizeX() override { return {}; }
     float CitySizeZ() override { return {}; }
