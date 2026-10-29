@@ -6,7 +6,7 @@
 <text x="16" y="102" font-size="16" font-weight="700" fill="#1d2320">Code exists</text>
 <text x="150" y="102" font-size="14" fill="#5b6560">partial or complete</text>
 <rect x="560" y="84" width="860" height="26" rx="3" fill="#e3e6e0"/>
-<rect x="560" y="84" width="664.5" height="26" rx="3" fill="#9cc3e4"/>
+<rect x="560" y="84" width="665.1" height="26" rx="3" fill="#9cc3e4"/>
 <text x="1432" y="103" font-size="18" font-weight="700" fill="#1d2320">77.3%</text>
 <text x="16" y="136" font-size="16" font-weight="700" fill="#1d2320">Recovered</text>
 <text x="150" y="136" font-size="14" fill="#5b6560">complete and covered by a test</text>
@@ -3271,9 +3271,8 @@
 <rect x="1545.3" y="651.6" width="36.7" height="0.3" fill="#e8b04a"><title>cSTEOverlayManager: 46 bytes, Recovered, unit test only (artifacts)</title></rect>
 <rect x="1545.3" y="651.6" width="36.7" height="0.3" fill="url(#hatch)"/>
 <rect x="1500.0" y="608.1" width="82.0" height="43.7" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
-<rect x="1500.0" y="651.8" width="22.6" height="40.1" fill="#d5d9d4"><title>cSTESurfaceWater: 4392 bytes, Not started</title></rect>
-<rect x="1522.7" y="651.8" width="31.4" height="22.0" fill="#1f6b43"><title>cSTESurfaceWater: 3342 bytes, Verified</title></rect>
-<rect x="1522.7" y="673.8" width="31.4" height="18.1" fill="#9cc3e4"><title>cSTESurfaceWater: 2759 bytes, Partial</title></rect>
+<rect x="1500.0" y="651.8" width="36.8" height="40.1" fill="#9cc3e4"><title>cSTESurfaceWater: 7151 bytes, Partial</title></rect>
+<rect x="1536.9" y="651.8" width="17.2" height="40.1" fill="#1f6b43"><title>cSTESurfaceWater: 3342 bytes, Verified</title></rect>
 <rect x="1500.0" y="651.8" width="54.1" height="40.1" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="1500.0" y="691.9" width="54.1" height="31.4" fill="#d5d9d4"><title>cSTEWaterRipple: 8214 bytes, Not started</title></rect>
 <rect x="1500.0" y="691.9" width="54.1" height="31.4" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>

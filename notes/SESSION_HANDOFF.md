@@ -140,3 +140,16 @@ recovered) and `RiotInProgress`. Patrol car / fire truck: no host.
 **Next targets:** (1) the water simulation functions above (UpdateFloodWaters is ~2 KB of float code, FindLocalMinimumOrWater ~1.1 KB,
 UpdateNeighborConnections ~1.4 KB: use `scripts/disasm.py`, test with the terrain fixture in `sc4_surfacewater_test.cpp`); (2) the game loop in
 `src/experimental_host/pending/` (M1); (3) `cSC4RiotPolice` + `cSC4SimFireCrew` (44 functions) so the emergency vehicles' crews exist.
+
+## Addendum 3: the water simulation
+
+`cSTESurfaceWater` now has `UpdateFloodWaters`, `UpdateNeighborConnections`, `FindLocalMinimumOrWater`, `GetBasinVertices`, `Rain` / `Rain_Static` /
+`AddRain` / `CreateSpring` / `EndBrushScrub`, all read from the disassembly (float order, the eight-direction table at 0x100a29ae0, the
+constants). They are `recovered-partial / needs differential`: the test is written from the same reading, so it proves the algorithm hangs
+together (a spring floods downhill and the buffers swap; a wide channel gets one neighbour connection per open edge), not bit-equality.
+Next step for exactness: run the retail `UpdateFloodWaters` under the Rosetta oracle on a small synthetic terrain. The native terrain host
+now routes `SurfaceWaterRain / AddRain / CreateSpring / EndBrushScrub` to the object and the water host reaches the neighbours simulator
+(`NativeSurfaceWaterNeighbors.cpp`). Still unwired: tick registration (spSimulator vslot 0x98, ATM vslot 0x28), so `AnimateWater` is never
+called; network / lot / occupant answers for `IsNavigable`. Quirks kept: the edge scan uses the x vertex count for all four edges and starts
+the east / south edges at cell count - 1; `GetBasinVertices` does not put the seed in its visited set; the flood pass writes -0.0 into
+empty buffers.

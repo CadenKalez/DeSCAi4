@@ -4219,11 +4219,6 @@ cSTESelectedTerrainArea,0000000100744f3a,not started,cSTESelectedTerrainArea::Sh
 cSTESelectedTerrainArea,0000000100744f86,not started,cSTESelectedTerrainArea::Update(SC4DrawContext*)
 cSTESelectedTerrainArea,0000000100744fee,not started,cSTESelectedTerrainArea::~cSTESelectedTerrainArea()
 cSTESelectedTerrainArea,0000000100745070,not started,cSTESelectedTerrainArea::~cSTESelectedTerrainArea()
-cSTESurfaceWater,000000010072efca,pending,cSTESurfaceWater::UpdateNeighborConnections()
-cSTESurfaceWater,000000010072fb5c,pending,cSTESurfaceWater::UpdateFloodWaters()
-cSTESurfaceWater,00000001007303b0,pending,cSTESurfaceWater::FindLocalMinimumOrWater(int)
-cSTESurfaceWater,0000000100730820,pending,"cSTESurfaceWater::Rain(int, cSTETerrain::tBrushContext&, SC4Rect<int>&, float)"
-cSTESurfaceWater,0000000100730882,pending,"cSTESurfaceWater::Rain_Static(int, cSTETerrain::tBrushContext&, SC4Rect<int>&, float)"
 cSTETerrain,0000000100737020,pending,cSTETerrain::cSTETerrain()
 cSTETerrain,00000001007372a8,pending,cSTETerrain::~cSTETerrain()
 cSTETerrain,00000001007373f2,pending,cSTETerrain::~cSTETerrain()

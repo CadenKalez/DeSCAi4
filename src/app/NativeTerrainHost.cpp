@@ -25,6 +25,9 @@
 #include "platform/Unwired.h"
 
 namespace native {
+bool NeighborsHasConnection(cIGZUnknown* component, std::uint32_t type, int x, int z);      // NativeSurfaceWaterNeighbors.cpp
+void NeighborsDeleteConnection(cIGZUnknown* component, std::uint32_t type, int x, int z);
+void NeighborsCreateConnection(cIGZUnknown* component, std::uint32_t type, int x, int z);
 namespace {
 using namespace sc4;
 cISC4City* g_city = nullptr;
@@ -87,6 +90,10 @@ struct NativeSurfaceWaterHost final : ISurfaceWaterHost {
     }
     void RegisterTicks(cSTESurfaceWater&) override { SC4_UNWIRED("cSTESurfaceWater tick registration (spSimulator vslot 0x98, ATM vslot 0x28): the water never animates"); }
     void UnregisterTicks(cSTESurfaceWater&) override {}
+    // The neighbours simulator is a city component (NativeSurfaceWaterNeighbors.cpp: its header cannot share this translation unit).
+    bool NeighborHasConnection(std::uint32_t type, int x, int z) override { return NeighborsHasConnection(Component(CityComponent::NeighborsSimulator), type, x, z); }
+    void NeighborDeleteConnection(std::uint32_t type, int x, int z) override { NeighborsDeleteConnection(Component(CityComponent::NeighborsSimulator), type, x, z); }
+    void NeighborCreateConnection(std::uint32_t type, int x, int z) override { NeighborsCreateConnection(Component(CityComponent::NeighborsSimulator), type, x, z); }
     IWaterNetworkOccupant* NetworkOccupantAt(int, int, std::uint32_t, bool) override { SC4_UNWIRED("ISurfaceWaterHost::NetworkOccupantAt (traffic network map)"); return nullptr; }
     IWaterNetworkOccupant* AsNetworkOccupant(cIGZUnknown*) override { SC4_UNWIRED("ISurfaceWaterHost::AsNetworkOccupant"); return nullptr; }
     IWaterCellOccupant* AsCellOccupant(cIGZUnknown*) override { SC4_UNWIRED("ISurfaceWaterHost::AsCellOccupant"); return nullptr; }
@@ -222,10 +229,13 @@ struct NativeTerrainHost final : ITerrainHost {
     void* BrushComponentTextureInfo(void* resource) override { return {}; }
     bool BrushTextureInfoSize(void* textureInfo, std::uint32_t& width, std::uint32_t& height) override { return {}; }
     const std::uint8_t* BrushTexturePixels(void* textureInfo) override { return {}; }
-    bool SurfaceWaterRain(std::int32_t vertexIndex, TerrainBrushContext& context, TerrainRect& rect, float amount) override { return {}; }
-    void SurfaceWaterAddRain(std::int32_t vertexIndex, float amount) override {}
-    void SurfaceWaterCreateSpring(std::int32_t vertexIndex) override {}
-    void SurfaceWaterEndBrushScrub(std::uint32_t brushType, std::uint32_t arg) override {}
+    bool SurfaceWaterRain(std::int32_t vertexIndex, TerrainBrushContext& context, TerrainRect& rect, float amount) override {
+        cSTESurfaceWater* water = WaterOf(Component(CityComponent::SurfaceWater));
+        return water && water->Rain(vertexIndex, context, rect, amount);
+    }
+    void SurfaceWaterAddRain(std::int32_t vertexIndex, float amount) override { if (cSTESurfaceWater* water = WaterOf(Component(CityComponent::SurfaceWater))) water->AddRain(vertexIndex, amount); }
+    void SurfaceWaterCreateSpring(std::int32_t vertexIndex) override { if (cSTESurfaceWater* water = WaterOf(Component(CityComponent::SurfaceWater))) water->CreateSpring(vertexIndex); }
+    void SurfaceWaterEndBrushScrub(std::uint32_t brushType, std::uint32_t arg) override { if (cSTESurfaceWater* water = WaterOf(Component(CityComponent::SurfaceWater))) water->EndBrushScrub(brushType, arg); }
     void PostBrushSound(std::uint32_t type, std::uint32_t data1, std::uint32_t data2) override {}
     std::uint32_t FloraBrushCount() override { return {}; }
     void FloraBrushList(std::vector<std::uint32_t>& ids) override {}

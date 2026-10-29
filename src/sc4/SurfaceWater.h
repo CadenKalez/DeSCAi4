@@ -10,10 +10,12 @@
 // in its own arrays (cSTETerrain::WaterDepth / Sediment); this object keeps the full tWaterInfo vector and copies those two channels
 // into the terrain after every change it makes (SyncTerrain), so the terrain's water queries see the same numbers.
 //
-// NOT recovered yet (the hooks log SC4_UNWIRED and do nothing; see the ledger rows): UpdateNeighborConnections (0x10072efca),
-// UpdateFloodWaters (0x10072fb5c), FindLocalMinimumOrWater (0x1007303b0), Rain_Static / GetBasinVertices (0x100730882).
+// The flood simulation (UpdateFloodWaters), the neighbour-connection scan, FindLocalMinimumOrWater, GetBasinVertices and Rain_Static are
+// recovered from the disassembly; their float order is checked by reading, not by running the retail code (ledger evidence says so).
+// Not reproduced: UpdateFloodWaters' cRZTimer (it only measures the pass) and its call to the city (its result is unused).
 #pragma once
 #include <cstdint>
+#include <climits>
 #include <list>
 #include <vector>
 
@@ -35,6 +37,8 @@ constexpr std::uint32_t kWaterMsgCityCell1 = 0x26d31ec1, kWaterMsgCityCell4 = 0x
                         kWaterMsgRebuildBodies = 0x66956814, kWaterMsgAnimate = 0x86ad10ee;
 constexpr std::uint32_t kWaterOccupantGroup = 0x2890d4de;             // the occupants IsNavigable and DoMessage look at
 constexpr float kDraftClearanceDepth = 5.0f;                          // 0x100a16210
+constexpr std::uint32_t kWaterConnectionType = 9;                      // the neighbour connection type the water scan places
+constexpr float kShallowWater = 30.0f;                                // 0x100a1969c: depth below which a connection spot is moved
 constexpr float kBridgeClearance = 20.0f;                             // a bridge must clear the water by this much to let ships through
 
 struct tWaterInfo {                        // 0x24 bytes
@@ -84,6 +88,9 @@ public:
     virtual IWaterNetworkOccupant* NetworkOccupantAt(int x, int z, std::uint32_t mask, bool exact) = 0;   // spTrafficNetworkMap vslot 0x50
     virtual IWaterNetworkOccupant* AsNetworkOccupant(cIGZUnknown* object) = 0;   // GZCOM_Interface(object, 0xa821ef94); counted by the host
     virtual IWaterCellOccupant* AsCellOccupant(cIGZUnknown* object) = 0;    // QueryInterface(0xa8c86142)
+    virtual bool NeighborHasConnection(std::uint32_t type, int x, int z) = 0;   // spNeighborsSim vslot 0x50
+    virtual void NeighborDeleteConnection(std::uint32_t type, int x, int z) = 0;   // vslot 0x38
+    virtual void NeighborCreateConnection(std::uint32_t type, int x, int z) = 0;   // vslot 0x30(type, x, z, false)
     virtual const void* LotAtCell(int x, int z) = 0;                        // terrain vslot 0xe8 / spCity vslot 0x308 / spLotManager vslot 0x30
     // spOccupantManager vslot 0x140(list, rect, rect, 0x2890d4de, 0xffffffff): the occupants of the group inside one cell
     virtual void OccupantsInCell(int x, int z, std::uint32_t group, std::vector<IWaterCellOccupant*>& out) = 0;
@@ -130,6 +137,11 @@ public:
     // The recovered-later parts: they log SC4_UNWIRED and leave the water as it is.
     virtual void UpdateNeighborConnections();                                 // @ 0x10072efca
     virtual void UpdateFloodWaters();                                         // @ 0x10072fb5c
+    int FindLocalMinimumOrWater(int vertex) const;                            // @ 0x1007303b0
+    void GetBasinVertices(int seed, float level, float limit, std::list<int>& basin, std::list<int>& rim, std::list<int>& spill) const;   // @ 0x100730492
+    bool Rain(int vertex, TerrainBrushContext& context, TerrainRect& rect, float amount);   // @ 0x100730820: true when the per-vertex mode takes the rain
+    void RainStatic(int vertex, TerrainBrushContext& context, TerrainRect& rect, float amount);   // @ 0x100730882
+    void AddRain(int vertex, float amount) { info_[static_cast<std::size_t>(vertex)].flow[1 + channel_] += amount; }   // cSTETerrain::BrushFnRain @ 0x10073083e
 
     // ---- accessors for the tests and the host ----
     std::vector<tWaterInfo>& Info() { return info_; }
@@ -149,7 +161,8 @@ private:
     std::vector<float> scratchFloats_;               // +0x80
     bool perVertex_ = false;                         // +0x70
     std::uint32_t channel_ = 0;                      // +0x74
-    std::vector<bool> flaggedCells_;                 // +0x78 cRZCellMap<bool>
+    TerrainRect dirty_{};                            // +0x78 (the rect of the cell map: the cells the simulation visits)
+    std::vector<float> flipStrength_;                // +0x40 per cell: how strongly the last flow asked the triangulation to flip
     cSC4SimGrid<std::uint16_t>* bodies_ = nullptr;   // +0x98 counted
     bool bodiesDirty_ = false;                       // +0xa0
 };

@@ -1,8 +1,12 @@
 // cSTESurfaceWater over a real cSTETerrain: depth queries, flooding altitude, navigability and the bodies of water, the messages, the stream.
+#include <algorithm>
+#include <climits>
 #include <cmath>
 #include <cstdio>
+#include <list>
 #include <map>
 #include <set>
+#include <tuple>
 
 #include "gz/cIGZMessage2.h"
 #include "rz/cRZMessage2Standard.h"
@@ -45,6 +49,11 @@ struct Host final : ISurfaceWaterHost {
     std::map<std::pair<int, int>, FakeCellOccupant*> cellOccupants;
     std::set<std::pair<int, int>> outside;
     const void* lotHere = nullptr;
+    std::set<std::tuple<int, int, int>> connections;
+    int created = 0, deleted = 0;
+    bool NeighborHasConnection(std::uint32_t t, int x, int z) override { return connections.count({int(t), x, z}) != 0; }
+    void NeighborDeleteConnection(std::uint32_t t, int x, int z) override { ++deleted; connections.erase({int(t), x, z}); }
+    void NeighborCreateConnection(std::uint32_t t, int x, int z) override { ++created; connections.insert({int(t), x, z}); }
     FakeNetwork* built = nullptr;
     FakeCellOccupant* asCell = nullptr;
     cSTETerrain* Terrain() override { return terrain; }
@@ -164,7 +173,101 @@ int main() {
     water->UpdateBodiesOfWater();
     auto* bodies = water->GetBodyOfWaterMap();
     CHECK(bodies->GetTractValue(1, 1) == 1 && bodies->GetTractValue(2, 2) == 1 && bodies->GetTractValue(0, 0) == 0);
-    water->UpdateNeighborConnections();                                    // not recovered: logs, changes nothing
+
+    // the neighbour scan: a run of flat water at an edge gets a connection one cell outside the map; shallow-water ends are moved inward
+    water->UpdateNeighborConnections();
+    CHECK(host.created == 0);                                              // the hole does not touch the edges of the 4x4 map
+    {
+        cSTETerrain big;
+        TerrainTuning t3;
+        t3.seaLevel = 20.0f;
+        big.Init(8, 8, t3);
+        for (int z = 0; z < 9; ++z)
+            for (int x = 0; x < 9; ++x) big.Vertices()[big.GetVertIndex(x, z)].altitude = (x >= 1 && x <= 6) ? 0.0f : 40.0f;   // a channel 6 vertices wide, open to both ends in z
+        Host h3;
+        h3.terrain = &big;
+        auto* w3 = new cSTESurfaceWater(&h3);
+        w3->AddRef();
+        w3->Init();
+        for (auto& info : w3->Info()) info.velocity = {0.0f, 0.0f, 0.0f};
+        h3.connections.clear();
+        w3->UpdateNeighborConnections();
+        int south = 0, north = 0;
+        for (const auto& c : h3.connections) {
+            CHECK(std::get<0>(c) == 9);
+            if (std::get<2>(c) == -1) ++south;
+            if (std::get<2>(c) == 8) ++north;
+        }
+        CHECK(south == 1 && north == 1);                                   // one connection on each open edge, none on the walls
+        CHECK(h3.created == 2);
+        // a second scan finds them and neither creates nor deletes
+        h3.created = h3.deleted = 0;
+        w3->UpdateNeighborConnections();
+        CHECK(h3.created == 0);
+        // a bridge-free but blocked cell deletes the connection under it
+        h3.outside.insert({3, 0});
+        w3->UpdateNeighborConnections();
+        CHECK(h3.deleted >= 1);
+        w3->Release();
+    }
+
+    // downhill search and basins
+    CHECK(water->FindLocalMinimumOrWater(terrain.GetVertIndex(2, 2)) == terrain.GetVertIndex(2, 2));      // already water
+    {
+        const int dry = terrain.GetVertIndex(0, 0);
+        CHECK(water->Info()[dry].depth <= 0.0f);
+        CHECK(water->FindLocalMinimumOrWater(dry) == terrain.GetVertIndex(1, 1));   // downhill into the hole, where the water begins
+    }
+    {
+        std::list<int> basin, rim, spill;
+        water->GetBasinVertices(terrain.GetVertIndex(2, 2), 0.0f, 10.0f, basin, rim, spill);
+        CHECK(basin.size() >= 9);                                          // the 3x3 hole at altitude 0 (the seed may repeat)
+        CHECK(std::find(basin.begin(), basin.end(), terrain.GetVertIndex(1, 1)) != basin.end());
+        CHECK(!rim.empty());                                               // the walls at altitude 40 are visited and stay on the rim
+        for (int v : rim) CHECK(terrain.Vertices()[static_cast<std::size_t>(v)].altitude > 10.0f);
+        for (int v : basin) if (terrain.Vertices()[static_cast<std::size_t>(v)].altitude <= 10.0f) CHECK(std::find(rim.begin(), rim.end(), v) == rim.end());
+        water->GetBasinVertices(terrain.GetVertIndex(2, 2), 0.0f, -5.0f, basin, rim, spill);
+        CHECK(basin.empty());                                              // the seed is above the limit
+    }
+    {
+        TerrainBrushContext context;
+        TerrainRect rect{};
+        CHECK(!water->Rain(terrain.GetVertIndex(2, 2), context, rect, 1.0f));      // static mode: no per-vertex brush
+        CHECK(rect.left == INT_MAX && rect.bottom == INT_MIN);            // (no texture: nothing changed)
+        water->SetPerVertexMode(true);
+        CHECK(water->Rain(terrain.GetVertIndex(2, 2), context, rect, 1.0f));
+        water->SetPerVertexMode(false);
+        const float before = water->Info()[5].flow[1];
+        water->AddRain(5, 2.5f);
+        CHECK(water->Info()[5].flow[1] == before + 2.5f);
+    }
+
+    // the flood step: a spring on a hill floods downhill and the buffers swap
+    {
+        cSTETerrain slope;
+        TerrainTuning t2;
+        t2.seaLevel = -100.0f;
+        slope.Init(4, 4, t2);
+        for (int z = 0; z < 5; ++z)
+            for (int x = 0; x < 5; ++x) slope.Vertices()[slope.GetVertIndex(x, z)].altitude = 100.0f - 10.0f * x;
+        Host h2;
+        h2.terrain = &slope;
+        auto* w2 = new cSTESurfaceWater(&h2);
+        w2->AddRef();
+        w2->Init();
+        const int source = slope.GetVertIndex(1, 2);
+        w2->Info()[source].flow[0] = 5.0f;                                 // a spring
+        w2->UpdateFloodWaters();                                           // the first step only seeds the new buffer with the spring
+        CHECK(w2->Info()[source].flow[2] >= 5.0f);
+        CHECK(w2->Info()[slope.GetVertIndex(2, 2)].flow[2] == 0.0f);
+        w2->UpdateFloodWaters();                                           // the second step shares it downhill
+        CHECK(w2->Info()[slope.GetVertIndex(2, 2)].flow[1] > 0.0f);        // to the right (lower)
+        CHECK(w2->Info()[slope.GetVertIndex(0, 2)].flow[1] == 0.0f);       // not uphill
+        CHECK(w2->Info()[source].velocity.x > 0.0f);                       // the flow points downhill (+x)
+        CHECK(w2->Info()[source].depth >= 1.0f);                           // back on buffer 0: the visible depth is the (rounded up) average
+        CHECK(slope.WaterDepth().size() == 25 && slope.WaterDepth()[static_cast<std::size_t>(source)] == w2->Info()[source].depth);
+        w2->Release();
+    }
 
     // messages
     auto* messagePtr = new cRZMessage2Standard();
