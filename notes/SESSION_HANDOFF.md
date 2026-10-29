@@ -172,3 +172,11 @@ loop is the port's own driver around the recovered tick, as the host owns the pl
 `cSC43DRender`, the RENDER3D model queue, `SC4DrawContext`, lighting / shadows per RENDER_STATUS.md) and every stub, fake, recovered-partial
 row and unwired seam on that path (use `scripts/unwired_report.py` after a `--script scenarios/first_city.txt` run, and the partial rows of the
 render classes in `notes/ledger.csv`). Do it after the road tool lands.
+
+## Addendum 5: renderer first (in progress)
+
+Survey of the shipped render path (headless city scenario + `SC4_DEBUG` driver counters): `cMetalGDriver` reports only 2 unsupported calls ("Punt"); terrain, buildings, props, trees, lot textures, network tiles and cars already draw. What is visibly missing against the real game: **shadows** (no decal shadows under buildings / trees), the city's background picture (dark-blue backdrop), water ripples / waves (`cSTEWaterRipple` 28, `cSTEWaterWave` 4), particle effects (smoke, ~100 functions), foundations (`LoadFoundationModels`), dynamic textures. Biggest stubs: `cGZGraphicSystem` 201 partial rows (UI-side), `cGZDrawContext` 28, `cSC43DRender` 15 (picks, screen shake), `cSC4ModelMaker` 9 not recovered.
+
+Done: `cSC4LightingManager::CalcShadowProjection` was a stub that refused every projection; it is now recovered and **bit-identical to the retail machine code** (`scripts/run_machine_oracle.sh lightingmanager`, 4000 random models, every transform flag combination; the harness runs the retail AlignDirToZWithYUp and operator*= unhooked). The oracle also found that the port's `nS3D::MultiplyTransform` added its terms left-nested; the machine code adds `c + (b + a)`; fixed (that function has other users, the suite still passes).
+
+Next for shadows (the chain): `cSC4ModelMaker::CreateOccupantShadow` (0x100313a00, ~250 lines, SIMD-heavy: verify with the oracle) -> the model maker host's `AddShadowDecal` / `MapShadowTexture` stubs in `src/app/NativeModelMaker.cpp` (they return 0) -> `cSTEOverlayManager::AddShadowDecal` (recovered, needs the overlay manager wired in the terrain view: `GetOverlayManager` is skipped in `cSTETerrainView3D`). Then the background picture (`cSC4View3DWin::AddBackgroundImageToRenderer` 0x100787334 + `cSC4ModelBackgroundLoader` 25), then `cSTEWaterRipple`.
