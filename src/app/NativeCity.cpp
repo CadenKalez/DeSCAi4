@@ -30,6 +30,7 @@ void InstallCityProbeBindings();                                          // cit
 namespace native {
 void SetTerrainHostCity(cISC4City* city);   // NativeTerrainHost.cpp
 static cISC4City* g_hostCity = nullptr;
+static std::set<std::uint32_t>* g_missingClasses = nullptr;   // the factory's list of classes it could not make
 static sc4::ISerializableFactory* g_serFactory = nullptr;      // the city the host creates (OnCityInitialized binds its services)
 namespace {
 
@@ -111,6 +112,9 @@ cIGZUnknown* CityHost::CreateComponent(std::uint32_t classId, std::uint32_t iid)
             unknown->Release();
         }
     }
+    // A component the serialization factory could not wrap (its class answers only its own interface, as the original's do) but the raw
+    // creator made is not missing.
+    if (result && g_missingClasses) g_missingClasses->erase(classId);
     std::printf("city: create component class %08x iid %08x: %s\n", classId, iid, result ? "ok" : "no creator");
     return result;
 }
@@ -131,6 +135,7 @@ bool LoadCityFile(cSC4App& app, const std::string& path) {
         installed = true;
         sc4::SetSerializableFactory(&factory);
         g_serFactory = &factory;
+        g_missingClasses = &factory.missing;
         auto& hooks = app.CityHooks();
         hooks.createCity = []() -> cISC4City* { auto* city = new sc4::cSC4City(&cityHost); city->AddRef(); g_hostCity = city; SetTerrainHostCity(city); return city; };
         hooks.createCitySegment = []() -> cIGZPersistDBSegment* {
