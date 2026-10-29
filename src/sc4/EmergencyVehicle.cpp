@@ -1,6 +1,8 @@
 // cSC4EmergencyVehicle — see sc4/EmergencyVehicle.h for what is and is not recovered.
 #include "sc4/EmergencyVehicle.h"
 
+#include <cmath>
+
 #include "sc4/DBSegment.h"
 
 namespace sc4 {
@@ -278,8 +280,107 @@ void cSC4EmergencyVehicle::SetDispatchState(std::uint32_t state) {
     }
 }
 
-// The teleport handler is not recovered; the state keeps running without acting.
-bool cSC4EmergencyVehicle::DoTeleportTick(float) { return true; }
+// 0x1002f563c: an emergency-mode vehicle starts with its lights on and the emergency speed (km/h -> units: * 1/3600).
+bool cSC4EmergencyVehicle::Init() {
+    if (IsInitialized()) return true;
+    if (!cSC4Vehicle::Init()) return false;
+    if (CheckAutomataFlag(0x80)) {
+        ShowEmergencyLights(true);
+        const std::uint32_t kmh = emergencyHost_ ? emergencyHost_->Tuning().speedKmh : 0;
+        defaultSpeed_ = static_cast<float>(static_cast<std::uint64_t>(kmh)) * 0.0002777778f;
+        SetSpeed(defaultSpeed_, 1.0f);
+    }
+    return true;
+}
+
+// 0x1002f7bf8 (the distance is sqrt(dz*dz + (dy*dy + dx*dx)): the disassembly's grouping). Close enough = within
+// teleportCells cells of the call and no tunnel / bridge tile (network flags 0x304) under the vehicle.
+bool cSC4EmergencyVehicle::CloseEnoughToDispatchDestination() const {
+    const cS3DVector3& destination = dispatchDestination_;
+    float position[3];
+    const_cast<cSC4EmergencyVehicle*>(this)->GetPosition(position);
+    const float dy = destination.y - position[1];
+    const float dx = destination.x - position[0];
+    const float dz = destination.z - position[2];
+    const float distance = std::sqrt(dz * dz + (dy * dy + dx * dx));
+    const std::uint32_t limit = emergencyHost_ ? emergencyHost_->Tuning().teleportCells : 0;
+    if (static_cast<float>(limit << 4) < distance || std::isnan(distance)) return false;
+    if (!emergencyHost_ || !trafficHost_) return true;
+    int cellX = 0, cellZ = 0;
+    emergencyHost_->PositionToCell(position[0], position[2], cellX, cellZ);
+    cSC4TrafficNetworkMap* map = trafficHost_->TrafficNetworkMap();
+    if (!map) return true;
+    for (TrafficTileInfo* tile = map->GetTileInfoAtCell(cellX, cellZ); tile != nullptr; tile = tile->next)
+        if (tile->occupant && tile->occupant->HasAnyNetworkFlag(0x304)) return false;
+    return true;
+}
+
+// 0x1002f615a: reaching the end of the route as an emergency car. Answering a call (state 3): near enough to the call hands
+// over to the event handler; too far reports the path blocked and repaths after a pause. A blocked call (1) waits.
+void cSC4EmergencyVehicle::HandleReachedRouteDestination() {
+    if (CheckAutomataFlag(0x80)) {
+        if (dispatchState_ == 1) return;
+        if (dispatchState_ == 3) {
+            SendCallbackMessage(5, 0);
+            if (CloseEnoughToDispatchDestination()) {
+                SetAutomataFlag(4, false);
+                repathCount_ = 0;
+                SetOpacity(1.0f, 0.0f);
+                SetState(kEmergencyStateHandlingEvent, nullptr, -1.0f, false, 0, 0, nullptr);
+                SetAutomataFlag(0x4000, true);
+                SetDispatchState(5);
+            } else {
+                SetDispatchState(1);
+                repathCount_ = 0;
+                PushState(kEmergencyStateRepathing, nullptr, -1.0f, false, 0, 0, nullptr);
+                PushState(7, nullptr, (emergencyHost_ ? emergencyHost_->Tuning().retrySeconds : 0.0f) * 1000.0f, false, 0, 0, nullptr);
+            }
+            return;
+        }
+    }
+    cSC4Automaton::HandleReachedRouteDestination();
+}
+
+// 0x1002f7670: tell the dispatcher the call is over and drive home (unless a player is driving).
+void cSC4EmergencyVehicle::ReturnToSourceOccupant() {
+    if (GetDispatchState() == 6) return;
+    if (FindState(kStatePlayerDrive) != nullptr) return;
+    SetDispatchState(6);
+    PushState(kEmergencyStateTeleport, nullptr, -1.0f, false, 0, 0, nullptr);
+}
+
+// 0x1002f5d08: the "go home" state. While the vehicle is mostly faded out (opacity <= 0.6) and still here it fades back in,
+// and, when its dispatch source is farther than the teleport distance, asks for a route to it; found -> drive home, not found
+// or too close -> leave the map.
+bool cSC4EmergencyVehicle::DoTeleportTick(float) {
+    const float opacity = GetOpacity();
+    if (opacity <= 0.6f && !GetMarkedForRemove()) {            // (a NaN opacity skips the handler, like the flags of ucomiss)
+        SetOpacity(1.0f, cSC4TrafficAutomaton::Tuning().fadeDuration);
+        bool leave = true;
+        if (dispatchSource_) {
+            float source[3] = {0, 0, 0};
+            static_cast<cISC4Occupant*>(dispatchSource_)->GetPosition(source);
+            float here[3] = {0, 0, 0};
+            GetPosition(here);
+            const float dx = here[0] - source[0];
+            const float dy = here[1] - source[1];
+            const float dz = here[2] - source[2];
+            const float distance = std::sqrt(dz * dz + (dx * dx + dy * dy));
+            const std::uint32_t limit = emergencyHost_ ? emergencyHost_->Tuning().teleportCells : 0;
+            if (distance >= static_cast<float>(limit << 4)) {
+                SetDispatchState(6);
+                const cS3DVector3 position{here[0], here[1], here[2]};
+                if (emergencyHost_ && emergencyHost_->FindReturnRoute(*this, position, dispatchSource_)) {
+                    repathCount_ = 0;
+                    SetState(0, nullptr, -1.0f, false, 0, 0, nullptr);
+                    leave = false;
+                }
+            }
+        }
+        if (leave) Remove(false);
+    }
+    return true;
+}
 
 void cSC4EmergencyVehicle::ShowEmergencyLights(bool on) {
     if ((lightModel_ != nullptr) != on && emergencyHost_) emergencyHost_->SetEmergencyLights(*this, on);

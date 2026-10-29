@@ -948,7 +948,7 @@ struct TestEmergencyCar final : cSC4EmergencyVehicle {
 };
 
 struct FakeEmergencyHost final : IEmergencyVehicleHost {
-    int stopped = 0, moved = 0, lightsOn = 0, lightsOff = 0, started = 0, blocked = 0, lookups = 0, routes = 0;
+    int stopped = 0, moved = 0, lightsOn = 0, lightsOff = 0, started = 0, blocked = 0, lookups = 0, routes = 0, returnRoutes = 0;
     std::uint32_t lastSound = 0, lastType = 0;
     std::uint8_t lastRepath = 0;
     bool routeFound = false;
@@ -963,6 +963,8 @@ struct FakeEmergencyHost final : IEmergencyVehicleHost {
     void PostPathBlocked(cSC4EmergencyVehicle&, std::uint32_t type, std::uint8_t repaths) override { ++blocked; lastType = type; lastRepath = repaths; }
     ITrafficAutomatonOccupant* NetworkOccupantAt(float, float) override { ++lookups; return occupantAt; }
     bool FindRoute(cSC4EmergencyVehicle&, const cS3DVector3&) override { ++routes; return routeFound; }
+    bool FindReturnRoute(cSC4EmergencyVehicle&, const cS3DVector3&, cIGZUnknown*) override { ++returnRoutes; return routeFound; }
+    void PositionToCell(float x, float z, int& cx, int& cz) override { cx = static_cast<int>(x * 0.0625f); cz = static_cast<int>(z * 0.0625f); }
 };
 
 void TestEmergencyVehicle() {
@@ -1044,6 +1046,69 @@ void TestEmergencyVehicle() {
     CHECK(ev->DoRepathingTick(16.0f) && ev->RepathCount() == 3 && ev->GetMarkedForRemove());   // past the limit: removed
     road->Release();
     info->Release();
+
+    // reaching the call: close enough hands over to the event handler, too far reports blocked and repaths after a pause
+    {
+        ev->SetAutomataFlag(0x80, true);
+        ev->SetDispatchStateRaw(3);
+        emergencyHost.tuning.teleportCells = 4;                                  // 64 metres
+        const float here[3] = {100.0f, 0.0f, 100.0f};
+        ev->SetPosition(here);
+        ev->SetDispatchDestination(Vec(100.0f, 0.0f, 140.0f));                   // 40 away: close
+        CHECK(ev->CloseEnoughToDispatchDestination());
+        ev->SetDispatchDestination(Vec(100.0f, 0.0f, 200.0f));                   // 100 away: far
+        CHECK(!ev->CloseEnoughToDispatchDestination());
+        ev->SetDispatchDestination(Vec(100.0f, 0.0f, 140.0f));
+        ev->HandleReachedRouteDestination();
+        CHECK(ev->GetDispatchState() == 5 && ev->GetState() != nullptr && ev->GetState()->stateType == kEmergencyStateHandlingEvent);
+        CHECK(ev->CheckAutomataFlag(0x4000) && !ev->CheckAutomataFlag(4));
+        ev->SetDispatchStateRaw(3);
+        ev->SetAutomataFlag(0x80, true);                                            // entering a state resets the mode flags
+        ev->SetDispatchDestination(Vec(100.0f, 0.0f, 200.0f));
+        ev->HandleReachedRouteDestination();
+        CHECK(ev->GetDispatchState() == 1 && ev->GetState() != nullptr && ev->GetState()->stateType == 7);   // waiting to repath
+        ev->SetDispatchStateRaw(1);
+        const std::uint32_t before = ev->GetState() ? ev->GetState()->stateType : 0;
+        ev->HandleReachedRouteDestination();                                       // a blocked call waits
+        CHECK(ev->GetState() != nullptr && ev->GetState()->stateType == before);
+        // going home: not while already home, not while a player drives; the teleport state follows
+        ev->SetDispatchStateRaw(6);
+        ev->ReturnToSourceOccupant();
+        CHECK(ev->GetDispatchState() == 6);
+        ev->SetDispatchStateRaw(3);
+        ev->ReturnToSourceOccupant();
+        CHECK(ev->GetDispatchState() == 6 && ev->GetState() != nullptr && ev->GetState()->stateType == kEmergencyStateTeleport);
+        // the teleport tick: no source -> leave; source close -> leave; source far with a route -> drive home
+        ev->OpacityTween() = AutomatonTween{};                                      // opacity 0: faded out
+        CHECK(ev->DoTeleportTick(16.0f) && ev->GetMarkedForRemove());
+
+        auto makeHomeBound = [&](float sourceX) {
+            auto* car = new TestEmergencyCar(&world.host, &world.automatonHost, nullptr, &emergencyHost);
+            car->AddRef();
+            auto* source = new FakeBaseOccupant();
+            source->position[0] = sourceX;
+            car->SetDispatchSource(source);
+            source->refs--;                                                       // the car holds the only reference
+            const float spot[3] = {0.0f, 0.0f, 0.0f};
+            car->SetPosition(spot);
+            car->OpacityTween() = AutomatonTween{};
+            return car;
+        };
+        emergencyHost.tuning.teleportCells = 4;
+        emergencyHost.routeFound = true;
+        emergencyHost.returnRoutes = 0;
+        TestEmergencyCar* far = makeHomeBound(500.0f);                                // 500 away >= 64: ask for the way home
+        CHECK(far->DoTeleportTick(16.0f) && !far->GetMarkedForRemove() && emergencyHost.returnRoutes == 1);
+        CHECK(far->GetDispatchState() == 6 && far->RepathCount() == 0);
+        far->Release();
+        emergencyHost.routeFound = false;
+        TestEmergencyCar* noRoute = makeHomeBound(500.0f);                            // no route: leave the map
+        CHECK(noRoute->DoTeleportTick(16.0f) && noRoute->GetMarkedForRemove());
+        noRoute->Release();
+        TestEmergencyCar* near = makeHomeBound(10.0f);                                // already at the source: leave
+        CHECK(near->DoTeleportTick(16.0f) && near->GetMarkedForRemove());
+        near->Release();
+    }
 
     // the ambulance: type 7, radius 80, a version-1 wrapper around the emergency record
     {

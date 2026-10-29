@@ -10,11 +10,10 @@
 // Behaviour states: 100 en route, 0x65 repathing, 0x66 handling the event, 0x67 teleporting back; 0x34 is the pursuit state
 // the base class already knows. Automaton flag 0x80 marks "emergency mode" (speed modifier ignored).
 //
-// RECOVERED here: ValidateNetworkOccupant, DoRepathingTick, SendPathBlockedMessage, SetDispatchState, constructor, Shutdown, Write / Read, the accessors, ShouldCollide, DoStateTick, DoEnRouteTick,
+// RECOVERED here: Init, DoTeleportTick, CloseEnoughToDispatchDestination, HandleReachedRouteDestination, ReturnToSourceOccupant, ValidateNetworkOccupant, DoRepathingTick, SendPathBlockedMessage, SetDispatchState, constructor, Shutdown, Write / Read, the accessors, ShouldCollide, DoStateTick, DoEnRouteTick,
 // DoAnimationTick, DoHandlingEventTick, DoPlayerDriveTick, UpdateAttraction, HandlePlayerDriveCommand, HandleEnterState,
 // HandleExitState, HandleNetworkOccupantRemoved, ShowMotionBlur. NOT recovered yet (see notes/next_class_emergency_vehicle.md):
-// Init, DoTeleportTick,
-// HandleReachedRouteDestination, HandleDispatched, AppendRouteToNearbyRoad, ReturnToSourceOccupant, GetDebugExtraText,
+// HandleDispatched, AppendRouteToNearbyRoad, ReturnToSourceOccupant, GetDebugExtraText,
 // CloseEnoughToDispatchDestination, ShowEmergencyLights. They need the argument registers Ghidra lost; the disassembly decides.
 #pragma once
 #include <cstdint>
@@ -55,6 +54,9 @@ public:
     virtual ITrafficAutomatonOccupant* NetworkOccupantAt(float x, float z) = 0;                     // spCity position -> cell, network manager vslot 0x38
     // spCity vslot 0x158 (the route finder) vslot 0x90(vehicle, list, request{1, destination}, 0, 3): true when a route was found
     virtual bool FindRoute(cSC4EmergencyVehicle& vehicle, const cS3DVector3& destination) = 0;
+    // the same service asked for the way home (DoTeleportTick): request {1, the vehicle's own position}, list {0, source}, 2, 2
+    virtual bool FindReturnRoute(cSC4EmergencyVehicle& vehicle, const cS3DVector3& position, cIGZUnknown* source) = 0;
+    virtual void PositionToCell(float x, float z, int& cellX, int& cellZ) = 0;                       // spCity vslot 0x2f8
 };
 
 class cSC4EmergencyVehicle : public cSC4Vehicle {
@@ -86,7 +88,11 @@ public:
     virtual bool DoEnRouteTick(float milliseconds);                          // 0x650 @ 0x1002f58d4
     virtual bool DoRepathingTick(float milliseconds);                         // 0x658 @ 0x1002f5ae2
     virtual bool DoHandlingEventTick(float milliseconds) { (void)milliseconds; return true; }   // 0x660 @ 0x1002f5d00
-    virtual bool DoTeleportTick(float milliseconds);                          // 0x668 @ 0x1002f5d08 (NOT RECOVERED: declared, defers)
+    virtual bool DoTeleportTick(float milliseconds);                          // 0x668 @ 0x1002f5d08
+    bool CloseEnoughToDispatchDestination() const;                            // 0x4c8 @ 0x1002f7bf8
+    void HandleReachedRouteDestination();                                     // 0x2b0 @ 0x1002f615a
+    void ReturnToSourceOccupant() override;                                   // 0xe8  @ 0x1002f7670
+    bool Init() override;                                                     // 0x18  @ 0x1002f563c
     bool ValidateNetworkOccupant();                                           // @ 0x1002f5a26
     void SendPathBlockedMessage();                                            // @ 0x1002f5c36
     void SetDispatchState(std::uint32_t state) override;                      // 0xc8  @ 0x1002f796c

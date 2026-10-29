@@ -6,17 +6,17 @@
 <text x="16" y="102" font-size="16" font-weight="700" fill="#1d2320">Code exists</text>
 <text x="150" y="102" font-size="14" fill="#5b6560">partial or complete</text>
 <rect x="560" y="84" width="860" height="26" rx="3" fill="#e3e6e0"/>
-<rect x="560" y="84" width="660.2" height="26" rx="3" fill="#9cc3e4"/>
+<rect x="560" y="84" width="660.4" height="26" rx="3" fill="#9cc3e4"/>
 <text x="1432" y="103" font-size="18" font-weight="700" fill="#1d2320">76.8%</text>
 <text x="16" y="136" font-size="16" font-weight="700" fill="#1d2320">Recovered</text>
 <text x="150" y="136" font-size="14" fill="#5b6560">complete and covered by a test</text>
 <rect x="560" y="118" width="860" height="26" rx="3" fill="#e3e6e0"/>
-<rect x="560" y="118" width="517.7" height="26" rx="3" fill="#e8b04a"/>
+<rect x="560" y="118" width="517.9" height="26" rx="3" fill="#e8b04a"/>
 <text x="1432" y="137" font-size="18" font-weight="700" fill="#1d2320">60.2%</text>
 <text x="16" y="170" font-size="16" font-weight="700" fill="#1d2320">Verified</text>
 <text x="150" y="170" font-size="14" fill="#5b6560">against the machine code</text>
 <rect x="560" y="152" width="860" height="26" rx="3" fill="#e3e6e0"/>
-<rect x="560" y="152" width="70.7" height="26" rx="3" fill="#1f6b43"/>
+<rect x="560" y="152" width="70.9" height="26" rx="3" fill="#1f6b43"/>
 <text x="1432" y="171" font-size="18" font-weight="700" fill="#1d2320">8.2%</text>
 <line x1="775.0" y1="84" x2="775.0" y2="178" stroke="#f6f7f4" stroke-width="1.5"/>
 <line x1="990.0" y1="84" x2="990.0" y2="178" stroke="#f6f7f4" stroke-width="1.5"/>
@@ -3325,11 +3325,11 @@
 <rect x="1226.2" y="831.9" width="73.8" height="46.4" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="1226.2" y="878.3" width="50.5" height="32.6" fill="#d5d9d4"><title>cSC4Pedestrian: 8608 bytes, Not started</title></rect>
 <rect x="1226.2" y="878.3" width="50.5" height="32.6" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
-<rect x="1226.2" y="910.9" width="27.7" height="29.0" fill="#d5d9d4"><title>cSC4EmergencyVehicle: 4202 bytes, Not started</title></rect>
-<rect x="1253.9" y="910.9" width="22.8" height="14.2" fill="#e8b04a"><title>cSC4EmergencyVehicle: 1694 bytes, Recovered</title></rect>
-<rect x="1253.9" y="925.1" width="17.9" height="14.8" fill="#1f6b43"><title>cSC4EmergencyVehicle: 1382 bytes, Verified</title></rect>
-<rect x="1271.8" y="925.1" width="4.9" height="14.8" fill="#e8b04a"><title>cSC4EmergencyVehicle: 376 bytes, Recovered, unit test only (artifacts)</title></rect>
-<rect x="1271.8" y="925.1" width="4.9" height="14.8" fill="url(#hatch)"/>
+<rect x="1226.2" y="910.9" width="19.3" height="29.0" fill="#1f6b43"><title>cSC4EmergencyVehicle: 2930 bytes, Verified</title></rect>
+<rect x="1245.5" y="910.9" width="17.5" height="29.0" fill="#d5d9d4"><title>cSC4EmergencyVehicle: 2654 bytes, Not started</title></rect>
+<rect x="1263.0" y="910.9" width="13.7" height="23.7" fill="#e8b04a"><title>cSC4EmergencyVehicle: 1694 bytes, Recovered</title></rect>
+<rect x="1263.0" y="934.6" width="13.7" height="5.3" fill="#e8b04a"><title>cSC4EmergencyVehicle: 376 bytes, Recovered, unit test only (artifacts)</title></rect>
+<rect x="1263.0" y="934.6" width="13.7" height="5.3" fill="url(#hatch)"/>
 <rect x="1226.2" y="910.9" width="50.5" height="29.0" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="1276.7" y="878.3" width="17.1" height="15.1" fill="#e8b04a"><title>cSC4Aircraft: 1358 bytes, Recovered</title></rect>
 <rect x="1293.8" y="878.3" width="6.1" height="13.4" fill="#1f6b43"><title>cSC4Aircraft: 428 bytes, Verified</title></rect>
