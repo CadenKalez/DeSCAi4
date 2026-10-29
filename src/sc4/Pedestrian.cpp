@@ -1,6 +1,5 @@
 // cSC4Pedestrian — see Pedestrian.h for the class, the layout, the vtable slots and the quirks. Every function here is a
-// hand port of the exported decompile; the crowd/queue/strike/riot/ignite ticks that still depend on an unrecovered
-// neighbour are listed under PARTIAL in notes/ledger_pending/cPedestrian-vehicle.txt.
+// hand port checked against the disassembly (the decompile drops arguments and mixes up float lanes in several of them).
 #include "sc4/Pedestrian.h"
 
 #include <cmath>
@@ -19,7 +18,45 @@ cS3DVector3 MakeVector(float x, float y, float z) {
     return v;
 }
 cS3DVector3 Scale(const cS3DVector3& v, float s) { return MakeVector(v.x * s, v.y * s, v.z * s); }
-float Length(const cS3DVector3& v) { return std::sqrt(v.z * v.z + v.y * v.y + v.x * v.x); }
+// The compiled sums group the squares as (x*x + y*y) + z*z everywhere in this class.
+float Length(const cS3DVector3& v) { return std::sqrt((v.x * v.x + v.y * v.y) + v.z * v.z); }
+
+constexpr std::uint32_t kEdgeCrowdAnimationMinimum = 2;          // DoCrowdTick: fewer than two animation names never re-roll
+constexpr float kPedestrianCrowdPush = 0.0027777778f;           // 1/360, DoCrowdTick (0x100a18410)
+constexpr float kPedestrianCollisionInterval = 500.0f;          // TestCollisionExpensive (0x100a18418)
+constexpr float kPedestrianCollisionRadius = 1.0f;
+constexpr float kPedestrianCollisionOverlap = 0.01f;            // closer than this the pushed pedestrian gets a random direction (0x100a15928)
+constexpr float kPedestrianStrayDistance = 10.0f;               // DoRiotFollowerTick: farther from the leader than this pulls towards it
+constexpr float kPedestrianStrayPull = 0.015625f;               // 1/64 of the vector to the leader
+constexpr float kPedestrianRedirectDistance = 20.0f;            // ChooseNewDestination (0x100a18408)
+constexpr float kPedestrianOrientationEpsilon = 1e-05f;         // UpdateOrientation (0x100a18a70)
+constexpr std::uint32_t kPedestrianStateIdleReturn = 1;         // DoIgniteTick: back to the idle state
+constexpr std::uint32_t kPedestrianPathTypeWalk = 2;
+constexpr std::uint8_t kPedestrianAnyEdge = 0xff;
+
+// DoRiotLeaderTick direction tables (0x100a18440 x, 0x100a18450 z, 0x100a18460 the order the four turns are tried in).
+constexpr int kRiotDirX[4] = {1, 0, -1, 0};
+constexpr int kRiotDirZ[4] = {0, 1, 0, -1};
+constexpr int kRiotTryOrder[4] = {0, 1, 3, 2};
+
+// The riot leader and follower both steer by the orientation plus a sideways nudge: (-z, 0, x) of the orientation scaled by
+// random / |(x, z)|. A zero horizontal orientation skips the scaling (and keeps the unscaled sideways terms), as compiled.
+cS3DVector3 SidewaysNudge(const cS3DVector3& o, float random) {
+    float x = -o.z, y = 0.0f, z = o.x;
+    const float lengthSquared = o.x * o.x + (o.z * o.z + 0.0f);
+    if (lengthSquared > 0.0f) {
+        const float k = random / std::sqrt(lengthSquared);
+        x = -o.z * k;
+        y = 0.0f * k;
+        z = k * o.x;
+    }
+    return MakeVector(x + o.x, y + o.y, z + o.z);
+}
+
+cS3DVector3 Normalized(const cS3DVector3& v) {
+    const float inverse = 1.0f / Length(v);
+    return MakeVector(v.x * inverse, v.y * inverse, v.z * inverse);
+}
 
 }  // namespace
 
@@ -89,16 +126,16 @@ void cSC4Pedestrian::MoveTo(const float* position, const float* direction) {
     cSC4Automaton::MoveTo(position, flattened);
 }
 
-// 0x1000f34d8: a ground-plane heading from the position to the target (the y delta is 0), or (1,0,0) when the target is on
-// the position.
+// 0x1000f34d8: a ground-plane heading from the position to the target (the y delta is 0), or (0,0,1) when the target is on
+// the position (the compiled code stores the 1.0 in the z lane; the decompile shows it in x).
 void cSC4Pedestrian::UpdateOrientation(const cS3DVector3& target, float* out) const {
     const float dx = target.x - position_.x;
     const float dz = target.z - position_.z;
     const float length = std::sqrt(dz * dz + dx * dx);
-    if (length <= 1e-05f) {
-        out[0] = 1.0f;
+    if (length <= kPedestrianOrientationEpsilon) {
+        out[0] = 0.0f;
         out[1] = 0.0f;
-        out[2] = 0.0f;
+        out[2] = 1.0f;
     } else {
         const float inverse = 1.0f / length;
         out[0] = dx * inverse;
@@ -134,14 +171,16 @@ void cSC4Pedestrian::HandleNetworkOccupantRemoved() {
     cSC4TrafficAutomaton::HandleNetworkOccupantRemoved();
 }
 
-// 0x1000f117c: when the automaton does not carry flag 0x4000, record the crowd reaction state (1 or 2), move at the
-// default speed and jump to the given position. Answers whether the reaction happened.
+// 0x1000f117c: when the automaton does not carry flag 0x4000, record the crowd reaction state (1 or 2), go back to the
+// default speed over a second and turn towards the event position: MoveTo its own position with the ground-plane direction
+// to the event (the decompile drops this direction argument). Answers whether the reaction happened.
 bool cSC4Pedestrian::HandleCrowdReactionEvent(const cS3DVector3& position, std::uint32_t event) {
     const bool flagged = CheckAutomataFlag(kAutomataFlagIgnoreAttractors);
     if (!flagged) {
         crowdReactionState_ = (event == 0) ? 1u : 2u;
         SetSpeed(GetDefaultSpeed(), 1.0f);
-        MoveTo(&position.x, nullptr);
+        const float direction[3] = {position.x - position_.x, 0.0f, position.z - position_.z};
+        MoveTo(&position_.x, direction);
     }
     return !flagged;
 }
@@ -272,7 +311,12 @@ bool cSC4Pedestrian::HandleExitState(const tAutomataState* state) {
 }
 
 // ---- the tick helpers ---------------------------------------------------------------------------------------------------
-// 0x1000f2124: move along the attraction vector.
+std::uint32_t cSC4Pedestrian::RandomBelow(std::uint32_t range) { return Host() ? Host()->RandomBelow(range) : 0; }
+float cSC4Pedestrian::RandomRange(double low, double high) {
+    return Host() ? static_cast<float>(Host()->RandomDouble(low, high)) : 0.0f;
+}
+
+// 0x1000f2124: move along the (normalised) attraction vector, then update the attraction.
 bool cSC4Pedestrian::DoBeeLineTick(float milliseconds) {
     const float length = Length(attraction_);
     if (length > 0.0f) MoveForwardWithCollision(Scale(attraction_, 1.0f / length), milliseconds);
@@ -280,22 +324,24 @@ bool cSC4Pedestrian::DoBeeLineTick(float milliseconds) {
     return true;
 }
 
-// 0x1000f2de8: advance by direction * (speed * modifier * ms / |direction|), stay on the network and refuse the move when
-// the target collides (the crowd-reaction direction is tried as a fallback). Answers whether the automaton moved.
+// 0x1000f2de8: advance by direction * (speed * modifier * ms / |direction|), stay on the network (unless roads are ignored)
+// and refuse the move when the target collides; a pending crowd-reaction push is then tried as a fallback. Answers whether
+// the automaton moved.
 bool cSC4Pedestrian::MoveForwardWithCollision(const cS3DVector3& direction, float milliseconds) {
     const float magnitude = Length(direction);
+    const float speed = GetCurrentSpeed();
     cS3DVector3 delta = direction;
     if (magnitude > 0.0f) {
-        const float scale = (GetCurrentSpeed() * GetSpeedModifier() * milliseconds) / magnitude;
+        const float scale = (speed * GetSpeedModifier() * milliseconds) / magnitude;
         delta = Scale(direction, scale);
     }
-    cS3DVector3 next = MakeVector(position_.x + delta.x, position_.y + delta.y, position_.z + delta.z);
+    cS3DVector3 next = MakeVector(delta.x + position_.x, delta.y + position_.y, delta.z + position_.z);
     if (!CheckAutomataFlag(kAutomataFlagIgnoreRoads) && Host())
         Host()->PlaceOnNetwork(position_, next, kAutomataMoveNetworkMask);
     bool moved = !TestCollisionExpensive(next, milliseconds);
     if (!moved && crowdReactionDirectionSet_ && Length(crowdReactionDirection_) > 0.0f) {
-        next = MakeVector(next.x + crowdReactionDirection_.x, next.y + crowdReactionDirection_.y,
-                          next.z + crowdReactionDirection_.z);
+        next = MakeVector(crowdReactionDirection_.x + next.x, next.y + crowdReactionDirection_.y,
+                          crowdReactionDirection_.z + next.z);
         if (Host()) Host()->PlaceOnNetwork(position_, next, kAutomataMoveNetworkMask);
         moved = !TestCollisionExpensive(next, 0.0f);
     }
@@ -304,132 +350,337 @@ bool cSC4Pedestrian::MoveForwardWithCollision(const cS3DVector3& direction, floa
     return moved;
 }
 
-// 0x1000f2ffa PARTIAL: the occupant-box sweep that pushes nearby pedestrians is only half recovered; the port keeps the
-// timer, the 1.0-metre proximity test and the box query, but does not write the other pedestrian's reaction direction.
+// 0x1000f2ffa: every 500 ms look for another pedestrian within a metre of the target position (the occupant manager's
+// box query for type 0x496e5783, at most 10). The first one found is pushed away: its crowd-reaction direction is set to
+// the vector from the target to it, or to a random ground-plane direction in [-0.5, 0.5] when it is nearly on top of the
+// target. Answers whether anybody was close enough. The query results are released.
 bool cSC4Pedestrian::TestCollisionExpensive(const cS3DVector3& position, float milliseconds) {
-    collisionTimer_ += milliseconds;
-    if (collisionTimer_ < 500.0f) return false;
+    const float timer = milliseconds + collisionTimer_;
+    collisionTimer_ = timer;
+    if (timer < kPedestrianCollisionInterval) return false;
     collisionTimer_ = 0.0f;
-    if (!pedestrianHost_) return false;
-    const float minXyz[3] = {position.x - 1.0f, position.y, position.z - 1.0f};
-    const float maxXyz[3] = {position.x + 1.0f, position.y + 2.0f, position.z + 1.0f};
+    bool collided = false;
     std::vector<cISC4Occupant*> occupants;
-    pedestrianHost_->OccupantsInBox(minXyz, maxXyz, kPedestrianOccupantType, 10, occupants);
+    if (pedestrianHost_) {
+        const float minXyz[3] = {position.x + -1.0f, 0.0f + position.y, position.z + -1.0f};
+        const float maxXyz[3] = {position.x + 1.0f, position.y + 2.0f, position.z + 1.0f};
+        pedestrianHost_->OccupantsInBox(minXyz, maxXyz, kPedestrianOccupantType, 10, occupants);
+    }
+    cISC4Occupant* self = AsOccupant();
     for (cISC4Occupant* occupant : occupants) {
-        if (occupant == AsOccupant()) continue;
+        if (collided) break;
+        if (occupant == self) continue;
         float other[3] = {0.0f, 0.0f, 0.0f};
         occupant->GetPosition(other);
         const float dx = other[0] - position.x;
         const float dy = other[1] - position.y;
         const float dz = other[2] - position.z;
-        if (std::sqrt(dx * dx + dy * dy + dz * dz) < 1.0f) return true;
+        const float distance = std::sqrt(dz * dz + (dx * dx + dy * dy));
+        if (!(distance < kPedestrianCollisionRadius)) continue;
+        cS3DVector3 push = MakeVector(dx, dy, dz);
+        if (distance < kPedestrianCollisionOverlap) {
+            push.x = RandomRange(-0.5, 0.5);
+            push.z = RandomRange(-0.5, 0.5);
+            push.y = 0.0f;
+        }
+        // The occupant is another pedestrian: the original writes its crowd-reaction fields (+0x39c / +0x3a0) through the
+        // occupant sub-object without any type check.
+        auto* pushed = static_cast<cSC4Pedestrian*>(occupant);
+        pushed->crowdReactionDirectionSet_ = true;
+        pushed->crowdReactionDirection_ = push;
+        collided = true;
     }
-    return false;
+    for (cISC4Occupant* occupant : occupants) occupant->Release();
+    return collided;
 }
 
-// 0x1000f328e: true when the automaton's cell has a non-empty network tile.
+// 0x1000f328e: true when the tile under the automaton (position / 16, the safe lookup) carries a network occupant.
 bool cSC4Pedestrian::VerifyNetworkOccupant() {
     cSC4TrafficNetworkMap* map = TrafficHost() ? TrafficHost()->TrafficNetworkMap() : nullptr;
     if (!map) return false;
-    TrafficTileInfo* tile = map->GetTileInfoAtCell(static_cast<int>(position_.x * 0.0625f),
-                                                   static_cast<int>(position_.z * 0.0625f));
+    const int cellX = static_cast<int>(position_.x * 0.0625f);
+    const int cellZ = static_cast<int>(position_.z * 0.0625f);
+    TrafficTileInfo* tile = map->SafeGetTileInfoAtCell(cellX, cellZ);
     return tile != nullptr && tile->occupant != nullptr;
 }
 
-// 0x1000f190a: the base destination choice, then re-route toward the attraction when it is far enough and a better edge
-// exists.
+// 0x1000f190a: the base destination choice, then re-route towards the attraction when it is far enough and the walk is not
+// already on the edge that faces it. Answers the base result, or StartTrip's when a better path was found.
 bool cSC4Pedestrian::ChooseNewDestination() {
     if (!cSC4TrafficAutomaton::ChooseNewDestination()) return false;
-    if (attractionController_ && networkOccupant_) {
-        if (std::fabs(attractionDistance_) >= 20.0f) {
-            const float length = Length(attraction_);
-            if (length > 0.0f) attraction_ = Scale(attraction_, 1.0f / length);
-            std::uint8_t edge = 0;
-            GetEdgeFromVector(networkOccupant_, attraction_, edge, true);
-            if (edge != static_cast<std::uint8_t>(GetPathKey())) {
-                cISC4PathInfo* pathInfo = networkOccupant_->GetPathInfoObject();
-                if (pathInfo) {
-                    std::uint32_t key = 0;
-                    if (pathInfo->GetBestPath(2, 0xff, edge, position_, &key, nullptr)) StartTrip(networkOccupant_, key, true);
-                }
-            }
+    bool result = true;
+    if (attractionController_ && networkOccupant_ && !(std::fabs(attractionDistance_) < kPedestrianRedirectDistance)) {
+        // normalised in place (no zero check, as compiled)
+        const float inverse = 1.0f / std::sqrt((attraction_.z * attraction_.z + attraction_.y * attraction_.y) + attraction_.x * attraction_.x);
+        attraction_ = MakeVector(attraction_.x * inverse, attraction_.y * inverse, attraction_.z * inverse);
+        std::uint8_t edge = 0;
+        GetEdgeFromVector(networkOccupant_, attraction_, edge, true);
+        if (edge != static_cast<std::uint8_t>(GetPathKey())) {
+            cISC4PathInfo* pathInfo = networkOccupant_->GetPathInfoObject();
+            std::uint32_t key = 0;
+            if (pathInfo && pathInfo->GetBestPath(kPedestrianPathTypeWalk, kPedestrianAnyEdge, edge, position_, &key, nullptr))
+                result = StartTrip(networkOccupant_, key, true);
         }
     }
-    return true;
+    return result;
 }
 
-// ---- PARTIAL ticks (the crowd / queue / strike / riot / ignite movements) -----------------------------------------------
+// ---- the behaviour ticks -------------------------------------------------------------------------------------------------
+// 0x1000f21c2: walk to the state's controller (the attraction) in a crowd. A pending push from a collision is added to the
+// position first (its length scaled to ms/360); the move is refused when the target collides. When the first model has
+// reached its last frame and the behaviour lists at least two animations, play a random one.
 bool cSC4Pedestrian::DoCrowdTick(float milliseconds) {
-    // 0x1000f21c2 PARTIAL: the crowd attraction, the random lookahead choice and the neighbour push are unrecovered; the
-    // port moves toward the attraction like the bee-line tick.
     tAutomataState* state = GetState();
     if (!state || !state->controller) return false;
-    if (Length(attraction_) > 0.0f) MoveForwardWithCollision(Scale(attraction_, 1.0f / Length(attraction_)), milliseconds);
+    float target[3] = {0.0f, 0.0f, 0.0f};
+    cS3DVector3 next = position_;
+    state->controller->GetPosition(target);
+    const cS3DVector3 toTarget = MakeVector(target[0] - position_.x, target[1] - position_.y, target[2] - position_.z);
+    if (crowdReactionDirectionSet_) {
+        const float lengthSquared = (crowdReactionDirection_.x * crowdReactionDirection_.x +
+                                     crowdReactionDirection_.y * crowdReactionDirection_.y) +
+                                    crowdReactionDirection_.z * crowdReactionDirection_.z;
+        if (lengthSquared > 0.0f) {
+            const float scale = (kPedestrianCrowdPush * milliseconds) / std::sqrt(lengthSquared);
+            crowdReactionDirection_ = Scale(crowdReactionDirection_, scale);
+        }
+        next = MakeVector(crowdReactionDirection_.x + position_.x, crowdReactionDirection_.y + position_.y,
+                          crowdReactionDirection_.z + position_.z);
+        crowdReactionDirectionSet_ = false;
+    }
+    if (Host()) Host()->PlaceOnNetwork(position_, next, kAutomataMoveNetworkMask);
+    if (!TestCollisionExpensive(next, milliseconds)) {
+        const float inverse = 1.0f / std::sqrt((toTarget.x * toTarget.x + toTarget.y * toTarget.y) + toTarget.z * toTarget.z);
+        const float direction[3] = {toTarget.x * inverse, 0.0f, toTarget.z * inverse};
+        MoveTo(&next.x, direction);
+    }
+    const auto* behavior = reinterpret_cast<const tBehaviorTemplate*>(state->runtime30);
+    if (!Models().empty() && behavior && Models().front() != nullptr) {
+        IAutomatonModel* model = Models().front();
+        if (model->GetFrameCount() - 1 <= model->GetFrame() && behavior->anims.size() >= kEdgeCrowdAnimationMinimum)
+            PlayAnimByName(behavior->anims[RandomBelow(static_cast<std::uint32_t>(behavior->anims.size()))]);
+    }
     UpdateAttraction();
     return true;
 }
 
+// 0x1000f2470: queue behind the controller. The controller's state tick runs, the automaton drives straight; once stopped it
+// faces the controller's queue point and plays "idle". No controller pops the state.
 bool cSC4Pedestrian::DoQueueTick(float milliseconds) {
-    // 0x1000f2470 PARTIAL: the controller's queue tick (slot 0xf0) and the queue-head orientation are unrecovered; the port
-    // pops an empty queue and otherwise drives a straight line.
     tAutomataState* state = GetState();
     if (!state || !state->controller) {
         PopState();
-    } else {
-        DoStraightLineTick(milliseconds);
+        return true;
+    }
+    state->controller->HandleStateTick(ControllerLinkFor(), state->stateType, milliseconds);
+    DoStraightLineTick(milliseconds);
+    if (CheckAutomataFlag(kTrafficFlagStopped)) {
+        float target[3] = {0.0f, 0.0f, 0.0f};
+        state->controller->GetPosition(target);
+        const float dx = target[0] - position_.x;
+        const float dy = target[1] - position_.y;
+        const float dz = target[2] - position_.z;
+        const float inverse = 1.0f / std::sqrt(dz * dz + (dy * dy + dx * dx));
+        const float facing[3] = {dx * inverse, 0.0f, dz * inverse};
+        SetOrientation(facing);
+        PlayAnimByName(cRZString(kPedestrianIdleAnimation));
     }
     UpdateAttraction();
     return true;
 }
 
+// 0x1000f2602: the strike walks its path (snapping onto it first) and, at the end of the path, either picks a way along the
+// controller's lot or turns back. Answers false when the walk cannot go on (no path, no controller, no free edge).
 bool cSC4Pedestrian::DoStrikeTick(float milliseconds) {
-    // 0x1000f2602 PARTIAL: the picket movement along the lot boundary and the re-routing are unrecovered; the port keeps
-    // the snap-to-path gate and the attraction update.
-    (void)milliseconds;
-    if (CurrentPath() == nullptr) SnapToPath();
-    UpdateAttraction();
-    return true;
-}
-
-bool cSC4Pedestrian::DoRiotLeaderTick(float milliseconds, bool initialize) {
-    // 0x1000f1ca8 PARTIAL: the direction choice and the collision avoidance are unrecovered; the port keeps the network
-    // verification and moves toward the attraction.
-    (void)initialize;
-    if (!VerifyNetworkOccupant()) {
-        Remove(false);
-        return false;
+    if (path_ == nullptr && !SnapToPath()) return false;
+    DoPathTick(milliseconds);
+    if (!GetReachedDestination()) {
+        UpdateAttraction();
+        return true;
     }
-    cS3DVector3 direction = attraction_;
-    if (Length(direction) <= 0.0f) direction = orientation_;
-    MoveForwardWithCollision(Scale(direction, 1.0f / Length(direction)), milliseconds);
-    UpdateAttraction();
-    return true;
-}
+    tAutomataState* state = GetState();
+    if (!state || !state->controller) return false;
+    cISC4Occupant* controllerOccupant = state->controller->GetOccupant();
+    if (!controllerOccupant) return false;
 
-bool cSC4Pedestrian::DoRiotFollowerTick(float milliseconds) {
-    // 0x1000f293a PARTIAL: the leader lookup and the strafe noise are unrecovered; the port moves toward the attraction.
-    if (!VerifyNetworkOccupant()) {
-        Remove(false);
-        return false;
+    float controllerPosition[3] = {0.0f, 0.0f, 0.0f};
+    state->controller->GetPosition(controllerPosition);
+    int lotCellX = 0, lotCellZ = 0;
+    ITrafficAutomatonHost* trafficHost = TrafficHost();
+    if (trafficHost) trafficHost->PositionToCell(controllerPosition[0], controllerPosition[2], lotCellX, lotCellZ);
+    ITrafficNetworkMapLot* lot = pedestrianHost_ ? pedestrianHost_->LotAt(lotCellX, lotCellZ) : nullptr;
+    std::int32_t rect[4];
+    if (lot) {
+        lot->GetBoundingRect(rect);
+    } else {
+        SC4CellRect cells{};
+        controllerOccupant->GetBoundingCityCells(cells);
+        rect[0] = cells.x0; rect[1] = cells.z0; rect[2] = cells.x1; rect[3] = cells.z1;
     }
-    cS3DVector3 direction = attraction_;
-    if (Length(direction) <= 0.0f) direction = orientation_;
-    SpeedTween().SetDesired(kPedestrianRiotSpeed, 0.0f);
-    MoveForwardWithCollision(Scale(direction, 1.0f / Length(direction)), milliseconds);
-    UpdateAttraction();
-    return true;
-}
+    rect[0] += -1; rect[1] += -1; rect[2] += 1; rect[3] += 1;
 
-bool cSC4Pedestrian::DoIgniteTick(float milliseconds) {
-    // 0x1000f2cb2 PARTIAL: the original asks the state's controller (slot 0x40) for the ignition point; the port uses the
-    // pedestrian's own position and asks the disaster layer to ignite it (intensity 2).
-    (void)milliseconds;
-    for (tAutomataState* state : StateStack()) {
-        if (state && state->stateType == kPedestrianStateIgnite && state->controller) {
-            if (pedestrianHost_) pedestrianHost_->IgniteAt(position_, 2);
-            break;
+    bool failed = true;
+    cSC4TrafficNetworkMap* map = trafficHost ? trafficHost->TrafficNetworkMap() : nullptr;
+    if (GetTrafficAutomataManager() && networkOccupant_ && map && map->GetTileInfoByNetwork(networkOccupant_)) {
+        const std::uint32_t key = GetPathKey();
+        TrafficTileInfo* tile = map->GetTileInfoAtNeighborEdge(networkOccupant_, static_cast<std::uint8_t>(key), false, 0);
+        if (tile && tile->occupant) {
+            ITrafficNetworkMapOccupant* neighbour = tile->occupant;
+            const std::uint32_t nibble = (key >> 24) & 0xf;
+            float neighbourPosition[3] = {0.0f, 0.0f, 0.0f};
+            neighbour->AsOccupant()->GetPosition(neighbourPosition);
+            int cellX = 0, cellZ = 0;
+            trafficHost->PositionToCell(neighbourPosition[0], neighbourPosition[2], cellX, cellZ);
+            if (rect[3] < cellZ || rect[0] > cellX || rect[1] > cellZ || rect[2] < cellX) {
+                // the next tile leaves the lot's surroundings: swap the entry and exit edges and turn back
+                const std::uint32_t turned = ((key >> 8) & 0xff) | ((key << 8) & 0xffff) | (key & 0xff0000) | (nibble << 24);
+                StartTrip(networkOccupant_, turned, true);
+                RecalculatePathOffset();
+                failed = false;
+            } else {
+                // still inside: try the three other exits, in turn, from the neighbour tile
+                const std::uint8_t entry = static_cast<std::uint8_t>(key);
+                const std::uint8_t opposite = static_cast<std::uint8_t>((entry + 2) & 3);
+                const std::uint32_t keep = (nibble << 24) | (key & 0xff0000) | (static_cast<std::uint32_t>(opposite) << 8);
+                std::uint32_t attempt = key;
+                std::uint8_t edge = entry;
+                bool started = false;
+                for (;;) {
+                    if (edge != opposite) started = StartTrip(static_cast<ITrafficAutomatonOccupant*>(neighbour), attempt, true);
+                    edge = static_cast<std::uint8_t>((edge + 1) & 3);
+                    if (edge == entry) break;
+                    attempt = edge | keep;
+                    if (started) break;
+                }
+                failed = !started;
+            }
         }
     }
+    if (failed) return false;
+    UpdateAttraction();
+    return true;
+}
+
+// 0x1000f1ca8: the riot leader. Initialising picks a random heading and clears the remembered cell; afterwards, each time it
+// enters a new 16-metre cell it tries to keep its heading and then the other three turns (connection test on the road
+// network, entry any, exit = the new heading, walk paths); with none free it picks a random heading. It walks along the
+// orientation plus a sideways nudge and the heading's unit step. Losing the network removes it.
+bool cSC4Pedestrian::DoRiotLeaderTick(float milliseconds, bool initialize) {
+    auto* state = static_cast<tAutomataStateRiotLeader*>(GetState());
+    if (!VerifyNetworkOccupant()) {
+        Remove(false);
+        return false;
+    }
+    if (initialize) {
+        state->value40 = static_cast<std::uint8_t>(RandomBelow(4));
+        state->value38 = -1;
+        state->value3c = -1;
+        SpeedTween().SetDesired(kPedestrianCrowdSpeed, 0.0f);
+        return true;
+    }
+    const int cellX = static_cast<int>(position_.x * 0.0625f);
+    const int cellZ = static_cast<int>(position_.z * 0.0625f);
+    if (state->value38 != cellX || state->value3c != cellZ) {
+        cSC4TrafficNetworkMap* map = TrafficHost() ? TrafficHost()->TrafficNetworkMap() : nullptr;
+        bool found = false;
+        for (int attempt = 0; attempt < 4 && !found; ++attempt) {
+            const int heading = (state->value40 + kRiotTryOrder[attempt]) % 4;
+            if (map && map->ConnectionExists(kRiotDirX[heading] + cellX, kRiotDirZ[heading] + cellZ, kPedestrianAnyEdge,
+                                             static_cast<std::uint8_t>(heading), kPedestrianPathTypeWalk)) {
+                state->value40 = static_cast<std::uint8_t>(heading);
+                state->value38 = cellX;
+                state->value3c = cellZ;
+                found = true;
+            }
+        }
+        if (!found) state->value40 = static_cast<std::uint8_t>(RandomBelow(4));
+    }
+    cS3DVector3 steer = SidewaysNudge(orientation_, RandomRange(-1.0, 1.0));
+    float stepX = static_cast<float>(kRiotDirX[state->value40]);
+    float stepZ = static_cast<float>(kRiotDirZ[state->value40]);
+    float stepY = 0.0f;
+    const float stepLengthSquared = stepZ * stepZ + (stepX * stepX + 0.0f);
+    if (stepLengthSquared > 0.0f) {
+        const float inverse = 0.25f / std::sqrt(stepLengthSquared);
+        stepX *= inverse;
+        stepY = 0.0f * inverse;
+        stepZ *= inverse;
+    }
+    steer = MakeVector(steer.x + stepX, steer.y + stepY, steer.z + stepZ);
+    MoveForwardWithCollision(Normalized(steer), milliseconds);
+    UpdateAttraction();
+    return true;
+}
+
+// 0x1000f293a: the riot follower. It first looks up its leader (the newest riot-follower state whose controller has an
+// occupant exposing the automaton interface). It steers like the leader, from a random ground-plane vector in [-1, 1] when it
+// has a pending push, otherwise from the orientation plus a sideways nudge in [-0.6, 0.6]; when more than 10 m behind the
+// leader it adds 1/64 of the vector to it. Losing the network removes it.
+bool cSC4Pedestrian::DoRiotFollowerTick(float milliseconds) {
+    if (!leader_) {
+        std::vector<tAutomataState*>& states = StateStack();
+        for (int index = static_cast<int>(states.size()) - 1; index >= 0; --index) {
+            tAutomataState* state = states[index];
+            if (state->stateType != kPedestrianStateRiotFollower || !state->controller) continue;
+            cISC4Occupant* occupant = state->controller->GetOccupant();
+            if (!occupant) continue;
+            if (leader_) {
+                cSC4Automaton* previous = leader_;
+                leader_ = nullptr;
+                previous->Release();
+            }
+            void* found = nullptr;
+            occupant->QueryInterface(kAutomatonIid, &found);
+            leader_ = static_cast<cSC4Automaton*>(found);
+            break;
+        }
+        if (!leader_) {
+            UpdateAttraction();
+            return true;
+        }
+    }
+    if (!VerifyNetworkOccupant()) {
+        Remove(false);
+        return false;
+    }
+    cS3DVector3 steer;
+    if (crowdReactionDirectionSet_) {
+        const float x = RandomRange(-1.0, 1.0);
+        const float z = RandomRange(-1.0, 1.0);
+        steer = MakeVector(x, 0.0f, z);
+    } else {
+        steer = SidewaysNudge(orientation_, RandomRange(-0.6, 0.6));
+    }
+    float leaderPosition[3] = {0.0f, 0.0f, 0.0f};
+    leader_->GetPosition(leaderPosition);
+    float toLeaderX = leaderPosition[0] - position_.x;
+    float toLeaderZ = leaderPosition[2] - position_.z;
+    if (std::sqrt(toLeaderZ * toLeaderZ + (toLeaderX * toLeaderX + 0.0f)) > kPedestrianStrayDistance) {
+        toLeaderX *= kPedestrianStrayPull;
+        toLeaderZ *= kPedestrianStrayPull;
+        steer = MakeVector(steer.x + toLeaderX, steer.y + 0.0f, steer.z + toLeaderZ);
+    }
+    steer = Normalized(steer);
+    SpeedTween().SetDesired(kPedestrianCrowdPush, 0.0f);
+    MoveForwardWithCollision(steer, milliseconds);
+    UpdateAttraction();
+    return true;
+}
+
+// 0x1000f2cb2: the ignite state asks the disaster layer to set the controller's occupant on fire (cause 2), then the
+// pedestrian goes back to the idle state with a timer of -1. A state stack without such a controller only goes idle.
+bool cSC4Pedestrian::DoIgniteTick(float milliseconds) {
+    (void)milliseconds;
+    std::vector<tAutomataState*>& states = StateStack();
+    for (int index = static_cast<int>(states.size()) - 1; index >= 0; --index) {
+        tAutomataState* state = states[index];
+        if (state->stateType != kPedestrianStateIgnite || !state->controller) continue;
+        cISC4Occupant* occupant = state->controller->GetOccupant();
+        if (!occupant) continue;
+        if (pedestrianHost_) pedestrianHost_->IgniteOccupant(occupant);
+        break;
+    }
+    SetState(kPedestrianStateIdleReturn, nullptr, -1.0f, false, 0, 0, nullptr);
     return true;
 }
 
@@ -441,12 +692,13 @@ ITrafficAutomataManager* cSC4Pedestrian::GetTrafficAutomataManager() const { ret
 // the crowd-reaction state.
 bool cSC4Pedestrian::Write(cIGZOStream& stream) const {
     stream.SetUint16(5);
-    if (!cSC4TrafficAutomaton::Write(stream)) return false;
-    stream.SetUint8(crowdReactionDirectionSet_ ? 1u : 0u);
-    stream << crowdReactionDirection_;
-    stream.SetFloat32(animationSpeed_);
-    stream.SetUint32(crowdReactionState_);
-    return !stream.GetError();
+    if (cSC4TrafficAutomaton::Write(stream)) {
+        stream.SetUint8(crowdReactionDirectionSet_ ? 1u : 0u);
+        stream << crowdReactionDirection_;
+        stream.SetFloat32(animationSpeed_);
+        stream.SetUint32(crowdReactionState_);
+    }
+    return !stream.GetError();   // a failing base record without a stream error still answers true, as compiled
 }
 
 // 0x1000f36ce: version 5 only; the base record, then the same four fields.
@@ -454,13 +706,14 @@ bool cSC4Pedestrian::Read(cIGZIStream& stream) {
     std::uint16_t version = 0;
     stream.GetUint16(version);
     if (version != 5) return false;
-    if (!cSC4TrafficAutomaton::Read(stream)) return false;
-    std::uint8_t flag = 0;
-    stream.GetUint8(flag);
-    crowdReactionDirectionSet_ = flag != 0;
-    stream >> crowdReactionDirection_;
-    stream.GetFloat32(animationSpeed_);
-    stream.GetUint32(crowdReactionState_);
+    if (cSC4TrafficAutomaton::Read(stream)) {
+        std::uint8_t flag = 0;
+        stream.GetUint8(flag);
+        crowdReactionDirectionSet_ = flag != 0;
+        stream >> crowdReactionDirection_;
+        stream.GetFloat32(animationSpeed_);
+        stream.GetUint32(crowdReactionState_);
+    }
     return !stream.GetError();
 }
 

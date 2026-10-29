@@ -76,9 +76,11 @@ public:
     // AddRefs each entry; the caller releases them.
     virtual void OccupantsInBox(const float* minXyz, const float* maxXyz, std::uint32_t type, int count,
                                 std::vector<cISC4Occupant*>& out) = 0;
-    // SL::spCity slot 0x240 (the disaster layer) -> the fire disaster manager: ignite a fire at the position with the
-    // given intensity.
-    virtual void IgniteAt(const cS3DVector3& position, int intensity) = 0;
+    // SL::spCity slot 0x240 (the disaster layer) -> GetDisasterManager(0x621cda33) -> cISC4DisasterManagerFire (iid 0x49b43f57):
+    // IgniteOccupant(occupant) (interface slot 0x20), then SetCause(2) (slot 0x48).
+    virtual void IgniteOccupant(cISC4Occupant* occupant) = 0;
+    // SL::spLotManager slot 0x28: the lot at a city cell (flag 0), or null; DoStrikeTick reads its bounding rect.
+    virtual ITrafficNetworkMapLot* LotAt(int cellX, int cellZ) = 0;
     // The pedestrian tuning table (0x100b218xx / 0x100b21axx); null uses the zero-filled defaults.
     virtual const PedestrianTuning* PedestrianTuningTable() = 0;
 };
@@ -111,17 +113,17 @@ public:
     // ---- pedestrian slots ----
     virtual bool HandleStopped();                                        // 0x5b8 @ 0x1000f35a8
 
-    // ---- state tick helpers (the crowd / queue / strike / riot ticks are PARTIAL) ----
+    // ---- state tick helpers ----
     bool HandleCrowdReactionEvent(const cS3DVector3& position, std::uint32_t event);   // @ 0x1000f117c
     bool DoBeeLineTick(float milliseconds);                              // @ 0x1000f2124
-    bool DoCrowdTick(float milliseconds);                                // @ 0x1000f21c2 (PARTIAL)
-    bool DoQueueTick(float milliseconds);                                // @ 0x1000f2470 (PARTIAL)
-    bool DoStrikeTick(float milliseconds);                               // @ 0x1000f2602 (PARTIAL)
-    bool DoRiotLeaderTick(float milliseconds, bool initialize);          // @ 0x1000f1ca8 (PARTIAL)
-    bool DoRiotFollowerTick(float milliseconds);                         // @ 0x1000f293a (PARTIAL)
-    bool DoIgniteTick(float milliseconds);                               // @ 0x1000f2cb2 (PARTIAL)
+    bool DoCrowdTick(float milliseconds);                                // @ 0x1000f21c2
+    bool DoQueueTick(float milliseconds);                                // @ 0x1000f2470
+    bool DoStrikeTick(float milliseconds);                               // @ 0x1000f2602
+    bool DoRiotLeaderTick(float milliseconds, bool initialize);          // @ 0x1000f1ca8
+    bool DoRiotFollowerTick(float milliseconds);                         // @ 0x1000f293a
+    bool DoIgniteTick(float milliseconds);                               // @ 0x1000f2cb2
     bool MoveForwardWithCollision(const cS3DVector3& direction, float milliseconds);   // @ 0x1000f2de8
-    bool TestCollisionExpensive(const cS3DVector3& position, float milliseconds);      // @ 0x1000f2ffa (PARTIAL)
+    bool TestCollisionExpensive(const cS3DVector3& position, float milliseconds);      // @ 0x1000f2ffa
     bool VerifyNetworkOccupant();                                        // @ 0x1000f328e
     void UpdateAnimation(float milliseconds) override;                   // @ 0x1000f338c
 
@@ -140,6 +142,9 @@ public:
     void SetAnimationSpeed(float value) { animationSpeed_ = value; }
 
 protected:
+    std::uint32_t RandomBelow(std::uint32_t range);       // cSC4Automaton::sRandom.RandomUint32Uniform(range)
+    float RandomRange(double low, double high);           // sRandom.RandomDoubleRangeUniform(low, high) as a float
+
     IPedestrianHost* pedestrianHost_ = nullptr;    // port seam (not in the original)
     std::uint32_t crowdReactionState_ = 0;         // +0x398 (1 or 2)
     bool crowdReactionDirectionSet_ = false;       // +0x39c

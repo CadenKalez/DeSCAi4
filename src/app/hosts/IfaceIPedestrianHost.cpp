@@ -8,7 +8,8 @@ namespace sc4 {
 namespace {
 struct StubIPedestrianHost final : IPedestrianHost {
     void OccupantsInBox(const float* minXyz, const float* maxXyz, std::uint32_t type, int count, std::vector<cISC4Occupant*>& out) override {}
-    void IgniteAt(const cS3DVector3& position, int intensity) override {}
+    void IgniteOccupant(cISC4Occupant* occupant) override {}
+    ITrafficNetworkMapLot* LotAt(int cellX, int cellZ) override { return {}; }
     const PedestrianTuning* PedestrianTuningTable() override { return {}; }
     cSC4TrafficNetworkMap* TrafficNetworkMap() override { return {}; }
     float CitySizeX() override { return {}; }

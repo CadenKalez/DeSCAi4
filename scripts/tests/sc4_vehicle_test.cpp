@@ -19,6 +19,7 @@
 #include "sc4/TrafficNetworkMap.h"
 #include "sc4/Ambulance.h"
 #include "sc4/EmergencyVehicle.h"
+#include "sc4/Pedestrian.h"
 #include "sc4/SpecialVehicles.h"
 #include "sc4/Vehicle.h"
 
@@ -1180,6 +1181,187 @@ void TestEmergencyVehicle() {
     ev->Release();
 }
 
+// ---- cSC4Pedestrian ----------------------------------------------------------------------------------------------------
+struct FakePedestrianHost final : IPedestrianHost {
+    FakeTrafficHost traffic;
+    PedestrianTuning tuning;
+    std::vector<cISC4Occupant*> boxOccupants;   // each is handed out with one extra reference, as the occupant manager does
+    int boxQueries = 0;
+    cISC4Occupant* ignited = nullptr;
+    cSC4TrafficNetworkMap* TrafficNetworkMap() override { return traffic.TrafficNetworkMap(); }
+    float CitySizeX() override { return traffic.CitySizeX(); }
+    float CitySizeZ() override { return traffic.CitySizeZ(); }
+    void PositionToCell(float x, float z, int& cellX, int& cellZ) override { traffic.PositionToCell(x, z, cellX, cellZ); }
+    int CityCellsX() override { return traffic.CityCellsX(); }
+    int CityCellsZ() override { return traffic.CityCellsZ(); }
+    ITrafficAutomataManager* TrafficAutomataManager() override { return traffic.TrafficAutomataManager(); }
+    cISC4PathFinder* PathFinder() override { return nullptr; }
+    void NeighborConnectionCells(std::vector<std::int32_t>&) override {}
+    void StartAudioEvent(std::uint32_t) override {}
+    void StopAudioEvent(std::uint32_t) override {}
+    ITrafficParticleSystem* CreateParticleSystem() override { return nullptr; }
+    ITrafficAutomatonOccupant* ReadNetworkOccupant(cIGZIStream&) override { return nullptr; }
+    const TrafficAutomatonTuning* Tuning() override { return traffic.Tuning(); }
+    void OccupantsInBox(const float*, const float*, std::uint32_t type, int, std::vector<cISC4Occupant*>& out) override {
+        ++boxQueries;
+        CHECK(type == kPedestrianOccupantType);
+        for (cISC4Occupant* occupant : boxOccupants) { occupant->AddRef(); out.push_back(occupant); }
+    }
+    void IgniteOccupant(cISC4Occupant* occupant) override { ignited = occupant; }
+    ITrafficNetworkMapLot* LotAt(int, int) override { return nullptr; }
+    const PedestrianTuning* PedestrianTuningTable() override { return &tuning; }
+};
+
+struct PedestrianController final : cSC4AutomataController {
+    int ticks = 0;
+    cISC4Occupant* occupant = nullptr;
+    float position[3] = {20.0f, 0.0f, 0.0f};
+    bool CheckFlag(std::uint32_t) const override { return false; }
+    void GetPosition(float* xyz) const override { for (int i = 0; i < 3; ++i) xyz[i] = position[i]; }
+    cISC4Occupant* GetOccupant() const override { return occupant; }
+    bool HandleStateTick(IControllerAutomaton*, std::uint32_t, float) override { ++ticks; return false; }
+    bool HandleEnterState(IControllerAutomaton*, std::uint32_t) override { return false; }
+    bool HandleExitState(IControllerAutomaton*, std::uint32_t) override { return false; }
+};
+
+cSC4Pedestrian* MakePedestrian(World& world, FakePedestrianHost& host) {
+    host.traffic.map = world.map;
+    host.traffic.manager = &world.manager;
+    SetAutomatonHost(&world.automatonHost);   // the pedestrian reaches the automaton host through the global, like the original
+    auto* pedestrian = new cSC4Pedestrian(&host);
+    pedestrian->AddRef();
+    return pedestrian;
+}
+
+void TestPedestrian() {
+    World world;
+    FakePedestrianHost host;
+    cSC4Pedestrian* pedestrian = MakePedestrian(world, host);
+    CHECK(pedestrian->GetType() == kPedestrianOccupantType);
+    CHECK(pedestrian->GetGZCLSID() == kGZCLSID_cSC4Pedestrian);
+    CHECK_NEAR(pedestrian->GetRadius(), 0.5f);
+    CHECK_NEAR(pedestrian->AnimationSpeed(), 0.01f);
+    void* out = nullptr;
+    CHECK(pedestrian->QueryInterface(kGZIID_cISC4Pedestrian, &out) && out == pedestrian);
+    CHECK(pedestrian->QueryInterface(kGZIID_cISC4TrafficAutomaton, &out) && out == pedestrian);
+
+    // UpdateOrientation: a unit ground-plane heading to the target; on the position the heading is (0, 0, 1) (z lane).
+    const float at[3] = {10.0f, 0.0f, 20.0f};
+    pedestrian->SetPosition(at);
+    float heading[3] = {9, 9, 9};
+    pedestrian->UpdateOrientation(Vec(13.0f, 50.0f, 24.0f), heading);
+    CHECK_NEAR(heading[0], 0.6f);
+    CHECK_NEAR(heading[1], 0.0f);
+    CHECK_NEAR(heading[2], 0.8f);
+    pedestrian->UpdateOrientation(Vec(10.0f, 3.0f, 20.0f), heading);
+    CHECK_NEAR(heading[0], 0.0f);
+    CHECK_NEAR(heading[1], 0.0f);
+    CHECK_NEAR(heading[2], 1.0f);
+
+    // HandleCrowdReactionEvent: event 0 -> state 1, anything else -> 2; the automaton turns towards the event on the ground
+    // plane (the decompile loses the direction argument); flag 0x4000 refuses the reaction.
+    CHECK(pedestrian->HandleCrowdReactionEvent(Vec(10.0f, 0.0f, 30.0f), 0));
+    CHECK(pedestrian->CrowdReactionState() == 1);
+    float orientation[3] = {0, 0, 0};
+    pedestrian->GetOrientation(orientation);
+    CHECK_NEAR(orientation[0], 0.0f);
+    CHECK_NEAR(orientation[2], 1.0f);
+    CHECK(pedestrian->HandleCrowdReactionEvent(Vec(10.0f, 0.0f, 30.0f), 7));
+    CHECK(pedestrian->CrowdReactionState() == 2);
+    pedestrian->SetAutomataFlag(kAutomataFlagIgnoreAttractors, true);
+    pedestrian->SetCrowdReactionState(0);
+    CHECK(!pedestrian->HandleCrowdReactionEvent(Vec(0.0f, 0.0f, 0.0f), 0));
+    CHECK(pedestrian->CrowdReactionState() == 0);
+    pedestrian->SetAutomataFlag(kAutomataFlagIgnoreAttractors, false);
+
+    // TestCollisionExpensive: nothing happens until 500 ms have accumulated, then the box query runs once and resets the timer.
+    cSC4Pedestrian* other = MakePedestrian(world, host);
+    const float otherAt[3] = {10.0f, 0.0f, 20.5f};
+    other->SetPosition(otherAt);
+    host.boxOccupants = {other->AsOccupant()};
+    CHECK(!pedestrian->TestCollisionExpensive(Vec(10.0f, 0.0f, 20.0f), 250.0f));
+    CHECK(host.boxQueries == 0);
+    CHECK_NEAR(pedestrian->CollisionTimer(), 250.0f);
+    CHECK(pedestrian->TestCollisionExpensive(Vec(10.0f, 0.0f, 20.0f), 250.0f));
+    CHECK(host.boxQueries == 1);
+    CHECK_NEAR(pedestrian->CollisionTimer(), 0.0f);
+    // The other pedestrian is pushed along the vector from the target to it; the extra reference taken by the query is released.
+    CHECK(other->CrowdReactionDirectionSet());
+    CHECK_NEAR(other->CrowdReactionDirection().x, 0.0f);
+    CHECK_NEAR(other->CrowdReactionDirection().z, 0.5f);
+    // Nearly on top of the target: a random ground-plane direction (the fake random returns the lower bound -0.5).
+    other->SetCrowdReactionDirectionSet(false);
+    const float onTop[3] = {10.0f, 0.0f, 20.001f};
+    other->SetPosition(onTop);
+    CHECK(pedestrian->TestCollisionExpensive(Vec(10.0f, 0.0f, 20.0f), 600.0f));
+    CHECK(other->CrowdReactionDirectionSet());
+    CHECK_NEAR(other->CrowdReactionDirection().x, -0.5f);
+    CHECK_NEAR(other->CrowdReactionDirection().y, 0.0f);
+    CHECK_NEAR(other->CrowdReactionDirection().z, -0.5f);
+    // Itself is skipped, and a pedestrian a metre or more away does not count.
+    host.boxOccupants = {pedestrian->AsOccupant()};
+    CHECK(!pedestrian->TestCollisionExpensive(Vec(10.0f, 0.0f, 20.0f), 600.0f));
+    const float far[3] = {10.0f, 0.0f, 25.0f};
+    other->SetPosition(far);
+    host.boxOccupants = {other->AsOccupant()};
+    CHECK(!pedestrian->TestCollisionExpensive(Vec(10.0f, 0.0f, 20.0f), 600.0f));
+    host.boxOccupants.clear();
+
+    // VerifyNetworkOccupant: no network tile under the pedestrian.
+    CHECK(!pedestrian->VerifyNetworkOccupant());
+
+    // MoveForwardWithCollision: a free move walks speed * ms along the direction and clears the pending push.
+    pedestrian->SetPosition(at);
+    pedestrian->SetSpeed(0.01f, 0.0f);
+    pedestrian->SetCrowdReactionDirectionSet(true);
+    CHECK(pedestrian->MoveForwardWithCollision(Vec(1.0f, 0.0f, 0.0f), 100.0f));
+    CHECK(!pedestrian->CrowdReactionDirectionSet());
+    float moved[3] = {0, 0, 0};
+    pedestrian->GetPosition(moved);
+    CHECK(moved[0] > at[0]);
+    CHECK_NEAR(moved[2], at[2]);
+
+    // The queue state with no controller pops itself; DoStateTick has nothing to run on an empty stack.
+    CHECK(!pedestrian->DoStateTick(16.0f));
+    CHECK(pedestrian->PushState(kStateIdleTick, nullptr, 0.0f, false, 0, 0, nullptr));
+    CHECK(pedestrian->DoQueueTick(16.0f));
+    CHECK(pedestrian->StateStack().empty());
+
+    // DoIgniteTick: the controller's occupant is handed to the disaster layer, then the pedestrian goes idle (state 1).
+    auto* controller = new PedestrianController();
+    controller->AddRef();
+    controller->occupant = other->AsOccupant();
+    CHECK(pedestrian->PushState(kPedestrianStateIgnite, controller, 0.0f, false, 0, 0, nullptr));
+    CHECK(pedestrian->DoIgniteTick(16.0f));
+    CHECK(host.ignited == other->AsOccupant());
+    CHECK(pedestrian->GetState() != nullptr && pedestrian->GetState()->stateType == kStateIdle);
+    controller->Release();
+
+    // Persistence: version 5, the base record, then the push flag and direction, the animation speed and the reaction state.
+    pedestrian->SetCrowdReactionDirectionSet(true);
+    pedestrian->SetCrowdReactionDirection(Vec(1.0f, 2.0f, 3.0f));
+    pedestrian->SetAnimationSpeed(0.25f);
+    pedestrian->SetCrowdReactionState(2);
+    PortMemoryOStream stream;
+    CHECK(pedestrian->Write(stream));
+    PortMemoryIStream in(stream.bytes().data(), stream.bytes().size());
+    cSC4Pedestrian* copy = MakePedestrian(world, host);
+    CHECK(copy->Read(in));
+    CHECK(copy->CrowdReactionDirectionSet());
+    CHECK_NEAR(copy->CrowdReactionDirection().y, 2.0f);
+    CHECK_NEAR(copy->CrowdReactionDirection().z, 3.0f);
+    CHECK_NEAR(copy->AnimationSpeed(), 0.25f);
+    CHECK(copy->CrowdReactionState() == 2);
+    const std::uint8_t bad[2] = {4, 0};
+    PortMemoryIStream badStream(bad, sizeof(bad));
+    CHECK(!copy->Read(badStream));
+    copy->Release();
+
+    other->Release();
+    pedestrian->Release();
+    SetAutomatonHost(nullptr);
+}
+
 int main() {
     TestConstructionAndQueries();
     TestGeometry();
@@ -1193,6 +1375,7 @@ int main() {
     TestLotIntersection();
     TestPlayerDriveTickAndOffRoad();
     TestEmergencyVehicle();
+    TestPedestrian();
     if (failures == 0) {
         std::printf("sc4_vehicle: ok\n");
         return 0;
