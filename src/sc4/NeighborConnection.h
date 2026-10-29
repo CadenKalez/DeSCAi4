@@ -45,6 +45,7 @@ public:
 class cSC4NeighborConnection : public cISC4NeighborConnection, public cIGZSerializable, public cSCPropertyHolder {
 public:
     cSC4NeighborConnection() = default;
+    void* AsTrafficSource() { return this; }    // @ 0x100075ebc (the cISC4TrafficSource view at +0x38 in the original; see cSC4Lot::AsTrafficSource)
     ~cSC4NeighborConnection() override = default;
 
     bool QueryInterface(std::uint32_t iid, void** out) override;

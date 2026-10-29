@@ -96,6 +96,30 @@ int main() {
     for (int i = 0; i < 16; ++i) allWhite = allWhite && rgba[i * 4] == 255 && rgba[i * 4 + 1] == 255 && rgba[i * 4 + 3] == 255;
     CHECK(allWhite);
 
+    {   // current frame and its palette attachment
+        std::vector<std::uint8_t> v(72, 0);
+        std::memcpy(v.data(), "SHPI", 4);
+        Put<std::uint32_t>(v, 4, 72);
+        Put<std::uint32_t>(v, 8, 1);
+        std::memcpy(&v[16], "pal0", 4);
+        Put<std::uint32_t>(v, 20, 24);                        // frame offset
+        Put<std::uint32_t>(v, 24, 0x7b | (32u << 8));         // 8-bit frame, attachment 32 bytes on
+        Put<std::int16_t>(v, 28, 4);
+        Put<std::int16_t>(v, 30, 4);
+        Put<std::uint32_t>(v, 56, 0x29);                      // a palette-type attachment, end of chain
+        FshFile pf;
+        CHECK(pf.Open(v.data(), v.size()) && pf.GetNumFrames() == 1);
+        FshFrameInfo info;
+        CHECK(!pf.GetCurrentFrameInfo(info));                 // no frame selected yet
+        CHECK(!pf.SetCurrentFrameByIndex(1) && pf.SetCurrentFrameByIndex(0) && pf.SetCurrentFrameByIndex(0));
+        CHECK(pf.GetCurrentFrameInfo(info) && info.code == 0x7b && info.width == 4 && info.attachment != nullptr);
+        CHECK(info.attachment[0] == 0x29);
+        Put<std::uint32_t>(v, 56, 0x30);                      // not a palette type: nothing is found
+        FshFile other;
+        CHECK(other.Open(v.data(), v.size()) && other.SetCurrentFrameByIndex(0));
+        CHECK(other.GetCurrentFrameInfo(info) && info.attachment == nullptr);
+    }
+
     std::printf(g_fail ? "FAILED %d\n" : "s3d_fsh OK\n", g_fail);
     return g_fail ? 1 : 0;
 }

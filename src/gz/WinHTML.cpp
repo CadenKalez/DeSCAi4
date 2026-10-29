@@ -4,6 +4,9 @@
 #include "gz/WinCtrlFactory.h"
 #include "rz/cRZFile.h"
 
+// @ 0x1005690a4: the 500 ms redraw timer's callback (vslot 0x2e0, InvalidateSelfAndParents)
+static void PeriodicWindowRedrawCallback(void* window) { static_cast<cGZWinHTML*>(window)->InvalidateSelfAndParents(); }
+
 namespace {
 
 // The Lock flag the outline uses (0x8008; not one of the html::kSurface* values).
@@ -284,7 +287,7 @@ bool cGZWinHTML::InternalSetDocument(const std::string& text, const cRZString& b
     if (!document->IsBlinkingPresent()) {
         if (timer_.IsRunning()) timer_.Stop();
     } else if (!timer_.IsRunning()) {
-        timer_.SetCallbackFunction([](void* user) { static_cast<cGZWinHTML*>(user)->InvalidateSelfAndParents(); }, this);
+        timer_.SetCallbackFunction(PeriodicWindowRedrawCallback, this);
         timer_.StartPeriodic(500, nullptr);
     }
     SetBaseURL(baseUrl);

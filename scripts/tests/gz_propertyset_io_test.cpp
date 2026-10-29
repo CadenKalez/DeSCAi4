@@ -159,5 +159,7 @@ int main() {
         PortMemoryOStream o3;
         assert(!r3.Write(o3, 0, nullptr));                      // unknown type: refused
     }
+    assert(PropertySetIO::LegacyReaderIgnoredCallback() && !PropertySetIO::SerializerIgnoredCallback());
+    assert(std::string(PropertySetIO::GetPropertySetTypeString()) == "cGZPropertySetUint32");
     std::puts("propertyset io ok");
 }

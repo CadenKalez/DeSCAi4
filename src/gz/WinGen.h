@@ -160,6 +160,7 @@ public:
     bool GetWinGenFlag(int flag) const override { return (genFlags_ & static_cast<std::uint32_t>(flag)) != 0; }   // @ 0x10024f700
     bool SetWinGenFlag(int flag, bool on) override;                // @ 0x10024f71c
     bool SetWinProc(cIGZWinProc* proc) override;                   // @ 0x10024fb76
+    bool SetUserTarget(cIGZWinProc* proc) { return SetWinProc(proc); }   // @ 0x10024fd14 (tail call to vslot 0x500)
     cIGZWinProc* GetWinProc() const override { return proc_; }     // @ 0x10024fcc4
     bool GetWinProcAs(std::uint32_t iid, void** out) const override { return proc_ && proc_->QueryInterface(iid, out); }   // @ 0x10024fcdc
     bool GetUserArea(cRZRect& out) const override { out = userArea_; return true; }   // @ 0x10024fada

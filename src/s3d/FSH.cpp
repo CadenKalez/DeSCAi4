@@ -49,6 +49,43 @@ bool FshFile::GetFrame(std::uint32_t index, FshFrameInfo& info) const {
     return true;
 }
 
+bool FshFile::SetCurrentFrameByIndex(std::uint32_t index) {
+    if (current_ == index) return true;
+    if (index >= entryCount_) return false;
+    current_ = index;
+    attachment_ = 0;
+    std::uint32_t offset;
+    std::memcpy(&offset, &data_[16 + std::size_t(index) * 8 + 4], 4);
+    auto read32 = [&](std::size_t at, std::uint32_t& out) {
+        if (at + 4 > data_.size()) return false;
+        std::memcpy(&out, &data_[at], 4);
+        return true;
+    };
+    std::uint32_t header;
+    if (!read32(offset, header)) return true;
+    std::uint32_t next = header;
+    if ((next & 0xfe) == 0x7a && (next >>= 8) != 0) {
+        std::size_t at = offset;
+        do {
+            std::uint32_t word;
+            if (!read32(at + next, word)) return true;
+            at += next;
+            if (static_cast<std::uint8_t>(word) < 0x2e && ((0x261000000000ull >> (word & 0xff)) & 1)) {
+                attachment_ = at;
+                return true;
+            }
+            next = word >> 8;
+        } while (next != 0);
+    }
+    return true;
+}
+
+bool FshFile::GetCurrentFrameInfo(FshFrameInfo& info) const {
+    if (current_ >= entryCount_ || !GetFrame(current_, info)) return false;
+    info.attachment = attachment_ ? &data_[attachment_] : nullptr;
+    return true;
+}
+
 namespace {
 inline void Rgb565(std::uint16_t v, std::uint8_t out[3]) {
     out[0] = static_cast<std::uint8_t>(((v >> 11) & 31) * 255 / 31);

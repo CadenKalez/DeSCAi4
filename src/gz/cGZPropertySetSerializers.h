@@ -40,4 +40,13 @@ inline bool WriteAuto(cIGZOStream& out, cIGZPropertySet& set, bool binary) {
     return binary ? WriteBinary(out, set) : WriteXml(out, set);
 }
 
+// SAX callbacks that carry no state in this function-based port. The legacy reader's six ignored handlers
+// (StartCdataSection 0x100472e66, EndCdataSection 0x100472e6e, StartNamespaceDecl 0x100472e76, EndNamespaceDecl 0x100472e7e,
+// InternalEntityReference 0x100472e86, NotationDecl 0x100472e8e) all return true; the serializer's six
+// (0x10047724a, 0x100477252, 0x10047725a, 0x100477262, 0x10047726a, 0x100477272) all return false.
+inline bool LegacyReaderIgnoredCallback() { return true; }
+inline bool SerializerIgnoredCallback() { return false; }
+// cGZPropertySetSerializerXmlT::GetPropertySetTypeString @ 0x100477438: the root element name.
+inline const char* GetPropertySetTypeString() { return kXmlRootName; }
+
 }  // namespace PropertySetIO

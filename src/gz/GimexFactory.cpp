@@ -1,5 +1,6 @@
 #include "gz/GimexFactory.h"
 
+#include <algorithm>
 #include <cstring>
 
 #include "gz/GZCOMDirector.h"
@@ -392,3 +393,73 @@ bool cGZGimexFactory::SerialWrite(cIGZPersistResource& resource, cIGZPersistDBSe
     buffer->Release();
     return result;
 }
+
+bool cGZGimexFactory::TranslateGimex24ToGZBufferARGB4444Dither(const cGZGimexInfo* info, const void* pixels, cIGZBuffer* buffer) {
+    auto* bits = static_cast<std::uint8_t*>(buffer->GetColorSurfaceBits());
+    const std::uint32_t stride = buffer->GetColorSurfaceStride();
+    return DitherToARGB4444(info, pixels, bits, stride);
+}
+
+// The error buffers hold four 4-bit channel errors packed one per nibble pair; the "current" row starts at 0x48484848
+// and the two rows swap places after every scan line. The scan starts at column 0, runs to the end, then comes back.
+bool cGZGimexFactory::DitherToARGB4444(const cGZGimexInfo* info, const void* pixels, std::uint8_t* destination,
+                                       std::uint32_t destinationStride) {
+    std::uint32_t end = static_cast<std::uint32_t>(info->width);
+    const int height = info->height;
+    const int bitsPerPixel = info->bitsPerPixel;
+    const std::uint32_t width = end;
+    ditherScratch_.resize(static_cast<std::size_t>(width) * 2 + 4);
+    std::uint32_t* current = ditherScratch_.data() + 1;
+    std::uint32_t* next = ditherScratch_.data() + 1 + (width + 2);
+    std::fill(current, current + width, 0x48484848u);
+    std::fill(next, next + width, 0u);
+    if (0 < height) {
+        const long rowBytes = static_cast<long>(static_cast<int>(((bitsPerPixel + (static_cast<std::uint32_t>(bitsPerPixel >> 31) >> 29)) >> 3) * width));
+        std::uint32_t carry = *current;
+        const std::uint8_t* row = static_cast<const std::uint8_t*>(pixels);
+        std::uint8_t* out = destination;
+        int step = 1;
+        std::uint32_t start = 0;
+        std::uint32_t last = 0;
+        for (int y = 0; y != height; ++y) {
+            std::uint32_t* here = current;
+            long x = static_cast<int>(start);
+            last = row[x * 4] & 0xf;
+            here[x] = last * 7 + carry;
+            next[x] += last;
+            if (start != end) {
+                const std::uint8_t* p = row + 1 + static_cast<int>(start * 4);
+                do {
+                    std::uint32_t error = here[x];
+                    auto channel = [](std::uint32_t value) {
+                        return value > 0xff ? (~(static_cast<std::int32_t>(value) >> 31) & 0xffu) : value;
+                    };
+                    std::uint32_t c0 = channel((p[-1] - 8u) + ((error >> 4) & 0xf));
+                    std::uint32_t c1 = channel((((error >> 12) & 0xf) - 8u) + p[0]);
+                    std::uint32_t c2 = channel((((error >> 20) & 0xf) - 8u) + p[1]);
+                    std::uint32_t c3 = channel(((error >> 28) - 8u) + p[2]);
+                    const std::uint16_t pixel = static_cast<std::uint16_t>((c3 >> 4) | (c2 & 0xf0) | ((c1 & 0xf0) << 4) | ((c0 & 0xf0) << 8));
+                    std::memcpy(out + x * 2, &pixel, 2);
+                    last = (c0 & 0xf) | ((c1 & 0xf) << 8) | ((c2 & 0xf) << 16) | ((c3 & 0xf) << 24);
+                    here[x + step] += last * 7;
+                    next[x + step] = last;
+                    next[x] += last * 5;
+                    next[x - step] += last * 3;
+                    x += step;
+                    p += step * 4;
+                } while (end != static_cast<std::uint32_t>(x));
+            }
+            const std::uint32_t newStart = end - static_cast<std::uint32_t>(step);
+            carry = last * 3 + next[static_cast<int>(newStart)];
+            next[static_cast<int>(newStart)] = carry;
+            row += rowBytes;
+            end = start - static_cast<std::uint32_t>(step);
+            step = -step;
+            out += destinationStride & ~1u;
+            std::swap(current, next);
+            start = newStart;
+        }
+    }
+    return true;
+}
+

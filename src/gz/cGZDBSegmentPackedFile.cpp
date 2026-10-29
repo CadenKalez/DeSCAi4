@@ -43,6 +43,15 @@ public:
         }
         return --refs_;
     }
+    // @ 0x10036982c: takes a reference on the new record, drops the old one, always succeeds.
+    bool SetDBSerialRecord(cIGZPersistDBSerialRecord* record) {
+        if (record) record->AddRef();
+        if (record_) record_->Release();
+        record_ = record;
+        return true;
+    }
+    cIGZPersistDBSerialRecord* GetDBSerialRecord() { return record_; }       // @ 0x1003709ce
+    cIGZFile* AsIGZFile() { return this; }                                   // @ 0x1003709d8 (the cIGZFile base at +8)
     bool Open(int, int, int) override { return false; }
     bool IsOpen() const override { return record_ != nullptr; }
     bool Close() override {

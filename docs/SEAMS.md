@@ -63,7 +63,7 @@ the caller fills (see `scripts/terrain_shot.mm`).
 | `IAdvisorPopupTrackerHost` | `src/sc4/AdvisorPopupTracker.h` | src/sc4/AdvisorPopupTracker.cpp | implemented | scripts/tests/sc4_advisorpopuptracker_test.cpp, src/app/hosts/StubAdvisorPopupTracker.cpp |
 | `IAdvisorSystemHost` | `src/sc4/AdvisorSystem.h` | src/sc4/AdvisorSystem.cpp | implemented | scripts/tests/sc4_advisorsystem_test.cpp, src/app/hosts/StubAdvisorSystem.cpp |
 | `IAemsEngineHost` | `src/sc4audio/AudioAEMSEventSystem.h` | src/sc4audio/AudioAEMSEventSystem.cpp | test fake only | scripts/tests/sc4_audioaemseventsystem_test.cpp |
-| `IAircraftHost` | `src/sc4/Aircraft.h` | src/sc4/Aircraft.cpp, src/sc4/Airplane.cpp, src/sc4/Airplane.h ... | implemented | scripts/tests/sc4_airplane_test.cpp, scripts/tests/sc4_helicopter_test.cpp |
+| `IAircraftHost` | `src/sc4/Aircraft.h` | src/sc4/Aircraft.cpp, src/sc4/Airplane.cpp, src/sc4/Airplane.h ... | implemented | scripts/machine_oracle/airplane_oracle.cpp, scripts/tests/sc4_airplane_test.cpp |
 | `IAirportDeveloperHost` | `src/sc4/AirportDeveloper.h` | src/sc4/AirportDeveloper.cpp | test fake only | scripts/tests/sc4_airportdeveloper_test.cpp |
 | `IAmbienceLayerHost` | `src/sc4audio/AmbienceLayer.h` | src/sc4audio/AmbienceLayer.cpp | test fake only | scripts/tests/sc4_audioambiencemanager_test.cpp, scripts/tests/sc4audio_ambiencelayer_test.cpp |
 | `IAmbienceManagerHost` | `src/sc4audio/AudioAmbienceManager.h` | src/sc4audio/AudioAmbienceManager.cpp | test fake only | scripts/tests/sc4_audioambiencemanager_test.cpp |

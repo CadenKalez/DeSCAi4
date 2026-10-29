@@ -117,6 +117,9 @@ void SetLotHost(ILotHost* host);
 class cSC4Lot {
 public:
     cSC4Lot() = default;
+    // @ 0x100183988: the original returns its cISC4TrafficSource view (this+0x38); the port has no separate view object,
+    // so the lot itself stands for it (the traffic simulator's host takes it as an opaque source).
+    void* AsTrafficSource() { return this; }
     cSC4Lot(int x0, int z0, int sizeX, int sizeZ, int facing);
     cSC4Lot(const cSC4Lot& other);
     cSC4Lot& operator=(const cSC4Lot&) = delete;

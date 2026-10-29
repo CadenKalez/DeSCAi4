@@ -87,6 +87,10 @@ public:
     // pixel translation
     bool TranslateGimexToGZBuffer(cGZGimexInfo* info, void* pixels, cIGZBuffer* buffer);   // @ 0x1003b531c
     bool TranslateGZBufferToGimex(cIGZBuffer* buffer, const cRZRect& area, cGZGimexInfo* info, void* pixels);   // @ 0x1003b5d94
+    // @ 0x1003b680c: 32-bit source -> ARGB4444 with error diffusion, rows scanned alternately left-to-right and
+    // right-to-left. The core works on raw pointers (the member fetches them from the buffer).
+    bool TranslateGimex24ToGZBufferARGB4444Dither(const cGZGimexInfo* info, const void* pixels, cIGZBuffer* buffer);
+    bool DitherToARGB4444(const cGZGimexInfo* info, const void* pixels, std::uint8_t* destination, std::uint32_t destinationStride);
     bool TranslateGimex8ToGZBuffer8(const cGZGimexInfo* info, const void* pixels, cIGZBuffer* buffer);    // @ 0x1003b6b1a
     bool TranslateGimex8ToGZBuffer16(const cGZGimexInfo* info, const void* pixels, cIGZBuffer* buffer);   // @ 0x1003b6b94
     bool TranslateGimex8ToGZBuffer32(const cGZGimexInfo* info, const void* pixels, cIGZBuffer* buffer);   // @ 0x1003b6d78

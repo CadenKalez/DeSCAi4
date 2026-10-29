@@ -568,7 +568,6 @@ class,address,status,name
 (free),0000000100565b3d,not started,"GetGZWinImage(cIGZWin*, unsigned int&, unsigned int&, unsigned int)"
 (free),0000000100565bb9,not started,"optionswalk(cIGZWin*, unsigned int, void*, void*)"
 (free),00000001005669e0,partial,GZCOM_CreatecGZWinHTML()
-(free),00000001005690a4,pending,PeriodicWindowRedrawCallback(void*)
 (free),0000000100569df0,partial,GZCOM_CreatecS3DMaterialManager()
 (free),000000010056a0d0,partial,GZCOM_CreatecSC4EffectsResource()
 (free),000000010056a11d,partial,GZCOM_CreatecSC4EffectsResourceFactory()
@@ -730,9 +729,6 @@ cGZCommandSystemSupport,0000000100703202,not started,"cGZCommandSystemSupport::Q
 cGZCommandSystemSupport,0000000100703220,not started,cGZCommandSystemSupport::AddRef()
 cGZCommandSystemSupport,000000010070322e,not started,cGZCommandSystemSupport::Release()
 cGZCommandSystemSupport,000000010070324a,not started,cGZCommandSystemSupport::FinalRelease()
-cGZDBSerialRecordAsIGZFile,000000010036982c,pending,cGZDBSerialRecordAsIGZFile::SetDBSerialRecord(cIGZPersistDBSerialRecord*)
-cGZDBSerialRecordAsIGZFile,00000001003709ce,pending,cGZDBSerialRecordAsIGZFile::GetDBSerialRecord()
-cGZDBSerialRecordAsIGZFile,00000001003709d8,pending,cGZDBSerialRecordAsIGZFile::AsIGZFile()
 cGZDrawCOMDirector,000000010064ec9c,partial,cGZDrawCOMDirector::OnStart(cIGZCOM*)
 cGZDrawContextRenderToHardware,0000000100654fd2,skipped,cGZDrawContextRenderToHardware::~cGZDrawContextRenderToHardware()
 cGZDrawContextRenderToHardware,0000000100654fd8,skipped,cGZDrawContextRenderToHardware::~cGZDrawContextRenderToHardware()
@@ -744,7 +740,6 @@ cGZDrawContextRenderToSimGLFactory,00000001007b4ed2,not started,cGZDrawContextRe
 cGZDrawContextRenderToSimGLFactory,00000001007b4ee0,not started,cGZDrawContextRenderToSimGLFactory::~cGZDrawContextRenderToSimGLFactory()
 cGZFontSysLibraryInitializer,00000001002ba21a,not started,cGZFontSysLibraryInitializer::cGZFontSysLibraryInitializer()
 cGZFontSysLibraryInitializer,00000001002ba23e,not started,cGZFontSysLibraryInitializer::~cGZFontSysLibraryInitializer()
-cGZGimexFactory,00000001003b680c,pending,"cGZGimexFactory::TranslateGimex24ToGZBufferARGB4444Dither(cGZGimexInfo*, void*, cIGZBuffer*)"
 cGZGraphicCOMDirector,00000001004dd37c,partial,cGZGraphicCOMDirector::OnStart(cIGZCOM*)
 cGZGraphicSystem::cCanvasMessageTarget,000000010061f9ee,not started,"cGZGraphicSystem::cCanvasMessageTarget::QueryInterface(unsigned int, void**)"
 cGZGraphicSystem::cCanvasMessageTarget,000000010061f9f6,not started,cGZGraphicSystem::cCanvasMessageTarget::AddRef()
@@ -780,13 +775,6 @@ cGZMiscCommandSystemSupport,0000000100708b4c,not started,cGZMiscCommandSystemSup
 cGZMiscCommandSystemSupport,0000000100708fd2,not started,cGZMiscCommandSystemSupport::Shutdown()
 cGZMiscCommandSystemSupport,0000000100709802,not started,cGZMiscCommandSystemSupport::DoMessage(cIGZMessage2*)
 cGZMiscCommandSystemSupport::MessageWaitInfo,000000010070c4b0,not started,cGZMiscCommandSystemSupport::MessageWaitInfo::MessageWaitInfo(cGZMiscCommandSystemSupport::MessageWaitInfo const&)
-"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>",000000010047724a,pending,"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>::HandleStartCdataSection()"
-"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>",0000000100477252,pending,"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>::HandleEndCdataSection()"
-"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>",000000010047725a,pending,"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>::HandleStartNamespaceDecl(char const*, char const*)"
-"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>",0000000100477262,pending,"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>::HandleEndNamespaceDecl(char const*)"
-"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>",000000010047726a,pending,"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>::HandleNotationDecl(char const*, char const*, char const*, char const*)"
-"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>",0000000100477272,pending,"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>::HandleInternalEntityReference(char const*, char const*)"
-"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>",0000000100477438,pending,"cGZPropertySetSerializerXmlT<cKeyStandardTraitsT<unsigned int, 3954248925ul, 1806839612ul>>::GetPropertySetTypeString(cRZString&, unsigned int const&)"
 cGZRTDEntry,000000010042fc16,not started,cGZRTDEntry::AddRef()
 cGZRTDEntry,000000010042fc28,not started,cGZRTDEntry::Release()
 cGZRTDEntry,000000010042fc46,not started,cGZRTDEntry::IsDirty()
@@ -895,9 +883,6 @@ cGZWWWSystem,000000010062fed2,not started,"cGZWWWSystem::LoadFileDocument(cRZURL
 cGZWWWSystem,0000000100630248,not started,"cGZWWWSystem::LoadHTTPDocument(cRZURL&, cIGZMessageTarget2*, cIGZWWWSystem::RAMDataPreference, void*, bool)"
 cGZWWWSystem,0000000100630250,not started,"cGZWWWSystem::LoadFTPDocument(cRZURL&, cIGZMessageTarget2*, cIGZWWWSystem::RAMDataPreference, void*)"
 cGZWWWSystem,0000000100630258,not started,"cGZWWWSystem::LoadNNTPDocument(cRZURL&, cIGZMessageTarget2*, cIGZWWWSystem::RAMDataPreference, void*)"
-cGZWinBtn,00000001002810f6,pending,cGZWinBtn::btn_paint_bmp() const
-cGZWinBtn,000000010028120e,pending,cGZWinBtn::btn_paint_flat() const
-cGZWinBtn,00000001002812d8,pending,cGZWinBtn::btn_paint_label() const
 cGZWinColorPicker2,000000010052c0de,not started,cGZWinColorPicker2::~cGZWinColorPicker2()
 cGZWinColorPicker2,000000010052c0e8,not started,cGZWinColorPicker2::~cGZWinColorPicker2()
 cGZWinColorPicker2,000000010052c116,not started,cGZWinColorPicker2::GZPaint()
@@ -974,7 +959,6 @@ cGZWinFolderRow,00000001005139d4,not started,cGZWinFolderRow::ClearSelection()
 cGZWinFolderRow,00000001005139e4,not started,cGZWinFolderRow::GetSelection()
 cGZWinFolderRow,00000001005139f0,not started,cGZWinFolderRow::~cGZWinFolderRow()
 cGZWinFolderRow,0000000100513a34,not started,cGZWinFolderRow::~cGZWinFolderRow()
-cGZWinGen,000000010024fd14,pending,cGZWinGen::SetUserTarget(cIGZWinProc*)
 cGZWinKeyAcceleratorResFactory,00000001004e635a,not started,"cGZWinKeyAcceleratorResFactory::CreateInstance(unsigned int, unsigned int, void**)"
 cGZWinKeyAcceleratorResFactory,00000001004e641e,not started,"cGZWinKeyAcceleratorResFactory::SerialRead(cIGZPersistResource&, cIGZPersistDBSerialRecord&)"
 cGZWinKeyAcceleratorResFactory,00000001004e6434,not started,"cGZWinKeyAcceleratorResFactory::SerialWrite(cIGZPersistResource&, cIGZPersistDBSerialRecord&)"
@@ -1154,8 +1138,6 @@ cGZWinRTDGraphEntry,0000000100308c5e,not started,cGZWinRTDGraphEntry::Shutdown()
 cGZWinRTDGraphEntry,0000000100308c92,not started,cGZWinRTDGraphEntry::GZPaint()
 cGZWinRTDGraphEntry,0000000100309256,not started,"cGZWinRTDGraphEntry::GZOnKeyDown(unsigned int, unsigned int)"
 cGZWinRTDGraphEntry,000000010030926c,not started,"cGZWinRTDGraphEntry::GZOnMouseMove(int, int, unsigned int)"
-cGZWinSlider,000000010027ba24,pending,cGZWinSlider::slider_paint_flat()
-cGZWinSlider,000000010027bbea,pending,cGZWinSlider::slider_paint_bmp()
 cGZWinSpyFinder,000000010069f82e,not started,cGZWinSpyFinder::Init()
 cGZWinSpyFinder,000000010069f8b0,not started,cGZWinSpyFinder::GZPaint()
 cGZWinSpyFinder,000000010069f95c,not started,"cGZWinSpyFinder::GZOnMouseUpL(int, int, unsigned int)"
@@ -1277,12 +1259,6 @@ cPortTypeConfig,00000001000cd79e,not started,"cPortTypeConfig::LoadConfiguration
 cPortTypeConfig,00000001000cdd4e,not started,cPortTypeConfig::~cPortTypeConfig()
 cPortTypeConfig,00000001000cdda4,not started,cPortTypeConfig::~cPortTypeConfig()
 cPortTypeConfig,00000001000cddae,not started,cPortTypeConfig::~cPortTypeConfig()
-cPropertySetUint32XmlReader,0000000100472e66,pending,cPropertySetUint32XmlReader::HandleStartCdataSection()
-cPropertySetUint32XmlReader,0000000100472e6e,pending,cPropertySetUint32XmlReader::HandleEndCdataSection()
-cPropertySetUint32XmlReader,0000000100472e76,pending,"cPropertySetUint32XmlReader::HandleStartNamespaceDecl(char const*, char const*)"
-cPropertySetUint32XmlReader,0000000100472e7e,pending,cPropertySetUint32XmlReader::HandleEndNamespaceDecl(char const*)
-cPropertySetUint32XmlReader,0000000100472e86,pending,"cPropertySetUint32XmlReader::HandleInternalEntityReference(char const*, char const*)"
-cPropertySetUint32XmlReader,0000000100472e8e,pending,"cPropertySetUint32XmlReader::HandleNotationDecl(char const*, char const*, char const*, char const*)"
 cPylonFilter,00000001003c36a0,not started,cPylonFilter::IsOccupantIncluded(cISC4Occupant*)
 cPylonFilter,00000001003c3772,not started,cPylonFilter::~cPylonFilter()
 cPylonFilter,00000001003c377c,not started,cPylonFilter::~cPylonFilter()
@@ -1471,12 +1447,9 @@ cS3DResSpriteAnimTable,0000000100550572,not started,cS3DResSpriteAnimTable::AddR
 cS3DResSpriteAnimTable,0000000100550580,not started,cS3DResSpriteAnimTable::Release()
 cS3DResSpriteAnimTable,000000010055058e,not started,cS3DResSpriteAnimTable::Data()
 cS3DShapeFile,000000010046d342,partial,cS3DShapeFile::Close()
-cS3DShapeFile,000000010046d3b0,pending,cS3DShapeFile::GetNumFrames()
 cS3DShapeFile,000000010046d3c0,partial,cS3DShapeFile::SwapDirectoryAndFrames()
 cS3DShapeFile,000000010046d40e,partial,cS3DShapeFile::Open(cIGZPersistDBSerialRecord*)
-cS3DShapeFile,000000010046d4fc,pending,cS3DShapeFile::SetCurrentFrameByIndex(unsigned int)
 cS3DShapeFile,000000010046d576,partial,cS3DShapeFile::OpenInfoOnly(cIGZPersistDBSerialRecord*)
-cS3DShapeFile,000000010046d72c,pending,cS3DShapeFile::GetCurrentFrameInfo(cS3DShapeFile::cFrameInfo&)
 cS3DShapeFile,000000010046d796,partial,cS3DShapeFile::GetCurrentFramePaletteInfo(cS3DShapeFile::cPaletteInfo&)
 cS3DTextureBinding,00000001000d9bd4,not started,"cS3DTextureBinding::cS3DTextureBinding(unsigned int, unsigned int const*, cIS3DTextureBindingFactory*)"
 cS3DTextureBinding,00000001000d9bec,not started,cS3DTextureBinding::AddRef()
@@ -2314,7 +2287,6 @@ cSC4LoadRegionDialog,00000001003d8a14,not started,cSC4LoadRegionDialog::~cSC4Loa
 cSC4LoadRegionDialog,00000001003d8a66,not started,cSC4LoadRegionDialog::GZOnAttach()
 cSC4LoadRegionDialog,00000001003d8c62,not started,cSC4LoadRegionDialog::GZOnCancel()
 cSC4LoadRegionDialog,00000001003d8c96,not started,cSC4LoadRegionDialog::GZOnOK()
-cSC4Lot,0000000100183988,pending,cSC4Lot::AsTrafficSource()
 cSC4LotConfigurationEditor,00000001004160a4,not started,cSC4LotConfigurationEditor::Shutdown()
 cSC4LotConfigurationFilterByBuildingType,00000001003c1f04,not started,cSC4LotConfigurationFilterByBuildingType::~cSC4LotConfigurationFilterByBuildingType()
 cSC4LotConfigurationFilterByBuildingType,00000001003c1f0e,not started,cSC4LotConfigurationFilterByBuildingType::~cSC4LotConfigurationFilterByBuildingType()
@@ -2602,7 +2574,6 @@ cSC4MyStreetSimInputControl,00000001006bbdf0,not started,"cSC4MyStreetSimInputCo
 cSC4MyStreetSimInputControl,00000001006bc1b8,not started,"cSC4MyStreetSimInputControl::OnMouseDownL(int, int, unsigned int)"
 cSC4MyStreetSimInputControl,00000001006bc230,not started,"cSC4MyStreetSimInputControl::OnKeyDown(unsigned int, unsigned int)"
 cSC4MyStreetSimInputControl,00000001006bc24a,not started,cSC4MyStreetSimInputControl::OnMouseExit()
-cSC4NeighborConnection,0000000100075ebc,pending,cSC4NeighborConnection::AsTrafficSource()
 cSC4NetworkBridgeOccupant,00000001001d25e6,not started,cSC4NetworkBridgeOccupant::cSC4NetworkBridgeOccupant()
 cSC4NetworkBridgeOccupant,00000001001d27ae,not started,"cSC4NetworkBridgeOccupant::QueryInterface(unsigned int, void**)"
 cSC4NetworkBridgeOccupant,00000001001d287a,not started,cSC4NetworkBridgeOccupant::AddRef()
