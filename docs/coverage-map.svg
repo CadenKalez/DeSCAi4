@@ -6,7 +6,7 @@
 <text x="16" y="102" font-size="16" font-weight="700" fill="#1d2320">Code exists</text>
 <text x="150" y="102" font-size="14" fill="#5b6560">partial or complete</text>
 <rect x="560" y="84" width="860" height="26" rx="3" fill="#e3e6e0"/>
-<rect x="560" y="84" width="660.4" height="26" rx="3" fill="#9cc3e4"/>
+<rect x="560" y="84" width="660.5" height="26" rx="3" fill="#9cc3e4"/>
 <text x="1432" y="103" font-size="18" font-weight="700" fill="#1d2320">76.8%</text>
 <text x="16" y="136" font-size="16" font-weight="700" fill="#1d2320">Recovered</text>
 <text x="150" y="136" font-size="14" fill="#5b6560">complete and covered by a test</text>
@@ -3326,10 +3326,11 @@
 <rect x="1226.2" y="878.3" width="50.5" height="32.6" fill="#d5d9d4"><title>cSC4Pedestrian: 8608 bytes, Not started</title></rect>
 <rect x="1226.2" y="878.3" width="50.5" height="32.6" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="1226.2" y="910.9" width="19.3" height="29.0" fill="#1f6b43"><title>cSC4EmergencyVehicle: 2930 bytes, Verified</title></rect>
-<rect x="1245.5" y="910.9" width="17.5" height="29.0" fill="#d5d9d4"><title>cSC4EmergencyVehicle: 2654 bytes, Not started</title></rect>
-<rect x="1263.0" y="910.9" width="13.7" height="23.7" fill="#e8b04a"><title>cSC4EmergencyVehicle: 1694 bytes, Recovered</title></rect>
-<rect x="1263.0" y="934.6" width="13.7" height="5.3" fill="#e8b04a"><title>cSC4EmergencyVehicle: 376 bytes, Recovered, unit test only (artifacts)</title></rect>
-<rect x="1263.0" y="934.6" width="13.7" height="5.3" fill="url(#hatch)"/>
+<rect x="1245.5" y="910.9" width="14.8" height="29.0" fill="#d5d9d4"><title>cSC4EmergencyVehicle: 2244 bytes, Not started</title></rect>
+<rect x="1260.3" y="910.9" width="16.4" height="19.8" fill="#e8b04a"><title>cSC4EmergencyVehicle: 1694 bytes, Recovered</title></rect>
+<rect x="1260.3" y="930.7" width="8.5" height="9.2" fill="#9cc3e4"><title>cSC4EmergencyVehicle: 410 bytes, Partial</title></rect>
+<rect x="1268.9" y="930.7" width="7.8" height="9.2" fill="#e8b04a"><title>cSC4EmergencyVehicle: 376 bytes, Recovered, unit test only (artifacts)</title></rect>
+<rect x="1268.9" y="930.7" width="7.8" height="9.2" fill="url(#hatch)"/>
 <rect x="1226.2" y="910.9" width="50.5" height="29.0" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="1276.7" y="878.3" width="17.1" height="15.1" fill="#e8b04a"><title>cSC4Aircraft: 1358 bytes, Recovered</title></rect>
 <rect x="1293.8" y="878.3" width="6.1" height="13.4" fill="#1f6b43"><title>cSC4Aircraft: 428 bytes, Verified</title></rect>

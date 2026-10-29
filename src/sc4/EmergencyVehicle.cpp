@@ -341,6 +341,32 @@ void cSC4EmergencyVehicle::HandleReachedRouteDestination() {
     cSC4Automaton::HandleReachedRouteDestination();
 }
 
+// 0x1002f6322: a new call. The vehicle remembers the destination and who sent it, leaves the "arrived" look (flag 0x400) and, when
+// its last routed cell is a road, extends the route towards the call.
+void cSC4EmergencyVehicle::HandleDispatched(const cS3DVector3& position, cISC4Occupant* occupant) {
+    cSC4Automaton::HandleDispatched(position, occupant);
+    dispatchDestination_ = position;
+    if (CheckAutomataFlag(0x400)) {
+        SetAutomataFlag(0x400, false);
+        SetOpacity(1.0f, 0.0f);
+    }
+    if (occupant != nullptr) {
+        if (dispatchSource_) dispatchSource_->Release();
+        dispatchSource_ = occupant;
+        occupant->AddRef();
+    }
+    if (route_.empty() || !trafficHost_) return;
+    cSC4TrafficNetworkMap* map = trafficHost_->TrafficNetworkMap();
+    if (!map) return;
+    const RouteData last = route_.back();
+    for (TrafficTileInfo* tile = map->GetTileInfoAtCell(last.x, last.z); tile != nullptr; tile = tile->next) {
+        if (tile->occupant && tile->occupant->HasAnyNetworkFlag(0x304)) {
+            AppendRouteToNearbyRoad(last.x, last.z, position);
+            return;
+        }
+    }
+}
+
 // 0x1002f7670: tell the dispatcher the call is over and drive home (unless a player is driving).
 void cSC4EmergencyVehicle::ReturnToSourceOccupant() {
     if (GetDispatchState() == 6) return;

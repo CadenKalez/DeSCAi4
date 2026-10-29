@@ -13,7 +13,7 @@
 // RECOVERED here: Init, DoTeleportTick, CloseEnoughToDispatchDestination, HandleReachedRouteDestination, ReturnToSourceOccupant, ValidateNetworkOccupant, DoRepathingTick, SendPathBlockedMessage, SetDispatchState, constructor, Shutdown, Write / Read, the accessors, ShouldCollide, DoStateTick, DoEnRouteTick,
 // DoAnimationTick, DoHandlingEventTick, DoPlayerDriveTick, UpdateAttraction, HandlePlayerDriveCommand, HandleEnterState,
 // HandleExitState, HandleNetworkOccupantRemoved, ShowMotionBlur. NOT recovered yet (see notes/next_class_emergency_vehicle.md):
-// HandleDispatched, AppendRouteToNearbyRoad, ReturnToSourceOccupant, GetDebugExtraText,
+// AppendRouteToNearbyRoad (HandleDispatched is recovered up to the call into it), ReturnToSourceOccupant, GetDebugExtraText,
 // CloseEnoughToDispatchDestination, ShowEmergencyLights. They need the argument registers Ghidra lost; the disassembly decides.
 #pragma once
 #include <cstdint>
@@ -93,6 +93,10 @@ public:
     void HandleReachedRouteDestination();                                     // 0x2b0 @ 0x1002f615a
     void ReturnToSourceOccupant() override;                                   // 0xe8  @ 0x1002f7670
     bool Init() override;                                                     // 0x18  @ 0x1002f563c
+    void HandleDispatched(const cS3DVector3& position, cISC4Occupant* occupant) override;   // 0x2b8 @ 0x1002f6322
+    // 0x1002f64bc (about 1.2 KB: asks the path finder for a route from the last route cell to the cell nearest the call and
+    // appends it). NOT RECOVERED: it needs the path finder service and the network map's area query; the port keeps the hook.
+    virtual void AppendRouteToNearbyRoad(int cellX, int cellZ, const cS3DVector3& destination) { (void)cellX; (void)cellZ; (void)destination; }
     bool ValidateNetworkOccupant();                                           // @ 0x1002f5a26
     void SendPathBlockedMessage();                                            // @ 0x1002f5c36
     void SetDispatchState(std::uint32_t state) override;                      // 0xc8  @ 0x1002f796c

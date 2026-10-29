@@ -1110,6 +1110,21 @@ void TestEmergencyVehicle() {
         near->Release();
     }
 
+    // a new call is stored with its sender and clears the arrived look
+    {
+        auto* car = new TestEmergencyCar(&world.host, &world.automatonHost, nullptr, &emergencyHost);
+        car->AddRef();
+        auto* sender = new FakeBaseOccupant();
+        const int sendersBefore = sender->refs;
+        car->SetAutomataFlag(0x400, true);
+        car->HandleDispatched(Vec(7.0f, 8.0f, 9.0f), sender);
+        CHECK(car->GetDispatchDestination().x == 7.0f && car->GetDispatchDestination().z == 9.0f && car->DispatchSource() == sender);
+        CHECK(sender->refs == sendersBefore + 1 && !car->CheckAutomataFlag(0x400));
+        car->HandleDispatched(Vec(1.0f, 2.0f, 3.0f), nullptr);                       // no sender: the old one stays
+        CHECK(car->DispatchSource() == sender && car->GetDispatchDestination().x == 1.0f);
+        car->Release();
+    }
+
     // the ambulance: type 7, radius 80, a version-1 wrapper around the emergency record
     {
         auto* ambulance = new cSC4Ambulance(&world.host, &world.automatonHost, nullptr, &emergencyHost);

@@ -2082,7 +2082,6 @@ cSC4EffectsResourceFactory,000000010056bdba,not started,cSC4EffectsResourceFacto
 cSC4EffectsResourceFactory,000000010056bde8,not started,"cSC4EffectsResourceFactory::CreateInstance(unsigned int, unsigned int, void**)"
 cSC4EffectsResourceFactory,000000010056be84,not started,"cSC4EffectsResourceFactory::SerialRead(cIGZPersistResource&, cIGZPersistDBSerialRecord&)"
 cSC4EffectsResourceFactory,000000010056bf66,not started,"cSC4EffectsResourceFactory::SerialWrite(cIGZPersistResource&, cIGZPersistDBSerialRecord&)"
-cSC4EmergencyVehicle,00000001002f6322,not started,"cSC4EmergencyVehicle::HandleDispatched(cS3DVector3 const&, cISC4Occupant*)"
 cSC4EmergencyVehicle,00000001002f64bc,not started,"cSC4EmergencyVehicle::AppendRouteToNearbyRoad(int, int, cS3DVector3 const&)"
 cSC4EmergencyVehicle,00000001002f76e4,not started,cSC4EmergencyVehicle::GetDebugExtraText() const
 cSC4EmergencyVehicle,00000001002f7cdc,not started,cSC4EmergencyVehicle::ShowEmergencyLights(bool)

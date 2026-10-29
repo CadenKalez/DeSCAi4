@@ -583,7 +583,8 @@ CLASS-cSC4EffectsModelProcessor,cSC4EffectsModelProcessor,"recover 1 remaining f
 CLASS-cSC4EffectsParser,cSC4EffectsParser,"recover 13 remaining function(s) (13 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4EffectsResource,cSC4EffectsResource,"recover 13 remaining function(s) (13 not started, 0 partial/pending); bases still unfinished: cSC4EffectsCollection",CLASS-cSC4EffectsCollection,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4EffectsResourceFactory,cSC4EffectsResourceFactory,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4EmergencyVehicle,cSC4EmergencyVehicle,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4EmergencyVehicle,cSC4EmergencyVehicle,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+LEDGER-cSC4EmergencyVehicle,cSC4EmergencyVehicle,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4FileTokenizer,cSC4FileTokenizer,"recover 3 remaining function(s) (3 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4FirePlaneDispatchSource,cSC4FirePlaneDispatchSource,"recover 28 remaining function(s) (28 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4FireProtectionSimulator,cSC4FireProtectionSimulator,finish 5 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
