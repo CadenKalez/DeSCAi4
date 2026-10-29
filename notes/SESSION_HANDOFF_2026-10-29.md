@@ -78,3 +78,19 @@ exactness worklist     4,348 functions with decompiler artifacts and only a unit
 ## Uncommitted
 
 (none: everything is committed.)
+
+## Addendum (same day, later)
+
+- `cSTEVolcanoLava` flow core recovered from the disassembly (`src/sc4/VolcanoLava.*`, test `sc4_volcanolava`); drawing, steam,
+  decals and burning stay behind `ILavaHost` (37 functions left in that class).
+- `cSC4LotDeveloper`: the lot wrappers (`IsLotDeveloped`, `IsLotFlat`, `GetLotAltitudeRange`, `GetLotSlope`,
+  `GetOccupantSlope`) and the `TestCondition` gate are recovered. 58 absent `LotDeveloper` rows remain: the other Test* gates
+  (`TestPower`, `TestWater`, `TestDesirability`, `TestTravel`, `TestCoffeeBar`), foundations, base textures, props, business-unit
+  joining (`PickUnitToJoin`, `UpdateTravelDesignates`, `UpdateTravelPopulations`) and the construction / demolition functions.
+- What actually blocks the remaining partials, by kind: (1) lifecycle rows (`Init`, `Shutdown`, `Read`, `Write`, `DoMessage` of the
+  Protection / Police / Power / FireProtection simulators) are partial only because the `SL::sp*` services behind them are host seams,
+  so they close when the native hosts exist, not by more decompiling; (2) rows that need an adapter between the port's concrete
+  lot and the business unit's `IBusinessLot`; (3) rows that need unrecovered neighbours (lot manager queries, the lot
+  configuration, growth developers).
+- Next in `LotDeveloper`: add an `IBusinessLot` adapter on `cSC4Lot`, then `UpdateTravelPopulations`, `RemoveLotFromItsBusinessUnit`,
+  `PickUnitToJoin`; then resolve the growth-developer slot 0xa0 and lot-configuration slot 0x58 that `TestWater` / `TestPower` call.
