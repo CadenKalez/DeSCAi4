@@ -147,7 +147,8 @@ def main():
              f"![decompiled](https://img.shields.io/badge/decompiled-{pct:.1f}%25-{color})\n\n"
              f"`{bar}` **{pct:.1f}%** — {nrec:,} of {ngame:,} game functions recovered, {ngame-nrec:,} remaining "
              "(details: [notes/progress.md](notes/progress.md))"
-             + _mline + "\n"
+             + _mline + "\n\n"
+             "[Coverage map](docs/coverage-map.svg): every class of the original as a box sized by its machine code, coloured by how far it has come\n"
              "<!-- progress:end -->")
     rd = ROOT/"README.md"
     if rd.exists():
@@ -160,5 +161,10 @@ def main():
             t = head + "\n\n" + block + "\n\n" + rest
         rd.write_text(t)
     print(text)
+    try:   # the treemap is drawn from the same ledger (scripts/coverage_treemap.py)
+        import subprocess
+        subprocess.run([sys.executable, str(ROOT/"scripts/coverage_treemap.py")], check=True, capture_output=True)
+    except Exception as exc:
+        print(f"coverage_treemap skipped: {exc}", file=sys.stderr)
 
 main()

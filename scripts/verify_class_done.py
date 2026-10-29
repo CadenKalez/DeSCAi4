@@ -39,7 +39,7 @@ if "0 duplicates" not in r.stdout:
 # 2-4
 generated(["notes/todo.csv"], [("python3", "scripts/todo.py", "sync-ledger"), ("python3", "scripts/todo.py", "sync-classes")], "notes/todo.csv")
 generated(["docs/SEAMS.md"], [("python3", "scripts/list_seams.py")], "docs/SEAMS.md")
-generated(["notes/progress.md", "README.md"], [("python3", "scripts/progress.py")], "progress meter")
+generated(["notes/progress.md", "README.md", "docs/coverage-map.svg"], [("python3", "scripts/progress.py")], "progress meter")
 
 ledger = list(csv.DictReader((ROOT/"notes/ledger.csv").open()))
 todo = list(csv.DictReader((ROOT/"notes/todo.csv").open()))
