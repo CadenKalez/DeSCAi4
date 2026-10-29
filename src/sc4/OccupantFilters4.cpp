@@ -43,4 +43,11 @@ bool cSC4WaterOccupantFilter::IsPropertyHolderIncluded(cISCPropertyHolder* holde
     return value;
 }
 
+bool cSC4NetworkORFilter::IsOccupantIncluded(cISC4Occupant* occupant) {
+    if (occupant->GetType() != kNetworkOccupantType) return false;
+    IOccupantFilterWorld* world = OccupantFilterWorld();
+    std::uint32_t flags = 0;
+    return world && world->NetworkFlags(occupant, flags) && (flags & mask_) != 0;
+}
+
 }  // namespace sc4

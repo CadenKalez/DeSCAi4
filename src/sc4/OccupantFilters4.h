@@ -39,4 +39,17 @@ public:
     bool IsPropertyHolderIncluded(cISCPropertyHolder* holder) override;          // @ 0x1001935a4
 };
 
+constexpr std::uint32_t kNetworkOccupantType = 0xc772bf98;     // -0x388d4068
+
+// Network occupants that carry any of the flags in the mask (HasAnyNetworkFlag, network interface vslot 0x48).
+class cSC4NetworkORFilter : public cSC4OccupantFilter {
+public:
+    cSC4NetworkORFilter() = default;                                         // @ 0x1002eee0a
+    explicit cSC4NetworkORFilter(std::uint32_t mask) : mask_(mask) {}        // @ 0x1002eee4c
+    bool IsOccupantIncluded(cISC4Occupant* occupant) override;               // @ 0x1002eee88
+
+private:
+    std::uint32_t mask_ = 0;      // +0x14
+};
+
 }  // namespace sc4

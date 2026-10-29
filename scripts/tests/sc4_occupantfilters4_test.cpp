@@ -97,6 +97,23 @@ int main() {
     CHECK(water.IsOccupantIncluded(&o));
     SetOccupantFilterWorld(nullptr);
 
+    {   // network OR filter: only network-type occupants, any flag of the mask
+        cSC4NetworkORFilter orFilter(0x30);
+        World w;
+        SetOccupantFilterWorld(&w);
+        w.network = true;
+        o.type = kNetworkOccupantType;
+        w.flags = 0x10;
+        CHECK(orFilter.IsOccupantIncluded(&o));
+        w.flags = 0x4;
+        CHECK(!orFilter.IsOccupantIncluded(&o));
+        w.flags = 0x30;
+        o.type = 5;
+        CHECK(!orFilter.IsOccupantIncluded(&o));
+        CHECK(!cSC4NetworkORFilter().IsOccupantIncluded(&o));
+        SetOccupantFilterWorld(nullptr);
+    }
+
     std::puts(failures ? "sc4_occupantfilters4: FAILED" : "sc4_occupantfilters4 ok");
     return failures != 0;
 }

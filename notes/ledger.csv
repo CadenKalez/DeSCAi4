@@ -28779,3 +28779,8 @@ address,symbol,unique_name,source,status,evidence
 0x100575a8a,cSC4DummyOccupant::~cSC4DummyOccupant(),DestructAndDelete,src/sc4/DummyAutoOccupant.h,recovered,transcribed from the decompile; test scripts/tests/sc4_occupantfilters4_test.cpp / sc4_occupant_test.cpp
 0x100575ad0,non-virtual thunk to cSC4DummyOccupant::~cSC4DummyOccupant(),DestructThunk,src/sc4/DummyAutoOccupant.h,recovered,transcribed from the decompile; test scripts/tests/sc4_occupantfilters4_test.cpp / sc4_occupant_test.cpp
 0x100575ade,non-virtual thunk to cSC4DummyOccupant::~cSC4DummyOccupant(),DestructAndDeleteThunk,src/sc4/DummyAutoOccupant.h,recovered,transcribed from the decompile; test scripts/tests/sc4_occupantfilters4_test.cpp / sc4_occupant_test.cpp
+0x1002eee0a,cSC4NetworkORFilter::cSC4NetworkORFilter(),Construct,src/sc4/OccupantFilters4.cpp|h,recovered,transcribed from the decompile; test scripts/tests/sc4_occupantfilters4_test.cpp
+0x1002eee4c,cSC4NetworkORFilter::cSC4NetworkORFilter(unsigned int),Construct_uintWrapper,src/sc4/OccupantFilters4.cpp|h,recovered,transcribed from the decompile; test scripts/tests/sc4_occupantfilters4_test.cpp
+0x1002eee88,cSC4NetworkORFilter::IsOccupantIncluded(cISC4Occupant*),IsOccupantIncluded,src/sc4/OccupantFilters4.cpp|h,recovered,transcribed from the decompile; test scripts/tests/sc4_occupantfilters4_test.cpp
+0x1002eef5e,cSC4NetworkORFilter::~cSC4NetworkORFilter(),Destruct,src/sc4/OccupantFilters4.cpp|h,recovered,transcribed from the decompile; test scripts/tests/sc4_occupantfilters4_test.cpp
+0x1002eef68,cSC4NetworkORFilter::~cSC4NetworkORFilter(),DestructAndDelete,src/sc4/OccupantFilters4.cpp|h,recovered,transcribed from the decompile; test scripts/tests/sc4_occupantfilters4_test.cpp

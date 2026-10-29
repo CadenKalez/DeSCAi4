@@ -676,7 +676,7 @@ NETLOT-1,cSC4NetworkLotManager,"Hook INetworkLotManagerHost to the city/occupant
 CLASS-cSC4NetworkManager,cSC4NetworkManager,"recover 39 remaining function(s) (39 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4NetworkManager,cSC4NetworkManager,finish 7 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 NETMGR-1,cSC4NetworkManager,"Wire GZCOM_CreatecSC4NetworkManager (still returns nullptr) and finish the 7 partials: DoMessage's underground-height fan-out, Retrofit's occupant slots, RemoveOrReplaceOccupant's tool GetCellInfo, the intersection queries and AutoconnectLotNodes",,open,src/sc4/NetworkManager.cpp
-CLASS-cSC4NetworkORFilter,cSC4NetworkORFilter,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4NetworkORFilter,cSC4NetworkORFilter,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4NetworkOccupant,cSC4NetworkOccupant,"recover 1 remaining function(s) (0 not started, 1 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4NetworkOccupant,cSC4NetworkOccupant,finish 1 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
 CLASS-cSC4NetworkOccupantModelInstance,cSC4NetworkOccupantModelInstance,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
