@@ -89,7 +89,7 @@ the caller fills (see `scripts/terrain_shot.mm`).
 | `IAutomataGeneratorHost` | `src/sc4/AutomataGenerator.h` | src/sc4/AutomataGenerator.cpp | implemented | scripts/tests/sc4_automatagenerator_test.cpp, src/tools/city_probe_creators.cpp |
 | `IAutomataManagerHost` | `src/sc4/AutomataManager.h` | src/app/NativeAutomataManagers.h, src/sc4/AutomataManager.cpp | implemented | scripts/tests/sc4_automatamanager_test.cpp, src/app/NativeAutomataManagers.cpp |
 | `IAutomataScriptHost` | `src/sc4/AutomataScriptSystem.h` |  | implemented | scripts/tests/sc4_automatascriptsystem_test.cpp, src/sc4/AutomataScriptSystem.cpp |
-| `IAutomatonHost` | `src/sc4/Automaton.h` | src/app/NativeAutomata.h, src/sc4/Aircraft.cpp, src/sc4/Aircraft.h ... | implemented | scripts/tests/sc4_airplane_test.cpp, scripts/tests/sc4_automaton_test.cpp |
+| `IAutomatonHost` | `src/sc4/Automaton.h` | src/app/NativeAutomata.h, src/sc4/Aircraft.cpp, src/sc4/Aircraft.h ... | implemented | scripts/machine_oracle/vehicle_oracle.cpp, scripts/tests/sc4_airplane_test.cpp |
 | `IBaseLotDeveloperHost` | `src/sc4/LotDeveloper.h` | src/gz/SimHostRegistry.h | implemented | scripts/tests/sc4_lotdeveloper_test.cpp, src/tools/city_probe_bindings.cpp |
 | `IBudgetDialogHost` | `src/sc4/BudgetDialogs.h` | src/sc4/BudgetDialogs.cpp | implemented | scripts/tests/sc4_budgetdialogs_test.cpp, src/app/hosts/StubBudgetDialog.cpp |
 | `IBudgetHost` | `src/sc4/Budget.h` | src/sc4/Budget.cpp | implemented | scripts/tests/sc4_airportdeveloper_test.cpp, scripts/tests/sc4_budget_test.cpp |
@@ -224,7 +224,7 @@ the caller fills (see `scripts/terrain_shot.mm`).
 | `IOverlayShadowService` | `src/sc4/OverlayManager.h` | src/app/hosts/StubOverlay.cpp, src/sc4/OverlayManager.cpp | test fake only | scripts/tests/sc4_overlaymanager_test.cpp |
 | `IPathFinderHost` | `src/sc4/PathFinder.h` | src/sc4/PathFinder.cpp | test fake only | scripts/tests/sc4_pathfinder_test.cpp |
 | `IPathInfoServices` | `src/sc4/PathInfo.h` | src/sc4/PathInfo.cpp | test fake only | scripts/tests/sc4_pathinfo_test.cpp |
-| `IPedestrianHost` | `src/sc4/Pedestrian.h` | src/sc4/Pedestrian.cpp, src/tools/city_probe_creators7.cpp | implemented | scripts/tests/sc4_vehicle_test.cpp, src/app/NativeTrafficHosts.cpp |
+| `IPedestrianHost` | `src/sc4/Pedestrian.h` | src/sc4/Pedestrian.cpp, src/tools/city_probe_creators7.cpp | implemented | scripts/machine_oracle/vehicle_oracle.cpp, scripts/tests/sc4_vehicle_test.cpp |
 | `IPedestrianManagerHost` | `src/sc4/PedestrianManager.h` | src/sc4/PedestrianManager.cpp | NOT IMPLEMENTED |  |
 | `IPersistBufferHost` | `src/gz/PersistBufferResource.h` | src/gz/PersistBufferResourceFactory.cpp, src/gz/PersistBufferResourceFactory.h | implemented | scripts/tests/gz_persistbufferresource_test.cpp, scripts/tests/gz_persistbufferresourcefactory_test.cpp |
 | `IPersistHost` | `src/gz/PersistStreams.h` | src/gz/PersistASCIIWriter.cpp, src/gz/PersistBinaryReader.cpp, src/gz/PersistBinaryWriter.cpp ... | test fake only | scripts/tests/gz_persist_test.cpp |
@@ -346,7 +346,7 @@ the caller fills (see `scripts/terrain_shot.mm`).
 | `ITrafficEffectHost` | `src/sc4/TrafficEffectManager.h` |  | implemented | scripts/tests/sc4_trafficautomaton_test.cpp, scripts/tests/sc4_trafficeffectmanager_test.cpp |
 | `ITrafficHost` | `src/sc4/TrafficSimulator.h` | src/gz/SimHostRegistry.h, src/sc4/NeighborsSimulator.h, src/sc4/TrafficSimulator.cpp | implemented | scripts/tests/sc4_trafficsimulator_test.cpp, src/tools/city_probe_bindings.cpp |
 | `ITrafficNetworkManagerApi` | `src/sc4/TrafficAutomataManager.h` | src/sc4/TrafficAutomataManager.cpp | test fake only | scripts/tests/sc4_trafficautomatamanager_test.cpp |
-| `ITrafficNetworkMapHost` | `src/sc4/TrafficNetworkMap.h` | src/sc4/TrafficNetworkMap.cpp | implemented | scripts/tests/sc4_trafficautomaton_test.cpp, scripts/tests/sc4_trafficnetworkmap_test.cpp |
+| `ITrafficNetworkMapHost` | `src/sc4/TrafficNetworkMap.h` | src/sc4/TrafficNetworkMap.cpp | implemented | scripts/machine_oracle/vehicle_oracle.cpp, scripts/tests/sc4_trafficautomaton_test.cpp |
 | `ITrafficSimulatorApi` | `src/sc4/TrafficAutomataManager.h` |  | test fake only | scripts/tests/sc4_trafficautomatamanager_test.cpp |
 | `ITreeViewServices` | `src/gz/WinTreeView.h` |  | implemented | scripts/tests/gz_wintreeview_test.cpp, src/gz/WinTreeView.cpp |
 | `ITrendBarHost` | `src/sc4/WinTrendBar.h` | src/sc4/WinTrendBar.cpp | test fake only | scripts/tests/sc4_wintrendbar_test.cpp |
