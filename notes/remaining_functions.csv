@@ -1990,11 +1990,6 @@ cSC4DispatchVehicleView,00000001002343d8,not started,cSC4DispatchVehicleView::Do
 cSC4DispatchVehicleView,000000010023446c,not started,"cSC4DispatchVehicleView::QueryInterface(unsigned int, void**)"
 cSC4DispatchVehicleView,00000001002344fe,not started,cSC4DispatchVehicleView::AddRef()
 cSC4DispatchVehicleView,000000010023450c,not started,cSC4DispatchVehicleView::Release()
-cSC4DummyOccupant,0000000100575a1a,not started,cSC4DummyOccupant::GetPosition(float*)
-cSC4DummyOccupant,0000000100575a32,not started,cSC4DummyOccupant::SetPosition(float const*)
-cSC4DummyOccupant,0000000100575a4a,not started,"cSC4DummyOccupant::GetBoundingBox(float*, float*)"
-cSC4DummyOccupant,0000000100575a80,not started,cSC4DummyOccupant::~cSC4DummyOccupant()
-cSC4DummyOccupant,0000000100575a8a,not started,cSC4DummyOccupant::~cSC4DummyOccupant()
 cSC4DynamicLimitTimer,00000001000a161c,not started,cSC4DynamicLimitTimer::~cSC4DynamicLimitTimer()
 cSC4DynamicParticleDescription,00000001005cb290,not started,cSC4DynamicParticleDescription::~cSC4DynamicParticleDescription()
 cSC4DynamicParticleDescription,00000001006fd016,not started,cSC4DynamicParticleDescription::operator=(cSC4DynamicParticleDescription const&)
@@ -3163,11 +3158,6 @@ cSC4SituationUIImageWinProc,00000001006f3dce,not started,cSC4SituationUIImageWin
 cSC4SituationUIImageWinProc,00000001006f3e26,not started,cSC4SituationUIImageWinProc::DoPaint()
 cSC4StaticFloraData,00000001000bd934,not started,cSC4StaticFloraData::Release()
 cSC4StaticFloraData,00000001000c24ae,not started,cSC4StaticFloraData::~cSC4StaticFloraData()
-cSC4StoplightPropOccupantFilter,00000001002dc206,not started,cSC4StoplightPropOccupantFilter::IsOccupantIncluded(cISC4Occupant*)
-cSC4StoplightPropOccupantFilter,00000001002dc258,not started,cSC4StoplightPropOccupantFilter::IsOccupantTypeIncluded(unsigned int)
-cSC4StoplightPropOccupantFilter,00000001002dc260,not started,cSC4StoplightPropOccupantFilter::IsPropertyHolderIncluded(cISCPropertyHolder*)
-cSC4StoplightPropOccupantFilter,00000001002dc268,not started,cSC4StoplightPropOccupantFilter::~cSC4StoplightPropOccupantFilter()
-cSC4StoplightPropOccupantFilter,00000001002dc272,not started,cSC4StoplightPropOccupantFilter::~cSC4StoplightPropOccupantFilter()
 cSC4StringSpecificationOccupantFilter,00000001000a716a,not started,cSC4StringSpecificationOccupantFilter::cSC4StringSpecificationOccupantFilter()
 cSC4StringSpecificationOccupantFilter,00000001000a7290,not started,cSC4StringSpecificationOccupantFilter::BuildSpecification(cIGZString const&)
 cSC4StringSpecificationOccupantFilter,00000001000a8a34,not started,"cSC4StringSpecificationOccupantFilter::GetOccupantsByBBox(ilist<cISC4Occupant*>&, unsigned int)"
@@ -3879,10 +3869,6 @@ cSC4ViewObject3D,00000001001ea190,not started,"cSC4ViewObject3D::QueryInterface(
 cSC4ViewObject3D,000000010023d290,not started,"cSC4ViewObject3D::Pick(cS3DVector3 const&, cS3DVector3 const&, SC4DrawContext*, float*)"
 cSC4ViewObject3D,00000001006fb990,not started,cSC4ViewObject3D::AddRef()
 cSC4ViewObject3D,0000000100714800,not started,cSC4ViewObject3D::Release()
-cSC4WaterOccupantFilter,0000000100193514,not started,cSC4WaterOccupantFilter::IsOccupantIncluded(cISC4Occupant*)
-cSC4WaterOccupantFilter,00000001001935a4,not started,cSC4WaterOccupantFilter::IsPropertyHolderIncluded(cISCPropertyHolder*)
-cSC4WaterOccupantFilter,000000010019360a,not started,cSC4WaterOccupantFilter::~cSC4WaterOccupantFilter()
-cSC4WaterOccupantFilter,0000000100193614,not started,cSC4WaterOccupantFilter::~cSC4WaterOccupantFilter()
 cSC4WaterPathFinder,00000001007254b6,not started,cSC4WaterPathFinder::cSC4WaterPathFinder()
 cSC4WaterPathFinder,00000001007254fc,not started,cSC4WaterPathFinder::~cSC4WaterPathFinder()
 cSC4WaterPathFinder,000000010072555c,not started,"cSC4WaterPathFinder::QueryInterface(unsigned int, void**)"
@@ -4054,11 +4040,6 @@ cSC4WinSnapshotTaker,00000001003a17f0,not started,"cSC4WinSnapshotTaker::AddNewG
 cSC4WinSnapshotTaker,00000001003a197c,not started,cSC4WinSnapshotTaker::GetGraphicInfoForCurrentCity(cRZString&)
 cSC4ZoneDeveloper,0000000100131ecc,skipped,"cSC4ZoneDeveloper::CanCreatePloppedLot(SC4Rect<int>, int, cISC4LotConfiguration*)"
 cSC4ZoneDeveloper,0000000100132396,skipped,"cSC4ZoneDeveloper::CheckLotTerrainConstraints(SC4Rect<int>, int, cISC4LotConfiguration*)"
-cSC4ZoomRotationModelChangeOccupantFilter,00000001002c119a,not started,cSC4ZoomRotationModelChangeOccupantFilter::cSC4ZoomRotationModelChangeOccupantFilter()
-cSC4ZoomRotationModelChangeOccupantFilter,00000001002c11d6,not started,"cSC4ZoomRotationModelChangeOccupantFilter::SetZoomAndRotation(int, int)"
-cSC4ZoomRotationModelChangeOccupantFilter,00000001002c11f6,not started,cSC4ZoomRotationModelChangeOccupantFilter::IsOccupantIncluded(cISC4Occupant*)
-cSC4ZoomRotationModelChangeOccupantFilter,00000001002c1234,not started,cSC4ZoomRotationModelChangeOccupantFilter::~cSC4ZoomRotationModelChangeOccupantFilter()
-cSC4ZoomRotationModelChangeOccupantFilter,00000001002c123e,not started,cSC4ZoomRotationModelChangeOccupantFilter::~cSC4ZoomRotationModelChangeOccupantFilter()
 cSCBoolTextEntryView,0000000100524aa8,not started,cSCBoolTextEntryView::Init()
 cSCBoolTextEntryView,0000000100524c4e,not started,cSCBoolTextEntryView::SetValue(cIGZVariant const&)
 cSCBoolTextEntryView,0000000100524c6e,not started,cSCBoolTextEntryView::GetValue(cIGZVariant&)

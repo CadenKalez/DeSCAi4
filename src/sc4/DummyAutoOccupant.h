@@ -22,4 +22,17 @@ private:
     std::uint32_t group_ = 0;         // +0x6c
 };
 
+// cSC4DummyOccupant (0x100575a1a..): the same position-only occupant without the group; IsOccupantGroup is the base class's.
+class cSC4DummyOccupant : public cSC4Occupant {
+public:
+    void GetPosition(float* xyz) override { xyz[0] = position_[0]; xyz[1] = position_[1]; xyz[2] = position_[2]; }   // @ 0x100575a1a
+    void SetPosition(const float* xyz) override { position_[0] = xyz[0]; position_[1] = xyz[1]; position_[2] = xyz[2]; }   // @ 0x100575a32
+    void GetBoundingBox(float* minXyz, float* maxXyz) override {               // @ 0x100575a4a
+        for (int i = 0; i < 3; ++i) minXyz[i] = maxXyz[i] = position_[i];
+    }
+
+private:
+    float position_[3] = {0, 0, 0};   // +0x60
+};
+
 }  // namespace sc4

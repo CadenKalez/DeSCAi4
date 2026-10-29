@@ -6,12 +6,12 @@
 <text x="16" y="102" font-size="16" font-weight="700" fill="#1d2320">Code exists</text>
 <text x="150" y="102" font-size="14" fill="#5b6560">partial or complete</text>
 <rect x="560" y="84" width="860" height="26" rx="3" fill="#e3e6e0"/>
-<rect x="560" y="84" width="660.5" height="26" rx="3" fill="#9cc3e4"/>
+<rect x="560" y="84" width="660.6" height="26" rx="3" fill="#9cc3e4"/>
 <text x="1432" y="103" font-size="18" font-weight="700" fill="#1d2320">76.8%</text>
 <text x="16" y="136" font-size="16" font-weight="700" fill="#1d2320">Recovered</text>
 <text x="150" y="136" font-size="14" fill="#5b6560">complete and covered by a test</text>
 <rect x="560" y="118" width="860" height="26" rx="3" fill="#e3e6e0"/>
-<rect x="560" y="118" width="517.9" height="26" rx="3" fill="#e8b04a"/>
+<rect x="560" y="118" width="518.0" height="26" rx="3" fill="#e8b04a"/>
 <text x="1432" y="137" font-size="18" font-weight="700" fill="#1d2320">60.2%</text>
 <text x="16" y="170" font-size="16" font-weight="700" fill="#1d2320">Verified</text>
 <text x="150" y="170" font-size="14" fill="#5b6560">against the machine code</text>
@@ -646,7 +646,9 @@
 <rect x="239.3" y="1083.2" width="9.2" height="8.7" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="248.4" y="1083.2" width="8.7" height="8.7" fill="#e8b04a"><title>cSC4PanelUIWinProc: 354 bytes, Recovered</title></rect>
 <rect x="248.4" y="1083.2" width="8.7" height="8.7" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
-<rect x="257.1" y="1083.2" width="7.8" height="8.7" fill="#d5d9d4"><title>cSC4WaterOccupantFilter: 316 bytes, Not started</title></rect>
+<rect x="257.1" y="1083.2" width="7.8" height="5.9" fill="#e8b04a"><title>cSC4WaterOccupantFilter: 214 bytes, Recovered</title></rect>
+<rect x="257.1" y="1089.1" width="7.8" height="2.8" fill="#e8b04a"><title>cSC4WaterOccupantFilter: 102 bytes, Recovered, unit test only (artifacts)</title></rect>
+<rect x="257.1" y="1089.1" width="7.8" height="2.8" fill="url(#hatch)"/>
 <rect x="257.1" y="1083.2" width="7.8" height="8.7" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="220.6" y="1091.9" width="7.3" height="8.8" fill="#e8b04a"><title>cSC4WateredPipeFilter: 300 bytes, Recovered</title></rect>
 <rect x="220.6" y="1091.9" width="7.3" height="8.8" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
@@ -656,7 +658,7 @@
 <rect x="220.6" y="1108.1" width="7.3" height="6.8" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="220.6" y="1114.8" width="7.3" height="6.6" fill="#d5d9d4"><title>cSC4SafeList&lt;cISC4Lot*&gt;: 226 bytes, Not started</title></rect>
 <rect x="220.6" y="1114.8" width="7.3" height="6.6" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
-<rect x="220.6" y="1121.5" width="7.3" height="6.5" fill="#d5d9d4"><title>cSC4ZoomRotationModelChangeOccupantFilter: 222 bytes, Not started</title></rect>
+<rect x="220.6" y="1121.5" width="7.3" height="6.5" fill="#e8b04a"><title>cSC4ZoomRotationModelChangeOccupantFilter: 222 bytes, Recovered</title></rect>
 <rect x="220.6" y="1121.5" width="7.3" height="6.5" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="227.9" y="1091.9" width="6.3" height="7.4" fill="#e8b04a"><title>cSC4AutoFlushInputMessageQueue: 218 bytes, Recovered</title></rect>
 <rect x="227.9" y="1091.9" width="6.3" height="7.4" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
@@ -688,7 +690,9 @@
 <rect x="234.2" y="1111.1" width="5.9" height="5.8" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="234.2" y="1116.8" width="5.9" height="5.6" fill="#e8b04a"><title>cSC4ActiveFireOccupantFilter: 156 bytes, Recovered</title></rect>
 <rect x="234.2" y="1116.8" width="5.9" height="5.6" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
-<rect x="234.2" y="1122.5" width="5.9" height="5.5" fill="#d5d9d4"><title>cSC4StoplightPropOccupantFilter: 154 bytes, Not started</title></rect>
+<rect x="234.2" y="1122.5" width="3.2" height="5.5" fill="#e8b04a"><title>cSC4StoplightPropOccupantFilter: 82 bytes, Recovered, unit test only (artifacts)</title></rect>
+<rect x="234.2" y="1122.5" width="3.2" height="5.5" fill="url(#hatch)"/>
+<rect x="237.3" y="1122.5" width="2.8" height="5.5" fill="#e8b04a"><title>cSC4StoplightPropOccupantFilter: 72 bytes, Recovered</title></rect>
 <rect x="234.2" y="1122.5" width="5.9" height="5.5" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="240.1" y="1098.5" width="6.4" height="5.2" fill="#e8b04a"><title>cSC4WealthRequester: 154 bytes, Recovered</title></rect>
 <rect x="240.1" y="1098.5" width="6.4" height="5.2" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
@@ -3391,7 +3395,7 @@
 <rect x="1369.4" y="932.2" width="4.7" height="7.7" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="1374.2" y="932.2" width="4.4" height="7.7" fill="#e8b04a"><title>cSC4DummyAutoOccupant: 178 bytes, Recovered</title></rect>
 <rect x="1374.2" y="932.2" width="4.4" height="7.7" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
-<rect x="1378.6" y="932.2" width="3.9" height="7.7" fill="#d5d9d4"><title>cSC4DummyOccupant: 158 bytes, Not started</title></rect>
+<rect x="1378.6" y="932.2" width="3.9" height="7.7" fill="#e8b04a"><title>cSC4DummyOccupant: 158 bytes, Recovered</title></rect>
 <rect x="1378.6" y="932.2" width="3.9" height="7.7" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="1382.6" y="932.2" width="3.8" height="4.5" fill="#e8b04a"><title>cSC4AutomatonOccupantFilter: 90 bytes, Recovered</title></rect>
 <rect x="1382.6" y="932.2" width="3.8" height="4.5" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>

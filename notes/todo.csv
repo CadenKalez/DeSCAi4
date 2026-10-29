@@ -568,7 +568,7 @@ CLASS-cSC4DisasterInstanceVolcano,cSC4DisasterInstanceVolcano,"recover 29 remain
 CLASS-cSC4DispatchManager,cSC4DispatchManager,"recover 37 remaining function(s) (37 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4DispatchVehicleView,cSC4DispatchVehicleView,"recover 30 remaining function(s) (30 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2, cSC4ViewObject3D","CLASS-cIGZMessageTarget2,CLASS-cSC4ViewObject3D",open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4DummyAutoOccupant,cSC4DummyAutoOccupant,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4DummyOccupant,cSC4DummyOccupant,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4DummyOccupant,cSC4DummyOccupant,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4DynamicLimitTimer,cSC4DynamicLimitTimer,"recover 1 remaining function(s) (1 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4DynamicParticleDescription,cSC4DynamicParticleDescription,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4DynamicParticleEffect,cSC4DynamicParticleEffect,"recover 24 remaining function(s) (24 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -820,7 +820,7 @@ CLASS-cSC4SingletonT<cSC4DisasterManagerFire>,cSC4SingletonT<cSC4DisasterManager
 CLASS-cSC4SituationUIImageWinProc,cSC4SituationUIImageWinProc,"recover 8 remaining function(s) (8 not started, 0 partial/pending); bases still unfinished: cSC4AdvisorUIImageWinProc",CLASS-cSC4AdvisorUIImageWinProc,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4SlotArray<cSTEOverlayManager,cSC4SlotArray<cSTEOverlayManager,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4StaticFloraData,cSC4StaticFloraData,"recover 2 remaining function(s) (2 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4StoplightPropOccupantFilter,cSC4StoplightPropOccupantFilter,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4StoplightPropOccupantFilter,cSC4StoplightPropOccupantFilter,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4StringSpecificationOccupantFilter,cSC4StringSpecificationOccupantFilter,"recover 9 remaining function(s) (9 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4SubBudgetWindow,cSC4SubBudgetWindow,"recover 44 remaining function(s) (44 not started, 0 partial/pending); bases still unfinished: cIGZWinProc",CLASS-cIGZWinProc,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4SubwayConnectionOccupant,cSC4SubwayConnectionOccupant,"recover 12 remaining function(s) (12 not started, 0 partial/pending); bases still unfinished: cSC4UndergroundConnectionOccupant",CLASS-cSC4UndergroundConnectionOccupant,open,scripts/export_class.py + notes/remaining_functions.csv
@@ -917,7 +917,7 @@ CLASS-cSC4ViewInputControlTollBooth,cSC4ViewInputControlTollBooth,"recover 7 rem
 CLASS-cSC4ViewInputControlTorch,cSC4ViewInputControlTorch,"recover 21 remaining function(s) (21 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4ViewInputControlZone,cSC4ViewInputControlZone,"recover 24 remaining function(s) (24 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4ViewObject3D,cSC4ViewObject3D,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
-CLASS-cSC4WaterOccupantFilter,cSC4WaterOccupantFilter,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4WaterOccupantFilter,cSC4WaterOccupantFilter,"recover 4 remaining function(s) (4 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4WaterPathFinder,cSC4WaterPathFinder,"recover 16 remaining function(s) (16 not started, 0 partial/pending); bases still unfinished: cIGZMessageTarget2",CLASS-cIGZMessageTarget2,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSC4Watercraft,cSC4Watercraft,"recover 64 remaining function(s) (64 not started, 0 partial/pending); bases still unfinished: cSC4Automaton",CLASS-cSC4Automaton,done,scripts/export_class.py + notes/remaining_functions.csv
 LEDGER-cSC4Watercraft,cSC4Watercraft,finish 11 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
@@ -990,7 +990,7 @@ ZONEDEV-1,cSC4ZoneDeveloper,Recover cSC4SafeList and cSC4SafeListIterator so Cre
 ZONEDEV-2,cSC4ZoneDeveloper,Recover the parcellization pipeline (OnZone/OnDezone/Parcellize/SubdivideTheZone/DrawStreet/DetermineLotSize) that DoParcellization and UpdateHighlightTextures call,,open,src/sc4/ZoneDeveloper.cpp
 ZONEDEV-3,cSC4ZoneDeveloper,"Recover DecodeNetworkConnectionObject (0x100132a04), the lot-config objects and surface water so CanCreatePloppedLot and CheckLotTerrainConstraints can be written",,open,src/sc4/ZoneDeveloper.cpp
 LEDGER-cSC4ZoneManager,cSC4ZoneManager,finish 2 partial/pending function(s) (see notes/ledger.csv status recovered-partial / pending),,open,notes/ledger.csv
-CLASS-cSC4ZoomRotationModelChangeOccupantFilter,cSC4ZoomRotationModelChangeOccupantFilter,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
+CLASS-cSC4ZoomRotationModelChangeOccupantFilter,cSC4ZoomRotationModelChangeOccupantFilter,"recover 5 remaining function(s) (5 not started, 0 partial/pending)",,done,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSCBoolTextEntryView,cSCBoolTextEntryView,"recover 6 remaining function(s) (6 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSCColorSequenceEntryView,cSCColorSequenceEntryView,"recover 10 remaining function(s) (10 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv
 CLASS-cSCEditValueDlg,cSCEditValueDlg,"recover 8 remaining function(s) (8 not started, 0 partial/pending)",,open,scripts/export_class.py + notes/remaining_functions.csv

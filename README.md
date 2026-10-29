@@ -7,8 +7,8 @@
 <!-- progress:start -->
 ![decompiled](https://img.shields.io/badge/decompiled-83.1%25-green)
 
-`█████████████████░░░` **83.1%** — 22,329 of 26,880 game functions recovered, 4,551 remaining (details: [notes/progress.md](notes/progress.md))
-![macOS port](https://img.shields.io/badge/macOS_port-83.9%25-blue) **83.9%** of the 26,597 functions the macOS port needs (22,319 recovered; 80% = 21,278)
+`█████████████████░░░` **83.1%** — 22,348 of 26,880 game functions recovered, 4,532 remaining (details: [notes/progress.md](notes/progress.md))
+![macOS port](https://img.shields.io/badge/macOS_port-84.0%25-blue) **84.0%** of the 26,597 functions the macOS port needs (22,338 recovered; 80% = 21,278)
 
 [Coverage map](docs/coverage-map.svg): every class of the original as a box sized by its machine code, coloured by how far it has come
 <!-- progress:end -->

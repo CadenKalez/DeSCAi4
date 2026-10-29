@@ -76,6 +76,13 @@ int main() {
     CHECK(!o->QueryInterface(0x12345678, &raw));
     o->Release();
     {   // the dummy automaton target: position, a zero-size box and one group
+        cSC4DummyOccupant plain;
+        const float spot[3] = {4.0f, 5.0f, 6.0f};
+        plain.SetPosition(spot);
+        float q[3], qlo[3], qhi[3];
+        plain.GetPosition(q);
+        plain.GetBoundingBox(qlo, qhi);
+        CHECK(q[1] == 5.0f && qlo[2] == 6.0f && qhi[0] == 4.0f);
         cSC4DummyAutoOccupant dummy;
         const float where[3] = {1.0f, 2.0f, 3.0f};
         dummy.SetPosition(where);
