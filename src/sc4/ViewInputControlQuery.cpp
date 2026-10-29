@@ -2507,11 +2507,85 @@ void cSC4ViewInputControlQuery::GetNetworkOccupantSummaryInfo(cRZString& title, 
     network->Release();
 }
 
-// @ 0x1002cfb90: PARTIAL (QUERY-6) - the lot headline builder (1,700 lines of decompile over a dozen simulators) is not recovered, so a lot
-// adds no headlines yet.
-void cSC4ViewInputControlQuery::GetLotHeadlines(IQueryLot*, std::multimap<int, cRZString>&) {}
+// @ 0x1002cfae0: the wealth of the lot's building type (its profile), else of the lot's occupants
+std::uint32_t cSC4ViewInputControlQuery::GetBuildingWealth(IQueryLot* lot) {
+    const std::uint32_t buildingType = lot->GetBuildingType(false);
+    if (buildingType != 0) {
+        IQueryHost* host = QueryHost();
+        return host ? host->BuildingTypeWealth(buildingType) : 0;
+    }
+    return static_cast<std::uint32_t>(lot->GetOccupantWealth());
+}
 
-// @ 0x1002c5604 PARTIAL (GetLotHeadlines): over land the title is "terrain", the zone type names the ground below it (zone 0 and 0xf replace the
+// @ 0x1002cfb90: the sentences the terrain tip shows for a lot, each with an importance key (the multimap keeps equal keys in insertion order):
+// a power-line-less lot needing power, pollution / garbage / school / hospital / crime verdicts, the traffic and trip length verdicts that
+// depend on the zone (residential 1-3, commercial 4-6, industrial 7-9), a vacated or abandoned lot and a lot that stays below its building's wealth.
+void cSC4ViewInputControlQuery::GetLotHeadlines(IQueryLot* lot, std::multimap<int, cRZString>& headlines) {
+    IQueryHost* host = QueryHost();
+    if (!host || !host->City()) return;
+    bool needsPower = lot->GetNeedsPower();
+    float center[3] = {0.0f, 0.0f, 0.0f};
+    lot->GetCenter(center);
+    int cellX = 0, cellZ = 0;
+    host->City()->PositionToCell(center[0], center[2], cellX, cellZ);
+    int buildingWealth = 0;
+    const std::uint32_t buildingType = lot->GetBuildingType(false);
+    IQueryGrowthDeveloper* developer = host->FindBestDeveloper(lot);
+    const std::uint32_t zone = host->ZoneTypeAt(cellX, cellZ);
+    if (!developer) return;
+    if (buildingType == 0) needsPower = true;
+    else buildingWealth = static_cast<int>(GetBuildingWealth(lot));
+
+    auto add = [&](std::uint32_t instance, int key) {
+        cRZString text;
+        host->LoadString(kStringGroup, instance, text);
+        headlines.emplace(key, text);
+    };
+    std::uint32_t reading = 0;
+    if (cISCPropertyHolder* holder = lot->AsPropertyHolder()) {
+        if (cSCPropertyHelp::GetPropertyValue(holder, 0x8999b20b, reading) && reading != 0) add(0x0a5bba2a, 0x5a);
+    }
+    if (needsPower && !lot->GetHasPower()) add(0x6a5bbba0, 100);
+    int value = 0;
+    if (GetSubjectivePollution(developer, cellX, cellZ, value) == 2) add(0x8a5bbbf1, value);
+    if (GetSubjectiveGarbage(developer, cellX, cellZ, value) == 2) add(0x0a82439f, value);
+    std::uint32_t verdict = GetSubjectiveSchoolGrade(developer, cellX, cellZ, value);
+    if (verdict == 0) add(0xca5bbc43, value);
+    else if (verdict == 2) add(0x2a5bbc39, value);
+    verdict = GetSubjectiveHospitalGrade(developer, cellX, cellZ, value);
+    if (verdict == 0) add(0x2a5bbc4d, value);
+    else if (verdict == 2) add(0x6a5bbc57, value);
+    verdict = GetSubjectiveCrimeLevel(developer, cellX, cellZ, value);
+    if (verdict == 0) add(0x4a5bbc61, value);
+    else if (verdict == 2) add(0x6a5bbc73, value);
+
+    // the trip verdicts by zone group: residential (bits 0xe), commercial (0x70) and industrial (0x380) words differ; other zones skip them
+    if (zone < 10) {
+        const bool residential = ((0xeu >> zone) & 1) != 0;
+        const bool commercial = !residential && ((0x70u >> zone) & 1) != 0;
+        const bool industrial = !residential && !commercial && ((0x380u >> zone) & 1) != 0;
+        if (residential || commercial || industrial) {
+            verdict = GetSubjectiveTrafficLevel(developer, cellX, cellZ, value);
+            if (verdict == 0) add(commercial ? 0x6aa87825 : 0x2a5bbc91, value);
+            else if (verdict == 2) add(commercial ? 0x0aa87852 : 0x6a5bbc80, value);
+            verdict = GetSubjectiveTripLength(developer, cellX, cellZ, value);
+            if (residential) {
+                if (verdict == 0) add(lot->GetAbandonReason() == 4 ? 0xaa5bbc97 : 0xaa5bbc9f, value);
+                else if (verdict == 2) add(0xaa5bbc97, value);
+            } else {
+                if (verdict == 0) add(0xcaa8785c, value);
+                else if (verdict == 2) add(0x2aa8786b, value);
+            }
+        }
+    }
+    const int state = lot->GetState();
+    if (state == 4) add(0x0a5fbdf2, 0);
+    else if (state == 2) add(0x4a5fbdc4, 0);
+    if (buildingWealth <= lot->GetOccupantWealth()) return;
+    add(0x6a5fbed8, 1);
+}
+
+// @ 0x1002c5604: over land the title is "terrain", the zone type names the ground below it (zone 0 and 0xf replace the
 // title instead of filling the text, as compiled), then the three most important headlines of the lot under the cell are appended to the text.
 void cSC4ViewInputControlQuery::GetTerrainSummaryInfo(cRZString& title, cRZString& text) {
     IQueryHost* host = QueryHost();

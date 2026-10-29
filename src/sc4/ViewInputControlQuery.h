@@ -118,6 +118,9 @@ public:
     virtual std::uint16_t GetCapacity(int wealth) { (void)wealth; return 0; }         // 0x190
     virtual float GetOccupancy() { return 0.0f; }                                     // 0x1e8
     virtual void GetCenter(float* xyz) { xyz[0] = xyz[1] = xyz[2] = 0.0f; }           // 0x78
+    virtual bool GetNeedsPower() { return false; }                                    // 0x208
+    virtual bool GetHasPower() { return false; }                                      // 0x210
+    virtual cISCPropertyHolder* AsPropertyHolder() { return nullptr; }                // 0x18
 };
 
 // The growth developer the rating rows read (cSC4GrowthDeveloper, recovered): the rating thresholds (vslot 0xf0 with a kind
@@ -362,6 +365,8 @@ public:
     virtual std::uint8_t TripLengthValue(int x, int z) { (void)x; (void)z; return 0; }                         // SL::spTrafficSim 0x68
     // FindBestDeveloper(lot) 0x1002cf948: the growth developer whose building type or cell suits the lot; null when none.
     virtual IQueryGrowthDeveloper* FindBestDeveloper(IQueryLot* lot) { (void)lot; return nullptr; }
+    // SL::spBuildingDevelopmentSim vslot 0x138 GetBuildingProfile(type): the profile's wealth (+4).
+    virtual std::uint32_t BuildingTypeWealth(std::uint32_t buildingType) { (void)buildingType; return 0; }
     virtual bool TerrainCellHasWater(int x, int z) { (void)x; (void)z; return false; }   // SL::spCity vslot 0x2a0 (terrain) -> vslot 0x110
     virtual std::uint32_t ZoneTypeAt(int x, int z) { (void)x; (void)z; return 0xff; }     // SL::spZoneManager vslot 0x60
     // SC4LoadExemplarString @ 0x100121132: the localized string the property names; false when it has none.
@@ -625,8 +630,9 @@ public:
     void GetPropOccupantSummaryInfo(cRZString& title);
     void GetFloraOccupantSummaryInfo(cRZString& title);
     void GetTerrainSummaryInfo(cRZString& title, cRZString& text);
-    // @ 0x1002cfb90 (PARTIAL: still an empty stub, QUERY-6): a lot's headline sentences keyed by importance
+    // @ 0x1002cfb90 a lot's headline sentences keyed by importance
     static void GetLotHeadlines(IQueryLot* lot, std::multimap<int, cRZString>& headlines);
+    static std::uint32_t GetBuildingWealth(IQueryLot* lot);   // @ 0x1002cfae0
     void DescribePick(int x, int y, cRZString& line1, cRZString& line2, cRZString& line3, bool detailed);
     void GetOccupantPaths();
     void ShowAllRoutesThatIntersectCityRect(const SC4CellRect& rect);

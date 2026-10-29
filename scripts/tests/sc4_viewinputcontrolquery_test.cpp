@@ -297,6 +297,11 @@ struct Lot final : IQueryLot {
     int state = 0;
     int reason = 0;
     bool historical = false;
+    bool needsPower = false, hasPower = true;
+    bool GetNeedsPower() override { return needsPower; }
+    bool GetHasPower() override { return hasPower; }
+    Holder* lotHolder = nullptr;
+    cISCPropertyHolder* AsPropertyHolder() override { return lotHolder; }
     int wealth = 0;
     std::uint16_t capacity = 0;
     std::uint32_t buildingType = 1;
@@ -648,6 +653,8 @@ struct Host final : IViewInputHost, IQueryHost {
     }
     GrowthDeveloperFake developer;
     bool hasDeveloper = true;
+    std::uint32_t typeWealth = 0;
+    std::uint32_t BuildingTypeWealth(std::uint32_t) override { return typeWealth; }
     std::uint16_t pollutionMaps[4] = {};
     float school = 0.0f, hospitalGrade = 0.0f;
     std::uint8_t crime = 0, traffic = 0, tripLength = 0;
@@ -1926,6 +1933,58 @@ int main() {
         tool->GetTerrainSummaryInfo(terrainTitle, terrainText);
         CHECK(host.strings.size() == 1);   // an unknown zone: only the terrain title
         tool->Release();
+    }
+
+    // --- M11: GetLotHeadlines / GetBuildingWealth ------------------------------------------------------------------
+    {
+        auto& dev = host.developer;
+        for (int i = 0; i < 9; ++i) dev.present[i] = true;
+        for (int k = 0; k < 7; ++k) { dev.lows[k] = 10; dev.highs[k] = 50; }
+        for (int i = 0; i < 4; ++i) host.pollutionMaps[i] = 30;   // pollution neutral, garbage neutral
+        host.school = 30.0f; host.hospitalGrade = 30.0f; host.crime = 30; host.traffic = 30; host.tripLength = 30;
+        Lot lot;
+        lot.buildingType = 1;
+        lot.state = 0;
+        lot.wealth = 5;
+        host.typeWealth = 4;
+        host.city.cellX = 1; host.city.cellZ = 1;
+        host.zone = 1;   // residential
+        host.hasDeveloper = true;
+        std::multimap<int, cRZString> headlines;
+        // a calm lot with enough wealth: no headline at all
+        cSC4ViewInputControlQuery::GetLotHeadlines(&lot, headlines);
+        CHECK(headlines.empty());
+        CHECK(cSC4ViewInputControlQuery::GetBuildingWealth(&lot) == 4);
+        lot.buildingType = 0;
+        lot.wealth = 7;
+        CHECK(cSC4ViewInputControlQuery::GetBuildingWealth(&lot) == 7);   // no building type: the occupants' wealth
+        lot.buildingType = 1;
+        // needs power without it, an abandoned lot (state 4), a wealth below the building's, bad crime and pollution
+        lot.needsPower = true; lot.hasPower = false;
+        lot.state = 4;
+        lot.wealth = 1;
+        host.crime = 5;                       // curve 5 < low 10 -> rank 2 (bad for the headline: only rank 0 / 2 verdicts add)
+        host.pollutionMaps[0] = 2; host.pollutionMaps[1] = 2; host.pollutionMaps[3] = 2;   // sum 6 < 10 -> rank 2
+        host.strings.clear();
+        headlines.clear();
+        cSC4ViewInputControlQuery::GetLotHeadlines(&lot, headlines);
+        std::vector<int> keys;
+        for (auto& entry : headlines) keys.push_back(entry.first);
+        CHECK(headlines.size() >= 4);
+        CHECK(headlines.count(100) == 1 && headlines.count(0) == 1 && headlines.count(1) == 1);   // power, vacated state, wealth
+        std::vector<std::uint32_t> loaded = host.strings;
+        auto has = [&](std::uint32_t instance) { for (auto v : loaded) if (v == instance) return true; return false; };
+        CHECK(has(0x6a5bbba0) && has(0x0a5fbdf2) && has(0x6a5fbed8) && has(0x8a5bbbf1));
+        // a lot with a property 0x8999b20b headlines first at key 0x5a; a building type zero forces the power check
+        Holder holder;
+        holder.id = 0x8999b20b;
+        holder.value = true;
+        lot.lotHolder = &holder;
+        // (the holder answers a bool; the property is read as a number, so it counts when non-zero)
+        host.hasDeveloper = false;
+        headlines.clear();
+        cSC4ViewInputControlQuery::GetLotHeadlines(&lot, headlines);
+        CHECK(headlines.empty());   // no growth developer: nothing
     }
 
     // --- N: neighbour-connection rows ----------------------------------------------------------------------

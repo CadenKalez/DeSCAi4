@@ -11,12 +11,12 @@
 <text x="16" y="136" font-size="16" font-weight="700" fill="#1d2320">Recovered</text>
 <text x="150" y="136" font-size="14" fill="#5b6560">complete and covered by a test</text>
 <rect x="560" y="118" width="860" height="26" rx="3" fill="#e3e6e0"/>
-<rect x="560" y="118" width="523.9" height="26" rx="3" fill="#e8b04a"/>
+<rect x="560" y="118" width="524.1" height="26" rx="3" fill="#e8b04a"/>
 <text x="1432" y="137" font-size="18" font-weight="700" fill="#1d2320">60.9%</text>
 <text x="16" y="170" font-size="16" font-weight="700" fill="#1d2320">Verified</text>
 <text x="150" y="170" font-size="14" fill="#5b6560">against the machine code</text>
 <rect x="560" y="152" width="860" height="26" rx="3" fill="#e3e6e0"/>
-<rect x="560" y="152" width="76.8" height="26" rx="3" fill="#1f6b43"/>
+<rect x="560" y="152" width="77.0" height="26" rx="3" fill="#1f6b43"/>
 <text x="1432" y="171" font-size="18" font-weight="700" fill="#1d2320">8.9%</text>
 <line x1="775.0" y1="84" x2="775.0" y2="178" stroke="#f6f7f4" stroke-width="1.5"/>
 <line x1="990.0" y1="84" x2="990.0" y2="178" stroke="#f6f7f4" stroke-width="1.5"/>
@@ -2349,8 +2349,8 @@
 <rect x="802.7" y="1126.7" width="2.9" height="1.3" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="529.9" y="738.5" width="275.7" height="389.5" fill="none" stroke="#f6f7f4" stroke-width="1.8"/>
 <text x="533.9" y="752.5" font-size="11.5" font-weight="600" fill="#1d2320" stroke="#f6f7f4" stroke-width="3" paint-order="stroke">GZ windows</text>
-<rect x="805.6" y="738.5" width="70.8" height="115.5" fill="#9cc3e4"><title>cSC4ViewInputControlQuery: 39743 bytes, Partial</title></rect>
-<rect x="876.4" y="738.5" width="60.8" height="115.5" fill="#1f6b43"><title>cSC4ViewInputControlQuery: 34122 bytes, Verified</title></rect>
+<rect x="805.6" y="738.5" width="68.1" height="115.5" fill="#9cc3e4"><title>cSC4ViewInputControlQuery: 38187 bytes, Partial</title></rect>
+<rect x="873.7" y="738.5" width="63.6" height="115.5" fill="#1f6b43"><title>cSC4ViewInputControlQuery: 35678 bytes, Verified</title></rect>
 <rect x="805.6" y="854.0" width="112.2" height="26.7" fill="#e8b04a"><title>cSC4ViewInputControlQuery: 14544 bytes, Recovered</title></rect>
 <rect x="917.8" y="854.0" width="19.4" height="26.7" fill="#e8b04a"><title>cSC4ViewInputControlQuery: 2520 bytes, Recovered, unit test only (artifacts)</title></rect>
 <rect x="917.8" y="854.0" width="19.4" height="26.7" fill="url(#hatch)"/>
