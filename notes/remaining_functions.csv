@@ -4490,9 +4490,7 @@ cSTEVolcanoLava,000000010075258a,not started,"cSTEVolcanoLava::CreateBurnAroundR
 cSTEVolcanoLava,000000010075264e,not started,cSTEVolcanoLava::cSTEVolcanoLava()
 cSTEVolcanoLava,00000001007527a2,not started,cSTEVolcanoLava::cSTEVolcanoLava()
 cSTEVolcanoLava,00000001007527ac,not started,cSTEVolcanoLava::DoAnimationTick(unsigned int)
-cSTEVolcanoLava,000000010075283e,not started,cSTEVolcanoLava::DoLavaFlow(unsigned int)
 cSTEVolcanoLava,0000000100752d60,not started,cSTEVolcanoLava::TickDecals(unsigned int)
-cSTEVolcanoLava,0000000100752ebc,not started,cSTEVolcanoLava::GetNeighborWithLowestLavaLevel(int)
 cSTEVolcanoLava,0000000100752ffc,not started,"cSTEVolcanoLava::SetThingsOnFire(int, float, float)"
 cSTEVolcanoLava,0000000100753112,not started,cSTEVolcanoLava::PrepareForDisplay()
 cSTEVolcanoLava,00000001007533a6,not started,cSTEVolcanoLava::DoMessage(cIGZMessage2*)
@@ -4511,16 +4509,11 @@ cSTEVolcanoLava,0000000100754148,not started,cSTEVolcanoLava::InitSurfacePoints(
 cSTEVolcanoLava,000000010075425c,not started,cSTEVolcanoLava::IsGoodVertexForPlacingSteam(int) const
 cSTEVolcanoLava,00000001007542da,not started,cSTEVolcanoLava::UpdateSteamEffects()
 cSTEVolcanoLava,0000000100754418,not started,"cSTEVolcanoLava::QueryInterface(unsigned int, void**)"
-cSTEVolcanoLava,0000000100754492,not started,cSTEVolcanoLava::ReadTuningParameters()
 cSTEVolcanoLava,0000000100754650,not started,cSTEVolcanoLava::Release()
 cSTEVolcanoLava,0000000100754676,not started,cSTEVolcanoLava::RemoveDecals()
 cSTEVolcanoLava,0000000100754734,not started,cSTEVolcanoLava::RemoveSteamEffects()
-cSTEVolcanoLava,00000001007547e8,not started,cSTEVolcanoLava::SetLavaProductionRate(float)
-cSTEVolcanoLava,00000001007547f6,not started,cSTEVolcanoLava::SetSolidificationRate(float)
-cSTEVolcanoLava,0000000100754804,not started,"cSTEVolcanoLava::StartLavaFlow(float, float, float, bool)"
 cSTEVolcanoLava,0000000100754940,not started,cSTEVolcanoLava::StaticShutdown(void*)
 cSTEVolcanoLava,00000001007549c0,not started,cSTEVolcanoLava::Update(SC4DrawContext*)
-cSTEVolcanoLava,0000000100754b46,not started,"cSTEVolcanoLava::GetLavaHeightByCityCell(int, int)"
 cSTEVolcanoLava,0000000100754b7a,not started,cSTEVolcanoLava::~cSTEVolcanoLava()
 cSTEVolcanoLava,0000000100754bfe,not started,cSTEVolcanoLava::~cSTEVolcanoLava()
 cSTEWaterRipple,0000000100755048,not started,cSTEWaterRipple::AddRef()
