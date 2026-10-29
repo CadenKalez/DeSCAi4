@@ -55,6 +55,7 @@ struct AirplaneOracleAccess {
         for (int i = 0; i < 3; ++i) { out[3 * i] = v[i]->x; out[3 * i + 1] = v[i]->y; out[3 * i + 2] = v[i]->z; }
     }
     static void SetAttitude(cSC4Airplane& p, float roll, float pitch, float yaw) { p.roll_ = roll; p.pitch_ = pitch; p.yaw_ = yaw; }
+    static void SetBox(cSC4Airplane& p, const float* box) { std::memcpy(p.boundingBox_, box, sizeof p.boundingBox_); }
     static void SetSlopes(cSC4Airplane& p, float climb, float descent) { p.climbSlope_ = climb; p.descentSlope_ = descent; }
     static void SetTurnRate(cSC4Airplane& p, float rate) { p.turnRate_ = rate; }
     static void Controls(const cSC4Airplane& p, float* out) {
@@ -107,6 +108,7 @@ struct OracleAircraftHost final : IAircraftHost {
         return gPick;
     }
     const void* LotAt(const cS3DVector3&) override { return nullptr; }
+    bool FindCollider(AircraftColliderQuery query, const float* lo, const float* hi, AircraftCollider& hit) override;
     float OpacityFadeSeconds() override { return 1.0f; }
     bool CellHasWater(std::uint32_t x, std::uint32_t z) override { return WaterCell(x, z); }
     bool DisasterActive() override { return false; }
@@ -129,8 +131,8 @@ float DefaultSlot(void*) { return 7.0f; }
 void* NoLot(void*, const float*) { return nullptr; }
 void* EffectMapsSlot(void*) { return &effectMaps; }
 float EffectHeightSlot(void*, float x, float z, int) { return EffectHeight(x, z); }
-int managerObject;
-void* ManagerSlot(void*) { return &managerObject; }
+unsigned char managerObject[0xc00];   // the aircraft manager: only its filter pointer (+0xb38) is read
+void* ManagerSlot(void*) { return managerObject; }
 void RunwayListHook(void*, const float*, std::vector<cS3DVector3>* out) { *out = gRunways; }
 std::uint32_t WeightedChoiceHook(void*, std::uint32_t count, const double* weights) {
     gWeightsOriginal.assign(weights, weights + count);
@@ -138,9 +140,34 @@ std::uint32_t WeightedChoiceHook(void*, std::uint32_t count, const double* weigh
 }
 void PositionToCellSlot(void*, float x, float z, int* cx, int* cz) { *cx = int(x / 16.0f); *cz = int(z / 16.0f); }
 bool CellHasWaterSlot(void*, std::uint32_t x, std::uint32_t z) { return WaterCell(x, z); }
-void NoCollisions(void*) {}
+long gStackGuard = 0x5ca1ab1e;   // what ___stack_chk_guard points at
 unsigned char gOriginalTransform[0x40];
 void SetTransformSlot(void*, const void* transform) { std::memcpy(gOriginalTransform, transform, sizeof gOriginalTransform); }
+// collision queries: which query (0 buildings, 1 aircraft, 2 type 0xc772bf98) hits, and the hit occupant
+int gHitQuery = -1;
+AircraftCollider gHit;
+std::vector<std::vector<float>> gBoxesOriginal, gBoxesPort;
+FakeService hitOccupant;
+void HitPosition(void*, float* out) { out[0] = gHit.position.x; out[1] = gHit.position.y; out[2] = gHit.position.z; }
+void HitBounds(void*, float* lo, float* hi) { std::memcpy(lo, gHit.boxMin, 12); std::memcpy(hi, gHit.boxMax, 12); }
+struct ListNode { ListNode* prev; ListNode* next; void* value; };
+struct OccupantList { ListNode* prev; ListNode* next; std::size_t size; };
+ListNode gNode;
+bool Query(int which, OccupantList* list, const float* lo, const float* hi) {
+    gBoxesOriginal.push_back({lo[0], lo[1], lo[2], hi[0], hi[1], hi[2]});
+    if (which != gHitQuery) return false;
+    gNode = {reinterpret_cast<ListNode*>(list), reinterpret_cast<ListNode*>(list), &hitOccupant};
+    list->prev = list->next = &gNode;
+    list->size = 1;
+    return true;
+}
+bool QueryByType(void*, OccupantList* list, const float* lo, const float* hi, std::uint32_t type, int) {
+    return Query(type == 0x278128a0 ? 0 : 2, list, lo, hi);
+}
+bool QueryByFilter(void*, OccupantList* list, const float* lo, const float* hi, void*, int) { return Query(1, list, lo, hi); }
+void ReleaseList(void*, OccupantList*) {}
+void ClearList(OccupantList* list) { list->prev = list->next = reinterpret_cast<ListNode*>(list); list->size = 0; }
+FakeService occupants;
 int gOriginalRemoved = 0;
 void RemoveSlot(void*, bool) { ++gOriginalRemoved; }
 void* NewHook(std::size_t n) { return ::operator new(n); }
@@ -167,6 +194,13 @@ void Check(bool ok, const char* what, int trial) {
     if (!ok && ++failures <= 20) std::printf("MISMATCH %s (trial %d)\n", what, trial);
 }
 }  // namespace
+
+bool OracleAircraftHost::FindCollider(AircraftColliderQuery query, const float* lo, const float* hi, AircraftCollider& hit) {
+    gBoxesPort.push_back({lo[0], lo[1], lo[2], hi[0], hi[1], hi[2]});
+    if (static_cast<int>(query) != gHitQuery) return false;
+    hit = gHit;
+    return true;
+}
 
 int main() {
     InstallCrashReport();
@@ -201,7 +235,15 @@ int main() {
     originalVtable.Set(0x290, reinterpret_cast<const void*>(&SetTransformSlot));   // cSC4Automaton::SetTransform
     city.Set(0x2f8, reinterpret_cast<const void*>(&PositionToCellSlot));
     terrain.Set(0x110, reinterpret_cast<const void*>(&CellHasWaterSlot));
-    if (!Hook(0x1006d0cd0, reinterpret_cast<const void*>(&NoCollisions))) return 2;   // DetectCollisions: port stand-in
+    hitOccupant.Set(0x40, reinterpret_cast<const void*>(&HitPosition));
+    hitOccupant.Set(0x50, reinterpret_cast<const void*>(&HitBounds));
+    occupants.Set(0x120, reinterpret_cast<const void*>(&QueryByType));
+    occupants.Set(0x128, reinterpret_cast<const void*>(&QueryByFilter));
+    occupants.Set(0x180, reinterpret_cast<const void*>(&ReleaseList));
+    occupants.Install(0x100b21348);                                    // SL::spOccupantManager
+    At<long*>(0x100a657c8) = &gStackGuard;                              // the ___stack_chk_guard GOT slot
+    originalVtable.slots[0x258 / 8] = reinterpret_cast<void*>(Here(0x100107148));   // cSC4Automaton::GetBoundingBox
+    if (!Hook(0x1000a5c20, reinterpret_cast<const void*>(&ClearList))) return 2;    // the occupant list's clear
     if (!Hook(0x10050175a, reinterpret_cast<const void*>(&RunwayListHook)) ||      // cSC4AircraftManager::GetRunwayList
         !Hook(0x10003da38, reinterpret_cast<const void*>(&WeightedChoiceHook))) {  // RandomUint32WeightedChoice
         std::perror("hook");
@@ -628,6 +670,46 @@ int main() {
             same = same && gOriginalTransform[1] == 5 && gOriginalTransform[0] == 5 && Same(translation[0], motion[0]) &&
                    Same(translation[1], motion[1]) && Same(translation[2], motion[2]);
             Check(same, "UpdatePhysics", t);
+        }
+
+        {   // DetectCollisions: no hit or a hit from each query, obstacle boxes around the plane
+            gStage = "DetectCollisions";
+            float o[3], v[3], box[6];
+            o[0] = unit(rng); o[1] = 0.3f * unit(rng); o[2] = unit(rng);
+            for (float& x : v) x = 30.0f * unit(rng);
+            const float px = gCitySize[0] * 0.5f * (unit(rng) + 1), pz = gCitySize[1] * 0.5f * (unit(rng) + 1);
+            const float position[3] = {px, Height(px, pz) + 20.0f * (unit(rng) + 1), pz};
+            for (int i = 0; i < 3; ++i) { box[i] = position[i] - 5.0f - 3.0f * (unit(rng) + 1); box[3 + i] = position[i] + 5.0f; }
+            gHitQuery = static_cast<int>(rng() % 4) - 1;
+            gHit.position = {position[0] + 15.0f * unit(rng), position[1] + 15.0f * unit(rng), position[2] + 15.0f * unit(rng)};
+            for (int i = 0; i < 3; ++i) {
+                const float centre = (&gHit.position.x)[i];
+                gHit.boxMin[i] = centre - 4.0f - 8.0f * (unit(rng) + 1);
+                gHit.boxMax[i] = centre + 4.0f + 8.0f * (unit(rng) + 1);
+            }
+            const float yaw = angle(rng);
+            std::memcpy(original + 0x8c, o, sizeof o);
+            std::memcpy(original + 0x36c, v, sizeof v);
+            std::memcpy(original + 0x74, position, sizeof position);
+            std::memcpy(original + 0x25c, box, sizeof box);
+            std::memcpy(original + 0x380, &yaw, 4);
+            float c[6] = {}, tune[12] = {};
+            AirplaneOracleAccess::SetMotion(port, c, tune, o, v);
+            std::memcpy(original + 0x314, c, sizeof c);
+            AirplaneOracleAccess::SetPositionState(port, position, 0);
+            AirplaneOracleAccess::SetBox(port, box);
+            AirplaneOracleAccess::SetAttitude(port, port.Roll(), port.Pitch(), yaw);
+            gBoxesOriginal.clear();
+            gBoxesPort.clear();
+            Function<void (*)(void*)>(0x1006d0cd0)(original);
+            port.DetectCollisions();
+            gHitQuery = -1;
+            float motion[9];
+            AirplaneOracleAccess::Motion(port, motion);
+            bool same = gBoxesOriginal == gBoxesPort && Same(Field(0x380), port.Yaw());
+            const int motionOffsets[3] = {0x74, 0x8c, 0x36c};
+            for (int i = 0; i < 9; ++i) same = same && Same(Field(motionOffsets[i / 3] + 4 * (i % 3)), motion[i]);
+            Check(same, "DetectCollisions", t);
         }
 
         if (t % 8 == 0) {

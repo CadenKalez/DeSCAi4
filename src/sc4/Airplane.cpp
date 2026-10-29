@@ -770,8 +770,118 @@ void cSC4Airplane::UpdatePhysics(float delta) {
     SetTransform(transform);
 }
 
-// @ 0x1006d0cd0 PARTIAL: the collision sweep is not ported.
-void cSC4Airplane::DetectCollisions() {}
+// @ 0x1006d0cd0. Over the terrain, the plane's box is checked against buildings, then (its floor raised to 6 above the
+// ground, at most 1 under its top) against other aircraft and occupants of type 0xc772bf98. On a hit (two crash sounds
+// when player-driven) the ray from the obstacle's centre towards the plane, 100 times as long, is cut at the obstacle's
+// box (+x, -x, +y, +z, -z faces) and the nearest face decides: off the top the plane is lifted out and its fall turned
+// upwards; off a side it is pushed out, the velocity gains twice the inward speed (at least 0.1) along the face normal,
+// stops climbing, and the nose and the yaw (via the rotation from the model's facing) follow the new velocity.
+void cSC4Airplane::DetectCollisions() {
+    IAircraftHost* host = HostFor(*this);
+    if (!host || !host->TerrainPointInBounds(position_.x, position_.z)) return;
+    float boxMin[3], boxMax[3];
+    GetBoundingBox(boxMin, boxMax);
+    AircraftCollider hit;
+    if (!host->FindCollider(AircraftColliderQuery::kBuildings, boxMin, boxMax, hit)) {
+        const float floor = GetAltitude(position_) + 6.0f;
+        if (floor > boxMin[1]) {
+            boxMin[1] = floor;
+            if (floor > boxMax[1]) boxMin[1] = boxMax[1] + -1.0f;
+        }
+        if (!host->FindCollider(AircraftColliderQuery::kAircraft, boxMin, boxMax, hit) &&
+            !host->FindCollider(AircraftColliderQuery::kType_c772bf98, boxMin, boxMax, hit))
+            return;
+    }
+    if (IsPlayerDriving()) {
+        host->PlayAudioEvent(7);
+        host->PlayAudioEvent(7);
+    }
+    const cS3DVector3 c = hit.position;
+    const float* lo = hit.boxMin;
+    const float* hi = hit.boxMax;
+    const float rx = position_.x - c.x, ry = position_.y - c.y, rz = position_.z - c.z;
+    float dx = rx * 100.0f, dy = ry * 100.0f, dz = 100.0f * rz;
+    auto shorten = [&](float k) { dx = dx * k; dy = dy * k; dz = dz * k; };
+    if (dx > 0.0f && c.x + dx > hi[0]) shorten((hi[0] - c.x) / dx);
+    if (0.0f > dx && lo[0] > c.x + dx) shorten((lo[0] - c.x) / dx);
+    if (dy > 0.0f && c.y + dy > hi[1]) shorten((hi[1] - c.y) / dy);
+    if (dz > 0.0f && c.z + dz > hi[2]) shorten((hi[2] - c.z) / dz);
+    if (0.0f > dz && lo[2] > c.z + dz) shorten((lo[2] - c.z) / dz);
+    const float px = dx + c.x, py = dy + c.y, pz = dz + c.z;
+
+    // the nearest face: -x, +x, +y, -z, +z (FLT_MAX start)
+    const float e0 = std::fabs(px - lo[0]);
+    float nx = FLT_MAX > e0 ? -1.0f : 0.0f;
+    float best = e0 < FLT_MAX ? e0 : FLT_MAX;
+    const float e1 = std::fabs(px - hi[0]);
+    if (best > e1) nx = 1.0f;
+    best = e1 < best ? e1 : best;
+    float ny = 0.0f, nz = 0.0f;
+    const float e2 = std::fabs(py - hi[1]);
+    if (best > e2) { nx = 0.0f; ny = 1.0f; nz = 0.0f; best = e2; }
+    const float e3 = std::fabs(pz - lo[2]);
+    if (best > e3) { nz = -1.0f; nx = 0.0f; ny = 0.0f; best = e3; }
+    const float e4 = std::fabs(pz - hi[2]);
+    if (best > e4) { ny = 0.0f; nz = 1.0f; }
+    if (e4 < best) nx = 0.0f;
+
+    const float vy = velocity_.y;
+    if (ny != 0.0f || std::isnan(ny)) {
+        if (std::fabs(py - c.y) > std::fabs(ry)) position_.y = py;
+        if (0.0f > vy) velocity_.y = -vy;
+        return;
+    }
+    const float vx = velocity_.x, vz = velocity_.z;
+    float push = (-(vy * ny) - vx * nx) - vz * nz;
+    if (std::fabs(px - c.x) > std::fabs(rx)) position_.x = px;
+    push = push > 0.1f ? push : 0.1f;   // MAXSS
+    if (std::fabs(pz - c.z) > std::fabs(rz)) position_.z = pz;
+    push = push + push;
+    velocity_ = {vx + nx * push, vy + ny * push, vz + nz * push};
+    if (velocity_.y > 0.0f) velocity_.y = 0.0f;
+    orientation_ = velocity_;
+    const float length = std::sqrt(orientation_.z * orientation_.z +
+                                   (orientation_.y * orientation_.y + orientation_.x * orientation_.x));
+    if (length > 0.0001f) {
+        const float inverse = 1.0f / length;
+        orientation_ = {orientation_.x * inverse, orientation_.y * inverse, orientation_.z * inverse};
+    }
+    cS3DVector3 level = {orientation_.x, 0.0f, orientation_.z};
+    const float flat = std::sqrt(orientation_.z * orientation_.z + (orientation_.x * orientation_.x + 0.0f));
+    if (flat > 0.0001f) {
+        const float inverse = 1.0f / flat;
+        level = {orientation_.x * inverse, 0.0f * inverse, orientation_.z * inverse};
+    }
+    // the rotation from kModelFacing to the level heading (w, and the y of its vector part)
+    const cS3DVector3& f = kAircraftModelFacing;
+    const float dot = f.z * level.z + (level.y * f.y + f.x * level.x);
+    float w = 1.0f, qy = 0.0f;
+    if (!(dot >= 0.9999f)) {
+        if (-0.9999f >= dot) {   // opposite: any axis perpendicular to the facing
+            const float s2 = f.y * f.y + f.x * f.x;
+            const bool degenerate = 1.0e-8f > s2;
+            const float ax = degenerate ? f.x : -f.y;
+            const float ay = degenerate ? 0.0f : f.x;
+            const float az = s2 < 1.0e-8f ? -f.z : 0.0f;
+            qy = (1.0f / std::sqrt(ax * ax + (ay * ay + az * az))) * ay;
+            w = 0.0f;
+        } else {
+            const float cx = f.y * level.z - level.y * f.z;
+            const float cy = f.z * level.x - level.z * f.x;
+            const float cz = level.y * f.x - f.y * level.x;
+            const float inverse = 1.0f / std::sqrt(cz * cz + (cy * cy + cx * cx));
+            qy = std::sqrt((1.0f - dot) * 0.5f) * (inverse * cy);
+            w = std::sqrt((dot + 1.0f) * 0.5f);
+        }
+    }
+    const float sine = std::sqrt(1.0f - w * w);
+    const float angle = std::acos(w);
+    const float twice = angle + angle;
+    const float absSine = sine < 0.0f ? -sine : sine;
+    const float scale = absSine < 0.0001f ? 1.0f : 1.0f / sine;
+    yaw_ = scale * qy < 0.0f ? twice : -twice;
+}
+
 
 // @ 0x1006ce990. Runs the current behaviour (jump table 0x1006cedf4 over behaviours 0x32..0x39):
 //  0x32 land (dispatch state 6 unless already 0/4; on landing: state 0 and pop);

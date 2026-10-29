@@ -114,7 +114,7 @@ public:
     void UpdateOrientation(const cS3DVector3& direction, cS3DVector3& heading, const AirplaneControls& controls,
                            cS3DTransform& transform, float delta);    // @ 0x1006d14e8
     void UpdatePhysics(float delta);                                  // @ 0x1006cee14
-    void DetectCollisions();                                          // @ 0x1006d0cd0  PARTIAL
+    void DetectCollisions();                                          // @ 0x1006d0cd0
     void SetAirplaneState(AirplaneState state);                       // @ 0x1006d0be2
     bool AI_TurnToVector(const cS3DVector3& vector, float delta);     // @ 0x1006d4852
     void AI_PursueGoal(float delta);                                  // @ 0x1006ce990

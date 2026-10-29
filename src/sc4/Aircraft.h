@@ -50,6 +50,12 @@ constexpr cS3DVector3 kAircraftWorldUp = {0.0f, 1.0f, 0.0f};       // @ 0x100b8f
 // One registered effect instance (the object cSC4ModelRegEffects::FindRegEffect returns and the effects manager creates;
 // original slots +0x08 AddRef, +0x10 Release, +0x18 Start(transition), +0x20 Stop(fade), +0x28 IsPlaying,
 // +0x38 SetTransform(cS3DTransform), +0x40 SetPosition(cS3DVector3)).
+enum class AircraftColliderQuery { kBuildings /* type 0x278128a0 */, kAircraft /* manager filter */, kType_c772bf98 };
+struct AircraftCollider {
+    cS3DVector3 position;
+    float boxMin[3] = {0.0f, 0.0f, 0.0f}, boxMax[3] = {0.0f, 0.0f, 0.0f};
+};
+
 class IAirplaneEffect {
 public:
     virtual ~IAirplaneEffect() = default;
@@ -80,6 +86,11 @@ public:
     virtual const void* LotAt(const cS3DVector3& position) = 0;
     virtual float OpacityFadeSeconds() = 0;                        // automata tuning params +0x134
     virtual bool CellHasWater(std::uint32_t cellX, std::uint32_t cellZ) = 0;   // SL::spTerrain slot 0x110
+    // DetectCollisions' occupant-manager queries over a box (slot 0x120 by occupant type, slot 0x128 with the aircraft
+    // manager's filter at +0xb38): whether anything is there, and the first hit's position (its slot 0x40) and bounds
+    // (slot 0x50).
+    virtual bool FindCollider(AircraftColliderQuery query, const float* boxMin, const float* boxMax,
+                              AircraftCollider& hit) = 0;
     // ---- SL::spLotManager -------------------------------------------------------------------------------------------
     // lot manager slot 0x30 finds the lot at the point; if the lot's slot 0x60 has bit 0 set its slot 0x80 is the
     // altitude GetAltitude returns instead of the terrain/water maximum.
