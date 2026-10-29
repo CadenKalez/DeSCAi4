@@ -13,7 +13,9 @@
 #include "rz/cRZMessage2Standard.h"
 #include "rz/cRZPoint.h"
 #include "rz/cRZVariant.h"
+#include "sc4/SCProperty.h"
 #include "sc4/SCPropertyHelp.h"
+#include "sc4/cSC4ResponseCurve.h"
 #include "sc4/SC4Utilities.h"
 
 namespace sc4 {
@@ -1149,7 +1151,11 @@ float UsageMeter(std::uint32_t usage, std::uint32_t capacity) {
     const float free = capacity > usage ? static_cast<float>(static_cast<std::uint64_t>(capacity - usage)) : 0.0f;
     return free / (capacityF * 0.19999999f);
 }
-std::uint32_t TruncatedUnsigned(float value) { return static_cast<std::uint32_t>(static_cast<std::int64_t>(value)); }
+// cvttss2si r64 then the low 32 bits: out-of-range and NaN give INT64_MIN, whose low half is 0
+std::uint32_t TruncatedUnsigned(float value) {
+    if (!(value > -9.2233720368547758e18f && value < 9.2233720368547758e18f)) return 0;
+    return static_cast<std::uint32_t>(static_cast<std::int64_t>(value));
+}
 }  // namespace
 
 // @ 0x1002d7b7c
@@ -1542,6 +1548,142 @@ bool cSC4ViewInputControlQuery::SetOrGetTransitStationMaxCapacity(cIGZWin* win, 
     return SetStaticControlNumeric(win, id, static_cast<std::uint32_t>(data.capacity));
 }
 
+// ---- RCI building rows: occupancy, customers, land value, the goofy stat -------------------------------------------------------
+namespace {
+// The lot under an occupant: position -> city cell -> lot manager (flag 0).
+IQueryLot* LotUnder(cISC4Occupant* occupant) {
+    IQueryHost* host = QueryHost();
+    IQueryCity* city = host ? host->City() : nullptr;
+    float position[3] = {0.0f, 0.0f, 0.0f};
+    occupant->GetPosition(position);
+    int cellX = 0, cellZ = 0;
+    if (city) city->PositionToCell(position[0], position[2], cellX, cellZ);
+    return host && host->LotManager() ? host->LotManager()->GetLotAtCell(cellX, cellZ, 0) : nullptr;
+}
+}  // namespace
+
+// @ 0x1002d9baa: the lot's capacity for its occupant wealth, else the building's profile capacity
+std::uint32_t cSC4ViewInputControlQuery::GetOccupantCapacity(cISC4Occupant* occupant) {
+    IQueryLot* lot = LotUnder(occupant);
+    if (!lot) return 0;
+    std::uint16_t capacity = lot->GetCapacity(lot->GetOccupantWealth());
+    if (capacity == 0) {
+        void* building = nullptr;
+        if (occupant->QueryInterface(kIID_cISC4BuildingOccupant, &building)) {
+            auto* profile = static_cast<IQueryBuildingOccupant*>(building);
+            capacity = profile->GetProfileCapacity();
+            profile->Release();
+        }
+    }
+    return capacity;
+}
+// @ 0x1002d9a92: capacity times the lot's occupancy (the original also looks up the building profile and developer type and
+// drops them), 0 without a lot or a building
+std::uint32_t cSC4ViewInputControlQuery::GetCurrentOccupancyValue(cISC4Occupant* occupant) {
+    IQueryLot* lot = LotUnder(occupant);
+    if (!lot) return 0;
+    lot->GetOccupantWealth();
+    if (lot->GetBuildingType(true) == 0) return 0;
+    const float occupancy = lot->GetOccupancy();
+    return TruncatedUnsigned(static_cast<float>(GetOccupantCapacity(occupant)) * occupancy);
+}
+// @ 0x1002da05e
+int cSC4ViewInputControlQuery::GetLandValue(cISC4Occupant* occupant) {
+    IQueryHost* host = QueryHost();
+    IQueryCity* city = host ? host->City() : nullptr;
+    float position[3] = {0.0f, 0.0f, 0.0f};
+    occupant->GetPosition(position);
+    int cellX = 0, cellZ = 0;
+    if (city) city->PositionToCell(position[0], position[2], cellX, cellZ);
+    IQueryLandValueSim* landValue = host ? host->LandValueSim() : nullptr;
+    return landValue ? landValue->GetLandValueType(cellX, cellZ) : 0;
+}
+
+// @ 0x1002d9ca8: "current/capacity"
+bool cSC4ViewInputControlQuery::SetOrGetRCIBuildingCurrentOccupancy(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (occupant && set) {
+        const std::uint32_t current = GetCurrentOccupancyValue(occupant);
+        const std::uint32_t capacity = GetOccupantCapacity(occupant);
+        cRZString text;
+        text.Sprintf("%d/%d", current, capacity);
+        SetStaticControlText(win, id, text);
+    }
+    return true;
+}
+// @ 0x1002d9d5e: the capacity, left alone when it is 0
+bool cSC4ViewInputControlQuery::SetOrGetRCIBuildingMaxOccupancy(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (occupant && set) {
+        const std::uint32_t capacity = GetOccupantCapacity(occupant);
+        if (capacity != 0) {
+            cRZString text;
+            text.Sprintf("%d", capacity);
+            SetStaticControlText(win, id, text);
+        }
+    }
+    return true;
+}
+// @ 0x1002dac26: occupancy over capacity as a number (a zero capacity divides to infinity, as compiled)
+bool cSC4ViewInputControlQuery::SetOrGetCommercialServiceBuildingCustomers(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (occupant && set) {
+        const std::uint32_t current = GetCurrentOccupancyValue(occupant);
+        const std::uint32_t capacity = GetOccupantCapacity(occupant);
+        SetStaticControlNumeric(win, id, TruncatedUnsigned((static_cast<float>(current) * 100.0f) / static_cast<float>(capacity)));
+    }
+    return true;
+}
+// @ 0x1002da28c: land value in three words (the lowest word also stands for anything unknown)
+bool cSC4ViewInputControlQuery::SetOrGetRCIBuildingLandValue(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (occupant && set) {
+        IQueryHost* host = QueryHost();
+        const int value = GetLandValue(occupant);
+        cRZString text;
+        std::uint32_t instance = 0x4a5fe266;
+        if (value == 3) instance = 0xaa5fe249;
+        else if (value == 2) instance = 0x0a5fe260;
+        if (host) host->LoadString(kStringGroup, instance, text);
+        SetStaticControlText(win, id, text);
+    }
+    return true;
+}
+
+// @ 0x1002d6944: the mayor rating pushed through the property's curve (identity 0..256 without one)
+bool cSC4ViewInputControlQuery::SetOrGetGoofyStat(cIGZWin* win, std::uint32_t id, bool set, cISCPropertyHolder* holder, std::uint32_t propertyId) {
+    if (!set) return true;
+    cSC4ResponseCurve curve;
+    curve.SetResponseCurveData(std::vector<SC4Point>{SC4Point{0.0f, 0.0f}, SC4Point{256.0f, 256.0f}});
+    if (holder) {
+        if (cISCProperty* property = holder->GetProperty(propertyId)) {
+            const cIGZVariant* value = property->GetPropertyValue();
+            curve.SetResponseCurveData(value->RefFloat32(), value->GetCount());
+        }
+    }
+    IQueryHost* host = QueryHost();
+    IQueryAuraSim* aura = host ? host->AuraSim() : nullptr;
+    const int rating = aura ? aura->GetMayorRating() : 0;
+    return SetStaticControlNumeric(win, id, TruncatedUnsigned(curve.GetOutputValue(static_cast<float>(rating))));
+}
+// @ 0x1002dac96
+bool cSC4ViewInputControlQuery::SetOrGetOccupantGoofyStat(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return SetOrGetGoofyStat(win, id, set, occupant->AsPropertyHolder(), 0xaa60e745);
+}
+// @ 0x1002d68bc: the tuning exemplar {0x6534284a, 0x67cd5fa1, 0xca270e9d}'s goofy stat curve; false when it is missing, also when clearing
+bool cSC4ViewInputControlQuery::SetOrGetAirportLostLuggage(cIGZWin* win, std::uint32_t id, bool set, int, int) {
+    IQueryHost* host = QueryHost();
+    cGZPersistResourceKey key;
+    key.type = 0x6534284a;
+    key.group = 0x67cd5fa1;
+    key.instance = 0xca270e9d;
+    cISCPropertyHolder* holder = host ? host->GetTuningProperties(key) : nullptr;
+    if (!holder) return false;
+    return SetOrGetGoofyStat(win, id, set, holder, 0xaa60e745);
+}
+// @ 0x1002d6876
+bool cSC4ViewInputControlQuery::SetOrGetAirportOccupantLostLuggage(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    int x = 0, z = 0;
+    if (!PortCellOfOccupant(occupant, x, z)) return false;
+    return SetOrGetAirportLostLuggage(win, id, set, x, z);
+}
+
 // @ 0x1002daf96
 // PARTIAL: the original is a switch over the cell-based control ids (0x1011..0x1015 airport/seaport traffic, 0x1026 /
 // 0x1027 landfill, 0x1028 the landfill developer's monthly cost, 0x104b..0x104e the neighbour-connection rows and
@@ -1556,6 +1698,7 @@ bool cSC4ViewInputControlQuery::SetOrGetControlValue(cIGZWin* win, std::uint32_t
     case 0x1027: SetOrGetLandfillNetTrashThisMonth(win, 0x1027, set, info->x, info->z); return false;
     case 0x1011: SetOrGetAirportAirTrafficVolume(win, 0x1011, set, info->x, info->z); return false;
     case 0x1013: SetOrGetAirportMaintenanceCost(win, 0x1013, set, info->x, info->z); return false;
+    case 0x1014: SetOrGetAirportLostLuggage(win, 0x1014, set, info->x, info->z); return false;
     case 0x1015: SetOrGetSeaportSeaTrafficVolume(win, 0x1015, set, info->x, info->z); return false;
     case 0x1078: SetOrGetSeaportMaintenanceCost(win, 0x1078, set, info->x, info->z); return false;
     case 0x107b: SetOrGetAirportUsage(win, 0x107b, set, info->x, info->z); return false;
@@ -1746,7 +1889,7 @@ cSC4ViewInputControlQuery::tSetOrGetFn const cSC4ViewInputControlQuery::kRowFunc
     &cSC4ViewInputControlQuery::SetOrGetPoliceStationCrimeCount, &cSC4ViewInputControlQuery::SetOrGetPoliceStationLocalFunding, &cSC4ViewInputControlQuery::SetOrGetPoliceStationPatrolCarCount, &cSC4ViewInputControlQuery::SetOrGetPoliceStationMaintenanceCost,   // 0x1008..0x100b
     &cSC4ViewInputControlQuery::SetOrGetJailCondition, &cSC4ViewInputControlQuery::SetOrGetJailCellCount, &cSC4ViewInputControlQuery::SetOrGetJailInmateCount, &cSC4ViewInputControlQuery::SetOrGetJailMaintenanceCost,   // 0x100c..0x100f
     &cSC4ViewInputControlQuery::SetOrGetParkMaintenanceCost, &cSC4ViewInputControlQuery::SetOrGetAirportOccupantAirTrafficVolume, nullptr, &cSC4ViewInputControlQuery::SetOrGetAirportOccupantMaintenanceCost,   // 0x1010..0x1013
-    nullptr, &cSC4ViewInputControlQuery::SetOrGetSeaportOccupantSeaTrafficVolume, nullptr, &cSC4ViewInputControlQuery::SetOrGetSchoolGrade,   // 0x1014..0x1017
+    &cSC4ViewInputControlQuery::SetOrGetAirportOccupantLostLuggage, &cSC4ViewInputControlQuery::SetOrGetSeaportOccupantSeaTrafficVolume, nullptr, &cSC4ViewInputControlQuery::SetOrGetSchoolGrade,   // 0x1014..0x1017
     &cSC4ViewInputControlQuery::SetOrGetSchoolLocalStaffFunding, &cSC4ViewInputControlQuery::SetOrGetSchoolLocalBusFunding, &cSC4ViewInputControlQuery::SetOrGetSchoolTeacherCount, &cSC4ViewInputControlQuery::SetOrGetSchoolDeskCount,   // 0x1018..0x101b
     &cSC4ViewInputControlQuery::SetOrGetSchoolStudentCount, &cSC4ViewInputControlQuery::SetOrGetMuseumExhibitTicketsAvailable, &cSC4ViewInputControlQuery::SetOrGetLibraryBooksBorrowedCount, &cSC4ViewInputControlQuery::SetOrGetLibraryBooksInCollectionCount,   // 0x101c..0x101f
     &cSC4ViewInputControlQuery::SetOrGetHospitalGrade, &cSC4ViewInputControlQuery::SetOrGetHospitalLocalStaffFunding, &cSC4ViewInputControlQuery::SetOrGetHospitalLocalAmbulanceFunding, &cSC4ViewInputControlQuery::SetOrGetHospitalDoctorCount,   // 0x1020..0x1023
@@ -1761,13 +1904,13 @@ cSC4ViewInputControlQuery::tSetOrGetFn const cSC4ViewInputControlQuery::kRowFunc
     &cSC4ViewInputControlQuery::SetOrGetTransitStationActualUsage, &cSC4ViewInputControlQuery::SetOrGetTransitStationMaxCapacity, &cSC4ViewInputControlQuery::SetOrGetTransitStationGlobalFunding, &cSC4ViewInputControlQuery::SetOrGetLandmarkFunding,   // 0x1044..0x1047
     nullptr, &cSC4ViewInputControlQuery::SetOrGetLandmarkMaintenance, &cSC4ViewInputControlQuery::SetOrGetLandmarkHomage, nullptr,   // 0x1048..0x104b
     nullptr, nullptr, nullptr, nullptr,   // 0x104c..0x104f
-    nullptr, nullptr, nullptr, nullptr,   // 0x1050..0x1053
-    nullptr, nullptr, nullptr, nullptr,   // 0x1054..0x1057
+    nullptr, &cSC4ViewInputControlQuery::SetOrGetRCIBuildingCurrentOccupancy, &cSC4ViewInputControlQuery::SetOrGetRCIBuildingMaxOccupancy, nullptr,   // 0x1050..0x1053
+    nullptr, nullptr, &cSC4ViewInputControlQuery::SetOrGetRCIBuildingLandValue, nullptr,   // 0x1054..0x1057
     &cSC4ViewInputControlQuery::SetOrGetResidentialBuildingMayorApproval, nullptr, nullptr, nullptr,   // 0x1058..0x105b
-    nullptr, nullptr, &cSC4ViewInputControlQuery::SetOrGetRecyclingCenterEfficiency, &cSC4ViewInputControlQuery::SetOrGetRecyclingCenterPercentCapacity,   // 0x105c..0x105f
+    &cSC4ViewInputControlQuery::SetOrGetCommercialServiceBuildingCustomers, nullptr, &cSC4ViewInputControlQuery::SetOrGetRecyclingCenterEfficiency, &cSC4ViewInputControlQuery::SetOrGetRecyclingCenterPercentCapacity,   // 0x105c..0x105f
     &cSC4ViewInputControlQuery::SetOrGetRecyclingCenterTrashRecycled, &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyPercentCondition, &cSC4ViewInputControlQuery::SetOrGetPowerPlantPercentCondition, &cSC4ViewInputControlQuery::SetOrGetPowerPlantLocalFunding,   // 0x1060..0x1063
     nullptr, nullptr, nullptr, nullptr,   // 0x1064..0x1067
-    nullptr, nullptr, nullptr, nullptr,   // 0x1068..0x106b
+    nullptr, nullptr, nullptr, &cSC4ViewInputControlQuery::SetOrGetOccupantGoofyStat,   // 0x1068..0x106b
     &cSC4ViewInputControlQuery::SetOrGetOccupantCost, &cSC4ViewInputControlQuery::SetOrGetWaterTreatmentPlantEfficiency, nullptr, nullptr,   // 0x106c..0x106f
     nullptr, nullptr, nullptr, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingPercentCondition,   // 0x1070..0x1073
     nullptr, nullptr, &cSC4ViewInputControlQuery::SetOrGetOccupantIsPowered, &cSC4ViewInputControlQuery::SetOrGetOccupantIsWatered,   // 0x1074..0x1077

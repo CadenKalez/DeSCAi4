@@ -110,6 +110,11 @@ public:
     virtual bool IsHistorical() = 0;                                                  // 0x158
     virtual void SetHistorical(bool on) = 0;                                          // 0x160
     virtual int GetAbandonReason() = 0;                                               // 0x168 (1..6)
+    // The RCI rows (defaults answer "nothing"):
+    virtual int GetOccupantWealth() { return 0; }                                     // 0x148
+    virtual std::uint32_t GetBuildingType(bool flag) { (void)flag; return 0; }        // 0x170
+    virtual std::uint16_t GetCapacity(int wealth) { (void)wealth; return 0; }         // 0x190
+    virtual float GetOccupancy() { return 0.0f; }                                     // 0x1e8
 };
 
 // cISC4BuildingOccupant as SetOrGetName uses it (interface 0x87dda3a9): vslot 0x90 SetName.
@@ -117,6 +122,7 @@ class IQueryBuildingOccupant : public cIGZUnknown {
 public:
     virtual void SetName(cIGZString& name) = 0;   // vslot 0x90
     virtual bool GetName(cRZString& name) = 0;    // 0x98
+    virtual std::uint16_t GetProfileCapacity() { return 0; }   // 0x58 GetBuildingProfile() -> the profile's capacity (+8)
 };
 
 // SL::spAuraSim: the per-cell aura value (a signed byte) the mayor rating averages over a lot.
@@ -124,6 +130,13 @@ class IQueryAuraSim {
 public:
     virtual ~IQueryAuraSim() = default;
     virtual std::int8_t GetAura(int cellX, int cellZ) = 0;   // vslot 0x28
+    virtual std::int8_t GetMayorRating() { return 0; }       // vslot 0x40 (the goofy stat rows feed it to a curve)
+};
+// SL::spLandValueSim vslot 0x28 GetLandValueType(x, z): 0..3.
+class IQueryLandValueSim {
+public:
+    virtual ~IQueryLandValueSim() = default;
+    virtual int GetLandValueType(int cellX, int cellZ) { (void)cellX; (void)cellZ; return 0; }
 };
 
 // SL::spLotManager
@@ -314,6 +327,9 @@ public:
     virtual IQueryBudgetSim* BudgetSim() = 0;                 // SL::spBudgetSim
     virtual IQueryNeighborsSim* NeighborsSim() = 0;           // SL::spNeighborsSim
     virtual IQueryTrafficSim* TrafficSim() = 0;               // SL::spTrafficSim
+    virtual IQueryLandValueSim* LandValueSim() { return nullptr; }                // SL::spLandValueSim
+    // SL::spRM vslot 0x18 GetResource(key, 0xa52160f5): the exemplar's property holder, null when the resource is missing.
+    virtual cISCPropertyHolder* GetTuningProperties(const cGZPersistResourceKey& key) { (void)key; return nullptr; }
     virtual IQueryPollutionSim* PollutionSim() { return nullptr; }                // SL::spPollutionSim
     virtual IQueryLandfillDeveloper* LandfillDeveloper() { return nullptr; }       // SL::spLandfillDeveloper
     virtual IQueryPortDeveloper* AirportDeveloper() { return nullptr; }   // SL::spCity slot 0x268
@@ -513,6 +529,18 @@ public:
     static bool SetOrGetTransitStationMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8ba2
     static bool SetOrGetTransitStationActualUsage(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8c80
     static bool SetOrGetTransitStationMaxCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8d5e
+    // --- RCI building rows (first batch: occupancy, customers, land value, the goofy stat) ---
+    static std::uint32_t GetOccupantCapacity(cISC4Occupant* occupant);        // @ 0x1002d9baa
+    static std::uint32_t GetCurrentOccupancyValue(cISC4Occupant* occupant);   // @ 0x1002d9a92
+    static int GetLandValue(cISC4Occupant* occupant);                         // @ 0x1002da05e
+    static bool SetOrGetGoofyStat(cIGZWin* win, std::uint32_t id, bool set, cISCPropertyHolder* holder, std::uint32_t propertyId);   // @ 0x1002d6944
+    static bool SetOrGetOccupantGoofyStat(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002dac96
+    static bool SetOrGetAirportLostLuggage(cIGZWin* win, std::uint32_t id, bool set, int x, int z);              // @ 0x1002d68bc
+    static bool SetOrGetAirportOccupantLostLuggage(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d6876
+    static bool SetOrGetRCIBuildingCurrentOccupancy(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d9ca8
+    static bool SetOrGetRCIBuildingMaxOccupancy(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);       // @ 0x1002d9d5e
+    static bool SetOrGetRCIBuildingLandValue(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);          // @ 0x1002da28c
+    static bool SetOrGetCommercialServiceBuildingCustomers(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002dac26
     static bool SetOrGetNeighborConnectionNeighborCityName(cIGZWin* win, std::uint32_t id, bool set, int x, int z,
                                                            int connectionType);                     // @ 0x1002d90d6
     static bool SetOrGetNeighborConnectionNeighborCityMayorName(cIGZWin* win, std::uint32_t id, bool set, int x,

@@ -125,6 +125,8 @@ struct TestOccupant final : cISC4Occupant, IQueryBuildingOccupant {
     std::string name = "Test Building";
     std::string lastSetName;
     Holder* holder = nullptr;
+    std::uint16_t profileCapacity = 0;
+    std::uint16_t GetProfileCapacity() override { return profileCapacity; }
 
     bool QueryInterface(std::uint32_t iid, void** out) override {
         if (iid == 0x87dda3a9) { *out = static_cast<IQueryBuildingOccupant*>(this); return true; }
@@ -293,6 +295,10 @@ struct Lot final : IQueryLot {
     int state = 0;
     int reason = 0;
     bool historical = false;
+    int wealth = 0;
+    std::uint16_t capacity = 0;
+    std::uint32_t buildingType = 1;
+    float occupancy = 0.0f;
     std::vector<cISC4Occupant*> occupants;
     bool QueryInterface(std::uint32_t, void**) override { return false; }
     std::uint32_t AddRef() override { return ++refs; }
@@ -303,6 +309,10 @@ struct Lot final : IQueryLot {
     bool IsHistorical() override { return historical; }
     void SetHistorical(bool on) override { historical = on; }
     int GetAbandonReason() override { return reason; }
+    int GetOccupantWealth() override { return wealth; }
+    std::uint16_t GetCapacity(int) override { return capacity; }
+    std::uint32_t GetBuildingType(bool) override { return buildingType; }
+    float GetOccupancy() override { return occupancy; }
 };
 
 struct LotMgr final : IQueryLotManager {
@@ -381,7 +391,15 @@ struct Plumbing final : IQueryPlumbingSim {
     bool GetWaterProducerConditionPercent(cISC4Occupant*, float& f) override { f = condition; return conditionOk; }
     bool GetOccupantMonthlyUpkeepCost(cISC4Occupant*, std::int64_t& c) override { c = upkeep; return upkeepOk; }
 };
-struct Aura final : IQueryAuraSim { std::int8_t value = 0; std::int8_t GetAura(int, int) override { return value; } };
+struct Aura final : IQueryAuraSim {
+    std::int8_t value = 0, mayorRating = 0;
+    std::int8_t GetAura(int, int) override { return value; }
+    std::int8_t GetMayorRating() override { return mayorRating; }
+};
+struct LandValueFake final : IQueryLandValueSim {
+    int type = 0, x = -1, z = -1;
+    int GetLandValueType(int cx, int cz) override { x = cx; z = cz; return type; }
+};
 struct Sim final : IQuerySimulator { std::uint32_t frame = 0; std::uint32_t FrameCount() override { return frame; } };
 struct ResSim final : IQueryResidentialSim {
     int calls = 0, x = 0, z = 0;
@@ -587,6 +605,11 @@ struct Host final : IViewInputHost, IQueryHost {
     IQueryLandfillDeveloper* LandfillDeveloper() override { return &landfill; }
     Plumbing plumbing;
     Aura aura;
+    LandValueFake landValue;
+    Holder* tuning = nullptr;
+    std::uint32_t tuningType = 0, tuningGroup = 0, tuningInstance = 0;
+    IQueryLandValueSim* LandValueSim() override { return &landValue; }
+    cISCPropertyHolder* GetTuningProperties(const cGZPersistResourceKey& key) override { tuningType = key.type; tuningGroup = key.group; tuningInstance = key.instance; return tuning; }
     Sim sim;
     ResSim residential;
     FireSimFake fireSim;
@@ -1595,6 +1618,77 @@ int main() {
         CHECK(cSC4ViewInputControlQuery::SetOrGetTransitStationActualUsage(dialog, 0x1007, false, &occupant));
         host.trafficSim.transitOk = true;
         delete dialog;
+    }
+
+    // --- M8: RCI building rows (occupancy, customers, land value, the goofy stat) -------------------------------
+    {
+        auto* dialog = new cGZWin(&host.mgr);
+        auto* label = new gz::cGZWinText(&host.mgr);
+        label->SetID(0x1007);
+        CHECK(dialog->ChildAdd(label));
+        TestOccupant occupant;
+        Lot lot;
+        host.lots.byCell = &lot;
+        host.city.cellX = 2;
+        host.city.cellZ = 3;
+        auto text = [&]() { return std::string(label->GetCaption().ToChar()); };
+        // capacity: the lot's for the occupant wealth, else the building profile's; 0 without a lot
+        lot.capacity = 120;
+        CHECK(cSC4ViewInputControlQuery::GetOccupantCapacity(&occupant) == 120);
+        lot.capacity = 0;
+        occupant.profileCapacity = 75;
+        CHECK(cSC4ViewInputControlQuery::GetOccupantCapacity(&occupant) == 75);
+        host.lots.byCell = nullptr;
+        CHECK(cSC4ViewInputControlQuery::GetOccupantCapacity(&occupant) == 0);
+        host.lots.byCell = &lot;
+        // occupancy: capacity times the lot's occupancy fraction; 0 for a lot without a building
+        lot.capacity = 200;
+        lot.occupancy = 0.755f;
+        CHECK(cSC4ViewInputControlQuery::GetCurrentOccupancyValue(&occupant) == 151);
+        lot.buildingType = 0;
+        CHECK(cSC4ViewInputControlQuery::GetCurrentOccupancyValue(&occupant) == 0);
+        lot.buildingType = 1;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingCurrentOccupancy(dialog, 0x1007, true, &occupant) && text() == "151/200");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingMaxOccupancy(dialog, 0x1007, true, &occupant) && text() == "200");
+        lot.capacity = 0;
+        occupant.profileCapacity = 0;
+        label->SetCaption(cRZString("untouched"));
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingMaxOccupancy(dialog, 0x1007, true, &occupant) && text() == "untouched");   // nothing to show
+        lot.capacity = 200;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetCommercialServiceBuildingCustomers(dialog, 0x1007, true, &occupant) && text() == "75");   // 151 * 100 / 200
+        lot.capacity = 0;
+        label->SetCaption(cRZString("x"));
+        CHECK(cSC4ViewInputControlQuery::SetOrGetCommercialServiceBuildingCustomers(dialog, 0x1007, true, &occupant) && text() == "0");   // capacity 0: infinity -> 0
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingCurrentOccupancy(dialog, 0x1007, false, &occupant));   // set-only
+        // land value: three words, anything else the lowest
+        host.strings.clear();
+        host.landValue.type = 3;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingLandValue(dialog, 0x1007, true, &occupant) && host.strings.back() == 0xaa5fe249);
+        host.landValue.type = 2;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingLandValue(dialog, 0x1007, true, &occupant) && host.strings.back() == 0x0a5fe260);
+        host.landValue.type = 1;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingLandValue(dialog, 0x1007, true, &occupant) && host.strings.back() == 0x4a5fe266);
+        host.landValue.type = 9;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingLandValue(dialog, 0x1007, true, &occupant) && host.strings.back() == 0x4a5fe266);
+        CHECK(host.landValue.x == 2 && host.landValue.z == 3);
+        // goofy stat: the mayor rating through the curve (identity without a property, a property's points otherwise)
+        host.aura.mayorRating = 40;
+        Holder none;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetGoofyStat(dialog, 0x1007, true, &none, 0xaa60e745) && text() == "40");
+        host.aura.mayorRating = -5;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetGoofyStat(dialog, 0x1007, true, &none, 0xaa60e745) && text() == "0");   // left of the curve: its first y
+        CHECK(cSC4ViewInputControlQuery::SetOrGetGoofyStat(dialog, 0x1007, false, &none, 0xaa60e745));
+        host.aura.mayorRating = 40;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetOccupantGoofyStat(dialog, 0x1007, true, &occupant) && text() == "40");   // no holder: the default curve
+        // the airport lost luggage reads the tuning exemplar {0x6534284a, 0x67cd5fa1, 0xca270e9d}; false without it
+        host.tuning = nullptr;
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetAirportLostLuggage(dialog, 0x1007, true, 0, 0));
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetAirportLostLuggage(dialog, 0x1007, false, 0, 0));   // false even when clearing
+        CHECK(host.tuningType == 0x6534284a && host.tuningGroup == 0x67cd5fa1 && host.tuningInstance == 0xca270e9d);
+        host.tuning = &none;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetAirportLostLuggage(dialog, 0x1007, true, 0, 0) && text() == "40");
+        delete dialog;
+        host.lots.byCell = nullptr;
     }
 
     // --- N: neighbour-connection rows ----------------------------------------------------------------------
