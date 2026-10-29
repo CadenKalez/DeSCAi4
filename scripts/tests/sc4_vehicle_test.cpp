@@ -19,6 +19,7 @@
 #include "sc4/TrafficNetworkMap.h"
 #include "sc4/Ambulance.h"
 #include "sc4/EmergencyVehicle.h"
+#include "sc4/SpecialVehicles.h"
 #include "sc4/Vehicle.h"
 
 static int failures = 0;
@@ -1061,6 +1062,31 @@ void TestEmergencyVehicle() {
         CHECK(!twin->Read(wrongStream));
         twin->Release();
         ambulance->Release();
+    }
+
+    // the three small vehicles: ids, versions and the limo's initial fields
+    {
+        auto roundTrip = [&](cSC4Vehicle* source, cSC4Vehicle* target, std::uint16_t version) {
+            PortMemoryOStream stream;
+            CHECK(source->Write(stream));
+            CHECK(stream.bytes().size() >= 2 && stream.bytes()[0] == version);
+            PortMemoryIStream back(stream.bytes().data(), stream.bytes().size());
+            CHECK(target->Read(back));
+            std::uint8_t wrong[2] = {9, 0};
+            PortMemoryIStream wrongStream(wrong, sizeof(wrong));
+            CHECK(!target->Read(wrongStream));
+        };
+        cSC4CarjackedVehicle jacked(&world.host, &world.automatonHost);
+        cSC4CarjackedVehicle jackedTwin(&world.host, &world.automatonHost);
+        cSC4GetawayVan van(&world.host, &world.automatonHost);
+        cSC4GetawayVan vanTwin(&world.host, &world.automatonHost);
+        cSC4MayorLimo limo(&world.host, &world.automatonHost);
+        cSC4MayorLimo limoTwin(&world.host, &world.automatonHost);
+        CHECK(jacked.GetGZCLSID() == 0xcbb32b0a && van.GetGZCLSID() == 0xea863423 && limo.GetGZCLSID() == 0x4c0dd224);
+        roundTrip(&jacked, &jackedTwin, 1);
+        roundTrip(&van, &vanTwin, 3);
+        roundTrip(&limo, &limoTwin, 1);
+        CHECK(limo.Value424() == 50 && limo.Value428() == 48.0f && limo.Value42c() == 10.0f);
     }
 
     // attraction: emergency mode drops the attraction controller instead of updating it

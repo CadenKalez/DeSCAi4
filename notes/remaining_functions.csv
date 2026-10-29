@@ -1703,13 +1703,7 @@ cSC4Bus,00000001005070ce,not started,cSC4Bus::~cSC4Bus()
 cSC4Bus,00000001005070d8,not started,cSC4Bus::~cSC4Bus()
 cSC4Bus,0000000100507118,not started,cSC4Bus::GetGZCLSID() const
 cSC4CameraParams,0000000100579f70,not started,cSC4CameraParams::cSC4CameraParams()
-cSC4CarjackedVehicle,00000001006d6864,not started,cSC4CarjackedVehicle::cSC4CarjackedVehicle()
 cSC4CarjackedVehicle,00000001006d68e8,not started,cSC4CarjackedVehicle::PostInit()
-cSC4CarjackedVehicle,00000001006d694a,not started,cSC4CarjackedVehicle::Write(cIGZOStream&) const
-cSC4CarjackedVehicle,00000001006d69fe,not started,cSC4CarjackedVehicle::Read(cIGZIStream&)
-cSC4CarjackedVehicle,00000001006d6bdc,not started,cSC4CarjackedVehicle::~cSC4CarjackedVehicle()
-cSC4CarjackedVehicle,00000001006d6be6,not started,cSC4CarjackedVehicle::~cSC4CarjackedVehicle()
-cSC4CarjackedVehicle,00000001006d6c26,not started,cSC4CarjackedVehicle::GetGZCLSID() const
 cSC4CellTextureModel,00000001000b5146,not started,cSC4CellTextureModel::cSC4CellTextureModel()
 cSC4CellTextureModel,00000001000b5252,not started,cSC4CellTextureModel::Init(cISC4LotBaseTextureOccupant::LotBaseTextureSpecification const&)
 cSC4CellTextureModel,00000001000b530e,not started,cSC4CellTextureModel::~cSC4CellTextureModel()
@@ -2209,13 +2203,7 @@ cSC4GeometrySourcedParticlesEffect,00000001005eb958,not started,cSC4GeometrySour
 cSC4GeometrySourcedParticlesEffect,00000001005ecabc,not started,cSC4GeometrySourcedParticlesEffect::~cSC4GeometrySourcedParticlesEffect()
 cSC4GeometrySourcedParticlesEffect,00000001005ecac6,not started,cSC4GeometrySourcedParticlesEffect::~cSC4GeometrySourcedParticlesEffect()
 cSC4GeometrySourcedParticlesEffect,00000001005ecc26,not started,cSC4GeometrySourcedParticlesEffect::~cSC4GeometrySourcedParticlesEffect()
-cSC4GetawayVan,0000000100507244,not started,cSC4GetawayVan::cSC4GetawayVan()
 cSC4GetawayVan,00000001005072c8,not started,cSC4GetawayVan::PostInit()
-cSC4GetawayVan,000000010050744e,not started,cSC4GetawayVan::Write(cIGZOStream&) const
-cSC4GetawayVan,00000001005074c4,not started,cSC4GetawayVan::Read(cIGZIStream&)
-cSC4GetawayVan,0000000100507552,not started,cSC4GetawayVan::~cSC4GetawayVan()
-cSC4GetawayVan,000000010050755c,not started,cSC4GetawayVan::~cSC4GetawayVan()
-cSC4GetawayVan,000000010050759c,not started,cSC4GetawayVan::GetGZCLSID() const
 cSC4GlyphTextureManager,000000010070cb30,not started,cSC4GlyphTextureManager::cSC4GlyphTextureManager()
 cSC4GlyphTextureManager,000000010070cbdc,not started,cSC4GlyphTextureManager::cSC4GlyphTextureManager()
 cSC4GlyphTextureManager,000000010070cbe6,not started,cSC4GlyphTextureManager::~cSC4GlyphTextureManager()
@@ -2276,18 +2264,9 @@ cSC4MassTransitTrain,00000001006f2f26,not started,cSC4MassTransitTrain::Read(cIG
 cSC4MassTransitTrain,00000001006f3084,not started,cSC4MassTransitTrain::~cSC4MassTransitTrain()
 cSC4MassTransitTrain,00000001006f3152,not started,cSC4MassTransitTrain::~cSC4MassTransitTrain()
 cSC4MassTransitTrain,00000001006f3180,not started,cSC4MassTransitTrain::GetGZCLSID() const
-cSC4MayorLimo,00000001006f3580,not started,cSC4MayorLimo::cSC4MayorLimo()
-cSC4MayorLimo,00000001006f361e,not started,cSC4MayorLimo::cSC4MayorLimo()
 cSC4MayorLimo,00000001006f3628,not started,cSC4MayorLimo::Init()
 cSC4MayorLimo,00000001006f36ee,not started,cSC4MayorLimo::Shutdown()
-cSC4MayorLimo,00000001006f3706,not started,"cSC4MayorLimo::HandlePlayerDriveCommand(cISC4Automaton::ePlayerDriveCommand, bool)"
-cSC4MayorLimo,00000001006f3714,not started,cSC4MayorLimo::HandleExitState(tAutomataState const*)
 cSC4MayorLimo,00000001006f371e,not started,"cSC4MayorLimo::TranslatePlayerDriveCommands(tAutomataStatePlayerDrive*, float)"
-cSC4MayorLimo,00000001006f3814,not started,cSC4MayorLimo::Write(cIGZOStream&) const
-cSC4MayorLimo,00000001006f38c8,not started,cSC4MayorLimo::Read(cIGZIStream&)
-cSC4MayorLimo,00000001006f39e6,not started,cSC4MayorLimo::~cSC4MayorLimo()
-cSC4MayorLimo,00000001006f39f0,not started,cSC4MayorLimo::~cSC4MayorLimo()
-cSC4MayorLimo,00000001006f3a30,not started,cSC4MayorLimo::GetGZCLSID() const
 cSC4MissingPluginDataReporter,000000010028bcb6,not started,cSC4MissingPluginDataReporter::cSC4MissingPluginDataReporter()
 cSC4MissingPluginDataReporter,000000010028bcec,not started,cSC4MissingPluginDataReporter::~cSC4MissingPluginDataReporter()
 cSC4MissingPluginDataReporter,000000010028bd40,not started,cSC4MissingPluginDataReporter::Shutdown()

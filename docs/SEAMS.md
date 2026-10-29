@@ -342,7 +342,7 @@ the caller fills (see `scripts/terrain_shot.mm`).
 | `ITractNetworkManagerApi` | `src/sc4/TractDeveloper.h` |  | NOT IMPLEMENTED |  |
 | `ITractZoneManagerApi` | `src/sc4/TractDeveloper.h` | src/app/hosts/StubTractDeveloper.cpp | test fake only | scripts/tests/sc4_tractdeveloper_test.cpp |
 | `ITrafficAutomataManagerHost` | `src/sc4/TrafficAutomataManager.h` | src/sc4/PedestrianManager.cpp, src/sc4/TrafficAutomataManager.cpp | implemented | scripts/tests/sc4_trafficautomatamanager_test.cpp, src/sc4/PedestrianManager.h |
-| `ITrafficAutomatonHost` | `src/sc4/TrafficAutomaton.h` | src/sc4/EmergencyVehicle.cpp, src/sc4/EmergencyVehicle.h, src/sc4/TrafficAutomaton.cpp ... | implemented | scripts/tests/sc4_trafficautomaton_test.cpp, scripts/tests/sc4_vehicle_test.cpp |
+| `ITrafficAutomatonHost` | `src/sc4/TrafficAutomaton.h` | src/sc4/EmergencyVehicle.cpp, src/sc4/EmergencyVehicle.h, src/sc4/SpecialVehicles.h ... | implemented | scripts/tests/sc4_trafficautomaton_test.cpp, scripts/tests/sc4_vehicle_test.cpp |
 | `ITrafficEffectHost` | `src/sc4/TrafficEffectManager.h` |  | implemented | scripts/tests/sc4_trafficautomaton_test.cpp, scripts/tests/sc4_trafficeffectmanager_test.cpp |
 | `ITrafficHost` | `src/sc4/TrafficSimulator.h` | src/gz/SimHostRegistry.h, src/sc4/NeighborsSimulator.h, src/sc4/TrafficSimulator.cpp | implemented | scripts/tests/sc4_trafficsimulator_test.cpp, src/tools/city_probe_bindings.cpp |
 | `ITrafficNetworkManagerApi` | `src/sc4/TrafficAutomataManager.h` | src/sc4/TrafficAutomataManager.cpp | test fake only | scripts/tests/sc4_trafficautomatamanager_test.cpp |
@@ -354,7 +354,7 @@ the caller fills (see `scripts/terrain_shot.mm`).
 | `ITutorialTaskHost` | `src/sc4/TutorialTask.h` | src/sc4/TutorialTask.cpp | implemented | scripts/tests/sc4_tutorialtask_test.cpp, src/app/hosts/StubTutorialTask.cpp |
 | `IUndergroundNetworkToolHost` | `src/sc4/UndergroundNetworkTool.h` | src/sc4/UndergroundNetworkTool.cpp | implemented | scripts/tests/sc4_undergroundnetworktool_test.cpp, src/app/hosts/StubUndergroundNetworkTool.cpp |
 | `IUndergroundOccupantHost` | `src/sc4/UndergroundOccupant.h` | src/sc4/UndergroundOccupant.cpp | implemented | scripts/tests/sc4_undergroundoccupant_test.cpp, src/app/hosts/StubUndergroundOccupant.cpp |
-| `IVehicleHost` | `src/sc4/Vehicle.h` | src/sc4/EmergencyVehicle.cpp, src/sc4/EmergencyVehicle.h, src/sc4/Vehicle.cpp ... | implemented | scripts/tests/sc4_vehicle_test.cpp, src/app/NativeTrafficHosts.cpp |
+| `IVehicleHost` | `src/sc4/Vehicle.h` | src/sc4/EmergencyVehicle.cpp, src/sc4/EmergencyVehicle.h, src/sc4/SpecialVehicles.h ... | implemented | scripts/tests/sc4_vehicle_test.cpp, src/app/NativeTrafficHosts.cpp |
 | `IVehicleManagerHost` | `src/sc4/VehicleManager.h` | src/sc4/VehicleManager.cpp | NOT IMPLEMENTED |  |
 | `IVertexBufferHost` | `src/render/gd/PrimitiveManager.h` | src/render/gd/PrimitiveManager.cpp | test fake only | scripts/tests/render_primitivemanager_test.cpp |
 | `IVertexHtConstraintHost` | `src/sc4/VertexHtConstraintSatisfier.h` |  | implemented | scripts/tests/sc4_vertexhtconstraintsatisfier_test.cpp, src/app/hosts/StubVertexHtConstraint.cpp |
