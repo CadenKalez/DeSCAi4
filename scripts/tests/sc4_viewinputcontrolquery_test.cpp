@@ -520,6 +520,10 @@ struct NeighborsSimFake final : IQueryNeighborsSim {
 struct TrafficSimFake final : IQueryTrafficSim {
     std::uint8_t cell = 0;
     int x = -1, z = -1;
+    TransitData transit;
+    bool transitOk = true;
+    int transitX = -1, transitZ = -1;
+    bool GetTransitSwitchQueryData(int cx, int cz, TransitData& out) override { transitX = cx; transitZ = cz; out = transit; return transitOk; }
     std::uint8_t CongestionCell(int cx, int cz) override {
         x = cx;
         z = cz;
@@ -1543,6 +1547,53 @@ int main() {
         CHECK(cSC4ViewInputControlQuery::SetOrGetLandmarkHomage(dialog, 0x1007, true, &occupant));
         CHECK(host.strings.size() == 1 && host.strings[0] == 0x1234abcd);
         CHECK(cSC4ViewInputControlQuery::SetOrGetLandmarkHomage(dialog, 0x1007, false, &occupant));
+        delete dialog;
+    }
+
+    // --- M7: transit station rows ---------------------------------------------------------------------------------
+    {
+        auto* dialog = new cGZWin(&host.mgr);
+        auto* label = new gz::cGZWinText(&host.mgr);
+        label->SetID(0x1007);
+        auto* meter = new gz::cGZWinBMP(&host.mgr);
+        meter->SetID(0x1001);
+        CHECK(dialog->ChildAdd(label) && dialog->ChildAdd(meter));
+        TestOccupant occupant;
+        auto text = [&]() { return std::string(label->GetCaption().ToChar()); };
+        auto meterOf = [&]() {
+            cIGZVariant* value = nullptr;
+            float result = -1.0f;
+            if (meter->AsIGZWin()->GetParam(0xea563ab0, &value) && value) { result = value->GetValFloat32(); value->Release(); }
+            return result;
+        };
+        host.city.cellX = 5;
+        host.city.cellZ = 9;
+        host.trafficSim.transit.served = 90;
+        host.trafficSim.transit.capacity = 200;
+        host.trafficSim.transit.usage = 120;
+        host.trafficSim.transit.maintenance = 4500;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetTransitStationMaxCapacity(dialog, 0x1007, true, &occupant) && text() == "200");
+        CHECK(host.trafficSim.transitX == 5 && host.trafficSim.transitZ == 9);   // the occupant's position -> city cell
+        CHECK(cSC4ViewInputControlQuery::SetOrGetTransitStationActualUsage(dialog, 0x1007, true, &occupant) && text() == "120");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetTransitStationMaintenanceCost(dialog, 0x1007, true, &occupant) && text() == "4500");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetTransitStationUsagePercent(dialog, 0x1007, true, &occupant) && text() == "60%");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetTransitStationServiceQuality(dialog, 0x1001, true, &occupant));
+        CHECK(std::fabs(meterOf() - 0.75f) < 1e-6f);   // 90 served over 120 in use
+        host.trafficSim.transit.served = 300;           // more served than used: capped at 1
+        CHECK(cSC4ViewInputControlQuery::SetOrGetTransitStationServiceQuality(dialog, 0x1001, true, &occupant) && std::fabs(meterOf() - 1.0f) < 1e-6f);
+        host.trafficSim.transit.usage = 0;              // nothing in use: full
+        CHECK(cSC4ViewInputControlQuery::SetOrGetTransitStationServiceQuality(dialog, 0x1001, true, &occupant) && std::fabs(meterOf() - 1.0f) < 1e-6f);
+        host.trafficSim.transit.served = 0;             // nothing served: empty
+        CHECK(cSC4ViewInputControlQuery::SetOrGetTransitStationServiceQuality(dialog, 0x1001, true, &occupant) && std::fabs(meterOf()) < 1e-6f);
+        host.trafficSim.transit.capacity = 0;           // no capacity: 0 %
+        CHECK(cSC4ViewInputControlQuery::SetOrGetTransitStationUsagePercent(dialog, 0x1007, true, &occupant) && text() == "0%");
+        // no station at the cell: the figure rows decline, the meter and percent rows show their empty value; clearing answers true
+        host.trafficSim.transitOk = false;
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetTransitStationMaxCapacity(dialog, 0x1007, true, &occupant));
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetTransitStationMaintenanceCost(dialog, 0x1007, true, &occupant));
+        CHECK(cSC4ViewInputControlQuery::SetOrGetTransitStationServiceQuality(dialog, 0x1001, true, &occupant) && std::fabs(meterOf()) < 1e-6f);
+        CHECK(cSC4ViewInputControlQuery::SetOrGetTransitStationActualUsage(dialog, 0x1007, false, &occupant));
+        host.trafficSim.transitOk = true;
         delete dialog;
     }
 

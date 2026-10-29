@@ -1481,6 +1481,67 @@ bool cSC4ViewInputControlQuery::SetOrGetLandmarkHomage(cIGZWin* win, std::uint32
     return SetStaticControlText(win, id, text);
 }
 
+// ---- transit station rows ---------------------------------------------------------------------------------------------------
+namespace {
+// The station data under the occupant: its position -> city cell -> the traffic simulator's query (vslot 0x118).
+bool TransitDataOf(cISC4Occupant* occupant, IQueryTrafficSim::TransitData& data) {
+    IQueryHost* host = QueryHost();
+    IQueryCity* city = host ? host->City() : nullptr;
+    IQueryTrafficSim* traffic = host ? host->TrafficSim() : nullptr;
+    float position[3] = {0.0f, 0.0f, 0.0f};
+    occupant->GetPosition(position);
+    int cellX = 0, cellZ = 0;
+    if (city) city->PositionToCell(position[0], position[2], cellX, cellZ);
+    return traffic && traffic->GetTransitSwitchQueryData(cellX, cellZ, data);
+}
+}  // namespace
+
+// @ 0x1002d89b0: served over actual usage, at most 1 (full when nothing is in use); nothing served leaves the meter empty
+bool cSC4ViewInputControlQuery::SetOrGetTransitStationServiceQuality(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryTrafficSim::TransitData data;
+    float quality = 0.0f;
+    if (TransitDataOf(occupant, data) && data.served != 0) {
+        if (data.usage == 0) {
+            quality = 1.0f;
+        } else {
+            quality = static_cast<float>(static_cast<std::uint32_t>(data.served)) / static_cast<float>(static_cast<std::uint32_t>(data.usage));
+            if (quality > 1.0f) quality = 1.0f;
+        }
+    }
+    return SetPerformanceMeterValue(win, id, quality);
+}
+// @ 0x1002d8aae: usage over capacity as a whole percent
+bool cSC4ViewInputControlQuery::SetOrGetTransitStationUsagePercent(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryTrafficSim::TransitData data;
+    std::uint32_t percent = 0;
+    if (TransitDataOf(occupant, data) && data.capacity != 0) {
+        const float ratio = static_cast<float>(static_cast<std::uint32_t>(data.usage)) / static_cast<float>(static_cast<std::uint32_t>(data.capacity));
+        percent = TruncatedUnsigned(ratio * 100.0f);
+    }
+    return SetStaticControlNumericPercent(win, id, percent);
+}
+// @ 0x1002d8ba2 / 0x1002d8c80 / 0x1002d8d5e: one figure each; false when the simulator has no station there
+bool cSC4ViewInputControlQuery::SetOrGetTransitStationMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryTrafficSim::TransitData data;
+    if (!TransitDataOf(occupant, data)) return false;
+    return SetStaticControlSimoleons(win, id, static_cast<std::int64_t>(static_cast<std::uint32_t>(data.maintenance)));
+}
+bool cSC4ViewInputControlQuery::SetOrGetTransitStationActualUsage(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryTrafficSim::TransitData data;
+    if (!TransitDataOf(occupant, data)) return false;
+    return SetStaticControlNumeric(win, id, static_cast<std::uint32_t>(data.usage));
+}
+bool cSC4ViewInputControlQuery::SetOrGetTransitStationMaxCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryTrafficSim::TransitData data;
+    if (!TransitDataOf(occupant, data)) return false;
+    return SetStaticControlNumeric(win, id, static_cast<std::uint32_t>(data.capacity));
+}
+
 // @ 0x1002daf96
 // PARTIAL: the original is a switch over the cell-based control ids (0x1011..0x1015 airport/seaport traffic, 0x1026 /
 // 0x1027 landfill, 0x1028 the landfill developer's monthly cost, 0x104b..0x104e the neighbour-connection rows and
@@ -1696,8 +1757,8 @@ cSC4ViewInputControlQuery::tSetOrGetFn const cSC4ViewInputControlQuery::kRowFunc
     &cSC4ViewInputControlQuery::SetOrGetPowerPlantEfficiency, &cSC4ViewInputControlQuery::SetOrGetPowerPlantPercentCapacity, &cSC4ViewInputControlQuery::SetOrGetPowerPlantMaxPowerOutputCapacity, &cSC4ViewInputControlQuery::SetOrGetPowerPlantCurrentPowerOutputCapacity,   // 0x1034..0x1037
     &cSC4ViewInputControlQuery::SetOrGetPowerPlantPowerUsed, &cSC4ViewInputControlQuery::SetOrGetPowerPlantCostPerUnit, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingEfficiency, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingUsagePercent,   // 0x1038..0x103b
     &cSC4ViewInputControlQuery::SetOrGetWaterBuildingMaxCapacity, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingCurrentCapacity, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingWaterUsed, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingCostPerUnit,   // 0x103c..0x103f
-    &cSC4ViewInputControlQuery::SetOrGetWaterBuildingPumpCondition, nullptr, nullptr, nullptr,   // 0x1040..0x1043
-    nullptr, nullptr, &cSC4ViewInputControlQuery::SetOrGetTransitStationGlobalFunding, &cSC4ViewInputControlQuery::SetOrGetLandmarkFunding,   // 0x1044..0x1047
+    &cSC4ViewInputControlQuery::SetOrGetWaterBuildingPumpCondition, &cSC4ViewInputControlQuery::SetOrGetTransitStationServiceQuality, &cSC4ViewInputControlQuery::SetOrGetTransitStationUsagePercent, &cSC4ViewInputControlQuery::SetOrGetTransitStationMaintenanceCost,   // 0x1040..0x1043
+    &cSC4ViewInputControlQuery::SetOrGetTransitStationActualUsage, &cSC4ViewInputControlQuery::SetOrGetTransitStationMaxCapacity, &cSC4ViewInputControlQuery::SetOrGetTransitStationGlobalFunding, &cSC4ViewInputControlQuery::SetOrGetLandmarkFunding,   // 0x1044..0x1047
     nullptr, &cSC4ViewInputControlQuery::SetOrGetLandmarkMaintenance, &cSC4ViewInputControlQuery::SetOrGetLandmarkHomage, nullptr,   // 0x1048..0x104b
     nullptr, nullptr, nullptr, nullptr,   // 0x104c..0x104f
     nullptr, nullptr, nullptr, nullptr,   // 0x1050..0x1053

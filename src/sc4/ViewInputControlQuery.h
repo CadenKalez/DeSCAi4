@@ -22,10 +22,10 @@
 // PARTIAL (see notes/ledger_pending/cSC4ViewInputControlQuery.txt): the tip/describe text builders
 // (Get*SummaryInfo, GetBuildingOccupantTipInfo, GetBuildingOccupantTrafficInfo, GetNetworkOccupantTrafficInfo,
 // DescribePick/DescribeCell/DescribeBuilding/DescribeDemand/DescribePopulation, WriteDetailedDebugInfo and the
-// headline/trip-volume/path helpers) and the row handlers for the simulators that are not recovered yet ( transit, landmark, RCI/growth-developer) are declared but not
+// headline/trip-volume/path helpers) and the row handlers for the simulators that are not recovered yet (the RCI building rows and the air and water pollution volumes) are declared but not
 // implemented. The fire, police/jail, park/occupant-cost and neighbour-connection rows — everything whose simulator
 // (cSC4FireProtectionSimulator, cSC4PoliceSimulator, cSC4BudgetSimulator, cSC4NeighborsSimulator) is recovered — are
-// ported, as are the school, hospital, library, landfill, incinerator, recycling, waste-to-energy, power plant and water building rows, the airport and seaport rows (usage, capacity, traffic meter, maintenance), the dialog enumeration callbacks (EnumFunc*) and the recovered control-id -> row handler table.
+// ported, as are the school, hospital, library, landfill, incinerator, recycling, waste-to-energy, power plant, water building, landmark and transit station rows, the airport and seaport rows (usage, capacity, traffic meter, maintenance), the dialog enumeration callbacks (EnumFunc*) and the recovered control-id -> row handler table.
 #pragma once
 #include <cstdint>
 #include <vector>
@@ -277,6 +277,13 @@ public:
     virtual ~IQueryTrafficSim() = default;
     // vslot 0x50 GetCongestionMap(), then the map's 0x38 cell getter (a byte).
     virtual std::uint8_t CongestionCell(int x, int z) = 0;
+    // vslot 0x118 GetTransitSwitchQueryData(x, z, record): the station at a cell (cSC4TrafficSimulator::GetTransitSwitchQueryData).
+    struct TransitData {
+        std::int32_t served = 0, capacity = 0;   // +0, +4
+        float percent = 0.0f;                    // +8 (not read by the rows)
+        std::int32_t usage = 0, maintenance = 0; // +0xc, +0x10
+    };
+    virtual bool GetTransitSwitchQueryData(int x, int z, TransitData& out) { (void)x; (void)z; out = TransitData{}; return false; }
 };
 
 // SL::spCity slot 0x268 (the airport developer) and slot 0x260 (the seaport developer): the rows only ask a lot's usage and
@@ -500,6 +507,12 @@ public:
     static bool SetOrGetLandmarkFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);       // @ 0x1002d8e9e
     static bool SetOrGetLandmarkMaintenance(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8f14
     static bool SetOrGetLandmarkHomage(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);        // @ 0x1002d8fc4
+    // --- transit station rows (the traffic simulator's switch / station data under the occupant's cell) ---
+    static bool SetOrGetTransitStationServiceQuality(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d89b0
+    static bool SetOrGetTransitStationUsagePercent(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8aae
+    static bool SetOrGetTransitStationMaintenanceCost(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8ba2
+    static bool SetOrGetTransitStationActualUsage(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8c80
+    static bool SetOrGetTransitStationMaxCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8d5e
     static bool SetOrGetNeighborConnectionNeighborCityName(cIGZWin* win, std::uint32_t id, bool set, int x, int z,
                                                            int connectionType);                     // @ 0x1002d90d6
     static bool SetOrGetNeighborConnectionNeighborCityMayorName(cIGZWin* win, std::uint32_t id, bool set, int x,

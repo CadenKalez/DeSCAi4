@@ -116,6 +116,21 @@ struct Host : ITrafficHost {
     std::map<void*, FakeCity*> cities;
     std::map<std::uint32_t, int> demandTotals;
     SC4RectInt32 sourceRect{};
+    // GetTransitSwitchQueryData: the switch grid, the switch/lot property holders and the budget
+    std::map<std::pair<int, int>, std::uint32_t> switchGrid;
+    cSCPropertyHolder switchHolder, lotHolder;
+    bool lotHasBuilding = true, itemOk = true, departmentOk = true;
+    std::uint32_t itemDepartment = 4, lastPurpose = 0, lastDepartment = 0;
+    std::int64_t itemCost = 0;
+    float departmentFraction = 1.0f;
+    const sc4::cISCPropertyHolder* lastHolder = nullptr;
+    std::uint32_t TransitSwitchIdAtCell(int x, int z) override { auto it = switchGrid.find({x, z}); return it == switchGrid.end() ? 0 : it->second; }
+    sc4::cISCPropertyHolder* TransitSwitchProperties(void*) override { return &switchHolder; }
+    sc4::cISCPropertyHolder* LotBuildingProperties(ITrafficLot*) override { return lotHasBuilding ? &lotHolder : nullptr; }
+    bool BudgetItemForPurpose(sc4::cISCPropertyHolder* holder, std::uint32_t purpose, std::uint32_t& department, std::int64_t& cost) override {
+        lastHolder = holder; lastPurpose = purpose; department = itemDepartment; cost = itemCost; return itemOk;
+    }
+    bool DepartmentFundingFraction(std::uint32_t department, float& fraction) override { lastDepartment = department; fraction = departmentFraction; return departmentOk; }
 
     void PostMessage(std::uint32_t m) override { ++messages[m]; }
     void PostPotholeMessage(int x, int z, bool on) override { potholes.push_back({x, z, on}); }
@@ -257,6 +272,47 @@ int main() {
         CHECK(sim.TransitSwitchEntryCost(77) == sim.CongestionToInverseSpeedCurve().GetOutputValue(2.0f) * 3.0f * 2.0f);
     }
 
+
+    // ---- GetTransitSwitchQueryData (called with the strike state of the block above: none)
+    {
+        TransitSwitchQueryData data;
+        // a station: found through the lot at the cell, its record's cell inside the lot's rectangle
+        FakeLot lot;
+        lot.rect = SC4RectInt32{10, 20, 12, 22};
+        host.lots[0][{11, 21}] = &lot;
+        sim.TransitStations().push_back({7, 3, 3});    // outside the rectangle
+        CHECK(!sim.GetTransitSwitchQueryData(11, 21, data));   // no record inside it yet
+        sim.TransitStations().push_back({150, 12, 22});   // on the rectangle's far corner
+        host.itemCost = 1000;
+        host.itemDepartment = 9;
+        host.departmentFraction = 0.755f;
+        CHECK(sim.GetTransitSwitchQueryData(11, 21, data));
+        CHECK(data.served == 150 && data.capacity == 150 && data.usage == 150 && data.percent == 1.0f);
+        CHECK(data.maintenance == 755 && host.lastPurpose == 0xca550301 && host.lastDepartment == 9 && host.lastHolder == &host.lotHolder);
+        // a lot with no building keeps the figures and skips the budget
+        host.lotHasBuilding = false;
+        host.lastPurpose = 0;
+        data = TransitSwitchQueryData{};
+        CHECK(sim.GetTransitSwitchQueryData(11, 21, data) && data.served == 150 && data.maintenance == 0 && host.lastPurpose == 0);
+        host.lotHasBuilding = true;
+        // no budget item or no department: the maintenance stays 0 but the call succeeds
+        host.itemOk = false;
+        CHECK(sim.GetTransitSwitchQueryData(11, 21, data) && data.maintenance == 0);
+        host.itemOk = true;
+        host.departmentOk = false;
+        CHECK(sim.GetTransitSwitchQueryData(11, 21, data) && data.maintenance == 0);
+        host.departmentOk = true;
+        // a transit switch wins over the lot: capacity, usage and percent come from its entry; the holder is its own
+        auto& entry = sim.TransitSwitchEntry(5);
+        entry.capacity = 80.9f; entry.usage = 33.7f; entry.percent = 0.4f;
+        host.switchGrid[{11, 21}] = 5;
+        CHECK(sim.GetTransitSwitchQueryData(11, 21, data));
+        CHECK(data.served == 80 && data.capacity == 80 && data.usage == 33 && data.percent == 0.4f);
+        CHECK(host.lastHolder == &host.switchHolder && data.maintenance == 755);
+        // an unknown cell without a lot answers false
+        CHECK(!sim.GetTransitSwitchQueryData(0, 0, data));
+    }
+
     // ---- background traffic
     host.grids[0x1010] = 3; host.grids[0x1030] = 4;       // group 0 = 7
     host.grids[0x3110] = 1; host.grids[0x3330] = 2;       // group 1 = 3
@@ -319,6 +375,15 @@ int main() {
         CHECK(sim.GetStrikeState() == cSC4TrafficSimulator::kStrikeOn && sim.StrikeActiveFlag() && host.messages[kTrafficMessageStrikeBegan] == 1);
         for (int i = 0; i < 24; ++i) sim.UpdateStrikes();       // 24 days of strike
         CHECK(sim.GetStrikeState() == cSC4TrafficSimulator::kStrikeOn && sim.StrikeDays() == 24);
+        {   // while the strike is on, a transit switch reports nothing served, no usage and a zero percent (its capacity stays)
+            auto& entry = sim.TransitSwitchEntry(6);
+            entry.capacity = 40.0f; entry.usage = 10.0f; entry.percent = 0.5f;
+            host.switchGrid[{30, 31}] = 6;
+            TransitSwitchQueryData data;
+            CHECK(sim.GetTransitSwitchQueryData(30, 31, data));
+            CHECK(data.served == 0 && data.capacity == 40 && data.usage == 0 && data.percent == 0.0f);
+            host.switchGrid.erase({30, 31});
+        }
         sim.UpdateStrikes();                                   // day cap reached -> ends
         CHECK(sim.GetStrikeState() == cSC4TrafficSimulator::kStrikeNone && !sim.StrikeActiveFlag() && host.messages[kTrafficMessageStrikeEnded] == 1);
         // threat averted when funding recovers

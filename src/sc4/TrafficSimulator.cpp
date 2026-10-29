@@ -544,6 +544,64 @@ float cSC4TrafficSimulator::GetBackgroundTraffic(int x, int z) const {
     return result;
 }
 
+// 0x10008d8bc: with a transit switch under the cell, its capacity, usage and percent; otherwise the station record whose cell lies in
+// the rectangle of the lot at (x, z). A strike zeroes the served count, the usage and the percent. The maintenance figure is the
+// budget item's monthly cost scaled by its department's funding fraction (truncated), left 0 when there is no item or department.
+bool cSC4TrafficSimulator::GetTransitSwitchQueryData(int x, int z, TransitSwitchQueryData& out) {
+    const bool striking = strikeState_ == kStrikeOn;
+    cISCPropertyHolder* holder = nullptr;
+    const std::uint32_t switchId = host_->TransitSwitchIdAtCell(x, z);
+    if (switchId != 0) {
+        TransitSwitch& entry = transitSwitches_[switchId];
+        out.capacity = static_cast<std::int32_t>(entry.capacity);
+        if (striking) {
+            out.served = 0;
+            out.usage = 0;
+            out.percent = 0.0f;   // kSC4PercentageZero
+        } else {
+            out.served = static_cast<std::int32_t>(entry.capacity);
+            out.usage = static_cast<std::int32_t>(entry.usage);
+            out.percent = entry.percent;
+        }
+        out.maintenance = 0;
+        holder = host_->TransitSwitchProperties(entry.occupant);
+    } else {
+        ITrafficLot* lot = host_->LotAt(x, z, 0);
+        if (!lot) return false;
+        SC4RectInt32 rect;
+        lot->OccupiedRect(rect);
+        const TransitStationRecord* station = nullptr;
+        for (const TransitStationRecord& candidate : transitStations_) {
+            if (rect.x0 <= candidate.x && rect.z0 <= candidate.z && candidate.x <= rect.x1 && candidate.z <= rect.z1) {
+                station = &candidate;
+                break;
+            }
+        }
+        if (!station) return false;
+        if (striking) {
+            out.served = 0;
+            out.capacity = 0;
+            out.usage = 0;
+            out.percent = 0.0f;   // kSC4PercentageZero
+        } else {
+            out.served = station->capacity;
+            out.capacity = station->capacity;
+            out.usage = station->capacity;
+            out.percent = 1.0f;   // kSC4PercentageOneHundred
+        }
+        out.maintenance = 0;
+        holder = host_->LotBuildingProperties(lot);
+        if (!holder) return true;
+    }
+    std::uint32_t department = 0;
+    std::int64_t cost = 0;
+    float fraction = 0.0f;
+    if (host_->BudgetItemForPurpose(holder, kBudgetPurposeTransitStation, department, cost) &&
+        host_->DepartmentFundingFraction(department, fraction))
+        out.maintenance = static_cast<std::int32_t>(static_cast<std::int64_t>(static_cast<float>(cost) * fraction));
+    return true;
+}
+
 float cSC4TrafficSimulator::TransitSwitchEntryCost(std::uint32_t id) {
     TransitSwitch& entry = transitSwitches_[id];
     const float ratio = entry.traffic / entry.capacity;

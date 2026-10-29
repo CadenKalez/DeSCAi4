@@ -38,6 +38,7 @@ struct cSC4TripData;
 
 constexpr std::uint32_t kGZCLSID_cSC4TrafficSimulator = 0x6990c1aa;
 constexpr std::uint32_t kGZIID_cISC4TrafficSimulator = 0x68027f37;
+constexpr std::uint32_t kBudgetPurposeTransitStation = 0xca550301;   // GetTransitSwitchQueryData's budget item
 constexpr std::uint32_t kTrafficSimulatorType = 0x88027f0d;
 
 // messages posted to the city
@@ -177,6 +178,35 @@ public:
     virtual int RegionDemandTotal(std::uint32_t gridId) = 0;
     // cISC4TrafficSource vslot 0x28: the rectangle the source's trips start from
     virtual SC4RectInt32 TrafficSourceStartRect(void* source) = 0;
+
+    // ---- GetTransitSwitchQueryData (the query tool's transit station rows); defaults answer "nothing" ----
+    // The transit-switch grid (+0x890, a cSC4SimGrid<uint32>) vslot 0x38: the switch id stored at a cell, 0 when none.
+    virtual std::uint32_t TransitSwitchIdAtCell(int x, int z) { (void)x; (void)z; return 0; }
+    // vslot 0x30 of the object a switch entry keeps at +0: its property holder (the budget item is looked up on it).
+    virtual cISCPropertyHolder* TransitSwitchProperties(void* occupant) { (void)occupant; return nullptr; }
+    // The lot's building (lot vslot 0x180 -> 0x18 -> 0x30): its property holder; null when the lot has none.
+    virtual cISCPropertyHolder* LotBuildingProperties(ITrafficLot* lot) { (void)lot; return nullptr; }
+    // Budget simulator vslot 0x198 GetBudgetItemForPurpose (department id and monthly cost) and 0xd8 -> 0x50 (funding fraction).
+    virtual bool BudgetItemForPurpose(cISCPropertyHolder* holder, std::uint32_t purpose, std::uint32_t& department, std::int64_t& cost) {
+        (void)holder; (void)purpose; department = 0; cost = 0; return false;
+    }
+    virtual bool DepartmentFundingFraction(std::uint32_t department, float& fraction) { (void)department; fraction = 0.0f; return false; }
+};
+
+// cISC4TrafficSimulator::TransitSwitchQueryData (0x14 bytes): what the query tool shows for a transit station.
+struct TransitSwitchQueryData {
+    std::int32_t served = 0;        // +0
+    std::int32_t capacity = 0;      // +4
+    float percent = 0.0f;           // +8 (an SC4Percentage)
+    std::int32_t usage = 0;         // +0xc
+    std::int32_t maintenance = 0;   // +0x10
+};
+
+// The part of the 0x1e8 list's records this port reads: the original record continues with the trip lists (Write/Read
+// 0x10008e... walk them); only the station capacity (+0x40) and cell (+0x44 / +0x45) are modelled here.
+struct TransitStationRecord {
+    std::uint16_t capacity = 0;   // +0x40
+    std::uint8_t x = 0, z = 0;    // +0x44, +0x45
 };
 
 struct TrafficTunables {
@@ -259,7 +289,12 @@ public:
     const TrafficEdgeDensity& GetTrafficEdgeDensity(int x, int z, int travelType, bool secondDirection) const;
 
     // ---- transit switches ----
-    struct TransitSwitch { std::uint32_t id = 0; float traffic = 0, cost = 0, capacity = 1; };  // +8 traffic, +0xc cost, +0x10 capacity
+    // The map value (the original's operator[] result): +0 the switch's object, +8 traffic, +0xc cost, +0x10 capacity, +0x18 usage,
+    // +0x1c percent. +0x14 is not read.
+    struct TransitSwitch { void* occupant = nullptr; float traffic = 0, cost = 0, capacity = 1; float field14 = 0, usage = 0, percent = 0; };
+    std::list<TransitStationRecord>& TransitStations() { return transitStations_; }   // +0x1e8
+    // 0x10008d8bc: the switch under the cell, or the station whose lot covers it; false when there is neither.
+    bool GetTransitSwitchQueryData(int x, int z, TransitSwitchQueryData& out);
     TransitSwitch& TransitSwitchEntry(std::uint32_t id) { return transitSwitches_[id]; }
     float TransitSwitchEntryCost(std::uint32_t id);   // FLT_MAX-like 1.7014117e38 when saturated
     float transitSwitchCostScale = 1.0f;               // +0x8c8
@@ -405,6 +440,7 @@ private:
     mutable std::vector<std::vector<std::vector<NetworkInfo>>> grid_;
     std::unordered_map<std::uint32_t, TrafficEdgeDensity> edgeDensities_;
     std::unordered_map<std::uint32_t, TransitSwitch> transitSwitches_;
+    std::list<TransitStationRecord> transitStations_;   // +0x1e8
     TrafficEdgeDensity emptyEdgeDensity_{};
     std::uint16_t nextSubnetworkId_ = 1;                 // +0xa4
     std::vector<SubnetworkInfo> workingSubnetworks_, subnetworks_;   // +0xa8, +0xc0
