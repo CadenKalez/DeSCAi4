@@ -143,6 +143,6 @@ Generated from notes/ledger.csv and a source scan (2026-10-29).
 
 - Lighting time of day comes from the machine clock (or SC4_TIMEOFDAY), not the simulator's game clock (NativeLighting.cpp).
 - Occupant shadows: data side recovered and wired (CreateOccupantShadow -> cSTEOverlayManager::AddShadow -> projection through the recovered lighting manager);
-  drawing is the port's own quad pass (NativeShadowOverlay.cpp, off unless SC4_SHADOWS is set) because the DrawShadows combiners are not ported.
+  drawing is the port's own terrain-conforming quad pass (NativeShadowOverlay.cpp, SC4_NOSHADOWS disables) that sets up the DrawShadows state (render state, alpha test, combiner 0, stage-0 projection); the second texture stage (soft-edge mask 0xaa592b77 with the shadow matrix) and the falloff by location are not driven, and the culling uses the visible ground rectangle instead of the overlay manager's spatial index.
 - Water tick not registered with the simulator (AnimateWater does not run); IsNavigable answers (network/lot/occupant) are stubs.
 - Region and city UI panels beyond the tutorial path (many WinRegionScreen / WinMapView PARTIAL markers).

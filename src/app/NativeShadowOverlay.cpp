@@ -127,8 +127,7 @@ public:
     std::uint32_t AddRef() override { return ++refs_; }
     std::uint32_t Release() override { return --refs_; }
     void DrawViewObject(SC4DrawContext& context) override {
-        // Off by default: the overlay manager's DrawShadows combiners (the texture's alpha as the shadow mask) are not ported, so the quads draw as solid blocks.
-        static const bool enabled = std::getenv("SC4_SHADOWS") != nullptr;
+        static const bool enabled = std::getenv("SC4_NOSHADOWS") == nullptr;
         if (!enabled || !g_manager || !g_terrain) return;
         IOverlayShadowService* service = g_host.ShadowService();
         cS3DVector4 colour; float strength, threshold;
@@ -136,7 +135,7 @@ public:
         const std::uint8_t alpha = static_cast<std::uint8_t>(std::clamp(strength, 0.0f, 1.0f) * 255.0f);
         static cSC4PackedRenderState state;
         static bool packed = false;
-        if (!packed) { state.PackRenderState(true, false, true, false, true, 0, false, 3, 4, 5, -1, -1.0f, 1, -1); packed = true; }
+        if (!packed) { state.PackRenderState(true, true, true, true, true, 1, false, 1, 4, 5, 4, 0.5f, -1, -1); packed = true; }   // renderStates_[kOverlayDrawModeShadow] (InitDrawStates)
         const int maxX = static_cast<int>(g_terrain->CellCountX()), maxZ = static_cast<int>(g_terrain->CellCountZ());
         auto& slots = g_manager->Overlays();
         // only the cells the camera sees (a margin for shadows cast in from outside)
@@ -155,13 +154,15 @@ public:
             const int x0 = std::max(viewX0, overlay.rect.left), z0 = std::max(viewZ0, overlay.rect.top);
             const int x1 = std::min(viewX1, overlay.rect.right), z1 = std::min(viewZ1, overlay.rect.bottom);
             if (x1 <= x0 || z1 <= z0) continue;
-            const cS3DMatrix4& m = overlay.shadowMatrix;
+            const cS3DMatrix4& m = overlay.texMatrix;   // stage 0 of DrawShadows: world position -> the model texture's coordinates (the projection)
             std::vector<Vertex>& triangles = byTexture[dbg ? 0 : overlay.texture->GlTextureId()];
             auto vertex = [&](int x, int z) {
                 const float wx = x * 16.0f, wz = z * 16.0f, wy = g_terrain->GetAltitudeAtVertex(x, z) + 0.6f;
                 Vertex out{wx, wy, wz, {dbg ? std::uint8_t(255) : std::uint8_t(0), 0, 0, dbg ? std::uint8_t(255) : alpha}, 0, 0};
-                out.u = wx * m.m[0][0] + wy * m.m[1][0] + wz * m.m[2][0] + m.m[3][0];
-                out.v = wx * m.m[0][1] + wy * m.m[1][1] + wz * m.m[2][1] + m.m[3][1];
+                const float w = wx * m.m[0][3] + wy * m.m[1][3] + wz * m.m[2][3] + m.m[3][3];
+                const float inverseW = (w > 1e-6f || w < -1e-6f) ? 1.0f / w : 1.0f;
+                out.u = (wx * m.m[0][0] + wy * m.m[1][0] + wz * m.m[2][0] + m.m[3][0]) * inverseW;
+                out.v = (wx * m.m[0][1] + wy * m.m[1][1] + wz * m.m[2][1] + m.m[3][1]) * inverseW;
                 return out;
             };
             for (int z = z0; z < z1; ++z)
@@ -172,16 +173,29 @@ public:
         }
         if (byTexture.empty()) return;
         context.ResetModelViewTransform();
+        // the setup of cSTEOverlayManager::DrawShadows (0x10072aee0): shadow colour, alpha test at intensity * strength, combiner 0 on stage 0
         context.SetRenderState(state);
+        context.SetTexColor(colour);
+        if (threshold <= 0.0f) {
+            context.EnableAlphaTestFlag(false);
+        } else {
+            context.EnableAlphaTestFlag(true);
+            context.SetAlphaFunc(6, threshold * strength);
+        }
+        context.SetTexFiltering(1, 1, 0);
+        static const gd::cGDCombiner combiner{0x01030100u, 0x01010001u, 0u};
+        context.SetTexCombiner(combiner, 0);
         context.SetDepthOffset(-2);
         std::size_t total = 0;
         for (const auto& batch : byTexture) {
             context.SetTexture(batch.first, 0);
+            context.SetTexWrapModes(2, 2, 0);
             for (std::size_t n = 0; n < batch.second.size(); n += 3000)
                 context.DrawPrims(0, 10, static_cast<int>(std::min<std::size_t>(3000, batch.second.size() - n)), batch.second.data() + n);
             total += batch.second.size();
         }
         context.SetDepthOffset(0);
+        context.EnableAlphaTestFlag(false);
         static int reported = 0;
         if (std::getenv("SC4_DEBUG") && reported++ < 3) std::fprintf(stderr, "shadow overlay: %zu vertices in %zu texture batches\n", total, byTexture.size());
     }
