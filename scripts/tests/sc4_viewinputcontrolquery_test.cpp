@@ -362,7 +362,25 @@ struct LandfillFake final : IQueryLandfillDeveloper {
     void GetLandfillUsage(std::uint32_t& u, std::uint32_t& c) override { u = usage; c = capacity; }
     std::int64_t GetCurrentBudget() override { return budget; }
 };
-struct Plumbing final : IQueryPlumbingSim { bool watered = false; bool IsWatered(cISC4Occupant*) override { return watered; } };
+struct Plumbing final : IQueryPlumbingSim {
+    bool watered = false;
+    bool IsWatered(cISC4Occupant*) override { return watered; }
+    bool infoOk = true, conditionOk = true, upkeepOk = true;
+    std::uint32_t current = 0, maximum = 0, used = 0;
+    float efficiency = 0.0f, condition = 0.0f;
+    bool pump = false;
+    std::int64_t upkeep = 0;
+    bool GetWaterProducerInfo(cISC4Occupant*, std::uint32_t* c, std::uint32_t* m, float* e, bool* p, std::uint32_t* u) override {
+        if (c) *c = current;
+        if (m) *m = maximum;
+        if (e) *e = efficiency;
+        if (p) *p = pump;
+        if (u) *u = used;
+        return infoOk;
+    }
+    bool GetWaterProducerConditionPercent(cISC4Occupant*, float& f) override { f = condition; return conditionOk; }
+    bool GetOccupantMonthlyUpkeepCost(cISC4Occupant*, std::int64_t& c) override { c = upkeep; return upkeepOk; }
+};
 struct Aura final : IQueryAuraSim { std::int8_t value = 0; std::int8_t GetAura(int, int) override { return value; } };
 struct Sim final : IQuerySimulator { std::uint32_t frame = 0; std::uint32_t FrameCount() override { return frame; } };
 struct ResSim final : IQueryResidentialSim {
@@ -1424,6 +1442,67 @@ int main() {
         // every row is set-only: clearing answers true
         CHECK(cSC4ViewInputControlQuery::SetOrGetPowerPlantEfficiency(dialog, 0x1001, false, &occupant));
         CHECK(cSC4ViewInputControlQuery::SetOrGetRecyclingCenterTrashRecycled(dialog, 0x1007, false, &occupant));
+        delete dialog;
+    }
+
+    // --- M5: water building rows ---------------------------------------------------------------------------------
+    {
+        auto* dialog = new cGZWin(&host.mgr);
+        auto* label = new gz::cGZWinText(&host.mgr);
+        label->SetID(0x1007);
+        auto* meter = new gz::cGZWinBMP(&host.mgr);
+        meter->SetID(0x1001);
+        CHECK(dialog->ChildAdd(label) && dialog->ChildAdd(meter));
+        TestOccupant occupant;
+        auto text = [&]() { return std::string(label->GetCaption().ToChar()); };
+        host.plumbing.current = 200;
+        host.plumbing.maximum = 500;
+        host.plumbing.used = 50;
+        host.plumbing.efficiency = 0.8f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWaterBuildingCurrentCapacity(dialog, 0x1007, true, &occupant) && text() == "200");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWaterBuildingMaxCapacity(dialog, 0x1007, true, &occupant) && text() == "500");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWaterBuildingWaterUsed(dialog, 0x1007, true, &occupant) && text() == "50");
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWaterBuildingUsagePercent(dialog, 0x1007, true, &occupant) && text() == "25%");
+        host.plumbing.current = 0;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWaterBuildingUsagePercent(dialog, 0x1007, true, &occupant) && text() == "0%");
+        host.plumbing.current = 200;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWaterBuildingEfficiency(dialog, 0x1001, true, &occupant));
+        cIGZVariant* value = nullptr;
+        CHECK(meter->AsIGZWin()->GetParam(0xea563ab0, &value) && value && std::fabs(value->GetValFloat32() - 0.8f) < 1e-6f);
+        if (value) value->Release();
+        host.plumbing.efficiency = 0.5f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWaterTreatmentPlantEfficiency(dialog, 0x1001, true, &occupant));   // forwards to the building row
+        value = nullptr;
+        CHECK(meter->AsIGZWin()->GetParam(0xea563ab0, &value) && value && std::fabs(value->GetValFloat32() - 0.5f) < 1e-6f);
+        if (value) value->Release();
+        // cost per unit: the monthly upkeep over the current capacity
+        host.plumbing.upkeep = 1000;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWaterBuildingCostPerUnit(dialog, 0x1007, true, &occupant));
+        CHECK(text().find("5.00") != std::string::npos);
+        host.plumbing.upkeepOk = false;
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetWaterBuildingCostPerUnit(dialog, 0x1007, true, &occupant));
+        host.plumbing.upkeepOk = true;
+        // the pump: two words by the pump flag
+        host.plumbing.pump = true;
+        host.strings.clear();
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWaterBuildingPumpCondition(dialog, 0x1007, true, &occupant));
+        CHECK(host.strings.size() == 1 && host.strings[0] == 0x0a5d4f43);
+        host.plumbing.pump = false;
+        host.strings.clear();
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWaterBuildingPumpCondition(dialog, 0x1007, true, &occupant));
+        CHECK(host.strings.size() == 1 && host.strings[0] == 0x2a5d4f3b);
+        // the condition percent: 0 when the simulator has none
+        host.plumbing.condition = 0.876f;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWaterBuildingPercentCondition(dialog, 0x1007, true, &occupant) && text() == "87%");
+        host.plumbing.conditionOk = false;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWaterBuildingPercentCondition(dialog, 0x1007, true, &occupant) && text() == "0%");
+        host.plumbing.conditionOk = true;
+        // no producer info: false; clearing: true
+        host.plumbing.infoOk = false;
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetWaterBuildingMaxCapacity(dialog, 0x1007, true, &occupant));
+        CHECK(!cSC4ViewInputControlQuery::SetOrGetWaterBuildingPumpCondition(dialog, 0x1007, true, &occupant));
+        CHECK(cSC4ViewInputControlQuery::SetOrGetWaterBuildingMaxCapacity(dialog, 0x1007, false, &occupant));
+        host.plumbing.infoOk = true;
         delete dialog;
     }
 

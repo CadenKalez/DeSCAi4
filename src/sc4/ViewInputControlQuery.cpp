@@ -1353,6 +1353,87 @@ bool cSC4ViewInputControlQuery::SetOrGetPowerPlantLocalFunding(cIGZWin* win, std
     return true;
 }
 
+// ---- water building rows ---------------------------------------------------------------------------------------------------
+namespace {
+IQueryPlumbingSim* PlumbingSim() { IQueryHost* host = QueryHost(); return host ? host->PlumbingSim() : nullptr; }
+constexpr std::uint32_t kStrPumpWorking = 0x0a5d4f43, kStrPumpBroken = 0x2a5d4f3b;
+}  // namespace
+
+// @ 0x1002d859e (the treatment plant @ 0x1002daf82 forwards)
+bool cSC4ViewInputControlQuery::SetOrGetWaterBuildingEfficiency(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryPlumbingSim* plumbing = PlumbingSim();
+    float efficiency = 0.0f;
+    if (!plumbing || !plumbing->GetWaterProducerInfo(occupant, nullptr, nullptr, &efficiency, nullptr, nullptr)) return false;
+    return SetPerformanceMeterValue(win, id, efficiency);
+}
+bool cSC4ViewInputControlQuery::SetOrGetWaterTreatmentPlantEfficiency(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return SetOrGetWaterBuildingEfficiency(win, id, set, occupant);
+}
+// @ 0x1002d860e: water used over the current capacity, as a whole percent
+bool cSC4ViewInputControlQuery::SetOrGetWaterBuildingUsagePercent(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryPlumbingSim* plumbing = PlumbingSim();
+    std::uint32_t current = 0, used = 0, percent = 0;
+    if (!plumbing || !plumbing->GetWaterProducerInfo(occupant, &current, nullptr, nullptr, nullptr, &used)) return false;
+    if (current != 0) percent = (used * 100u) / current;
+    return SetStaticControlNumericPercent(win, id, percent);
+}
+// @ 0x1002d868e / 0x1002d86f2 / 0x1002d875a: one figure of the producer info
+bool cSC4ViewInputControlQuery::SetOrGetWaterBuildingMaxCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryPlumbingSim* plumbing = PlumbingSim();
+    std::uint32_t maximum = 0;
+    if (!plumbing || !plumbing->GetWaterProducerInfo(occupant, nullptr, &maximum, nullptr, nullptr, nullptr)) return false;
+    return SetStaticControlNumeric(win, id, maximum);
+}
+bool cSC4ViewInputControlQuery::SetOrGetWaterBuildingCurrentCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryPlumbingSim* plumbing = PlumbingSim();
+    std::uint32_t current = 0;
+    if (!plumbing || !plumbing->GetWaterProducerInfo(occupant, &current, nullptr, nullptr, nullptr, nullptr)) return false;
+    return SetStaticControlNumeric(win, id, current);
+}
+bool cSC4ViewInputControlQuery::SetOrGetWaterBuildingWaterUsed(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryPlumbingSim* plumbing = PlumbingSim();
+    std::uint32_t used = 0;
+    if (!plumbing || !plumbing->GetWaterProducerInfo(occupant, nullptr, nullptr, nullptr, nullptr, &used)) return false;
+    return SetStaticControlNumeric(win, id, used);
+}
+// @ 0x1002d87c0: the monthly upkeep over the current capacity
+bool cSC4ViewInputControlQuery::SetOrGetWaterBuildingCostPerUnit(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryPlumbingSim* plumbing = PlumbingSim();
+    std::uint32_t current = 0;
+    std::int64_t cost = 0;
+    if (!plumbing || !plumbing->GetWaterProducerInfo(occupant, &current, nullptr, nullptr, nullptr, nullptr) ||
+        !plumbing->GetOccupantMonthlyUpkeepCost(occupant, cost))
+        return false;
+    const double perUnit = current == 0 ? 0.0 : static_cast<double>(cost) / static_cast<double>(current);
+    return SetStaticControlSimoleonsFloat(win, id, perUnit);
+}
+// @ 0x1002d8860: the pump's state as a word
+bool cSC4ViewInputControlQuery::SetOrGetWaterBuildingPumpCondition(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryHost* host = QueryHost();
+    IQueryPlumbingSim* plumbing = PlumbingSim();
+    bool pumpWorking = false;
+    if (!host || !plumbing || !plumbing->GetWaterProducerInfo(occupant, nullptr, nullptr, nullptr, &pumpWorking, nullptr)) return false;
+    cRZString text;
+    host->LoadString(kStringGroup, pumpWorking ? kStrPumpWorking : kStrPumpBroken, text);
+    return SetStaticControlText(win, id, text);
+}
+// @ 0x1002d894c: the producer's condition as a whole percent (0 when the simulator has none)
+bool cSC4ViewInputControlQuery::SetOrGetWaterBuildingPercentCondition(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!set) return true;
+    IQueryPlumbingSim* plumbing = PlumbingSim();
+    float condition = 0.0f;
+    std::uint32_t percent = 0;
+    if (plumbing && plumbing->GetWaterProducerConditionPercent(occupant, condition)) percent = TruncatedUnsigned(condition * 100.0f);
+    return SetStaticControlNumericPercent(win, id, percent);
+}
+
 // @ 0x1002daf96
 // PARTIAL: the original is a switch over the cell-based control ids (0x1011..0x1015 airport/seaport traffic, 0x1026 /
 // 0x1027 landfill, 0x1028 the landfill developer's monthly cost, 0x104b..0x104e the neighbour-connection rows and
@@ -1566,9 +1647,9 @@ cSC4ViewInputControlQuery::tSetOrGetFn const cSC4ViewInputControlQuery::kRowFunc
     nullptr, &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyEfficiency, &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyPercentCapacity, &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyMaxPowerOutputCapacity,   // 0x102c..0x102f
     &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyCurrentPowerOutputCapacity, &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyPowerUsed, &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyCostPerUnit, &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyTrashIncinerated,   // 0x1030..0x1033
     &cSC4ViewInputControlQuery::SetOrGetPowerPlantEfficiency, &cSC4ViewInputControlQuery::SetOrGetPowerPlantPercentCapacity, &cSC4ViewInputControlQuery::SetOrGetPowerPlantMaxPowerOutputCapacity, &cSC4ViewInputControlQuery::SetOrGetPowerPlantCurrentPowerOutputCapacity,   // 0x1034..0x1037
-    &cSC4ViewInputControlQuery::SetOrGetPowerPlantPowerUsed, &cSC4ViewInputControlQuery::SetOrGetPowerPlantCostPerUnit, nullptr, nullptr,   // 0x1038..0x103b
-    nullptr, nullptr, nullptr, nullptr,   // 0x103c..0x103f
-    nullptr, nullptr, nullptr, nullptr,   // 0x1040..0x1043
+    &cSC4ViewInputControlQuery::SetOrGetPowerPlantPowerUsed, &cSC4ViewInputControlQuery::SetOrGetPowerPlantCostPerUnit, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingEfficiency, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingUsagePercent,   // 0x1038..0x103b
+    &cSC4ViewInputControlQuery::SetOrGetWaterBuildingMaxCapacity, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingCurrentCapacity, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingWaterUsed, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingCostPerUnit,   // 0x103c..0x103f
+    &cSC4ViewInputControlQuery::SetOrGetWaterBuildingPumpCondition, nullptr, nullptr, nullptr,   // 0x1040..0x1043
     nullptr, nullptr, nullptr, nullptr,   // 0x1044..0x1047
     nullptr, nullptr, nullptr, nullptr,   // 0x1048..0x104b
     nullptr, nullptr, nullptr, nullptr,   // 0x104c..0x104f
@@ -1579,8 +1660,8 @@ cSC4ViewInputControlQuery::tSetOrGetFn const cSC4ViewInputControlQuery::kRowFunc
     &cSC4ViewInputControlQuery::SetOrGetRecyclingCenterTrashRecycled, &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyPercentCondition, &cSC4ViewInputControlQuery::SetOrGetPowerPlantPercentCondition, &cSC4ViewInputControlQuery::SetOrGetPowerPlantLocalFunding,   // 0x1060..0x1063
     nullptr, nullptr, nullptr, nullptr,   // 0x1064..0x1067
     nullptr, nullptr, nullptr, nullptr,   // 0x1068..0x106b
-    &cSC4ViewInputControlQuery::SetOrGetOccupantCost, nullptr, nullptr, nullptr,   // 0x106c..0x106f
-    nullptr, nullptr, nullptr, nullptr,   // 0x1070..0x1073
+    &cSC4ViewInputControlQuery::SetOrGetOccupantCost, &cSC4ViewInputControlQuery::SetOrGetWaterTreatmentPlantEfficiency, nullptr, nullptr,   // 0x106c..0x106f
+    nullptr, nullptr, nullptr, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingPercentCondition,   // 0x1070..0x1073
     nullptr, nullptr, &cSC4ViewInputControlQuery::SetOrGetOccupantIsPowered, &cSC4ViewInputControlQuery::SetOrGetOccupantIsWatered,   // 0x1074..0x1077
     &cSC4ViewInputControlQuery::SetOrGetSeaportOccupantMaintenanceCost, &cSC4ViewInputControlQuery::SetOrGetWhyOccupantAbandoned, &cSC4ViewInputControlQuery::SetOrGetOccupantIsHistorical, &cSC4ViewInputControlQuery::SetOrGetAirportOccupantUsage,   // 0x1078..0x107b
     &cSC4ViewInputControlQuery::SetOrGetAirportOccupantCapacity, &cSC4ViewInputControlQuery::SetOrGetSeaportOccupantUsage, &cSC4ViewInputControlQuery::SetOrGetSeaportOccupantCapacity,   // 0x107c..0x107e

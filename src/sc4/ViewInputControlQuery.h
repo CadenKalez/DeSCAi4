@@ -22,10 +22,10 @@
 // PARTIAL (see notes/ledger_pending/cSC4ViewInputControlQuery.txt): the tip/describe text builders
 // (Get*SummaryInfo, GetBuildingOccupantTipInfo, GetBuildingOccupantTrafficInfo, GetNetworkOccupantTrafficInfo,
 // DescribePick/DescribeCell/DescribeBuilding/DescribeDemand/DescribePopulation, WriteDetailedDebugInfo and the
-// headline/trip-volume/path helpers) and the row handlers for the simulators that are not recovered yet (water building, transit, landmark, RCI/growth-developer) are declared but not
+// headline/trip-volume/path helpers) and the row handlers for the simulators that are not recovered yet ( transit, landmark, RCI/growth-developer) are declared but not
 // implemented. The fire, police/jail, park/occupant-cost and neighbour-connection rows — everything whose simulator
 // (cSC4FireProtectionSimulator, cSC4PoliceSimulator, cSC4BudgetSimulator, cSC4NeighborsSimulator) is recovered — are
-// ported, as are the school, hospital, library, landfill, incinerator, recycling, waste-to-energy and power plant rows, the airport and seaport rows (usage, capacity, traffic meter, maintenance), the dialog enumeration callbacks (EnumFunc*) and the recovered control-id -> row handler table.
+// ported, as are the school, hospital, library, landfill, incinerator, recycling, waste-to-energy, power plant and water building rows, the airport and seaport rows (usage, capacity, traffic meter, maintenance), the dialog enumeration callbacks (EnumFunc*) and the recovered control-id -> row handler table.
 #pragma once
 #include <cstdint>
 #include <vector>
@@ -177,6 +177,12 @@ class IQueryPlumbingSim {
 public:
     virtual ~IQueryPlumbingSim() = default;
     virtual bool IsWatered(cISC4Occupant* occupant) = 0;   // vslot 0x48
+    // The water building rows (cSC4PlumbingSimulator, recovered). Defaults answer "no data".
+    // vslot 0xc0 GetWaterProducerInfo(occupant, current, maximum, efficiency, pumpWorking, used): a null out is skipped.
+    virtual bool GetWaterProducerInfo(cISC4Occupant*, std::uint32_t* current, std::uint32_t* maximum, float* efficiency, bool* pumpWorking,
+                                      std::uint32_t* used) { (void)current; (void)maximum; (void)efficiency; (void)pumpWorking; (void)used; return false; }
+    virtual bool GetWaterProducerConditionPercent(cISC4Occupant*, float&) { return false; }       // vslot 0xc8
+    virtual bool GetOccupantMonthlyUpkeepCost(cISC4Occupant*, std::int64_t&) { return false; }    // vslot 0xd0
 };
 
 // SL::spSimulator (the frame counter that gates the periodic dialog refresh) and SL::spResidentialSim.
@@ -474,6 +480,16 @@ public:
     static bool SetOrGetWasteToEnergyPercentCondition(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d83f4
     static bool SetOrGetPowerPlantPercentCondition(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d843e
     static bool SetOrGetPowerPlantLocalFunding(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8488
+    // --- water building rows ---
+    static bool SetOrGetWaterBuildingEfficiency(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d859e
+    static bool SetOrGetWaterTreatmentPlantEfficiency(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002daf82
+    static bool SetOrGetWaterBuildingUsagePercent(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d860e
+    static bool SetOrGetWaterBuildingMaxCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d868e
+    static bool SetOrGetWaterBuildingCurrentCapacity(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d86f2
+    static bool SetOrGetWaterBuildingWaterUsed(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d875a
+    static bool SetOrGetWaterBuildingCostPerUnit(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d87c0
+    static bool SetOrGetWaterBuildingPumpCondition(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d8860
+    static bool SetOrGetWaterBuildingPercentCondition(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002d894c
     static bool SetOrGetNeighborConnectionNeighborCityName(cIGZWin* win, std::uint32_t id, bool set, int x, int z,
                                                            int connectionType);                     // @ 0x1002d90d6
     static bool SetOrGetNeighborConnectionNeighborCityMayorName(cIGZWin* win, std::uint32_t id, bool set, int x,
