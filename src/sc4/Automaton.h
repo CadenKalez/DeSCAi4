@@ -307,13 +307,13 @@ public:
     bool PlayAnim(std::uint32_t animId);                              // 0xa0  @ 0x10010ae6a
     bool PlayAnimByName(const cRZString& name);                       // 0xa8  @ 0x10010aeba
     bool AttachAnim(const cGZPersistResourceKey& key, s3d::PlayMode mode, bool flag, float rate);   // 0xb0
-    std::uint16_t GetCallNumber() const { return 0; }                 // 0xb8  @ 0x1000e24f0
-    void SetCallNumber(std::uint16_t) {}                              // 0xc0  @ 0x10010ec30
-    void SetDispatchState(std::uint32_t) {}                           // 0xc8  @ 0x1006d6b20
-    std::uint32_t GetDispatchState() const { return 3; }              // 0xd0  @ 0x1004fdee0
+    virtual std::uint16_t GetCallNumber() const { return 0; }                 // 0xb8  @ 0x1000e24f0
+    virtual void SetCallNumber(std::uint16_t) {}                              // 0xc0  @ 0x10010ec30
+    virtual void SetDispatchState(std::uint32_t) {}                           // 0xc8  @ 0x1006d6b20
+    virtual std::uint32_t GetDispatchState() const { return 3; }              // 0xd0  @ 0x1004fdee0
     std::uint32_t GetDispatchInfoID() const { return dispatchInfoId_; }   // 0xd8  @ 0x1000e2500
     void SetDispatchInfoID(std::uint32_t id) { dispatchInfoId_ = id; }    // 0xe0  @ 0x1000f3c10
-    void ReturnToSourceOccupant() {}                                  // 0xe8  @ 0x10010ec40
+    virtual void ReturnToSourceOccupant() {}                                  // 0xe8  @ 0x10010ec40
     void SetAutomataFlag(std::uint32_t flag, bool on);                // 0xf0  @ 0x1006d6b30
     bool CheckAutomataFlag(std::uint32_t flag) const;                 // 0xf8  @ 0x1006d6b50
     float GetOpacity() const;                                         // 0x100 @ 0x1006d6b60
@@ -362,14 +362,14 @@ public:
     bool PlaceInOccupantManager(bool add);                            // 0x268 @ 0x100107216
     bool PlaceInRenderer(bool add);                                   // 0x270 @ 0x100107370
     virtual bool DoAnimationTick(std::uint32_t unknown, float milliseconds);   // 0x278 @ 0x100107ce2
-    bool ShouldCollide(cSC4Automaton* other) const;                   // 0x280 @ 0x10010b9c8
+    virtual bool ShouldCollide(cSC4Automaton* other) const;                   // 0x280 @ 0x10010b9c8
     void SetZoomAndRotation(int zoom, int rotation);                  // 0x288 @ 0x10010bba2
     void SetTransform(const cS3DTransform& transform);                // 0x290 @ 0x10010aa68
     std::uint32_t GetAnimOffsetByName(const cRZString& name) const;   // 0x298 @ 0x10010aee2
     void EnableActiveSound(bool on);                                  // 0x2a0 @ 0x10010ea18
     void UpdateActiveSound(float milliseconds);                       // 0x2a8 @ 0x10010ea78
-    void HandleReachedRouteDestination();                             // 0x2b0 @ 0x10010a436
-    void HandleDispatched(const cS3DVector3& position, cISC4Occupant* occupant);   // 0x2b8 @ 0x10010a4ac
+    virtual void HandleReachedRouteDestination();                             // 0x2b0 @ 0x10010a436
+    virtual void HandleDispatched(const cS3DVector3& position, cISC4Occupant* occupant);   // 0x2b8 @ 0x10010a4ac
     bool HandleRemoveController(cSC4AutomataController* controller);  // 0x2c0 @ 0x10010a4c4
     IAutomatonModel* GetModelInstance() const;                        // 0x2c8 @ 0x100506820
     void UpdateOpacity(float milliseconds);                           // 0x2d0 @ 0x10010a6e6
@@ -394,7 +394,7 @@ public:
     void SendCallbackMessage(std::uint32_t event, std::uint32_t data);   // 0x368 @ 0x10010bf22
     virtual void UpdateAnimation(float milliseconds);                         // 0x370 @ 0x100108136
     void UpdateEffects();                                             // 0x378 @ 0x10010b956
-    void UpdateAttraction();                                          // 0x380 @ 0x10010bbfa
+    virtual void UpdateAttraction();                                          // 0x380 @ 0x10010bbfa
     void InitLighting();                                              // 0x388 @ 0x10010a9b4
     void UpdateLighting();                                            // 0x390 @ 0x10010a858
     void ClearStateStack();                                           // 0x398 @ 0x10010cd3e

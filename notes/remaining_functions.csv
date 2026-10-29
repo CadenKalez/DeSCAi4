@@ -2109,41 +2109,19 @@ cSC4EffectsResourceFactory,000000010056bdba,not started,cSC4EffectsResourceFacto
 cSC4EffectsResourceFactory,000000010056bde8,not started,"cSC4EffectsResourceFactory::CreateInstance(unsigned int, unsigned int, void**)"
 cSC4EffectsResourceFactory,000000010056be84,not started,"cSC4EffectsResourceFactory::SerialRead(cIGZPersistResource&, cIGZPersistDBSerialRecord&)"
 cSC4EffectsResourceFactory,000000010056bf66,not started,"cSC4EffectsResourceFactory::SerialWrite(cIGZPersistResource&, cIGZPersistDBSerialRecord&)"
-cSC4EmergencyVehicle,00000001002f5580,not started,cSC4EmergencyVehicle::cSC4EmergencyVehicle()
 cSC4EmergencyVehicle,00000001002f563c,not started,cSC4EmergencyVehicle::Init()
-cSC4EmergencyVehicle,00000001002f56dc,not started,cSC4EmergencyVehicle::Shutdown()
-cSC4EmergencyVehicle,00000001002f576e,not started,"cSC4EmergencyVehicle::DoAnimationTick(unsigned int, float)"
-cSC4EmergencyVehicle,00000001002f57fc,not started,cSC4EmergencyVehicle::DoStateTick(float)
-cSC4EmergencyVehicle,00000001002f58d4,not started,cSC4EmergencyVehicle::DoEnRouteTick(float)
 cSC4EmergencyVehicle,00000001002f5a26,not started,cSC4EmergencyVehicle::ValidateNetworkOccupant()
 cSC4EmergencyVehicle,00000001002f5ae2,not started,cSC4EmergencyVehicle::DoRepathingTick(float)
 cSC4EmergencyVehicle,00000001002f5c36,not started,cSC4EmergencyVehicle::SendPathBlockedMessage()
-cSC4EmergencyVehicle,00000001002f5d00,not started,cSC4EmergencyVehicle::DoHandlingEventTick(float)
 cSC4EmergencyVehicle,00000001002f5d08,not started,cSC4EmergencyVehicle::DoTeleportTick(float)
-cSC4EmergencyVehicle,00000001002f5f9e,not started,cSC4EmergencyVehicle::DoPlayerDriveTick(float)
-cSC4EmergencyVehicle,00000001002f5fa8,not started,cSC4EmergencyVehicle::UpdateAttraction()
-cSC4EmergencyVehicle,00000001002f600c,not started,"cSC4EmergencyVehicle::HandlePlayerDriveCommand(cISC4Automaton::ePlayerDriveCommand, bool)"
-cSC4EmergencyVehicle,00000001002f603c,not started,cSC4EmergencyVehicle::HandleEnterState(tAutomataState*)
-cSC4EmergencyVehicle,00000001002f611e,not started,cSC4EmergencyVehicle::HandleExitState(tAutomataState const*)
 cSC4EmergencyVehicle,00000001002f615a,not started,cSC4EmergencyVehicle::HandleReachedRouteDestination()
-cSC4EmergencyVehicle,00000001002f62e6,not started,cSC4EmergencyVehicle::HandleNetworkOccupantRemoved()
 cSC4EmergencyVehicle,00000001002f6322,not started,"cSC4EmergencyVehicle::HandleDispatched(cS3DVector3 const&, cISC4Occupant*)"
 cSC4EmergencyVehicle,00000001002f64bc,not started,"cSC4EmergencyVehicle::AppendRouteToNearbyRoad(int, int, cS3DVector3 const&)"
 cSC4EmergencyVehicle,00000001002f7670,not started,cSC4EmergencyVehicle::ReturnToSourceOccupant()
 cSC4EmergencyVehicle,00000001002f76e4,not started,cSC4EmergencyVehicle::GetDebugExtraText() const
-cSC4EmergencyVehicle,00000001002f78e6,not started,cSC4EmergencyVehicle::ShouldCollide(cSC4Automaton*)
 cSC4EmergencyVehicle,00000001002f796c,not started,cSC4EmergencyVehicle::SetDispatchState(cISC4DispatchManager::tDispatchState)
 cSC4EmergencyVehicle,00000001002f7bf8,not started,cSC4EmergencyVehicle::CloseEnoughToDispatchDestination() const
 cSC4EmergencyVehicle,00000001002f7cdc,not started,cSC4EmergencyVehicle::ShowEmergencyLights(bool)
-cSC4EmergencyVehicle,00000001002f7efa,not started,cSC4EmergencyVehicle::ShowMotionBlur(bool)
-cSC4EmergencyVehicle,00000001002f7f02,not started,cSC4EmergencyVehicle::Write(cIGZOStream&) const
-cSC4EmergencyVehicle,00000001002f7fbc,not started,cSC4EmergencyVehicle::Read(cIGZIStream&)
-cSC4EmergencyVehicle,00000001002f80a6,not started,cSC4EmergencyVehicle::GetCallNumber() const
-cSC4EmergencyVehicle,00000001002f80c2,not started,cSC4EmergencyVehicle::GetDispatchState() const
-cSC4EmergencyVehicle,00000001002f80d2,not started,cSC4EmergencyVehicle::~cSC4EmergencyVehicle()
-cSC4EmergencyVehicle,00000001002f80d8,not started,cSC4EmergencyVehicle::~cSC4EmergencyVehicle()
-cSC4EmergencyVehicle,000000010050f2d8,not started,cSC4EmergencyVehicle::SetCallNumber(unsigned short)
-cSC4EmergencyVehicle,000000010050f550,not started,cSC4EmergencyVehicle::GetDispatchDestination() const
 cSC4FileTokenizer,00000001001aeca2,not started,cSC4FileTokenizer::GetToken()
 cSC4FileTokenizer,00000001001b0502,not started,cSC4FileTokenizer::Init(cGZPersistResourceKey const&)
 cSC4FileTokenizer,00000001001b056e,not started,cSC4FileTokenizer::~cSC4FileTokenizer()

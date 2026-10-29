@@ -17,6 +17,7 @@
 #include "sc4/Occupant.h"
 #include "sc4/PathInfo.h"
 #include "sc4/TrafficNetworkMap.h"
+#include "sc4/EmergencyVehicle.h"
 #include "sc4/Vehicle.h"
 
 static int failures = 0;
@@ -937,6 +938,68 @@ void TestPlayerDriveTickAndOffRoad() {
 
 }  // namespace
 
+// ---- cSC4EmergencyVehicle (the recovered part) ----------------------------------------------------------------------------
+struct FakeEmergencyHost final : IEmergencyVehicleHost {
+    int stopped = 0, moved = 0, lightsOn = 0, lightsOff = 0;
+    int lastX = 0, lastY = 0, lastZ = 0;
+    void SirenStopped(const cSC4EmergencyVehicle&) override { ++stopped; }
+    void SirenMoved(const cSC4EmergencyVehicle&, int x, int y, int z) override { ++moved; lastX = x; lastY = y; lastZ = z; }
+    void SetEmergencyLights(cSC4EmergencyVehicle&, bool on) override { on ? ++lightsOn : ++lightsOff; }
+};
+
+void TestEmergencyVehicle() {
+    World world;
+    FakeEmergencyHost emergencyHost;
+    auto* ev = new cSC4EmergencyVehicle(&world.host, &world.automatonHost, nullptr, &emergencyHost);
+    ev->AddRef();
+    CHECK(ev->GetCallNumber() == 0 && ev->GetDispatchState() == 0 && ev->RepathCount() == 0);
+    ev->SetCallNumber(0x1234);
+    ev->SetDispatchDestination(Vec(1, 2, 3));
+    ev->SetDispatchStateRaw(3);
+    ev->SetRepathCount(2);
+    CHECK(ev->GetCallNumber() == 0x1234 && ev->GetDispatchState() == 3 && ev->GetDispatchDestination().z == 3.0f);
+
+    // the stream: version 2, the vehicle record, destination, the (null) dispatch source, repath count, call number, state
+    PortMemoryOStream out;
+    CHECK(ev->Write(out));
+    PortMemoryIStream in(out.bytes().data(), out.bytes().size());
+    auto* copy = new cSC4EmergencyVehicle(&world.host, &world.automatonHost, nullptr, &emergencyHost);
+    copy->AddRef();
+    CHECK(copy->Read(in));
+    CHECK(copy->GetCallNumber() == 0x1234 && copy->GetDispatchState() == 3 && copy->RepathCount() == 2 &&
+          copy->GetDispatchDestination().x == 1.0f && copy->GetDispatchDestination().y == 2.0f && copy->DispatchSource() == nullptr);
+    const std::uint8_t badVersion[2] = {9, 0};
+    PortMemoryIStream bad(badVersion, sizeof(badVersion));
+    CHECK(!copy->Read(bad));
+
+    // lights key: released toggles the lights (on while there is no light model), pressed goes to the vehicle
+    CHECK(ev->HandlePlayerDriveCommand(kEmergencyPlayerDriveLightsCommand, false));
+    CHECK(emergencyHost.lightsOn == 1 && emergencyHost.lightsOff == 0);
+    ev->ShowEmergencyLights(false);                                  // already off: nothing to do
+    CHECK(emergencyHost.lightsOff == 0);
+
+    // collisions: ordinary vehicles use the base rule; emergency mode ignores everything that is not also an emergency car
+    cSC4Vehicle* other = MakeVehicle(world);
+    CHECK(ev->ShouldCollide(other) == static_cast<const cSC4Automaton*>(ev)->cSC4Automaton::ShouldCollide(other));
+    ev->SetAutomataFlag(0x80, true);
+    CHECK(!ev->ShouldCollide(nullptr) && !ev->ShouldCollide(ev) && !ev->ShouldCollide(other));
+    other->SetAutomataFlag(0x80, true);
+    CHECK(ev->ShouldCollide(other));                                   // two emergency cars that are not queueing collide
+    other->SetAutomataFlag(0x20, true);
+    CHECK(!ev->ShouldCollide(other) || ev->Route().empty());           // a queueing one only when this car has nothing routed
+    other->Release();
+
+    // attraction: emergency mode drops the attraction controller instead of updating it
+    ev->UpdateAttraction();
+
+    // shutdown silences the siren and releases the light model
+    const int stoppedBefore = emergencyHost.stopped;
+    ev->Shutdown();
+    CHECK(emergencyHost.stopped == stoppedBefore + 1 && ev->LightModel() == nullptr);
+    copy->Release();
+    ev->Release();
+}
+
 int main() {
     TestConstructionAndQueries();
     TestGeometry();
@@ -949,6 +1012,7 @@ int main() {
     TestPersistence();
     TestLotIntersection();
     TestPlayerDriveTickAndOffRoad();
+    TestEmergencyVehicle();
     if (failures == 0) {
         std::printf("sc4_vehicle: ok\n");
         return 0;
