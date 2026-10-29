@@ -233,12 +233,13 @@ void MultiplyTransform(cS3DTransform& self, const cS3DTransform& other) {
     const float s = self.scale;
     float tx = self.translation[0], ty = self.translation[1], tz = self.translation[2];
     const float ox = other.translation[0], oy = other.translation[1], oz = other.translation[2];
-    tx = (t[0][2] * oz + t[0][1] * oy + t[0][0] * ox) * s + tx;
-    ty = (t[1][2] * oz + t[1][1] * oy + t[1][0] * ox) * s + ty;
-    tz = (t[2][2] * oz + t[2][1] * oy + t[2][0] * ox) * s + tz;
+    // (the terms are added right-nested, c + (b + a), as the machine code does: checked by scripts/machine_oracle/lightingmanager_oracle.cpp)
+    tx = (t[0][2] * oz + (t[0][1] * oy + t[0][0] * ox)) * s + tx;
+    ty = (t[1][2] * oz + (t[1][1] * oy + t[1][0] * ox)) * s + ty;
+    tz = (t[2][2] * oz + (t[2][1] * oy + t[2][0] * ox)) * s + tz;
     float n[3][3];
     for (int row = 0; row < 3; ++row)
-        for (int col = 0; col < 3; ++col) n[row][col] = o[2][col] * t[row][2] + o[1][col] * t[row][1] + o[0][col] * t[row][0];
+        for (int col = 0; col < 3; ++col) n[row][col] = o[2][col] * t[row][2] + (o[1][col] * t[row][1] + o[0][col] * t[row][0]);
     for (int row = 0; row < 3; ++row)
         for (int col = 0; col < 3; ++col) self.rotation[row][col] = n[row][col];
     self.translation[0] = tx; self.translation[1] = ty; self.translation[2] = tz;

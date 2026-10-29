@@ -8,4 +8,5 @@ D=$(grep "^ \"sc4_$1:" scripts/run_tests.sh | sed 's/^ "[^:]*://; s/"$//; s/\$T/
 OUT=${TMPDIR:-/tmp}/machine_oracle_$1
 clang++ -arch x86_64 -std=c++20 -O1 -ffp-contract=off -w -Isrc -Iscripts/tests/stubs -Iscripts/machine_oracle \
     scripts/machine_oracle/$1_oracle.cpp ${=D} -o $OUT || exit 1
-arch -x86_64 $OUT
+shift
+arch -x86_64 $OUT "$@"   # extra arguments go to the oracle

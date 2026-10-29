@@ -11,12 +11,12 @@
 <text x="16" y="136" font-size="16" font-weight="700" fill="#1d2320">Recovered</text>
 <text x="150" y="136" font-size="14" fill="#5b6560">complete and covered by a test</text>
 <rect x="560" y="118" width="860" height="26" rx="3" fill="#e3e6e0"/>
-<rect x="560" y="118" width="526.2" height="26" rx="3" fill="#e8b04a"/>
+<rect x="560" y="118" width="526.5" height="26" rx="3" fill="#e8b04a"/>
 <text x="1432" y="137" font-size="18" font-weight="700" fill="#1d2320">61.2%</text>
 <text x="16" y="170" font-size="16" font-weight="700" fill="#1d2320">Verified</text>
 <text x="150" y="170" font-size="14" fill="#5b6560">against the machine code</text>
 <rect x="560" y="152" width="860" height="26" rx="3" fill="#e3e6e0"/>
-<rect x="560" y="152" width="79.1" height="26" rx="3" fill="#1f6b43"/>
+<rect x="560" y="152" width="79.4" height="26" rx="3" fill="#1f6b43"/>
 <text x="1432" y="171" font-size="18" font-weight="700" fill="#1d2320">9.2%</text>
 <line x1="775.0" y1="84" x2="775.0" y2="178" stroke="#f6f7f4" stroke-width="1.5"/>
 <line x1="990.0" y1="84" x2="990.0" y2="178" stroke="#f6f7f4" stroke-width="1.5"/>
@@ -89,7 +89,7 @@
 <rect x="135.7" y="586.7" width="67.4" height="47.4" fill="#e8b04a"><title>cSC4LightingManager: 14944 bytes, Recovered</title></rect>
 <rect x="135.7" y="634.1" width="48.1" height="24.3" fill="#e8b04a"><title>cSC4LightingManager: 5474 bytes, Recovered, unit test only (artifacts)</title></rect>
 <rect x="135.7" y="634.1" width="48.1" height="24.3" fill="url(#hatch)"/>
-<rect x="183.8" y="634.1" width="19.3" height="23.5" fill="#9cc3e4"><title>cSC4LightingManager: 2114 bytes, Partial</title></rect>
+<rect x="183.8" y="634.1" width="19.3" height="23.5" fill="#1f6b43"><title>cSC4LightingManager: 2114 bytes, Verified</title></rect>
 <rect x="183.8" y="657.6" width="19.3" height="0.9" fill="#c9c3b6"><title>cSC4LightingManager: 78 bytes, skipped</title></rect>
 <rect x="135.7" y="586.7" width="67.4" height="71.7" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="203.0" y="339.9" width="70.0" height="68.3" fill="#e8b04a"><title>cSC4NeighborsSimulator: 22342 bytes, Recovered</title></rect>
@@ -3172,8 +3172,8 @@
 <rect x="1532.3" y="507.2" width="26.7" height="24.8" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="1559.0" y="507.2" width="23.0" height="24.8" fill="#d5d9d4"><title>cS3DResModel: 2758 bytes, Not started</title></rect>
 <rect x="1559.0" y="507.2" width="23.0" height="24.8" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
-<rect x="1502.4" y="531.9" width="22.6" height="13.8" fill="#e8b04a"><title>cS3DTransform: 1510 bytes, Recovered</title></rect>
-<rect x="1502.4" y="545.8" width="22.6" height="8.8" fill="#1f6b43"><title>cS3DTransform: 962 bytes, Verified</title></rect>
+<rect x="1502.4" y="531.9" width="22.6" height="14.2" fill="#1f6b43"><title>cS3DTransform: 1558 bytes, Verified</title></rect>
+<rect x="1502.4" y="546.2" width="22.6" height="8.4" fill="#e8b04a"><title>cS3DTransform: 914 bytes, Recovered</title></rect>
 <rect x="1502.4" y="531.9" width="22.6" height="22.6" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="1502.4" y="554.6" width="19.0" height="19.1" fill="#e8b04a"><title>cSC43DPlaceableObject: 1760 bytes, Recovered</title></rect>
 <rect x="1521.4" y="554.6" width="3.6" height="19.1" fill="#e8b04a"><title>cSC43DPlaceableObject: 332 bytes, Recovered, unit test only (artifacts)</title></rect>

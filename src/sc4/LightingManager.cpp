@@ -17,6 +17,7 @@
 #include "sc4/SCPropertyHelp.h"
 #include "sc4/ViewUtilities.h"
 #include "s3d/ModelInstance.h"
+#include "s3d/S3DMath.h"
 
 namespace {
 
@@ -1428,16 +1429,116 @@ void cSC4LightingManager::GetVertexColors(int count, const cS3DVector3* normals,
 
 bool cSC4LightingManager::CalcShadowProjection(int count, const cS3DVector3* points, const cS3DVector2* texCoords,
                                                const cS3DTransform& transform, cS3DMatrix4* out) {
-    // PARTIAL (0x10077909a): the original fits a 3x3 projection from the box corners' moments and composes it with
-    // the transform's rotation / scale groups (flag bits 2 and 4) and AlignDirToZWithYUp. The transcription of the
-    // normal-equation solve was not finished, so the port reports "no projection" and the callers keep the decal
-    // shadows off (the light colours and the terrain shadows above are unaffected). See notes/ledger_pending.
-    (void)count;
-    (void)points;
-    (void)texCoords;
-    (void)transform;
-    if (out) *out = cS3DMatrix4{};
-    return false;
+    // 0x10077909a. The points are in the model's space. The light direction goes into that space through the transform's inverse, a
+    // frame is built whose z axis is the light (AlignDirToZWithYUp), the points are flattened along the light into that frame's (a, b)
+    // plane, and (a, b) is fitted to the texture coordinates by least squares: u = ca a + cb b + cc (and v likewise). The fit becomes a
+    // model -> texture matrix (its third column passes the model's z through) composed with the transform's inverse, so it takes world
+    // points. A fit whose normal-equation determinant is below 0.01 (the points do not spread) is refused and `out` is left alone.
+    // Float order checked against the machine code (scripts/machine_oracle/lightingmanager_oracle.cpp).
+    const std::uint8_t flags = transform.flags;
+    float rotation[9];
+    std::memcpy(rotation, transform.rotation, sizeof rotation);
+    float inverseRotation[9];
+    for (int r = 0; r < 3; ++r)
+        for (int c = 0; c < 3; ++c) inverseRotation[3 * r + c] = (flags & nS3D::kTransformRotation) ? rotation[3 * c + r] : rotation[3 * r + c];
+    cS3DTransform inverse;
+    inverse.changeCounter = 1;
+    inverse.flags = flags;
+    std::memcpy(inverse.rotation, inverseRotation, sizeof inverseRotation);
+    float tx = -transform.translation[0], ty = -transform.translation[1], tz = -transform.translation[2];
+    inverse.scale = transform.scale;
+    inverse.translation[0] = tx; inverse.translation[1] = ty; inverse.translation[2] = tz;
+    if (flags & nS3D::kTransformRotation) {
+        inverse.translation[0] = rotation[6] * tz + (rotation[3] * ty + rotation[0] * tx);
+        inverse.translation[1] = rotation[7] * tz + (rotation[4] * ty + rotation[1] * tx);
+        inverse.translation[2] = rotation[8] * tz + (rotation[5] * ty + rotation[2] * tx);
+    }
+    if (flags & nS3D::kTransformScale) {
+        const float inverseScale = 1.0f / transform.scale;
+        inverse.scale = inverseScale;
+        for (float& t : inverse.translation) t = t * inverseScale;
+    }
+
+    const cS3DVector3 light = GetShadowDirection();
+    const float negLightX = -light.x;
+    cS3DVector3 direction;
+    direction.x = (inverseRotation[0] * negLightX - inverseRotation[1] * light.y) - inverseRotation[2] * light.z;
+    direction.y = (inverseRotation[3] * negLightX - inverseRotation[4] * light.y) - inverseRotation[5] * light.z;
+    direction.z = (inverseRotation[6] * negLightX - inverseRotation[7] * light.y) - inverseRotation[8] * light.z;
+    nS3D::Matrix3 frame;
+    nS3D::AlignDirToZWithYUp(direction, frame);
+    const float* m = frame.m;
+
+    float sumA = 0, sumAA = 0, sumAB = 0, sumBB = 0, sumB = 0, count_ = 0;
+    float sumAU = 0, sumU = 0, sumBU = 0, sumAV = 0, sumV = 0, sumBV = 0;
+    for (int i = 0; i < count; ++i) {
+        const cS3DVector3& p = points[i];
+        const float a = (p.x * m[0] + m[1] * p.y) + m[2] * p.z;
+        const float b = (p.x * m[3] + m[4] * p.y) + m[5] * p.z;
+        const float u = texCoords[i].x, v = texCoords[i].y;
+        sumA += a;
+        sumAA += a * a;
+        sumAB += a * b;
+        sumBB += b * b;
+        sumB += b;
+        count_ += 1.0f;
+        sumAU += a * u;
+        sumU += u;
+        sumBU += u * b;
+        sumAV += a * v;
+        sumV += v;
+        sumBV += b * v;
+    }
+    const float c0 = sumBB * count_ - sumB * sumB;
+    const float c1 = sumB * sumA - sumAB * count_;
+    const float c2 = sumAB * sumB - sumA * sumBB;
+    const float determinant = sumAA * c0 + sumAB * c1 + sumA * c2;
+    if (!(0.01 <= static_cast<double>(determinant))) return false;   // the original compares in double
+    const float inv = 1.0f / determinant;
+    const float i01 = (sumA * sumB - sumAB * count_) * inv;
+    const float i02 = (sumB * sumAB - sumBB * sumA) * inv;
+    const float i11 = (sumAA * count_ - sumA * sumA) * inv;
+    const float i12 = (sumAB * sumA - sumAA * sumB) * inv;
+    const float i22 = inv * (sumAA * sumBB - sumAB * sumAB);
+    const float k0 = c0 * inv, k1 = c1 * inv, k2 = c2 * inv;
+    // each coefficient: (sum of the plain terms) * (inverse entry) added to (the b term added to the a term), right-nested as the machine code does
+    const float ca_u = sumU * i02 + (sumBU * i01 + sumAU * k0);
+    const float cb_u = sumU * i12 + (sumBU * i11 + sumAU * k1);
+    const float cc_u = sumU * i22 + (sumBU * i12 + sumAU * k2);
+    const float ca_v = i02 * sumV + (i01 * sumBV + k0 * sumAV);
+    const float cb_v = i12 * sumV + (i11 * sumBV + k1 * sumAV);
+    const float cc_v = i22 * sumV + (i12 * sumBV + k2 * sumAV);
+
+    cS3DTransform fit;
+    fit.changeCounter = 0;
+    fit.flags = nS3D::kTransformTranslation | nS3D::kTransformRotation;
+    float* r = &fit.rotation[0][0];
+    r[0] = m[3] * cb_u + m[0] * ca_u;
+    r[1] = m[4] * cb_u + m[1] * ca_u;
+    r[2] = m[5] * cb_u + m[2] * ca_u;
+    r[3] = m[3] * cb_v + m[0] * ca_v;
+    r[4] = m[4] * cb_v + m[1] * ca_v;
+    r[5] = cb_v * m[5] + ca_v * m[2];
+    r[6] = 0.0f;
+    r[7] = 0.0f;
+    r[8] = 1.0f;
+    fit.translation[0] = cc_u;
+    fit.translation[1] = cc_v;
+    fit.translation[2] = 0.0f;
+    fit.scale = 1.0f;
+    nS3D::MultiplyTransform(fit, inverse);
+
+    const float factor = (fit.flags & nS3D::kTransformScale) ? fit.scale : 1.0f;
+    const float* g = &fit.rotation[0][0];
+    for (int row = 0; row < 3; ++row) {
+        for (int column = 0; column < 3; ++column) out->m[row][column] = (fit.flags & nS3D::kTransformScale) ? g[3 * column + row] * factor : g[3 * column + row];
+        out->m[row][3] = 0.0f;
+    }
+    out->m[3][0] = fit.translation[0];
+    out->m[3][1] = fit.translation[1];
+    out->m[3][2] = fit.translation[2];
+    out->m[3][3] = 1.0f;
+    return true;
 }
 
 bool cSC4LightingManager::CalcShadowTerrainRect(int count, const cS3DVector3* points, const cS3DBoundingBox& box,
