@@ -7,13 +7,13 @@ The port is a transcription checked by tests; none of this proves the machine co
 
 | Evidence | Rows | Share |
 |---|---:|---:|
-| unit test only | 22,398 | 84.9% |
-| checked against the disassembly | 1,687 | 6.4% |
+| unit test only | 22,396 | 84.9% |
+| checked against the disassembly | 1,689 | 6.4% |
 | oracle (decompiled code run against the port on random inputs) | 1,169 | 4.4% |
 | no test named | 1,122 | 4.3% |
 | real game data | 3 | 0.0% |
 
-## Worklist: 4,348 functions with decompiler artifacts and only a unit test
+## Worklist: 4,342 functions with decompiler artifacts and only a unit test
 
 | Source | Functions |
 |---|---:|
@@ -43,7 +43,6 @@ The port is a transcription checked by tests; none of this proves the machine co
 | `src/gz/WinTreeView.cpp` | 36 |
 | `src/sc4/ViewInputControlQuery.cpp` | 36 |
 | `src/rz/NetSocket.cpp` | 33 |
-| `src/sc4/Lot.cpp` | 33 |
 | `src/sc4/Vehicle.cpp` | 33 |
 | `src/sc4/WinCalloutBox.cpp` | 33 |
 | `src/gz/WinCombo.cpp` | 32 |
@@ -53,6 +52,7 @@ The port is a transcription checked by tests; none of this proves the machine co
 | `src/gz/PersistBinaryWriter.cpp` | 30 |
 | `src/html/HTMLDocument.cpp` | 30 |
 | `src/sc4/Disaster.cpp` | 30 |
+| `src/sc4/Lot.cpp` | 30 |
 | `src/sc4/PathInfo.cpp` | 30 |
 | `src/sc4/Watercraft.cpp` | 30 |
 | `src/gz/cGZPersistResourceManager.cpp` | 28 |
@@ -280,7 +280,6 @@ The port is a transcription checked by tests; none of this proves the machine co
 | `src/sc4/CommercialSimulator.cpp` | 3 |
 | `src/sc4/CrimeSimulator.cpp` | 3 |
 | `src/sc4/UIFilters.cpp` | 3 |
-| `src/sc4/DemandSimulator.cpp` | 3 |
 | `src/sc4/Demolition.cpp` | 3 |
 | `src/sc4/PipeBurstInstance.cpp` | 3 |
 | `src/sc4/DisasterManagers.cpp` | 3 |
