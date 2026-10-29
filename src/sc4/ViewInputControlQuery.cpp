@@ -1684,6 +1684,179 @@ bool cSC4ViewInputControlQuery::SetOrGetAirportOccupantLostLuggage(cIGZWin* win,
     return SetOrGetAirportLostLuggage(win, id, set, x, z);
 }
 
+// ---- RCI rating rows --------------------------------------------------------------------------------------------------------
+namespace {
+// cvttss2si r32: out-of-range and NaN give INT32_MIN
+int TruncatedInt(float value) {
+    if (!(value > -2147483648.0f && value < 2147483648.0f)) return INT32_MIN;
+    return static_cast<int>(value);
+}
+// The three-way ranking the "bad is high" maps share (pollution, garbage): below the low threshold the rating is bad (2) with the
+// magnitude negated, below the high one neutral (1), else good (0) with half the value.
+std::uint32_t RankBadWhenHigh(int value, int low, int high, int& out) {
+    if (value < low) { out = -value; return 2; }
+    if (value < high) { out = 0; return 1; }
+    out = value / 2;
+    return 0;
+}
+// The mirror for the "good is high" maps (school, hospital): bad 0, neutral 1, good 2.
+std::uint32_t RankGoodWhenHigh(int value, int low, int high, int& out) {
+    if (value < low) { out = -value; return 0; }
+    if (value < high) { out = 0; return 1; }
+    out = value / 2;
+    return 2;
+}
+}  // namespace
+
+// @ 0x1002cf38e: the pollution curves (index 2 is never added; the original reaches index 3 through it) over the pollution maps
+std::uint32_t cSC4ViewInputControlQuery::GetSubjectivePollution(IQueryGrowthDeveloper* developer, int x, int z, int& value) {
+    IQueryHost* host = QueryHost();
+    int low = 0, high = 0;
+    developer->GetRatingThresholds(0, low, high);
+    int sum = 0;
+    for (int map = 0; map < 4; ++map) {
+        const cSC4ResponseCurve* curve = developer->PollutionCurve(map);
+        if (!curve || map == 2) continue;
+        const float reading = static_cast<float>(host ? host->PollutionMapValue(map, x, z) : 0);
+        sum = TruncatedInt(static_cast<float>(sum) + curve->GetOutputValue(reading));
+    }
+    return RankBadWhenHigh(sum, low, high, value);
+}
+// @ 0x1002cf488: pollution map 2 through the third curve
+std::uint32_t cSC4ViewInputControlQuery::GetSubjectiveGarbage(IQueryGrowthDeveloper* developer, int x, int z, int& value) {
+    IQueryHost* host = QueryHost();
+    int low = 0, high = 0;
+    developer->GetRatingThresholds(1, low, high);
+    int reading = 0;
+    if (const cSC4ResponseCurve* curve = developer->PollutionCurve(2))
+        reading = TruncatedInt(curve->GetOutputValue(static_cast<float>(host ? host->PollutionMapValue(2, x, z) : 0)));
+    return RankBadWhenHigh(reading, low, high, value);
+}
+// @ 0x1002cf544 / 0x1002cf5fe: with no curve the rating is neutral and the value 0
+std::uint32_t cSC4ViewInputControlQuery::GetSubjectiveSchoolGrade(IQueryGrowthDeveloper* developer, int x, int z, int& value) {
+    IQueryHost* host = QueryHost();
+    int low = 0, high = 0;
+    developer->GetRatingThresholds(2, low, high);
+    const cSC4ResponseCurve* curve = developer->SchoolCurve();
+    if (!curve) { value = 0; return 1; }
+    return RankGoodWhenHigh(TruncatedInt(curve->GetOutputValue(host ? host->SchoolGradeValue(x, z) : 0.0f)), low, high, value);
+}
+std::uint32_t cSC4ViewInputControlQuery::GetSubjectiveHospitalGrade(IQueryGrowthDeveloper* developer, int x, int z, int& value) {
+    IQueryHost* host = QueryHost();
+    int low = 0, high = 0;
+    developer->GetRatingThresholds(3, low, high);
+    const cSC4ResponseCurve* curve = developer->HospitalCurve();
+    if (!curve) { value = 0; return 1; }
+    return RankGoodWhenHigh(TruncatedInt(curve->GetOutputValue(host ? host->HospitalGradeValue(x, z) : 0.0f)), low, high, value);
+}
+// @ 0x1002cf6b8: crime is bad when high (bad 2, good 0), a missing curve neutral
+std::uint32_t cSC4ViewInputControlQuery::GetSubjectiveCrimeLevel(IQueryGrowthDeveloper* developer, int x, int z, int& value) {
+    IQueryHost* host = QueryHost();
+    int low = 0, high = 0;
+    developer->GetRatingThresholds(4, low, high);
+    const cSC4ResponseCurve* curve = developer->CrimeCurve();
+    if (!curve) { value = 0; return 1; }
+    return RankBadWhenHigh(TruncatedInt(curve->GetOutputValue(static_cast<float>(host ? host->CrimeValue(x, z) : 0))), low, high, value);
+}
+// @ 0x1002cf776: the curve at the traffic byte and at the next one decide the rating from the slope. The value is only written for
+// the bad and good ends; a missing curve or the middle band leaves it alone and answers neutral.
+std::uint32_t cSC4ViewInputControlQuery::GetSubjectiveTrafficLevel(IQueryGrowthDeveloper* developer, int x, int z, int& value) {
+    IQueryHost* host = QueryHost();
+    int low = 0, high = 0;
+    developer->GetRatingThresholds(5, low, high);
+    const cSC4ResponseCurve* curve = developer->TrafficCurve();
+    if (!curve) return 1;
+    const std::uint32_t reading = host ? host->TrafficValue(x, z) : 0;
+    const float here = curve->GetOutputValue(static_cast<float>(reading));
+    const float next = curve->GetOutputValue(static_cast<float>(reading + 1));
+    if (static_cast<float>(low) > here) {
+        value = TruncatedInt(-here);
+        return here > next ? 2u : 0u;
+    }
+    if (here < static_cast<float>(high)) return 1;
+    value = TruncatedInt(here * 0.5f);
+    return here <= next ? 2u : 0u;
+}
+// @ 0x1002cf87c: a zero trip length reads as 255
+std::uint32_t cSC4ViewInputControlQuery::GetSubjectiveTripLength(IQueryGrowthDeveloper* developer, int x, int z, int& value) {
+    IQueryHost* host = QueryHost();
+    int low = 0, high = 0;
+    developer->GetRatingThresholds(6, low, high);
+    const cSC4ResponseCurve* curve = developer->TripLengthCurve();
+    if (!curve) { value = 0; return 1; }
+    const std::uint32_t reading = host ? host->TripLengthValue(x, z) : 0;
+    const int rated = TruncatedInt(curve->GetOutputValue(reading == 0 ? 255.0f : static_cast<float>(reading)));
+    if (low > rated) { value = -rated; return 2; }
+    if (high <= rated) { value = rated / 2; return 0; }
+    value = 0;
+    return 1;
+}
+
+// @ 0x1002d99be: the lot of the occupant, its centre cell, the best growth developer for the lot; the rating picks one of three strings
+void cSC4ViewInputControlQuery::GetSubjectiveOccupantRatingString(cISC4Occupant* occupant, tSubjectiveFn rating, const std::uint32_t* strings,
+                                                                  cRZString& out) {
+    IQueryHost* host = QueryHost();
+    if (!host || !host->LotManager() || !host->City()) return;
+    IQueryLot* lot = host->LotManager()->GetLotForOccupant(occupant);
+    if (!lot) return;
+    float center[3] = {0.0f, 0.0f, 0.0f};
+    lot->GetCenter(center);
+    int cellX = 0, cellZ = 0;
+    host->City()->PositionToCell(center[0], center[2], cellX, cellZ);
+    IQueryGrowthDeveloper* developer = host->FindBestDeveloper(lot);
+    if (!developer) return;
+    int value = 0;
+    const std::uint32_t index = rating(developer, cellX, cellZ, value);
+    host->LoadString(kStringGroup, strings[index], out);
+}
+
+namespace {
+constexpr std::uint32_t kGeneralRatingStrings[3] = {0x4a5fe266, 0x0a5fe260, 0xaa5fe249};   // sGeneralRatingStringGUIDs 0x100a1c798
+constexpr std::uint32_t kCommuteRatingStrings[3] = {0xaa71fae3, 0x6a71fadc, 0x0a71fad3};   // sCommuteRatingStringGUIDs 0x100a1c7a4
+constexpr std::uint32_t kStrCommuteAbandoned = 0x0a71fad3;
+bool RatingRow(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant, cSC4ViewInputControlQuery::tSubjectiveFn rating) {
+    if (occupant && set) {
+        cRZString text;
+        cSC4ViewInputControlQuery::GetSubjectiveOccupantRatingString(occupant, rating, kGeneralRatingStrings, text);
+        cSC4ViewInputControlQuery::SetStaticControlText(win, id, text);
+    }
+    return true;
+}
+}  // namespace
+// @ 0x1002da0e2 / 0x1002da170 / 0x1002da1fe / 0x1002da462 / 0x1002da724 / 0x1002da7b2
+bool cSC4ViewInputControlQuery::SetOrGetRCIBuildingPollution(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return RatingRow(win, id, set, occupant, &GetSubjectivePollution);
+}
+bool cSC4ViewInputControlQuery::SetOrGetRCIBuildingGarbage(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return RatingRow(win, id, set, occupant, &GetSubjectiveGarbage);
+}
+bool cSC4ViewInputControlQuery::SetOrGetRCIBuildingCrime(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return RatingRow(win, id, set, occupant, &GetSubjectiveCrimeLevel);
+}
+bool cSC4ViewInputControlQuery::SetOrGetRCIBuildingTraffic(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return RatingRow(win, id, set, occupant, &GetSubjectiveTrafficLevel);
+}
+bool cSC4ViewInputControlQuery::SetOrGetResidentialBuildingEQ(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return RatingRow(win, id, set, occupant, &GetSubjectiveSchoolGrade);
+}
+bool cSC4ViewInputControlQuery::SetOrGetResidentialBuildingHQ(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    return RatingRow(win, id, set, occupant, &GetSubjectiveHospitalGrade);
+}
+// @ 0x1002da38a: an abandoned lot (reason 4) has its own word; otherwise the trip length rating over the commute strings
+bool cSC4ViewInputControlQuery::SetOrGetResidentialBuildingCommute(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant) {
+    if (!occupant || !set) return true;
+    IQueryHost* host = QueryHost();
+    cRZString text;
+    IQueryLot* lot = host && host->LotManager() ? host->LotManager()->GetLotForOccupant(occupant) : nullptr;
+    if (lot && lot->GetAbandonReason() == 4) {
+        host->LoadString(kStringGroup, kStrCommuteAbandoned, text);
+    } else {
+        GetSubjectiveOccupantRatingString(occupant, &GetSubjectiveTripLength, kCommuteRatingStrings, text);
+    }
+    SetStaticControlText(win, id, text);
+    return true;
+}
+
 // @ 0x1002daf96
 // PARTIAL: the original is a switch over the cell-based control ids (0x1011..0x1015 airport/seaport traffic, 0x1026 /
 // 0x1027 landfill, 0x1028 the landfill developer's monthly cost, 0x104b..0x104e the neighbour-connection rows and
@@ -1905,15 +2078,15 @@ cSC4ViewInputControlQuery::tSetOrGetFn const cSC4ViewInputControlQuery::kRowFunc
     nullptr, &cSC4ViewInputControlQuery::SetOrGetLandmarkMaintenance, &cSC4ViewInputControlQuery::SetOrGetLandmarkHomage, nullptr,   // 0x1048..0x104b
     nullptr, nullptr, nullptr, nullptr,   // 0x104c..0x104f
     nullptr, &cSC4ViewInputControlQuery::SetOrGetRCIBuildingCurrentOccupancy, &cSC4ViewInputControlQuery::SetOrGetRCIBuildingMaxOccupancy, nullptr,   // 0x1050..0x1053
-    nullptr, nullptr, &cSC4ViewInputControlQuery::SetOrGetRCIBuildingLandValue, nullptr,   // 0x1054..0x1057
-    &cSC4ViewInputControlQuery::SetOrGetResidentialBuildingMayorApproval, nullptr, nullptr, nullptr,   // 0x1058..0x105b
+    &cSC4ViewInputControlQuery::SetOrGetRCIBuildingPollution, &cSC4ViewInputControlQuery::SetOrGetRCIBuildingCrime, &cSC4ViewInputControlQuery::SetOrGetRCIBuildingLandValue, &cSC4ViewInputControlQuery::SetOrGetResidentialBuildingCommute,   // 0x1054..0x1057
+    &cSC4ViewInputControlQuery::SetOrGetResidentialBuildingMayorApproval, &cSC4ViewInputControlQuery::SetOrGetResidentialBuildingEQ, &cSC4ViewInputControlQuery::SetOrGetResidentialBuildingHQ, nullptr,   // 0x1058..0x105b
     &cSC4ViewInputControlQuery::SetOrGetCommercialServiceBuildingCustomers, nullptr, &cSC4ViewInputControlQuery::SetOrGetRecyclingCenterEfficiency, &cSC4ViewInputControlQuery::SetOrGetRecyclingCenterPercentCapacity,   // 0x105c..0x105f
     &cSC4ViewInputControlQuery::SetOrGetRecyclingCenterTrashRecycled, &cSC4ViewInputControlQuery::SetOrGetWasteToEnergyPercentCondition, &cSC4ViewInputControlQuery::SetOrGetPowerPlantPercentCondition, &cSC4ViewInputControlQuery::SetOrGetPowerPlantLocalFunding,   // 0x1060..0x1063
     nullptr, nullptr, nullptr, nullptr,   // 0x1064..0x1067
     nullptr, nullptr, nullptr, &cSC4ViewInputControlQuery::SetOrGetOccupantGoofyStat,   // 0x1068..0x106b
     &cSC4ViewInputControlQuery::SetOrGetOccupantCost, &cSC4ViewInputControlQuery::SetOrGetWaterTreatmentPlantEfficiency, nullptr, nullptr,   // 0x106c..0x106f
     nullptr, nullptr, nullptr, &cSC4ViewInputControlQuery::SetOrGetWaterBuildingPercentCondition,   // 0x1070..0x1073
-    nullptr, nullptr, &cSC4ViewInputControlQuery::SetOrGetOccupantIsPowered, &cSC4ViewInputControlQuery::SetOrGetOccupantIsWatered,   // 0x1074..0x1077
+    &cSC4ViewInputControlQuery::SetOrGetRCIBuildingTraffic, &cSC4ViewInputControlQuery::SetOrGetRCIBuildingGarbage, &cSC4ViewInputControlQuery::SetOrGetOccupantIsPowered, &cSC4ViewInputControlQuery::SetOrGetOccupantIsWatered,   // 0x1074..0x1077
     &cSC4ViewInputControlQuery::SetOrGetSeaportOccupantMaintenanceCost, &cSC4ViewInputControlQuery::SetOrGetWhyOccupantAbandoned, &cSC4ViewInputControlQuery::SetOrGetOccupantIsHistorical, &cSC4ViewInputControlQuery::SetOrGetAirportOccupantUsage,   // 0x1078..0x107b
     &cSC4ViewInputControlQuery::SetOrGetAirportOccupantCapacity, &cSC4ViewInputControlQuery::SetOrGetSeaportOccupantUsage, &cSC4ViewInputControlQuery::SetOrGetSeaportOccupantCapacity,   // 0x107c..0x107e
 };

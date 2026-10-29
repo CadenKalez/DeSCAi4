@@ -37,6 +37,7 @@
 #include "sc4/ISC4WinCalloutBox.h"
 #include "sc4/Occupant.h"
 #include "sc4/ViewInputControl.h"
+#include "sc4/cSC4ResponseCurve.h"
 
 namespace sc4 {
 
@@ -115,6 +116,22 @@ public:
     virtual std::uint32_t GetBuildingType(bool flag) { (void)flag; return 0; }        // 0x170
     virtual std::uint16_t GetCapacity(int wealth) { (void)wealth; return 0; }         // 0x190
     virtual float GetOccupancy() { return 0.0f; }                                     // 0x1e8
+    virtual void GetCenter(float* xyz) { xyz[0] = xyz[1] = xyz[2] = 0.0f; }           // 0x78
+};
+
+// The growth developer the rating rows read (cSC4GrowthDeveloper, recovered): the rating thresholds (vslot 0xf0 with a kind
+// 0..6) and the response curves it keeps (+0x88[0..3] pollution, +0xd0 school, +0xd8 hospital, +0xe0 crime, +0xe8 trip length,
+// +0xf0 traffic); a missing curve is null.
+class IQueryGrowthDeveloper {
+public:
+    virtual ~IQueryGrowthDeveloper() = default;
+    virtual void GetRatingThresholds(int kind, int& low, int& high) = 0;
+    virtual const cSC4ResponseCurve* PollutionCurve(int index) = 0;
+    virtual const cSC4ResponseCurve* SchoolCurve() = 0;
+    virtual const cSC4ResponseCurve* HospitalCurve() = 0;
+    virtual const cSC4ResponseCurve* CrimeCurve() = 0;
+    virtual const cSC4ResponseCurve* TripLengthCurve() = 0;
+    virtual const cSC4ResponseCurve* TrafficCurve() = 0;
 };
 
 // cISC4BuildingOccupant as SetOrGetName uses it (interface 0x87dda3a9): vslot 0x90 SetName.
@@ -327,6 +344,15 @@ public:
     virtual IQueryBudgetSim* BudgetSim() = 0;                 // SL::spBudgetSim
     virtual IQueryNeighborsSim* NeighborsSim() = 0;           // SL::spNeighborsSim
     virtual IQueryTrafficSim* TrafficSim() = 0;               // SL::spTrafficSim
+    // The per-cell maps the rating rows sample (each the simulator's map object, then its vslot 0x38 getter).
+    virtual std::uint16_t PollutionMapValue(int map, int x, int z) { (void)map; (void)x; (void)z; return 0; }   // SL::spPollutionSim 0x28(map)
+    virtual float SchoolGradeValue(int x, int z) { (void)x; (void)z; return 0.0f; }                            // SL::spResidentialSim 0x138
+    virtual float HospitalGradeValue(int x, int z) { (void)x; (void)z; return 0.0f; }                          // 0x140
+    virtual std::uint8_t CrimeValue(int x, int z) { (void)x; (void)z; return 0; }                              // SL::spCrimeSim 0x28
+    virtual std::uint8_t TrafficValue(int x, int z) { (void)x; (void)z; return 0; }                            // SL::spTrafficSim 0x48
+    virtual std::uint8_t TripLengthValue(int x, int z) { (void)x; (void)z; return 0; }                         // SL::spTrafficSim 0x68
+    // FindBestDeveloper(lot) 0x1002cf948: the growth developer whose building type or cell suits the lot; null when none.
+    virtual IQueryGrowthDeveloper* FindBestDeveloper(IQueryLot* lot) { (void)lot; return nullptr; }
     virtual IQueryLandValueSim* LandValueSim() { return nullptr; }                // SL::spLandValueSim
     // SL::spRM vslot 0x18 GetResource(key, 0xa52160f5): the exemplar's property holder, null when the resource is missing.
     virtual cISCPropertyHolder* GetTuningProperties(const cGZPersistResourceKey& key) { (void)key; return nullptr; }
@@ -541,6 +567,23 @@ public:
     static bool SetOrGetRCIBuildingMaxOccupancy(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);       // @ 0x1002d9d5e
     static bool SetOrGetRCIBuildingLandValue(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);          // @ 0x1002da28c
     static bool SetOrGetCommercialServiceBuildingCustomers(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002dac26
+    // --- RCI rating rows: GetSubjective* helpers (growth developer + per-cell map -> a rating index 0..2) ---
+    using tSubjectiveFn = std::uint32_t (*)(IQueryGrowthDeveloper*, int, int, int&);
+    static std::uint32_t GetSubjectivePollution(IQueryGrowthDeveloper* developer, int x, int z, int& value);      // @ 0x1002cf38e
+    static std::uint32_t GetSubjectiveGarbage(IQueryGrowthDeveloper* developer, int x, int z, int& value);       // @ 0x1002cf488
+    static std::uint32_t GetSubjectiveSchoolGrade(IQueryGrowthDeveloper* developer, int x, int z, int& value);   // @ 0x1002cf544
+    static std::uint32_t GetSubjectiveHospitalGrade(IQueryGrowthDeveloper* developer, int x, int z, int& value); // @ 0x1002cf5fe
+    static std::uint32_t GetSubjectiveCrimeLevel(IQueryGrowthDeveloper* developer, int x, int z, int& value);    // @ 0x1002cf6b8
+    static std::uint32_t GetSubjectiveTrafficLevel(IQueryGrowthDeveloper* developer, int x, int z, int& value);  // @ 0x1002cf776
+    static std::uint32_t GetSubjectiveTripLength(IQueryGrowthDeveloper* developer, int x, int z, int& value);    // @ 0x1002cf87c
+    static void GetSubjectiveOccupantRatingString(cISC4Occupant* occupant, tSubjectiveFn rating, const std::uint32_t* strings, cRZString& out);   // @ 0x1002d99be
+    static bool SetOrGetRCIBuildingPollution(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002da0e2
+    static bool SetOrGetRCIBuildingGarbage(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);     // @ 0x1002da170
+    static bool SetOrGetRCIBuildingCrime(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);       // @ 0x1002da1fe
+    static bool SetOrGetResidentialBuildingCommute(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);   // @ 0x1002da38a
+    static bool SetOrGetRCIBuildingTraffic(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);     // @ 0x1002da462
+    static bool SetOrGetResidentialBuildingEQ(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);  // @ 0x1002da724
+    static bool SetOrGetResidentialBuildingHQ(cIGZWin* win, std::uint32_t id, bool set, cISC4Occupant* occupant);  // @ 0x1002da7b2
     static bool SetOrGetNeighborConnectionNeighborCityName(cIGZWin* win, std::uint32_t id, bool set, int x, int z,
                                                            int connectionType);                     // @ 0x1002d90d6
     static bool SetOrGetNeighborConnectionNeighborCityMayorName(cIGZWin* win, std::uint32_t id, bool set, int x,

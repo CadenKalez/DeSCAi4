@@ -396,6 +396,22 @@ struct Aura final : IQueryAuraSim {
     std::int8_t GetAura(int, int) override { return value; }
     std::int8_t GetMayorRating() override { return mayorRating; }
 };
+struct GrowthDeveloperFake final : IQueryGrowthDeveloper {
+    cSC4ResponseCurve curves[9];   // 0..3 pollution, 4 school, 5 hospital, 6 crime, 7 trip length, 8 traffic
+    bool present[9] = {};
+    int lows[8] = {}, highs[8] = {};
+    void GetRatingThresholds(int kind, int& low, int& high) override { low = lows[kind]; high = highs[kind]; }
+    const cSC4ResponseCurve* Get(int i) const { return present[i] ? &curves[i] : nullptr; }
+    const cSC4ResponseCurve* PollutionCurve(int index) override { return Get(index); }
+    const cSC4ResponseCurve* SchoolCurve() override { return Get(4); }
+    const cSC4ResponseCurve* HospitalCurve() override { return Get(5); }
+    const cSC4ResponseCurve* CrimeCurve() override { return Get(6); }
+    const cSC4ResponseCurve* TripLengthCurve() override { return Get(7); }
+    const cSC4ResponseCurve* TrafficCurve() override { return Get(8); }
+    GrowthDeveloperFake() {
+        for (int i = 0; i < 9; ++i) curves[i].SetResponseCurveData(std::vector<SC4Point>{SC4Point{0.0f, 0.0f}, SC4Point{300.0f, 300.0f}});   // identity
+    }
+};
 struct LandValueFake final : IQueryLandValueSim {
     int type = 0, x = -1, z = -1;
     int GetLandValueType(int cx, int cz) override { x = cx; z = cz; return type; }
@@ -606,6 +622,18 @@ struct Host final : IViewInputHost, IQueryHost {
     Plumbing plumbing;
     Aura aura;
     LandValueFake landValue;
+    GrowthDeveloperFake developer;
+    bool hasDeveloper = true;
+    std::uint16_t pollutionMaps[4] = {};
+    float school = 0.0f, hospitalGrade = 0.0f;
+    std::uint8_t crime = 0, traffic = 0, tripLength = 0;
+    std::uint16_t PollutionMapValue(int map, int, int) override { return pollutionMaps[map]; }
+    float SchoolGradeValue(int, int) override { return school; }
+    float HospitalGradeValue(int, int) override { return hospitalGrade; }
+    std::uint8_t CrimeValue(int, int) override { return crime; }
+    std::uint8_t TrafficValue(int, int) override { return traffic; }
+    std::uint8_t TripLengthValue(int, int) override { return tripLength; }
+    IQueryGrowthDeveloper* FindBestDeveloper(IQueryLot*) override { return hasDeveloper ? &developer : nullptr; }
     Holder* tuning = nullptr;
     std::uint32_t tuningType = 0, tuningGroup = 0, tuningInstance = 0;
     IQueryLandValueSim* LandValueSim() override { return &landValue; }
@@ -1689,6 +1717,124 @@ int main() {
         CHECK(cSC4ViewInputControlQuery::SetOrGetAirportLostLuggage(dialog, 0x1007, true, 0, 0) && text() == "40");
         delete dialog;
         host.lots.byCell = nullptr;
+    }
+
+    // --- M9: RCI rating rows (the GetSubjective* helpers and the rows that print them) ----------------------------
+    {
+        auto& dev = host.developer;
+        for (int i = 0; i < 9; ++i) dev.present[i] = true;
+        for (int k = 0; k < 7; ++k) { dev.lows[k] = 10; dev.highs[k] = 50; }
+        int value = 0;
+        // pollution: the curves of maps 0, 1 and 3 add up (curve 2 never does); bad 2 with the magnitude, neutral 1, good 0 with half
+        host.pollutionMaps[0] = 3; host.pollutionMaps[1] = 4; host.pollutionMaps[2] = 200; host.pollutionMaps[3] = 2;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectivePollution(&dev, 0, 0, value) == 2 && value == -9);   // 3 + 4 + 2 = 9 < 10
+        host.pollutionMaps[0] = 30;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectivePollution(&dev, 0, 0, value) == 1 && value == 0);    // 36
+        host.pollutionMaps[0] = 100;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectivePollution(&dev, 0, 0, value) == 0 && value == 53);   // 106 / 2
+        dev.present[3] = false;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectivePollution(&dev, 0, 0, value) == 0 && value == 52);   // 104 / 2
+        dev.present[3] = true;
+        // garbage: map 2 through curve 2
+        host.pollutionMaps[2] = 5;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveGarbage(&dev, 0, 0, value) == 2 && value == -5);
+        host.pollutionMaps[2] = 20;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveGarbage(&dev, 0, 0, value) == 1 && value == 0);
+        host.pollutionMaps[2] = 80;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveGarbage(&dev, 0, 0, value) == 0 && value == 40);
+        dev.present[2] = false;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveGarbage(&dev, 0, 0, value) == 2 && value == 0);   // reading 0 < 10 -> bad with -0
+        dev.present[2] = true;
+        // school and hospital: bad 0, neutral 1, good 2; no curve is neutral
+        host.school = 4.0f;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveSchoolGrade(&dev, 0, 0, value) == 0 && value == -4);
+        host.school = 12.0f;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveSchoolGrade(&dev, 0, 0, value) == 1 && value == 0);
+        host.school = 90.0f;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveSchoolGrade(&dev, 0, 0, value) == 2 && value == 45);
+        dev.present[4] = false;
+        value = 77;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveSchoolGrade(&dev, 0, 0, value) == 1 && value == 0);
+        host.hospitalGrade = 60.0f;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveHospitalGrade(&dev, 0, 0, value) == 2 && value == 30);
+        // crime: bad when high
+        host.crime = 7;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveCrimeLevel(&dev, 0, 0, value) == 2 && value == -7);
+        host.crime = 30;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveCrimeLevel(&dev, 0, 0, value) == 1 && value == 0);
+        host.crime = 200;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveCrimeLevel(&dev, 0, 0, value) == 0 && value == 100);
+        // traffic: the curve at the byte and the next byte; the value is only written at the ends
+        host.traffic = 5;
+        value = 77;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveTrafficLevel(&dev, 0, 0, value) == 0 && value == -5);   // 5 > ... here <= next: 0
+        host.traffic = 30;
+        value = 77;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveTrafficLevel(&dev, 0, 0, value) == 1 && value == 77);    // middle band leaves value alone
+        host.traffic = 100;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveTrafficLevel(&dev, 0, 0, value) == 2 && value == 50);    // here <= next: 2
+        dev.present[8] = false;
+        value = 77;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveTrafficLevel(&dev, 0, 0, value) == 1 && value == 77);
+        dev.present[8] = true;
+        // trip length: a zero byte reads 255
+        host.tripLength = 3;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveTripLength(&dev, 0, 0, value) == 2 && value == -3);
+        host.tripLength = 0;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveTripLength(&dev, 0, 0, value) == 0 && value == 127);   // 255 / 2
+        host.tripLength = 20;
+        CHECK(cSC4ViewInputControlQuery::GetSubjectiveTripLength(&dev, 0, 0, value) == 1 && value == 0);
+
+        // the rows: the lot of the occupant, its centre cell, the developer, then the string by the rating index
+        auto* dialog = new cGZWin(&host.mgr);
+        auto* label = new gz::cGZWinText(&host.mgr);
+        label->SetID(0x1007);
+        CHECK(dialog->ChildAdd(label));
+        TestOccupant occupant;
+        Lot lot;
+        host.lots.byOccupant = &lot;
+        host.city.cellX = 1;
+        host.city.cellZ = 1;
+        host.pollutionMaps[0] = 100; host.pollutionMaps[1] = 0; host.pollutionMaps[3] = 0;
+        host.strings.clear();
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingPollution(dialog, 0x1007, true, &occupant));
+        CHECK(host.strings.size() == 1 && host.strings[0] == 0x4a5fe266);   // rank 0 -> the first general string
+        host.crime = 30;
+        host.strings.clear();
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingCrime(dialog, 0x1007, true, &occupant) && host.strings[0] == 0x0a5fe260);
+        host.crime = 7;
+        host.strings.clear();
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingCrime(dialog, 0x1007, true, &occupant) && host.strings[0] == 0xaa5fe249);   // rank 2
+        host.strings.clear();
+        host.school = 90.0f; dev.present[4] = true;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetResidentialBuildingEQ(dialog, 0x1007, true, &occupant) && host.strings[0] == 0xaa5fe249);
+        host.strings.clear();
+        CHECK(cSC4ViewInputControlQuery::SetOrGetResidentialBuildingHQ(dialog, 0x1007, true, &occupant) && host.strings[0] == 0xaa5fe249);   // hospital 60
+        host.strings.clear();
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingTraffic(dialog, 0x1007, true, &occupant) && host.strings.size() == 1);
+        host.strings.clear();
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingGarbage(dialog, 0x1007, true, &occupant) && host.strings.size() == 1);
+        // commute: its own strings; an abandoned lot (reason 4) has one word of its own
+        host.strings.clear();
+        host.tripLength = 3;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetResidentialBuildingCommute(dialog, 0x1007, true, &occupant) && host.strings[0] == 0x0a71fad3);   // bad = index 2
+        lot.reason = 4;
+        host.strings.clear();
+        host.tripLength = 20;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetResidentialBuildingCommute(dialog, 0x1007, true, &occupant) && host.strings[0] == 0x0a71fad3);
+        lot.reason = 0;
+        host.strings.clear();
+        CHECK(cSC4ViewInputControlQuery::SetOrGetResidentialBuildingCommute(dialog, 0x1007, true, &occupant) && host.strings[0] == 0x6a71fadc);   // neutral
+        // no lot or no developer: nothing is loaded; the rows still answer true and are set-only
+        host.hasDeveloper = false;
+        host.strings.clear();
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingPollution(dialog, 0x1007, true, &occupant) && host.strings.empty());
+        host.hasDeveloper = true;
+        host.lots.byOccupant = nullptr;
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingPollution(dialog, 0x1007, true, &occupant) && host.strings.empty());
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingPollution(dialog, 0x1007, false, &occupant));
+        CHECK(cSC4ViewInputControlQuery::SetOrGetRCIBuildingPollution(dialog, 0x1007, true, nullptr));
+        delete dialog;
     }
 
     // --- N: neighbour-connection rows ----------------------------------------------------------------------
