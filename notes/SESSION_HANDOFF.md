@@ -153,3 +153,15 @@ now routes `SurfaceWaterRain / AddRain / CreateSpring / EndBrushScrub` to the ob
 called; network / lot / occupant answers for `IsNavigable`. Quirks kept: the edge scan uses the x vertex count for all four edges and starts
 the east / south edges at cell count - 1; `GetBasinVertices` does not put the seed in its visited set; the flood pass writes -0.0 into
 empty buffers.
+
+## Addendum 4: the game loop (M1)
+
+Finding: the loop WIRE_THE_GAME.md asks to link already exists in the native app. `build/sc4_game` boots `cSC4App`, pumps both message servers
+and `OnTick`, runs the splash -> region screen swap and opens cities through the recovered `cWinSC4App`; the `experimental_host/pending` files
+are superseded (README says so). What was missing was the scripted, repeatable mode: `sc4_game --script FILE [--threads=1]` now runs a
+scenario headless (`scenarios/region.txt`, `scenarios/first_city.txt`; commands frames / wait-region / wait-city / click / input / shot /
+expect-region / expect-city / quit; exit 0 when every expectation held, 4 bad script, 5 failed expectation). `--threads=N` other than 1 is
+refused (the reference mode is the only one). Milestone: **M1 reached** (region screen through the app's own screen chain, scripted);
+**M2 reached for rendering** (a retail city loads and draws terrain, buildings, props). First failing step of the mission scenario:
+**terraform** (no tool is driven yet; the scenario's tail lists the steps as TODO). Note `cSC4App::Run` itself is not recovered; the frame
+loop is the port's own driver around the recovered tick, as the host owns the platform event pump.

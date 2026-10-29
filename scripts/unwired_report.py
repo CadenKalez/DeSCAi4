@@ -3,6 +3,8 @@
 import csv, os, re, sys
 log = sys.argv[1] if len(sys.argv) > 1 else 'work/unwired.log'
 rows = []
+if not os.path.exists(log):
+    print(f'{log}: no unwired site was hit (or the run did not exit normally)'); sys.exit(0)
 for line in open(log):
     p = line.rstrip('\n').split('\t')
     if len(p) == 3: rows.append((int(p[0]), p[1], p[2]))

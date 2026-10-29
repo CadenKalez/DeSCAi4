@@ -1,0 +1,4 @@
+# The region screen: boot, splash, the region map. Exit 0 when the region screen shows.
+wait-region 4000
+expect-region
+shot work/scenario_region.png

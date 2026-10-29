@@ -1,3 +1,8 @@
+> **SUPERSEDED (2026-10-29).** The native application `build/sc4_game` (src/app/game_main.mm) already is this game loop: its `Frame()`
+> pumps both message servers, ticks `cSC4App` and the window manager, and draws through Metal. It reaches the splash, the region screen
+> and a loaded city. Run it headless with `build/sc4_game --script scenarios/region.txt --threads=1`. These two files are kept only as
+> history of the early experimental host; do not link them.
+
 # pending - written, not linked yet
 
 `HostGame.cpp` is the game loop: after `RunBoot(keepAlive)` it lets the recovered `cWinSC4App` create the splash screen

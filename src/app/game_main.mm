@@ -5,6 +5,7 @@
 //
 //   sc4_game                      open a window
 //   sc4_game --shot out.png [--frames N]   run N frames (default 120) headless and write the frame target as a PNG
+//   sc4_game --script scenarios/first_city.txt [--threads=1]   run a scenario headless (see RunScenario); exit code 0 = it held
 #import <Cocoa/Cocoa.h>
 #import <ImageIO/ImageIO.h>
 #import <Metal/Metal.h>
@@ -16,6 +17,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
 #include <cstring>
 #include <map>
 #include <sstream>
@@ -611,19 +613,141 @@ static bool CityViewKey(NSEvent* e, bool down) {
 }
 @end
 
+// "token:frames,..." city view input (the SC4_INPUT variable and the scenario `input` command).
+void RunInputScript(const std::string& all) {
+    std::size_t at = 0;
+    while (at < all.size()) {
+        std::size_t end = all.find(',', at);
+        if (end == std::string::npos) end = all.size();
+        const std::string token = all.substr(at, end - at);
+        at = end + 1;
+        const std::size_t colon = token.find(':');
+        const std::string name = token.substr(0, colon);
+        const int hold = colon == std::string::npos ? 30 : std::atoi(token.c_str() + colon + 1);
+        sc4::cSC4View3DWin* v = gAppWindow ? gAppWindow->View3D() : nullptr;
+        static const std::map<std::string, std::pair<std::uint32_t, std::uint32_t>> kCommands = {
+            {"left", {0x6a935cd8, 0x2a94826b}}, {"right", {0x6a935ce0, 0x2a94826e}}, {"up", {0x6a935cdd, 0x2a948272}},
+            {"down", {0x6a935ce2, 0x2a948275}}, {"zin", {0x6a935cb7, 0}}, {"zout", {0x6a935cba, 0}},
+            {"rl", {0x6a935cc9, 0}}, {"rr", {0x6a935ccc, 0}}};
+        if (name.rfind("sfx@", 0) == 0) {   // sfx@HEX: a game sound id
+            native::PlayGameSound(static_cast<std::uint32_t>(std::strtoul(name.c_str() + 4, nullptr, 16)));
+        } else if (name.rfind("panel@", 0) == 0 && v) {   // panel@HEX: ShowPanel(index)
+            v->ShowMayorSubPanel(static_cast<std::uint32_t>(std::strtoul(name.c_str() + 6, nullptr, 16)));
+        } else if (name.rfind("zone", 0) == 0 && name.size() > 4 && v) {   // zoneN: the zoning tool for zone type N
+            v->InvokeZoningTool(static_cast<std::uint32_t>(std::atoi(name.c_str() + 4)));
+        } else if (name.rfind("drag@", 0) == 0) {   // drag@X1xY1xX2xY2: a left drag
+            int a = 0, b = 0, c = 0, d = 0;
+            std::sscanf(name.c_str() + 5, "%dx%dx%dx%d", &a, &b, &c, &d);
+            gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, a, b, 0);
+            gMgr->GZWinMsgPost_Mouse(kGZMsgMouseDownL, a, b, 0);
+            for (int step = 1; step <= 8; ++step) {
+                gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, a + (c - a) * step / 8, b + (d - b) * step / 8, 0x10);
+                Frame();
+            }
+            gMgr->GZWinMsgPost_Mouse(kGZMsgMouseUpL, c, d, 0);
+        } else if (name.rfind("click@", 0) == 0) {   // click@XxY: one left click at a window point
+            int cx = 0, cy = 0;
+            std::sscanf(name.c_str() + 6, "%dx%d", &cx, &cy);
+            gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, cx, cy, 0);
+            gMgr->GZWinMsgPost_Mouse(kGZMsgMouseDownL, cx, cy, 0);
+            gMgr->GZWinMsgPost_Mouse(kGZMsgMouseUpL, cx, cy, 0);
+        } else if (name == "wheel+" || name == "wheel-")
+            gMgr->GZWinMsgPost_Mouse(kGZMsgMouseWheel, kW / 2, kH / 2, std::uint32_t(name == "wheel+" ? 120 : -120) << 16);
+        else if (auto it = kCommands.find(name); it != kCommands.end() && v)
+            v->ProcessViewCommand(it->second.first);
+        for (int i = 0; i < hold; ++i) { Frame(); [NSThread sleepForTimeInterval:0.004]; }
+        if (auto it = kCommands.find(name); it != kCommands.end() && v && it->second.second) v->ProcessViewCommand(it->second.second);
+        std::printf("input: %s for %d frames\n", name.c_str(), hold);
+    }
+}
+
+// A synthetic double click (the SC4_CLICK variable and the scenario `click` command).
+void DoubleClick(int cx, int cy) {
+    gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, cx, cy, 0);
+    for (int k = 0; k < 2; ++k) {
+        gMgr->GZWinMsgPost_Mouse(kGZMsgMouseDownL, cx, cy, 0);
+        gMgr->GZWinMsgPost_Mouse(kGZMsgMouseUpL, cx, cy, 0);
+        for (int i = 0; i < 10; ++i) { Frame(); [NSThread sleepForTimeInterval:0.004]; }
+    }
+}
+
+
+bool OnRegionScreen() { return gAppWindow && gAppWindow->CurrentScreen() && gAppWindow->CurrentScreen()->GetID() == 0xea659793; }
+
+// A scenario (scenarios/*.txt): one command per line, `#` starts a comment. The run is repeatable and needs no window.
+//   frames N              run N frames           wait-region [N]   run until the region screen shows (at most N frames, default 3000)
+//   wait-city [N]         run until a city view exists                  click X Y        a synthetic double click
+//   input TOKENS          the SC4_INPUT tokens (left:20,zin:30,zone1,...)  shot PATH      write the frame as a PNG
+//   expect-region / expect-city   fail the run (exit 5) unless that screen is up       quit    stop here
+// Returns 0 when every command ran and every expectation held.
+int RunScenario(const std::string& path) {
+    std::ifstream in(path);
+    if (!in) { std::printf("scenario: cannot open %s\n", path.c_str()); return 4; }
+    std::string line;
+    int number = 0;
+    while (std::getline(in, line)) {
+        ++number;
+        const std::size_t hash = line.find('#');
+        if (hash != std::string::npos) line.erase(hash);
+        std::istringstream words(line);
+        std::string command;
+        if (!(words >> command)) continue;
+        std::printf("scenario %d: %s\n", number, line.c_str());
+        if (command == "frames") {
+            int n = 0; words >> n;
+            for (int i = 0; i < n; ++i) { Frame(); [NSThread sleepForTimeInterval:0.004]; }
+        } else if (command == "wait-region" || command == "wait-city") {
+            int limit = 3000; words >> limit;
+            const bool region = command == "wait-region";
+            int i = 0;
+            for (; i < limit; ++i) {
+                if (region ? OnRegionScreen() : (gAppWindow && gAppWindow->View3D() != nullptr)) break;
+                Frame(); [NSThread sleepForTimeInterval:0.004];
+            }
+            if (i >= limit) { std::printf("scenario %d: %s gave up after %d frames\n", number, command.c_str(), limit); return 5; }
+            std::printf("scenario %d: reached after %d frames\n", number, i);
+        } else if (command == "click") {
+            int x = 0, y = 0; words >> x >> y;
+            DoubleClick(x, y);
+        } else if (command == "input") {
+            std::string tokens; words >> tokens;
+            RunInputScript(tokens);
+        } else if (command == "shot") {
+            std::string target; words >> target;
+            WritePng(target);
+        } else if (command == "expect-region") {
+            if (!OnRegionScreen()) { std::printf("scenario %d: expected the region screen\n", number); return 5; }
+        } else if (command == "expect-city") {
+            if (!(gAppWindow && gAppWindow->View3D())) { std::printf("scenario %d: expected a city view\n", number); return 5; }
+        } else if (command == "quit") {
+            return 0;
+        } else {
+            std::printf("scenario %d: unknown command %s\n", number, command.c_str());
+            return 4;
+        }
+    }
+    return 0;
+}
+
 int main(int argc, char** argv) {
     std::setvbuf(stdout, nullptr, _IONBF, 0);
     std::string shot;
+    std::string scenario;   // --script FILE
     int frames = -1;
     for (int i = 1; i < argc; ++i) {
         if (!std::strcmp(argv[i], "--shot") && i + 1 < argc) shot = argv[++i];
         else if (!std::strcmp(argv[i], "--frames") && i + 1 < argc) frames = std::atoi(argv[++i]);
+        else if (!std::strcmp(argv[i], "--script") && i + 1 < argc) scenario = argv[++i];
+        else if (!std::strncmp(argv[i], "--threads=", 10)) {
+            // The reference mode: everything runs on the main thread. More threads are the performance phase (after M6).
+            if (std::atoi(argv[i] + 10) != 1) { std::fprintf(stderr, "--threads=%s: only --threads=1 exists yet\n", argv[i] + 10); return 1; }
+        }
     }
     @autoreleasepool {
         NSApplication* app = [NSApplication sharedApplication];
         NSWindow* window = nil;
         CAMetalLayer* layer = nil;
-        if (shot.empty()) {
+        if (shot.empty() && scenario.empty()) {
             [app setActivationPolicy:NSApplicationActivationPolicyRegular];
             window = [[NSWindow alloc] initWithContentRect:NSMakeRect(100, 100, kW, kH)
                 styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable backing:NSBackingStoreBuffered defer:NO];
@@ -645,8 +769,9 @@ int main(int argc, char** argv) {
         gDriver = gd::cMetalGDriver::Create((__bridge void*)layer, kW, kH);
         if (!gDriver) { std::printf("no Metal device\n"); return 1; }
         Boot();
-        if (shot.empty() || std::getenv("SC4_AUDIO")) StartGameAudio();
+        if ((shot.empty() && scenario.empty()) || std::getenv("SC4_AUDIO")) StartGameAudio();
         if (!native::VerifyRuntimeWiring(gDriver.get(), gAudio != nullptr)) { std::fprintf(stderr, "boot halted: a required dependency is not wired\n"); return 3; }
+        if (!scenario.empty()) return RunScenario(scenario);
         if (const char* cityPath = std::getenv("SC4_LOADCITY")) {   // development: load one city file straight after boot and exit
             cSC4App* loadApp = native::BootApplication();
             const bool loaded = loadApp && native::LoadCityFile(*loadApp, cityPath);
@@ -659,62 +784,9 @@ int main(int argc, char** argv) {
             if (const char* click = std::getenv("SC4_CLICK")) {   // "x,y": a synthetic double click after the frames
                 int cx = 0, cy = 0;
                 std::sscanf(click, "%d,%d", &cx, &cy);
-                gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, cx, cy, 0);
-                for (int k = 0; k < 2; ++k) {
-                    gMgr->GZWinMsgPost_Mouse(kGZMsgMouseDownL, cx, cy, 0);
-                    gMgr->GZWinMsgPost_Mouse(kGZMsgMouseUpL, cx, cy, 0);
-                    for (int i = 0; i < 10; ++i) { Frame(); [NSThread sleepForTimeInterval:0.004]; }
-                }
+                DoubleClick(cx, cy);
             }
-            if (const char* script = std::getenv("SC4_INPUT")) {   // dev: "token:frames,..." city view input after the click
-                // tokens: left/right/up/down (held for the frames), zin/zout/rl/rr (view commands), wheel+/wheel- (at the centre),
-                // click@XxY (a left click)
-                std::string all(script);
-                std::size_t at = 0;
-                while (at < all.size()) {
-                    std::size_t end = all.find(',', at);
-                    if (end == std::string::npos) end = all.size();
-                    const std::string token = all.substr(at, end - at);
-                    at = end + 1;
-                    const std::size_t colon = token.find(':');
-                    const std::string name = token.substr(0, colon);
-                    const int hold = colon == std::string::npos ? 30 : std::atoi(token.c_str() + colon + 1);
-                    sc4::cSC4View3DWin* v = gAppWindow ? gAppWindow->View3D() : nullptr;
-                    static const std::map<std::string, std::pair<std::uint32_t, std::uint32_t>> kCommands = {
-                        {"left", {0x6a935cd8, 0x2a94826b}}, {"right", {0x6a935ce0, 0x2a94826e}}, {"up", {0x6a935cdd, 0x2a948272}},
-                        {"down", {0x6a935ce2, 0x2a948275}}, {"zin", {0x6a935cb7, 0}}, {"zout", {0x6a935cba, 0}},
-                        {"rl", {0x6a935cc9, 0}}, {"rr", {0x6a935ccc, 0}}};
-                    if (name.rfind("sfx@", 0) == 0) {   // sfx@HEX: a game sound id
-                        native::PlayGameSound(static_cast<std::uint32_t>(std::strtoul(name.c_str() + 4, nullptr, 16)));
-                    } else if (name.rfind("panel@", 0) == 0 && v) {   // panel@HEX: ShowPanel(index)
-                        v->ShowMayorSubPanel(static_cast<std::uint32_t>(std::strtoul(name.c_str() + 6, nullptr, 16)));
-                    } else if (name.rfind("zone", 0) == 0 && name.size() > 4 && v) {   // zoneN: the zoning tool for zone type N
-                        v->InvokeZoningTool(static_cast<std::uint32_t>(std::atoi(name.c_str() + 4)));
-                    } else if (name.rfind("drag@", 0) == 0) {   // drag@X1xY1xX2xY2: a left drag
-                        int a = 0, b = 0, c = 0, d = 0;
-                        std::sscanf(name.c_str() + 5, "%dx%dx%dx%d", &a, &b, &c, &d);
-                        gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, a, b, 0);
-                        gMgr->GZWinMsgPost_Mouse(kGZMsgMouseDownL, a, b, 0);
-                        for (int step = 1; step <= 8; ++step) {
-                            gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, a + (c - a) * step / 8, b + (d - b) * step / 8, 0x10);
-                            Frame();
-                        }
-                        gMgr->GZWinMsgPost_Mouse(kGZMsgMouseUpL, c, d, 0);
-                    } else if (name.rfind("click@", 0) == 0) {   // click@XxY: one left click at a window point
-                        int cx = 0, cy = 0;
-                        std::sscanf(name.c_str() + 6, "%dx%d", &cx, &cy);
-                        gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, cx, cy, 0);
-                        gMgr->GZWinMsgPost_Mouse(kGZMsgMouseDownL, cx, cy, 0);
-                        gMgr->GZWinMsgPost_Mouse(kGZMsgMouseUpL, cx, cy, 0);
-                    } else if (name == "wheel+" || name == "wheel-")
-                        gMgr->GZWinMsgPost_Mouse(kGZMsgMouseWheel, kW / 2, kH / 2, std::uint32_t(name == "wheel+" ? 120 : -120) << 16);
-                    else if (auto it = kCommands.find(name); it != kCommands.end() && v)
-                        v->ProcessViewCommand(it->second.first);
-                    for (int i = 0; i < hold; ++i) { Frame(); [NSThread sleepForTimeInterval:0.004]; }
-                    if (auto it = kCommands.find(name); it != kCommands.end() && v && it->second.second) v->ProcessViewCommand(it->second.second);
-                    std::printf("input: %s for %d frames\n", name.c_str(), hold);
-                }
-            }
+            if (const char* script = std::getenv("SC4_INPUT")) RunInputScript(script);
             if (std::getenv("SC4_DEBUG")) {
                 cIGZWin* desktop = gMgr->GetMainWindow();
                 if (cIGZWin* w = desktop->GetChildWindowFromIDRecursive(0xaaa9c9d9)) {
