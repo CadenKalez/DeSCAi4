@@ -2110,16 +2110,12 @@ cSC4EffectsResourceFactory,000000010056bde8,not started,"cSC4EffectsResourceFact
 cSC4EffectsResourceFactory,000000010056be84,not started,"cSC4EffectsResourceFactory::SerialRead(cIGZPersistResource&, cIGZPersistDBSerialRecord&)"
 cSC4EffectsResourceFactory,000000010056bf66,not started,"cSC4EffectsResourceFactory::SerialWrite(cIGZPersistResource&, cIGZPersistDBSerialRecord&)"
 cSC4EmergencyVehicle,00000001002f563c,not started,cSC4EmergencyVehicle::Init()
-cSC4EmergencyVehicle,00000001002f5a26,not started,cSC4EmergencyVehicle::ValidateNetworkOccupant()
-cSC4EmergencyVehicle,00000001002f5ae2,not started,cSC4EmergencyVehicle::DoRepathingTick(float)
-cSC4EmergencyVehicle,00000001002f5c36,not started,cSC4EmergencyVehicle::SendPathBlockedMessage()
 cSC4EmergencyVehicle,00000001002f5d08,not started,cSC4EmergencyVehicle::DoTeleportTick(float)
 cSC4EmergencyVehicle,00000001002f615a,not started,cSC4EmergencyVehicle::HandleReachedRouteDestination()
 cSC4EmergencyVehicle,00000001002f6322,not started,"cSC4EmergencyVehicle::HandleDispatched(cS3DVector3 const&, cISC4Occupant*)"
 cSC4EmergencyVehicle,00000001002f64bc,not started,"cSC4EmergencyVehicle::AppendRouteToNearbyRoad(int, int, cS3DVector3 const&)"
 cSC4EmergencyVehicle,00000001002f7670,not started,cSC4EmergencyVehicle::ReturnToSourceOccupant()
 cSC4EmergencyVehicle,00000001002f76e4,not started,cSC4EmergencyVehicle::GetDebugExtraText() const
-cSC4EmergencyVehicle,00000001002f796c,not started,cSC4EmergencyVehicle::SetDispatchState(cISC4DispatchManager::tDispatchState)
 cSC4EmergencyVehicle,00000001002f7bf8,not started,cSC4EmergencyVehicle::CloseEnoughToDispatchDestination() const
 cSC4EmergencyVehicle,00000001002f7cdc,not started,cSC4EmergencyVehicle::ShowEmergencyLights(bool)
 cSC4FileTokenizer,00000001001aeca2,not started,cSC4FileTokenizer::GetToken()

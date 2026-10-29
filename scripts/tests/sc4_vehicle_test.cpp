@@ -939,18 +939,33 @@ void TestPlayerDriveTickAndOffRoad() {
 }  // namespace
 
 // ---- cSC4EmergencyVehicle (the recovered part) ----------------------------------------------------------------------------
+struct TestEmergencyCar final : cSC4EmergencyVehicle {
+    using cSC4EmergencyVehicle::cSC4EmergencyVehicle;
+    std::uint32_t GetDispatchType() const override { return 7; }
+};
+
 struct FakeEmergencyHost final : IEmergencyVehicleHost {
-    int stopped = 0, moved = 0, lightsOn = 0, lightsOff = 0;
+    int stopped = 0, moved = 0, lightsOn = 0, lightsOff = 0, started = 0, blocked = 0, lookups = 0, routes = 0;
+    std::uint32_t lastSound = 0, lastType = 0;
+    std::uint8_t lastRepath = 0;
+    bool routeFound = false;
+    EmergencyVehicleTuning tuning;
+    ITrafficAutomatonOccupant* occupantAt = nullptr;
     int lastX = 0, lastY = 0, lastZ = 0;
     void SirenStopped(const cSC4EmergencyVehicle&) override { ++stopped; }
     void SirenMoved(const cSC4EmergencyVehicle&, int x, int y, int z) override { ++moved; lastX = x; lastY = y; lastZ = z; }
     void SetEmergencyLights(cSC4EmergencyVehicle&, bool on) override { on ? ++lightsOn : ++lightsOff; }
+    const EmergencyVehicleTuning& Tuning() override { return tuning; }
+    void SirenStarted(const cSC4EmergencyVehicle&, std::uint32_t sound) override { ++started; lastSound = sound; }
+    void PostPathBlocked(cSC4EmergencyVehicle&, std::uint32_t type, std::uint8_t repaths) override { ++blocked; lastType = type; lastRepath = repaths; }
+    ITrafficAutomatonOccupant* NetworkOccupantAt(float, float) override { ++lookups; return occupantAt; }
+    bool FindRoute(cSC4EmergencyVehicle&, const cS3DVector3&) override { ++routes; return routeFound; }
 };
 
 void TestEmergencyVehicle() {
     World world;
     FakeEmergencyHost emergencyHost;
-    auto* ev = new cSC4EmergencyVehicle(&world.host, &world.automatonHost, nullptr, &emergencyHost);
+    auto* ev = new TestEmergencyCar(&world.host, &world.automatonHost, nullptr, &emergencyHost);
     ev->AddRef();
     CHECK(ev->GetCallNumber() == 0 && ev->GetDispatchState() == 0 && ev->RepathCount() == 0);
     ev->SetCallNumber(0x1234);
@@ -963,7 +978,7 @@ void TestEmergencyVehicle() {
     PortMemoryOStream out;
     CHECK(ev->Write(out));
     PortMemoryIStream in(out.bytes().data(), out.bytes().size());
-    auto* copy = new cSC4EmergencyVehicle(&world.host, &world.automatonHost, nullptr, &emergencyHost);
+    auto* copy = new TestEmergencyCar(&world.host, &world.automatonHost, nullptr, &emergencyHost);
     copy->AddRef();
     CHECK(copy->Read(in));
     CHECK(copy->GetCallNumber() == 0x1234 && copy->GetDispatchState() == 3 && copy->RepathCount() == 2 &&
@@ -988,6 +1003,44 @@ void TestEmergencyVehicle() {
     other->SetAutomataFlag(0x20, true);
     CHECK(!ev->ShouldCollide(other) || ev->Route().empty());           // a queueing one only when this car has nothing routed
     other->Release();
+
+    // dispatch state: 3 turns the emergency mode on, 6 turns it off; 1 reports a blocked path; the same state again is ignored
+    emergencyHost.tuning.maxRepaths = 2;
+    emergencyHost.tuning.retrySeconds = 3.0f;
+    ev->SetDispatchStateRaw(0);
+    ev->SetDispatchState(3);
+    CHECK(ev->GetDispatchState() == 3 && ev->CheckAutomataFlag(0x80) && ev->CheckAutomataFlag(0x800) && ev->CheckAutomataFlag(0x1000));
+    CHECK(ev->GetState() != nullptr && ev->GetState()->stateType == kEmergencyStateEnRoute);
+    CHECK(emergencyHost.started == 0);                                   // no sound group: no siren message
+    ev->SetDispatchState(3);                                             // (same state: ignored)
+    ev->AddOccupantGroup(0x4228);                                         // a police car
+    ev->SetDispatchStateRaw(0);
+    ev->SetDispatchState(3);
+    CHECK(emergencyHost.started == 1 && emergencyHost.lastSound == 0x29de9021);
+    ev->SetDispatchState(1);
+    CHECK(emergencyHost.blocked == 1 && emergencyHost.lastType == 7);
+    ev->SetDispatchState(6);
+    CHECK(!ev->CheckAutomataFlag(0x80) && !ev->CheckAutomataFlag(0x800) && ev->CheckAutomataFlag(0x10000));
+
+    // repathing: a found route restores the state and clears the counter; failures retry up to the limit while the car still
+    // has a road under it, and a car without one is removed at once
+    ev->SetRepathCount(0);
+    emergencyHost.routeFound = true;
+    CHECK(ev->DoRepathingTick(16.0f) && ev->RepathCount() == 0 && ev->GetDispatchState() == 3);
+    emergencyHost.routeFound = false;
+    emergencyHost.lookups = 0;
+    CHECK(!ev->ValidateNetworkOccupant() && emergencyHost.lookups == 1);   // nothing under the car yet
+    cSC4PathInfo* info = MakePathInfo();
+    FakeOccupant* road = MakeOccupant(info);
+    emergencyHost.occupantAt = road;
+    CHECK(ev->ValidateNetworkOccupant());                                    // attached now
+    const int blockedBefore = emergencyHost.blocked;
+    CHECK(ev->DoRepathingTick(16.0f) && ev->RepathCount() == 1 && emergencyHost.blocked == blockedBefore + 1);
+    CHECK(ev->GetState() != nullptr && ev->GetState()->stateType == 7);     // the retry pause
+    CHECK(ev->DoRepathingTick(16.0f) && ev->RepathCount() == 2 && !ev->GetMarkedForRemove());
+    CHECK(ev->DoRepathingTick(16.0f) && ev->RepathCount() == 3 && ev->GetMarkedForRemove());   // past the limit: removed
+    road->Release();
+    info->Release();
 
     // attraction: emergency mode drops the attraction controller instead of updating it
     ev->UpdateAttraction();

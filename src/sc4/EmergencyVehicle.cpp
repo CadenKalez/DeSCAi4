@@ -104,7 +104,7 @@ bool cSC4EmergencyVehicle::DoStateTick(float milliseconds) {
     if (states_.empty()) return false;
     tAutomataState* state = GetState();
     if (!state) return false;
-    switch (state->stateId) {
+    switch (state->stateType) {
         case kEmergencyStateEnRoute: return DoEnRouteTick(milliseconds);
         case kEmergencyStateRepathing: return DoRepathingTick(milliseconds);
         case kEmergencyStateHandlingEvent: return DoHandlingEventTick(milliseconds);
@@ -169,7 +169,7 @@ bool cSC4EmergencyVehicle::HandlePlayerDriveCommand(std::uint32_t command, bool 
 // 0x1002f603c.
 bool cSC4EmergencyVehicle::HandleEnterState(tAutomataState* state) {
     if (state) {
-        const std::uint32_t id = state->stateId;
+        const std::uint32_t id = state->stateType;
         if (id == kStatePlayerDrive) {
             cSC4Vehicle::HandleEnterState(state);
             dispatchState_ = 3;
@@ -186,7 +186,7 @@ bool cSC4EmergencyVehicle::HandleEnterState(tAutomataState* state) {
 
 // 0x1002f611e: leaving the player-drive or pursuit state turns the lights off.
 bool cSC4EmergencyVehicle::HandleExitState(const tAutomataState* state) {
-    if (state && (state->stateId == kStatePlayerDrive || state->stateId == kStatePursuit)) ShowEmergencyLights(false);
+    if (state && (state->stateType == kStatePlayerDrive || state->stateType == kStatePursuit)) ShowEmergencyLights(false);
     return cSC4TrafficAutomaton::HandleExitState(state);
 }
 
@@ -199,11 +199,86 @@ void cSC4EmergencyVehicle::HandleNetworkOccupantRemoved() {
     cSC4TrafficAutomaton::HandleNetworkOccupantRemoved();
 }
 
-// The three below are not recovered (their argument registers are lost in the decompile); they are declared so the recovered
-// handlers link, and behave as the most conservative reading: the occupant check only reports whether one is set, and the two
-// ticks keep the state alive without acting.
-bool cSC4EmergencyVehicle::ValidateNetworkOccupant() { return networkOccupant_ != nullptr; }
-bool cSC4EmergencyVehicle::DoRepathingTick(float) { return true; }
+// 0x1002f5a26: a vehicle without a network occupant looks up the one under it and attaches to it.
+bool cSC4EmergencyVehicle::ValidateNetworkOccupant() {
+    if (networkOccupant_ == nullptr && emergencyHost_) {
+        float position[3] = {0, 0, 0};
+        GetPosition(position);
+        SetPath(emergencyHost_->NetworkOccupantAt(position[0], position[2]), 0, nullptr, false);
+    }
+    return networkOccupant_ != nullptr;
+}
+
+// 0x1002f5c36 (the posted Data2 is the unsigned repath byte; the decompile's (char) cast is wrong).
+void cSC4EmergencyVehicle::SendPathBlockedMessage() {
+    if (emergencyHost_) emergencyHost_->PostPathBlocked(*this, GetDispatchType(), repathCount_);
+}
+
+// 0x1002f5ae2: look for a route to the call; found -> back to driving; not found -> retry a few times after a pause, then
+// give up and leave the map.
+bool cSC4EmergencyVehicle::DoRepathingTick(float) {
+    if (ValidateNetworkOccupant() || repathCount_ == 0) {
+        if (emergencyHost_ && emergencyHost_->FindRoute(*this, dispatchDestination_)) {
+            SetDispatchState(3);
+            PopState();
+            repathCount_ = 0;
+            return true;
+        }
+        ++repathCount_;
+        if (emergencyHost_ && repathCount_ <= emergencyHost_->Tuning().maxRepaths) {
+            SendPathBlockedMessage();
+            PushState(7, nullptr, emergencyHost_->Tuning().retrySeconds * 1000.0f, false, 0, 0, nullptr);
+            return true;
+        }
+    }
+    Remove(false);
+    return true;
+}
+
+// 0x1002f796c: the dispatch state drives the automaton's mode (3 = answering the call: emergency flags, lights and siren on;
+// 6 = finished: back to normal; 1 = blocked: tell the dispatcher). The sound system hears the matching message.
+void cSC4EmergencyVehicle::SetDispatchState(std::uint32_t state) {
+    if (dispatchState_ == state) return;
+    if (FindState(kStatePlayerDrive) != nullptr) return;
+    dispatchState_ = state;
+    SendCallbackMessage(7, GetDispatchState());
+    switch (state) {
+        case 1:
+            if (emergencyHost_) emergencyHost_->SirenStopped(*this);
+            SendPathBlockedMessage();
+            return;
+        case 3: {
+            SetState(kEmergencyStateEnRoute, nullptr, -1.0f, false, 0, 0, nullptr);
+            SetAutomataFlag(0x80, true);
+            SetAutomataFlag(0x10000, true);
+            SetAutomataFlag(0x800, true);
+            SetAutomataFlag(0x1000, true);
+            ShowEmergencyLights(true);
+            std::uint32_t sound = 0x29de9021;
+            if (!IsOccupantGroup(0x4228)) sound = IsOccupantGroup(0x4202) ? 0x9dc5728 : 0;
+            if (emergencyHost_ && sound != 0) emergencyHost_->SirenStarted(*this, sound);
+            return;
+        }
+        case 6:
+            SetState(0, nullptr, -1.0f, false, 0, 0, nullptr);
+            SetAutomataFlag(0x80, false);
+            SetAutomataFlag(0x10000, true);
+            SetAutomataFlag(0x800, false);
+            SetAutomataFlag(0x1000, false);
+            ShowEmergencyLights(false);
+            [[fallthrough]];
+        case 0:
+        case 2:
+        case 4:
+        case 5:
+            if (emergencyHost_) emergencyHost_->SirenStopped(*this);
+            return;
+        default:
+            return;
+    }
+}
+
+// The teleport handler is not recovered; the state keeps running without acting.
 bool cSC4EmergencyVehicle::DoTeleportTick(float) { return true; }
 
 void cSC4EmergencyVehicle::ShowEmergencyLights(bool on) {

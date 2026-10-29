@@ -10,10 +10,10 @@
 // Behaviour states: 100 en route, 0x65 repathing, 0x66 handling the event, 0x67 teleporting back; 0x34 is the pursuit state
 // the base class already knows. Automaton flag 0x80 marks "emergency mode" (speed modifier ignored).
 //
-// RECOVERED here: constructor, Shutdown, Write / Read, the accessors, ShouldCollide, DoStateTick, DoEnRouteTick,
+// RECOVERED here: ValidateNetworkOccupant, DoRepathingTick, SendPathBlockedMessage, SetDispatchState, constructor, Shutdown, Write / Read, the accessors, ShouldCollide, DoStateTick, DoEnRouteTick,
 // DoAnimationTick, DoHandlingEventTick, DoPlayerDriveTick, UpdateAttraction, HandlePlayerDriveCommand, HandleEnterState,
 // HandleExitState, HandleNetworkOccupantRemoved, ShowMotionBlur. NOT recovered yet (see notes/next_class_emergency_vehicle.md):
-// Init, DoRepathingTick, DoTeleportTick, SendPathBlockedMessage, ValidateNetworkOccupant, SetDispatchState,
+// Init, DoTeleportTick,
 // HandleReachedRouteDestination, HandleDispatched, AppendRouteToNearbyRoad, ReturnToSourceOccupant, GetDebugExtraText,
 // CloseEnoughToDispatchDestination, ShowEmergencyLights. They need the argument registers Ghidra lost; the disassembly decides.
 #pragma once
@@ -32,6 +32,15 @@ constexpr std::uint32_t kEmergencySoundStopMessage = 0x6a451908;        // sound
 constexpr std::uint32_t kEmergencySoundMoveMessage = 0xca45190f;        // siren position update
 constexpr std::uint32_t kEmergencyPlayerDriveLightsCommand = 9;         // the key that toggles the lights while driving it
 
+// The emergency tunables (cSC4AutomataManager::sTuningParams + 0x170..0x17c); zero until the tuning loader (unrecovered) runs.
+struct EmergencyVehicleTuning {
+    float retrySeconds = 0.0f;           // +0x170 (the retry state's timer is this * 1000)
+    std::uint8_t teleportCells = 0;      // +0x174 (teleport when farther than this many cells)
+    std::uint8_t maxRepaths = 0;         // +0x175
+    std::uint32_t speedKmh = 0;          // +0x178 (the emergency speed, in km/h)
+    std::int32_t surroundingDepth = 0;   // +0x17c (RemoveSurroundingAutomata's depth)
+};
+
 // The sound system and light services the vehicle reaches (SL::spSS, SL::spCity effects manager).
 class IEmergencyVehicleHost {
 public:
@@ -39,6 +48,13 @@ public:
     virtual void SirenStopped(const cSC4EmergencyVehicle& vehicle) = 0;                            // spSS vslot 0x50(0x6a451908, id, 0, 0, 0)
     virtual void SirenMoved(const cSC4EmergencyVehicle& vehicle, int x, int y, int z) = 0;         // spSS vslot 0x50(0xca45190f, id, x, y, z)
     virtual void SetEmergencyLights(cSC4EmergencyVehicle& vehicle, bool on) = 0;                    // ShowEmergencyLights (effects + model)
+    virtual const EmergencyVehicleTuning& Tuning() = 0;
+    virtual void SirenStarted(const cSC4EmergencyVehicle& vehicle, std::uint32_t soundId) = 0;      // spSS vslot 0x50(0xea451903, soundId, id, 0, 0)
+    // message 0xca8dcdb4: Data1 = dispatch type, Data2 = repath count, IGZUnknown = the vehicle's occupant; posted on the message server
+    virtual void PostPathBlocked(cSC4EmergencyVehicle& vehicle, std::uint32_t dispatchType, std::uint8_t repathCount) = 0;
+    virtual ITrafficAutomatonOccupant* NetworkOccupantAt(float x, float z) = 0;                     // spCity position -> cell, network manager vslot 0x38
+    // spCity vslot 0x158 (the route finder) vslot 0x90(vehicle, list, request{1, destination}, 0, 3): true when a route was found
+    virtual bool FindRoute(cSC4EmergencyVehicle& vehicle, const cS3DVector3& destination) = 0;
 };
 
 class cSC4EmergencyVehicle : public cSC4Vehicle {
@@ -68,10 +84,13 @@ public:
 
     // ---- state handlers (slots 0x650..0x668 in the original) ----
     virtual bool DoEnRouteTick(float milliseconds);                          // 0x650 @ 0x1002f58d4
-    virtual bool DoRepathingTick(float milliseconds);                         // 0x658 @ 0x1002f5ae2 (NOT RECOVERED: declared, defers)
+    virtual bool DoRepathingTick(float milliseconds);                         // 0x658 @ 0x1002f5ae2
     virtual bool DoHandlingEventTick(float milliseconds) { (void)milliseconds; return true; }   // 0x660 @ 0x1002f5d00
     virtual bool DoTeleportTick(float milliseconds);                          // 0x668 @ 0x1002f5d08 (NOT RECOVERED: declared, defers)
-    virtual bool ValidateNetworkOccupant();                                   // @ 0x1002f5a26 (NOT RECOVERED: declared, reports the occupant)
+    bool ValidateNetworkOccupant();                                           // @ 0x1002f5a26
+    void SendPathBlockedMessage();                                            // @ 0x1002f5c36
+    void SetDispatchState(std::uint32_t state) override;                      // 0xc8  @ 0x1002f796c
+    virtual std::uint32_t GetDispatchType() const = 0;                        // 0x638 (pure: Ambulance, GetawayVan, ... answer it)
     virtual void ShowEmergencyLights(bool on);                               // 0x648 (seam: IEmergencyVehicleHost)
 
     // ---- accessors for the tests and the subclasses ----
