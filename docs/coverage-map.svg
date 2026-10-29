@@ -6,18 +6,18 @@
 <text x="16" y="102" font-size="16" font-weight="700" fill="#1d2320">Code exists</text>
 <text x="150" y="102" font-size="14" fill="#5b6560">partial or complete</text>
 <rect x="560" y="84" width="860" height="26" rx="3" fill="#e3e6e0"/>
-<rect x="560" y="84" width="662.2" height="26" rx="3" fill="#9cc3e4"/>
-<text x="1432" y="103" font-size="18" font-weight="700" fill="#1d2320">77.0%</text>
+<rect x="560" y="84" width="662.9" height="26" rx="3" fill="#9cc3e4"/>
+<text x="1432" y="103" font-size="18" font-weight="700" fill="#1d2320">77.1%</text>
 <text x="16" y="136" font-size="16" font-weight="700" fill="#1d2320">Recovered</text>
 <text x="150" y="136" font-size="14" fill="#5b6560">complete and covered by a test</text>
 <rect x="560" y="118" width="860" height="26" rx="3" fill="#e3e6e0"/>
-<rect x="560" y="118" width="524.5" height="26" rx="3" fill="#e8b04a"/>
-<text x="1432" y="137" font-size="18" font-weight="700" fill="#1d2320">61.0%</text>
+<rect x="560" y="118" width="525.2" height="26" rx="3" fill="#e8b04a"/>
+<text x="1432" y="137" font-size="18" font-weight="700" fill="#1d2320">61.1%</text>
 <text x="16" y="170" font-size="16" font-weight="700" fill="#1d2320">Verified</text>
 <text x="150" y="170" font-size="14" fill="#5b6560">against the machine code</text>
 <rect x="560" y="152" width="860" height="26" rx="3" fill="#e3e6e0"/>
-<rect x="560" y="152" width="77.4" height="26" rx="3" fill="#1f6b43"/>
-<text x="1432" y="171" font-size="18" font-weight="700" fill="#1d2320">9.0%</text>
+<rect x="560" y="152" width="78.1" height="26" rx="3" fill="#1f6b43"/>
+<text x="1432" y="171" font-size="18" font-weight="700" fill="#1d2320">9.1%</text>
 <line x1="775.0" y1="84" x2="775.0" y2="178" stroke="#f6f7f4" stroke-width="1.5"/>
 <line x1="990.0" y1="84" x2="990.0" y2="178" stroke="#f6f7f4" stroke-width="1.5"/>
 <line x1="1205.0" y1="84" x2="1205.0" y2="178" stroke="#f6f7f4" stroke-width="1.5"/>
@@ -1035,7 +1035,7 @@
 <rect x="493.7" y="968.1" width="32.1" height="39.4" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="457.2" y="1007.4" width="36.2" height="34.0" fill="#d5d9d4"><title>cSC4DisasterInstanceRiot: 5744 bytes, Not started</title></rect>
 <rect x="457.2" y="1007.4" width="36.2" height="34.0" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
-<rect x="493.3" y="1007.4" width="32.5" height="34.0" fill="#d5d9d4"><title>cSC4FireTruck: 5164 bytes, Not started</title></rect>
+<rect x="493.3" y="1007.4" width="32.5" height="34.0" fill="#1f6b43"><title>cSC4FireTruck: 5164 bytes, Verified</title></rect>
 <rect x="493.3" y="1007.4" width="32.5" height="34.0" fill="none" stroke="#f6f7f4" stroke-width="0.6"/>
 <rect x="457.2" y="1041.4" width="33.8" height="25.1" fill="#e8b04a"><title>cSC4FireOccupant: 3966 bytes, Recovered</title></rect>
 <rect x="491.0" y="1041.4" width="0.7" height="25.1" fill="#e8b04a"><title>cSC4FireOccupant: 80 bytes, Recovered, unit test only (artifacts)</title></rect>

@@ -2111,30 +2111,6 @@ cSC4FirePlaneDispatchSource,00000001007239a2,not started,"cSC4FirePlaneDispatchS
 cSC4FirePlaneDispatchSource,00000001007239c6,not started,cSC4FirePlaneDispatchSource::DoOccupantInserted(cISC4Occupant*)
 cSC4FirePlaneDispatchSource,0000000100723bea,not started,cSC4FirePlaneDispatchSource::DoOccupantRemoved(cISC4Occupant*)
 cSC4FirePlaneDispatchSource,0000000100723c44,not started,cSC4FirePlaneDispatchSource::GetGZCLSID() const
-cSC4FireTruck,000000010050f670,not started,cSC4FireTruck::cSC4FireTruck()
-cSC4FireTruck,000000010050f91c,not started,cSC4FireTruck::cSC4FireTruck()
-cSC4FireTruck,000000010050f926,not started,cSC4FireTruck::Shutdown()
-cSC4FireTruck,000000010050f97c,not started,cSC4FireTruck::ReleaseFireCrew()
-cSC4FireTruck,000000010050f9ec,not started,cSC4FireTruck::ChooseNewDestination()
-cSC4FireTruck,000000010050fba8,not started,cSC4FireTruck::HandleReachedRouteDestination()
-cSC4FireTruck,000000010050fbb2,not started,cSC4FireTruck::HandleCrewFinished()
-cSC4FireTruck,000000010050fbf2,not started,cSC4FireTruck::SetDispatchState(cISC4DispatchManager::tDispatchState)
-cSC4FireTruck,000000010050fd50,not started,"cSC4FireTruck::GetFireCount(int&, int&)"
-cSC4FireTruck,000000010050ff3c,not started,"cSC4FireTruck::GetToxicSpillCount(int&, int&)"
-cSC4FireTruck,0000000100510060,not started,cSC4FireTruck::CreateFireCrew()
-cSC4FireTruck,000000010051019c,not started,cSC4FireTruck::GetEffectiveRadius() const
-cSC4FireTruck,00000001005101fc,not started,cSC4FireTruck::DoHandlingEventTick(float)
-cSC4FireTruck,00000001005102c2,not started,"cSC4FireTruck::HandlePlayerDriveCommand(cISC4Automaton::ePlayerDriveCommand, bool)"
-cSC4FireTruck,0000000100510444,not started,cSC4FireTruck::HandleExitState(tAutomataState const*)
-cSC4FireTruck,0000000100510474,not started,"cSC4FireTruck::TranslatePlayerDriveCommands(tAutomataStatePlayerDrive*, float)"
-cSC4FireTruck,0000000100510680,not started,cSC4FireTruck::GetStreamTargetPoint(cS3DVector3&)
-cSC4FireTruck,00000001005106d4,not started,cSC4FireTruck::Write(cIGZOStream&) const
-cSC4FireTruck,000000010051074c,not started,cSC4FireTruck::Read(cIGZIStream&)
-cSC4FireTruck,0000000100510816,not started,cSC4FireTruck::~cSC4FireTruck()
-cSC4FireTruck,0000000100510820,not started,cSC4FireTruck::~cSC4FireTruck()
-cSC4FireTruck,000000010051084e,not started,cSC4FireTruck::GetGZCLSID() const
-cSC4FireTruck,0000000100510866,not started,cSC4FireTruck::GetDispatchType() const
-cSC4FireTruck,0000000100510a4c,not started,cSC4FireTruck::~cSC4FireTruck()
 cSC4FoundationModel,000000010035f09c,not started,cSC4FoundationModel::cSC4FoundationModel()
 cSC4FoundationModel,000000010035f19c,not started,cSC4FoundationModel::~cSC4FoundationModel()
 cSC4FoundationModel,000000010035f22e,not started,cSC4FoundationModel::~cSC4FoundationModel()

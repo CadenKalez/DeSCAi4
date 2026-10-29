@@ -20,6 +20,7 @@
 #include "sc4/Ambulance.h"
 #include "sc4/EmergencyVehicle.h"
 #include "sc4/PatrolCar.h"
+#include "sc4/FireTruck.h"
 #include "sc4/Pedestrian.h"
 #include "sc4/SpecialVehicles.h"
 #include "sc4/Vehicle.h"
@@ -1317,6 +1318,144 @@ void TestPatrolCar() {
     car->Release();
 }
 
+// ---- cSC4FireTruck ------------------------------------------------------------------------------------------------------------
+struct FakeFireHost final : IFireTruckHost {
+    FakeCrew crew, fireFilter, spillFilter;
+    bool stationKnown = true;
+    float competence = 0.75f, radius = 32.0f, maxStream = 10.0f;
+    int fires = 0, nearbyFires = 0, spills = 0, nearbySpills = 0;
+    int created = 0, registered = 0, setups = 0, removed = 0;
+    float crewCompetence = -1.0f;
+    float boxMin[3] = {0, 0, 0}, boxMax[3] = {0, 0, 0};
+    int rect[4] = {0, 0, 0, 0};
+    bool pickHit = true;
+    cS3DVector3 picked{0, 0, 0};
+    int cityW = 8, cityH = 8;
+    bool hasCity = true;
+    cIGZUnknown* NewFireFilter() override { return &fireFilter; }
+    cIGZUnknown* NewSpillFilter() override { return &spillFilter; }
+    bool FireCompetence(cIGZUnknown*, float& value) override { value = competence; return stationKnown; }
+    bool StationRadius(cIGZUnknown*, float& value) override { value = radius; return stationKnown; }
+    int FireCount() override { return fires; }
+    bool OccupantsInBox(const float min[3], const float max[3], cIGZUnknown*, int& count) override {
+        for (int i = 0; i < 3; ++i) { boxMin[i] = min[i]; boxMax[i] = max[i]; }
+        count = nearbyFires;
+        return nearbyFires > 0;
+    }
+    int SpillTotal() override { return spills; }
+    int SpillsInRect(const int r[4]) override { for (int i = 0; i < 4; ++i) rect[i] = r[i]; return nearbySpills; }
+    cIGZUnknown* NewFireCrew(cSC4FireTruck&) override { ++created; return &crew; }
+    void SetFireCrewCompetence(cIGZUnknown*, float value) override { crewCompetence = value; }
+    void RegisterFireCrew(cIGZUnknown*) override { ++registered; }
+    void SetupFireCrew(cIGZUnknown*) override { ++setups; }
+    void RemoveFireCrew(cIGZUnknown*) override { ++removed; }
+    bool PickGroundPoint(float, float, cS3DVector3& out) override { out = picked; return pickHit; }
+    bool CityCells(int& w, int& h) override { w = cityW; h = cityH; return hasCity; }
+    float MaxStreamDistance() override { return maxStream; }
+};
+
+void TestFireTruck() {
+    World world;
+    FakeEmergencyHost emergencyHost;
+    FakeFireHost fire;
+    auto* truck = new cSC4FireTruck(&world.host, &world.automatonHost, nullptr, &emergencyHost, &fire);
+    truck->AddRef();
+    CHECK(truck->GetGZCLSID() == 0xaa222b83 && truck->GetDispatchType() == 1);
+    CHECK(truck->FireFilter() == &fire.fireFilter && truck->SpillFilter() == &fire.spillFilter && fire.fireFilter.refs == 1);
+    CHECK(truck->GetEffectiveRadius() == 16.0f);
+    auto* source = new FakeBaseOccupant();
+    truck->SetDispatchSource(source);
+    source->refs--;
+    CHECK(truck->GetEffectiveRadius() == 32.0f);
+
+    // the counts: a box of the reach around the truck, a square of cells for the spills (radius * 3 / 16 cells)
+    const float where[3] = {100.0f, 5.0f, 200.0f};
+    truck->SetPosition(where);
+    fire.fires = 3; fire.nearbyFires = 2; fire.spills = 4; fire.nearbySpills = 1;
+    int cityFires = 0, nearFires = 0, citySpills = 0, nearSpills = 0;
+    truck->GetFireCount(cityFires, nearFires);
+    CHECK(cityFires == 3 && nearFires == 2);
+    CHECK(fire.boxMin[0] == 68.0f && fire.boxMax[0] == 132.0f && fire.boxMin[2] == 168.0f && fire.boxMax[2] == 232.0f);
+    CHECK(fire.boxMin[1] < -3.0e38f && fire.boxMax[1] > 3.0e38f);
+    truck->GetToxicSpillCount(citySpills, nearSpills);
+    CHECK(citySpills == 4 && nearSpills == 1 && fire.rect[2] - fire.rect[0] == 12 && fire.rect[3] - fire.rect[1] == 12);   // (int)(32 * 3 / 16) = 6
+
+    // the crew: competence from the station (1.0 when unknown), one per truck
+    truck->CreateFireCrew();
+    CHECK(fire.created == 1 && fire.crewCompetence == 0.75f && fire.registered == 1 && fire.setups == 1 && truck->FireCrew() == &fire.crew);
+    truck->CreateFireCrew();
+    CHECK(fire.created == 1);
+    truck->ReleaseFireCrew();
+    CHECK(fire.removed == 1 && truck->FireCrew() == nullptr && fire.crew.refs == 0);
+
+    // dispatch states: a blocked call (1) brings an unconditioned crew, at the call (5) only something to fight does
+    truck->SetDispatchState(1);
+    CHECK(truck->FireCrew() == &fire.crew && fire.crewCompetence == 0.75f);
+    fire.crewCompetence = -1.0f;
+    truck->SetDispatchState(3);
+    CHECK(truck->FireCrew() == nullptr);
+    fire.nearbyFires = 0; fire.nearbySpills = 0;
+    truck->SetDispatchStateRaw(0);
+    truck->SetDispatchState(5);
+    CHECK(truck->FireCrew() == nullptr);                               // nothing near: no crew
+    fire.nearbyFires = 1;
+    truck->SetDispatchStateRaw(0);
+    truck->SetDispatchState(5);
+    CHECK(truck->FireCrew() == &fire.crew);
+
+    // handling the event: a finished call with something burning near goes back to work; none near and nothing anywhere goes home
+    truck->ReleaseFireCrew();
+    truck->SetDispatchStateRaw(2);
+    CHECK(truck->DoHandlingEventTick(1.0f) && truck->GetDispatchState() == 5 && truck->FireCrew() == &fire.crew);
+    fire.nearbyFires = 0;
+    CHECK(truck->DoHandlingEventTick(1.0f) && truck->GetDispatchState() == 2 && truck->FireCrew() == nullptr);   // 5, nothing near: done
+    truck->HandleCrewFinished();
+    CHECK(truck->GetDispatchState() == 2);
+
+    // the keys: the stop key with the truck stopped starts the crew, the fire key with a crew out sends it home
+    truck->SetDispatchStateRaw(3);
+    truck->HandlePlayerDriveCommand(kFireTruckCommandStop, false);
+    CHECK(truck->FireCrew() == &fire.crew && truck->GetDispatchState() == 5);
+    truck->HandlePlayerDriveCommand(kFireTruckCommandFire, true);
+    CHECK(truck->FireCrew() == nullptr && truck->GetDispatchState() == 2);
+    truck->HandlePlayerDriveCommand(0, true);                           // keys 0 and 1 drop a crew; none out here
+
+    // the stream target and its clamps
+    tAutomataStatePlayerDrive drive;
+    drive.history[8] = -1.0f;
+    fire.picked = Vec(500.0f, 7.0f, -3.0f);
+    truck->TranslatePlayerDriveCommands(&drive, 1.0f);
+    CHECK(drive.effectPosition248.x == 0.0f && drive.effectPosition248.y == 0.0f);      // key not held: untouched
+    drive.history[8] = 0.0f;
+    fire.maxStream = 1000.0f;
+    truck->TranslatePlayerDriveCommands(&drive, 1.0f);
+    CHECK(drive.effectPosition248.x == 127.0f && drive.effectPosition248.z == 0.0f && drive.effectPosition248.y == 7.0f);   // clamped to 8 cells * 16 - 1
+    fire.maxStream = 10.0f;
+    fire.cityW = fire.cityH = 32;
+    fire.picked = Vec(100.0f, 5.0f, 230.0f);
+    truck->TranslatePlayerDriveCommands(&drive, 1.0f);
+    CHECK(std::fabs(drive.effectPosition248.z - 210.0f) < 1e-3f && drive.effectPosition248.x == 100.0f);   // 30 away, reach 10
+    CHECK(!truck->GetStreamTargetPoint(*new cS3DVector3()));            // no player-drive state on the truck
+
+    // the stream: version 2, the emergency vehicle's record, the crew (null here)
+    PortMemoryOStream out;
+    CHECK(truck->Write(out));
+    PortMemoryIStream in(out.bytes().data(), out.bytes().size());
+    auto* copy = new cSC4FireTruck(&world.host, &world.automatonHost, nullptr, &emergencyHost, &fire);
+    copy->AddRef();
+    CHECK(copy->Read(in) && copy->FireCrew() == nullptr);
+    const std::uint8_t badVersion[2] = {9, 0};
+    PortMemoryIStream bad(badVersion, sizeof(badVersion));
+    CHECK(!copy->Read(bad));
+    copy->Release();
+
+    truck->CreateFireCrew();
+    truck->ClearStateStack();
+    truck->Shutdown();
+    CHECK(truck->FireCrew() == nullptr && truck->FireFilter() == nullptr && truck->SpillFilter() == nullptr);
+    truck->Release();
+}
+
 // ---- cSC4Pedestrian ----------------------------------------------------------------------------------------------------
 struct FakePedestrianHost final : IPedestrianHost {
     FakeTrafficHost traffic;
@@ -1512,6 +1651,7 @@ int main() {
     TestPlayerDriveTickAndOffRoad();
     TestEmergencyVehicle();
     TestPatrolCar();
+    TestFireTruck();
     TestPedestrian();
     if (failures == 0) {
         std::printf("sc4_vehicle: ok\n");
