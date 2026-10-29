@@ -138,6 +138,25 @@ public:
         return true;
     }
     void ComputeBounds(cS3DBoundingBox& out) override { out = bounds_; }
+    bool GetShadowMeshes(std::vector<s3d::ShadowMeshData>& out) override {
+        out.clear();
+        for (std::size_t i = 0; i < meshes_.size(); ++i) {
+            const SC4MeshVertexGroup* group = meshes_[i].vertices;
+            s3d::ShadowMeshData data;
+            data.textureLayers = materials_[i].layerCount;
+            data.texture = materials_[i].layers[0].texture;
+            const auto* bytes = static_cast<const std::uint8_t*>(group->data);
+            for (std::uint32_t v = 0; v < group->count; ++v) {
+                float f[6];
+                std::memcpy(f, bytes + std::size_t(v) * 24, 12);
+                std::memcpy(f + 4, bytes + std::size_t(v) * 24 + 16, 8);
+                data.points.push_back({f[0], f[1], f[2]});
+                data.uvs.push_back({f[4], f[5]});
+            }
+            out.push_back(std::move(data));
+        }
+        return !out.empty();
+    }
 
     bool Load(const std::uint8_t* data, std::size_t size) {
         s3d::Model model;

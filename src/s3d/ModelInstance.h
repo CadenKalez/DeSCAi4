@@ -13,6 +13,7 @@
 #pragma once
 #include <cstdint>
 #include <cstring>
+#include <vector>
 
 #include "gz/StreamOps.h"
 #include "s3d/MeshAndMaterial.h"
@@ -33,6 +34,15 @@ class cIS3DModelInstance;
 
 // The model resource as the instance uses it: slot 4 creates a model instance from it, slot 7 computes its bounding
 // box. (cSC4ModelMaker::AddModel 0x100314328 calls slot 7 then slot 4 with a zero flag word.)
+// One mesh of a model's first level of detail as the shadow code reads it (port seam: the original walks the model's mesh list through
+// vslots 0x18 / 0x28 / 0x38 of the object resource model's vslot 0x30(0)).
+struct ShadowMeshData {
+    std::vector<cS3DVector3> points;     // the vertex positions
+    std::vector<cS3DVector2> uvs;        // the first texture coordinates
+    std::uint32_t textureLayers = 0;     // the material's layer count (material + 0xb): a mesh without a texture casts no shadow
+    std::uint64_t texture = 0;           // the first layer's texture binding (material + 0x18), opaque to the model maker
+};
+
 class cIS3DResModel : public cIGZUnknown {
 public:
     virtual void Slot3() {}
@@ -40,6 +50,8 @@ public:
     virtual void Slot5() {}
     virtual void Slot6() {}
     virtual void ComputeBounds(cS3DBoundingBox& out) = 0;   // [7]
+    // The shadow code's view of the model: false when the model has no mesh list for level 0.
+    virtual bool GetShadowMeshes(std::vector<ShadowMeshData>& out) { out.clear(); return false; }
 };
 
 class cIS3DModelInstance : public cIGZUnknown {

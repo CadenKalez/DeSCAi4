@@ -206,6 +206,14 @@ public:
 };
 
 // ---- seam: the view, the renderer, the view utilities, the lighting manager, the terrain and the city --------
+// cSTEOverlayManager::AddShadow (vslot 0x58) as the model maker calls it; `texture` is the model material's texture binding.
+class IShadowOverlay {
+public:
+    virtual ~IShadowOverlay() = default;
+    virtual std::uint32_t AddShadow(std::uint64_t texture, int pointCount, const cS3DVector3* points, const cS3DVector2* texCoords,
+                                    const cS3DBoundingBox& box, const cS3DTransform& transform) = 0;   // 0xffffffff when nothing was added
+};
+
 class IModelMakerHost {
 public:
     virtual ~IModelMakerHost() = default;
@@ -275,6 +283,15 @@ public:
     // cSTEOverlayManager::AddShadowDecal @ 0x1007292c6 (vslot 0x50) on the land (0) or water (1) overlay manager.
     virtual std::uint32_t AddShadowDecal(int overlay, const cGZPersistResourceKey& key, float x, float z,
                                          float height, float rotation, bool flip) = 0;
+    // ---- what CreateOccupantShadow (0x100313a00) reaches; the defaults make shadows a no-op until a host provides them ----
+    // SL::spRenderProperties + 0x30 -> +0x398: the shadow quality (props cast shadows from 3, the box passed on changes at 5).
+    virtual int ShadowRenderQuality() { return 0; }
+    // SL::spRenderProperties + 0x48 -> +0x230: a model whose height times the view scale is below this casts no shadow.
+    virtual float ShadowMinimumHeight() { return 0.0f; }
+    // The model maker's +0x28 object's float at +0x15c: the scale of a model's height on the screen.
+    virtual float ShadowViewScale() { return 1.0f; }
+    // The terrain's overlay manager `index` (terrain vslot 0x210 -> vslot 0x90): the land (0) overlay that receives shadows.
+    virtual IShadowOverlay* ShadowOverlay(int index) { (void)index; return nullptr; }
 };
 IModelMakerHost* ModelMakerHost();
 void SetModelMakerHost(IModelMakerHost* host);

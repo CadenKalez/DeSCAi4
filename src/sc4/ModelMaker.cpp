@@ -1407,29 +1407,99 @@ bool cSC4ModelMaker::DoTerrainHidingForCells(const SC4RectT<int>& rect, bool wat
     return changed;
 }
 
+// 0x100313a00. Buildings (unless flagged 0xea3209f9), props (only at shadow quality 3 and up and with property 0x8a5e5db8), flora and
+// the occupants of type 0x2890d4de cast shadows; a "no shadow" property (0x29244db) stops all of them. The model of the occupant at the
+// highest zoom that has one (counting down from the view's) must be at least as tall on screen as the minimum; its textured meshes
+// then become shadow decals on the terrain's land overlay, projected along the light by CalcShadowProjection inside the overlay manager.
 bool cSC4ModelMaker::CreateOccupantShadow(cISC4Occupant* occupant, int zoom, int rotation) {
-    // PARTIAL: 0x100313a00 reads the "no shadow" property (0x29244db), the occupant's model instance id, the
-    // shadow texture through cSC4NetworkManager::MapShadowTexture and adds one shadow decal per land / water
-    // overlay. The shadow overlay managers and the model instance id helper are seams; the instance transform
-    // walk is not recovered.
-    if (!occupant || !g_host) return false;
+    if (!occupant || !g_host || !resourceManager_) return false;
     cISCPropertyHolder* holder = occupant->AsPropertyHolder();
-    bool noShadow = false;
-    if (holder) cSCPropertyHelp::GetPropertyValue(holder, 0x29244db, noShadow);
-    if (noShadow) return false;
-    std::uint32_t instanceA = 0;
-    std::uint32_t instanceB = 0;
-    const std::uint32_t modelId = g_host->GetModelInstanceID(occupant, zoom, rotation, 0, false, &instanceA,
-                                                             &instanceB);
-    if (modelId == 0) return false;
-    std::uint8_t shadowRotation = 0;
-    const std::uint32_t shadowTexture = g_host->MapShadowTexture(modelId, shadowRotation, 0, 0);
-    if (shadowTexture == 0) return false;
-    const cGZPersistResourceKey key{shadowTexture, 0, 0};
-    float position[3] = {};
-    occupant->GetPosition(position);
-    g_host->AddShadowDecal(0, key, position[0], position[2], 16.0f, 0.0f, false);
-    return true;
+    if (holder) {
+        bool noShadow = false;
+        const bool found = cSCPropertyHelp::GetPropertyValue(holder, 0x29244db, noShadow);
+        if (noShadow && found) return false;
+    }
+    std::uint32_t orientation = 0;
+    int state = 0;
+    if (g_utility) g_utility->GetOccupantOrientationAndState(occupant, orientation, state);
+    const int quality = g_host->ShadowRenderQuality();
+    void* raw = nullptr;
+    if (occupant->QueryInterface(kGZIID_cISC4BuildingOccupant, &raw) && raw) {
+        static_cast<cIGZUnknown*>(raw)->Release();
+        bool flagged = false;
+        const bool found = holder && cSCPropertyHelp::GetPropertyValue(holder, 0xea3209f9, flagged);
+        if (flagged && found) return false;
+    } else {
+        raw = nullptr;
+        if (occupant->QueryInterface(0xe9793a65, &raw) && raw) {                     // a prop
+            static_cast<cIGZUnknown*>(raw)->Release();
+            bool castsShadow = false;
+            const bool found = quality >= 3 && holder && cSCPropertyHelp::GetPropertyValue(holder, 0x8a5e5db8, castsShadow);
+            if (!(found && castsShadow)) return false;
+        } else {
+            raw = nullptr;
+            if (occupant->QueryInterface(0xa9c05c85, &raw) && raw) {                  // flora
+                static_cast<cIGZUnknown*>(raw)->Release();
+            } else {
+                if (occupant->GetType() != 0x2890d4de) return false;
+                state = 0;
+            }
+        }
+    }
+    const bool lit = holder && holder->HasProperty(0xe83a081d);
+    if (zoom < 0) return false;
+    const int nextRotation = (rotation + 1) % 4;
+    for (int z = zoom; z >= 0; --z) {
+        cGZPersistResourceKey key{0x5ad0e817, 0xbadb57f1, 0};
+        key.instance = g_host->GetModelInstanceID(occupant, z, nextRotation, state, lit, &key.type, &key.group);
+        if (key.instance == 0) continue;
+        void* resourceRaw = nullptr;
+        int verdict = 4;                                                  // 4: try a lower zoom, 2: cast the shadow, 1: no shadow at all
+        cS3DBoundingBox modelBounds{{1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}};
+        std::vector<s3d::ShadowMeshData> meshes;
+        if (resourceManager_->GetResource(key, 0x9ad0e7e3, &resourceRaw, 0, nullptr) && resourceRaw) {
+            auto* model = static_cast<s3d::cIS3DResModel*>(static_cast<cIGZUnknown*>(resourceRaw));
+            const bool haveMeshes = model->GetShadowMeshes(meshes);
+            if (haveMeshes && !meshes.empty() && (quality > 3 || meshes.size() == 1)) {
+                model->ComputeBounds(modelBounds);
+                verdict = 2 - (((modelBounds.max[1] - modelBounds.min[1]) * g_host->ShadowViewScale() < g_host->ShadowMinimumHeight()) ? 1 : 0);
+            }
+            static_cast<cIGZUnknown*>(resourceRaw)->Release();
+        }
+        if (verdict == 4) continue;
+        if (verdict != 2) return false;
+
+        // the model's transform, turned a quarter (the shadow code's own correction of the model's facing)
+        cS3DTransform transform;
+        float position[3] = {0.0f, 0.0f, 0.0f};
+        occupant->GetPosition(position);
+        FindModelTransform(holder, lit, state, position, nullptr, transform);
+        constexpr float kQuarterCos = 4.371139e-08f;                      // 0x100a18174 (and its negative at 0x100a18a40)
+        float* r = &transform.rotation[0][0];
+        for (int row = 0; row < 3; ++row) {
+            const float a = r[3 * row], c = r[3 * row + 2];
+            r[3 * row + 2] = c * -kQuarterCos - a;
+            r[3 * row] = c - a * kQuarterCos;
+        }
+        transform.flags = static_cast<std::uint8_t>(transform.flags | 4);
+        transform.changeCounter = static_cast<std::uint8_t>(transform.changeCounter + 1);
+        cS3DBoundingBox worldModelBounds = modelBounds;
+        SC4ViewUtilities::TransformBoundingBox(transform, worldModelBounds);
+
+        IShadowOverlay* overlay = g_host->ShadowOverlay(0);
+        cS3DBoundingBox occupantBounds{{1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}};
+        for (const s3d::ShadowMeshData& mesh : meshes) {
+            if (mesh.textureLayers == 0 || mesh.points.size() < 3) continue;
+            if (!overlay) continue;
+            occupant->GetBoundingBox(occupantBounds.min, occupantBounds.max);
+            const std::uint32_t id = overlay->AddShadow(mesh.texture, static_cast<int>(mesh.points.size()), mesh.points.data(), mesh.uvs.data(),
+                                                        quality >= 5 ? worldModelBounds : occupantBounds, transform);
+            if (id != 0xffffffffu)
+                if (cISC43DPlaceableObject* placeable = Placeable(occupant)) placeable->AddOverlay(id);
+        }
+        return true;
+    }
+    return false;
 }
 
 void cSC4ModelMaker::LoadOccupantModelsForZoomAndRotation(cISC4Occupant* occupant, int zoom, int rotation) {

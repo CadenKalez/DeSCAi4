@@ -253,6 +253,11 @@ struct FakeResModel final : s3d::cIS3DResModel {
     cS3DBoundingBox bounds;
     int refCount = 1;
     int created = 0;
+    std::vector<s3d::ShadowMeshData> shadowMeshes;
+    bool GetShadowMeshes(std::vector<s3d::ShadowMeshData>& out) override {
+        out = shadowMeshes;
+        return !out.empty();
+    }
     bool QueryInterface(std::uint32_t iid, void** out) override {
         if (iid != 1) return false;
         *out = this;
@@ -601,6 +606,22 @@ struct FakeHost final : sc4::IModelMakerHost {
     int rendererAdds = 0;
     int rendererUpdates = 0;
     int shadowDecals = 0;
+    int shadowQuality = 5;
+    float shadowMinimum = 0.0f;
+    struct FakeOverlay final : sc4::IShadowOverlay {
+        int adds = 0;
+        std::uint64_t lastTexture = 0;
+        int lastCount = 0;
+        cS3DBoundingBox lastBox;
+        std::uint32_t AddShadow(std::uint64_t texture, int count, const cS3DVector3*, const cS3DVector2*, const cS3DBoundingBox& box,
+                                const cS3DTransform&) override {
+            ++adds; lastTexture = texture; lastCount = count; lastBox = box;
+            return 7;
+        }
+    } overlay;
+    int ShadowRenderQuality() override { return shadowQuality; }
+    float ShadowMinimumHeight() override { return shadowMinimum; }
+    sc4::IShadowOverlay* ShadowOverlay(int) override { return &overlay; }
     std::vector<s3d::cIS3DModelInstance*> rendererModels;
     std::vector<std::pair<s3d::cIS3DModelInstance*, int>> layerAdds;
 
@@ -1411,6 +1432,48 @@ int main() {
         // stream that answers nothing still reports success (quirk kept)
         CHECK(maker->Read(in));
         maker->Release();
+        sc4::SetModelMakerHost(nullptr);
+    }
+
+    // ---- 12b. CreateOccupantShadow: the textured meshes of the model become decals on the land overlay ----------
+    {
+        FakeHost host;
+        FakeResourceManager resources;
+        FakeResModel* resource = new FakeResModel();
+        resource->bounds.max[0] = 16; resource->bounds.max[1] = 8; resource->bounds.max[2] = 16;
+        s3d::ShadowMeshData textured;
+        textured.points = {{0, 0, 0}, {1, 0, 0}, {0, 0, 1}};
+        textured.uvs = {{0, 0}, {1, 0}, {0, 1}};
+        textured.textureLayers = 1;
+        textured.texture = 0x1234;
+        resource->shadowMeshes = {textured};
+        resources.resource = resource;
+        host.resources = &resources;
+        FakeUtility utility;
+        sc4::SetModelMakerHost(&host);
+        sc4::SetModelMakerUtility(&utility);
+        SL::spRM = &resources;
+        auto* maker = new sc4::cSC4ModelMaker();
+        maker->Init();
+        auto* placeable = new FakePlaceable();
+        auto* occupant = new FakeOccupant();
+        occupant->type = 0x2890d4de;
+        occupant->placeable = placeable;
+        CHECK(maker->CreateOccupantShadow(occupant, 2, 1));
+        CHECK(host.overlay.adds == 1 && host.overlay.lastTexture == 0x1234 && host.overlay.lastCount == 3);
+        CHECK(resources.lastKey.type == 0x11111111 && resources.lastKey.group == 0x22222222 && resources.lastKey.instance == 0x33333333);
+        CHECK(host.overlay.lastBox.max[1] > 7.0f);   // quality 5 passes the model's own box
+        // too small on screen: no shadow, no decal
+        host.shadowMinimum = 100.0f;
+        CHECK(!maker->CreateOccupantShadow(occupant, 2, 1) && host.overlay.adds == 1);
+        // an occupant that is neither a building, prop, flora nor the shadow type casts none
+        host.shadowMinimum = 0.0f;
+        occupant->type = 5;
+        CHECK(!maker->CreateOccupantShadow(occupant, 2, 1) && host.overlay.adds == 1);
+        maker->Release();
+        occupant->Release();
+        placeable->Release();
+        delete resource;
         sc4::SetModelMakerHost(nullptr);
     }
 
