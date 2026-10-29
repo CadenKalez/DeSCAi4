@@ -180,3 +180,11 @@ Survey of the shipped render path (headless city scenario + `SC4_DEBUG` driver c
 Done: `cSC4LightingManager::CalcShadowProjection` was a stub that refused every projection; it is now recovered and **bit-identical to the retail machine code** (`scripts/run_machine_oracle.sh lightingmanager`, 4000 random models, every transform flag combination; the harness runs the retail AlignDirToZWithYUp and operator*= unhooked). The oracle also found that the port's `nS3D::MultiplyTransform` added its terms left-nested; the machine code adds `c + (b + a)`; fixed (that function has other users, the suite still passes).
 
 Next for shadows (the chain): `cSC4ModelMaker::CreateOccupantShadow` (0x100313a00, ~250 lines, SIMD-heavy: verify with the oracle) -> the model maker host's `AddShadowDecal` / `MapShadowTexture` stubs in `src/app/NativeModelMaker.cpp` (they return 0) -> `cSTEOverlayManager::AddShadowDecal` (recovered, needs the overlay manager wired in the terrain view: `GetOverlayManager` is skipped in `cSTETerrainView3D`). Then the background picture (`cSC4View3DWin::AddBackgroundImageToRenderer` 0x100787334 + `cSC4ModelBackgroundLoader` 25), then `cSTEWaterRipple`.
+
+## Addendum 6: occupant shadows (commit 420e274)
+- `cSC4ModelMaker::CreateOccupantShadow` (0x100313a00) now follows the disassembly (was an invented stub). New seams: `s3d::cIS3DResModel::GetShadowMeshes`
+  (implemented in NativeModelMaker's ResModel), `IModelMakerHost::ShadowRenderQuality/ShadowMinimumHeight/ShadowViewScale/ShadowOverlay`
+  (defaults make it a no-op) and `sc4::IShadowOverlay`.
+- Still to do for shadows to be visible: implement `IShadowOverlay` over the native cSTEOverlayManager (AddShadow vslot 0x58 needs IOverlayTexture/
+  IOverlayHost/IOverlayDrawContext wired in the terrain view) and return it, plus quality/min-height/view-scale, from the native ModelMakerHost.
+- Rounding order of the 90-degree row fix-up is not oracle-checked (row is recovered-partial).
