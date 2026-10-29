@@ -81,3 +81,42 @@ edited at the time. `pending/README.md` lists the four steps to switch it on. `A
 - **Verify against the binary, not against the existing code.** Three `cSTETerrain` functions were marked recovered and
   were wrong (with tests that agreed with the bugs), and 7 automaton rows claimed bodies that did not exist anywhere in
   `src/`. A test written from the same misreading as the code proves nothing.
+
+
+## Addendum 2026-10-29 (WIRE_THE_GAME.md campaign, first stretch)
+
+**Milestone reached: M2 partly.** `SC4_LOADCITY=<file> build/sc4_game` now reads every class object of a retail-style developed city
+(`Regions/Berlin/City - Konradshohe.sc4`, 1.5 MB) and of the "New City" saves; before, both failed in the traffic simulator, the occupant
+manager, the traffic network map and the vehicle manager. First failing step of the scenario: the city loads, then **4 classes are still
+missing** (`cSTESurfaceWater` 0x0b8da7db, `cSC4MySimAgentSimulator` 0x29e37dec: creators return null; `cSC4EffectsManager` and
+`cSC4DisasterLayer`: "no cIGZSerializable"). The game loop in `src/experimental_host/pending/` is still not linked.
+
+**Phase 0 done:** `src/platform/Unwired.h` (`SC4_UNWIRED("what")`, header-only, logs once to stderr, writes `work/unwired.log` or
+`$SC4_UNWIRED_LOG` at exit), `scripts/unwired_report.py` ranks the log, every null `GZCOM_Create*` fallback and the new emergency-vehicle
+creators call it. Not done: the `--script scenarios/first_city.txt` mode, `--threads=1`, Phase 1 audit (`audit_bodies.py`).
+
+**Root causes found:** `cSC4TrafficSimulator::Read` accepted only versions >= 0x1d and had the fourth 16-bit key set modelled as "one extra
+u32"; both fixed from the decompile (versions 0x13..0x1c: old float density rows, legacy rule list, sections gated at 0x15/0x16/0x1b/0x1e).
+Cities saved by this Mac build carry version 0x13. The real cause of the other three failures was class 0x4a222b98 (patrol car) missing from
+the creators.
+
+**Recovered this stretch:** `cSC4PatrolCar` (33 rows), `cSC4FireTruck` (37 rows), both behind new seams (`IPatrolCarHost`,
+`IFireTruckHost`); creators for patrol car / fire truck / ambulance in `src/tools/city_probe_creators8.cpp` (registered in
+`NativeCity.cpp`). They are created without hosts: sirens, routes, crews, the police/fire/crime simulators do nothing yet (logged as
+`UNWIRED: IPatrolCarHost ...`).
+
+**Not done on the path (listed):**
+- unwired seams: `IEmergencyVehicleHost`, `IPatrolCarHost`, `IFireTruckHost`, the riot-police / fire-crew automata (`cSC4RiotPolice` 18
+  functions, `cSC4SimFireCrew` 26, both unrecovered), plus everything in `docs/SEAMS.md` without a native adapter.
+- `cSTESurfaceWater` (35 functions; read/write/init layout decoded in the session notes below), `cSC4MySimAgentSimulator` (28),
+  `cSC4EffectsManager`/`cSC4DisasterLayer` (QueryInterface for `cIGZSerializable` missing).
+- other agents' uncommitted work (do not commit for them): `NativeAutomata*.{cpp,h}`, `NativeAutomataManagers.*`, `NativeTrafficHosts.cpp`,
+  `AutomataManager.*`, `city_probe_creators5/7.cpp`; `scripts/native_game_link_list.txt` has their two lines uncommitted (my line for
+  `city_probe_creators8.cpp` is committed through `git update-index`).
+
+**Decoded for the next agent (cSTESurfaceWater, class id 0x0b8da7db, iid 0xab8da759/0x452294aa, 0xa8 bytes):** `+0x18` initialised flag,
+`+0x1c` refcount, `+0x20` counted cSTETerrain, `+0x28` vector of tWaterInfo (0x24 bytes: depth float, 3 floats, cS3DVector3 at +0x10,
+float at +0x1c), `+0x58` std::list<int>, `+0x70/0x74` flags, `+0x78` cRZCellMap<bool>, `+0x80` vector<float>, `+0x98` cSC4SimGrid<u16>
+(class 0x49b9e604, 0x4be3618b). Write: u16 version 1, terrain serializable, then `SaveWaterInfo` (autosave stream 0x8a91e7ef/0xe98f9525,
+version 4: vertex count, then per vertex 4 floats, a cS3DVector3, 1 float). Read accepts version < 2. Messages registered:
+0x26d31ec1/4/5, 0x89d3e9f3, 0x99ef1142/3. `IsNavigable` is a spiral search over city cells using six services.
