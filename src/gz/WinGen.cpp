@@ -470,8 +470,8 @@ bool cGZWinGen::DoMessage(cGZMessage& message) {   // 0x10024f01c
         if (proc_) {
             AddRef();
             if (!proc_->DoWinProcMessage(this, message) && proc_) proc_->DoWinMsg(this, message.type, message.param1, message.param2, message.param3);
+            Release();   // only the reference taken above: without a proc the original skips both (0x10024f05b -> 0x10024f115)
         }
-        Release();
         return cGZWin::DoMessage(message);
     }
     if (proc_) {

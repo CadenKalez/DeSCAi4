@@ -680,10 +680,13 @@ void RunInputScript(const std::string& all) {
 // A synthetic double click (the SC4_CLICK variable and the scenario `click` command).
 void DoubleClick(int cx, int cy) {
     gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, cx, cy, 0);
+    // One frame between the two clicks (the first one selects, the second opens): the second must land inside the double-click time,
+    // which ten frames of a slow (ASan) build exceeded once the timers ran.
     for (int k = 0; k < 2; ++k) {
         gMgr->GZWinMsgPost_Mouse(kGZMsgMouseDownL, cx, cy, 0);
         gMgr->GZWinMsgPost_Mouse(kGZMsgMouseUpL, cx, cy, 0);
-        for (int i = 0; i < 10; ++i) { Frame(); [NSThread sleepForTimeInterval:0.004]; }
+        const int frames = k == 0 ? 1 : 10;
+        for (int i = 0; i < frames; ++i) { Frame(); [NSThread sleepForTimeInterval:0.004]; }
     }
 }
 
@@ -691,7 +694,8 @@ void DoubleClick(int cx, int cy) {
 bool OnRegionScreen() { return gAppWindow && gAppWindow->CurrentScreen() && gAppWindow->CurrentScreen()->GetID() == 0xea659793; }
 
 // A scenario (scenarios/*.txt): one command per line, `#` starts a comment. The run is repeatable and needs no window.
-//   frames N              run N frames           wait-region [N]   run until the region screen shows (at most N frames, default 3000)
+//   frames N              run N frames           wait MS  run frames for MS ms of real time      move X Y  the cursor
+//                                                wait-region [N]   run until the region screen shows (at most N frames, default 3000)
 //   wait-city [N]         run until a city view exists                  click X Y        a synthetic double click
 //   input TOKENS          the SC4_INPUT tokens (left:20,zin:30,zone1,...)  shot PATH      write the frame as a PNG
 //   expect-region / expect-city   fail the run (exit 5) unless that screen is up       quit    stop here
@@ -712,6 +716,14 @@ int RunScenario(const std::string& path) {
         if (command == "frames") {
             int n = 0; words >> n;
             for (int i = 0; i < n; ++i) { Frame(); [NSThread sleepForTimeInterval:0.004]; }
+        } else if (command == "move") {   // the cursor: a scenario starts with it at (0, 0), where the region screen edge-scrolls
+            int x = 0, y = 0; words >> x >> y;
+            gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, x, y, 0);
+            Frame();
+        } else if (command == "wait") {   // run frames until MS milliseconds of real time passed (the game's eases and timers run on time)
+            int ms = 0; words >> ms;
+            const double end = [[NSDate date] timeIntervalSince1970] + ms / 1000.0;
+            while ([[NSDate date] timeIntervalSince1970] < end) { Frame(); [NSThread sleepForTimeInterval:0.004]; }
         } else if (command == "wait-region" || command == "wait-city") {
             int limit = 3000; words >> limit;
             const bool region = command == "wait-region";
