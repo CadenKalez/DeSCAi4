@@ -1,3 +1,4 @@
+#include <cstdio>
 #include "sc4/Simulator.h"
 
 #include <chrono>
@@ -261,7 +262,7 @@ bool cSC4Simulator::DoMessage(cIGZMessage2* message) {
         DoCheatCode(static_cast<std::uint32_t>(standard->GetData1()), static_cast<const cIGZString*>(standard->GetVoid2()));
     } else if (type == 0x26d31ec1) {
         if (messages_) messages_->RemoveNotification(this, 0x26d31ec1);
-        Resume();
+        HiddenResume();                                                   // vslot 0x68: releases the hidden pause Init took
     }
     return true;
 }

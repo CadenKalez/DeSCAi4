@@ -14,6 +14,9 @@
 #include "sc4/Exemplar.h"
 #include "sc4/ServiceLocator.h"
 #include "sc4/Simulator.h"
+#include "rz/cRZString.h"
+#include "sc4/cSC4City.h"
+#include "app/NativeCity.h"
 
 namespace native {
 namespace {
@@ -63,6 +66,31 @@ private:
 }  // namespace
 
 void InstallSimulatorStub() { static NativeSimulatorHost s; sc4::SetSimulatorHost(&s); }
+
+namespace {
+// The city's simulator component through its cISC4Simulator interface (iid 0x8695664e).
+cSC4Simulator* CitySimulator() {
+    cSC4City* city = HostCity();
+    cIGZUnknown* component = city ? city->GetComponent(CityComponent::Simulator) : nullptr;
+    void* iface = nullptr;
+    if (!component || !component->QueryInterface(0x8695664e, &iface) || !iface) return nullptr;
+    auto* simulator = static_cast<cSC4Simulator*>(static_cast<cISC4Simulator*>(iface));
+    simulator->Release();   // the city keeps it alive
+    return simulator;
+}
+}  // namespace
+
+bool AddCitySimulatorAgent(cIGZMessageTarget2* agent, int interval, const char* name, std::uint32_t flags) {
+    cSC4Simulator* simulator = CitySimulator();
+    if (!simulator || !agent) return false;
+    return simulator->AddAgent(agent, interval, cRZString(name ? name : ""), flags);
+}
+
+bool CitySimulatorPresent() { return CitySimulator() != nullptr; }
+
+void RemoveCitySimulatorAgent(cIGZMessageTarget2* agent) {
+    if (cSC4Simulator* simulator = CitySimulator()) simulator->RemoveAgent(agent);
+}
 
 // One framework tick for the services the simulator host registered (cGZFramework::OnTick over its tick list).
 void TickSimulatorServices(std::uint32_t tickNumber) {

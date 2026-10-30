@@ -4,6 +4,7 @@
 
 #include "rz/PortMemoryStreams.h"
 #include "rz/cRZString.h"
+#include "rz/cRZMessage2Standard.h"
 #include "sc4/Simulator.h"
 
 namespace SL { cIGZMessageServer2* spMS2 = nullptr; }
@@ -48,6 +49,14 @@ int main() {
     CHECK(host.services == 1 && host.cheats == 1 && host.commands == 1);
     CHECK(sim.GetSimSpeed() == 0);                    // speed 3 means "pick the slowest"
     CHECK(sim.IsHiddenPaused());
+    {   // the city-started message (0x26d31ec1) releases Init's hidden pause (vslot 0x68), not the player's pause
+        cRZMessage2Standard started;
+        started.SetType(0x26d31ec1);
+        sim.DoMessage(&started);
+    }
+    CHECK(!sim.IsHiddenPaused());
+    CHECK(!sim.IsPaused());
+    sim.HiddenPause();
     sim.HiddenResume();
     CHECK(!sim.IsHiddenPaused());
 
