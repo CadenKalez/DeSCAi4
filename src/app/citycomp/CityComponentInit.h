@@ -1,6 +1,8 @@
 // One component's Init / Shutdown by its recovered class (NativeCityComponents.cpp dispatches over the list below).
 #pragma once
 
+#include "tools/city_probe_plain.h"
+
 class cIGZUnknown;
 
 namespace native {
@@ -9,6 +11,13 @@ namespace native {
 // has a no-argument Init) or Shutdown and answers true; false when it is not that class or the class has no Init.
 template <class T> bool TryCityComponentInit(cIGZUnknown* object, bool init) {
     T* concrete = dynamic_cast<T*>(object);
+    // A "plain" class (no COM base) is held by the city in its serializable adapter: its object is the plain view.
+    if (!concrete) {
+        if (auto* adapter = dynamic_cast<sc4::PlainSerializableAdapter<T>*>(object)) {
+            void* raw = nullptr;
+            if (adapter->QueryInterface(sc4::kGZIID_PlainObject, &raw)) concrete = static_cast<T*>(raw);
+        }
+    }
     if (!concrete) return false;
     if (init) {
         if constexpr (requires { concrete->Init(); }) (void)concrete->Init();
