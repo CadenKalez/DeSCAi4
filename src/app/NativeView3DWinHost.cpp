@@ -28,6 +28,7 @@
 #include "app/NativeZoneTool.h"
 #include "app/NativeCatalogUi.h"
 #include "gz/Buffer.h"
+#include "gz/WinBtn.h"
 #include "sc4/SC4UI.h"
 #include "sc4/ViewInputControlQuery.h"
 #include "sc4/ViewInputControlPlaceLot.h"
@@ -163,7 +164,13 @@ struct StubView3DWin final : IView3DWinHost {
         return ok;
     }
     cIGZBuffer* LoadImageBuffer(std::uint32_t, std::uint32_t group, std::uint32_t instance) override { return native::LoadBitmapResource(group, instance); }
-    cIGZWin* CreateToolbarButton() override { return {}; }
+    // GZCOM()->CreateInstance(0x22ecfc47, cIGZWin): the button that brings the hidden UI back (AddGUI skins it, gives it id 0x43 and
+    // hides it until MinimizeUI). It was null natively, so a hidden UI could not be shown again.
+    cIGZWin* CreateToolbarButton() override {
+        auto* button = new gz::cGZWinBtn(ActiveWinMgr());
+        button->AddRef();
+        return static_cast<cIGZWin*>(static_cast<cGZWin*>(button));
+    }
     cIGZWin* CreateCompassWindow() override { return {}; }
     void LocalisedString(std::uint32_t group, std::uint32_t instance, cRZString& out) override {}
     // new cSC4PanelUIWinProc (AddGUI @ 0x1007892fc): the options bar's save / region / quit / snapshot buttons become view commands
