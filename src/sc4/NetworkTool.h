@@ -294,13 +294,22 @@ struct cSC4NetworkCellInfo {
     tVertexHeightRange range70[4] = {};      // +0x70 the range the constraints allow this corner
     tVertexHeightRange preferred90[4] = {};  // +0x90 the preferred range
     std::int32_t vertexBaseHeights[4] = {};  // +0xb0 + i*4, the vertex ids the terrain query takes
-    std::int32_t solvedCellIndex = 0;        // +0xc0 index into solvedCellList_ (piece id / smoothing seed)
+    std::int32_t solvedCellIndex = -1;       // +0xc0 index into solvedCellList_ (piece id / smoothing seed); the ctor
+                                             // 0x10079d6ac sets -1, the occupant, the neighbourhoods and +0x58 to 0
+
+    // @ 0x10079d6e2: the all-types neighbourhood (+0x54) is the union of the per-type ones.
+    void RecomputeEdgesFromAllTypes() {
+        std::uint32_t all = 0;
+        for (std::uint32_t compact : tileNeighborhoods) all |= compact;
+        compact54 = all;
+    }
 };
 static_assert(offsetof(cSC4NetworkCellInfo, occupant) == 0x10, "cell info offsets");
 static_assert(offsetof(cSC4NetworkCellInfo, tileNeighborhoods) == 0x20, "cell info offsets");
 static_assert(offsetof(cSC4NetworkCellInfo, vertexHeights) == 0x60, "cell info offsets");
 static_assert(offsetof(cSC4NetworkCellInfo, vertexBaseHeights) == 0xb0, "cell info offsets");
 static_assert(offsetof(cSC4NetworkCellInfo, solvedCellIndex) == 0xc0, "cell info offsets");
+static_assert(sizeof(cSC4NetworkCellInfo) == 0xc8, "cell info size (GetAllCells copies 200 bytes)");
 
 class INetworkPreview;
 class INetworkWorldCache;
