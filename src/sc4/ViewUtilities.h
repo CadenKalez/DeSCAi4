@@ -181,6 +181,7 @@ public:
     // The original writes +0x28 / +0x2c directly (cSC43DRender::Init stores 0x45800000 = 4096 there).
     void SetCitySize(float citySizeX, float citySizeZ) { citySizeX_ = citySizeX; citySizeZ_ = citySizeZ; }
     int Zoom() const { return zoom_; }
+    const cS3DVector3& EyePosition() const { return eye_; }   // +0x44
     int Rotation() const { return rotation_; }
     float RotationAngle() const { return rotationAngle_; }                              // +0x24
     bool DrawFrustumReduced() const { return drawReduced_; }

@@ -212,3 +212,32 @@ Dev switches in NativeShadowOverlay.cpp: `SC4_SHADOWDBG=1` (untextured red recta
 Not done / open: shadow RGB and blend follow the port's choice, not the original's combiner (see CENSUS); no shadows over water (the
 water-pass manager is not created); a crash in the automata tick (`cSC4AutomataControllerManager::DoMessage` null controller, reached by
 zooming in three times in a scenario) lives in another agent's uncommitted NativeAutomataManagers.cpp and was left alone.
+
+## Addendum 8: the city simulation starts (2026-10-29/30)
+Root causes found on the simulation path, all fixed:
+- **No city component was ever initialised.** The original `cSC4City::Init` calls slot 0x18 (Init) / 0x20 (Shutdown) of every stored
+  component directly; the port asked for `cIGZInitShutdown`, which no component answers. `ICityHost::InitComponent / ShutdownComponent`
+  now carry the call; the native host dispatches by class with `dynamic_cast` (`src/app/NativeCityComponents.cpp`, one TU per class in
+  `src/app/citycomp/`). ~30 components now initialise (simulator, history, surface water, script system, controller manager, budget,
+  zone/lot/network managers, developers, most simulators). Left out: `kProbeHosted` (LandValueSimulator, TrafficNetwork: their hosts
+  are still city-probe bindings, Init crashed) and `kInitByCityView` (Terrain, OccupantManager: initialised by the city view after its
+  render stack; from the component pass the terrain drew black). Dev switches `SC4_COMPINIT_SKIP=a,b`, `SC4_COMPINIT_PROBES=1`.
+- **The simulator never ticked**: its host was a generated stub (no message server, `RegisterService` dropped). `NativeSimulatorHost.cpp`
+  is real; `TickSimulatorServices` runs from the frame loop.
+- **City messages were dropped and would have dangled**: `PostMessage/SendMessage` of the native city host were empty, and
+  `cSC4City` posted stack messages (the original heap-allocates them; fixed in cSC4City.cpp).
+- **Every RZ timer was frozen**: `PumpTimers` stored wall-clock milliseconds (~1.7e12) into the 32-bit stub `g_ticks`; arm64 saturates the
+  conversion to 0xffffffff. Now milliseconds since start-up, seeded in `main`. Consequence: the region map now needs a real double-click
+  to open a city (the frozen clock made every click a double-click); `scenarios/first_city.txt` clicks twice.
+- **cSC4AnimationTickManager (SL::ATM) recovered** (28 functions + creator; `src/sc4/AnimationTickManager.*`, test
+  `sc4_animationtickmanager`). It is the region screen's "frame service" (EndFrame = DoAnimationTick); in a city the native frame loop
+  ticks it (ATM-1). `NativeAnimationTicks.cpp` also offers it as a message server for the seams that model ATM that way (ATM-2).
+- **Controller manager host** is native (`NativeControllerManagerHost.cpp`): city clock, script system, ATM ticks, view position; no
+  controller creators yet (CTRL-1).
+- `cSTESurfaceWater::Init` resets water to sea level after the read, as the binary does: valleys below sea level now fill.
+Open, in order (todo.csv): SIM-HOST-1/2/3 (22 simulator hosts are still city-probe bindings, `src/tools/city_probe_bindings.cpp`),
+SIM-INIT-1 (Init/Shutdown of power, residential, traffic, police, fire, pollution, flora, plumbing, lot developer, crime not recovered),
+SIM-INIT-2, ATM-1/2, CTRL-1. UI partials surveyed: 422 recovered-partial rows in 38 UI classes; the big ones are cGZGraphicSystem (201,
+driver side replaced by Metal), cSC4ViewInputControlQuery (36), cGZDrawContext (28), cGZWinCOMDirector (20), cSC4View3DWin (14,
+including HandleButtonActivated's ~120-button switch only partly written).
+Not touched: the other agent's NativeAutomata*/NativeTrafficHosts/AutomataManager work (uncommitted, still in the tree).

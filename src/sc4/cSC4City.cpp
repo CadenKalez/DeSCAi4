@@ -214,24 +214,28 @@ void cSC4City::SetCityName(const cIGZString& name) {
     if (originalCityName_.Strlen() == 0) originalCityName_.AssignFromChars(cityName_.Data(), cityName_.Strlen());
     cityName_.AssignFromIGZString(name);
     SC4LimitStringLength(cityName_, 0x80);
-    cRZMessage2Standard message;
-    message.AddRef();
-    message.SetType(kCityNameChangedMessage);
-    message.SetVoid1(this);
-    message.SetIGZUnknown(static_cast<cIGZSerializable*>(this));
-    host_->PostMessage(&message);
+    // heap-allocated like the original (operator new + AddRef, released after the call): the queue keeps posted messages
+    auto* message = new cRZMessage2Standard;
+    message->AddRef();
+    message->SetType(kCityNameChangedMessage);
+    message->SetVoid1(this);
+    message->SetIGZUnknown(static_cast<cIGZSerializable*>(this));
+    host_->PostMessage(message);
+    message->Release();
 }
 
 void cSC4City::SetMayorName(const cIGZString& name) {
     if (originalMayorName_.Strlen() == 0) originalMayorName_.AssignFromChars(mayorName_.Data(), mayorName_.Strlen());
     mayorName_.AssignFromIGZString(name);
     if (mayorName_.Strlen() > 0x80) mayorName_.Resize(0x80);
-    cRZMessage2Standard message;
-    message.AddRef();
-    message.SetType(kMayorNameChangedMessage);
-    message.SetVoid1(this);
-    message.SetIGZUnknown(static_cast<cIGZSerializable*>(this));
-    host_->PostMessage(&message);
+    // heap-allocated like the original (operator new + AddRef, released after the call): the queue keeps posted messages
+    auto* message = new cRZMessage2Standard;
+    message->AddRef();
+    message->SetType(kMayorNameChangedMessage);
+    message->SetVoid1(this);
+    message->SetIGZUnknown(static_cast<cIGZSerializable*>(this));
+    host_->PostMessage(message);
+    message->Release();
 }
 
 void cSC4City::SetCityDescription(const cIGZString& description) {
@@ -244,12 +248,14 @@ void cSC4City::SetCityDescription(const cIGZString& description) {
 void cSC4City::SetEstablished(bool established) {
     if (established_ == established) return;
     established_ = established;
-    cRZMessage2Standard message;
-    message.AddRef();
-    message.SetType(0x26d31ec5u - (established ? 1u : 0u));
-    message.SetVoid1(this);
-    message.SetIGZUnknown(static_cast<cIGZSerializable*>(this));
-    host_->SendMessage(&message);
+    // heap-allocated like the original (operator new + AddRef, released after the call): the queue keeps posted messages
+    auto* message = new cRZMessage2Standard;
+    message->AddRef();
+    message->SetType(0x26d31ec5u - (established ? 1u : 0u));
+    message->SetVoid1(this);
+    message->SetIGZUnknown(static_cast<cIGZSerializable*>(this));
+    host_->SendMessage(message);
+    message->Release();
     host_->OnEstablishedChanged(established);
 }
 
@@ -314,6 +320,24 @@ void cSC4City::CreateCityComponents() {
     }
 }
 
+void ICityHost::InitComponent(CityComponent, cIGZUnknown* object) {
+    void* raw = nullptr;
+    if (object && object->QueryInterface(kGZIID_cIGZInitShutdown, &raw)) {
+        auto* initShutdown = static_cast<cIGZInitShutdown*>(raw);
+        initShutdown->Init();
+        initShutdown->Release();
+    }
+}
+
+void ICityHost::ShutdownComponent(CityComponent, cIGZUnknown* object) {
+    void* raw = nullptr;
+    if (object && object->QueryInterface(kGZIID_cIGZInitShutdown, &raw)) {
+        auto* initShutdown = static_cast<cIGZInitShutdown*>(raw);
+        initShutdown->Shutdown();
+        initShutdown->Release();
+    }
+}
+
 bool cSC4City::Init() {
     if (initialized_) return true;
     host_->RegisterCityCommands();
@@ -321,14 +345,7 @@ bool cSC4City::Init() {
     host_->OnCityInitialized();
     bool birthDateSet = false;
     for (CityComponent id : kInitOrder) {
-        if (cIGZUnknown* component = GetComponent(id)) {
-            void* raw = nullptr;
-            if (component->QueryInterface(kGZIID_cIGZInitShutdown, &raw)) {
-                auto* initShutdown = static_cast<cIGZInitShutdown*>(raw);
-                initShutdown->Init();
-                initShutdown->Release();
-            }
-        }
+        if (cIGZUnknown* component = GetComponent(id)) host_->InitComponent(id, component);   // slot 0x18 of the component
         if (!birthDateSet && id == CityComponent::HistoryWarehouse) {
             birthDate_ = host_->GetSimulatorDate();      // read once the simulator and history are up
             birthDateSet = true;
@@ -346,12 +363,7 @@ bool cSC4City::Shutdown() {
     for (CityComponent id : kShutdownOrder) {
         auto& slot = components_[static_cast<std::size_t>(id)];
         if (!slot) continue;
-        void* raw = nullptr;
-        if (slot->QueryInterface(kGZIID_cIGZInitShutdown, &raw)) {
-            auto* initShutdown = static_cast<cIGZInitShutdown*>(raw);
-            initShutdown->Shutdown();
-            initShutdown->Release();
-        }
+        host_->ShutdownComponent(id, slot.get());   // slot 0x20 of the component
         slot = nullptr;
     }
     host_->UnregisterCityCommands();

@@ -42,8 +42,11 @@ struct CityHost final : sc4::ICityHost {
     // A component the city file did not carry: the class's GZCOM creator, asked for the interface the city keeps it as
     // (cSC4City::CreateCityComponents -> GZCOM()->CreateInstance(classId, iid)).
     cIGZUnknown* CreateComponent(std::uint32_t classId, std::uint32_t iid) override;
-    void PostMessage(cIGZMessage2*) override {}
-    void SendMessage(cIGZMessage2*) override {}
+    void PostMessage(cIGZMessage2* message) override { if (SL::spMS2) SL::spMS2->MessagePost(message, false); }   // SL::spMS2 slot 0x20
+    void SendMessage(cIGZMessage2* message) override { if (SL::spMS2) SL::spMS2->MessageSend(message); }          // slot 0x18
+    // slot 0x18 / 0x20 of each component (NativeCityComponents.cpp)
+    void InitComponent(sc4::CityComponent component, cIGZUnknown* object) override { RunCityComponentLifecycle(component, object, true); }
+    void ShutdownComponent(sc4::CityComponent component, cIGZUnknown* object) override { RunCityComponentLifecycle(component, object, false); }
     // cSC4City::Init has created and initialised the components: the locator's OnCityCreate / OnCityInit.
     void OnCityInitialized() override { BindCityServices(g_hostCity); ReportCityWiring(); }
 };
@@ -167,5 +170,8 @@ bool LoadCityFile(cSC4App& app, const std::string& path) {
     std::printf("city: %s %s (%zu classes missing)\n", path.c_str(), loaded ? "loaded" : "FAILED", factory.missing.size());
     return loaded;
 }
+
+// The city being loaded or played (the one cSC4City::Init runs on, before the application publishes it).
+sc4::cSC4City* HostCity() { return dynamic_cast<sc4::cSC4City*>(g_hostCity); }
 
 }  // namespace native

@@ -1,4 +1,5 @@
 #include "app/NativeRegionScreen.h"
+#include "app/NativeAnimationTicks.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -76,11 +77,12 @@ public:
     void Shutdown() override {}
     void GetScreenOffsets(float& x, float& y) override { x = y = 0; }
 };
+// The animation tick manager (GZCOM 0xa9c73857 / iid 0x86ad10ed): Init / Shutdown / DoAnimationTick (vslots 0x18 / 0x20 / 0x48).
 class FrameService final : public IRegionFrameService {
 public:
-    bool Init() override { return true; }
-    void Shutdown() override {}
-    void EndFrame() override {}
+    bool Init() override { return StartAnimationTicks(); }
+    void Shutdown() override { StopAnimationTicks(); }
+    void EndFrame() override { TickAnimation(); }
 };
 class EffectsManager final : public IEffectsManager {
 public:

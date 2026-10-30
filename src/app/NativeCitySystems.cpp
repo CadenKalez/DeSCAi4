@@ -6,6 +6,7 @@
 #include "sc4/Render3D.h"
 #include "sc4/View3DWin.h"
 #include "sc4/cSC4City.h"
+#include "sc4/cSC4SimGrid.h"
 
 namespace native {
 namespace {
@@ -74,9 +75,24 @@ private:
 
 }  // namespace
 
+namespace {
+// The city geometry cSC4SimGrid reads through SL::spCity (cISC4City cell counts and cell sizes).
+class SimGridCity final : public sc4::ISimGridCity {
+public:
+    std::int32_t CitySizeXInCells() const override { return city_ ? city_->CellCountX() : 0; }
+    std::int32_t CitySizeZInCells() const override { return city_ ? city_->CellCountZ() : 0; }
+    float CellSizeXMeters() const override { return city_ ? city_->CellWidthX() : 16.0f; }
+    float CellSizeZMeters() const override { return city_ ? city_->CellWidthZ() : 16.0f; }
+    sc4::cSC4City* city_ = nullptr;
+};
+}  // namespace
+
 void BindCityServices(cISC4City* cityInterface) {
     auto* city = dynamic_cast<sc4::cSC4City*>(cityInterface);
     if (!city) return;
+    static SimGridCity gridCity;
+    gridCity.city_ = city;
+    sc4::SetSimGridCity(&gridCity);
     static CitySystems* systems = nullptr;
     delete systems;
     systems = new CitySystems(city);

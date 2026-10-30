@@ -400,8 +400,9 @@ __attribute__((weak)) void* GZCOM_CreatecSC4PowerPoleOccupant() { SC4_UNWIRED("G
 __attribute__((weak)) void* GZCOM_CreatecSC4PowerLineOccupant() { SC4_UNWIRED("GZCOM_CreatecSC4PowerLineOccupant"); return nullptr; }
 // original allocates 0x60 bytes; the class is not recovered yet
 void* GZCOM_CreatecSC4ComplexViewOccupantFilter() { SC4_UNWIRED("GZCOM_CreatecSC4ComplexViewOccupantFilter"); return nullptr; }
-// original allocates 0x1b8 bytes; the class is not recovered yet
-void* GZCOM_CreatecSC4AnimationTickManager() { SC4_UNWIRED("GZCOM_CreatecSC4AnimationTickManager"); return nullptr; }
+// original allocates 0x1b8 bytes
+// weak fallback: gzcom_creators/cSC4AnimationTickManager.cpp provides the real creator when linked
+__attribute__((weak)) void* GZCOM_CreatecSC4AnimationTickManager() { SC4_UNWIRED("GZCOM_CreatecSC4AnimationTickManager"); return nullptr; }
 // weak fallback: gzcom_creators/cSC4RegionalCity.cpp provides the real constructor-backed creator when linked
 __attribute__((weak)) void* GZCOM_CreatecSC4RegionalCity() { SC4_UNWIRED("GZCOM_CreatecSC4RegionalCity"); return nullptr; }
 // original allocates 0x300 bytes; the class is not recovered yet

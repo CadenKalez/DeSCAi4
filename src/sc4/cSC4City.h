@@ -88,6 +88,12 @@ public:
     virtual void OnCityShuttingDown() {}
     virtual void OnCityDestroyed() {}
     virtual void OnComponentCreated(CityComponent /*component*/, cIGZUnknown* /*object*/, float /*sizeX*/, float /*sizeZ*/) {}
+    // Init / Shutdown of one component (cSC4City::Init / Shutdown). The original calls slot 0x18 / 0x20 of the stored interface
+    // directly: every cISC4 component interface starts QueryInterface, AddRef, Release, Init, Shutdown. The port keeps components
+    // as cIGZUnknown, whose interfaces do not carry those slots, so the host (which knows the concrete classes) makes the call; the
+    // default asks for cIGZInitShutdown, which only test doubles answer.
+    virtual void InitComponent(CityComponent component, cIGZUnknown* object);
+    virtual void ShutdownComponent(CityComponent component, cIGZUnknown* object);
     virtual void OnCityNotLoaded() {}                                            // cheat manager reset (slot 0x50)
     virtual bool ShouldEstablishNewCity() { return false; }                      // application flag at +0x208
     virtual void RegisterCityCommands() {}                                       // message/command/cheat ids

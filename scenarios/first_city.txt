@@ -5,6 +5,7 @@ frames 200
 shot work/scenario_region.png
 # open a city from the region map (a double click on a developed tile)
 click 520 320
+click 520 320
 wait-city 1500
 expect-city
 shot work/scenario_city.png

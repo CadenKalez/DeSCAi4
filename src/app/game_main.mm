@@ -27,6 +27,7 @@
 
 #include "app/NativeBoot.h"
 #include "app/NativeCity.h"
+#include "app/NativeAnimationTicks.h"
 #include "app/NativeCityView.h"
 #include "app/NativeFonts.h"
 #include "app/NativeGraphics.h"
@@ -350,10 +351,18 @@ void DumpTree(cIGZWin* window, int depth, int maxDepth) {
 
 // ---- the frame loop ---------------------------------------------------------------------------------------------------------
 // The SDL stub's timers never fire by themselves: fire the armed one when its period has passed.
+// SDL_GetTicks for the stub SDL clock: milliseconds since start-up, never 0 (a cRZTimer started at tick 0 counts as stopped). The
+// wall-clock milliseconds (~1.7e12) do not fit 32 bits, and on arm64 the float -> uint32 conversion saturates to 0xffffffff instead of
+// wrapping, which froze every RZ timer in the game.
+std::uint32_t StubTicksNow() {
+    static const double start = [[NSDate date] timeIntervalSince1970] * 1000.0;
+    return 1u + static_cast<std::uint32_t>(static_cast<std::uint64_t>([[NSDate date] timeIntervalSince1970] * 1000.0 - start));
+}
+
 void PumpTimers() {
     static double armedAt = -1; static int armedId = 0;
     const double now = [[NSDate date] timeIntervalSince1970] * 1000.0;
-    g_ticks = std::uint32_t(now);
+    g_ticks = StubTicksNow();
     if (g_activeTimerId != armedId) { armedId = g_activeTimerId; armedAt = armedId ? now : -1; }
     if (armedId && g_timerCallback && now - armedAt >= g_timerInterval) {
         if (std::getenv("SC4_DEBUG")) std::printf("debug: timer %d fires\n", armedId);
@@ -415,6 +424,13 @@ void Frame() {
     native::PumpToolTicks(16);
     native::TickLighting();
     native::TickAutomata();
+    {   // the framework tick of the simulator host's services (cSC4Simulator::OnTick: the date and every simulator agent)
+        static std::uint32_t tickNumber = 0;
+        native::TickSimulatorServices(++tickNumber);
+    }
+    // In a city the animation tick manager is ticked here (the region screen ticks it from its GZPaint; the city view's per-frame call is
+    // not recovered). Init is idempotent: the region screen shut it down when the city replaced it.
+    if (gAppWindow && gAppWindow->View3D() && native::StartAnimationTicks()) native::TickAnimation();
     native::EndFrameJobs();
     if (gAudio) gAudio->Tick();
     PumpTimers();
@@ -731,6 +747,9 @@ int RunScenario(const std::string& path) {
 
 int main(int argc, char** argv) {
     std::setvbuf(stdout, nullptr, _IONBF, 0);
+    // The stub SDL clock (PumpTimers refreshes it every frame) must be valid before the boot: a cRZTimer restarted while it reads 0
+    // counts as stopped and never advances (the animation tick manager's timer did).
+    g_ticks = StubTicksNow();
     std::string shot;
     std::string scenario;   // --script FILE
     int frames = -1;

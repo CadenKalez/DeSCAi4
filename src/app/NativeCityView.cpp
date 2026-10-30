@@ -191,6 +191,9 @@ public:
 
 }  // namespace
 
+sc4::cSC43DRender* g_cityRender = nullptr;
+sc4::cSC43DRender* CityRenderer() { return g_cityRender; }
+
 bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, gd::cIGZGDriver* driver, gz::cIGZDrawContext* screen, int width, int height) {
     sc4::cSTETerrain* terrain = nullptr;
     if (auto* city = dynamic_cast<sc4::cSC4City*>(cityInterface)) {
@@ -255,6 +258,7 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     render->SetCamera(camera);
     render->SetCameraControl(control);
     cameraHost.render = render;
+    g_cityRender = render;
     const bool ok = render->Init();
     render->SetBackingStoreEnabled(false);   // the Metal driver keeps no backing store yet: a restore would replay whatever the screen held
     std::printf("city view: renderer %s\n", ok ? "up" : "FAILED");
