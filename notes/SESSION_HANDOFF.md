@@ -252,3 +252,12 @@ ShowMayorSubPanel (3 + the 4 graph ids), 8 InvokeSecondaryMenu cases, InvokeTert
 CreateCatalogView 0x69b9324a, SetWindowVisible 0x4bb92c20/21 (window 0xcc1a6983 / 0x10000005), 0x4bb92c1f / 0x2b709676 (vslot 0x70 with
 0x1b), 0xea6fa936 (this vslot 0x230), and std::map inserts for 0x3 / 0x9930709 / 0x89dd5405 / 0x1501..0x1506. Re-derive with a pass over
 `scripts/disfn.py 0x10078afde 2500` mapping `cmpl $id` + je/jne to target blocks.
+
+## Addendum 10: crashes and bugs found while playing (2026-10-29, registered in notes/todo.csv)
+- Fixed (250a5dd): zooming in a city with saved automata controllers (Big City Tutorial) crashed on null controllers the read could not
+  create; the read now skips them (divergence until CTRL-1; follow-up CRASH-2).
+- Open CRASH-1: mouse move in a city segfaults in cGZWin::DoMessage's filter loop (a freed message filter). An ASan game binary is built at
+  build/sc4_game_asan (`NATIVE_DEBUG=1 NATIVE_OUT=$PWD/build/sc4_game_asan python3 scripts/native_autolink.py ...`); run it, repeat menu
+  clicks / query hovering, and read the free site from the report.
+- Open BUG-1 (region clicks hit different cities while the map eases), BUG-2 (panel toggle reaches the view, no panel appears), BUG-3
+  (Rush Hour Tutorial still fails to load).
