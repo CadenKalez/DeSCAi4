@@ -783,6 +783,9 @@ int main(int argc, char** argv) {
             window = [[NSWindow alloc] initWithContentRect:NSMakeRect(100, 100, kW, kH)
                 styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable backing:NSBackingStoreBuffered defer:NO];
             window.title = @"SimCity 4";
+            // ARC owns the window: AppKit's default for a window made in code (release when closed) freed it a second time when the
+            // window closed, and the autorelease pool's release then hit the dead object (CRASH-3).
+            window.releasedWhenClosed = NO;
             GameView* view = [[GameView alloc] initWithFrame:NSMakeRect(0, 0, kW, kH)];
             view.wantsLayer = YES;
             layer = (CAMetalLayer*)view.layer;
