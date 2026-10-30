@@ -1,4 +1,5 @@
 // Platform glue of the native Metal application (no recovered counterpart on macOS); derived from the early host.
+#include "platform/GameDataPath.h"
 #include "app/NativeUi.h"
 
 #include <cstdio>
@@ -38,10 +39,7 @@ cIGZUIScriptService* g_service = nullptr;
 
 // ---- the image loader: PNG resources of the game data (read with the recovered DBPF reader; the engine's own path
 // goes through cGZPersistResourceManager + the Gimex factory, which is not wired in the host yet) -------------------
-std::string GameDataDir() {
-    return std::string(std::getenv("HOME")) +
-           "/Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/GameData/";
-}
+std::string GameDataDir() { return platform::GameDataDir(); }
 
 PngDecoder g_decodePng = nullptr;   // set by host_main.mm (ImageIO lives there)
 

@@ -29,4 +29,11 @@ if grep -qx "notes/ledger.csv" <<<"$staged"; then
     echo "pre-commit: duplicate ledger names:"; tail -5 /tmp/sc4-names.txt; fail=1
   fi
 fi
+# The game's own files are copyrighted: never commit them (game/, .dat packages, saved cities, the original executable).
+blocked=$(grep -E '^game/|\.(dat|DAT|sc4|SC4|fsh|FSH)$|Editionsub$' <<<"$staged" || true)
+if [ -n "$blocked" ]; then
+  echo "pre-commit: refusing game data (copyrighted, never pushed):"; head -10 <<<"$blocked"
+  echo "  Unstage it with: git restore --staged <path>"
+  fail=1
+fi
 exit $fail

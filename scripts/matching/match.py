@@ -15,7 +15,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import compare  # noqa: E402
 
-GAME = pathlib.Path.home() / "Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/MacOS/Sim City 4 Deluxe Editionsub"
+GAME = ROOT / "game/MacOS/Sim City 4 Deluxe Editionsub"   # scripts/fetch_gamedata.sh; else the Steam install
+if not GAME.exists():
+    GAME = pathlib.Path.home() / "Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/MacOS/Sim City 4 Deluxe Editionsub"
 FLAGS = ["-std=c++20", "-w", "-Isrc", "-Iscripts/tests/stubs", "-I/opt/homebrew/include/freetype2", "-target", "x86_64-apple-macos10.12"]
 
 

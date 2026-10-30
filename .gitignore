@@ -1,4 +1,11 @@
 # --- copyrighted game material: never commit ---
+# the local copy of the game (scripts/fetch_gamedata.sh); the pre-commit hook refuses it too
+/game/
+*.DAT
+*.SC4
+*.sc4
+*.fsh
+*.FSH
 game-binaries/
 game-assets-index/sha256.txt
 game-assets-index/ls-lR.txt

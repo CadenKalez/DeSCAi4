@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "sc4/DBSegment.h"
+#include "platform/GameDataPath.h"
 #include "app/NativeBoot.h"
 #include "gz/GZFramework.h"
 #include "gz/cGZPersistResourceManager.h"
@@ -65,8 +66,7 @@ bool RunBoot(bool verbose, bool keepAlive, gd::cIGZGDriver* driver, const std::f
     int failures = 0;
     auto Step = [&](const char* name, bool ok) { std::printf("[%s] %s\n", ok ? "OK" : "FAIL", name); std::fflush(stdout); if (!ok) ++failures; };
 
-    const std::string bundle = std::string(std::getenv("HOME")) +
-        "/Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents";
+    const std::string bundle = platform::GameContentsDir();
     const std::string docs = "/tmp/sc4boot_docs";
     std::filesystem::create_directories(docs);
     SetDocumentsFolderProvider([&](std::string& out) { out = docs; return true; });

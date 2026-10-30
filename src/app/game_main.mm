@@ -25,6 +25,7 @@
 #include <string>
 #include <vector>
 
+#include "platform/GameDataPath.h"
 #include "app/NativeBoot.h"
 #include "app/NativeCity.h"
 #include "app/NativeAnimationTicks.h"
@@ -86,8 +87,7 @@ struct DrawFontHost final : IDrawFontRendererHost {
 // <guid>"), the specifications cSC4App::SetFontStyle hands CreateFontStyleFromSpecification (0x1003d9360). Each style
 // becomes one cGZFont; the windows ask for their style by guid.
 std::string GameFontsDirectory() {
-    return std::string(std::getenv("HOME")) +
-           "/Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/GameData/Fonts/";
+    return platform::GameDataDir() + "Fonts/";
 }
 
 struct FontFile { std::string path, family; bool bold = false, italic = false; };
@@ -409,8 +409,7 @@ GameAudio* gAudio = nullptr;
 void StartGameAudio() {
     static GameAudio audio;
     std::string error;
-    const std::string dat = std::string(std::getenv("HOME")) +
-        "/Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/GameData/Sound.dat";
+    const std::string dat = platform::GameDataDir() + "Sound.dat";
     if (!audio.Open(dat, error)) { std::printf("audio: %s\n", error.c_str()); return; }
     gAudio = &audio;
     native::SetGameAudio(&audio);
@@ -443,8 +442,7 @@ void Frame() {
     }
     const bool regionScreen = gAppWindow && gAppWindow->CurrentScreen() && gAppWindow->CurrentScreen()->GetID() == 0xea659793;
     if (gAudio && gAppWindow && gAppWindow->CurrentScreen()) {   // the radio follows the screen: the region station on the map, the mayor's in a city
-        static const std::string stations = std::string(std::getenv("HOME")) +
-            "/Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/GameData/Radio/Stations/";
+        static const std::string stations = platform::GameDataDir() + "Radio/Stations/";
         gAudio->SetStation(stations + (regionScreen ? "Region" : (gAppWindow->View3D() ? "Mayor" : "Region")) + "/Music");
     }
     if (regionScreen && native::DrawRegionLayers()) InvalidateTree(gMgr->GetMainWindow());   // the map is drawn under the windows: they repaint over it
@@ -499,7 +497,7 @@ bool Boot() {
     if (!ok) std::printf("boot: FAILED\n");
     if (cSC4App* app = native::BootApplication()) {
         native::RegionCallbacks callbacks;
-        callbacks.dataDirectory = std::string(std::getenv("HOME")) + "/Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents/GameData/";
+        callbacks.dataDirectory = platform::GameDataDir();
         callbacks.isRegionScreenCurrent = [] { return gAppWindow && gAppWindow->CurrentScreen() && gAppWindow->CurrentScreen()->GetID() == 0xea659793; };
         callbacks.destroyCurrentScreen = [] { if (gAppWindow) gAppWindow->DestroyCurrentScreen(); };
         callbacks.createRegionScreen = [] { if (gAppWindow) gAppWindow->CreateRegionScreen(); };

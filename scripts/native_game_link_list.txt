@@ -66,6 +66,7 @@ src/rz/Radio.cpp
 src/rz/cRZSysServPtr.cpp
 src/rz/PathUtils.cpp
 src/platform/MacTools.cpp
+src/platform/GameDataPath.cpp
 src/gz/RZServices.cpp
 src/sc4/Exemplar.cpp
 src/sc4/AppResources.cpp

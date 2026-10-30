@@ -32,7 +32,9 @@ machine code into readable C++, keeping the original's object layout, calling co
 - [What works today](#what-works-today)
 - [What does not work yet](#what-does-not-work-yet)
 - [How it works](#how-it-works)
-- [Running it](#running-it)
+- [Getting the game data](#getting-the-game-data)
+- [Running the game](#running-the-game)
+- [Other targets](#other-targets)
 - [Tests](#tests)
 - [Keeping the ledger honest](#keeping-the-ledger-honest)
 - [Rebuilding the environment from scratch](#rebuilding-the-environment-from-scratch)
@@ -117,7 +119,49 @@ A class is **not** considered done when it compiles. It is done when the ledger 
 names how it was verified, the test is registered and passing, every seam it introduces is documented, and
 `verify_class_done.py` prints `ok`.
 
-## Running it
+## Getting the game data
+
+DeSCAi4 ships no game content. You need your own copy of **SimCity 4 Deluxe Edition for macOS** (the Steam version). The build
+reads the game's `.dat` packages, fonts, sounds and the original executable (the byte-matching tools compare against it) from
+a folder laid out like the app bundle's `Contents`. It looks in this order:
+
+1. `$SC4_GAME_CONTENTS`, if set (the `Contents` folder, or any folder with `GameData/` inside)
+2. `game/` in this repository
+3. the Steam install, `~/Library/Application Support/Steam/steamapps/common/SimCity 4 Deluxe/Sim City 4 Deluxe Edition.app/Contents`
+
+To keep a copy inside the repository (about 1.2 GB):
+
+```bash
+scripts/fetch_gamedata.sh
+```
+
+It copies `GameData/` and `MacOS/` from the Steam install into `game/`. To copy from somewhere else, pass that `Contents`
+folder as its argument.
+
+**Never push game data to GitHub.** The game's files are copyrighted. `game/`, `*.dat`, `*.sc4` and `*.fsh` are in
+`.gitignore`, and the pre-commit hook refuses to commit them. Install the hook once per clone:
+
+```bash
+git config core.hooksPath scripts/hooks
+```
+
+## Running the game
+
+```bash
+NATIVE_OUT=$PWD/build/sc4_game python3 scripts/native_autolink.py scripts/native_game_link_list.txt src/app/game_main.mm 6
+./build/sc4_game
+```
+
+The first command builds `build/sc4_game`. The second opens the game window at the region screen; click a city to open it.
+To run a scripted session without a window, for example the region screen and a first city:
+
+```bash
+./build/sc4_game --script scenarios/first_city.txt
+```
+
+Set `SC4_SIMDEBUG=1` to print the simulation trace (the month ticks, the growth developers, the tract developer).
+
+## Other targets
 
 **The application spine, headless** — prints each startup step and stops at whichever one is missing:
 
