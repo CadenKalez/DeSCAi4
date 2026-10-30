@@ -2,9 +2,18 @@
 // generator): the city exists once the view is up, the zoom stops at the last level, the right-button scroll tool
 // is the recovered cSC4ViewInputControlCityScroll, and AddGUI builds its windows through the UI-script service and
 // nSC4UI's window-set helpers. Everything else is still neutral.
+#include <cstring>
 #include <string>
 #include <vector>
 #include "sc4/View3DWin.h"
+#include "app/NativeCity.h"
+#include "platform/Unwired.h"
+#include "app/NativeLighting.h"
+#include "app/NativeCitySystems.h"
+#include "sc4/CitySituationManager.h"
+#include "sc4/Ordinance.h"
+#include "sc4/cSTETerrain.h"
+#include "sc4/ServiceLocator.h"
 #include "sc4/ViewInputControlCityScroll.h"
 #include "app/NativeUi.h"
 #include "app/NativeBoot.h"
@@ -25,6 +34,28 @@
 namespace native {
 namespace {
 using namespace sc4;
+
+// The view's cRZAutoMsg2Notification (+0x1d0): the message types it listens for on SL::spMS2 (constructor @ 0x1000419bc,
+// AddAllNotifications @ 0x100041aae, RemoveAllNotifications @ 0x100041b6e).
+class View3DNotifications final : public INotificationHelper3D {
+public:
+    void AddMessageTypes(const std::uint32_t* types, int count) override { types_.assign(types, types + count); }
+    void AddAllNotifications(cIGZMessageTarget2* target) override {
+        static const char* skip = std::getenv("SC4_VIEWNOTIFY_SKIP");   // dev: hex types to leave out ("all" for every one)
+        if (SL::spMS2)
+            for (std::uint32_t type : types_) {
+                char hex[16];
+                std::snprintf(hex, sizeof hex, "%08x", type);
+                if (skip && (std::strcmp(skip, "all") == 0 || std::strstr(skip, hex))) continue;
+                SL::spMS2->AddNotification(target, type);
+            }
+    }
+    void RemoveAllNotifications(cIGZMessageTarget2* target) override {
+        if (SL::spMS2) for (std::uint32_t type : types_) SL::spMS2->RemoveNotification(target, type);
+    }
+private:
+    std::vector<std::uint32_t> types_;
+};
 
 cSC4City* LoadedCity() {
     cSC4App* app = BootApplication();
@@ -53,12 +84,13 @@ std::string GroupDigits(std::int64_t value) {
     return negative ? "-" + out : out;
 }
 struct StubView3DWin final : IView3DWinHost {
+    View3DNotifications notifications_;
     cIGZMessageServer2* MessageServer2() override { return {}; }
     // the preferences blob (0x1734 bytes): all defaults off (no edge scrolling)
     std::uint8_t* Preferences() override { static std::uint8_t blob[0x1734] = {}; return blob; }
     bool CityExists() override { return LoadedCity() != nullptr; }
     void PostGameMessage(std::uint32_t type) override {}
-    INotificationHelper3D* NotificationHelper() override { return {}; }
+    INotificationHelper3D* NotificationHelper() override { return &notifications_; }
     void RegisterCommandTable() override {}
     void UnregisterCommandTable() override {}
     void AddCheatCodeTarget(cIGZWin* target) override {}
@@ -119,7 +151,35 @@ struct StubView3DWin final : IView3DWinHost {
     gz::cIGZWinBMP* CreateWinBMP() override { return {}; }
     void InitMapView(cIGZWin* window) override {}
     bool IsKeyDownNow(std::uint32_t key) override { return {}; }
-    void ExecuteCommand(std::uint32_t command) override {}
+    // SL::spCommandServer vslot 0x98(command, 0, 0). The command server is not set up natively: a command goes to the city view, the
+    // handler of every command its buttons send (ProcessCommand via its DoMessage in the original). COMMAND-1.
+    void ExecuteCommand(std::uint32_t command) override {
+        if (sc4::cSC4View3DWin* view = CityView3DWin()) view->ProcessViewCommand(command);
+    }
+    void SetDayNightMode(int mode) override { native::SetCityDayNightMode(mode); }
+    void ReconcileTerrainEdges() override {
+        if (auto* terrain = CityComponentAs<cSTETerrain>(CityComponent::Terrain, kGZCLSID_cSTETerrain)) terrain->ReconcileEdgesWithNeighboringCities(true, true, true);
+    }
+    bool OrdinanceOn(std::uint32_t ordinance) override {
+        auto* sim = CityComponentAs<cSC4OrdinanceSimulator>(CityComponent::OrdinanceSimulator, kGZCLSID_cSC4OrdinanceSimulator);
+        return sim && sim->IsOrdinanceOn(ordinance);
+    }
+    static cSC4CitySituationManager* SituationManager() {
+        sc4::cSC4City* city = native::HostCity();
+        return city ? dynamic_cast<cSC4CitySituationManager*>(city->GetComponent(CityComponent::CitySituationManager)) : nullptr;
+    }
+    bool CitySituationIndicatorVisible() override {
+        auto* m = SituationManager();
+        return m && m->GetVisible();   // GetCSIVisible (vslot 0xf0)
+    }
+    void SetCitySituationIndicatorVisible(bool visible) override {
+        if (auto* m = SituationManager()) m->SetVisible(visible);   // SetCSIVisible (vslot 0xe8)
+    }
+    void GoToNextDisaster() override { SC4_UNWIRED("IView3DWinHost::GoToNextDisaster (cSC4DisasterLayer not recovered)"); }
+    cSC4ViewInputControl* CreateDispatchTool(int) override { SC4_UNWIRED("IView3DWinHost::CreateDispatchTool (cSC4ViewInputControlDispatch not recovered)"); return nullptr; }
+    cSC4ViewInputControl* CreateNetworkTool(int) override { SC4_UNWIRED("IView3DWinHost::CreateNetworkTool (cSC4ViewInputControlNetworkTool not recovered)"); return nullptr; }
+    void ShowMyStreetSim() override { SC4_UNWIRED("IView3DWinHost::ShowMyStreetSim"); }
+    void PlayUISound(std::uint32_t) override { SC4_UNWIRED("IView3DWinHost::PlayUISound (sound system)"); }
     void AlignWindowToWindow(std::uint32_t windowId, std::uint32_t childId, std::uint32_t alignId) override {
         nSC4UI::AlignWindowToWindow(windowId, childId, alignId, nullptr);
     }

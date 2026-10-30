@@ -99,6 +99,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <list>
+#include <map>
 #include <set>
 #include <unordered_map>
 #include <vector>
@@ -125,9 +126,14 @@ class cISC4OccupantFilter;
 namespace gz { class cIGZWinGen; }
 namespace s3d { class cIS3DModelInstance; }
 
+class cIGZPersistDBSegment;
+class cIGZVariant;
+
 namespace sc4 {
 
 class cSC4View3DWin;
+class cISC4CatalogItem;
+class cISC4WinCatalogView;
 
 // ---------------------------------------------------------------------------------------------------------------
 // Identifiers (the binary's literal pools)
@@ -624,6 +630,40 @@ public:
     virtual void AfterButtonActivated() {}   // the city-service tail of HandleButtonActivated (SL::spCity vslot 0x290 -> vslot 0x70), not modelled
     virtual void AlignWindowToWindow(std::uint32_t windowId, std::uint32_t childId, std::uint32_t alignId) {}   // nSC4UI @ 0x10030aaaa
     virtual cSC4ViewInputControl* CreateQueryTool(int type, std::uint32_t tipPeriod) { return nullptr; }   // cSC4ViewInputControlQuery @ 0x1002c1fcc
+    // --- the city menus (DoDayNightMenu / DoLandscapeMenu / DoDisasterCopingMenu / DoVehicleMenu / DoTransportMenu / DoUtilitiesMenu)
+    // SL::sp24HourClock vslot 0xe8(1), then vslot 0x28(mode) when mode >= 0, then the clock's vslot 0x30 into the preference byte that
+    // SL::spSC4 vslot 0x130 returns (DoDayNightMenu @ 0x10078ca8c).
+    virtual void SetDayNightMode(int mode) { (void)mode; }
+    virtual void ReconcileTerrainEdges() {}                            // SL::spTerrain vslot 0x2c8(1, 1, 1): ReconcileEdgesWithNeighboringCities
+    virtual void GoToNextDisaster() {}                                 // SL::spCity vslot 0x240 (disaster layer) -> vslot 0x58
+    virtual cSC4ViewInputControl* CreateDispatchTool(int type) { (void)type; return nullptr; }   // new cSC4ViewInputControlDispatch(type) @ 0x1003c25ec
+    virtual cSC4ViewInputControl* CreateNetworkTool(int type) { (void)type; return nullptr; }    // new cSC4ViewInputControlNetworkTool(type) @ 0x10038df4c
+    virtual bool CitySituationIndicatorVisible() { return false; }     // SL::spCity vslot 0x188 -> GetCSIVisible (vslot 0xf0)
+    virtual void SetCitySituationIndicatorVisible(bool visible) { (void)visible; }   // -> SetCSIVisible (vslot 0xe8)
+    virtual void ShowMyStreetSim() {}                                  // SL::spAdvisorSystem GetAdvisor(0x1e) as cISC4MyStreetSim -> vslot 0x28
+    virtual bool OrdinanceOn(std::uint32_t ordinance) { (void)ordinance; return false; }   // SL::spOrdinanceSim vslot 0x40 IsOrdinanceOn
+    // --- DoMessage(cIGZMessage2*)'s unrecovered helpers (each one the view's member of the same name runs)
+    virtual void PreCityInit() {}                                       // DoPreCityInit (the camera, the renderer: the native view builds them)
+    virtual void PostCityInit() {}                                      // DoPostCityInit
+    virtual void LoadViewState(cIGZPersistDBSegment* segment, cIGZVariant* version) { (void)segment; (void)version; }   // DoLoad
+    virtual void SaveViewState(cIGZPersistDBSegment* segment) { (void)segment; }   // DoSave
+    virtual void BudgetFailure() {}                                     // DoBudgetFailure: the scripted dialog 0xa5cf71d / 0x2a5cfb2c
+    virtual void ClockChanged(std::uint32_t hour, std::uint32_t minute) { (void)hour; (void)minute; }   // Update24HourClock
+    virtual void AmbientLightChanged() {}                               // UpdateAmbientLightLevel
+    virtual void MayorRatingChanged() {}                                // UpdateMayorRatingBar
+    virtual void MissionProgress(cIGZUnknown* mission, std::uint32_t state) { (void)mission; (void)state; }   // UpdateMissionProgress
+    virtual void AddBackgroundImage() {}                                // AddBackgroundImageToRenderer
+    // --- HandleButtonActivated's services
+    virtual void PlayUISound(std::uint32_t sound) { (void)sound; }      // SL::spSS vslot 0x50(1, sound, 0, 0, 0) (AddRef / Release around it)
+    virtual bool SignsAndLabelsVisible() { return true; }               // SL::spPropDeveloper vslot 0x50 AreSignsAndLabelsVisible
+    // SL::spCity vslot 0x290 (tutorial system) vslot 0x40 (running) -> vslot 0x78(catalog): the tutorial follows an opened catalog
+    virtual void TutorialCatalogOpened(cISC4WinCatalogView* catalog) { (void)catalog; }
+    // SL::spVehicleManager / spAircraftManager / spWatercraftManager (0 / 1 / 2): the earned-vehicle catalogs' source
+    virtual cIGZUnknown* VehicleCatalogManager(int which) { (void)which; return nullptr; }
+    // AddBuildingsToItemList (0x100791d86) / AddAutomataToItemList (0x100790e52): PARTIAL until those two are recovered.
+    virtual void AddBuildingsToItemList(std::uint32_t menuId, const std::set<std::uint32_t>& include, const std::set<std::uint32_t>& exclude,
+                                        std::multimap<int, cISC4CatalogItem*>& items) { (void)menuId; (void)include; (void)exclude; (void)items; }
+    virtual void AddAutomataToItemList(cIGZUnknown* manager, std::multimap<int, cISC4CatalogItem*>& items) { (void)manager; (void)items; }
     // cSC4View3DWin::DoEstablishCityDialog @ 0x10078ff30 (PARTIAL: builds the modal city dialog).
     virtual bool ShowEstablishCityDialog() = 0;
     // SL::spCity vslot 0x240 (cSC4City::GetDisasterLayer) -> the disaster layer's vslot 0x50.
@@ -807,9 +847,25 @@ public:
     // @ 0x10078d1be: a tool palette beside `sender`'s button `alignId`, filled with `catalog`'s items.
     void InvokeTertiaryMenu(std::uint32_t menuId, cIGZWin* sender, std::uint32_t alignId, class cISC4WinCatalogView* catalog,
                             std::uint32_t backgroundImage, CatalogState* state);
+    // @ 0x10078d762: the same in the secondary slot (another frame image and anchor; the catalog shows at most six rows).
+    void InvokeSecondaryMenu(std::uint32_t menuId, cIGZWin* sender, std::uint32_t alignId, class cISC4WinCatalogView* catalog,
+                             std::uint32_t backgroundImage, CatalogState* state);
     void DoZoneCatalogView(cIGZWin* sender, std::uint32_t alignId, std::uint32_t propertyFilter, std::uint32_t catalogId,
                            CatalogState* state);                            // @ 0x100790c4a
     void DoZoningMenu(cIGZWin* sender, std::uint32_t button);               // @ 0x10078cb24
+    void DoDayNightMenu(std::uint32_t button);                              // @ 0x10078ca8c
+    void DoLandscapeMenu(cIGZWin* sender, std::uint32_t button);            // @ 0x10078c690
+    void DoDisasterCopingMenu(cIGZWin* sender, std::uint32_t button);       // @ 0x10078dbb0
+    void DoVehicleMenu(cIGZWin* sender, std::uint32_t button);              // @ 0x10078e108
+    void DoTransportMenu(cIGZWin* sender, std::uint32_t button);            // @ 0x10078dd12
+    void DoUtilitiesMenu(cIGZWin* sender, std::uint32_t button);            // @ 0x10078cbb4
+    void DoLandscapeCatalogView(cIGZWin* sender, std::uint32_t alignId, std::uint32_t menuId, std::uint32_t catalogId,
+                                CatalogState* state);                       // @ 0x100790aa0
+    void DoFloraCatalogView(cIGZWin* sender, std::uint32_t alignId, std::uint32_t menuId, std::uint32_t catalogId,
+                            CatalogState* state);                           // @ 0x100790b98
+    void DoEarnedVehicleCatalogView(cIGZWin* sender, std::uint32_t button, cIGZUnknown* manager, CatalogState* state);   // @ 0x100790cfc
+    class cSC4WinCatalogView* CreateBuildingMenu(std::uint32_t menuId, const std::set<std::uint32_t>& include,
+                                                 const std::set<std::uint32_t>& exclude, std::uint32_t lotItemType, int zoneItemType);   // @ 0x10078d074
     void InvokeCatalogItemCommand(std::uint32_t itemType, std::uint32_t id, bool closeMenu);   // @ 0x10078410a
     void SetCursorTextPosition3D(const cS3DVector3& position) override;   // @ 0x100791cc4
 
@@ -849,6 +905,17 @@ public:
     void UpdateDayNightButtons();                                  // @ 0x10078aa58
     void UpdatePopulation();                                       // @ 0x100787fb6
     void UpdateBudget();                                           // @ 0x1007887bc
+    // DoMessage(cIGZMessage2*)'s helpers that are not recovered yet: each runs the host's hook (PARTIAL).
+    void DoPreCityInit();                                          // @ 0x10078616c (PARTIAL: host)
+    void DoPostCityInit();                                         // @ 0x1007867d8 (PARTIAL: host)
+    void DoLoad(cIGZPersistDBSegment* segment, cIGZVariant* version);   // @ 0x100787092 (PARTIAL: host)
+    void DoSave(cIGZPersistDBSegment* segment);                    // @ 0x1007871e4 (PARTIAL: host)
+    void DoBudgetFailure();                                        // @ 0x100788d0e (PARTIAL: host)
+    void Update24HourClock(std::uint32_t hour, std::uint32_t minute);   // @ 0x100788912 (PARTIAL: host)
+    void UpdateAmbientLightLevel();                                // @ 0x100788bfc (PARTIAL: host)
+    void UpdateMayorRatingBar();                                   // @ 0x100788084 (PARTIAL: host)
+    void UpdateMissionProgress(cIGZUnknown* mission, std::uint32_t state);   // @ 0x100787b66 (PARTIAL: host)
+    void AddBackgroundImageToRenderer();                           // @ 0x100787334 (PARTIAL: host)
     // --- the panel commands (PARTIAL: the menu builders behind HandleButtonActivated / DoPanelCommandGUI)
     void HandleButtonActivated(cIGZWin* window, cGZMessage& message);   // @ 0x10078afde (PARTIAL)
     void DoPanelCommandGUI(std::uint32_t command);                 // @ 0x10078c2dc (PARTIAL)
@@ -962,7 +1029,7 @@ protected:
     // The secondary menu window (+0x358) and its state word (+0x368).
     cIGZWin* secondaryMenu_ = nullptr;                  // +0x358 (referenced; CloseSecondaryMenu ChildDeletes it)
     std::uint32_t secondaryMenuState_ = 0;              // +0x368
-    CatalogState catalogStates_[8];                     // +0x378.. one per catalog menu
+    CatalogState catalogStates_[25];                    // +0x378..+0x440, one per catalog menu (index = (offset - 0x378) / 8)
     CatalogState* tertiaryState_ = nullptr;             // +0x370
     cIGZWin* tertiaryMenu_ = nullptr;                   // +0x360 (referenced)
     std::uint32_t tertiaryMenuState_ = 0;               // +0x36c

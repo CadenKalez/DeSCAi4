@@ -8,4 +8,6 @@ namespace native {
 void BindCityServices(cISC4City* city);
 // SL::spView3D / spView3DWin / spRenderer / spLightingManager (OnView3DCreate + OnView3DInit); the model maker and view utilities stay pending.
 void BindView3DServices(sc4::cSC4View3DWin* view, sc4::cSC43DRender* render);
+// The city view bound last (null before a city view exists).
+sc4::cSC4View3DWin* CityView3DWin();
 }

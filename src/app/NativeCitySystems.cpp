@@ -115,8 +115,12 @@ public:
 };
 }  // namespace
 
+sc4::cSC4View3DWin* g_cityView3DWin = nullptr;
+sc4::cSC4View3DWin* CityView3DWin() { return g_cityView3DWin; }
+
 void BindView3DServices(sc4::cSC4View3DWin* view, sc4::cSC43DRender* render) {
     static View3DSystems systems;
+    g_cityView3DWin = view;
     systems.view_ = view;
     systems.render_ = render;
     SL::spWinSC4App = &systems;

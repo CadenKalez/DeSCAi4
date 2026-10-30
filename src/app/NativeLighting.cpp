@@ -167,6 +167,14 @@ IS4LightingManager* CreateNativeLightingManager() {
     return CreateLightingManagerView(g_manager);
 }
 
+// SL::sp24HourClock vslot 0xe8(1) EnableDayNightTransitionNotifications, vslot 0x28 SetVisualTimeMode; the original also stores
+// GetVisualTimeMode (vslot 0x30) in the preference byte SL::spSC4 vslot 0x130 returns (the native preferences are not kept).
+void SetCityDayNightMode(int mode) {
+    if (!g_clock) return;
+    g_clock->EnableDayNightTransitionNotifications(true);
+    if (mode >= 0) g_clock->SetVisualTimeMode(static_cast<sc4::cSC424HourClock::VisualTimeMode>(mode));
+}
+
 void SetLightingClock(sc4::cSC424HourClock* clock) {
     g_clock = clock;
     if (clock && std::getenv("SC4_DEBUG")) std::fprintf(stderr, "clock: game %u:%02u visual %u:%02u mode %d paused %d\n", clock->GetHour(), clock->GetMinute(), clock->GetVisualHour(), clock->GetVisualMinute(), int(clock->GetVisualTimeMode()), clock->IsPaused());

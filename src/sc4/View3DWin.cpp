@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "gz/CommandParameterSet.h"
+#include "gz/WinBtn.h"
 #include "gz/WinGen.h"
 #include "gz/WinUtils.h"
 #include "sc4/WinAuraAlert.h"
@@ -1242,6 +1243,69 @@ void cSC4View3DWin::InvokeTertiaryMenu(std::uint32_t menuId, cIGZWin* sender, st
     frame->Release();
 }
 
+// InvokeSecondaryMenu with a catalog (0x10078d762): the catalog palette in the secondary slot. The callout and the catalog are set up
+// before the open menu is closed; the same button again closes it (the original then keeps the catalog's extra reference).
+void cSC4View3DWin::InvokeSecondaryMenu(std::uint32_t menuId, cIGZWin* sender, std::uint32_t alignId, cISC4WinCatalogView* catalog,
+                                        std::uint32_t backgroundImage, CatalogState* state) {
+    if (!catalog || !sender || !host_) return;
+    catalog->AddRef();
+    catalog->SetItemSize(0x2c, 0x2c, 5);                                // vslot 0x60
+    cIGZWin* catalogWindow = catalog->AsIGZWin();
+    cIGZWin* self = static_cast<cIGZWin*>(static_cast<cGZWin*>(this));
+    catalogWindow->SetNotificationTarget(self);                         // vslot 0x2b0
+    std::uint32_t rows = static_cast<std::uint32_t>(catalog->GetItemCount());
+    if (rows == 0) rows = 1;
+    if (rows > 5) rows = 6;
+    const cRZPoint size = catalog->CalcPreferredSize(rows);             // vslot 0x68
+    if (cISC4WinCalloutBox* callout = host_->CreateCalloutBox()) {      // new cSC4WinCalloutBox
+        callout->SetTextFontStyle(0xa85f1a83);
+        callout->SetTitleFontStyle(0xe9c86c9d);
+        callout->AsIGZWin()->HideWindow();
+        if (cursorTextBox_) {
+            callout->SetBackgroundImage(cursorTextBox_->GetBackgroundImage(), 8, 5);
+            callout->SetConstraintRect(cursorTextBox_->GetConstraintRect());
+        }
+        catalog->SetCalloutBox(callout);                                // vslot 0xb0
+        callout->Release();
+    }
+    RemoveAllViewInputControls(false);
+    const std::uint32_t current = secondaryMenuState_;
+    if (current != 0) {
+        CloseSecondaryMenu();
+        if (current == menuId) return;
+    }
+    cIGZWin* button = sender->GetChildWindowFromID(alignId);
+    if (!button) { catalog->Release(); return; }
+    const int anchorX = button->GetW() / 2 - 1 + sender->GetL() + button->GetL();
+    const int anchorY = button->GetH() / 2 + button->GetT() + sender->GetT();
+    const int toolbarTop = panelWindow_ ? panelWindow_->GetT() : GetH();
+    cSLBuffer image(kView3DImageType, kView3DImageGroup, backgroundImage, 1, false);
+    image.Load();
+    auto* frame = new cSC4WinTertiaryMenuFrame(GetWindowManager());
+    frame->AddRef();
+    cISC4WinTertiaryMenuFrame* frameInterface = frame;
+    cIGZWin* frameWindow = frameInterface->AsIGZWin();
+    ChildAdd(frameWindow);
+    frameInterface->SetBackgroundImage(image.GetBuffer(), 0x35, 0x19, 0x5e, 0x3e, 6, 0x28, 0x22);   // vslot 0x20
+    frameInterface->PositionFrame(size.x, size.y, anchorX, anchorY, 10, toolbarTop - 10);          // vslot 0x28
+    frameWindow->PullToFront();
+    frameWindow->ShowWindow();
+    cRZRect content;
+    frameInterface->GetContentRect(content);                            // vslot 0x30
+    catalogWindow->SetArea(content);
+    frameWindow->ChildAdd(catalogWindow);
+    frameWindow->SetNotificationTarget(catalogWindow);
+    catalog->Release();
+    tertiaryState_ = state;                                             // +0x370 (shared with the tertiary palette)
+    if (state) {
+        catalog->SetScrollPosition(state->scroll);
+        catalog->SetSelectedItemByID(state->selected);
+    }
+    host_->TutorialCatalogOpened(catalog);
+    secondaryMenu_ = frameWindow;                                       // the frame's creation reference
+    secondaryMenuState_ = menuId;
+}
+
 // DoZoneCatalogView (0x100790c4a): the zone-type list of a zoning button.
 void cSC4View3DWin::DoZoneCatalogView(cIGZWin* sender, std::uint32_t alignId, std::uint32_t propertyFilter, std::uint32_t catalogId,
                                       CatalogState* state) {
@@ -1281,6 +1345,211 @@ void cSC4View3DWin::DoZoningMenu(cIGZWin* sender, std::uint32_t button) {
     }
 }
 
+// DoDayNightMenu (0x10078ca8c): the three day / night buttons set the 24-hour clock's display mode (0xca35cb74 day-night cycle,
+// 0xca35cb76 always day, 0xca35cb78 always night); the clock's answer goes back into the preferences, then the buttons follow.
+void cSC4View3DWin::DoDayNightMenu(std::uint32_t button) {
+    int mode = -1;
+    if (button == 0xca35cb78u) mode = 2;
+    else if (button == 0xca35cb76u) mode = 1;
+    else if (button == 0xca35cb74u) mode = 0;
+    if (host_) host_->SetDayNightMode(mode);
+    UpdateDayNightButtons();
+}
+
+// DoLandscapeMenu (0x10078c690): the terraform palette. Buttons open the terrain-tool, flora and secondary menus, pick a brush, run a
+// global terrain tool (0xaa44502..5 -> 5, 6, 3, 4) or reconcile the edges with the neighbours (0x4a551a6b).
+void cSC4View3DWin::DoLandscapeMenu(cIGZWin* sender, std::uint32_t button) {
+    switch (button) {
+        case 0x8991ee08u: InvokeSecondaryMenu(0x09923283u, 0x49923239u, 0x8991ee08u); return;
+        case 0x49e95d2bu: InvokeSecondaryMenu(0xe9923283u, 0x49923239u, 0x49e95d2bu); return;
+        case 0x8a32dddbu: InvokeSecondaryMenu(0xaaa44448u, 0xca35cbedu, 0x8a32dddbu); return;
+        case 0x36u: InvokeSecondaryMenu(0xaaa44448u, 0xca35cbedu, 0x36u); return;
+        case 0x899231e6u: case 0x0a32ddd2u:                              // the two default brushes (raise / the other)
+            CloseTertiaryMenu();
+            ApplyDefaultTerrainBrush(6, button == 0x899231e6u);
+            return;
+        case 0xc99231dau: DoLandscapeCatalogView(sender, 0xc99231dau, 0x6a33d682u, 0x4a2b2462u, &catalogStates_[19]); return;
+        case 0x152231f3u: DoLandscapeCatalogView(sender, 0x152231f3u, 0xea33d694u, 0x4a2b2462u, &catalogStates_[20]); return;
+        case 0x6a3d638cu: DoLandscapeCatalogView(sender, 0x6a3d638cu, 0x8a3f131bu, 0x4a2b2462u, &catalogStates_[21]); return;
+        case 0x29923215u: DoLandscapeCatalogView(sender, 0x29923215u, 0x8a3143b7u, 0x4a2b2462u, &catalogStates_[22]); return;
+        case 0x4a22ea06u: DoFloraCatalogView(sender, 0x4a22ea06u, 0x8a2602bbu, 0xea5ad08du, &catalogStates_[24]); return;
+        case 0xea32ddbbu: CloseTertiaryMenu(); InvokeLandscapeTool(0xea33e2fdu, false); return;
+        case 0xea32dde5u: CloseTertiaryMenu(); InvokeLandscapeTool(0x4a524342u, false); return;
+        case 0x4a32ddc7u: CloseTertiaryMenu(); InvokeLandscapeTool(0x0a33e37bu, false); return;
+        case 0x0aa44502u: RunGlobalTerrainTool(5); return;
+        case 0x0aa44503u: RunGlobalTerrainTool(6); return;
+        case 0x0aa44504u: RunGlobalTerrainTool(3); return;
+        case 0x0aa44505u: RunGlobalTerrainTool(4); return;
+        case 0x4a551a6bu:
+            CloseSecondaryMenu();
+            if (host_) host_->ReconcileTerrainEdges();
+            return;
+        default: return;
+    }
+}
+
+// DoDisasterCopingMenu (0x10078dbb0): the emergency palette. 0x1 opens its tertiary menu, 0x992fd36 jumps to the next disaster, the
+// others pick a dispatch tool (0x33 -> 0, 0x69a30679 -> 1, 0x4bfc8c2f -> 6, 0x6bfc8c55 -> 5).
+void cSC4View3DWin::DoDisasterCopingMenu(cIGZWin* sender, std::uint32_t button) {
+    (void)sender;
+    int type = -1;
+    switch (button) {
+        case 0x1u: InvokeTertiaryMenu(0x09de3002u, 0x09de8798u, 0x1u); return;
+        case 0x992fd36u: if (host_) host_->GoToNextDisaster(); return;
+        case 0x33u: type = 0; break;
+        case 0x69a30679u: type = 1; break;
+        case 0x4bfc8c2fu: type = 6; break;
+        case 0x6bfc8c55u: type = 5; break;
+        default: return;
+    }
+    if (!host_) return;
+    if (cSC4ViewInputControl* tool = host_->CreateDispatchTool(type)) {
+        tool->AddRef();
+        SetCurrentViewInputControl(tool, 2);
+        tool->Release();
+    }
+}
+
+// DoVehicleMenu (0x10078e108): the vehicle palette (0xabb27a7a, with the city-situation indicator toggle 0xebfac720 set from the
+// manager), the earned-vehicle catalogs (cars / aircraft / boats), the indicator toggle itself, and the My Street sim button.
+void cSC4View3DWin::DoVehicleMenu(cIGZWin* sender, std::uint32_t button) {
+    switch (button) {
+        case 0xebfac717u: DoEarnedVehicleCatalogView(sender, 0xebfac717u, host_ ? host_->VehicleCatalogManager(0) : nullptr, nullptr); return;
+        case 0xebfac718u: DoEarnedVehicleCatalogView(sender, 0xebfac718u, host_ ? host_->VehicleCatalogManager(1) : nullptr, nullptr); return;
+        case 0xebfac719u: DoEarnedVehicleCatalogView(sender, 0xebfac719u, host_ ? host_->VehicleCatalogManager(2) : nullptr, nullptr); return;
+        case 0xebfac720u:
+            if (host_) host_->SetCitySituationIndicatorVisible(nsGZWinUtils::GetButtonToggleState(secondaryMenu_, 0xebfac720u));
+            return;
+        case 0xebf9e342u: if (host_) host_->ShowMyStreetSim(); return;
+        case 0xabb27a7au:
+            if (!sender) return;
+            InvokeSecondaryMenu(0x6bb27447u, 0x8bb27c12u, 0xabb27a7au);
+            if (secondaryMenu_ && host_) nsGZWinUtils::SetButtonToggleState(secondaryMenu_, 0xebfac720u, host_->CitySituationIndicatorVisible());
+            return;
+        default: return;
+    }
+}
+
+// DoTransportMenu (0x10078dd12): the transport building catalogs. Each button picks the lot item type of the catalog and, for some,
+// one building occupant group to include; the same button again closes its palette.
+void cSC4View3DWin::DoTransportMenu(cIGZWin* sender, std::uint32_t button) {
+    std::set<std::uint32_t> include, exclude;
+    std::uint32_t lotItemType = 0;
+    CatalogState* state = nullptr;
+    switch (button) {
+        case 0x29u: include.insert(0x1300u); lotItemType = 0x4001u; state = &catalogStates_[15]; break;
+        case 0x31u: lotItemType = 0x4005u; state = &catalogStates_[14]; break;
+        case 0x299237bfu: include.insert(0x130au); lotItemType = 0x4002u; state = &catalogStates_[16]; break;
+        case 0x2b730c5bu: lotItemType = 0x4000u; break;
+        case 0x6999bf56u: lotItemType = 0x4000u; state = &catalogStates_[13]; break;
+        case 0xa99234a6u: include.insert(0x1519u); state = &catalogStates_[18]; break;
+        case 0xe99234b3u: include.insert(0x1508u); state = &catalogStates_[17]; break;
+        default: break;   // the original falls through with an empty catalog
+    }
+    if (tertiaryMenuState_ == button) {
+        CloseTertiaryMenu();
+        return;
+    }
+    cSC4WinCatalogView* catalog = CreateBuildingMenu(0x07bddf1cu, include, exclude, lotItemType, -1);
+    InvokeTertiaryMenu(button, sender, button, catalog, 0x14215ed2u, state);
+    if (catalog) catalog->Release();
+}
+
+// DoUtilitiesMenu (0x10078cbb4): the utility building catalogs (power 0x35, water 0x39, garbage 0x40) and the power-line tool (0x32).
+// The power catalog excludes group 0x1402 and, when the ordinance 0xe0d0722e is on, 0x6a650ffe; the garbage catalog shows the
+// zone item type 0x2a49d7ca as well.
+void cSC4View3DWin::DoUtilitiesMenu(cIGZWin* sender, std::uint32_t button) {
+    if (button == 0x32u) {
+        CloseTertiaryMenu();
+        if (host_) {
+            if (cSC4ViewInputControl* tool = host_->CreateNetworkTool(5)) {   // the power-line tool
+                tool->AddRef();
+                SetCurrentViewInputControl(tool, 2);
+                tool->Release();
+            }
+        }
+        return;
+    }
+    if (button != 0x35u && button != 0x39u && button != 0x40u) return;
+    std::set<std::uint32_t> include, exclude;
+    std::uint32_t lotItemType = 0;
+    int zoneItemType = -1;
+    CatalogState* state = nullptr;
+    if (button == 0x40u) {
+        include.insert(0x1402u);
+        exclude.insert(0x1401u);
+        state = &catalogStates_[12];
+        zoneItemType = 0x2a49d7ca;
+    } else if (button == 0x39u) {
+        include.insert(0x1401u);
+        state = &catalogStates_[11];
+        lotItemType = 0x4004u;
+    } else {
+        include.insert(0x1400u);
+        exclude.insert(0x1402u);
+        if (host_ && host_->OrdinanceOn(0xe0d0722eu)) exclude.insert(0x6a650ffeu);
+        state = &catalogStates_[10];
+        lotItemType = 0x4003u;
+    }
+    if (tertiaryMenuState_ == button) {
+        CloseTertiaryMenu();
+        return;
+    }
+    cSC4WinCatalogView* catalog = CreateBuildingMenu(0xc8dbccbau, include, exclude, lotItemType, zoneItemType);
+    InvokeTertiaryMenu(button, sender, button, catalog, 0x14215ed3u, state);
+    if (catalog) catalog->Release();
+}
+
+// DoLandscapeCatalogView (0x100790aa0) / DoFloraCatalogView (0x100790b98): a catalog of terrain tools (item type 0x6a01fc2a) or of
+// flora (0xe83e0437) in a palette beside the button.
+void cSC4View3DWin::DoLandscapeCatalogView(cIGZWin* sender, std::uint32_t alignId, std::uint32_t menuId, std::uint32_t catalogId,
+                                           CatalogState* state) {
+    cSC4WinCatalogView* catalog = nSC4UI::CreateCatalogView(0x6a01fc2au, catalogId, 0, menuId);
+    if (catalog) catalog->AddRef();
+    InvokeTertiaryMenu(menuId, sender, alignId, catalog, 0x14215ed0u, state);
+    if (catalog) catalog->Release();
+}
+
+void cSC4View3DWin::DoFloraCatalogView(cIGZWin* sender, std::uint32_t alignId, std::uint32_t menuId, std::uint32_t catalogId,
+                                       CatalogState* state) {
+    cSC4WinCatalogView* catalog = nSC4UI::CreateCatalogView(0xe83e0437u, catalogId, 0, menuId);
+    if (catalog) catalog->AddRef();
+    InvokeTertiaryMenu(menuId + 0xea5ada53u, sender, alignId, catalog, 0x14215ed0u, state);
+    if (catalog) catalog->Release();
+}
+
+// DoEarnedVehicleCatalogView (0x100790cfc): the vehicles the city has earned, from one automata manager.
+void cSC4View3DWin::DoEarnedVehicleCatalogView(cIGZWin* sender, std::uint32_t button, cIGZUnknown* manager, CatalogState* state) {
+    if (!manager) return;
+    auto* catalog = new cSC4WinCatalogView(GetWindowManager());   // WinCatalogViewConstructThunk: the global window manager
+    catalog->AddRef();
+    std::multimap<int, cISC4CatalogItem*> items;
+    if (host_) host_->AddAutomataToItemList(manager, items);
+    for (auto& entry : items) {
+        catalog->AddItem(entry.second);
+        entry.second->Release();
+    }
+    InvokeTertiaryMenu(button + 0x6bb2e4bcu, sender, button, catalog, 0x14215eddu, state);
+    catalog->Release();
+}
+
+// CreateBuildingMenu (0x10078d074): a catalog of the lot (0x4a2b2467) and zone (0x4a2b2466) items of the given types plus the buildings
+// AddBuildingsToItemList picks; the items are added in the multimap's order and the list's references dropped.
+cSC4WinCatalogView* cSC4View3DWin::CreateBuildingMenu(std::uint32_t menuId, const std::set<std::uint32_t>& include,
+                                                      const std::set<std::uint32_t>& exclude, std::uint32_t lotItemType, int zoneItemType) {
+    std::multimap<int, cISC4CatalogItem*> items;
+    auto* catalog = new cSC4WinCatalogView(GetWindowManager());   // WinCatalogViewConstructThunk: the global window manager
+    catalog->AddRef();
+    if (lotItemType != 0) nSC4UI::CreateCatalogItemList(items, catalog, 0x2a3858e4u, 0x4a2b2467u, 0, lotItemType);
+    if (0 < zoneItemType) nSC4UI::CreateCatalogItemList(items, catalog, 0x2a3858e4u, 0x4a2b2466u, 0, static_cast<std::uint32_t>(zoneItemType));
+    if (host_) host_->AddBuildingsToItemList(menuId, include, exclude, items);
+    for (auto& entry : items) {
+        catalog->AddItem(entry.second);
+        entry.second->Release();
+    }
+    return catalog;
+}
+
 // The two menu invokers build a script window (group 0x96a006b0) as a child of the view, route its commands to the
 // view, align it to the toolbar button and show it. The tertiary one is the same with the other slot.
 void cSC4View3DWin::InvokeSecondaryMenu(std::uint32_t script, std::uint32_t windowId, std::uint32_t alignTo) {
@@ -1298,13 +1567,13 @@ void cSC4View3DWin::InvokeSecondaryMenu(std::uint32_t script, std::uint32_t wind
     if (menu->QueryInterface(kGZIID_cIGZWinGenView, &gen) && gen) {
         auto* view = static_cast<gz::cIGZWinGen*>(gen);
         menu->AddMessageFilter(static_cast<cIGZWinMessageFilter*>(this));    // vslot 0x3a0
-        menu->SetFlag(4, false);                                        // vslot 0x30 (4, 0), (1, 0)
-        menu->SetFlag(1, false);
+        view->SetWinGenFlag(4, false);                                  // cIGZWinGen vslot 0x30 (4, 0), (1, 0)
+        view->SetWinGenFlag(1, false);
         view->Release();
     }
-    host_->AlignWindowToWindow(windowId, 0xaaaau, alignTo);
+    host_->AlignWindowToWindow(menu->GetID(), 0xaaaau, alignTo);         // the new window's own id (vslot 0x1f8)
     menu->PullToFront();                                                // vslot 0xb8
-    menu->ShowWindow();                                                 // vslot 0x228                                                 // vslot 0xb8 / 0x228
+    menu->ShowWindow();                                                 // vslot 0x228
     secondaryMenu_ = menu;
     secondaryMenuState_ = windowId;
 }
@@ -1324,11 +1593,11 @@ void cSC4View3DWin::InvokeTertiaryMenu(std::uint32_t script, std::uint32_t windo
     if (menu->QueryInterface(kGZIID_cIGZWinGenView, &gen) && gen) {
         auto* view = static_cast<gz::cIGZWinGen*>(gen);
         menu->AddMessageFilter(static_cast<cIGZWinMessageFilter*>(this));
-        menu->SetFlag(4, false);
-        menu->SetFlag(1, false);
+        view->SetWinGenFlag(4, false);
+        view->SetWinGenFlag(1, false);
         view->Release();
     }
-    host_->AlignWindowToWindow(windowId, 0xaaaau, alignTo);
+    host_->AlignWindowToWindow(menu->GetID(), 0xaaaau, alignTo);
     menu->PullToFront();                                                // vslot 0xb8
     menu->ShowWindow();                                                 // vslot 0x228
     tertiaryMenu_ = menu;
@@ -1884,7 +2153,7 @@ void cSC4View3DWin::UpdateSpeedButtons() {
         cRZRect area;
         cIGZBuffer* image = nullptr;
         button->GetImageArea(area);                                     // vslot 0x80
-        button->GetBuffer(image);                                       // vslot 0x90
+        button->GetBuffer(image);                                       // vslot 0x90 (borrowed: the original releases only the button)
         if (!image) { button->Release(); continue; }
         const int half = static_cast<int>(image->Height()) >> 1;        // vslot 0x60
         const int offset = paused ? half : 0;
@@ -1893,7 +2162,6 @@ void cSC4View3DWin::UpdateSpeedButtons() {
             const int style = button->GetStyle();                       // vslot 0x58
             button->SetStyle(style, image, &image2);                    // vslot 0x60
         }
-        image->Release();
         button->Release();
     }
 }
@@ -2255,79 +2523,132 @@ void cSC4View3DWin::DoPanelCommandGUI(std::uint32_t command) {
     }
 }
 
-// HandleButtonActivated (0x10078afde, 4659 bytes). PARTIAL: the original is one nested binary search over ~120
-// button ids that either runs a command-server command or opens one of the nine menus (DoZoningMenu,
-// DoTransportMenu, DoUtilitiesMenu, DoLandscapeMenu, DoVehicleMenu, DoDayNightMenu, DoDisasterCopingMenu,
-// CreateBuildingMenu and the two InvokeSecondaryMenu / InvokeTertiaryMenu flavours), none of which is recovered.
-// The menu entry points are not seams yet, so the function reports that it did not handle the message.
-// The button ids that run a command-server command (the 21 `SL::spCommandServer vslot 0x98` calls of the original).
+// HandleButtonActivated (0x10078afde, 4659 bytes): the toolbar and menu buttons. A nested binary search (and a jump table for the ids
+// 0x29..0x44) picks: a command-server command, one of the menus, the inlined civic-building catalogs, the mayor sub-panels, the
+// mission panel toggles, the signs palette, the network tool's escape, the earned-items catalog; every path ends with the tutorial hook.
+namespace {
 struct ButtonCommand { std::uint32_t button, command; };
-constexpr ButtonCommand kButtonCommands[] = {
+constexpr ButtonCommand kButtonCommands[] = {   // SL::spCommandServer vslot 0x98(command, 0, 0)
     {0x8998bbdfu, 0x6a935cb5u}, {0x8a4fbaeau, 0x6a935cccu}, {0xa98f4f88u, 0x6a935e34u}, {0x8b96b73eu, 0x6a935cf4u},
     {0x99887766u, 0x6a935cf3u}, {0xaba7ed0au, 0xabcdee11u}, {0xaa5543a1u, 0x2a94a5b6u}, {0xca58ebb7u, 0x6a935e2au},
     {0xcb95412cu, 0x0b980587u}, {0xe999c820u, 0x6a935d36u}, {0xe9920494u, 0x6a935cbau}, {0xe99237b4u, 0x6a935dc9u},
     {0xeb9541ebu, 0x6b98058au}, {0x2a4fbb08u, 0x6a935cc9u}, {0x4992046au, 0x6a935cb7u}, {0x6a4fbb31u, 0x6a935cb0u},
     {0x4a4fbb60u, 0x6a935cb2u}, {0x098f4f6cu, 0x6a935e2du}, {0x0b954123u, 0x0b980581u}, {0xc998bb81u, 0x6a935cadu},
-    {0x00000044u, 0x6a935e3fu}, {0x00000043u, 0x6a935e3fu},
+    {0x00000044u, 0x6a935e3fu},
 };
-// The buttons that open a secondary menu window: {button, script, window id, align target}.
-struct SecondaryMenu { std::uint32_t button, script, window; };
+struct SecondaryMenu { std::uint32_t button, script, window; };   // InvokeSecondaryMenu(script, window, sender, button)
 constexpr SecondaryMenu kSecondaryMenus[] = {
-    {0xa994824du, 0xe99237ffu, 0xc99237a0u}, {0xe991ee2fu, 0x4992f764u, 0xe992f711u},
-    {0x6991ee42u, 0x899302fcu, 0x0992fd17u}, {0x0991ee13u, 0xe9949936u, 0x69923479u},
-    {0x0991ee39u, 0xc9930681u, 0x699306edu}, {0x8991ee08u, 0x09923283u, 0x49923239u},
-    {0x49e95d2bu, 0xe9923283u, 0x49923239u}, {0xa9ed5617u, 0xaa356502u, 0xca35cbedu},
-    {0x00000036u, 0xaaa44448u, 0xca35cbedu}, {0x8a32dddbu, 0xaaa44448u, 0xca35cbedu},
+    {0xa994824du, 0xe99237ffu, 0xc99237a0u}, {0xe991ee2fu, 0x4992f764u, 0xe992f711u}, {0x6991ee42u, 0x899302fcu, 0x0992fd17u},
+    {0x0991ee13u, 0xe9949936u, 0x69923479u}, {0x0991ee39u, 0xc9930681u, 0x699306edu},
 };
+struct CivicCatalog { std::uint32_t button; std::uint32_t groups[4]; int count; int state; };   // the inlined building catalogs
+constexpr CivicCatalog kCivicCatalogs[] = {
+    {0x00000003u, {0x1006u}, 1, 7},                 {0x00000034u, {0x150bu}, 1, -1},
+    {0x00000037u, {0x1500u, 0x1501u}, 2, 3},        {0x00000038u, {0x1502u}, 1, 4},
+    {0x00000042u, {0x1503u, 0x1504u, 0x1505u, 0x1506u}, 4, 6},
+    {0x89dd5405u, {0x1507u}, 1, 5},                 {0x09930709u, {0x150au}, 1, 8},
+};
+bool In(std::uint32_t value, std::initializer_list<std::uint32_t> list) {
+    for (std::uint32_t v : list) if (v == value) return true;
+    return false;
+}
+}  // namespace
 
-// HandleButtonActivated (0x10078afde, 4659 bytes): the toolbar and menu buttons. Buttons that run a command go through
-// the command table; the mayor sub-panels, the day / night buttons and the secondary menus are handled here. The
-// catalog menus (zoning, roads, buildings, landscape, vehicles) need the catalog view classes and the tool classes
-// behind them (the zone and network tools are not recovered), so those buttons only close the open menu.
 void cSC4View3DWin::HandleButtonActivated(cIGZWin* sender, cGZMessage& message) {
     const auto button = static_cast<std::uint32_t>(message.param2);
     AddRef();
-    bool handled = false;
-    for (const ButtonCommand& entry : kButtonCommands) {
-        if (entry.button != button) continue;
-        if (entry.button == 0x2992f72cu) CloseTertiaryMenu();
-        ProcessViewCommand(entry.command);
-        handled = true;
+    auto command = [this](std::uint32_t id) { if (host_) host_->ExecuteCommand(id); };
+    bool done = false;
+    for (const ButtonCommand& entry : kButtonCommands)
+        if (entry.button == button) { command(entry.command); done = true; break; }
+    if (!done) for (const SecondaryMenu& menu : kSecondaryMenus)
+        if (menu.button == button) { if (sender) InvokeSecondaryMenu(menu.script, menu.window, button); done = true; break; }
+    if (!done) for (const CivicCatalog& civic : kCivicCatalogs) {
+        if (civic.button != button) continue;
+        done = true;
+        if (!sender) break;
+        std::set<std::uint32_t> include(civic.groups, civic.groups + civic.count), exclude;
+        CatalogState* state = civic.state >= 0 ? &catalogStates_[civic.state] : nullptr;
+        if (tertiaryMenuState_ == button) {
+            CloseTertiaryMenu();
+        } else {
+            cSC4WinCatalogView* catalog = CreateBuildingMenu(0xc8dbccbau, include, exclude, 0, -1);
+            InvokeTertiaryMenu(button, sender, button, catalog, 0x14215ed4u, state);
+            if (catalog) catalog->Release();
+        }
         break;
     }
-    if (!handled) {
-        switch (button) {
-            case 0x49edf9b7u: case 0x00000041u: case 0x99887755u: case 0xabc54125u:
-            case 0x15200002u: case 0x15200003u:
-                ShowMayorSubPanel(button);
-                handled = true;
-                break;
-            case 0x29d27ec0u: case 0x49d27ed0u: case 0x09d27eb0u: case 0xaa9211b3u:   // the graph buttons
-                ShowMayorSubPanel(0x15200002u);
-                if (graphsViewWinProc_) graphsViewWinProc_->ShowGraphType(0xe);
-                handled = true;
-                break;
-            case 0xa998af42u: case 0xc998af00u: case 0x29920899u: case 0x30u:   // the zoning palette
-                DoZoningMenu(sender, button);
-                handled = true;
-                break;
-            case 0x2992f72cu:                                          // a tertiary menu's own close button
-                CloseTertiaryMenu();
-                ProcessViewCommand(0x6a935deeu);
-                handled = true;
-                break;
-            default: break;
+    if (!done) {
+        done = true;
+        if (In(button, {0x8991ee08u, 0x899231e6u, 0x152231f3u, 0x4a551a6bu, 0x29923215u, 0x6a3d638cu, 0xea32ddbbu, 0x8a32dddbu,
+                        0xc99231dau, 0x4a22ea06u, 0x4a32ddc7u, 0x0a32ddd2u, 0xea32dde5u, 0x49e95d2bu, 0x36u, 0x0aa44502u, 0x0aa44503u,
+                        0x0aa44504u, 0x0aa44505u})) {
+            if (sender) DoLandscapeMenu(sender, button);
+        } else if (In(button, {0xabb27a7au, 0xabb27b91u, 0xebf9e342u})) {
+            DoVehicleMenu(sender, button);
+        } else if (In(button, {0x29920899u, 0xa998af42u, 0xc998af00u, 0x30u})) {
+            if (sender) DoZoningMenu(sender, button);
+        } else if (In(button, {0x99887755u, 0xabc54125u, 0x49edf9b7u, 0x41u, 0x15200002u, 0x15200003u})) {
+            ShowMayorSubPanel(button);
+        } else if (In(button, {0xe99234b3u, 0x299237bfu, 0xa99234a6u, 0x2b730c5bu, 0x2b79e398u, 0xea6e379du, 0x6999bf56u, 0x29u, 0x31u})) {
+            if (sender) DoTransportMenu(sender, button);
+        } else if (In(button, {0x29d27ec0u, 0x49d27ed0u, 0x09d27eb0u, 0xaa9211b3u})) {   // the graph buttons
+            ShowMayorSubPanel(0x15200002u);
+            if (graphsViewWinProc_) graphsViewWinProc_->ShowGraphType(0xe);
+        } else if (In(button, {0x4bfc8c2fu, 0x0992fd36u, 0x1u, 0x09de87aeu, 0xe9de87a7u, 0x69a30679u, 0x6bfc8c55u, 0x33u})) {
+            DoDisasterCopingMenu(sender, button);
+        } else if (In(button, {0x32u, 0x35u, 0x39u, 0x40u})) {
+            if (sender) DoUtilitiesMenu(sender, button);
+        } else {
+            switch (button) {
+                case 0x2992f72cu:                                       // a tertiary menu's own close button
+                    CloseTertiaryMenu();
+                    command(0x6a935deeu);
+                    break;
+                case 0xa9ed5617u:                                       // the day / night menu
+                    InvokeSecondaryMenu(0xaa356502u, 0xca35cbedu, 0xa9ed5617u);
+                    UpdateDayNightButtons();
+                    break;
+                case 0xab9537b7u:                                       // the signs palette, its toggle following the prop developer
+                    if (!sender) break;
+                    InvokeTertiaryMenu(0xcb95403eu, 0xab954023u, 0xab9537b7u);
+                    if (tertiaryMenu_ && host_) nsGZWinUtils::SetButtonToggleState(tertiaryMenu_, 0xeb9541ebu, host_->SignsAndLabelsVisible());
+                    break;
+                case 0x69b9324au:                                       // the earned-items catalog
+                    if (sender) InvokeSecondaryMenu(0x4a2b2fe2u, sender, 0x69b9324au,
+                                                    nSC4UI::CreateCatalogView(0x29b6c670u, 0x4a2b2464u, 0, 0x8a416a99u), 0x8a2564a2u, nullptr);
+                    break;
+                case 0x4bb92c20u:                                       // the mission panel: details hidden, summary shown
+                    if (missionPanel_) {
+                        nsGZWinUtils::SetWindowVisible(missionPanel_, 0xcc1a6983u, false, false);
+                        nsGZWinUtils::SetWindowVisible(missionPanel_, 0x10000005u, true, false);
+                    }
+                    break;
+                case 0x4bb92c21u:                                       // and back
+                    if (missionPanel_) {
+                        nsGZWinUtils::SetWindowVisible(missionPanel_, 0xcc1a6983u, true, false);
+                        nsGZWinUtils::SetWindowVisible(missionPanel_, 0x10000005u, false, false);
+                    }
+                    break;
+                case 0x4bb92c1fu:                                       // escape out of the tool 0x2b709676
+                    if (cSC4ViewInputControl* tool = GetCurrentViewInputControl())
+                        if (tool->GetID() == 0x2b709676u) tool->OnKeyDown(0x1b, 0);
+                    break;
+                case 0xea6fa936u:                                       // the mayor panel's window closes
+                    if (window4b0_) window4b0_->HideWindow();
+                    break;
+                case 0x43u:                                             // a click sound, then the command 0x44 runs too
+                    if (host_) host_->PlayUISound(0x4a5c31d7u);
+                    command(0x6a935e3fu);
+                    break;
+                default:
+                    done = false;
+                    break;
+            }
         }
     }
-    if (!handled && sender) {
-        for (const SecondaryMenu& menu : kSecondaryMenus) {
-            if (menu.button != button) continue;
-            InvokeSecondaryMenu(menu.script, menu.window, button);
-            handled = true;
-            break;
-        }
-    }
-    if (host_) host_->AfterButtonActivated();
+    (void)done;
+    if (host_) host_->AfterButtonActivated();                           // SL::spCity vslot 0x290 (tutorial) -> vslot 0x40 / 0x70
     Release();
 }
 
@@ -2599,6 +2920,124 @@ bool cSC4View3DWin::DoMessage(cGZMessage& message) {                         // 
 
 // PARTIAL: the engine-notification entry point (0x100785a5e, 1657 bytes) drives the advisors, the
 // city name / budget / population panels and the mission progress out of ~46 message types.
-bool cSC4View3DWin::DoMessage(cIGZMessage2*) { return false; }
+// DoMessage(cIGZMessage2*) (0x100785a5e): the view's message-server handler. A command (a message answering the command-message
+// interface 0x4b99446a, sent by the command dispatcher) runs ProcessCommand with its parameter sets; the city's life cycle, load / save,
+// the clock, the simulation, the budget, the alerts and the mission messages update the windows.
+bool cSC4View3DWin::DoMessage(cIGZMessage2* message) {
+    auto* standard = static_cast<cIGZMessage2Standard*>(message);
+    const std::uint32_t type = message->GetType();
+    void* command = nullptr;
+    if (message->QueryInterface(0x4b99446au, &command) && command) {
+        // the command message's sets (vslots 0x50 / 0x78); the original does not Release the interface it asked for
+        auto* in = static_cast<cIGZCommandParameterSet*>(standard->GetVoid1());
+        auto* out = static_cast<cIGZCommandParameterSet*>(standard->GetVoid2());
+        if (in && out) ProcessCommand(type, *in, *out);
+        else ProcessViewCommand(type);
+        return true;
+    }
+    auto updateSpeedAndAlerts = [&]() {
+        // the pause button follows the simulator (SetBtnFlag 1, and a flash while paused)
+        if (simulatorToPause_ && panelWindow_) {
+            void* raw = nullptr;
+            if (panelWindow_->GetChildAs(0xc998bb81u, gz::kGZIID_cIGZWinBtn, &raw) && raw) {
+                auto* button = static_cast<gz::cIGZWinBtn*>(raw);
+                const bool paused = simulatorToPause_->IsPaused();
+                button->SetBtnFlag(1, paused);
+                button->Flash(simulatorToPause_->IsPaused() ? 0xfffffff0u : 0u, 1000);
+                button->Release();
+            }
+        }
+        UpdateSpeedButtons();
+        UpdateAlertBorder();
+        if (type == 0xabbbca64u) UpdateMissionProgress(standard->GetIGZUnknown(), static_cast<std::uint32_t>(standard->GetData1()));
+    };
+    auto alertButton = [&]() {
+        if (cIGZWin* button = GetChildWindowFromIDRecursive(0x8991ee08u)) button->SetFlag(2, type == 0xaa1b2002u);
+        UpdateAlertBorder();
+    };
+    switch (type) {
+        case 0xca1b1e64u:                                               // the disaster ended: the disaster menu closes
+            if (secondaryMenuState_ == 0x49923239u) CloseSecondaryMenu();
+            alertButton();
+            return true;
+        case 0xaa1b2002u: alertButton(); return true;               // a disaster began
+        case 0x06cdb65bu: if (renderer_) renderer_->ForceFullRedraw(); return true;   // renderer vslot 0xa0
+        case 0x0772fad4u: case 0x08dac3e7u: case 0x08dac3e8u: UpdateBudget(); return true;
+        case 0x0ab99380u: UpdateCityName(); return true;
+        case 0x26c63341u:                                               // the city was read
+            DoLoad(static_cast<cIGZPersistDBSegment*>(standard->GetVoid1()), static_cast<cIGZVariant*>(standard->GetVoid3()));
+            return true;
+        case 0x26c63344u: DoSave(static_cast<cIGZPersistDBSegment*>(standard->GetVoid1())); return true;
+        case 0x26c63343u: RemoveAllViewInputControls(false); return true;
+        case 0x26d31ec0u: DoPreCityInit(); return true;
+        case 0x26d31ec1u: DoPostCityInit(); return true;
+        case 0x26d31ec2u:                                               // the city shuts down
+            deferredMessages_.clear();
+            RemoveAllViewInputControls(true);
+            RemoveAllPersistentViewInputControls();
+            return true;
+        case 0x26d31ec3u: return true;
+        case 0x26d31ec4u: DoCityEstablished(); return true;
+        case 0x26d31ec5u: DoCityObliterated(); return true;
+        case 0xa6b79602u: case 0xa6b79612u: {                           // the view changed (zoom / rotation)
+            if (host_ && host_->GlobalRenderProperties() && host_->GlobalRenderProperties()->BoolValue(28)) return true;   // render properties +0x738 (bool 28: 0x40-byte records, value at +0x38)
+            if (type == 0xa6b79602u) {
+                UpdateZoomButtons();
+                AddBackgroundImageToRenderer();
+            }
+            DoTemporarySimHiddenPause();
+            if (focusState_ == 0) return true;
+            int x = 0, y = 0;
+            if (cIGZWinMgr* mgr = GetWindowManager()) mgr->GetMousePosition(x, y);
+            GZOnMouseMove(x, y, lastMessageModifiers_);
+            return true;
+        }
+        case 0xa6b79621u: DoTemporarySimHiddenPause(); return true;
+        case 0xaa5cf1e3u: {                                             // the budget failed: a dialog now, or once dialogs are safe
+            if (host_ && host_->PopupModalDialogsSafe()) {
+                DoBudgetFailure();
+                return true;
+            }
+            for (const auto& queued : deferredMessages_)
+                if (queued && queued->GetType() == type) return true;
+            deferredMessages_.push_back(cRZAutoRefCount<cIGZMessage2>(message));
+            return true;
+        }
+        case 0xaa7fb7e0u: updateSpeedAndAlerts(); return true;
+        case 0xabbbca64u: updateSpeedAndAlerts(); return true;
+        case 0xac083d7du: UpdateMissionProgress(standard->GetIGZUnknown(), 1); return true;
+        case 0x44778231u:
+            Update24HourClock(static_cast<std::uint32_t>(standard->GetData2()), static_cast<std::uint32_t>(standard->GetData3()));
+            return true;
+        case 0x44778233u: UpdateAmbientLightLevel(); return true;
+        case 0x4a44667fu: {                                             // a progress caption
+            if (!progressScreen_ || !host_) return true;
+            void* raw = nullptr;
+            if (standard->GetString(0x089b7dc8u, &raw) && raw) {
+                auto* text = static_cast<cIGZString*>(raw);
+                host_->SetProgressCaption(progressScreen_, static_cast<int>(standard->GetData1()), *text);
+                text->Release();
+            }
+            return true;
+        }
+        case 0x4a7fb7e2u: updateSpeedAndAlerts(); return true;
+        case 0x4a7fb7e9u: UpdateSpeedButtons(); return true;
+        case 0x66956814u: UpdateSimulationClock(); UpdatePopulation(); return true;
+        case 0x66956816u: UpdateMayorRatingBar(); return true;
+        default: return true;
+    }
+}
+
+// ---- DoMessage's helpers that are not recovered yet: the host's hooks stand in (PARTIAL) -------------------------------------------
+void cSC4View3DWin::DoPreCityInit() { if (host_) host_->PreCityInit(); }                                   // 0x10078616c
+void cSC4View3DWin::DoPostCityInit() { if (host_) host_->PostCityInit(); }                                 // 0x1007867d8
+void cSC4View3DWin::DoLoad(cIGZPersistDBSegment* segment, cIGZVariant* version) { if (host_) host_->LoadViewState(segment, version); }   // 0x100787092
+void cSC4View3DWin::DoSave(cIGZPersistDBSegment* segment) { if (host_) host_->SaveViewState(segment); }   // 0x1007871e4
+void cSC4View3DWin::DoBudgetFailure() { if (host_) host_->BudgetFailure(); }                               // 0x100788d0e
+void cSC4View3DWin::Update24HourClock(std::uint32_t hour, std::uint32_t minute) { if (host_) host_->ClockChanged(hour, minute); }   // 0x100788912
+void cSC4View3DWin::UpdateAmbientLightLevel() { if (host_) host_->AmbientLightChanged(); }                 // 0x100788bfc
+void cSC4View3DWin::UpdateMayorRatingBar() { if (host_) host_->MayorRatingChanged(); }                     // 0x100788084
+void cSC4View3DWin::UpdateMissionProgress(cIGZUnknown* mission, std::uint32_t state) { if (host_) host_->MissionProgress(mission, state); }   // 0x100787b66
+void cSC4View3DWin::AddBackgroundImageToRenderer() { if (host_) host_->AddBackgroundImage(); }            // 0x100787334
 
 }  // namespace sc4
