@@ -3,6 +3,7 @@
 #include "app/NativeGrowthDevelopers.h"
 
 #include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <vector>
 
@@ -21,12 +22,33 @@ void* NewGrowthDeveloper() {
     return developer;
 }
 
+std::uint32_t GrowthDeveloperSubType(void* developer) {
+    return developer ? static_cast<std::uint32_t>(static_cast<sc4::cSC4GrowthDeveloper*>(developer)->GetSubType()) : 0;
+}
+bool GrowthDeveloperListsValid(void* developer) {
+    return developer && static_cast<sc4::cSC4GrowthDeveloper*>(developer)->GrowthAndDeclineListsAreValid();
+}
+void GrowthDeveloperGrowthList(void* developer, std::vector<std::array<std::int32_t, 3>>& out) {
+    out.clear();
+    if (!developer) return;
+    for (const auto& item : static_cast<sc4::cSC4GrowthDeveloper*>(developer)->GetGrowthList()) out.push_back({item.x, item.z, item.style});
+}
+float GrowthDeveloperActiveDemand(void* developer) {
+    sc4::IGrowthDemandApi* demand = developer ? static_cast<sc4::cSC4GrowthDeveloper*>(developer)->GetSourceDemand() : nullptr;
+    return demand ? demand->GetActiveValue() : 0.0f;
+}
+sc4::cSC4GrowthDeveloper* GrowthDeveloperOfType(std::uint32_t type) {
+    for (sc4::cSC4GrowthDeveloper* d : g_developers) if (static_cast<std::uint32_t>(d->GetSubType()) == type) return d;
+    return nullptr;
+}
+
 std::string GrowthDevelopersSummary() {
     std::string out;
     for (sc4::cSC4GrowthDeveloper* d : g_developers) {
         char line[96];
-        std::snprintf(line, sizeof line, " %x:%s%zu/%zu", d->GetSubType(), d->GrowthAndDeclineListsAreValid() ? "" : "!",
-                      d->GetGrowthList().size(), d->GetDeclineList().size());
+        sc4::IGrowthDemandApi* demand = d->GetSourceDemand();
+        std::snprintf(line, sizeof line, " %x:%s%zu/%zu d%.0f", d->GetSubType(), d->GrowthAndDeclineListsAreValid() ? "" : "!",
+                      d->GetGrowthList().size(), d->GetDeclineList().size(), demand ? demand->GetActiveValue() : -1.0f);
         out += line;
     }
     return out;
@@ -162,6 +184,7 @@ struct CrimeApi final : IGrowthCrimeApi {   // the crime simulator's grid is con
 struct DemandChannel final : IGrowthDemandApi {
     cSC4Demand* demand = nullptr;
     float GetValue() const override { return demand ? demand->QuerySupplyValue() : 0.0f; }
+    float GetActiveValue() const override { return demand ? demand->QueryActiveDemandValue() : 0.0f; }
     void AddToSupply(float amount) override { if (demand) demand->AddToSupplyValue(amount); }
 };
 struct DemandSimulatorApi final : IGrowthDemandSimulatorApi {

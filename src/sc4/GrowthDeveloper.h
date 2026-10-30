@@ -258,6 +258,7 @@ public:
     virtual void Release() {}                                         // cIGZUnknown slot 0x10
     virtual float GetValue() const = 0;                               // vslot 0x40
     virtual void AddToSupply(float amount) = 0;                       // vslot 0x88
+    virtual float GetActiveValue() const { return 0.0f; }             // vslot 0x60 (the active demand Grow weighs)
 };
 
 class IGrowthDemandSimulatorApi : public IGrowthDeveloperService {

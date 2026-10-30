@@ -45,6 +45,11 @@ public:
     void RegisterMessageTarget(cSC4BuildingDevelopmentSimulator*) override { ++registered; }
     void UnregisterMessageTarget(cSC4BuildingDevelopmentSimulator*) override { ++unregistered; }
     float DemandChannelSupply(std::uint32_t type) override { return channels.count(type) ? channels[type] : 0.0f; }
+    ITractDeveloperRef* tract = nullptr;
+    ITractDeveloperRef* TractDeveloper() override { return tract; }
+    std::uint32_t RandomBelow(std::uint32_t) override { return 0; }
+    std::uint64_t BeginGrowSlice() override { return 0; }
+    bool GrowSliceExpired(std::uint64_t) override { return false; }
     void LotConfigurations(std::vector<LotConfigurationInfo>& out) override {
         LotConfigurationInfo c;
         c.sizeX = 2; c.sizeZ = 2;
@@ -128,7 +133,19 @@ struct FakeServices final : IBuildingPlacementServices {
     bool RemoveOccupant(IPlacedOccupant*, bool, bool) override { ++removed; return true; }
 };
 struct Source final : IDeclineSource { float value; explicit Source(float v) : value(v) {} float Condition() override { return value; } };
-struct Tract final : ITractDeveloperRef { std::vector<int> results; int calls = 0; int ExecuteOutcome(const TractOutcome&) override { return results[calls++]; } };
+struct Tract final : ITractDeveloperRef {
+    std::vector<int> results; int calls = 0; int ExecuteOutcome(const TractOutcome&) override { return results[calls++]; }
+    std::vector<std::pair<int, int>> grown; int growResult = 1;
+    int Grow(IGrowthDeveloperRef*, int x, int z, std::uint8_t) override { grown.push_back({x, z}); return growResult; }
+};
+struct GrowingDeveloper final : IGrowthDeveloperRef {
+    float demand = 50; std::uint32_t type = 0x1010;
+    void Init(cISCPropertyHolder*) override {}
+    std::uint32_t SubType() const override { return type; }
+    bool ListsValid() const override { return true; }
+    std::vector<GrowthTract> GrowthList() const override { return {{3, 4, 1}, {7, 8, 2}}; }
+    float ActiveDemand() const override { return demand; }
+};
 struct Filter final : IBuildingTypeFilter { bool Accepts(std::uint32_t t) override { return t == 0x1002; } };
 }
 int main() {
@@ -418,6 +435,33 @@ int main() {
         growth->SetPlacementServices(nullptr);
         growth->SetConstructionResources(nullptr);
         host.exemplars.erase(0x7777);
+        growth->Release();
+    }
+    // ---- Grow (0x10014fb24): the first unmarked tract of the drawn developer goes to the tract developer
+    {
+        auto* growth = new cSC4BuildingDevelopmentSimulator();
+        growth->AddRef();
+        FakeServices services;
+        growth->SetPlacementServices(&services);
+        Tract tract;
+        host.tract = &tract;
+        CHECK(growth->Init());
+        GrowingDeveloper developer;
+        growth->SetDeveloperForTest(developer.type, &developer);
+        growth->Grow();
+        CHECK(tract.grown.size() == 1 && tract.grown[0] == std::make_pair(3, 4));
+        CHECK(!growth->IsTractUnmarked(0x1010, 3, 4) && growth->GetDayOfLastSuccessfulBuild(0x1010) == 7);
+        growth->Grow();                                                    // the next tract
+        CHECK(tract.grown.size() == 2 && tract.grown[1] == std::make_pair(7, 8));
+        growth->Grow();                                                    // all marked: the marks clear, the list starts over
+        CHECK(tract.grown.size() == 3 && tract.grown[2] == std::make_pair(3, 4) && growth->IsTractUnmarked(0x1010, 7, 8));
+        developer.demand = 5;                                              // demand not above 5: nobody grows
+        growth->Grow();
+        CHECK(tract.grown.size() == 3);
+        growth->SetDeveloperForTest(developer.type, nullptr);
+        growth->Shutdown();
+        growth->SetPlacementServices(nullptr);
+        host.tract = nullptr;
         growth->Release();
     }
     S::StaticShutdown();

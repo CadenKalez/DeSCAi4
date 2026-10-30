@@ -9,7 +9,11 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <array>
+#include <chrono>
 #include <map>
+
+#include "rz/cRZRandom.h"
 
 #include "app/NativeCity.h"
 #include "app/NativeGrowthDevelopers.h"
@@ -99,9 +103,30 @@ public:
     void Init(cISCPropertyHolder* properties) override { GrowthDeveloperInit(developer_, properties); }
     void StartMapUpdate() override { GrowthDeveloperStartMapUpdate(developer_); }
     bool IsMapUpdateFinished() const override { return GrowthDeveloperMapUpdateFinished(developer_); }
+    std::uint32_t SubType() const override { return GrowthDeveloperSubType(developer_); }
+    bool ListsValid() const override { return GrowthDeveloperListsValid(developer_); }
+    std::vector<GrowthTract> GrowthList() const override {
+        std::vector<std::array<std::int32_t, 3>> items;
+        GrowthDeveloperGrowthList(developer_, items);
+        std::vector<GrowthTract> out;
+        for (const auto& i : items) out.push_back(GrowthTract{i[0], i[1], i[2]});
+        return out;
+    }
+    float ActiveDemand() const override { return GrowthDeveloperActiveDemand(developer_); }
+    void* Handle() const { return developer_; }
 private:
     void* developer_;
 };
+
+// SL::spTractDeveloper: the city's cSC4TractDeveloper, reached through NativeTractDevelopment.cpp.
+class TractDeveloperRef final : public ITractDeveloperRef {
+public:
+    int ExecuteOutcome(const TractOutcome&) override { SC4_UNWIRED("ITractDeveloperRef::ExecuteOutcome (the decline plan, layer 3)"); return 0; }
+    int Grow(IGrowthDeveloperRef* developer, int x, int z, std::uint8_t style) override {
+        auto* ref = static_cast<GrowthDeveloperRef*>(developer);   // every developer this host made is one
+        return ref ? NativeTractGrow(ref->Handle(), x, z, style) : 0;
+    }
+} g_tract;
 
 // IBuildingPlacementServices: the growth developers are real; the occupant placement is layer 4.
 class PlacementServices final : public IBuildingPlacementServices {
@@ -181,6 +206,13 @@ public:
         g_targets.erase(it);
     }
     IBuildingPlacementServices* PlacementServices() override { return &g_placement; }
+    ITractDeveloperRef* TractDeveloper() override { return &g_tract; }
+    std::uint32_t RandomBelow(std::uint32_t range) override { static cRZRandom random(0x5eedu); return range ? random.RandomUint32Uniform(range) : 0; }
+    std::uint64_t BeginGrowSlice() override { return NowMicros() + 3000; }      // cSC4DynamicLimitTimer: 3 ms
+    bool GrowSliceExpired(std::uint64_t slice) override { return NowMicros() >= slice; }
+    static std::uint64_t NowMicros() {
+        return static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count());
+    }
     IConstructionResources* CreateConstructionResources() override { return new ConstructionResources(); }
     float DemandChannelSupply(std::uint32_t type) override {
         cSC4DemandSimulator* demand = CityComponent<cSC4DemandSimulator>(sc4::CityComponent::DemandSimulator, kGZCLSID_cSC4DemandSimulator);

@@ -68,6 +68,7 @@ public:
 };
 
 class IBuildingPlacementServices;
+class ITractDeveloperRef;
 class cSC4BuildingDevelopmentSimulator;
 class IBuildingDevelopmentSimHost {
 public:
@@ -99,6 +100,10 @@ public:
     virtual IConstructionResources* CreateConstructionResources() { return nullptr; }   // new cSC4Demand, one reference
     // SL::spDemandSim vslot 0x30 GetDemand(type, 0) -> vslot 0x40: a demand channel's supply value
     virtual float DemandChannelSupply(std::uint32_t type) { (void)type; return 0.0f; }
+    virtual ITractDeveloperRef* TractDeveloper() { return nullptr; }       // SL::spTractDeveloper (+0xd0)
+    virtual std::uint32_t RandomBelow(std::uint32_t range) { (void)range; return 0; }   // sRandom.RandomUint32UniformBelow
+    virtual std::uint64_t BeginGrowSlice() { return 0; }                  // cSC4DynamicLimitTimer(3 ms)
+    virtual bool GrowSliceExpired(std::uint64_t slice) { (void)slice; return true; }
 };
 // cISC4BuildingDevelopmentSimulator::ConstructionProfile (the fields IsSuitableForConstruction reads) and its failure codes.
 struct ConstructionProfile {
@@ -174,12 +179,21 @@ public:
     virtual void SetPosition(const float position[3]) = 0;                  // vslot 0xe0
     virtual void GetBounds(float minimum[3], float maximum[3]) = 0;         // vslot 0xe8
 };
+struct GrowthTract {                                                        // cISC4GrowthDeveloper::GrowthItem (0xc bytes)
+    std::int32_t x = 0, z = 0;
+    std::int32_t style = 1;                                                 // the byte Grow hands on
+};
 class IGrowthDeveloperRef {                                                 // cISC4GrowthDeveloper
 public:
     virtual ~IGrowthDeveloperRef() = default;
     virtual void Init(cISCPropertyHolder* properties) = 0;                  // vslot 0x18
     virtual void StartMapUpdate() {}                                        // vslot 0xd8 (DoMonthlySimulation)
     virtual bool IsMapUpdateFinished() const { return true; }              // vslot 0xe0 (DoIdle)
+    // what Grow reads (0x10014fb24)
+    virtual std::uint32_t SubType() const { return 0; }                    // vslot 0x30
+    virtual bool ListsValid() const { return false; }                      // vslot 0x50
+    virtual std::vector<GrowthTract> GrowthList() const { return {}; }     // vslot 0x58
+    virtual float ActiveDemand() const { return 0.0f; }                    // vslot 0x90 -> demand vslot 0x60
 };
 // One pending demolition of the decline plan (a node of the list at this+0x110).
 class IDeclineSource {
@@ -202,6 +216,8 @@ class ITractDeveloperRef {                                                  // c
 public:
     virtual ~ITractDeveloperRef() = default;
     virtual int ExecuteOutcome(const TractOutcome& outcome) = 0;            // vslot 0x30
+    // vslot 0x28 Grow(GrowthProfile{developer, x, z, style}, outcomes, declined): > 0 when something was built
+    virtual int Grow(IGrowthDeveloperRef* developer, int x, int z, std::uint8_t style) { (void)developer; (void)x; (void)z; (void)style; return 0; }
 };
 class IBuildingPlacementServices {
 public:
@@ -243,8 +259,8 @@ public:
     void DoMonthlySimulation();                                             // @ 0x10014ee44
     void ReadSimulatorTunableValues();                                      // @ 0x10014d71e
     static void InitDynamicDataFromExemplar(const cGZPersistResourceKey& key, void* context);   // @ 0x10014d666
-    // Not recovered yet (notes/GROWTH_PLAN.md layer 3): Grow 0x10014fb24, PlanDecline 0x10015060c.
-    void Grow() {}
+    void Grow();                                                            // @ 0x10014fb24
+    // Not recovered yet: PlanDecline 0x10015060c (the decline queue).
     void PlanDecline() {}
     int GrowthStage() const { return stage_; }
 
@@ -309,6 +325,9 @@ public:
     IGrowthDeveloperRef* GetDeveloper(std::uint32_t developerType) const;                       // @ 0x10015359a (vslot 0x108)
     IGrowthDeveloperRef* GetDeveloper(std::uint32_t purpose, std::int32_t wealth) const;        // @ 0x100153572 (vslot 0x100)
     const std::map<std::uint32_t, IGrowthDeveloperRef*>& GetDevelopers() const { return developers_; }   // +0xb8
+    void SetDeveloperForTest(std::uint32_t type, IGrowthDeveloperRef* developer) {
+        if (developer) developers_[type] = developer; else developers_.erase(type);
+    }
     ITractDeveloperRef* GetTractDeveloper() const { return tractDeveloper_; }                   // +0xd0
     void SetTractDeveloper(ITractDeveloperRef* developer) { tractDeveloper_ = developer; }
     void* GetBuildingMap() const { return buildingMap_; }                                       // +0x80

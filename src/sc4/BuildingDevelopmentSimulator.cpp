@@ -463,6 +463,7 @@ bool cSC4BuildingDevelopmentSimulator::Init() {
     initialized_ = true;
     StaticInit();
     if (!placement_ && g_host) placement_ = g_host->PlacementServices();
+    if (!tractDeveloper_ && g_host) tractDeveloper_ = g_host->TractDeveloper();    // SL::spTractDeveloper (+0xd0)
     // every exemplar of type 0x6534284a whose ExemplarType (0x10) is 4 (a simulator) that names a developer type makes a developer
     if (g_host) g_host->ForEachExemplarKey([this](const cGZPersistResourceKey& key) { InitDynamicDataFromExemplar(key, this); });
     ReadSimulatorTunableValues();
@@ -607,6 +608,52 @@ void cSC4BuildingDevelopmentSimulator::DoIdle() {
             return;
         default:
             return;
+    }
+}
+
+// 0x10014fb24, the "random pass": within a 3 ms slice, a developer is drawn at random among those whose active demand is above
+// 5 (weight = the demand + +0x1a8); its first growth tract this developer has not marked yet is marked and handed to the tract
+// developer (vslot 0x28); a build records the day. When every tract of the list is marked, the marks of that developer are
+// cleared and the list starts over. The drawn developer leaves the candidates whatever happens. Kept: a pass where no developer
+// has demand above 5 only ends when the slice expires (the original spins on its candidate map); the port stops at once.
+void cSC4BuildingDevelopmentSimulator::Grow() {
+    if (!g_host) return;
+    std::map<std::uint32_t, IGrowthDeveloperRef*> candidates;
+    for (const auto& entry : developers_) if (entry.second) candidates.emplace(entry.first, entry.second);
+    const std::uint64_t slice = g_host->BeginGrowSlice();
+    while (!candidates.empty() && !g_host->GrowSliceExpired(slice)) {
+        std::uint32_t total = 0;
+        for (const auto& entry : candidates) {
+            const int demand = static_cast<int>(entry.second->ActiveDemand());              // vslot 0x90 -> 0x60
+            if (demand > 5) total += static_cast<std::uint32_t>(demand) + developerWeightBonus_;
+        }
+        if (total == 0) break;
+        std::int32_t pick = static_cast<std::int32_t>(g_host->RandomBelow(total));
+        for (auto it = candidates.begin(); it != candidates.end(); ++it) {
+            IGrowthDeveloperRef* developer = it->second;
+            const int demand = static_cast<int>(developer->ActiveDemand());
+            if (demand <= 5) continue;
+            const std::int32_t weight = demand + static_cast<std::int32_t>(developerWeightBonus_);
+            const bool chosen = pick < weight;
+            pick -= weight;
+            if (!chosen) continue;
+            const std::uint32_t type = developer->SubType();                               // vslot 0x30
+            if (developer->ListsValid()) {                                                  // vslot 0x50
+                const std::vector<GrowthTract> list = developer->GrowthList();              // vslot 0x58
+                auto tract = std::find_if(list.begin(), list.end(), [&](const GrowthTract& t) { return IsTractUnmarked(type, t.x, t.z); });
+                if (tract == list.end()) {                    // every tract tried: forget the marks and start over
+                    growthMarks_[type].clear();
+                    tract = list.begin();
+                }
+                if (tract != list.end()) {
+                    MarkTract(type, tract->x, tract->z);
+                    if (tractDeveloper_ && tractDeveloper_->Grow(developer, tract->x, tract->z, static_cast<std::uint8_t>(tract->style)) > 0)
+                        lastBuildDay_[static_cast<std::int32_t>(type)] = g_host->SimulatorDay();
+                }
+            }
+            candidates.erase(it);
+            break;
+        }
     }
 }
 

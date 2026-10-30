@@ -4,7 +4,10 @@
 #include <cstdint>
 #include <string>
 
-namespace sc4 { class cISCPropertyHolder; template <class T> class cSC4SimGrid; }
+#include <array>
+#include <vector>
+
+namespace sc4 { class cISCPropertyHolder; template <class T> class cSC4SimGrid; class cSC4GrowthDeveloper; }
 
 namespace native {
 
@@ -12,6 +15,14 @@ void* NewGrowthDeveloper();                                          // new cSC4
 bool GrowthDeveloperInit(void* developer, sc4::cISCPropertyHolder* exemplar);   // vslot 0x18
 void GrowthDeveloperStartMapUpdate(void* developer);                 // vslot 0xd8
 bool GrowthDeveloperMapUpdateFinished(void* developer);              // vslot 0xe0
+std::uint32_t GrowthDeveloperSubType(void* developer);               // vslot 0x30
+bool GrowthDeveloperListsValid(void* developer);                     // vslot 0x50
+void GrowthDeveloperGrowthList(void* developer, std::vector<std::array<std::int32_t, 3>>& out);   // vslot 0x58 {x, z, style}
+float GrowthDeveloperActiveDemand(void* developer);                  // vslot 0x90 -> demand vslot 0x60
+sc4::cSC4GrowthDeveloper* GrowthDeveloperOfType(std::uint32_t type); // the developer of one developer type (or null)
+// cSC4TractDeveloper::Grow for one developer's tract (NativeTractDevelopment.cpp); > 0 when something was built
+int NativeTractGrow(void* developer, int tractX, int tractZ, std::uint8_t style);
+void InstallTractDeveloperHost();   // the tract developer's ITractDeveloperHost (growth layer 3)
 
 // The land value simulator's maps (NativeGrowthMaps.cpp)
 sc4::cSC4SimGrid<std::uint8_t>* NativeTotalLandValueMap();
