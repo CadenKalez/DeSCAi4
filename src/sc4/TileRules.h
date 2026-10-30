@@ -122,4 +122,16 @@ private:
     TileRuleSet rules_;                                 // +0x08
 };
 
+// The RUL rule files (type 0x0a5bcf4b, group 0xaa5bcf57; the k*ResKey statics set by SC4NetworkTool.cpp's initializer
+// 0x10019256a): per network type a "simple" and a "complex" set, instances 1..24, plus 0x10000000 intersections, 0x10000001
+// multi-type rules and 0x10000002 rule overrides.
+constexpr std::uint32_t kNetworkRulesType = 0x0a5bcf4b, kNetworkRulesGroup = 0xaa5bcf57;
+
+// cSC4NetworkTypeInfo +0x28: a network type's tile evaluators, the complex rules first (13 types, 5 = power line has none).
+const std::vector<cSC4TileEvaluator*>& NetworkTileEvaluators(std::uint32_t networkType);
+// The evaluator half of cSC4NetworkTool::ReloadNetworkTypeInfo (0x100186f9c): every type's record is cleared and gets
+// LoadEvaluator(complex key) then LoadEvaluator(simple key) (cSC4NetworkTypeInfo::LoadEvaluator 0x1001c7390 pushes the
+// evaluator even when its file did not load). Returns the number of rule files that loaded.
+int LoadNetworkTileEvaluators();
+
 }  // namespace sc4

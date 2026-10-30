@@ -109,6 +109,19 @@ int main() {
     cSC4TileEvaluator refused;
     CHECK(!refused.AddRulesFromText("1,0,2,0,2\n"));
 
+    // the network types' evaluators: only the street files (instances 10 complex, 9 simple) exist here
+    SetTileRuleResourceLoader([](const cGZPersistResourceKey& key, std::string& out) {
+        if (key.type != kNetworkRulesType || key.group != kNetworkRulesGroup || (key.instance != 9 && key.instance != 10)) return false;
+        out = key.instance == 10 ? "#Complex\n1,2,2,2,2\n3,0,0x5f500400,0,0\n" : "#Simple\n1,0,2,0,2\n3,0,0x5f500200,0,0\n";
+        return true;
+    });
+    CHECK(LoadNetworkTileEvaluators() == 2);
+    CHECK(NetworkTileEvaluators(3).size() == 2);                       // complex first
+    CHECK(NetworkTileEvaluators(3)[0]->Rules().begin()->second.solutions[0].id == 0x5f500400);
+    CHECK(NetworkTileEvaluators(0).size() == 2 && NetworkTileEvaluators(0)[0]->Rules().empty());   // pushed although missing
+    CHECK(NetworkTileEvaluators(5).empty());                           // the power line has no rules
+    CHECK(LoadNetworkTileEvaluators() == 2 && NetworkTileEvaluators(3).size() == 2);   // a reload replaces them
+
     if (g_failures == 0) std::puts("sc4_tilerules ok");
     return g_failures == 0 ? 0 : 1;
 }

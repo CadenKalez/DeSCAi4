@@ -365,4 +365,40 @@ bool cSC4TileEvaluator::AddRules(cSC4FileTokenizer& tokens) {
     return true;
 }
 
+// ------------------------------------------------------------------------------------------- the network types' evaluators
+
+namespace {
+constexpr std::uint32_t kNetworkTypeCount = 13;
+std::vector<cSC4TileEvaluator*>& EvaluatorsOf(std::uint32_t type) {
+    static std::vector<cSC4TileEvaluator*> evaluators[kNetworkTypeCount];
+    return evaluators[type];
+}
+}  // namespace
+
+const std::vector<cSC4TileEvaluator*>& NetworkTileEvaluators(std::uint32_t networkType) {
+    static const std::vector<cSC4TileEvaluator*> none;
+    return networkType < kNetworkTypeCount ? EvaluatorsOf(networkType) : none;
+}
+
+int LoadNetworkTileEvaluators() {
+    // {network type, complex instance, simple instance} in ReloadNetworkTypeInfo's order; the power line (5) has no rules.
+    static constexpr std::uint32_t kFiles[12][3] = {
+        {0, 8, 7},   {10, 18, 17}, {11, 20, 19}, {1, 6, 5},  {8, 16, 15}, {9, 22, 21},
+        {3, 10, 9},  {2, 2, 1},    {12, 24, 23}, {6, 14, 13}, {4, 4, 3},  {7, 12, 11},
+    };
+    int loaded = 0;
+    for (std::uint32_t type = 0; type < kNetworkTypeCount; ++type) {   // cSC4NetworkTypeInfo::Clear (0x1001c7308)
+        for (cSC4TileEvaluator* evaluator : EvaluatorsOf(type)) delete evaluator;
+        EvaluatorsOf(type).clear();
+    }
+    for (const auto& file : kFiles) {
+        for (int which = 1; which <= 2; ++which) {
+            auto* evaluator = new cSC4TileEvaluator();
+            if (evaluator->AddRulesFromResource(cGZPersistResourceKey{kNetworkRulesType, kNetworkRulesGroup, file[which]})) ++loaded;
+            EvaluatorsOf(file[0]).push_back(evaluator);
+        }
+    }
+    return loaded;
+}
+
 }  // namespace sc4

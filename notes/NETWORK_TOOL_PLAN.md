@@ -44,5 +44,10 @@ previews and highlights, the construction crew's animation.
 - The tile-rule engine (src/sc4/TileRules.cpp, test sc4_tilerules): cSC4FileTokenizer (text through SetTileRuleResourceLoader
   instead of SC4GetResourceAsFile), cSC4TileInfo, tCompactNeighborInfo (its rotate / mirror were not decompiled: transcribed from the
   disassembly), cSC4TileRule, cSC4TileNeighborhood, cSC4TileEvaluator (incl. TransmogrifyRuleSet).
-- Next: cSC4NetworkTypeInfo (LoadEvaluator / LoadTileConflictRules / LoadPlacementParams ...) and cSC4NetworkTool::ReloadRules /
-  ReloadNetworkTypeInfo, so the game's rule files load; then cSC4NetworkTileNeighborhood (reads the tool's cell infos) and phase B.
+- The per-type tile evaluators (NetworkTileEvaluators / LoadNetworkTileEvaluators: the evaluator half of ReloadNetworkTypeInfo).
+  Rule files: type 0x0a5bcf4b, group 0xaa5bcf57, instances 1..24 (per type complex then simple; street = 10 / 9), recovered from
+  SC4NetworkTool.cpp's static initializer 0x10019256a. Checked offline against the game data: all 24 files parse (street simple 412
+  rules, street complex 326).
+- Next: install the rule loader natively (SL::spRM bytes) and call LoadNetworkTileEvaluators at start-up; cSC4NetworkTileNeighborhood
+  (reads the tool's cell infos); then phase B. The rest of cSC4NetworkTypeInfo (bridges, supports, placement params, tile
+  conflict / pattern verifier rules) stays host-provided until needed.
