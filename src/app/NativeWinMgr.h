@@ -24,6 +24,7 @@ public:
 
     void Pump() { ProcessPostedMessages(); }
     std::function<void()> modalPump;   // keeps the host painting and pumping events while a modal window is up
+    bool modalDialogs = false;         // SC4GetPopupModalDialogsEnabled / Safe: true once modalPump can run a dialog
 
 private:
     cIGZFrameWork* Framework() override { return nullptr; }
@@ -36,5 +37,9 @@ private:
     bool modalDone_ = false;
     std::uint64_t modalResult_ = 0;
 };
+
+// The game's window manager (RZ::WM()): set once by the host at boot, for the services that reach it outside the window tree.
+WinMgr* ActiveWinMgr();
+void SetActiveWinMgr(WinMgr* manager);
 
 }  // namespace native

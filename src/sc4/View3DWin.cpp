@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "gz/CommandParameterSet.h"
+#include "gz/cIGZVariant.h"
 #include "gz/WinBtn.h"
 #include "gz/WinGen.h"
 #include "gz/WinUtils.h"
@@ -328,12 +329,49 @@ bool cSC4View3DWin::SetZoomAndRotation(int zoom, int rotation) {
     return changed;
 }
 
-bool cSC4View3DWin::ProcessCommand(std::uint32_t command, cIGZCommandParameterSet&, cIGZCommandParameterSet&) {   // 0x10078e2e0
-    return ProcessViewCommand(command);
+bool cSC4View3DWin::ProcessCommand(std::uint32_t command, cIGZCommandParameterSet&, cIGZCommandParameterSet& out) {   // 0x10078e2e0
+    // The commands that read parameters take them from the second set: parameter 0 / 1 as bools (vslot 0x50), parameter 0 as the
+    // lot of 0xec3e82f8 (vslot 0x258).
+    cIGZVariant* first = out.GetParameterCount() > 0 ? out.GetParameter(0) : nullptr;
+    cIGZVariant* second = out.GetParameterCount() > 1 ? out.GetParameter(1) : nullptr;
+    const bool param0 = first && first->GetValBool();
+    const bool param1 = second && second->GetValBool();
+    const std::uint32_t item = first ? first->AsUint32() : 0;   // vslot 0x258: the stored word, no conversion
+    return ProcessViewCommand(command, param0, param1, item);
 }
 
-bool cSC4View3DWin::ProcessViewCommand(std::uint32_t command) {
-    const bool keyboardIdle = keyboardScrollX_ == 0 && keyboardScrollY_ == 0;
+namespace {
+// The lots the 0x6a2b245f catalog commands place (InvokeCatalogItemCommand(0x6a2b245f, lot)).
+struct PlaceLotCommand { std::uint32_t command, lot; };
+constexpr PlaceLotCommand kPlaceLotCommands[] = {
+    {0x6a935dfdu, 0x01000007u}, {0x6a935e0au, 0x2a2735a0u}, {0x6a935e0du, 0xea273867u}, {0x6a935e11u, 0x4a2af441u},
+    {0x6a935e14u, 0x89dd094eu}, {0x6a935e17u, 0x4a2829d1u}, {0x6a935dc9u, 0x05000001u}, {0x6a935dddu, 0x6a8a358fu},
+    {0x6a935ddfu, 0x6a3855d4u}, {0x6a935de6u, 0x05000002u}, {0x6a935df1u, 0x69de426bu}, {0x6a935df4u, 0x01000005u},
+    {0x6a935df7u, 0x01000003u}, {0x6a935dfau, 0xa9dd1e4cu}, {0x2bfe0beau, 0x6bb942d7u}, {0x2bfe1095u, 0x0b96ae64u},
+    {0x2bfe11c9u, 0x4bafba9fu},
+};
+// The network tools (new cSC4ViewInputControlNetworkTool(type), stacked with operation 2 when SL::spCity vslot 0xb0 allows it).
+struct NetworkCommand { std::uint32_t command; int type; };
+constexpr NetworkCommand kNetworkCommands[] = {
+    {0x6a935dc0u, 0}, {0x6a935ddau, 1}, {0x6a935dc5u, 2}, {0x6a935dc2u, 3}, {0x6a935deeu, 4}, {0x6a935debu, 5}, {0x6b730f78u, 6},
+    {0x6a935de3u, 7}, {0x2b79e72bu, 8}, {0x8be098f4u, 9}, {0x4be098f7u, 10}, {0x6be098fau, 11}, {0x4be098fdu, 12},
+};
+// The zoning tools (InvokeZoningTool(type)).
+struct ZoneCommand { std::uint32_t command, type; };
+constexpr ZoneCommand kZoneCommands[] = {
+    {0x6a935d0bu, 2}, {0x6a935d0eu, 3}, {0x6a935d11u, 4}, {0x6a935d17u, 5}, {0x6a935d1au, 6}, {0x6a935d1du, 7}, {0x6a935d25u, 8},
+    {0x6a935d28u, 0xe}, {0x6a935d2bu, 9}, {0x6a935d2eu, 0}, {0x6a935cf7u, 1},
+};
+// The panel toggles the keyboard reaches (the button found by id, iid 0x8810, then flipped; its notification does the rest).
+struct PanelToggleCommand { std::uint32_t command, button; };
+constexpr PanelToggleCommand kPanelToggleCommands[] = {
+    {0x6a935c34u, 0x2988bc85u}, {0x6a935ca4u, 0xc988bc79u}, {0x6a935ca8u, 0x4988bc6au}, {0x6a935cabu, 0x8988bc94u},
+};
+}  // namespace
+
+// ProcessCommand's body (0x10078e2e0). The original's binary-search tree of compares is a flat switch here; every command returns 0.
+bool cSC4View3DWin::ProcessViewCommand(std::uint32_t command, bool param0, bool param1, std::uint32_t item) {
+    const bool keyboardIdle = keyboardScrollX_ == 0 && keyboardScrollY_ == 0;   // +0x504 / +0x508
     auto stepScroll = [&](float angle) {
         if (keyboardIdle && cameraControl_) cameraControl_->ScrollByViewportAngle(angle, 1.0f);
         return false;
@@ -344,7 +382,43 @@ bool cSC4View3DWin::ProcessViewCommand(std::uint32_t command) {
         RecalcScrollVelocity();
         return false;
     };
+    auto cityAllowsTools = [&] { return host_ && host_->CanInvokeZoningTool(); };   // SL::spCity vslot 0xb0
+    // new tool, AddRef, SetCurrentViewInputControl(tool, operation), Release
+    auto stack = [&](cSC4ViewInputControl* tool, int operation) {
+        if (!tool) return false;
+        tool->AddRef();
+        SetCurrentViewInputControl(tool, operation);
+        tool->Release();
+        return false;
+    };
+    auto speed = [&](int value) {                                        // 0x6a935cb0 / cb2 / cb5
+        if (!simulatorToPause_) return false;
+        simulatorToPause_->SetSpeed(value);                             // vslot 0xe0
+        if (simulatorToPause_->IsPaused()) simulatorToPause_->UserResume();   // vslot 0x78 -> 0x60
+        UpdateSpeedButtons();
+        return false;
+    };
+
+    for (const PlaceLotCommand& entry : kPlaceLotCommands)
+        if (entry.command == command) { InvokeCatalogItemCommand(0x6a2b245fu, entry.lot, false); return false; }
+    for (const NetworkCommand& entry : kNetworkCommands)
+        if (entry.command == command) return cityAllowsTools() ? stack(host_->CreateNetworkTool(entry.type), 2) : false;
+    for (const ZoneCommand& entry : kZoneCommands)
+        if (entry.command == command) { InvokeZoningTool(entry.type); return false; }
+    for (const PanelToggleCommand& entry : kPanelToggleCommands) {
+        if (entry.command != command) continue;
+        void* raw = nullptr;
+        if (panelWindow_ && panelWindow_->GetChildAsRecursive(entry.button, gz::kGZIID_cIGZWinBtn, &raw) && raw) {
+            auto* button = static_cast<gz::cIGZWinBtn*>(raw);
+            if (!button->GetBtnFlag(1)) button->ToggleOn();             // vslot 0x20(1) -> 0x30 / 0x38
+            else button->ToggleOff();
+            button->Release();
+        }
+        return false;
+    }
+
     switch (command) {
+        // --- scrolling, zoom, rotation
         case 0x6a935cd8: return keyboardScroll(keyboardScrollX_, -1);   // scroll left
         case 0x6a935cdd: return keyboardScroll(keyboardScrollY_, -1);   // scroll up
         case 0x6a935ce0: return keyboardScroll(keyboardScrollX_, 1);    // scroll right
@@ -358,33 +432,140 @@ bool cSC4View3DWin::ProcessViewCommand(std::uint32_t command) {
         case 0x2a9484f2: return stepScroll(4.712389f);
         case 0x2a9484ff: return stepScroll(0.0f);
         case 0x2a94850b: return stepScroll(1.5707964f);
-        case 0x6a935cb7: ZoomIn(); return false;
-        case 0x6a935cba: ZoomOut(); return false;
-        case 0x6a935cbd: SetZoom(0); return false;
+        case 0x6a935ce5: {                                              // centre the view on the terrain under the cursor
+            int x = 0, y = 0;
+            if (!host_ || !renderer_ || !cameraControl_) return false;
+            host_->CursorOverView(this, x, y);                          // RZ::WM() vslot 0x110 (screen to window)
+            cS3DVector3 target;                                         // nS3D::k_zero x3
+            if (!renderer_->PickTerrain(x, y, &target.x, false, true)) return false;   // vslot 0x1e8
+            cameraControl_->SetViewTargetPosition(target);
+            return false;
+        }
+        case 0x6a935ce8:                                                // post 0x277a9364 on SL::spMS2
+            if (cIGZMessageServer2* server = host_ ? host_->MessageServer2() : nullptr) {
+                auto* message = new cRZMessage2Standard();
+                message->AddRef();
+                message->SetType(0x277a9364u);
+                server->MessagePost(message, false);
+                message->Release();
+            }
+            return false;
+        case 0x6a935cb7: ZoomIn(); return false;                        // vslot 0x48
+        case 0x6a935cba: ZoomOut(); return false;                       // vslot 0x50
+        case 0x6a935cbd: SetZoom(0); return false;                      // vslot 0x40
         case 0x6a935cbf: SetZoom(1); return false;
         case 0x6a935cc2: SetZoom(2); return false;
         case 0x6a935cc4: SetZoom(3); return false;
         case 0x6a935cc7: SetZoom(4); return false;
-        case 0x6a935cf3: case 0x6a935cf4: {                              // the building / network query tool
-            if (!host_ || !host_->CanInvokeZoningTool()) return false;
-            const int type = command == 0x6a935cf3 ? 0 : 1;
-            cSC4ViewInputControl* current = GetCurrentViewInputControl();
-            if (current && current->GetID() == (type == 0 ? 0xc7af928eu : 0xc7af928fu)) return false;   // already running
-            if (cSC4ViewInputControl* tool = host_->CreateQueryTool(type, 0x32)) {
-                tool->AddRef();
-                SetCurrentViewInputControl(tool, 0);
-                tool->Release();
+        case 0x2bcbd5f1: SetZoom(5); return false;
+        case 0x6a935cc9: RotateLeft(); return false;                    // vslot 0x78
+        case 0x6a935ccc: RotateRight(); return false;                   // vslot 0x80
+        case 0x6a9391a0: if (renderer_) renderer_->ForceFullRedraw(); return false;   // vslot 0xa0
+
+        // --- the simulation speed
+        case 0x6a935cad:                                                // pause / resume
+            if (simulatorToPause_) {
+                if (!simulatorToPause_->IsPaused()) simulatorToPause_->UserPause();   // vslot 0x78 -> 0x48
+                else simulatorToPause_->UserResume();                                 // -> 0x60
             }
             return false;
+        case 0x6a935cb0: return speed(0);
+        case 0x6a935cb2: return speed(1);
+        case 0x6a935cb5: return speed(2);
+
+        // --- the query and demolish tools (operation 0), after dropping a current tool that does not stack
+        case 0x6a935cf3: case 0x6a935cf4: case 0x6a935d36: {
+            if (!cityAllowsTools()) return false;
+            cSC4ViewInputControl* current = GetCurrentViewInputControl();
+            if (current && !current->ShouldStack()) {                   // vslot 0x60
+                RemoveCurrentViewInputControl(false);                   // vslot 0xd0
+                current = GetCurrentViewInputControl();
+            }
+            if (command == 0x6a935cf3) {
+                if (current && current->GetID() == 0xc7af928eu) return false;   // already running
+                return stack(host_->CreateQueryTool(0, 0x32), 0);
+            }
+            if (command == 0x6a935cf4) {
+                if (current && current->GetID() == 0xc7af928fu) return false;
+                return stack(host_->CreateQueryTool(1, 0x32), 0);
+            }
+            if (current && current->GetID() == 0x46ddb5f1u) return false;
+            return stack(host_->CreateDemolishTool(), 0);
         }
         case 0x6a935cf1:                                                // escape: the tool, else the tertiary then the secondary menu
             if (!tools_.empty()) RemoveAllViewInputControls(false);
             else if (tertiaryMenu_) CloseTertiaryMenu();
             else if (secondaryMenu_) CloseSecondaryMenu();
             return false;
-        case 0x6a935cc9: RotateLeft(); return false;
-        case 0x6a935ccc: RotateRight(); return false;
+
+        // --- dispatch, signs, labels
+        case 0xca935dbd: case 0x6a935d39:                               // the emergency dispatch tools 0 / 1
+            if (!cityAllowsTools()) return false;
+            return stack(host_ ? host_->CreateDispatchTool(command != 0xca935dbdu ? 1 : 0) : nullptr, 2);
+        case 0x8c0b0e46: case 0xec0b0e6a:                               // dispatch tools 5 / 6 (no city check)
+            return stack(host_ ? host_->CreateDispatchTool(command == 0xec0b0e6au ? 6 : 5) : nullptr, 2);
+        case 0x0b980581: return stack(host_ ? host_->CreateSignTool() : nullptr, 2);
+        case 0x0b980587: return stack(host_ ? host_->CreateLabelTool() : nullptr, 2);
+        case 0xabcdee11: return stack(host_ ? host_->CreateSignLabelDemolishTool() : nullptr, 2);
+        case 0x6b98058a: {                                              // signs and labels on / off
+            if (!host_) return false;
+            if (cSC4ViewInputControl* current = GetCurrentViewInputControl()) {
+                const std::uint32_t id = current->GetID();
+                if (host_->SignsAndLabelsVisible() && (id == 0x8b3ce416u || id == 0xcbcc987eu || id == 0x8b4ce5a0u))
+                    RemoveAllViewInputControls(false);                  // a sign / label tool goes with them
+            }
+            host_->ToggleSignsAndLabels();
+            return false;
+        }
+
+        // --- the city
+        case 0x2a94a5b6: if (cityAllowsTools()) ObliterateCity(); return false;
+        case 0x2a94a04b: ToggleContourDisplay(); return false;
+        case 0xcab22c64: AddWinAnimationRecorder(true); return false;
+        case 0xec3e82f8: if (item != 0) InvokeCatalogItemCommand(0x6a2b245fu, item, false); return false;
+        case 0x6a935e1e: DoDayNightMenu(0xca35cb76u); return false;
+        case 0x6a935e21: DoDayNightMenu(0xca35cb78u); return false;
+        case 0x6a935e27: DoDayNightMenu(0xca35cb74u); return false;
+        case 0x6a935e3f: if (panelWindow_) MinimizeUI(panelWindow_->IsVisible()); return false;   // vslot 0x1b8(panel vslot 0x238)
+        case 0x6aa9fe51:                                                // SL::spPreferences byte 0xf0a flips
+            if (std::uint8_t* preferences = host_ ? host_->Preferences() : nullptr) preferences[0xf0a] = preferences[0xf0a] == 0;
+            return false;
+
+        // --- the animation system (only with byte +0x1c8 set)
+        case 0x6a9753ea:
+            if ((unknown1c8_ & 0xff) && host_) host_->PauseAnimationSystem(!host_->AnimationSystemPaused());
+            return false;
+        case 0x6a9753ed:
+            if ((unknown1c8_ & 0xff) && host_) host_->StepAnimationSystem();
+            return false;
+
+        // --- dialogs and the app
+        case 0x6a935e2a: if (host_) host_->RunPreferencesDialog(0); return false;   // game
+        case 0x6a935e2d: if (host_) host_->RunPreferencesDialog(1); return false;   // video
+        case 0x6a935e34: if (host_) host_->RunPreferencesDialog(2); return false;   // audio
+        case 0x6a935e45: if (host_) host_->ShowSnapshotAlbum(this); return false;
+        case 0x6a935e4b: if (host_) host_->CreateSnapshotTaker(this); return false;
+        case 0x6a935e36: case 0x6a935e37:                               // save (0x37: the alternate save without the key)
+            if (host_) host_->RequestSaveCity(!param0, command == 0x6a935e37 ? true : host_->IsKeyDownNow(0x12));
+            return false;
+        case 0x6a935e39: if (host_) host_->RequestGoToRegionView(!param0); return false;
+        case 0x6a935e3c:
+            if (host_ && host_->PopupModalDialogsSafe()) host_->RequestQuit(!param0, param1);
+            return false;
         default: return false;
+    }
+}
+
+// ObliterateCity (0x10078fe78): the confirmation dialog, then the obliterate button goes grey, the budget panel closes and the
+// cSC4ObliterateCity tool takes the view.
+void cSC4View3DWin::ObliterateCity() {
+    if (nSC4UI::DoScriptedModalDialog(0x2a41436cu, 0x27df05beu) != 0x6a41bbb5u) return;
+    if (panelWindow_) nsGZWinUtils::SetWindowEnabled(panelWindow_, kPanelObliterateButtonId, false);
+    if (currentPanel_ == kPanelBudgetIndex) HidePanel(kPanelBudgetIndex);   // +0x350
+    if (cSC4ViewInputControl* tool = host_ ? host_->CreateObliterateCityTool() : nullptr) {
+        tool->AddRef();
+        SetCurrentViewInputControl(tool, 2);
+        tool->Release();
     }
 }
 
@@ -1315,20 +1496,71 @@ void cSC4View3DWin::DoZoneCatalogView(cIGZWin* sender, std::uint32_t alignId, st
     if (catalog) catalog->Release();
 }
 
-// InvokeCatalogItemCommand (0x10078410a): the item type picks the tool family, the id the tool. PARTIAL: the landscape and
-// zoning families; flora, disasters, vehicles, networks and the lot plops need their tool classes.
+// InvokeCatalogItemCommand (0x10078410a): a catalog item of each family starts its tool. closeMenu closes the tertiary menu first
+// (the global terrain tools close the secondary one).
 void cSC4View3DWin::InvokeCatalogItemCommand(std::uint32_t itemType, std::uint32_t id, bool closeMenu) {
+    auto stack = [&](cSC4ViewInputControl* tool) {
+        if (!tool) return;
+        tool->AddRef();
+        SetCurrentViewInputControl(tool, 2);
+        tool->Release();
+    };
+    const bool cityAllowsTools = host_ && host_->CanInvokeZoningTool();   // SL::spCity vslot 0xb0
     switch (itemType) {
+        case 0x8a313c52u:                                               // a terrain brush without the scrubber's flag
+            if (closeMenu) CloseTertiaryMenu();
+            InvokeLandscapeTool(id, false);
+            break;
+        case 0xea5ad08du:                                               // a tree / flora brush
+            if (closeMenu) CloseTertiaryMenu();
+            if (host_) stack(host_->CreateFloraTool(id));
+            break;
+        case 0x0bb2e43eu:                                               // an earned vehicle: the city situation indicator follows it
+            if (host_ && host_->FocusVehicle(id)) CloseTertiaryMenu();
+            break;
         case 0x4a2b2462u:                                               // a terrain tool
             if (closeMenu) CloseTertiaryMenu();
             InvokeLandscapeTool(id, true);
             break;
+        case 0x4a2b2464u:                                               // a disaster
+            if (closeMenu) CloseTertiaryMenu();
+            if (host_) host_->InvokeDisaster(id);
+            break;
         case 0x4a2b2466u:                                               // a zone type
             if (closeMenu) CloseTertiaryMenu();
-            if (id < 0x10 && host_ && host_->CanInvokeZoningTool()) InvokeZoningTool(id);
+            if (id < 0x10 && cityAllowsTools) InvokeZoningTool(id);
             break;
-        default:                                                        // the other families are the host's
-            if (host_) host_->InvokeCatalogItemCommand(itemType, id, closeMenu);
+        case 0x4a2b2467u: {                                             // a network, or an intersection (0x6a47xxxx)
+            if (closeMenu) CloseTertiaryMenu();
+            if (!cityAllowsTools) break;
+            struct NetworkItem { std::uint32_t item; int type; };
+            static constexpr NetworkItem kNetworkItems[] = {
+                {0x8c329937u, 0}, {0x00000029u, 1}, {0x00000031u, 2}, {0xea6e379du, 3}, {0x2992f72cu, 4}, {0x00000032u, 5},
+                {0x2b730c5bu, 6}, {0x299237bfu, 7}, {0x2b79e398u, 8}, {0x4be099deu, 9}, {0x0be099c1u, 10}, {0x2be099a9u, 11},
+                {0x0be0998fu, 12},
+            };
+            for (const NetworkItem& item : kNetworkItems)
+                if (item.item == id) { stack(host_->CreateNetworkTool(item.type)); return; }
+            if ((id & 0xffff0000u) == 0x6a470000u) stack(host_->CreateNetworkIntxTool(id & 0xffffu));
+            break;
+        }
+        case 0x6a5ac478u:                                               // a global terrain tool
+            if (closeMenu) CloseSecondaryMenu();
+            RunGlobalTerrainTool(static_cast<int>(id));
+            break;
+        case 0x6a2b245fu: {                                             // a lot: the place-lot tool, under the cursor at once
+            if (closeMenu) CloseTertiaryMenu();
+            if (!cityAllowsTools) break;
+            cSC4ViewInputControl* tool = host_->CreatePlaceLotTool(id);   // cSC4ViewInputControlPlaceLot(0, id, 0, false)
+            if (!tool) break;
+            tool->AddRef();
+            SetCurrentViewInputControl(tool, 2);
+            int x = 0, y = 0;
+            if (host_->CursorOverView(this, x, y)) tool->OnMouseMove(x, y, 0);   // vslot 0xa0
+            tool->Release();
+            break;
+        }
+        default:                                                        // 0x4a2b2463 / 0x4a2b2465 and the rest: nothing
             break;
     }
 }
@@ -3030,7 +3262,15 @@ bool cSC4View3DWin::DoMessage(cIGZMessage2* message) {
 
 // ---- DoMessage's helpers that are not recovered yet: the host's hooks stand in (PARTIAL) -------------------------------------------
 void cSC4View3DWin::DoPreCityInit() { if (host_) host_->PreCityInit(); }                                   // 0x10078616c
-void cSC4View3DWin::DoPostCityInit() { if (host_) host_->PostCityInit(); }                                 // 0x1007867d8
+// DoPostCityInit (0x1007867d8): the view keeps SL::spSimulator at +0x238 (the speed buttons and the hidden pause use it); the rest of
+// the body (the camera's city size, the clock, the panels) is the host's.
+void cSC4View3DWin::DoPostCityInit() {
+    if (!simulatorToPause_ && host_) {
+        simulatorToPause_ = host_->Simulator();
+        if (simulatorToPause_) simulatorToPause_->AddRef();
+    }
+    if (host_) host_->PostCityInit();
+}
 void cSC4View3DWin::DoLoad(cIGZPersistDBSegment* segment, cIGZVariant* version) { if (host_) host_->LoadViewState(segment, version); }   // 0x100787092
 void cSC4View3DWin::DoSave(cIGZPersistDBSegment* segment) { if (host_) host_->SaveViewState(segment); }   // 0x1007871e4
 void cSC4View3DWin::DoBudgetFailure() { if (host_) host_->BudgetFailure(); }                               // 0x100788d0e

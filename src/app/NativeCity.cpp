@@ -1,3 +1,5 @@
+#include "sc4/SC4Utilities.h"
+#include <filesystem>
 // Loading a city file in the native application (see NativeCity.h). The factory and city host are the ones the city probe
 // (src/tools/city_probe.cpp) proved against the retail files.
 #include "app/NativeCitySystems.h"
@@ -147,6 +149,26 @@ bool LoadCityFile(cSC4App& app, const std::string& path) {
             return segment->AsIGZPersistDBSegment();
         };
         hooks.readLoadSaveVersion = [](cIGZPersistDBSegment* segment) { return sc4::SC4ReadAppLoadSaveVersion(segment); };
+        // SC4CreateSavePathForCity (0x1001e98a4 -> 0x1001e9aa9): "City - <name>.sc4", sanitised, resolved in the current region's
+        // directory (natively the directory the open city was read from), " (n)" appended while another city's file holds the name.
+        hooks.createSavePathForCity = [](const cRZString& cityName, std::uint32_t, cRZString& out) {
+            out = cRZString("");
+            cRZString current;
+            if (g_hostCity) g_hostCity->GetCitySaveFilePath(current);
+            const std::string currentPath = current.ToChar();
+            const std::size_t slash = currentPath.rfind('/');
+            if (slash == std::string::npos) { out = current; return; }   // no directory known: the file it came from
+            const std::string directory = currentPath.substr(0, slash + 1);
+            for (unsigned copy = 1;; ++copy) {
+                std::string name = std::string("City - ") + cityName.ToChar();
+                if (copy > 1) name += " (" + std::to_string(copy) + ")";
+                name += ".sc4";
+                cRZString sanitized;
+                sc4::SC4SanitizeFileName(cRZString(name.c_str()), sanitized);
+                const std::string candidate = directory + sanitized.ToChar();
+                if (candidate == currentPath || !std::filesystem::exists(candidate)) { out = cRZString(candidate.c_str()); return; }
+            }
+        };
         hooks.notify = [](const std::string& title, const std::string& text) { std::printf("notify: %s - %s\n", title.c_str(), text.c_str()); };
         hooks.loadText = [](std::uint32_t, std::uint32_t) { return std::string(); };
         hooks.busy = [](bool) {};

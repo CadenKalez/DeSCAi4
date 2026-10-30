@@ -431,6 +431,9 @@ public:
     virtual void Resume() = 0;                          // vslot 0x68
     virtual int Speed() { return 0; }                   // vslot 0xd8 (0 slow, 1 medium, 2 fast)
     virtual bool IsPaused() { return true; }            // vslot 0x78
+    virtual void UserPause() {}                         // vslot 0x48 (the player's pause)
+    virtual void UserResume() {}                        // vslot 0x60
+    virtual void SetSpeed(int speed) { (void)speed; }   // vslot 0xe0
 };
 class INotificationHelper3D {                           // cRZAutoMsg2Notification at +0x1d0
 public:
@@ -638,6 +641,30 @@ public:
     virtual void GoToNextDisaster() {}                                 // SL::spCity vslot 0x240 (disaster layer) -> vslot 0x58
     virtual cSC4ViewInputControl* CreateDispatchTool(int type) { (void)type; return nullptr; }   // new cSC4ViewInputControlDispatch(type) @ 0x1003c25ec
     virtual cSC4ViewInputControl* CreateNetworkTool(int type) { (void)type; return nullptr; }    // new cSC4ViewInputControlNetworkTool(type) @ 0x10038df4c
+    // --- ProcessCommand (0x10078e2e0) / InvokeCatalogItemCommand (0x10078410a): the tools and dialogs they create, the app requests
+    virtual ISimulatorPauseSink* Simulator() { return nullptr; }                       // SL::spSimulator (DoPostCityInit keeps it at +0x238)
+    virtual cSC4ViewInputControl* CreateDemolishTool() { return nullptr; }             // new cSC4ViewInputControlDemolish @ 0x1003cb99c
+    virtual cSC4ViewInputControl* CreateSignTool() { return nullptr; }                 // new cSC4ViewInputControlSignTool @ 0x1006ca19c
+    virtual cSC4ViewInputControl* CreateLabelTool() { return nullptr; }                // new cSC4ViewInputControlLabelTool @ 0x1006c869c
+    virtual cSC4ViewInputControl* CreateSignLabelDemolishTool() { return nullptr; }    // new cSC4ViewInputControlSignLabelDemolish @ 0x1006c9a8c
+    virtual cSC4ViewInputControl* CreateObliterateCityTool() { return nullptr; }       // new cSC4ObliterateCity @ 0x100376d2c
+    virtual cSC4ViewInputControl* CreateFloraTool(std::uint32_t type) { (void)type; return nullptr; }          // cSC4ViewInputControlFlora @ 0x1003b6e6e
+    virtual cSC4ViewInputControl* CreateNetworkIntxTool(std::uint32_t type) { (void)type; return nullptr; }    // cSC4ViewInputControlNetworkIntxTool @ 0x10038ea4c
+    virtual cSC4ViewInputControl* CreatePlaceLotTool(std::uint32_t lot) { (void)lot; return nullptr; }         // cSC4ViewInputControlPlaceLot(0, lot, 0, false) @ 0x1003bb93c
+    // RZ::WM() cursor position in the view's coordinates, true when the window under it (GetChildWindowForCursorPosRecursive) is the view
+    virtual bool CursorOverView(cIGZWin* view, int& x, int& y) { (void)view; (void)x; (void)y; return false; }
+    virtual void InvokeDisaster(std::uint32_t type) { (void)type; }                    // cSC4View3DWin::InvokeDisaster @ 0x100783e2a
+    virtual bool FocusVehicle(std::uint32_t vehicle) { (void)vehicle; return false; }  // the 0x0bb2e43e catalog branch (vehicle managers + CSI vslot 0xb8)
+    virtual void RunPreferencesDialog(int which) { (void)which; }                      // 0 game, 1 video, 2 audio: new + DoModalWin + SetFocus
+    virtual void ShowSnapshotAlbum(cIGZWin* parent) { (void)parent; }                  // cSC4WinSnapshotTaker::ShowSnapshotAlbum @ 0x1003a15f2 + DoModalWin
+    virtual void CreateSnapshotTaker(cIGZWin* parent) { (void)parent; }                // cSC4WinSnapshotTaker::CreateWinSnapshotTaker @ 0x1003a0c84
+    virtual void RequestSaveCity(bool announce, bool alternate) { (void)announce; (void)alternate; }   // SL::spSC4 vslot 0x48
+    virtual void RequestGoToRegionView(bool ask) { (void)ask; }                        // SL::spSC4 vslot 0x60
+    virtual void RequestQuit(bool ask, bool save) { (void)ask; (void)save; }           // SL::spSC4 vslot 0x50
+    virtual bool AnimationSystemPaused() { return false; }                             // SL::ATM() vslot 0x68
+    virtual void PauseAnimationSystem(bool pause) { (void)pause; }                     // SL::ATM() vslot 0x60
+    virtual void StepAnimationSystem() {}                                              // SL::ATM() vslot 0x80
+    virtual void ToggleSignsAndLabels() {}                                             // SL::spPropDeveloper vslot 0x48
     virtual bool CitySituationIndicatorVisible() { return false; }     // SL::spCity vslot 0x188 -> GetCSIVisible (vslot 0xf0)
     virtual void SetCitySituationIndicatorVisible(bool visible) { (void)visible; }   // -> SetCSIVisible (vslot 0xe8)
     virtual void ShowMyStreetSim() {}                                  // SL::spAdvisorSystem GetAdvisor(0x1e) as cISC4MyStreetSim -> vslot 0x28
@@ -786,7 +813,9 @@ public:
     // PARTIAL (0x10078e2e0): the camera commands of ProcessCommand - keyboard scrolling (start / stop), the one-step
     // scrolls, zoom in / out / to a level and rotation. The tool, panel and game-speed commands are not ported.
     bool ProcessCommand(std::uint32_t command, cIGZCommandParameterSet& in, cIGZCommandParameterSet& out) override;
-    bool ProcessViewCommand(std::uint32_t command);
+    // ProcessCommand without parameter sets (the buttons' commands): the bool parameters read false, the item parameter 0.
+    bool ProcessViewCommand(std::uint32_t command, bool param0 = false, bool param1 = false, std::uint32_t item = 0);
+    void ObliterateCity();                                         // @ 0x10078fe78
     void GetCurrentViewFilterInfo(cSC4ViewFilterInformation& out) override;   // @ 0x1007820a4
     bool SetCurrentViewFilterInfo(cSC4ViewFilterInformation& info) override;  // @ 0x1007820ba
     void GetCurrentViewLevelInfo(cSC4ViewLevelInformation& out) override;     // @ 0x100782230

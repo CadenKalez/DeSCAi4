@@ -30,6 +30,15 @@
 #include "gz/Buffer.h"
 #include "sc4/SC4UI.h"
 #include "sc4/ViewInputControlQuery.h"
+#include "sc4/ViewInputControlPlaceLot.h"
+#include "sc4/ViewInputControlSignTool.h"
+#include "sc4/GamePreferencesWinProc.h"
+#include "sc4/SmallWinProcs.h"
+#include <chrono>
+#include "sc4/PropDeveloper.h"
+#include "sc4/AnimationTickManager.h"
+#include "app/NativeAnimationTicks.h"
+#include "app/NativeWinMgr.h"
 
 namespace native {
 namespace {
@@ -83,6 +92,24 @@ std::string GroupDigits(std::int64_t value) {
     }
     return negative ? "-" + out : out;
 }
+// SL::spSimulator as the view sees it (+0x238): the city's cSC4Simulator. The view's hidden pause is the simulator's HiddenPause
+// (vslots 0x50 / 0x68), the speed buttons its Pause / Resume / SetSimSpeed.
+class SimulatorView final : public ISimulatorPauseSink {
+public:
+    bool QueryInterface(std::uint32_t, void**) override { return false; }
+    std::uint32_t AddRef() override { return 2; }   // static: the view's reference never frees it
+    std::uint32_t Release() override { return 1; }
+    void Pause() override { if (auto* s = Sim()) s->HiddenPause(); }
+    void Resume() override { if (auto* s = Sim()) s->HiddenResume(); }
+    int Speed() override { auto* s = Sim(); return s ? s->GetSimSpeed() : 0; }
+    bool IsPaused() override { auto* s = Sim(); return !s || s->IsPaused(); }
+    void UserPause() override { if (auto* s = Sim()) s->Pause(); }
+    void UserResume() override { if (auto* s = Sim()) s->Resume(); }
+    void SetSpeed(int speed) override { if (auto* s = Sim()) s->SetSimSpeed(speed); }
+private:
+    static cSC4Simulator* Sim() { return CityComponentAs<cSC4Simulator>(CityComponent::Simulator, kGZCLSID_cSC4Simulator); }
+};
+
 struct StubView3DWin final : IView3DWinHost {
     View3DNotifications notifications_;
     cIGZMessageServer2* MessageServer2() override { return {}; }
@@ -139,7 +166,21 @@ struct StubView3DWin final : IView3DWinHost {
     cIGZWin* CreateToolbarButton() override { return {}; }
     cIGZWin* CreateCompassWindow() override { return {}; }
     void LocalisedString(std::uint32_t group, std::uint32_t instance, cRZString& out) override {}
-    gz::cIGZWinProc* CreatePanelUIWinProc() override { return {}; }
+    // new cSC4PanelUIWinProc (AddGUI @ 0x1007892fc): the options bar's save / region / quit / snapshot buttons become view commands
+    gz::cIGZWinProc* CreatePanelUIWinProc() override {
+        PanelServices& services = GetPanelServices();
+        if (!services.hasView3D) {
+            services.hasView3D = [] { return CityView3DWin() != nullptr; };
+            services.executeCommand = [this](std::uint32_t command) { ExecuteCommand(command); };
+            services.nowMs = [] {
+                return static_cast<std::uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now().time_since_epoch()).count());
+            };
+        }
+        auto* proc = new cSC4PanelUIWinProc();
+        proc->AddRef();
+        return proc;
+    }
     INewsTickerWindow* CreateNewsTickerWinProc() override { return {}; }
     IMySimWindow* CreateMySimWinProc(gz::cIGZWinGen* panel) override { return native::CreateMySimWindow(panel); }
     IBudgetUIWindow* CreateBudgetUIWinProc() override { return native::CreateBudgetUiWindow(); }
@@ -179,6 +220,68 @@ struct StubView3DWin final : IView3DWinHost {
     cSC4ViewInputControl* CreateDispatchTool(int) override { SC4_UNWIRED("IView3DWinHost::CreateDispatchTool (cSC4ViewInputControlDispatch not recovered)"); return nullptr; }
     cSC4ViewInputControl* CreateNetworkTool(int) override { SC4_UNWIRED("IView3DWinHost::CreateNetworkTool (cSC4ViewInputControlNetworkTool not recovered)"); return nullptr; }
     void ShowMyStreetSim() override { SC4_UNWIRED("IView3DWinHost::ShowMyStreetSim"); }
+    // The native city save writes an incomplete file the game cannot load back (SAVE-1): until it is whole the city is save-disabled,
+    // so every save request takes the game's own "saving is disabled" path instead of replacing the city file.
+    void PostCityInit() override {
+        if (cSC4City* city = LoadedCity(); city && !city->IsSaveDisabled()) city->DisableSave();
+    }
+    ISimulatorPauseSink* Simulator() override { static SimulatorView view; return CityExists() ? &view : nullptr; }
+    cSC4ViewInputControl* CreateSignTool() override { return new cSC4ViewInputControlSignTool(); }
+    cSC4ViewInputControl* CreatePlaceLotTool(std::uint32_t lot) override { return new cSC4ViewInputControlPlaceLot(0, lot, 0, false); }
+    cSC4ViewInputControl* CreateDemolishTool() override { SC4_UNWIRED("IView3DWinHost::CreateDemolishTool (cSC4ViewInputControlDemolish not recovered)"); return nullptr; }
+    cSC4ViewInputControl* CreateLabelTool() override { SC4_UNWIRED("IView3DWinHost::CreateLabelTool (cSC4ViewInputControlLabelTool not recovered)"); return nullptr; }
+    cSC4ViewInputControl* CreateSignLabelDemolishTool() override { SC4_UNWIRED("IView3DWinHost::CreateSignLabelDemolishTool (not recovered)"); return nullptr; }
+    cSC4ViewInputControl* CreateObliterateCityTool() override { SC4_UNWIRED("IView3DWinHost::CreateObliterateCityTool (cSC4ObliterateCity not recovered)"); return nullptr; }
+    cSC4ViewInputControl* CreateFloraTool(std::uint32_t) override { SC4_UNWIRED("IView3DWinHost::CreateFloraTool (cSC4ViewInputControlFlora not recovered)"); return nullptr; }
+    cSC4ViewInputControl* CreateNetworkIntxTool(std::uint32_t) override { SC4_UNWIRED("IView3DWinHost::CreateNetworkIntxTool (not recovered)"); return nullptr; }
+    bool CursorOverView(cIGZWin* view, int& x, int& y) override {
+        WinMgr* manager = ActiveWinMgr();
+        if (!manager) return false;
+        manager->GetCursorPos(view, x, y);                              // RZ::WM() vslot 0x110
+        return true;
+    }
+    void InvokeDisaster(std::uint32_t) override { SC4_UNWIRED("IView3DWinHost::InvokeDisaster (cSC4View3DWin::InvokeDisaster not recovered)"); }
+    bool FocusVehicle(std::uint32_t) override { SC4_UNWIRED("IView3DWinHost::FocusVehicle (vehicle managers)"); return false; }
+    // new cSC4GamePreferencesWinProc; AddRef; ShowDialog(kGameOptions) (vslot 0x28); DoModalWin; the view takes the focus back
+    void RunPreferencesDialog(int which) override {
+        if (which != 0) { SC4_UNWIRED("IView3DWinHost::RunPreferencesDialog (video / audio preferences not recovered)"); return; }
+        if (!ActiveWinMgr() || !ActiveWinMgr()->modalDialogs) return;
+        GamePreferencesServices& services = GetGamePreferencesServices();
+        if (!services.windowManager) {
+            services.windowManager = [] { return static_cast<cIGZWinMgr*>(ActiveWinMgr()); };
+            services.preferences = [this] { return Preferences(); };
+            services.cityLoaded = [] { return LoadedCity() != nullptr; };
+            services.appPresent = [] { return BootApplication() != nullptr; };
+            services.postMessage = [](std::uint32_t type) {
+                if (!SL::spMS2) return;
+                auto* message = new cRZMessage2Standard();
+                message->AddRef();
+                message->SetType(type);
+                SL::spMS2->MessagePost(message, false);
+                message->Release();
+            };
+        }
+        auto* proc = new cSC4GamePreferencesWinProc();
+        proc->AddRef();
+        const bool alreadyShowing = cSC4GamePreferencesWinProc::Displayed();
+        proc->ShowDialog(cSC4GamePreferencesWinProc::kGameOptions);
+        // DoModalWin dereferences the dialog: run it only when this ShowDialog built one (the script loaded, no other copy is up)
+        if (!alreadyShowing && cSC4GamePreferencesWinProc::Displayed()) proc->DoModalWin();
+        else SC4_UNWIRED("IView3DWinHost::RunPreferencesDialog: the game options dialog was not built");
+        proc->Release();
+        if (sc4::cSC4View3DWin* view = CityView3DWin()) view->SetFocus();
+    }
+    void ShowSnapshotAlbum(cIGZWin*) override { SC4_UNWIRED("IView3DWinHost::ShowSnapshotAlbum (cSC4WinSnapshotAlbum not recovered)"); }
+    void CreateSnapshotTaker(cIGZWin*) override { SC4_UNWIRED("IView3DWinHost::CreateSnapshotTaker (cSC4WinSnapshotTaker not recovered)"); }
+    void RequestSaveCity(bool announce, bool alternate) override { if (cSC4App* app = BootApplication()) app->RequestSaveCity(announce, alternate); }
+    void RequestGoToRegionView(bool ask) override { if (cSC4App* app = BootApplication()) app->RequestGoToRegionView(ask); }
+    void RequestQuit(bool ask, bool save) override { if (cSC4App* app = BootApplication()) app->RequestQuit(ask, save); }
+    bool AnimationSystemPaused() override { auto* atm = AnimationTickManager(); return atm && atm->IsAnimationSystemPaused(); }
+    void PauseAnimationSystem(bool pause) override { if (auto* atm = AnimationTickManager()) atm->PauseAnimationSystem(pause); }
+    void StepAnimationSystem() override { if (auto* atm = AnimationTickManager()) atm->StepAnimationSystem(); }
+    void ToggleSignsAndLabels() override {
+        if (auto* props = CityComponentAs<cSC4PropDeveloper>(CityComponent::PropDeveloper, kGZCLSID_cSC4PropDeveloper)) props->ToggleSignsAndLabels();
+    }
     void PlayUISound(std::uint32_t) override { SC4_UNWIRED("IView3DWinHost::PlayUISound (sound system)"); }
     void AlignWindowToWindow(std::uint32_t windowId, std::uint32_t childId, std::uint32_t alignId) override {
         nSC4UI::AlignWindowToWindow(windowId, childId, alignId, nullptr);
@@ -204,14 +307,14 @@ struct StubView3DWin final : IView3DWinHost {
     void RemoveContourCallback(int handle) override {}
     bool ProjectPointToViewport(cS3DVector3& point) override { return {}; }
     void UpdateCostIndicator(float dt) override {}
-    bool PopupModalDialogsSafe() override { return {}; }
-    bool PopupModalDialogsEnabled() override { return {}; }
+    bool PopupModalDialogsSafe() override { return ActiveWinMgr() && ActiveWinMgr()->modalDialogs; }
+    bool PopupModalDialogsEnabled() override { return ActiveWinMgr() && ActiveWinMgr()->modalDialogs; }
     std::uint32_t SimulationFrameCounter() override { return {}; }
     bool FilterUiCommandMessage(cGZMessage&) override { return true; }   // no tutorial running: every message is kept
     bool HandleUrl(cIGZString* link) override { return {}; }
     void HandleAdviceLink(cGZMessage& message) override {}
     void ProcessCheatCode(std::uint32_t id, const char* cmdLine) override {}
-    void InvokeCatalogItemCommand(std::uint32_t item, std::uint32_t param, bool flag) override {}
+    void InvokeCatalogItemCommand(std::uint32_t, std::uint32_t, bool) override {}   // unused: the view's InvokeCatalogItemCommand is whole
     void ExecuteAcceleratorCommand(std::uint32_t command) override {}
     void Update24HourClockHover() override {}
     void UpdateCursorTextPositions(int x, int y) override {}

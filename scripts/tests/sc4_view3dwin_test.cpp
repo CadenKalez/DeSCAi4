@@ -695,6 +695,10 @@ struct FakeSpeedSimulator final : ISimulatorPauseSink {
     void Resume() override { ++resumes; }
     int Speed() override { return speed; }
     bool IsPaused() override { return paused; }
+    int userPauses = 0, userResumes = 0, speedSets = 0;
+    void UserPause() override { ++userPauses; paused = true; }
+    void UserResume() override { ++userResumes; paused = false; }
+    void SetSpeed(int value) override { ++speedSets; speed = value; }
 };
 
 // A toggle button the panel helpers can find (gz::kGZIID_cIGZWinBtn): it records the toggle state.
@@ -1088,6 +1092,14 @@ struct FakeHost final : IView3DWinHost {
     void InvokeCatalogItemCommand(std::uint32_t item, std::uint32_t param, bool flag) override {
         ++catalogInvokes; catalogItem = item; catalogParam = param; catalogFlag = flag;
     }
+    int placeLots = 0;
+    std::uint32_t lastPlaceLot = 0;
+    cSC4ViewInputControl* CreatePlaceLotTool(std::uint32_t lot) override { ++placeLots; lastPlaceLot = lot; return nullptr; }
+    int signTools = 0, saves = 0, regionRequests = 0;
+    bool lastSaveAnnounce = false, lastSaveAlternate = false;
+    cSC4ViewInputControl* CreateSignTool() override { ++signTools; return nullptr; }
+    void RequestSaveCity(bool announce, bool alternate) override { ++saves; lastSaveAnnounce = announce; lastSaveAlternate = alternate; }
+    void RequestGoToRegionView(bool) override { ++regionRequests; }
     void ExecuteAcceleratorCommand(std::uint32_t command) override {
         ++acceleratorCommands; lastAcceleratorCommand = command;
     }
@@ -1767,11 +1779,23 @@ int main() {
         message = cGZMessage{};
         message.type = kMsgViewCommand;
         message.param1 = kCmdViewCatalogItem;
-        message.param2 = 0x1234;
+        message.param2 = 0x6a2b245f;                             // a lot: the place-lot tool for it (InvokeCatalogItemCommand 0x10078410a)
         message.param3 = 0x5678;
         CHECK(view->DoMessage(message));
-        CHECK(host.catalogInvokes == 1 && host.catalogItem == 0x1234 && host.catalogParam == 0x5678);
-        CHECK(host.catalogFlag && mgr.focus == static_cast<cIGZWin*>(static_cast<cGZWin*>(view)));
+        CHECK(host.placeLots == 1 && host.lastPlaceLot == 0x5678 && host.catalogInvokes == 0);
+        CHECK(mgr.focus == static_cast<cIGZWin*>(static_cast<cGZWin*>(view)));
+        message.param2 = 0x1234;                                 // an unknown family: nothing
+        CHECK(view->DoMessage(message));
+        CHECK(host.placeLots == 1 && host.catalogInvokes == 0);
+        // ProcessCommand (0x10078e2e0): the lot commands, the sign tool, the save and region requests.
+        view->ProcessViewCommand(0x6a935dc9u);
+        CHECK(host.placeLots == 2 && host.lastPlaceLot == 0x05000001u);
+        view->ProcessViewCommand(0x0b980581u);
+        CHECK(host.signTools == 1);
+        view->ProcessViewCommand(0x6a935e37u);
+        CHECK(host.saves == 1 && host.lastSaveAnnounce && host.lastSaveAlternate);
+        view->ProcessViewCommand(0x6a935e39u, true);
+        CHECK(host.regionRequests == 1);
 
         // The cheat-code message hands the command line of the string in param2 to the cheat handler.
         cRZString cheatText("GOL");
@@ -2685,6 +2709,16 @@ int main() {
         view->UpdateSpeedButtons();
         CHECK(speed1->GetBtnFlag(gz::kBtnOn));
         CHECK(speed1->hasArea && speed1->lastArea.top == 0 && speed1->lastArea.bottom == 16);
+        // ProcessCommand's speed commands: pause toggles the player's pause; a speed sets it and resumes a paused game.
+        view->ProcessViewCommand(0x6a935cadu);
+        CHECK(host.speedSimulator.userPauses == 1 && host.speedSimulator.paused);
+        view->ProcessViewCommand(0x6a935cb5u);
+        CHECK(host.speedSimulator.speedSets == 1 && host.speedSimulator.speed == 2 && host.speedSimulator.userResumes == 1);
+        view->ProcessViewCommand(0x6a935cadu);
+        CHECK(host.speedSimulator.userPauses == 2);
+        view->ProcessViewCommand(0x6a935cadu);
+        CHECK(host.speedSimulator.userResumes == 2 && !host.speedSimulator.paused);
+        host.speedSimulator.speed = 1;
         View3DWinTestAccess::Simulator(*view) = nullptr;
         // ---- UpdateAlertBorder: the three images in the disaster / situation / busy order.
         host.disasterAlert = false;

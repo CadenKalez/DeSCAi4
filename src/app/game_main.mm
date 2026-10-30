@@ -314,7 +314,7 @@ public:
 // nSC4UI's services: the script window builder and the window manager (the default host reaches for engine globals the app lacks)
 class UiHost final : public nSC4UI::INSC4UIHost {
 public:
-    bool PopupModalDialogsEnabled() override { return false; }
+    bool PopupModalDialogsEnabled() override { return gMgr && gMgr->modalDialogs; }
     bool LoadExemplarString(cIGZString&, sc4::cISCPropertyHolder*, std::uint32_t, sc4::cSCStringDetokenizer*) override { return false; }
     void MakeNumberString(std::int64_t value, cIGZString& out) override { char t[32]; std::snprintf(t, sizeof t, "%lld", (long long)value); out.AssignFromCString(t); }
     cIGZWinMgr* WindowManager() override { return gMgr.get(); }
@@ -696,7 +696,7 @@ bool OnRegionScreen() { return gAppWindow && gAppWindow->CurrentScreen() && gApp
 // A scenario (scenarios/*.txt): one command per line, `#` starts a comment. The run is repeatable and needs no window.
 //   frames N              run N frames           wait MS  run frames for MS ms of real time      move X Y  the cursor
 //                                                wait-region [N]   run until the region screen shows (at most N frames, default 3000)
-//   wait-city [N]         run until a city view exists                  click X Y        a synthetic double click
+//   wait-city [N]         run until a city view exists                  click X Y        a synthetic double click   tap X Y  a single click
 //   input TOKENS          the SC4_INPUT tokens (left:20,zin:30,zone1,...)  shot PATH      write the frame as a PNG
 //   expect-region / expect-city   fail the run (exit 5) unless that screen is up       quit    stop here
 // Returns 0 when every command ran and every expectation held.
@@ -716,6 +716,12 @@ int RunScenario(const std::string& path) {
         if (command == "frames") {
             int n = 0; words >> n;
             for (int i = 0; i < n; ++i) { Frame(); [NSThread sleepForTimeInterval:0.004]; }
+        } else if (command == "tap") {   // a single click (toolbar buttons toggle: a double click turns them on and off again)
+            int x = 0, y = 0; words >> x >> y;
+            gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, x, y, 0);
+            gMgr->GZWinMsgPost_Mouse(kGZMsgMouseDownL, x, y, 0);
+            gMgr->GZWinMsgPost_Mouse(kGZMsgMouseUpL, x, y, 0);
+            for (int i = 0; i < 5; ++i) { Frame(); [NSThread sleepForTimeInterval:0.004]; }
         } else if (command == "move") {   // the cursor: a scenario starts with it at (0, 0), where the region screen edge-scrolls
             int x = 0, y = 0; words >> x >> y;
             gMgr->GZWinMsgPost_Mouse(kGZMsgMouseMove, x, y, 0);
@@ -747,6 +753,19 @@ int RunScenario(const std::string& path) {
             if (!OnRegionScreen()) { std::printf("scenario %d: expected the region screen\n", number); return 5; }
         } else if (command == "expect-city") {
             if (!(gAppWindow && gAppWindow->View3D())) { std::printf("scenario %d: expected a city view\n", number); return 5; }
+        } else if (command == "where") {   // where HEXID: the screen rectangle of the first window with that id (finding a button to tap)
+            std::string hex;
+            words >> hex;
+            const std::uint32_t id = std::uint32_t(std::strtoul(hex.c_str(), nullptr, 16));
+            if (cIGZWin* w = gMgr->GetMainWindow()->GetChildWindowFromIDRecursive(id)) {
+                cRZRect a = w->GetArea();
+                int x = a.left, y = a.top;
+                for (cIGZWin* p = w->GetParentWin(); p; p = p->GetParentWin()) { const cRZRect pa = p->GetArea(); x += pa.left; y += pa.top; }
+                std::printf("where %08x: %d,%d %dx%d visible=%d centre %d,%d\n", id, x, y, a.right - a.left, a.bottom - a.top, w->IsVisible(),
+                            x + (a.right - a.left) / 2, y + (a.bottom - a.top) / 2);
+            } else {
+                std::printf("where %08x: not found\n", id);
+            }
         } else if (command == "quit") {
             return 0;
         } else {
@@ -804,6 +823,34 @@ int main(int argc, char** argv) {
         if (!gDriver) { std::printf("no Metal device\n"); return 1; }
         Boot();
         if ((shot.empty() && scenario.empty()) || std::getenv("SC4_AUDIO")) StartGameAudio();
+        // A modal dialog (RunModalLoop) keeps the windows painting: interactively the Cocoa events go on being dispatched; a scenario
+        // shows the dialog for 30 frames, writes work/shots/modal<N>.png and cancels it (the scenario cannot press its buttons).
+        // The simulation does not tick under a dialog (the original holds a game pause around every one).
+        native::SetActiveWinMgr(gMgr.get());
+        gMgr->modalDialogs = shot.empty();
+        gMgr->modalPump = [app, interactive = scenario.empty() && shot.empty()] {
+            static int frame = 0, dialog = 0;
+            @autoreleasepool {
+                if (interactive) {
+                    NSEvent* e;
+                    while ((e = [app nextEventMatchingMask:NSEventMaskAny untilDate:[NSDate dateWithTimeIntervalSinceNow:0.008] inMode:NSDefaultRunLoopMode dequeue:YES]))
+                        [app sendEvent:e];
+                } else {
+                    [NSThread sleepForTimeInterval:0.004];
+                }
+                PumpTimers();
+                if (gAppWindow && gAppWindow->View3D()) InvalidateTree(gMgr->GetMainWindow());
+                gMgr->Pump();
+                gMgr->Plot();
+                gGraphics->Services().Tick();
+                gDriver->Present();
+            }
+            if (!interactive && ++frame >= 30) {
+                frame = 0;
+                WritePng("work/shots/modal" + std::to_string(dialog++) + ".png");
+                gMgr->PostWinMessage(gz::kWinMgrMsgEndModal, 0, 0x80000001u, 0x80000001u);
+            }
+        };
         if (!native::VerifyRuntimeWiring(gDriver.get(), gAudio != nullptr)) { std::fprintf(stderr, "boot halted: a required dependency is not wired\n"); return 3; }
         if (!scenario.empty()) return RunScenario(scenario);
         if (const char* cityPath = std::getenv("SC4_LOADCITY")) {   // development: load one city file straight after boot and exit

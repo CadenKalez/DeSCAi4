@@ -261,3 +261,18 @@ CreateCatalogView 0x69b9324a, SetWindowVisible 0x4bb92c20/21 (window 0xcc1a6983 
   clicks / query hovering, and read the free site from the report.
 - Open BUG-1 (region clicks hit different cities while the map eases), BUG-2 (panel toggle reaches the view, no panel appears), BUG-3
   (Rush Hour Tutorial still fails to load).
+
+## Addendum 11: the city commands and the options bar (2026-10-30)
+- `cSC4View3DWin::ProcessCommand` (0x10078e2e0) is fully transcribed (`ProcessViewCommand`), with `InvokeCatalogItemCommand`
+  (0x10078410a) and `ObliterateCity` (0x10078fe78). Tools whose classes are not recovered are created through new
+  `IView3DWinHost::Create*Tool` seams that report SC4_UNWIRED natively: network (TOOL-1), demolish (TOOL-2), obliterate (TOOL-3),
+  dispatch / label / flora / intersection (TOOL-4). Place-lot and sign tools are created natively but have neutral hosts (TOOL-5).
+- Speed / pause buttons work: `DoPostCityInit` now keeps SL::spSimulator at +0x238 (it was never set, so the buttons did nothing).
+- The options bar ("..." at 213,740) works: `CreatePanelUIWinProc` returns the recovered `cSC4PanelUIWinProc`, so save / region /
+  quit reach the app's Request* functions. Game Options opens as a real modal dialog (UI-PREFS-2: its lower pages draw blank).
+- Modal dialogs run natively: `WinMgr::modalPump` is set in game_main.mm (interactive: the Cocoa pump; scenario: 30 frames, a shot
+  `work/shots/modalN.png`, then cancelled). The UI-script service is now also a framework service (SC4CreateWindowFromScript found
+  nothing before, so every recovered dialog failed to build).
+- SAVE-1: the native save writes an incomplete city that does not load, and with no `createSavePathForCity` hook it deleted the
+  city file from /tmp/sc4boot_docs. The hook is set now, and the native view host keeps the city save-disabled until saving is whole.
+- Scenario command `where HEXID` prints a window's screen rectangle (to find buttons to `tap`).

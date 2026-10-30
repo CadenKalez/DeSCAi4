@@ -157,6 +157,8 @@ bool InitUiScripts(WinMgr* mgr) {
         return false;
     }
     g_service = static_cast<cIGZUIScriptService*>(service);
+    // ... and a framework service too (system service 0x5a356e15): SC4CreateWindowFromScript and the recovered dialogs find it there.
+    framework->AddSystemService(static_cast<cIGZSystemService*>(static_cast<cGZUIScriptService*>(g_service)));
     return true;
 }
 

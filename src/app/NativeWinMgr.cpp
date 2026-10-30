@@ -4,6 +4,12 @@
 
 namespace native {
 
+namespace {
+WinMgr* g_active = nullptr;
+}  // namespace
+WinMgr* ActiveWinMgr() { return g_active; }
+void SetActiveWinMgr(WinMgr* manager) { g_active = manager; }
+
 WinMgr::WinMgr() : gz::cGZWinMgrBase(this) {}
 WinMgr::~WinMgr() = default;
 
