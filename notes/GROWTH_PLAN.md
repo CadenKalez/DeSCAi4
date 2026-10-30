@@ -58,3 +58,9 @@ construction = layer 4), `citylot_*` (cSC4Lot), `bldgocc_sim.cpp` (building occu
 Use: read its description of a function, then transcribe from **our** disassembly / decompile (the truth source for the macOS
 layout) and check that both agree. Copying its code needs LGPL-2.1 terms (compatible with this repo's GPL-3.0 through LGPL 2.1
 section 3, keeping its notices); the default here is reference only.
+
+Local copy: `scripts/fetch_opensc4_ref.sh` puts all 101 of its docs and its 55 save-record schemas in `work/opensc4_ref/`
+(git-ignored). Per layer: layer 2 = docs/growth.md (the 20-state map update, the tuning, the save record: version 1, five grid
+references, all 12 developers in one record) and docs/demand.md, landvalue.md, traffic.md; layer 3 = docs/development.md and
+tract.md; layer 4 = docs/lot.md, citylot.md, bldgocc.md, constrocc.md, foundocc.md; layer 5 = residential.md, power.md. Saves (SAVE-1):
+docs/save-format.md and save_schemas/*.py decode every city record (the format is the same on macOS).
