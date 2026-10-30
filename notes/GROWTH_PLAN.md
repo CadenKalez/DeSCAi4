@@ -46,3 +46,15 @@ Goal: a zoned, empty lot (now created natively, see SESSION_HANDOFF addendum 12)
 
 Done so far: zoning makes lots (b3dfaa8); the component init unwraps PlainSerializableAdapter so the BDS, the lot
 configuration manager and the prop manager Init (0e2db86).
+
+## Cross-reference: OpenSC4 (https://github.com/danhere/opensc4, LGPL-2.1)
+An in-process reimplementation of SC4 Deluxe **Windows build 1.1.641** (hooked into the running exe, each function checked against
+the original by a parity harness; 7,517 functions, "nearly all simulators"). Its addresses (data/addresses/*.toml) are Windows
+addresses and do not apply to our macOS binary, and its classes use the Windows object layouts, but the game logic is the same
+source. Its file header comments describe each function's behaviour and the vtable slots it uses. Relevant files:
+`src/core/development_{object,messages,queries,occupants}.cpp` (cSC4BuildingDevelopmentSimulator: Grow, planner),
+`growth_{object,messages,queries}.cpp` (cSC4GrowthDeveloper), `lot_{object,build,construct,terrain}.cpp` (cSC4LotDeveloper,
+construction = layer 4), `citylot_*` (cSC4Lot), `bldgocc_sim.cpp` (building occupant), `lotconfig_*`, `residential`, `power`.
+Use: read its description of a function, then transcribe from **our** disassembly / decompile (the truth source for the macOS
+layout) and check that both agree. Copying its code needs LGPL-2.1 terms (compatible with this repo's GPL-3.0 through LGPL 2.1
+section 3, keeping its notices); the default here is reference only.
