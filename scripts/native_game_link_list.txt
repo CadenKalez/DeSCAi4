@@ -578,6 +578,7 @@ src/app/NativeZoneOverlay.cpp
 src/app/NativeZoneDeveloperHost.cpp
 src/app/NativeBuildingDevelopment.cpp
 src/app/NativeGrowthDevelopers.cpp
+src/app/NativeGrowthMaps.cpp
 src/app/NativeCatalogUi.cpp
 src/sc4/WinCalloutBox.cpp
 src/app/NativeAudio.cpp

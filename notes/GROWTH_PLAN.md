@@ -44,7 +44,8 @@ Goal: a zoned, empty lot (now created natively, see SESSION_HANDOFF addendum 12)
 4. cSC4LotDeveloper::StartConstruction and the construction / building occupant creation it needs.
 5. Residential simulator Init + power (so a built lot is occupied and can grow beyond stage 1).
 
-Done so far: zoning makes lots (b3dfaa8); the component init unwraps PlainSerializableAdapter so the BDS, the lot
+Done so far: layer 2 (the growth developers' native host; PlaceZone's 0x07699455 zone-change message now sent, so zoning
+fills the developers' zone cell counts: a residential zone gives R$ a 32-tract growth list); layer 1 (c625295); zoning makes lots (b3dfaa8); the component init unwraps PlainSerializableAdapter so the BDS, the lot
 configuration manager and the prop manager Init (0e2db86).
 
 ## Cross-reference: OpenSC4 (https://github.com/danhere/opensc4, LGPL-2.1)

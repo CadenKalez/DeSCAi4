@@ -66,8 +66,8 @@ public:
     bool DoMessage(cIGZMessage2* message) override {
         static const bool trace = std::getenv("SC4_SIMDEBUG") != nullptr;
         if (trace && message && (message->GetType() == 0x66956816 || message->GetType() == 0x66956810))
-            std::fprintf(stderr, "building development: month %08x, stage %d, %zu developers\n", message->GetType(), simulator_ ? simulator_->GrowthStage() : -1,
-                         simulator_ ? simulator_->GetDevelopers().size() : 0);
+            std::fprintf(stderr, "building development: month %08x, stage %d, %zu developers;%s\n", message->GetType(), simulator_ ? simulator_->GrowthStage() : -1,
+                         simulator_ ? simulator_->GetDevelopers().size() : 0, GrowthDevelopersSummary().c_str());
         return simulator_ ? simulator_->DoMessage(message) : true;
     }
 private:
@@ -193,6 +193,33 @@ private:
 };
 
 }  // namespace
+
+namespace {
+// The city's building development simulator: a plain class held in its serializable adapter (the plain view).
+cSC4BuildingDevelopmentSimulator* CityBuildingDevelopment() {
+    cSC4City* city = HostCity();
+    cIGZUnknown* object = city ? city->GetComponent(sc4::CityComponent::BuildingDevelopmentSimulator) : nullptr;
+    void* raw = nullptr;
+    if (!object || !object->QueryInterface(kGZIID_PlainObject, &raw) || !raw) return nullptr;
+    return static_cast<cSC4BuildingDevelopmentSimulator*>(raw);
+}
+}  // namespace
+
+const sc4::BuildingProfile* NativeBuildingProfile(std::uint32_t buildingType) {
+    cSC4BuildingDevelopmentSimulator* simulator = CityBuildingDevelopment();
+    return simulator ? simulator->GetBuildingProfilePtr(buildingType) : nullptr;
+}
+float NativeMaxCapacity(int zoneType, std::uint32_t purpose, std::uint32_t wealth) {
+    cSC4BuildingDevelopmentSimulator* simulator = CityBuildingDevelopment();
+    return simulator ? simulator->GetMaxCapacity(zoneType, purpose, wealth) : 0.0f;
+}
+sc4::cSC4Demand* NativeDemandChannel(std::uint32_t type, std::uint32_t keyOffset) {
+    cSC4DemandSimulator* demand = CityComponent<cSC4DemandSimulator>(sc4::CityComponent::DemandSimulator, kGZCLSID_cSC4DemandSimulator);
+    return demand ? demand->GetDemand(type, keyOffset) : nullptr;
+}
+bool NativeBuildingFitsInZone(std::uint32_t buildingPurpose, std::uint32_t zoneType) {
+    return cSC4BuildingDevelopmentSimulator::BuildingFitsInZone(buildingPurpose, zoneType);
+}
 
 void InstallBuildingDevelopmentHost() {
     static BuildingDevelopmentHost host;

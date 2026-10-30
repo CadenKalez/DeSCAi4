@@ -145,7 +145,23 @@ public:
     void ApplyZone(const sc4::SC4CellRegion<int>& changed, int zoneType, bool flag) override {
         if (sc4::cISC4ZoneDeveloper* d = Developer()) d->DoParcellization(changed, zoneType, flag);   // vslot 0x30
     }
-    void PostZoneChanged(const sc4::SC4CellRegion<int>&, int, bool) override {}   // the overlay reads the zone grid every frame
+    // PlaceZone's message 0x07699455 (0x1001993a8): the simulators that keep per-zone state (the growth developers' zone cell counts,
+    // land value, network lots, landfill) hear about the change. void1 / the unknown = the zone manager, void2 = the changed region,
+    // data3 = the zone type, data4 = the flag. The original posts it; the region here is the caller's local, so it is sent at once.
+    void PostZoneChanged(const sc4::SC4CellRegion<int>& changed, int zoneType, bool flag) override {
+        if (!SL::spMS2) return;
+        sc4::cSC4ZoneManager* zones = Zones();
+        auto* message = new cRZMessage2Standard();
+        message->AddRef();
+        message->SetType(0x07699455);
+        message->SetVoid1(zones);
+        message->SetIGZUnknown(zones ? static_cast<cIGZUnknown*>(static_cast<cIGZSerializable*>(zones)) : nullptr);
+        message->SetVoid2(const_cast<sc4::SC4CellRegion<int>*>(&changed));
+        message->SetData3(static_cast<std::uint64_t>(static_cast<std::int64_t>(zoneType)));
+        message->SetData4(flag ? 1 : 0);
+        SL::spMS2->MessageSend(message);
+        message->Release();
+    }
 };
 
 ZoneToolHost g_toolHost;
