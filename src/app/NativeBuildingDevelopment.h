@@ -22,6 +22,12 @@ void NativeAllBuildingTypes(std::vector<std::uint32_t>& out);
 bool NativeBuildingKeyFromType(std::uint32_t type, cGZPersistResourceKey& key);
 std::int32_t NativeDayOfLastSuccessfulBuild(std::uint32_t developerType);
 const sc4::DemandBuildingProfile* NativeDemandBuildingProfile(std::uint32_t buildingType);   // the census's copy of the profile
+void NativeEnsureBuildingCatalogue();   // cSC4BuildingDevelopmentSimulator::StaticInit (idempotent)
+bool NativeIsBuildingType(std::uint32_t id);                                           // IsBuildingTypeValid
+bool NativeIsBuildingFamily(std::uint32_t id);                                         // IsBuildingFamilyTypeValid
+void NativeBuildingsInFamily(std::uint32_t family, std::vector<std::uint32_t>& out);   // GetBuildingTypesByFamily
+bool NativeIsBuildingInFamily(std::uint32_t type, std::uint32_t family);
+bool NativeRetainingWallExists(std::uint32_t id);                                      // GetLotRetainingWallKeyFromType
 bool NativeBuildingFitsInZone(std::uint32_t buildingPurpose, std::uint32_t zoneType);    // @ 0x100150a86
 
 }  // namespace native

@@ -44,7 +44,11 @@ Goal: a zoned, empty lot (now created natively, see SESSION_HANDOFF addendum 12)
 4. cSC4LotDeveloper::StartConstruction and the construction / building occupant creation it needs.
 5. Residential simulator Init + power (so a built lot is occupied and can grow beyond stage 1).
 
-Done so far: layer 3 (BDS Grow, the tract developer's native host; in the city Grow draws no developer because the demand
+Done so far: lot configuration hosts (1,908 lot configurations load); demand host (6d6df12): Grow draws R$ and calls the tract
+developer ~350 times in a month, which builds nothing because cSC4TractDeveloper::Grow's pass loop and its candidate / pick / build
+functions are `return 0` PARTIAL stubs (TRACT-1: 0x100136070 loop, 0x1001369ae, 0x1001377a0, 0x100137b04, 0x100137f44,
+0x1001388c4, 0x10013845e, 0x100138b10, 0x1001392fa, 0x100139dd2...). Next: recover them (OpenSC4 docs/tract.md describes them);
+layer 3 (BDS Grow, the tract developer's native host; in the city Grow draws no developer because the demand
 simulator's channels are empty: its host StubDemandSimulator is neutral, so no tunables / channel values: DEMAND-1); layer 2 (the growth developers' native host; PlaceZone's 0x07699455 zone-change message now sent, so zoning
 fills the developers' zone cell counts: a residential zone gives R$ a 32-tract growth list); layer 1 (c625295); zoning makes lots (b3dfaa8); the component init unwraps PlainSerializableAdapter so the BDS, the lot
 configuration manager and the prop manager Init (0e2db86).

@@ -262,6 +262,19 @@ std::int32_t NativeDayOfLastSuccessfulBuild(std::uint32_t developerType) {
     cSC4BuildingDevelopmentSimulator* simulator = CityBuildingDevelopment();
     return simulator ? simulator->GetDayOfLastSuccessfulBuild(static_cast<std::int32_t>(developerType)) : 0;
 }
+void NativeEnsureBuildingCatalogue() { cSC4BuildingDevelopmentSimulator::StaticInit(); }
+bool NativeIsBuildingType(std::uint32_t id) { auto* s = CityBuildingDevelopment(); return s && s->IsBuildingTypeValid(id); }
+bool NativeIsBuildingFamily(std::uint32_t id) { auto* s = CityBuildingDevelopment(); return s && s->IsBuildingFamilyTypeValid(id); }
+void NativeBuildingsInFamily(std::uint32_t family, std::vector<std::uint32_t>& out) {
+    out.clear();
+    if (auto* s = CityBuildingDevelopment()) s->GetBuildingTypesByFamily(out, family);
+}
+bool NativeIsBuildingInFamily(std::uint32_t type, std::uint32_t family) { auto* s = CityBuildingDevelopment(); return s && s->IsBuildingInFamily(type, family); }
+bool NativeRetainingWallExists(std::uint32_t id) {
+    cGZPersistResourceKey key;
+    auto* s = CityBuildingDevelopment();
+    return s && s->GetLotRetainingWallKeyFromType(id, key);
+}
 bool NativeBuildingFitsInZone(std::uint32_t buildingPurpose, std::uint32_t zoneType) {
     return cSC4BuildingDevelopmentSimulator::BuildingFitsInZone(buildingPurpose, zoneType);
 }
