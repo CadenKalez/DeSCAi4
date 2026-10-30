@@ -734,7 +734,9 @@ bool cSC4AutomataControllerManager::Read(cIGZIStream& stream) {
         for (std::uint32_t j = 0; j < controllerCount; ++j) {
             void* controller = nullptr;
             SC4ReadGZSerializable(stream, kGZIID_cISC4AutomataController, &controller, false);
-            if (isNew) entry.controllers.push_back(static_cast<cSC4AutomataController*>(controller));   // an existing entry drops them (kept)
+            // Divergence: the original can create every saved controller class; the port's controller creators are not wired yet
+            // (CTRL-1), so the read can answer null, and a null in the list crashed every later walk (view change, automaton removal).
+            if (isNew && controller) entry.controllers.push_back(static_cast<cSC4AutomataController*>(controller));   // an existing entry drops them (kept)
         }
     }
     stream.GetUint32(count);
