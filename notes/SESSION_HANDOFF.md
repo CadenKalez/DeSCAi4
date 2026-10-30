@@ -241,3 +241,14 @@ SIM-INIT-2, ATM-1/2, CTRL-1. UI partials surveyed: 422 recovered-partial rows in
 driver side replaced by Metal), cSC4ViewInputControlQuery (36), cGZDrawContext (28), cGZWinCOMDirector (20), cSC4View3DWin (14,
 including HandleButtonActivated's ~120-button switch only partly written).
 Not touched: the other agent's NativeAutomata*/NativeTrafficHosts/AutomataManager work (uncommitted, still in the tree).
+
+## Addendum 9: UI partials, where to start (2026-10-30)
+User asked to recover all UI partials and resolve all stubs. Survey: 422 recovered-partial rows in 38 UI classes (largest: cGZGraphicSystem
+201, driver side replaced by Metal; cSC4ViewInputControlQuery 36; cGZDrawContext 28; cGZWinCOMDirector 20; cSC4View3DWin 14) plus the
+city menus, which are not partial but **skipped as "not needed on macOS"** (UI-MENU-1): every toolbar menu of the city view. First target.
+`cSC4View3DWin::HandleButtonActivated` (0x10078afde) dispatches 86 button ids into ~45 blocks: 21 command-server commands (already in
+kButtonCommands), DoLandscapeMenu (14 ids), DoTransportMenu (7), DoDisasterCopingMenu (7), DoZoningMenu (3), DoVehicleMenu (3),
+ShowMayorSubPanel (3 + the 4 graph ids), 8 InvokeSecondaryMenu cases, InvokeTertiaryMenu 0xab9537b7 (+ toggle of 0xeb9541eb),
+CreateCatalogView 0x69b9324a, SetWindowVisible 0x4bb92c20/21 (window 0xcc1a6983 / 0x10000005), 0x4bb92c1f / 0x2b709676 (vslot 0x70 with
+0x1b), 0xea6fa936 (this vslot 0x230), and std::map inserts for 0x3 / 0x9930709 / 0x89dd5405 / 0x1501..0x1506. Re-derive with a pass over
+`scripts/disfn.py 0x10078afde 2500` mapping `cmpl $id` + je/jne to target blocks.
