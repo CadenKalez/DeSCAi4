@@ -6,6 +6,7 @@
 #include <functional>
 
 #include "sc4/SCPropertyHelp.h"
+#include "sc4/Occupant.h"
 
 namespace sc4 {
 
@@ -453,17 +454,179 @@ bool cSC4BuildingDevelopmentSimulator::QueryInterface(std::uint32_t iid, void** 
     return true;
 }
 
+// 0x10014ce64. PARTIAL: the services the original AddRefs (+0x28..+0x68: the resource manager, city, occupant manager, zone,
+// lot, land value and power simulators, terrain) are reached through the host and the injected interfaces; the building map grid
+// (+0x80) and the lot / tract developers (+0xd8 / +0xd0, layer 3) are not attached here; the cheat codes are not registered (no
+// cheat-code manager natively).
 bool cSC4BuildingDevelopmentSimulator::Init() {
-    if (!initialized_) {
-        initialized_ = true;
-        StaticInit();
+    if (initialized_) return true;
+    initialized_ = true;
+    StaticInit();
+    if (!placement_ && g_host) placement_ = g_host->PlacementServices();
+    // every exemplar of type 0x6534284a whose ExemplarType (0x10) is 4 (a simulator) that names a developer type makes a developer
+    if (g_host) g_host->ForEachExemplarKey([this](const cGZPersistResourceKey& key) { InitDynamicDataFromExemplar(key, this); });
+    ReadSimulatorTunableValues();
+    // the construction resources (+0xe0): a cSC4Demand with supply 100 and demand 0
+    if (!resources_ && g_host) {
+        resources_ = g_host->CreateConstructionResources();
+        if (resources_) {
+            resources_->Init();
+            resources_->SetTotal(100.0f);
+            resources_->SetUsed(0.0f);
+        }
+    } else if (resources_) {
+        resources_->Init();
+    }
+    if (g_host && !messageTargetRegistered_) {
+        g_host->RegisterMessageTarget(this);
+        messageTargetRegistered_ = true;
     }
     return true;
 }
 
 bool cSC4BuildingDevelopmentSimulator::Shutdown() {
+    if (!initialized_) return true;
     initialized_ = false;
+    if (g_host && messageTargetRegistered_) {
+        g_host->UnregisterMessageTarget(this);
+        messageTargetRegistered_ = false;
+    }
+    for (cIGZUnknown* occupant : civicOccupants_) if (occupant) occupant->Release();
+    civicOccupants_.clear();
+    stage_ = 0;
+    idleCursorValid_ = false;
     return true;
+}
+
+// 0x10014d666: a simulator exemplar (ExemplarType 4) makes or re-initialises the developer it names (property 0x21).
+void cSC4BuildingDevelopmentSimulator::InitDynamicDataFromExemplar(const cGZPersistResourceKey& key, void* context) {
+    auto* self = static_cast<cSC4BuildingDevelopmentSimulator*>(context);
+    if (!self || !g_host) return;
+    cISCPropertyHolder* exemplar = g_host->AcquireExemplar(key);
+    if (!exemplar) return;
+    std::uint32_t exemplarType = 0;
+    if (cSCPropertyHelp::GetPropertyValue(exemplar, 0x10, exemplarType) && exemplarType == 4) self->CreateDeveloper(exemplar);
+    g_host->ReleaseExemplar(exemplar);
+}
+
+// 0x10014d71e: the construction-resource bounds (0x47e2c380 = {min, max}, defaults 100 / 2000), resources per unit of RCI
+// demand (0x47e2c381, 0.5), the developer weight bonus (0x47e2c382, 10) and the stage population multipliers (0x47e2c383).
+void cSC4BuildingDevelopmentSimulator::ReadSimulatorTunableValues() {
+    minResources_ = 100;
+    maxResources_ = 2000;
+    resourcesPerDemand_ = 0.5f;
+    std::uint32_t bonus = 10;
+    cISCPropertyHolder* tunables = g_host ? g_host->AcquireExemplar(cGZPersistResourceKey{0x6534284a, 0xe7e2c2db, 0xe8da7677}) : nullptr;
+    if (tunables) {
+        std::vector<std::uint32_t> bounds;
+        if (cSCPropertyHelp::GetPropertyValue(tunables, 0x47e2c380, bounds) && bounds.size() >= 2) {
+            minResources_ = bounds[0];
+            maxResources_ = bounds[1];
+        }
+        cSCPropertyHelp::GetPropertyValue(tunables, 0x47e2c381, resourcesPerDemand_);
+        cSCPropertyHelp::GetPropertyValue(tunables, 0x47e2c382, bonus);
+        cSCPropertyHelp::GetPropertyValue(tunables, 0x47e2c383, stageMultipliers_);
+        g_host->ReleaseExemplar(tunables);
+    }
+    developerWeightBonus_ = bonus;
+}
+
+// 0x10014e84c. PARTIAL: the building-changed (0xe8bda2e7 -> DoBuildingChanged), terrain-changed (0x278e6003 ->
+// DoTerrainChanged) and PlaceBuilding command (0xb99ae81) branches need functions that are not recovered.
+bool cSC4BuildingDevelopmentSimulator::DoMessage(cIGZMessage2* message) {
+    if (!message) return true;
+    auto* standard = static_cast<cIGZMessage2Standard*>(message);
+    const std::uint32_t type = message->GetType();
+    switch (type) {
+        case 0x99ef1142:                                     // an occupant inserted: civic buildings (families 0x150a / 0x150b)
+        case 0x99ef1143: {                                   // ... removed
+            auto* occupant = static_cast<cISC4Occupant*>(standard->GetVoid1());
+            if (!occupant) break;
+            cISCPropertyHolder* properties = occupant->AsPropertyHolder();                 // vslot 0x30
+            if (properties && properties->HasProperty(0x29244db)) break;                  // vslot 0x18
+            if (!occupant->IsOccupantGroup(0x150a) && !occupant->IsOccupantGroup(0x150b)) break;   // vslot 0xb0
+            if (type == 0x99ef1142) {
+                occupant->AddRef();
+                civicOccupants_.push_front(occupant);
+            } else {
+                for (auto it = civicOccupants_.begin(); it != civicOccupants_.end(); ++it)
+                    if (*it == occupant) { civicOccupants_.erase(it); occupant->Release(); break; }
+            }
+            break;
+        }
+        case 0x230e27ac: {                                   // cheat codes
+            const std::uint64_t cheat = standard->GetData1();
+            if (cheat == 0x8dad89a) cheatPower_ = true;
+            else if (cheat == 0x6ab6a2d7) cheatCoffee_ = !cheatCoffee_;
+            else if (cheat == 0x491865e1) cheatPlumbing_ = true;
+            break;
+        }
+        case 0x66956814:                                     // a day
+            DoIdle();
+            DoDailySimulation();
+            break;
+        case 0x6695681a:                                     // idle time
+            DoIdle();
+            break;
+        case 0x66956810:                                     // the month's two messages
+        case 0x66956816:
+            DoMonthlySimulation();
+            break;
+        default:
+            break;
+    }
+    return true;
+}
+
+// 0x10014ecba: the stage machine the month starts. 1/2: wait until every developer finished its map update (one may need
+// several idle slices); 3: plan the growth (only in the planned mode, which nothing sets); 4: plan the decline; back to 0.
+void cSC4BuildingDevelopmentSimulator::DoIdle() {
+    switch (stage_) {
+        case 1:
+            idleCursorValid_ = !developers_.empty();
+            if (idleCursorValid_) idleCursor_ = developers_.begin()->first;
+            stage_ = 2;
+            [[fallthrough]];
+        case 2: {
+            auto it = idleCursorValid_ ? developers_.find(idleCursor_) : developers_.end();
+            for (; it != developers_.end(); ++it) {
+                idleCursor_ = it->first;
+                idleCursorValid_ = true;
+                if (it->second && !it->second->IsMapUpdateFinished()) return;   // vslot 0xe0
+            }
+            idleCursorValid_ = false;
+            stage_ = 3;
+            [[fallthrough]];
+        }
+        case 3:
+            stage_ = 4;   // PlanGrowth only when +0x1c8 (planned growth) is set
+            return;
+        case 4:
+            PlanDecline();
+            stage_ = 0;
+            return;
+        default:
+            return;
+    }
+}
+
+// 0x10014edcc: grow (the planned mode would execute its plan instead), then the decline plan.
+void cSC4BuildingDevelopmentSimulator::DoDailySimulation() {
+    Grow();
+    ExecuteDeclinePlan();
+}
+
+// 0x10014ee44: once the previous month's stages are done, the construction resources become the R + C + I demand (channels
+// 0x1001 / 0x3001 / 0x4001, their supply) times +0x1a4, clamped to [+0x19c, +0x1a0]; every developer starts its map update.
+void cSC4BuildingDevelopmentSimulator::DoMonthlySimulation() {
+    if (stage_ != 0) return;
+    const float demand = g_host ? g_host->DemandChannelSupply(0x1001) + g_host->DemandChannelSupply(0x3001) + g_host->DemandChannelSupply(0x4001) : 0.0f;
+    std::uint32_t total = static_cast<std::uint32_t>(demand * resourcesPerDemand_);
+    if (total < minResources_) total = minResources_;
+    if (maxResources_ < total) total = maxResources_;
+    if (resources_) resources_->SetTotal(static_cast<float>(static_cast<int>(total)));   // vslot 0x90
+    for (auto& entry : developers_) if (entry.second) entry.second->StartMapUpdate();   // vslot 0xd8
+    stage_ = 1;
 }
 
 bool cSC4BuildingDevelopmentSimulator::Write(cIGZOStream& stream) const {

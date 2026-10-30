@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "gz/cGZPersistResourceKey.h"
+#include "gz/cIGZMessage2.h"
 #include "rz/cRZString.h"
 #include "sc4/BuildingOccupant.h"
 #include "sc4/SCProperty.h"
@@ -60,8 +61,14 @@ public:
     virtual float Used() const = 0;                          // vslot 0x48
     virtual void Add(float amount) = 0;                      // vslot 0x88
     virtual void Update() = 0;                               // vslot 0xf0
+    // Init (vslot 0x18) and the two setters Init / DoMonthlySimulation use (cSC4Demand vslots 0x90 / 0x98).
+    virtual void Init() {}
+    virtual void SetTotal(float total) { (void)total; }      // vslot 0x90 SetSupplyValue
+    virtual void SetUsed(float used) { (void)used; }         // vslot 0x98 SetDemandValue
 };
 
+class IBuildingPlacementServices;
+class cSC4BuildingDevelopmentSimulator;
 class IBuildingDevelopmentSimHost {
 public:
     virtual ~IBuildingDevelopmentSimHost() = default;
@@ -82,6 +89,16 @@ public:
         std::vector<bool> zoneCompatibility;                  // 16 zone types
     };
     virtual void LotConfigurations(std::vector<LotConfigurationInfo>& out) = 0;
+    // ---- what Init / DoMessage reach (0x10014ce64, 0x10014e84c)
+    // The simulator's message target (+0x10): SL::spMS2 notifications 0xe8bda2e7, 0x278e6003, 0x99ef1142, 0x99ef1143,
+    // 0xb99ae81 and SL::spSimulator vslot 0x98 agents 0, 4, 6, 10 ("cSC4BuildingDevelopmentSimulator", flags 2). The host owns the
+    // cIGZMessageTarget2 that forwards to DoMessage (the port's class has no COM base).
+    virtual void RegisterMessageTarget(cSC4BuildingDevelopmentSimulator* simulator) { (void)simulator; }
+    virtual void UnregisterMessageTarget(cSC4BuildingDevelopmentSimulator* simulator) { (void)simulator; }
+    virtual IBuildingPlacementServices* PlacementServices() { return nullptr; }
+    virtual IConstructionResources* CreateConstructionResources() { return nullptr; }   // new cSC4Demand, one reference
+    // SL::spDemandSim vslot 0x30 GetDemand(type, 0) -> vslot 0x40: a demand channel's supply value
+    virtual float DemandChannelSupply(std::uint32_t type) { (void)type; return 0.0f; }
 };
 // cISC4BuildingDevelopmentSimulator::ConstructionProfile (the fields IsSuitableForConstruction reads) and its failure codes.
 struct ConstructionProfile {
@@ -161,6 +178,8 @@ class IGrowthDeveloperRef {                                                 // c
 public:
     virtual ~IGrowthDeveloperRef() = default;
     virtual void Init(cISCPropertyHolder* properties) = 0;                  // vslot 0x18
+    virtual void StartMapUpdate() {}                                        // vslot 0xd8 (DoMonthlySimulation)
+    virtual bool IsMapUpdateFinished() const { return true; }              // vslot 0xe0 (DoIdle)
 };
 // One pending demolition of the decline plan (a node of the list at this+0x110).
 class IDeclineSource {
@@ -216,6 +235,18 @@ public:
     bool Init();
     bool Shutdown();
     std::uint32_t GetGZCLSID() const { return kGZCLSID_cSC4BuildingDevelopmentSimulator; }
+
+    // ---- the simulation (0x10014e84c..0x10014f222)
+    bool DoMessage(cIGZMessage2* message);                                  // @ 0x10014e84c
+    void DoIdle();                                                          // @ 0x10014ecba
+    void DoDailySimulation();                                               // @ 0x10014edcc
+    void DoMonthlySimulation();                                             // @ 0x10014ee44
+    void ReadSimulatorTunableValues();                                      // @ 0x10014d71e
+    static void InitDynamicDataFromExemplar(const cGZPersistResourceKey& key, void* context);   // @ 0x10014d666
+    // Not recovered yet (notes/GROWTH_PLAN.md layer 3): Grow 0x10014fb24, PlanDecline 0x10015060c.
+    void Grow() {}
+    void PlanDecline() {}
+    int GrowthStage() const { return stage_; }
 
     // type / wealth mapping
     static std::uint32_t GetDeveloperType_Static(std::uint32_t purpose, std::int32_t wealth);
@@ -337,6 +368,15 @@ private:
     std::map<std::uint32_t, std::set<std::pair<int, int>>> growthMarks_;       // mGrowthMarks
     bool cheatPlumbing_ = false, cheatPower_ = false, cheatCaps_ = false;       // +0x1c9..0x1cb
     bool cheatDebug_ = false, cheatCoffee_ = false;                             // +0x1cc, +0x1cd
+    bool plannedGrowth_ = false;                                                // +0x1c8 (never set: Grow, not PlanGrowth)
+    int stage_ = 0;                                                             // +0xe8 the idle stage machine
+    std::uint32_t idleCursor_ = 0;                                              // +0xf0 the developer DoIdle waits on (its type)
+    bool idleCursorValid_ = false;
+    std::uint32_t minResources_ = 100, maxResources_ = 2000;                    // +0x19c, +0x1a0
+    float resourcesPerDemand_ = 0.5f;                                           // +0x1a4
+    std::uint32_t developerWeightBonus_ = 10;                                   // +0x1a8
+    std::list<cIGZUnknown*> civicOccupants_;                                    // +0x88 (families 0x150a / 0x150b; one reference each)
+    bool messageTargetRegistered_ = false;
 };
 
 }  // namespace sc4

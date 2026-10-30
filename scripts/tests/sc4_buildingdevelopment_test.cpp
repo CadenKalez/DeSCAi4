@@ -2,6 +2,7 @@
 #include "rz/PortMemoryStreams.h"
 #include "sc4/BuildingDevelopmentSimulator.h"
 #include "sc4/SCPropertyHelp.h"
+#include "rz/cRZMessage2Standard.h"
 static int failures = 0;
 #define CHECK(c) do { if (!(c)) { std::printf("FAIL line %d: %s\n", __LINE__, #c); ++failures; } } while (0)
 using namespace sc4;
@@ -13,6 +14,10 @@ public:
     float Used() const override { return used; }
     void Add(float a) override { used += a; }
     void Update() override {}
+    int inits = 0;
+    void Init() override { ++inits; }
+    void SetTotal(float t) override { total = t; }
+    void SetUsed(float u) override { used = u; }
 };
 class Host final : public IBuildingDevelopmentSimHost {
 public:
@@ -35,6 +40,11 @@ public:
     void CityCellSize(float& x, float& z) override { x = z = 16.0f; }
     void PostBuildingTypesUpdated() override { ++posted; }
     std::int32_t SimulatorDay() override { return 7; }
+    int registered = 0, unregistered = 0;
+    std::map<std::uint32_t, float> channels;
+    void RegisterMessageTarget(cSC4BuildingDevelopmentSimulator*) override { ++registered; }
+    void UnregisterMessageTarget(cSC4BuildingDevelopmentSimulator*) override { ++unregistered; }
+    float DemandChannelSupply(std::uint32_t type) override { return channels.count(type) ? channels[type] : 0.0f; }
     void LotConfigurations(std::vector<LotConfigurationInfo>& out) override {
         LotConfigurationInfo c;
         c.sizeX = 2; c.sizeZ = 2;
@@ -91,7 +101,13 @@ struct FakeFoundation final : IPlacedFoundation {
     void ApplyExemplar(cISCPropertyHolder* e) override { exemplar = e; }
     void FinishPlacement() override { finished = true; }
 };
-struct FakeDeveloper final : IGrowthDeveloperRef { int inits = 0; void Init(cISCPropertyHolder*) override { ++inits; } };
+struct FakeDeveloper final : IGrowthDeveloperRef {
+    int inits = 0, mapUpdates = 0;
+    bool finished = true;
+    void Init(cISCPropertyHolder*) override { ++inits; }
+    void StartMapUpdate() override { ++mapUpdates; }
+    bool IsMapUpdateFinished() const override { return finished; }
+};
 struct FakeServices final : IBuildingPlacementServices {
     FakeBuilding building; bool occupied = false; int added = 0, removed = 0, released = 0; float surface = 33;
     FakeDeveloper developer; int created = 0; float lastRect[4] = {};
@@ -342,6 +358,68 @@ int main() {
         sim->SetPlacementServices(nullptr);
     }
     sim->Release();
+
+    // ---- the simulation messages (DoMessage 0x10014e84c, DoMonthlySimulation, DoIdle)
+    {
+        auto* growth = new cSC4BuildingDevelopmentSimulator();
+        growth->AddRef();
+        FakeServices services;
+        growth->SetPlacementServices(&services);
+        Resources resources;
+        growth->SetConstructionResources(&resources);
+        auto* simulatorExemplar = new cSCPropertyHolder();
+        simulatorExemplar->AddRef();
+        cSCPropertyHelp::SetPropertyValue(simulatorExemplar, 0x10, static_cast<std::uint32_t>(4));   // a simulator exemplar...
+        cSCPropertyHelp::SetPropertyValue(simulatorExemplar, 0x21, static_cast<std::uint32_t>(0x1010));   // ... naming R$
+        host.exemplars[0x7777] = simulatorExemplar;
+        const int registeredBefore = host.registered;
+        CHECK(growth->Init());
+        CHECK(services.created == 1 && services.developer.inits >= 1);    // the developer came from the simulator exemplar
+        CHECK(host.registered == registeredBefore + 1);
+        CHECK(resources.inits == 1);
+        // month: R + C + I supply 3000 * 0.5 = 1500 resources; every developer starts its map update; stage 1
+        host.channels = {{0x1001, 1000.0f}, {0x3001, 1500.0f}, {0x4001, 500.0f}};
+        cRZMessage2Standard month;
+        month.SetType(0x66956816);
+        growth->DoMessage(&month);
+        CHECK(resources.total == 1500.0f && services.developer.mapUpdates == 1 && growth->GrowthStage() == 1);
+        growth->DoMessage(&month);                                         // a second month before the stages finished: nothing
+        CHECK(services.developer.mapUpdates == 1);
+        // idle: the stage machine waits for the developer's map update
+        services.developer.finished = false;
+        cRZMessage2Standard idle;
+        idle.SetType(0x6695681a);
+        growth->DoMessage(&idle);
+        CHECK(growth->GrowthStage() == 2);
+        services.developer.finished = true;
+        growth->DoMessage(&idle);                                          // finished: stage 3 -> 4 (no planned growth)
+        CHECK(growth->GrowthStage() == 4);
+        growth->DoMessage(&idle);                                          // the decline plan, back to 0
+        CHECK(growth->GrowthStage() == 0);
+        // the clamps: no demand -> the minimum, a huge demand -> the maximum
+        host.channels.clear();
+        growth->DoMessage(&month);
+        CHECK(resources.total == 100.0f);
+        for (int i = 0; i < 3; ++i) growth->DoMessage(&idle);
+        host.channels = {{0x1001, 1e7f}};
+        growth->DoMessage(&month);
+        CHECK(resources.total == 2000.0f);
+        // the cheats
+        cRZMessage2Standard cheat;
+        cheat.SetType(0x230e27ac);
+        cheat.SetData1(0x491865e1);
+        growth->DoMessage(&cheat);
+        CHECK(growth->CheatIgnorePlumbing());
+        cheat.SetData1(0x6ab6a2d7);
+        growth->DoMessage(&cheat);
+        CHECK(growth->CheatCoffeeBar());
+        const int unregisteredBefore = host.unregistered;
+        CHECK(growth->Shutdown() && host.unregistered == unregisteredBefore + 1);
+        growth->SetPlacementServices(nullptr);
+        growth->SetConstructionResources(nullptr);
+        host.exemplars.erase(0x7777);
+        growth->Release();
+    }
     S::StaticShutdown();
     std::puts(failures ? "sc4_buildingdevelopment: FAILED" : "sc4_buildingdevelopment ok");
     return failures != 0;

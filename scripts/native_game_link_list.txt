@@ -576,6 +576,8 @@ src/sc4/ViewInputControlZone.cpp
 src/app/NativeZoneTool.cpp
 src/app/NativeZoneOverlay.cpp
 src/app/NativeZoneDeveloperHost.cpp
+src/app/NativeBuildingDevelopment.cpp
+src/app/NativeGrowthDevelopers.cpp
 src/app/NativeCatalogUi.cpp
 src/sc4/WinCalloutBox.cpp
 src/app/NativeAudio.cpp

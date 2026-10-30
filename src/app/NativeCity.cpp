@@ -5,6 +5,7 @@
 #include "app/NativeCitySystems.h"
 #include "app/NativeRuntimeWire.h"
 #include "app/NativeCity.h"
+#include "app/NativeBuildingDevelopment.h"
 
 #include <cstdio>
 #include <set>
@@ -187,6 +188,7 @@ bool LoadCityFile(cSC4App& app, const std::string& path) {
         }
         InstallStubHosts();
         InstallCityProbeBindings();
+        InstallBuildingDevelopmentHost();   // the real host replaces the generated stub before the components Init
     }
     const bool loaded = app.LoadCity(cRZString(path.c_str()), nullptr);
     std::printf("city: %s %s (%zu classes missing)\n", path.c_str(), loaded ? "loaded" : "FAILED", factory.missing.size());
