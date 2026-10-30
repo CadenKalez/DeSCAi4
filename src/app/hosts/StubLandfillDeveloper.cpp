@@ -15,7 +15,9 @@ struct StubLandfillDeveloper final : ILandfillDeveloperHost {
     ILandfillBudgetApi* Budget() override { return {}; }
     cISCPropertyHolder* TuningExemplar() override { return {}; }
     ILandfillZoneHost* ZoneHost() override { return {}; }
-    void AddSimulatorAgent(cIGZMessageTarget2* target, int interval, const char* name, std::uint32_t flags) override { AddCitySimulatorAgent(target, interval, name, flags); }
+    // Not registered: the landfill zones' host (ZoneHost below) is still null, so the developer's monthly UpdateZone dereferenced it
+    // (crash in cSC4LandfillZone::IsZoneConnected). Register once LANDFILL-1 gives the zones a real host.
+    void AddSimulatorAgent(cIGZMessageTarget2*, int, const char*, std::uint32_t) override {}
     void RemoveSimulatorAgent(cIGZMessageTarget2* target) override { RemoveCitySimulatorAgent(target); }
     std::uint32_t ViewLevel() override { return {}; }
     std::int32_t LandfillTileCount() override { return {}; }
