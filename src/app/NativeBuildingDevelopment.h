@@ -29,5 +29,9 @@ void NativeBuildingsInFamily(std::uint32_t family, std::vector<std::uint32_t>& o
 bool NativeIsBuildingInFamily(std::uint32_t type, std::uint32_t family);
 bool NativeRetainingWallExists(std::uint32_t id);                                      // GetLotRetainingWallKeyFromType
 bool NativeBuildingFitsInZone(std::uint32_t buildingPurpose, std::uint32_t zoneType);    // @ 0x100150a86
+std::uint16_t NativeFreeConstructionResources();                                       // vslot 0x180
+bool NativeClaimConstructionResources(std::uint16_t amount);                           // vslot 0x190
+void NativeReleaseConstructionResources(std::uint16_t amount);                         // vslot 0x198
+bool NativeBuildingCheat(int which);   // 0 CheatIgnorePlumbing (0x1b0), 1 CheatIgnorePower (0x1b8), 2 CheatIgnoreCaps (0x1c0)
 
 }  // namespace native

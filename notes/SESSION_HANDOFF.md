@@ -290,3 +290,24 @@ CreateCatalogView 0x69b9324a, SetWindowVisible 0x4bb92c20/21 (window 0xcc1a6983 
 - `SetDBSegmentMessageServer(SL::spMS2)` was never called natively: every occupant message after load was dropped (new occupants never
   got models). Bound in NativeCityView right after the model maker's initial pass.
 - Next for growth: GROWTH-1 and LEDGER-LOTDEV (the lot developer's construction half is not implemented despite the ledger).
+
+## Addendum 13: the tract developer builds on empty zoned lots (TRACT-1, 2026-10-30)
+- `cSC4TractDeveloper::Grow`'s pass loop and the existing-lot path are transcribed from the decompile + disassembly:
+  ListCandidateLots_Existing, IsLotSuitable, IsLotConfigurationCompatible, TestForCornerLot, FindNetworks, Build, PickBuilding,
+  IsBuildingCompatible. Unit test `TestBuildOnEmptyLot`: an empty zoned lot reaches the lot developer's StartConstruction with the
+  chosen configuration and building. Not byte-exact (the engine calls go through ITractDeveloperHost; byte-match 12 % on the one
+  function that pairs by name). Remaining routes (take-over, aggregation, subdivision, farms): TRACT-2.
+- New ITractDeveloperHost seams (cell queries, DemolishLots, the building exemplar flag, the network manager); the native host answers
+  "provided" for power / water / fire / park / land value until those simulators run natively (TRACT-HOST-1).
+- Port bugs found on the way: cSC4LotConfiguration's constructor and Shutdown set the minimum slope to 90 (the original stores
+  {90.0f, 0.0f} in one 8-byte write, so the minimum is 0): every lot failed the slope test. The lot configuration manager never heard
+  the city-init message 0x26d31ec1 natively, so no configuration had its building styles / capacities: NativeLotConfigHost subscribes
+  on its behalf. Lot road access (ILotHost::RoadAccessCells) was a neutral `false`: now the zone developer's edge cells are scanned
+  for a road-type network occupant (mask 0x449).
+- cSC4BuildingDevelopmentSimulator::GrowthStageFitsInZone / BuildingFitsInZone moved to src/sc4/BuildingZoneFit.cpp (the simulator's
+  statics forward) so the tract developer can call them despite the header clash.
+- Trace: `SC4_SIMDEBUG=1` prints each Grow with its histogram (row:outcome=count; rows per TractHistogramBucket).
+- In game (SC4_SIMDEBUG, zone R$ beside the road between the two towns): 15 configurations qualify, every lot is then refused
+  with outcome 21 (no road access): lots face the auto-street rows zoning plans between them, and those cells hold no road because
+  drawing auto-streets needs cSC4NetworkTool (TOOL-1). So the next blocker for visible growth is TOOL-1, then layer 4
+  (cSC4LotDeveloper::StartConstruction, buildings appearing).

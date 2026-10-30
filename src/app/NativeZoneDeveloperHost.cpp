@@ -17,6 +17,7 @@
 #include "rz/cRZRandom.h"
 #include "sc4/LotBaseTextureOccupant.h"
 #include "sc4/LotDeveloper.h"
+#include "sc4/NetworkOccupant.h"
 #include <vector>
 #include "sc4/DBSegment.h"
 #include "sc4/Simulator.h"
@@ -236,7 +237,21 @@ struct LotHost final : ILotHost {
     void UnitLotShutdown(cIGZUnknown* unit, const cSC4Lot& lot) override {}
     void NeighborLots(const cSC4Lot& lot, int direction, std::vector<cSC4Lot*>& out) override {}
     void GetLotOccupants(const cSC4Lot& lot, std::vector<cIGZUnknown*>& out) override {}
-    bool RoadAccessCells(const cSC4Lot& lot, int rotation) override { return {}; }
+    // cSC4Lot::CalculateRoadAccess's scan (0x100181c62): the cells along one edge of the lot (the zone developer's
+    // GetNeighborCellsAtEdgeOfLot, edge mask 1 << rotation) hold a network occupant of a road type (mask 0x449: road, street,
+    // avenue, one-way road).
+    bool RoadAccessCells(const cSC4Lot& lot, int rotation) override {
+        cSC4ZoneDeveloper* developer = Developer();
+        if (!developer) return false;
+        std::int32_t rect[4];
+        lot.GetBoundingRect(rect);
+        SC4Rect<int> edge;
+        if (!developer->GetNeighborCellsAtEdgeOfLot(SC4Rect<int>{rect[0], rect[1], rect[2], rect[3]}, 1 << rotation, edge)) return false;
+        for (int x = edge.x0; x <= edge.x1; ++x)
+            for (int z = edge.z0; z <= edge.z1; ++z)
+                if (NativeNetworkTypesAt(x, z) & 0x449) return true;
+        return false;
+    }
     bool IsFerryTerminal(const cSC4Lot& lot) override { return {}; }
     bool FerryTerminalRoadAccess(const cSC4Lot& lot) override { return {}; }
     cIGZUnknown* FindBuildingOccupant(const cSC4Lot& lot) override { return {}; }
@@ -245,6 +260,23 @@ struct LotHost final : ILotHost {
 } g_lotHost;
 
 }  // namespace
+
+std::uint32_t NativeNetworkTypesAt(int x, int z) {
+    cISC4OccupantManager* occupants = Occupants();
+    cISC4Occupant* occupant = nullptr;
+    if (!occupants || !occupants->GetFirstOccupantByStandardCityCell(occupant, x, z, 0xc772bf98) || !occupant) return 0;
+    std::uint32_t types = 0;
+    if (auto* network = dynamic_cast<cSC4NetworkOccupant*>(occupant))
+        for (std::uint32_t type = 0; type < 13; ++type)
+            if (network->IsOfType(type)) types |= 1u << type;
+    occupant->Release();
+    return types;
+}
+
+float NativeAreaSlope(const std::int32_t rect[4], bool includeWater) {
+    cSC4LotDeveloper* developer = LotDeveloper();
+    return developer ? developer->GetAreaSlope(LotCellRect{rect[0], rect[1], rect[2], rect[3]}, includeWater) : 0.0f;
+}
 
 bool InstallZoneDeveloperHost(sc4::cSC4City* city) {
     g_city = city;

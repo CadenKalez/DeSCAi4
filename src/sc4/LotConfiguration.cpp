@@ -22,7 +22,7 @@ void SetBits(std::vector<bool>& bits, const std::vector<std::uint8_t>& values) {
 ILotConfigurationHost* LotConfigurationHost() { return g_host; }
 void SetLotConfigurationHost(ILotConfigurationHost* host) { g_host = host; }
 
-cSC4LotConfiguration::cSC4LotConfiguration() { minSlope_ = 90.0f; }
+cSC4LotConfiguration::cSC4LotConfiguration() = default;   // 0x100402820: one 8-byte store makes the slopes {90.0f, 0.0f}
 
 std::uint32_t cSC4LotConfiguration::Release() {
     if (refCount_ < 2) {
@@ -45,7 +45,9 @@ bool cSC4LotConfiguration::Shutdown() {
     name_.clear();
     sizeX_ = sizeZ_ = 0;
     families_.clear();
-    maxSlope_ = minSlope_ = maxSlopeBeforeFoundation_ = 90.0f;
+    maxSlope_ = 90.0f;                   // one 8-byte store: the minimum slope (+0x5c) is 0
+    minSlope_ = 0.0f;
+    maxSlopeBeforeFoundation_ = 90.0f;
     growthStage_ = 1;
     minCapacity_ = 0xffff;
     maxCapacity_ = 0;

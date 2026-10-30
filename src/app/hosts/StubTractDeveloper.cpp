@@ -29,6 +29,15 @@ struct StubTractDeveloper final : ITractDeveloperHost {
     std::int32_t SimulatorDay() override { return {}; }
     std::uint32_t RandomBelow(std::uint32_t range) override { return {}; }
     void ForEachCellInTract(int tractX, int tractZ, int shift, const std::function<void(int, int)>& fn) override {}
+    ITractNetworkManagerApi* NetworkManager() override { return {}; }
+    std::uint8_t LandValueAt(int x, int z) override { return {}; }
+    bool IsCellWatered(int x, int z) override { return {}; }
+    std::uint8_t PoweredAt(int x, int z) override { return {}; }
+    bool FireProtectedAt(int x, int z) override { return {}; }
+    std::int16_t ParkEffectAt(int x, int z) override { return {}; }
+    bool HasTripLengthAt(int x, int z) override { return {}; }
+    void DemolishLots(const std::list<cRZAutoRefCount<cSC4Lot>>& lots, std::uint32_t flags) override {}
+    void BuildingExemplarBool(const cGZPersistResourceKey& key, std::uint32_t property, bool& value) override {}
 };
 }  // namespace
 

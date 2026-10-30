@@ -253,6 +253,7 @@ src/gz/GZCOMCreators7.cpp
 src/sc4/DispatchManager.cpp
 src/sc4/cSC424HourClock.cpp
 src/sc4/BuildingDevelopmentSimulator.cpp
+src/sc4/BuildingZoneFit.cpp
 src/sc4/cSC4City.cpp
 src/sc4/CrimeSimulator.cpp
 src/sc4/cSC4Demand.cpp

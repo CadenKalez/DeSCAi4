@@ -65,12 +65,11 @@
 // ITractDeveloperHost, one method per original call with its vtable slot. cSC4Lot and
 // cSC4LotConfiguration are used directly (recovered in Lot.h / LotConfiguration.h).
 //
-// Not recovered here (PARTIAL, see notes/ledger_pending/cSC4TractDeveloper.txt): the growth pass
-// itself (Grow's candidate collection and build loop, TakeOverAbandoned, the three ListCandidateLots_*
-// passes, Build/BuildFarm/PickBuilding, the aggregation/subdivision and lot-configuration compatibility
-// predicates, FindNetworks and UpdatePopulation) because they need cISC4GrowthDeveloper's growth /
-// decline lists (unrecovered), the occupant-manager occupant interface and the demolition, fire, aura
-// and plumbing simulators.
+// Recovered growth path: Grow's pass loop, the existing-lot candidate search (ListCandidateLots_Existing, IsLotSuitable,
+// IsLotConfigurationCompatible, TestForCornerLot, FindNetworks) and the build (Build, PickBuilding, IsBuildingCompatible). They
+// are transcriptions of the decompile and disassembly; the engine calls go through ITractDeveloperHost, so they are not
+// byte-exact. Not recovered (PARTIAL, to-do TRACT-2): TakeOverAbandoned, the aggregation and subdivision searches and their
+// Perform* steps, IsAggregationLegal, BuildFarm and UpdatePopulation.
 #pragma once
 
 #include <cstddef>
@@ -80,13 +79,16 @@
 #include <map>
 #include <set>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
+#include "gz/cGZPersistResourceKey.h"
 #include "gz/cIGZMessage2.h"
 #include "gz/cIGZSerializable.h"
 #include "sc4/BuildingOccupant.h"
 #include "sc4/Lot.h"
+#include "sc4/SCPropertyHelp.h"
 
 namespace sc4 {
 
@@ -119,8 +121,9 @@ enum TractOutcome : int {
 };
 
 // cISC4BuildingDevelopmentSimulator::ConstructionProfile, written by the growth developer's
-// GetConstructionInfo (0x10015a6da): +0x00 purpose, +0x04 max slope, +0x08 min slope, +0x0c styles,
-// +0x10/+0x11 two flag bytes. The tract developer copies it out of the growth developer once per pass.
+// GetConstructionInfo (0x10015a6da): +0x00 building purpose, +0x04 a construction value, +0x08 the
+// developer's wealth (an int stored in the float's bits), +0x0c the developer's purpose, +0x10/+0x11 the
+// land value range. The tract developer copies it out of the growth developer once per pass.
 struct ConstructionProfile {
     std::uint32_t purpose = 0;      // +0x00
     float value4 = 0;               // +0x04
@@ -162,6 +165,13 @@ public:
     virtual ITractValueMap* GetPopulationMap() const = 0;                 // vslot 0x78
     virtual ITractValueMap* GetMaxCapacityMap() const = 0;                // vslot 0x80
     virtual ITractDemandApi* GetSourceDemand() const = 0;                 // vslot 0x90
+    virtual std::int32_t GetType() const = 0;                             // vslot 0x28 (3 = agriculture-free industry)
+    virtual std::uint8_t GetPowerSupplyCap() const = 0;                   // vslot 0x98
+    virtual std::uint8_t GetWaterSupplyCap() const = 0;                   // vslot 0xa0
+    virtual std::uint8_t GetFireCoverageCap() const = 0;                  // vslot 0xa8
+    virtual std::uint8_t GetParkCap() const = 0;                          // vslot 0xb0
+    virtual std::uint32_t GetMonopolyUse() const = 0;                     // vslot 0xc8
+    virtual const std::map<std::uint32_t, SC4Percentage>& GetStylePercentages() const = 0;  // vslot 0xd0
 };
 
 // cISC4BuildingDevelopmentSimulator::GrowthProfile, passed by the growth planner: the developer of the
@@ -200,23 +210,33 @@ public:
     virtual cSC4Lot* GetLot(int x, int z, bool exactCell) = 0;              // vslot 0x28
     virtual int GetLotsInCellRect(std::list<cRZAutoRefCount<cSC4Lot>>& out, int x0, int z0, int x1,
                                   int z1, bool unique) = 0;                 // vslot 0x38
+    virtual int CanCreateLot(int x, int z, int sizeX, int sizeZ, bool param5, bool param6,
+                             cSC4LotConfiguration* configuration) = 0;      // vslot 0xa0
 };
 
 class ITractLotDeveloperApi : public ITractDeveloperService {
 public:
-    virtual void StartConstruction(cSC4Lot* lot, std::uint32_t configurationId, int objectId,
-                                   bool flag) = 0;                          // vslot 0x30
+    virtual void StartConstruction(cSC4Lot* lot, cSC4LotConfiguration* configuration,
+                                   std::uint32_t buildingType, bool flag) = 0;   // vslot 0x30
     virtual void AbandonBuilding(cSC4Lot* lot, int vacateReason) = 0;       // vslot 0x40
     virtual void ReoccupyBuilding(cSC4Lot* lot, std::uint32_t developerType) = 0;  // vslot 0x48
+    virtual float GetAreaSlope(const std::int32_t rect[4], bool includeWater) = 0; // vslot 0xe8
 };
 
 class ITractBuildingDevelopmentApi : public ITractDeveloperService {
 public:
     virtual bool CheatCodesEnabled() = 0;                                   // vslot 0x1c8
     virtual const BuildingProfile& GetBuildingProfile(std::uint32_t type) const = 0;  // vslot 0x138
-    virtual std::uint16_t NextObjectId() = 0;                               // vslot 0x180
-    virtual bool IsBuildingTypeValid(std::uint16_t objectId) = 0;           // vslot 0x190
-    virtual void NoteBuildFailed(std::uint32_t objectId) = 0;               // vslot 0x198
+    virtual std::uint16_t GetFreeConstructionResources() = 0;               // vslot 0x180
+    virtual bool ClaimConstructionResources(std::uint16_t amount) = 0;      // vslot 0x190
+    virtual void ReleaseConstructionResources(std::uint16_t amount) = 0;    // vslot 0x198
+    virtual bool GetBuildingKeyFromType(std::uint32_t type, cGZPersistResourceKey& key) = 0;    // vslot 0x68
+    virtual void GetBuildingTypesByFamily(std::unordered_set<std::uint32_t>& out, std::uint32_t family) = 0;  // vslot 0x88
+    virtual bool CheatIgnorePlumbing() = 0;                                 // vslot 0x1b0
+    virtual bool CheatIgnorePower() = 0;                                    // vslot 0x1b8
+    virtual bool CheatIgnoreCaps() = 0;                                     // vslot 0x1c0
+    // vslot 0x120 GetLotDeveloper() -> the lot developer's vslot 0x120 NeedsAnchorBuilding(rect, purpose).
+    virtual bool NeedsAnchorBuilding(const std::int32_t rect[4], std::int32_t purpose) = 0;
 };
 
 class ITractZoneManagerApi : public ITractDeveloperService {
@@ -295,6 +315,19 @@ public:
     // see the note on ListExistingLots.
     virtual void ForEachCellInTract(int tractX, int tractZ, int shift,
                                     const std::function<void(int, int)>& fn) = 0;
+
+    // The cell queries of the growth predicates, one per original call chain.
+    virtual ITractNetworkManagerApi* NetworkManager() = 0;                    // SL::spCity vslot 0x140 GetTrafficNetwork
+    virtual std::uint8_t LandValueAt(int x, int z) = 0;                       // land value sim vslot 0x30 GetLandValue
+    virtual bool IsCellWatered(int x, int z) = 0;                             // plumbing sim vslot 0x58
+    virtual std::uint8_t PoweredAt(int x, int z) = 0;                         // power sim vslot 0x120 GetPoweredGrid -> grid vslot 0x38
+    virtual bool FireProtectedAt(int x, int z) = 0;                           // SL::spFireProtectionSim vslot 0x28 -> grid vslot 0x38
+    virtual std::int16_t ParkEffectAt(int x, int z) = 0;                      // SL::spAuraSim vslot 0x70 GetParkMap -> grid vslot 0x38
+    virtual bool HasTripLengthAt(int x, int z) = 0;                           // traffic sim vslot 0x68 GetTripLengthMap -> grid vslot 0x38
+    // SL::spDemolition vslot 0x38 DemolishLots(true, lots, privilege 0, flags, false, null, null, null).
+    virtual void DemolishLots(const std::list<cRZAutoRefCount<cSC4Lot>>& lots, std::uint32_t flags) = 0;
+    // SL::spRM vslot 0x18 GetResource(key, 0xa52160f5 exemplar) -> cSCPropertyHelp::GetPropertyValue(bool).
+    virtual void BuildingExemplarBool(const cGZPersistResourceKey& key, std::uint32_t property, bool& value) = 0;
 };
 ITractDeveloperHost* TractDeveloperHost();
 void SetTractDeveloperHost(ITractDeveloperHost* host);
@@ -353,11 +386,12 @@ struct TractCandidateLot {
     std::uint8_t reserved60[0x20] = {};             // +0x60..0x7f (never read by the recovered code)
     std::uint8_t ratio = 0;                         // +0x80 subdivison ratio
     std::uint8_t reserved81[7] = {};                // +0x81
-    std::vector<std::int32_t> roadsAndRail = std::vector<std::int32_t>(4, 0);   // +0x88 counts per edge
-    std::vector<std::int32_t> streets = std::vector<std::int32_t>(4, 0);        // +0xa0 (FindNetworks)
-    std::vector<std::int32_t> highways = std::vector<std::int32_t>(4, 0);       // +0xb8
-    std::vector<std::int32_t> otherNetworks = std::vector<std::int32_t>(4, 0);  // +0xd0
-    std::uint8_t reservedE8 = 0;                    // +0xe8
+    // FindNetworks' counts per edge (0 north/-z, 1 east/+x, 2 south/+z, 3 west/-x) of the network types next to the lot.
+    std::vector<std::int32_t> streets = std::vector<std::int32_t>(4, 0);   // +0x88 street (3) / dirt road (11)
+    std::vector<std::int32_t> roads = std::vector<std::int32_t>(4, 0);     // +0xa0 road (0) / one-way road (10)
+    std::vector<std::int32_t> avenues = std::vector<std::int32_t>(4, 0);   // +0xb8 avenue (6)
+    std::vector<std::int32_t> rails = std::vector<std::int32_t>(4, 0);     // +0xd0 rail (1)
+    std::uint8_t needsRoad = 0;                     // +0xe8 set when a configuration with required roads fits
     std::uint8_t reservedE9[7] = {};                // +0xe9
 };
 static_assert(sizeof(TractCandidateLot) == 0xf0, "CandidateLot must stay 0xf0 bytes");
@@ -427,6 +461,10 @@ enum TractHistogramBucket : std::size_t {
     kHistogramSubdivision = 5,      // ListCandidateLots_Subdivision (+0x78)
     kHistogramBuild = 6,            // Build (+0x90)
     kHistogramSuitable = 7,         // IsLotConfigurationSuitable (+0xa8)
+    kHistogramLotSuitable = 8,      // IsLotSuitable (+0xc0)
+    kHistogramStyle = 10,           // PickBuilding's style filter (+0xf0)
+    kHistogramCompatible = 11,      // IsLotConfigurationCompatible (+0x108)
+    kHistogramBuilding = 12,        // IsBuildingCompatible (+0x120)
     kHistogramBucketCount = 13,
 };
 constexpr std::size_t kTractOutcomeSlots = 28;
@@ -488,23 +526,24 @@ public:
     const GrowthAttemptRecord* GetLastFailedBuild(int x, int z,
                                                   std::uint32_t developerType) const;  // @ 0x10013baf2
 
-    // PARTIAL: not recovered (see the header note and notes/ledger_pending/cSC4TractDeveloper.txt).
-    int TakeOverAbandoned();                               // @ 0x1001369ae
     int ListCandidateLots_Existing();                      // @ 0x1001377a0
-    int ListCandidateLots_Aggregation();                   // @ 0x100137b04
-    int ListCandidateLots_Subdivision();                   // @ 0x100137f44
     int Build(CandidateLot* candidate);                    // @ 0x1001388c4
-    int BuildFarm(CandidateLot* candidate);                // @ 0x10013845e
-    int IsLotSuitable(cSC4Lot* lot, bool param);            // @ 0x100138b10
+    int IsLotSuitable(cSC4Lot* lot, bool useCache);        // @ 0x100138b10
     int PickBuilding(CandidateLot* candidate);             // @ 0x1001392fa
-    void PerformAggregation(CandidateLot* candidate, cSC4Lot*& out);   // @ 0x100139dd2
-    void PerformSubdivision(CandidateLot* candidate);      // @ 0x10013a04e
     void FindNetworks(CandidateLot* candidate);            // @ 0x10013a5f2
     int IsLotConfigurationCompatible(cSC4LotConfiguration* configuration, CandidateLot* candidate,
-                                     bool param);          // @ 0x10013aa5c
+                                     bool needsRoad);      // @ 0x10013aa5c
+    static bool TestForCornerLot(cSC4LotConfiguration* configuration, CandidateLot* candidate);  // @ 0x10013b318
+    int IsBuildingCompatible(std::uint32_t buildingType, CandidateLot* candidate);       // @ 0x10013b436
+
+    // PARTIAL: not recovered (see the header note and notes/ledger_pending/cSC4TractDeveloper.txt).
+    int TakeOverAbandoned();                               // @ 0x1001369ae
+    int ListCandidateLots_Aggregation();                   // @ 0x100137b04
+    int ListCandidateLots_Subdivision();                   // @ 0x100137f44
+    int BuildFarm(CandidateLot* candidate);                // @ 0x10013845e
+    void PerformAggregation(CandidateLot* candidate, cSC4Lot*& out);   // @ 0x100139dd2
+    void PerformSubdivision(CandidateLot* candidate);      // @ 0x10013a04e
     bool IsAggregationLegal(CandidateLot* candidate);      // @ 0x10013ae4a
-    bool TestForCornerLot(cSC4LotConfiguration* configuration, CandidateLot* candidate);  // @ 0x10013b318
-    bool IsBuildingCompatible(std::uint32_t buildingType, CandidateLot* candidate);      // @ 0x10013b436
 
     // Accessors the test and the neighbours use.
     bool IsInitialized() const { return initialized_; }
@@ -520,6 +559,8 @@ public:
     // The +0x10c update Build performs after a successful construction (0x1001388c4).
     void AccumulateBuiltCapacity(std::int32_t capacity) { builtCount_ += capacity; }
     std::int32_t BuiltCapacity() const { return builtCount_; }
+    bool SecondAttempt() const { return attempted_ != 0; }
+    void SetSecondAttempt(bool second) { attempted_ = second ? 1 : 0; }   // test hook: Grow leaves its last pass's value
     const std::set<cSC4Lot*>& ExistingLots() const { return existingLots_; }
     const std::set<cSC4LotConfiguration*>& SuitableConfigurations() const { return configurations_; }
     const std::vector<std::vector<std::uint32_t>>& Histograms() const { return currentAttempt_.histograms; }
@@ -600,11 +641,11 @@ private:
     std::set<cSC4Lot*> existingLots_;                  // +0x118
     std::set<cSC4LotConfiguration*> configurations_;   // +0x130
     std::vector<CandidateLot*> candidates_;            // +0x148
-    std::uint64_t configurationData_ = 0;              // +0x160
-    std::int32_t objectId_ = 0;                        // +0x168
+    cSC4LotConfiguration* configuration_ = nullptr;    // +0x160 the configuration PickBuilding chose
+    std::uint32_t buildingType_ = 0;                   // +0x168 the building type PickBuilding chose
     std::int32_t outcome0_ = 0;                        // +0x16c
-    std::int32_t outcome1_ = 0;                        // +0x170
-    std::int32_t outcome2_ = 0;                        // +0x174
+    std::int32_t outcome1_ = 0;                        // +0x170 PickBuilding's minimum capacity
+    std::int32_t outcome2_ = 0;                        // +0x174 PickBuilding's maximum capacity
     std::list<int>* outcomeList_ = nullptr;            // +0x178 borrowed
     std::uint8_t noGrowth_ = 0;                        // +0x180
     std::uint8_t reserved181_[7] = {};                 // +0x181

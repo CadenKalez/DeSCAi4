@@ -10,6 +10,7 @@
 
 #include "sc4/TractDeveloper.h"
 
+#include <bit>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -18,6 +19,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "rz/PortMemoryStreams.h"
@@ -72,6 +74,8 @@ struct FakeLotManager : ITractLotManagerApi {
     int GetLotsInCellRect(std::list<cRZAutoRefCount<cSC4Lot>>&, int, int, int, int, bool) override {
         return 0;
     }
+    int canCreate = 7;
+    int CanCreateLot(int, int, int, int, bool, bool, cSC4LotConfiguration*) override { return canCreate; }
 };
 
 struct FakeLotDeveloper : ITractLotDeveloperApi {
@@ -83,7 +87,16 @@ struct FakeLotDeveloper : ITractLotDeveloperApi {
     std::vector<Abandoned> abandoned;
     std::vector<std::uint32_t> reoccupied;
     int constructions = 0;
-    void StartConstruction(cSC4Lot*, std::uint32_t, int, bool) override { ++constructions; }
+    cSC4Lot* lastLot = nullptr;
+    cSC4LotConfiguration* lastConfiguration = nullptr;
+    std::uint32_t lastBuilding = 0;
+    void StartConstruction(cSC4Lot* lot, cSC4LotConfiguration* configuration, std::uint32_t building, bool) override {
+        ++constructions;
+        lastLot = lot;
+        lastConfiguration = configuration;
+        lastBuilding = building;
+    }
+    float GetAreaSlope(const std::int32_t*, bool) override { return 0.0f; }
     void AbandonBuilding(cSC4Lot* lot, int reason) override { abandoned.push_back({lot, reason}); }
     void ReoccupyBuilding(cSC4Lot*, std::uint32_t type) override { reoccupied.push_back(type); }
 };
@@ -100,9 +113,23 @@ struct FakeBuildingDevelopment : ITractBuildingDevelopmentApi {
         auto it = profiles.find(type);
         return it == profiles.end() ? empty : it->second;
     }
-    std::uint16_t NextObjectId() override { return nextObjectId++; }
-    bool IsBuildingTypeValid(std::uint16_t) override { return true; }
-    void NoteBuildFailed(std::uint32_t objectId) override { failed.push_back(objectId); }
+    std::uint16_t GetFreeConstructionResources() override { return nextObjectId++; }
+    bool claim = true;
+    bool ClaimConstructionResources(std::uint16_t) override { return claim; }
+    void ReleaseConstructionResources(std::uint16_t amount) override { failed.push_back(amount); }
+    std::map<std::uint32_t, std::vector<std::uint32_t>> families;
+    bool GetBuildingKeyFromType(std::uint32_t type, cGZPersistResourceKey& key) override {
+        key = cGZPersistResourceKey{0x6534284a, 0, type};
+        return true;
+    }
+    void GetBuildingTypesByFamily(std::unordered_set<std::uint32_t>& out, std::uint32_t family) override {
+        auto it = families.find(family);
+        if (it != families.end()) out.insert(it->second.begin(), it->second.end());
+    }
+    bool CheatIgnorePlumbing() override { return false; }
+    bool CheatIgnorePower() override { return false; }
+    bool CheatIgnoreCaps() override { return true; }
+    bool NeedsAnchorBuilding(const std::int32_t*, std::int32_t) override { return false; }
 };
 
 struct FakeZoneManager : ITractZoneManagerApi {
@@ -155,6 +182,14 @@ struct FakeGrowthDeveloper : IGrowthDeveloperApi {
     ITractValueMap* GetPopulationMap() const override { return const_cast<FakeValueMap*>(&population); }
     ITractValueMap* GetMaxCapacityMap() const override { return const_cast<FakeValueMap*>(&maxCapacity); }
     ITractDemandApi* GetSourceDemand() const override { return const_cast<FakeDemand*>(&demand); }
+    std::map<std::uint32_t, SC4Percentage> styles;
+    std::int32_t GetType() const override { return 0; }
+    std::uint8_t GetPowerSupplyCap() const override { return 0; }
+    std::uint8_t GetWaterSupplyCap() const override { return 0; }
+    std::uint8_t GetFireCoverageCap() const override { return 0; }
+    std::uint8_t GetParkCap() const override { return 0; }
+    std::uint32_t GetMonopolyUse() const override { return 0; }
+    const std::map<std::uint32_t, SC4Percentage>& GetStylePercentages() const override { return styles; }
 };
 
 struct FakeLotHost : ILotHost {
@@ -308,6 +343,30 @@ struct FakeHost : ITractDeveloperHost {
             }
         }
     }
+
+    struct RoadCell : ITractNetworkCellApi {
+        bool HasNetworkType(int type) const override { return type == 0; }
+    } roadCell;
+    struct Network : ITractNetworkManagerApi {
+        ITractNetworkCellApi* cell = nullptr;
+        ITractNetworkCellApi* GetNetworkAt(int, int, std::uint32_t, int) override { return cell; }
+    } network;
+    bool roads = false;   // every cell next to a lot has a road
+    ITractNetworkManagerApi* NetworkManager() override {
+        network.cell = roads ? &roadCell : nullptr;
+        return &network;
+    }
+    std::uint8_t LandValueAt(int, int) override { return 0; }
+    bool IsCellWatered(int, int) override { return true; }
+    std::uint8_t PoweredAt(int, int) override { return 2; }
+    bool FireProtectedAt(int, int) override { return true; }
+    std::int16_t ParkEffectAt(int, int) override { return 1; }
+    bool HasTripLengthAt(int, int) override { return true; }
+    int demolitions = 0;
+    void DemolishLots(const std::list<cRZAutoRefCount<cSC4Lot>>& lots, std::uint32_t) override {
+        demolitions += static_cast<int>(lots.size());
+    }
+    void BuildingExemplarBool(const cGZPersistResourceKey&, std::uint32_t, bool&) override {}
 
     const cISC4LotConfigurationFilter* lastFilter = nullptr;
 };
@@ -630,7 +689,8 @@ void TestExistingLotsAndDecline() {
     std::list<int> growOutcomes;
     bool growDeclined = true;
     developer.Grow(profile, growOutcomes, growDeclined);
-    CHECK(developer.ExistingLots().empty());
+    CHECK(developer.ExistingLots().size() == 2);   // each pass lists the tract's lots
+    host.visitedCells.clear();
 
     developer.ListExistingLots();
     CHECK(developer.ExistingLots().size() == 2);
@@ -692,6 +752,7 @@ void TestSuitability() {
     developer.Grow(profile, outcomes, declined);
     CHECK(!declined);
     CHECK(developer.CurrentAttempt().histograms.size() == 13);
+    developer.SetSecondAttempt(false);
 
     // purpose mismatch / wealth mismatch / growth stage
     cSC4LotConfiguration* wrongPurpose = MakeConfiguration(1, 1, {2}, {1}, 0, 10, {});
@@ -747,6 +808,8 @@ void TestConfigurationPass() {
     std::list<int> outcomes;
     bool declined = true;
     developer.Grow(profile, outcomes, declined);
+    CHECK(developer.SecondAttempt());   // the fruitless first pass was followed by a second one
+    developer.SetSecondAttempt(false);
 
     cSC4LotConfiguration* suitable = MakeConfiguration(11, 1, {1}, {1}, 0, 10, {});
     cSC4LotConfiguration* small = MakeConfiguration(12, 1, {1}, {1}, 0, 0, {});
@@ -804,8 +867,12 @@ void TestAttemptRecords() {
     profile.tractZ = 4;
     std::list<int> outcomes;
     bool declined = true;
+    host.buildingDevelopment.cheats = false;   // Grow records nothing without the debug build
     CHECK(developer.Grow(profile, outcomes, declined) == 0);
     CHECK(!declined);
+    host.buildingDevelopment.cheats = true;
+    // two passes (tract size 0: 0*0 + 1), both without configurations, so no outcome is listed
+    CHECK(outcomes.empty());
 
     // Grow's per-pass setup
     const GrowthAttemptRecord& attempt = developer.CurrentAttempt();
@@ -838,7 +905,7 @@ void TestAttemptRecords() {
     CHECK(record.candidates[0]->score == 3.0f && record.candidates[0]->kind == 2);
     record.candidates[0]->score = 9.0f;
     CHECK(candidate->score == 3.0f);   // deep copy
-    CHECK(record.outcomeCount == 0 && record.attempted == 0);
+    CHECK(record.outcomeCount == 0 && record.attempted == 1);   // Grow left the developer on its second attempt
 
     // nothing was built: RecordGrowthAttempt writes the *failed* attempt
     developer.RecordGrowthAttempt();
@@ -921,9 +988,9 @@ void TestScoreCandidateLots() {
     measured->kind = 2;
     measured->existingCapacity = 5;
     measured->abandonedCapacity = 0;
-    measured->otherNetworks[0] = 1;
-    measured->highways[0] = 2;
-    measured->streets[0] = 3;
+    measured->rails[0] = 1;
+    measured->avenues[0] = 2;
+    measured->roads[0] = 3;
     developer.Candidates().push_back(measured);
 
     CHECK(developer.ScoreCandidateLots() == 0);
@@ -1009,6 +1076,72 @@ void TestNullHost() {
 
 }  // namespace
 
+// An empty 2x2 zoned lot with road access, one suitable 2x2 configuration and one building of the right purpose, wealth and
+// capacity: Grow lists the lot, accepts it (IsLotSuitable, IsLotConfigurationCompatible), picks the configuration and the
+// building, claims the capacity, clears the lot and starts the construction.
+void TestBuildOnEmptyLot() {
+    FakeHost host;
+    FakeLotHost lotHost;
+    SetTractDeveloperHost(&host);
+    SetLotHost(&lotHost);
+    host.growthDeveloper.purpose = 1;
+    host.growthDeveloper.wealth = 1;
+    host.growthDeveloper.construction.purpose = 1;
+    host.growthDeveloper.construction.value8 = std::bit_cast<float>(std::int32_t{1});
+    host.growthDeveloper.construction.value12 = 1;
+    host.growthDeveloper.desirability.tractSize = 1;
+    host.growthDeveloper.desirability.shift = 2;            // tract (1,1) covers cells x 4..7, z 4..7
+    BuildingProfile profile;
+    profile.purpose = 1;
+    profile.wealth = 1;
+    profile.capacity = 1;
+    host.buildingDevelopment.profiles[0x2000] = profile;
+    host.buildingDevelopment.families[0] = {0x2000};
+    host.roads = true;
+
+    cSC4TractDeveloper developer;
+    CHECK(developer.Init());
+    auto* lot = new cSC4Lot(4, 4, 2, 2, 0);
+    lot->AddRef();                                          // the lot manager's reference
+    for (int x = 4; x < 6; ++x)
+        for (int z = 4; z < 6; ++z) host.lotManager.lots[{x, z}] = lot;
+    cSC4LotConfiguration* configuration = MakeConfiguration(21, 1, {1}, {1}, 0, 10, {});
+    host.configurations = {configuration};
+
+    GrowthProfile grow;
+    grow.developer = &host.growthDeveloper;
+    grow.tractX = 1;
+    grow.tractZ = 1;
+    grow.growthStage = 2;
+    std::list<int> outcomes;
+    bool declined = false;
+    CHECK(developer.Grow(grow, outcomes, declined) == 1);
+    CHECK(declined);                                        // the tract had a lot that could grow
+    CHECK(outcomes.size() == 1 && outcomes.front() == kTractOutcomeSuccess);
+    CHECK(host.lotDeveloper.constructions == 1);
+    CHECK(host.lotDeveloper.lastLot == lot);
+    CHECK(host.lotDeveloper.lastConfiguration == configuration);
+    CHECK(host.lotDeveloper.lastBuilding == 0x2000);
+    CHECK(host.demolitions == 1);
+    CHECK(developer.Histograms()[kHistogramLotSuitable][kTractOutcomeSuccess] >= 1);
+    CHECK(developer.Histograms()[kHistogramExisting][kTractOutcomeSuccess] == 1);
+    CHECK(developer.Histograms()[kHistogramBuilding][kTractOutcomeSuccess] >= 1);
+
+    // without construction resources the build fails (20) and nothing starts
+    host.buildingDevelopment.claim = false;
+    host.lotDeveloper.constructions = 0;
+    outcomes.clear();
+    CHECK(developer.Grow(grow, outcomes, declined) == 0);
+    CHECK(host.lotDeveloper.constructions == 0);
+    CHECK(!outcomes.empty() && outcomes.front() == kTractOutcomeBuildFailed);
+
+    configuration->Release();
+    developer.Shutdown();
+    lot->Release();
+    SetLotHost(nullptr);
+    SetTractDeveloperHost(nullptr);
+}
+
 int main() {
     TestLayoutAndCom();
     TestStyles();
@@ -1024,6 +1157,7 @@ int main() {
     TestScoreCandidateLots();
     TestInitAndShutdown();
     TestNullHost();
+    TestBuildOnEmptyLot();
     if (g_failures == 0) std::puts("sc4_tractdeveloper ok");
     return g_failures == 0 ? 0 : 1;
 }

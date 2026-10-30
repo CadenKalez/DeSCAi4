@@ -14,11 +14,15 @@
 #include "sc4/TractDeveloper.h"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <cstring>
+#include <unordered_set>
 
+#include "sc4/BuildingZoneFit.h"
 #include "sc4/LotConfiguration.h"
 #include "sc4/LotConfigurationManager.h"
+#include "sc4/Occupant.h"
 
 namespace sc4 {
 
@@ -419,8 +423,8 @@ void cSC4TractDeveloper::RecordBuildAttempt() {
     BuildAttemptRecord record;
     record.attempted = attempted_;                       // this[0x114]
     record.configurations = configurations_;             // +0x130 copy
-    record.configurationData = configurationData_;       // this+0x160
-    record.configurationId = objectId_;                  // this+0x168
+    record.configurationData = reinterpret_cast<std::uint64_t>(configuration_);   // this+0x160
+    record.configurationId = static_cast<std::int32_t>(buildingType_);   // this+0x168
     record.outcome0 = outcome0_;                         // this+0x16c
     record.outcome1 = outcome1_;                         // this+0x170
     record.outcome2 = outcome2_;                         // this+0x174
@@ -630,9 +634,9 @@ int cSC4TractDeveloper::ScoreCandidateLots() {
         }
         if (weight0 != 0.0f || std::isnan(weight0)) {
             for (int i = 0; i < 4; ++i) {
-                score += static_cast<float>(candidate->otherNetworks[static_cast<std::size_t>(i)]) * weight0 +
-                         static_cast<float>(candidate->highways[static_cast<std::size_t>(i)]) * weight1 +
-                         static_cast<float>(candidate->streets[static_cast<std::size_t>(i)]) * weight2;
+                score += static_cast<float>(candidate->rails[static_cast<std::size_t>(i)]) * weight0 +
+                         static_cast<float>(candidate->avenues[static_cast<std::size_t>(i)]) * weight1 +
+                         static_cast<float>(candidate->roads[static_cast<std::size_t>(i)]) * weight2;
                 candidate->score = score;
             }
         }
@@ -797,7 +801,7 @@ int cSC4TractDeveloper::Grow(const GrowthProfile& profile, std::list<int>& outco
     maximumBuildAttempts_ = attempts;
     secondAttemptLimit_ = static_cast<std::int32_t>(static_cast<float>(attempts) * capacityFactor_);
     builtCount_ = 0;                                                   // 8-byte store at +0x10c
-    configurationData_ = 0;                                            // 8-byte store at +0x160
+    configuration_ = nullptr;                                          // 8-byte store at +0x160
     outcomeList_ = &outcomes;                                          // +0x178
     noGrowth_ = 0;                                                     // +0x180
     const std::int32_t day = g_host->SimulatorDay();                   // cRZDate of simulator vslot 0x30
@@ -815,16 +819,82 @@ int cSC4TractDeveloper::Grow(const GrowthProfile& profile, std::list<int>& outco
     currentAttempt_.desirability =
         desirabilityMap ? desirabilityMap->GetCellValue(tractX_, tractZ_) : 0;
     currentAttempt_.maximumBuilds = maximumBuildAttempts_;             // +0x214
-    currentAttempt_.objectId = buildingDevelopment_->NextObjectId();   // building dev vslot 0x180
+    currentAttempt_.objectId = buildingDevelopment_->GetFreeConstructionResources();   // building dev vslot 0x180
     currentAttempt_.attempts.clear();                                  // +0x220
     currentAttempt_.histograms.assign(kHistogramBucketCount, std::vector<std::uint32_t>(kTractOutcomeSlots, 0));
 
-    // PARTIAL (0x100136070): the pass loop is not recovered. It needs TakeOverAbandoned, the three
-    // ListCandidateLots_* passes, ScoreCandidateLots (recovered) and Build/BuildFarm, and those need
-    // cISC4GrowthDeveloper's growth list (unrecovered) plus the occupant-manager occupant interface.
-    // The original runs the loop at most n*n+1 times (n = the desirability map's tract size), records
-    // the growth attempt and returns the built capacity; this port stops after the setup above.
-    declined = noGrowth_ != 0;
+    // The passes (0x100136234..0x1001365fc). At most n*n + 1 of them (n = the desirability map's tract size). Each starts clean,
+    // lists the tract's lots and tries, in order: taking over an abandoned building (which ends Grow when it succeeds), then, when
+    // configurations qualify, the three candidate searches (subdivision not for agriculture); the candidates are scored, sorted
+    // and built in order. Every outcome goes on the caller's list and into the attempt record. A pass that ends without a
+    // decision is followed by another only after the first pass (`firstPass`), or when it ended in success (27).
+    const std::int32_t purpose = developer->GetPurpose();              // vslot 0x38
+    ITractValueMap* tractMap = developer->GetDesirabilityMap();        // vslot 0x68
+    int passesLeft = (tractMap ? tractMap->GetTractSize() : 0);        // map vslot 0x50
+    passesLeft = passesLeft * passesLeft + 1;
+    bool firstPass = true;
+    bool done = false;
+    do {
+        const bool carried = done;                                     // local_40: the previous pass's verdict (always false here)
+        existingLots_.clear();
+        configurations_.clear();
+        ClearCandidateList(candidates_);
+        attempted_ = firstPass ? 0 : 1;                                // +0x114
+        buildingType_ = 0;                                             // +0x168 / +0x16c (one 8-byte store)
+        outcome0_ = 0;
+        outcome1_ = -1;                                                // +0x170 / +0x174 (one 8-byte store of -1)
+        outcome2_ = -1;
+        lotOutcomes_.clear();                                          // +0x188
+        ListExistingLots();
+
+        int outcome = 0;
+        bool verdict = carried;                                        // what a pass that runs out of candidates hands on
+        const int takeOver = TakeOverAbandoned();
+        if (takeOver > 0) outcome = takeOver;
+        if (takeOver == kTractOutcomeSuccess) {
+            outcomes.push_back(kTractOutcomeSuccess);
+            RecordBuildAttempt();
+            break;
+        }
+        if (ListPossibleLotConfigurations() == kTractOutcomeSuccess) {
+            outcome = std::max(outcome, ListCandidateLots_Existing());
+            outcome = std::max(outcome, ListCandidateLots_Aggregation());
+            if (purpose != 5) outcome = std::max(outcome, ListCandidateLots_Subdivision());
+            if (candidates_.empty()) {
+                if (outcome == kTractOutcomeSuccess) outcome = kTractOutcomeNoCandidates;
+                outcomes.push_back(outcome);
+                currentAttempt_.histograms[0][static_cast<std::size_t>(outcome)] += 1;
+                RecordBuildAttempt();
+            } else {
+                ScoreCandidateLots();
+                std::sort(candidates_.begin(), candidates_.end(), CompareCandidateLots);
+                for (CandidateLot* candidate : candidates_) {
+                    const int result = developer->GetPurpose() == 5 ? BuildFarm(candidate) : Build(candidate);
+                    outcome = result;
+                    outcomes.push_back(result);
+                    RecordBuildAttempt();
+                    if (result == kTractOutcomeBuildFailed) {      // the pass is over; a second one only after the first
+                        verdict = attempted_ != 0;
+                        break;
+                    }
+                    if (maximumBuildAttempts_ <= builtCount_) {    // grew as much as the demand asks
+                        verdict = true;
+                        break;
+                    }
+                    if (result == kTractOutcomeSuccess) {          // agriculture and industry stop at one building
+                        verdict = static_cast<std::uint32_t>(developer->GetPurpose() - 5) <= 3 ? true : carried;
+                        break;
+                    }
+                }
+            }
+        }
+        if (passesLeft < 1) break;
+        done = (outcome == kTractOutcomeSuccess || firstPass) ? verdict : true;
+        --passesLeft;
+        firstPass = false;
+    } while (!done);
+    RecordGrowthAttempt();
+    declined = noGrowth_ != 0;                                         // +0x180
     return builtCount_;
 }
 
@@ -868,31 +938,487 @@ void cSC4TractDeveloper::UpdatePopulation(const GrowthProfile& profile) {
 }
 
 //==================================================================================================
-// PARTIAL: the growth decisions themselves (see the file comment)
+// The candidate search and the build (the path an empty zoned lot takes to a building)
+//==================================================================================================
+
+// Every lot of the tract that IsLotSuitable passes, paired with the first suitable configuration of its own footprint that fits
+// the zone's growth stage, the lot's slope and IsLotConfigurationCompatible, becomes a kind-2 candidate. The best outcome
+// seen is returned; a tract with a lot that is neither unsuitable for its zone (6) nor abandoned (3) is marked "could grow"
+// (noGrowth_ is the original's +0x180 byte, which this sets).
+int cSC4TractDeveloper::ListCandidateLots_Existing() {   // @ 0x1001377a0
+    int best = 0;
+    for (cSC4Lot* lot : existingLots_) {
+        const int suitable = IsLotSuitable(lot, true);
+        const int state = lot->GetState();                                         // lot vslot 0x108
+        if (suitable != 6 && state != 3) noGrowth_ = 1;
+        int x, z;
+        lot->GetLocation(x, z);                                                    // lot vslot 0xa8
+        if (suitable != kTractOutcomeSuccess) {
+            if (best <= suitable) best = suitable;
+            continue;
+        }
+        std::uint8_t sizeX, sizeZ;
+        lot->GetSize(sizeX, sizeZ);                                                // lot vslot 0xb0
+        const float slope = lot->GetSlope();                                       // lot vslot 0x90
+        for (cSC4LotConfiguration* configuration : configurations_) {
+            std::uint32_t configurationX, configurationZ;
+            configuration->GetSize(configurationX, configurationZ);                // vslot 0x38
+            if (configurationX != sizeX || configurationZ != sizeZ) {
+                ++currentAttempt_.histograms[kHistogramExisting][kTractOutcomeNoConfiguration];
+                if (best <= 4) best = kTractOutcomeNoConfiguration;
+                continue;
+            }
+            const std::uint8_t stage = configuration->GetGrowthStage();            // vslot 0x58
+            if (!GrowthStageFitsInZone(stage, static_cast<std::uint32_t>(zoneManager_->ZoneTypeAt(x, z)))) {
+                ++currentAttempt_.histograms[kHistogramExisting][6];
+                if (best <= 5) best = 6;
+                continue;
+            }
+            const float minimum = configuration->GetMinimumSlope();                // vslot 0x48
+            const float maximum = configuration->GetMaximumSlope();                // vslot 0x40
+            if (slope < minimum || maximum < slope) {
+                ++currentAttempt_.histograms[kHistogramExisting][10];
+                if (best <= 9) best = 10;
+                continue;
+            }
+            CandidateLot* candidate = NewCandidateLot();
+            candidate->kind = 2;
+            candidate->lot = lot;
+            lot->GetLocation(candidate->x, candidate->z);
+            candidate->sizeX = sizeX;
+            candidate->sizeZ = sizeZ;
+            candidate->facing = lot->GetFacing();                                  // lot vslot 0xb8
+            FindNetworks(candidate);
+            const int compatible = IsLotConfigurationCompatible(configuration, candidate, false);
+            if (best <= compatible) best = compatible;
+            if (compatible == kTractOutcomeSuccess) {
+                candidates_.push_back(candidate);
+                ++currentAttempt_.histograms[kHistogramExisting][kTractOutcomeSuccess];
+                break;
+            }
+            DeleteCandidateLot(candidate);
+        }
+    }
+    return best;
+}
+
+// Picks a building for the candidate, claims its capacity from the construction resources and starts it: an existing lot is
+// cleared first (DemolishLots, flags 0x800) and its old capacity no longer counts; a subdivision hands its capacity back and
+// subdivides instead of constructing.
+int cSC4TractDeveloper::Build(CandidateLot* candidate) {   // @ 0x1001388c4
+    cSC4Lot* lot = nullptr;
+    int result = PickBuilding(candidate);
+    if (result != kTractOutcomeSuccess) return result;
+    const std::uint16_t capacity = buildingDevelopment_->GetBuildingProfile(buildingType_).capacity;   // vslot 0x138, +8
+    if (!buildingDevelopment_->ClaimConstructionResources(capacity)) {                                 // vslot 0x190
+        ++currentAttempt_.histograms[kHistogramBuild][kTractOutcomeBuildFailed];
+        return kTractOutcomeBuildFailed;
+    }
+    if (candidate->kind == 4) {
+        buildingDevelopment_->ReleaseConstructionResources(capacity);                                   // vslot 0x198
+        PerformSubdivision(candidate);
+        return kTractOutcomeSuccess;
+    }
+    if (candidate->kind == 3) {
+        PerformAggregation(candidate, lot);
+    } else if (candidate->kind == 2) {
+        lot = candidate->lot;
+        lot->AddRef();
+        lotOutcomes_.erase(lot);
+        std::list<cRZAutoRefCount<cSC4Lot>> lots;
+        lots.push_back(cRZAutoRefCount<cSC4Lot>(lot));
+        g_host->DemolishLots(lots, 0x800);
+        builtCount_ -= candidate->existingCapacity;
+    }
+    if (!lot) {
+        ++currentAttempt_.histograms[kHistogramBuild][0];
+        return 0;
+    }
+    lotDeveloper_->StartConstruction(lot, configuration_, buildingType_, true);                        // vslot 0x30
+    builtCount_ += capacity;
+    lot->Release();
+    return kTractOutcomeSuccess;
+}
+
+// Whether a lot can be rebuilt by this developer. With useCache the per-lot outcome map answers repeat questions and records
+// the answer. The checks, in order: the zone fits the developer's building purpose (else 6) and, for a cached question about
+// a livable lot, it has been in that state 180 days (else 19); the land value range of the construction profile (22); the
+// lot's state (4); the lot manager's CanCreateLot on its footprint (7 / 8 pass, 0..3 map to 0 / 4 / 6 / 3); an occupied lot
+// must not be a landmark-type (5) or same-purpose agriculture (15) building and, for a cached question, may only be taken
+// over by a richer or (when take-overs are off) equal-wealth developer of the same purpose (16); not historical (18); its
+// growth stage not past the tract's (17); then road access: 27 or 21.
+int cSC4TractDeveloper::IsLotSuitable(cSC4Lot* lot, bool useCache) {   // @ 0x100138b10
+    if (useCache) {
+        auto found = lotOutcomes_.find(lot);
+        if (found != lotOutcomes_.end()) return found->second;
+    }
+    int x, z;
+    lot->GetLocation(x, z);                                                        // lot vslot 0xa8
+    ConstructionProfile info;
+    growthDeveloper_->GetConstructionInfo(info);                                   // vslot 0x48
+    const char zone = static_cast<char>(zoneManager_->ZoneTypeAt(x, z));           // zone manager vslot 0x60
+    const bool fits = BuildingFitsInZone(info.purpose, static_cast<std::uint32_t>(static_cast<int>(zone)));
+    int result = 6;
+    const BuildingProfile* profile = nullptr;
+    do {
+        if (fits && useCache && lot->IsInLivableState()) {                         // lot vslot 0x128
+            result = 0x13;
+            if (lot->GetDaysSinceLastStateChange() < 180) break;                   // lot vslot 0x140
+        } else if (!fits) {
+            break;
+        }
+        if (info.flag10 != 0 || info.flag11 != 0) {
+            const std::uint8_t value = g_host->LandValueAt(x, z);                  // land value vslot 0x30
+            if (value < info.flag10 || info.flag11 < value) {
+                outcome0_ = value;
+                result = 0x16;
+                break;
+            }
+        }
+        const int state = lot->GetState();                                         // lot vslot 0x108
+        result = 4;
+        if (state == 2 || state > 4) break;
+        std::int32_t rect[4];
+        lot->GetBoundingRect(rect);                                                // lot vslot 0x70
+        static constexpr int kCanCreateOutcome[4] = {0, 4, 6, 3};                  // 0x100a18df0
+        const int canCreate = lotManager_->CanCreateLot(rect[0], rect[1], rect[2] + 1 - rect[0], rect[3] + 1 - rect[1],
+                                                        false, false, nullptr);    // lot manager vslot 0xa0
+        if (static_cast<unsigned>(canCreate - 7) > 1) {
+            result = static_cast<unsigned>(canCreate) < 4 ? kCanCreateOutcome[canCreate] : 0;
+            break;
+        }
+        if (lot->HasCapacity()) {                                                  // lot vslot 0x130
+            const std::uint32_t buildingType = lot->GetBuildingType(false);       // lot vslot 0x170
+            if (buildingType == 0) break;
+            profile = &buildingDevelopment_->GetBuildingProfile(buildingType);     // vslot 0x138
+            result = 0xf;
+            if (profile->purpose == 5 || (profile->purpose == 7 && construction_.value12 == 6)) break;
+            if (useCache) {
+                const std::int32_t wealth = std::bit_cast<std::int32_t>(construction_.value8);
+                const std::int32_t lotWealth = static_cast<std::int32_t>(profile->wealth);
+                result = 0x10;
+                if (allowTakeOver_ ? lotWealth > wealth : lotWealth != wealth) break;
+                if (lotWealth >= wealth && static_cast<std::uint32_t>(profile->purpose) != construction_.value12) break;
+            }
+            result = 0x12;
+            if (lot->IsHistorical()) break;                                        // lot vslot 0x158
+            cISC4LotConfigurationRef* reference = lot->GetLotConfiguration();      // lot vslot 0x48
+            const cSC4LotConfiguration* configuration =
+                reference && lotConfigurationManager_ ? lotConfigurationManager_->GetLotConfiguration(reference->GetID()) : nullptr;
+            if (configuration) {
+                const int stage = configuration->GetGrowthStage();                 // vslot 0x58
+                const bool fitsStage = static_cast<std::int32_t>(profile->wealth) != std::bit_cast<std::int32_t>(construction_.value8)
+                                           ? stage <= profileFlag_
+                                           : stage < profileFlag_;
+                result = 0x11;
+                if (!fitsStage) break;
+            }
+        }
+        const int purpose = growthDeveloper_->GetPurpose();                        // vslot 0x38
+        bool access;
+        if (static_cast<unsigned>(purpose - 6) < 3) {
+            access = lot->HasOrganicRoadAccess(static_cast<std::uint32_t>(purpose));   // lot vslot 0xe8
+        } else if (purpose == 1) {
+            access = g_host->HasTripLengthAt(x, z);                                // traffic vslot 0x68 -> map vslot 0x38
+        } else {
+            access = lot->HasRoadAccess();                                         // lot vslot 0xe0
+        }
+        result = access ? kTractOutcomeSuccess : 0x15;
+    } while (false);
+    if (useCache) lotOutcomes_[lot] = result;
+    ++currentAttempt_.histograms[kHistogramLotSuitable][static_cast<std::size_t>(result)];
+    return result;
+}
+
+// Chooses the configuration and building for a candidate. The style is the anchor style (0x3000) where the lot developer
+// needs an anchor building, else one drawn from the developer's style percentages (0 = any). Among the suitable
+// configurations of that style that IsLotConfigurationCompatible accepts, one is drawn at random (configuration_); the
+// capacity window [outcome1_, outcome2_] follows from what is still to build; then one building of the configuration's
+// primary building families that IsBuildingCompatible accepts is drawn (buildingType_), the monopoly-piece alternatives (2)
+// standing in only when nothing else fits and the developer's monopoly use is 1.
+int cSC4TractDeveloper::PickBuilding(CandidateLot* candidate) {   // @ 0x1001392fa
+    FindExistingCapacity(candidate);
+    const std::int32_t purpose = growthDeveloper_->GetPurpose();                   // vslot 0x38
+    std::uint32_t style = 0x3000;
+    if (!buildingDevelopment_->NeedsAnchorBuilding(&candidate->rectX0, purpose)) {
+        const std::map<std::uint32_t, SC4Percentage>& percentages = growthDeveloper_->GetStylePercentages();   // vslot 0xd0
+        style = 0;
+        if (!percentages.empty()) {
+            std::uint32_t draw = g_host->RandomBelow(100);
+            for (const auto& entry : percentages) {
+                const std::uint32_t share = static_cast<std::uint32_t>(std::lrintf(entry.second.value * 100.0f));
+                if (draw < share) {
+                    style = entry.first;
+                    break;
+                }
+                draw -= share;
+            }
+        }
+    }
+    std::set<cSC4LotConfiguration*> chosen;
+    for (cSC4LotConfiguration* configuration : configurations_) {
+        if (style != 0 && !configuration->IsCompatibleWithStyle(style)) {          // vslot 0x90
+            ++currentAttempt_.histograms[kHistogramStyle][kTractOutcomeStyleMismatch];
+            continue;
+        }
+        if (IsLotConfigurationCompatible(configuration, candidate, candidate->needsRoad != 0) == kTractOutcomeSuccess)
+            chosen.insert(configuration);
+    }
+    if (chosen.empty()) return 0;
+    std::uint32_t pick = g_host->RandomBelow(static_cast<std::uint32_t>(chosen.size()));
+    configuration_ = nullptr;
+    for (cSC4LotConfiguration* configuration : chosen) {
+        if (pick == 0) {
+            configuration_ = configuration;
+            break;
+        }
+        --pick;
+    }
+
+    const std::int32_t existing = candidate->existingCapacity;
+    std::int32_t minimum;
+    if (!attempted_) {
+        minimum = maximumBuildAttempts_ - builtCount_ + existing;
+        if (candidate->kind == 4) {
+            minimum += reserved110_;
+            if (minimum < existing) minimum = existing;
+            minimum /= candidate->ratio;
+        } else if (minimum < existing) {
+            minimum = existing;
+        }
+    } else {
+        minimum = existing + 1;
+        if (minimum < existing) minimum = existing;
+        if (candidate->kind == 4) minimum /= candidate->ratio;
+    }
+    const std::int32_t limit = secondAttemptLimit_ - builtCount_ + existing;
+    outcome1_ = minimum;
+    outcome2_ = minimum < limit ? limit : minimum + 1;
+
+    int result = 0;
+    std::unordered_set<std::uint32_t> compatible, alternatives;
+    cSC4LotConfigurationObject* building = configuration_ ? configuration_->GetPrimaryBuildingConfigurationObject() : nullptr;   // vslot 0xc0
+    if (building) {
+        for (std::uint32_t family : building->extra) {
+            std::unordered_set<std::uint32_t> types;
+            buildingDevelopment_->GetBuildingTypesByFamily(types, family);         // vslot 0x88
+            for (std::uint32_t type : types) {
+                if (style != 0) {
+                    cGZPersistResourceKey key{};
+                    buildingDevelopment_->GetBuildingKeyFromType(type, key);       // vslot 0x68
+                    if (!cSC4Occupant::IsOccupantGroup(key, style)) {
+                        ++currentAttempt_.histograms[kHistogramStyle][kTractOutcomeStyleMismatch];
+                        continue;
+                    }
+                }
+                result = IsBuildingCompatible(type, candidate);
+                if (result == 2) {
+                    if (growthDeveloper_->GetMonopolyUse() == 1) alternatives.insert(type);   // vslot 0xc8
+                } else if (result == kTractOutcomeSuccess) {
+                    compatible.insert(type);
+                }
+            }
+        }
+    }
+    if (compatible.empty()) {
+        if (alternatives.empty()) return result;
+        compatible = alternatives;
+    }
+    std::uint32_t draw = g_host->RandomBelow(static_cast<std::uint32_t>(compatible.size()));
+    buildingType_ = 0;
+    for (std::uint32_t type : compatible) {
+        if (draw == 0) {
+            buildingType_ = type;
+            break;
+        }
+        --draw;
+    }
+    return kTractOutcomeSuccess;
+}
+
+// Counts the networks on the four sides of the candidate's footprint (one cell outside it, inside the city): the counters
+// are CandidateLot's streets / roads / avenues / rails, one entry per edge.
+void cSC4TractDeveloper::FindNetworks(CandidateLot* candidate) {   // @ 0x10013a5f2
+    ITractNetworkManagerApi* network = g_host->NetworkManager();                   // SL::spCity vslot 0x140
+    GetBoundingRect(candidate);
+    std::int32_t rect[4];
+    if (candidate->kind == 4) {
+        candidate->lot->GetBoundingRect(rect);                                     // lot vslot 0x70
+    } else {
+        rect[0] = candidate->rectX0;
+        rect[1] = candidate->rectZ0;
+        rect[2] = candidate->rectX1;
+        rect[3] = candidate->rectZ1;
+    }
+    auto count = [candidate](ITractNetworkCellApi* cell, std::size_t edge) {
+        if (!cell) return;
+        if (cell->HasNetworkType(3) || cell->HasNetworkType(0xb)) ++candidate->streets[edge];   // cell vslot 0xb0
+        if (cell->HasNetworkType(0) || cell->HasNetworkType(10)) ++candidate->roads[edge];
+        if (cell->HasNetworkType(6)) ++candidate->avenues[edge];
+        if (cell->HasNetworkType(1)) ++candidate->rails[edge];
+    };
+    if (!network) return;
+    if (rect[1] > 0) {
+        for (int x = rect[0]; x <= rect[2]; ++x) count(network->GetNetworkAt(x, rect[1] - 1, 0xc4b, 1), 0);   // vslot 0x50
+    }
+    if (rect[2] < city_->CellCountX() - 1) {                                       // city vslot 0x2e8
+        for (int z = rect[1]; z <= rect[3]; ++z) count(network->GetNetworkAt(rect[2] + 1, z, 0xc4b, 1), 1);
+    }
+    if (rect[3] < city_->CellCountZ() - 1) {                                       // city vslot 0x2f0
+        for (int x = rect[0]; x <= rect[2]; ++x) count(network->GetNetworkAt(x, rect[3] + 1, 0xc4b, 1), 2);
+    }
+    if (rect[0] > 0) {
+        for (int z = rect[1]; z <= rect[3]; ++z) count(network->GetNetworkAt(rect[0] - 1, z, 0xc4b, 1), 3);
+    }
+}
+
+// Whether a configuration fits a candidate: its footprint (else 0), the zone (6), the growth stage against the candidate's
+// tallest existing building, stricter for another wealth (12), the slope (10), unless the caps cheat is on the power (26),
+// water (25), fire (23) and park (24) caps of the growth stage, then the required roads: a configuration that needs a road
+// on some side is accepted only where TestForCornerLot finds one (and marks the candidate), and a candidate that needs a
+// road accepts only such configurations (21). Agriculture-free developers of type 3 skip the road test.
+int cSC4TractDeveloper::IsLotConfigurationCompatible(cSC4LotConfiguration* configuration, CandidateLot* candidate,
+                                                     bool needsRoad) {   // @ 0x10013aa5c
+    const int x = candidate->x;
+    const int z = candidate->z;
+    FindExistingCapacity(candidate);
+    std::uint32_t sizeX, sizeZ;
+    configuration->GetSize(sizeX, sizeZ);                                          // vslot 0x38
+    if (sizeX != candidate->sizeX || sizeZ != candidate->sizeZ) {
+        ++currentAttempt_.histograms[kHistogramCompatible][kTractOutcomeNoConfiguration];
+        return 0;
+    }
+    if (!configuration->IsCompatibleWithZoneType(zoneManager_->ZoneTypeAt(x, z))) {   // vslot 0x78
+        ++currentAttempt_.histograms[kHistogramCompatible][6];
+        return 6;
+    }
+    const std::uint8_t stage = configuration->GetGrowthStage();                    // vslot 0x58
+    const bool sameWealth = configuration->IsCompatibleWithWealthType(candidate->maxWealth);   // vslot 0x80
+    if (!(sameWealth ? candidate->maxGrowthStage < stage : candidate->maxGrowthStage <= stage)) {
+        ++currentAttempt_.histograms[kHistogramCompatible][0xc];
+        return 0xc;
+    }
+    const float slope = candidate->lot ? candidate->lot->GetSlope()                // lot vslot 0x90
+                                       : lotDeveloper_->GetAreaSlope(&candidate->rectX0, false);   // lot developer vslot 0xe8
+    const float minimum = configuration->GetMinimumSlope();                        // vslot 0x48
+    const float maximum = configuration->GetMaximumSlope();                        // vslot 0x40
+    if (slope < minimum || maximum < slope) {
+        ++currentAttempt_.histograms[kHistogramCompatible][10];
+        return 10;
+    }
+    if (!buildingDevelopment_->CheatIgnoreCaps()) {                                // vslot 0x1c0
+        if (growthDeveloper_->GetPowerSupplyCap() < stage && !buildingDevelopment_->CheatIgnorePower() &&
+            g_host->PoweredAt(x, z) < 2) {
+            ++currentAttempt_.histograms[kHistogramCompatible][0x1a];
+            return 0x1a;
+        }
+        if (growthDeveloper_->GetWaterSupplyCap() < stage && !buildingDevelopment_->CheatIgnorePlumbing() &&
+            !g_host->IsCellWatered(x, z)) {
+            ++currentAttempt_.histograms[kHistogramCompatible][0x19];
+            return 0x19;
+        }
+        if (growthDeveloper_->GetFireCoverageCap() < stage && !g_host->FireProtectedAt(x, z)) {
+            ++currentAttempt_.histograms[kHistogramCompatible][0x17];
+            return 0x17;
+        }
+        if (growthDeveloper_->GetParkCap() < stage && g_host->ParkEffectAt(x, z) == 0) {
+            ++currentAttempt_.histograms[kHistogramCompatible][0x18];
+            return 0x18;
+        }
+    }
+    if (growthDeveloper_->GetType() != 3) {                                        // vslot 0x28
+        std::vector<bool> required;
+        configuration->GetRequiredRoads(required);                                 // vslot 0xa8
+        bool anyRequired = false;
+        for (std::size_t edge = 0; edge < 3; ++edge) {
+            if (required[edge]) {
+                anyRequired = true;
+                break;
+            }
+        }
+        if (!anyRequired && needsRoad) {
+            ++currentAttempt_.histograms[kHistogramCompatible][0x15];
+            return 0x15;
+        }
+        if (!TestForCornerLot(configuration, candidate)) {
+            ++currentAttempt_.histograms[kHistogramCompatible][0x15];
+            return 0x15;
+        }
+        if (anyRequired) candidate->needsRoad = 1;
+    }
+    ++currentAttempt_.histograms[kHistogramCompatible][kTractOutcomeSuccess];
+    return kTractOutcomeSuccess;
+}
+
+// Every side the configuration needs a road on must have a street, road or avenue next to it (the side index turns with the
+// candidate's facing).
+bool cSC4TractDeveloper::TestForCornerLot(cSC4LotConfiguration* configuration, CandidateLot* candidate) {   // @ 0x10013b318
+    std::vector<bool> required;
+    configuration->GetRequiredRoads(required);                                     // vslot 0xa8
+    for (int side = 0; side < 4; ++side) {
+        if (!required[static_cast<std::size_t>(side)]) continue;
+        int edge = side + candidate->facing + 1;
+        while (edge < 0) edge += 4;
+        while (edge > 3) edge -= 4;
+        if (candidate->avenues[static_cast<std::size_t>(edge)] == 0 && candidate->roads[static_cast<std::size_t>(edge)] == 0 &&
+            candidate->streets[static_cast<std::size_t>(edge)] == 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Whether a building type suits the developer and the capacity window: purpose (7), wealth (8), the current style for
+// residential / commercial purposes (9), capacity below the window (11) or above it (13), and the monopoly-piece rule: a piece
+// (property 0x2781283f) is 2 for a developer whose monopoly use is 0 or 1, a non-piece 2 for one whose use is 2.
+int cSC4TractDeveloper::IsBuildingCompatible(std::uint32_t buildingType, CandidateLot* candidate) {   // @ 0x10013b436
+    (void)candidate;
+    const BuildingProfile& profile = buildingDevelopment_->GetBuildingProfile(buildingType);   // vslot 0x138
+    if (static_cast<std::int32_t>(profile.purpose) != growthDeveloper_->GetPurpose()) {        // vslot 0x38
+        ++currentAttempt_.histograms[kHistogramBuilding][kTractOutcomePurposeMismatch];
+        return kTractOutcomePurposeMismatch;
+    }
+    if (static_cast<std::int32_t>(profile.wealth) != growthDeveloper_->GetWealth()) {          // vslot 0x40
+        ++currentAttempt_.histograms[kHistogramBuilding][kTractOutcomeWealthMismatch];
+        return kTractOutcomeWealthMismatch;
+    }
+    if (!activeStyles_.empty() && profile.purpose - 1 < 3) {
+        const std::uint32_t style = activeStyles_[static_cast<std::size_t>(styleIndex_)];
+        cGZPersistResourceKey key{};
+        buildingDevelopment_->GetBuildingKeyFromType(buildingType, key);         // vslot 0x68
+        if (!cSC4Occupant::IsOccupantGroup(key, style)) {
+            ++currentAttempt_.histograms[kHistogramBuilding][kTractOutcomeStyleMismatch];
+            return kTractOutcomeStyleMismatch;
+        }
+    }
+    if (static_cast<int>(profile.capacity) < outcome1_) {
+        ++currentAttempt_.histograms[kHistogramBuilding][kTractOutcomeCapacityTooLow];
+        return kTractOutcomeCapacityTooLow;
+    }
+    if (outcome2_ < static_cast<int>(profile.capacity)) {
+        ++currentAttempt_.histograms[kHistogramBuilding][kTractOutcomeCapacityTooHigh];
+        return kTractOutcomeCapacityTooHigh;
+    }
+    bool monopolyPiece = false;
+    cGZPersistResourceKey key{};
+    buildingDevelopment_->GetBuildingKeyFromType(buildingType, key);
+    g_host->BuildingExemplarBool(key, 0x2781283f, monopolyPiece);
+    const std::uint32_t use = growthDeveloper_->GetMonopolyUse();                  // vslot 0xc8
+    int result = kTractOutcomeSuccess;
+    if (use < 2 ? monopolyPiece : (use == 2 && !monopolyPiece)) result = 2;
+    ++currentAttempt_.histograms[kHistogramBuilding][static_cast<std::size_t>(result)];
+    return result;
+}
+
+//==================================================================================================
+// PARTIAL: the other growth decisions (see the file comment)
 //==================================================================================================
 
 int cSC4TractDeveloper::TakeOverAbandoned() { return 0; }        // PARTIAL (0x1001369ae)
-int cSC4TractDeveloper::ListCandidateLots_Existing() { return 0; }      // PARTIAL (0x1001377a0)
 int cSC4TractDeveloper::ListCandidateLots_Aggregation() { return 0; }   // PARTIAL (0x100137b04)
 int cSC4TractDeveloper::ListCandidateLots_Subdivision() { return 0; }   // PARTIAL (0x100137f44)
 
-int cSC4TractDeveloper::Build(CandidateLot* candidate) {         // PARTIAL (0x1001388c4)
-    (void)candidate;
-    return 0;
-}
-
 int cSC4TractDeveloper::BuildFarm(CandidateLot* candidate) {     // PARTIAL (0x10013845e)
-    (void)candidate;
-    return 0;
-}
-
-int cSC4TractDeveloper::IsLotSuitable(cSC4Lot* lot, bool param) {   // PARTIAL (0x100138b10)
-    (void)lot;
-    (void)param;
-    return 0;
-}
-
-int cSC4TractDeveloper::PickBuilding(CandidateLot* candidate) {  // PARTIAL (0x1001392fa)
     (void)candidate;
     return 0;
 }
@@ -906,33 +1432,7 @@ void cSC4TractDeveloper::PerformSubdivision(CandidateLot* candidate) {   // PART
     (void)candidate;
 }
 
-void cSC4TractDeveloper::FindNetworks(CandidateLot* candidate) {         // PARTIAL (0x10013a5f2)
-    (void)candidate;
-}
-
-int cSC4TractDeveloper::IsLotConfigurationCompatible(cSC4LotConfiguration* configuration,
-                                                     CandidateLot* candidate, bool param) {  // PARTIAL 0x10013aa5c
-    (void)configuration;
-    (void)candidate;
-    (void)param;
-    return 0;
-}
-
 bool cSC4TractDeveloper::IsAggregationLegal(CandidateLot* candidate) {   // PARTIAL (0x10013ae4a)
-    (void)candidate;
-    return false;
-}
-
-bool cSC4TractDeveloper::TestForCornerLot(cSC4LotConfiguration* configuration,
-                                          CandidateLot* candidate) {      // PARTIAL (0x10013b318)
-    (void)configuration;
-    (void)candidate;
-    return false;
-}
-
-bool cSC4TractDeveloper::IsBuildingCompatible(std::uint32_t buildingType,
-                                              CandidateLot* candidate) {     // PARTIAL (0x10013b436)
-    (void)buildingType;
     (void)candidate;
     return false;
 }

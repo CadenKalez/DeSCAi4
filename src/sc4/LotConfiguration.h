@@ -154,7 +154,7 @@ private:
     std::uint8_t sizeX_ = 0, sizeZ_ = 0;            // +0x38, +0x39
     std::vector<std::uint32_t> families_;           // +0x40
     float maxSlope_ = 90.0f;                        // +0x58
-    float minSlope_ = 0.0f;                         // +0x5c (initialised to 90.0 in the constructor)
+    float minSlope_ = 0.0f;                         // +0x5c
     float maxSlopeBeforeFoundation_ = 90.0f;        // +0x60
     std::uint8_t growthStage_ = 1;                  // +0x64
     std::uint16_t minCapacity_ = 0xffff;            // +0x66

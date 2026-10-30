@@ -1,10 +1,14 @@
 // The tract developer on the native application (notes/GROWTH_PLAN.md layer 3). Replaces the generated neutral ITractDeveloperHost:
-// the city, zone manager, lots (through the zone developer, the port's lot map), lot configurations and building catalogue are the
-// city's, so cSC4TractDeveloper::Grow searches real lots and real lot configurations. Its last step, the lot developer's
-// StartConstruction (layer 4, not recovered), is reported, not performed.
+// the city, zone manager, lots (through the zone developer, the port's lot map), lot configurations, building catalogue,
+// construction resources and network occupants are the city's, so cSC4TractDeveloper::Grow searches real lots and real lot
+// configurations and picks real buildings. Its last step, the lot developer's StartConstruction (layer 4, not recovered), is
+// reported, not performed.
 //
-// Neutral here (each named): the land value / plumbing / power / traffic services (only stored by Init), the tunables (the
-// class's defaults stand), the abandon / reoccupy calls, NextObjectId's counter and NoteBuildFailed.
+// Neutral here (each named, PARTIAL): the tunables (the class's defaults stand); the abandon / reoccupy calls; the services the
+// port does not run natively answer "provided" so that the growth-stage caps do not hold growth back: power (2), water, fire
+// protection, park effect, the land value (0: inside every range test the profile skips) and the residential trip-length map
+// (the lot's own road access stands in); the lot developer's NeedsAnchorBuilding (false); DemolishLots (an empty lot has nothing
+// to demolish; a built one is reported).
 #include <cstdio>
 #include <cstdlib>
 #include <map>
@@ -14,9 +18,12 @@
 #include "app/NativeCity.h"
 #include "app/NativeGrowthDevelopers.h"
 #include "platform/Unwired.h"
+#include "app/NativeZoneDeveloperHost.h"
+#include "gz/cGZPersistResourceManager.h"
 #include "rz/cRZRandom.h"
 #include "sc4/CommonIIDs.h"
 #include "sc4/GrowthDeveloper.h"
+#include "sc4/Exemplar.h"
 #include "sc4/LotConfigurationManager.h"
 #include "sc4/ServiceLocator.h"
 #include "sc4/Simulator.h"
@@ -78,6 +85,13 @@ public:
     ITractValueMap* GetPopulationMap() const override { population_.Reset(d_->GetPopulationMap()); return &population_; }
     ITractValueMap* GetMaxCapacityMap() const override { maxCapacity_.Reset(d_->GetMaxCapacityMap()); return &maxCapacity_; }
     ITractDemandApi* GetSourceDemand() const override { demand_.demand = d_->GetSourceDemand(); return &demand_; }
+    std::int32_t GetType() const override { return d_->GetType(); }
+    std::uint8_t GetPowerSupplyCap() const override { return d_->GetPowerSupplyCap(); }
+    std::uint8_t GetWaterSupplyCap() const override { return d_->GetWaterSupplyCap(); }
+    std::uint8_t GetFireCoverageCap() const override { return d_->GetFireCoverageCap(); }
+    std::uint8_t GetParkCap() const override { return d_->GetParkCap(); }
+    std::uint32_t GetMonopolyUse() const override { return d_->GetMonopolyUse(); }
+    const std::map<std::uint32_t, SC4Percentage>& GetStylePercentages() const override { return d_->GetStylePercentages(); }
 private:
     cSC4GrowthDeveloper* d_;
     mutable ValueMap<std::int16_t> desirability_;
@@ -110,10 +124,19 @@ struct BuildingDevelopmentApi final : ITractBuildingDevelopmentApi {
         const BuildingProfile* profile = NativeBuildingProfile(type);
         return profile ? *profile : none;
     }
-    std::uint16_t NextObjectId() override { return ++next_; }   // PARTIAL: vslot 0x180's own counter is not modelled
-    bool IsBuildingTypeValid(std::uint16_t) override { return true; }
-    void NoteBuildFailed(std::uint32_t) override {}
-    std::uint16_t next_ = 0;
+    std::uint16_t GetFreeConstructionResources() override { return NativeFreeConstructionResources(); }
+    bool ClaimConstructionResources(std::uint16_t amount) override { return NativeClaimConstructionResources(amount); }
+    void ReleaseConstructionResources(std::uint16_t amount) override { NativeReleaseConstructionResources(amount); }
+    bool GetBuildingKeyFromType(std::uint32_t type, cGZPersistResourceKey& key) override { return NativeBuildingKeyFromType(type, key); }
+    void GetBuildingTypesByFamily(std::unordered_set<std::uint32_t>& out, std::uint32_t family) override {
+        std::vector<std::uint32_t> types;
+        NativeBuildingsInFamily(family, types);
+        out.insert(types.begin(), types.end());
+    }
+    bool CheatIgnorePlumbing() override { return NativeBuildingCheat(0); }
+    bool CheatIgnorePower() override { return NativeBuildingCheat(1); }
+    bool CheatIgnoreCaps() override { return NativeBuildingCheat(2); }
+    bool NeedsAnchorBuilding(const std::int32_t*, std::int32_t) override { return false; }   // PARTIAL: cSC4LotDeveloper vslot 0x120
 } g_buildingDevelopment;
 
 struct LotManagerApi final : ITractLotManagerApi {   // SL::spLotManager: the port's lot map is the zone developer's
@@ -122,22 +145,27 @@ struct LotManagerApi final : ITractLotManagerApi {   // SL::spLotManager: the po
         cSC4ZoneDeveloper* d = ZoneDeveloper();
         return d ? d->GetLotsInCellRect(out, x0, z0, x1, z1, unique) : 0;
     }
+    int CanCreateLot(int x, int z, int sizeX, int sizeZ, bool param5, bool param6, cSC4LotConfiguration* configuration) override {
+        cSC4ZoneDeveloper* d = ZoneDeveloper();
+        return d ? d->CanCreateLot(x, z, sizeX, sizeZ, param5, param6, configuration) : 0;
+    }
 } g_lotManager;
 
 // SL::spLotDeveloper: layer 4. StartConstruction is where a building would begin.
 struct LotDeveloperApi final : ITractLotDeveloperApi {
-    void StartConstruction(cSC4Lot* lot, std::uint32_t configurationId, int objectId, bool flag) override {
+    void StartConstruction(cSC4Lot* lot, cSC4LotConfiguration* configuration, std::uint32_t buildingType, bool flag) override {
         ++constructions;
         if (std::getenv("SC4_SIMDEBUG")) {
             int x = 0, z = 0;
             if (lot) lot->GetLocation(x, z);
-            std::fprintf(stderr, "tract developer: StartConstruction lot (%d,%d) configuration %08x object %d%s\n", x, z, configurationId, objectId,
-                         flag ? " (keep)" : "");
+            std::fprintf(stderr, "tract developer: StartConstruction lot (%d,%d) configuration %08x building %08x%s\n", x, z,
+                         configuration ? configuration->GetID() : 0, buildingType, flag ? " (keep)" : "");
         }
         SC4_UNWIRED("ITractLotDeveloperApi::StartConstruction (cSC4LotDeveloper construction, growth layer 4)");
     }
     void AbandonBuilding(cSC4Lot*, int) override { SC4_UNWIRED("ITractLotDeveloperApi::AbandonBuilding (layer 4)"); }
     void ReoccupyBuilding(cSC4Lot*, std::uint32_t) override { SC4_UNWIRED("ITractLotDeveloperApi::ReoccupyBuilding (layer 4)"); }
+    float GetAreaSlope(const std::int32_t rect[4], bool includeWater) override { return NativeAreaSlope(rect, includeWater); }
     int constructions = 0;
 } g_lotDeveloper;
 
@@ -147,6 +175,18 @@ struct ZoneManagerApi final : ITractZoneManagerApi {
         return m ? m->GetZoneType(x, z) : 0;
     }
 } g_zoneManager;
+
+// City vslot 0x140 GetTrafficNetwork -> vslot 0x50: the cell's network types come from its network occupant.
+struct NetworkCell final : ITractNetworkCellApi {
+    std::uint32_t types = 0;
+    bool HasNetworkType(int type) const override { return (types >> type) & 1; }
+} g_networkCell;
+struct NetworkManagerApi final : ITractNetworkManagerApi {
+    ITractNetworkCellApi* GetNetworkAt(int x, int z, std::uint32_t typeMask, int) override {
+        g_networkCell.types = NativeNetworkTypesAt(x, z);
+        return (g_networkCell.types & typeMask) ? &g_networkCell : nullptr;
+    }
+} g_networkManager;
 
 struct TractHost final : ITractDeveloperHost {
     cIGZMessageServer2* MessageServer() override { return SL::spMS2; }
@@ -183,6 +223,28 @@ struct TractHost final : ITractDeveloperHost {
         for (int x = tractX << shift; x < ((tractX + 1) << shift); ++x)
             for (int z = tractZ << shift; z < ((tractZ + 1) << shift); ++z) fn(x, z);
     }
+    ITractNetworkManagerApi* NetworkManager() override { return &g_networkManager; }
+    std::uint8_t LandValueAt(int, int) override { return 0; }          // PARTIAL: the land value simulator is not run natively
+    bool IsCellWatered(int, int) override { return true; }             // PARTIAL: no plumbing simulator natively
+    std::uint8_t PoweredAt(int, int) override { return 2; }            // PARTIAL: no power simulator natively
+    bool FireProtectedAt(int, int) override { return true; }           // PARTIAL: no fire protection simulator natively
+    std::int16_t ParkEffectAt(int, int) override { return 1; }         // PARTIAL: no aura simulator natively
+    bool HasTripLengthAt(int x, int z) override {                      // PARTIAL: no traffic simulator; the lot's road access stands in
+        cSC4ZoneDeveloper* d = ZoneDeveloper();
+        cSC4Lot* lot = d ? d->GetLot(x, z, false) : nullptr;
+        return lot && lot->HasRoadAccess();
+    }
+    void DemolishLots(const std::list<cRZAutoRefCount<cSC4Lot>>& lots, std::uint32_t) override {
+        for (const auto& lot : lots)
+            if (lot && lot->GetBuildingType(false) != 0) SC4_UNWIRED("ITractDeveloperHost::DemolishLots (built lot; no demolition simulator natively)");
+    }
+    void BuildingExemplarBool(const cGZPersistResourceKey& key, std::uint32_t property, bool& value) override {
+        void* raw = nullptr;
+        if (!SL::spRM || !SL::spRM->GetResource(key, 0xa52160f5, &raw, 0, nullptr) || !raw) return;
+        auto* exemplar = static_cast<cISCResExemplar*>(raw);
+        cSCPropertyHelp::GetPropertyValue(exemplar->AsISCPropertyHolder(), property, value);
+        exemplar->Release();
+    }
 } g_host;
 
 }  // namespace
@@ -200,9 +262,16 @@ int NativeTractGrow(void* developer, int tractX, int tractZ, std::uint8_t style)
     bool declined = false;
     const int before = g_lotDeveloper.constructions;
     const int result = tract->Grow(profile, outcomes, declined);   // vslot 0x28
-    if (std::getenv("SC4_SIMDEBUG"))
-        std::fprintf(stderr, "tract developer: Grow developer %x tract (%d,%d) -> %d, %zu outcomes, %d constructions\n", view->GetDeveloperType(), tractX, tractZ, result,
-                     outcomes.size(), g_lotDeveloper.constructions - before);
+    if (std::getenv("SC4_SIMDEBUG")) {
+        std::fprintf(stderr, "tract developer: Grow developer %x tract (%d,%d) -> %d, %zu outcomes, %d constructions, %zu lots, %zu configurations;",
+                     view->GetDeveloperType(), tractX, tractZ, result, outcomes.size(), g_lotDeveloper.constructions - before,
+                     tract->ExistingLots().size(), tract->SuitableConfigurations().size());
+        const auto& histograms = tract->Histograms();   // the attempt record's outcome counts, row:outcome=count
+        for (std::size_t row = 0; row < histograms.size(); ++row)
+            for (std::size_t outcome = 0; outcome < histograms[row].size(); ++outcome)
+                if (histograms[row][outcome]) std::fprintf(stderr, " %zu:%zu=%u", row, outcome, histograms[row][outcome]);
+        std::fprintf(stderr, "\n");
+    }
     return result;
 }
 

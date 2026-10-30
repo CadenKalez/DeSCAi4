@@ -269,6 +269,14 @@ void NativeBuildingsInFamily(std::uint32_t family, std::vector<std::uint32_t>& o
     out.clear();
     if (auto* s = CityBuildingDevelopment()) s->GetBuildingTypesByFamily(out, family);
 }
+std::uint16_t NativeFreeConstructionResources() { auto* s = CityBuildingDevelopment(); return s ? s->GetFreeConstructionResources() : 0; }
+bool NativeClaimConstructionResources(std::uint16_t amount) { auto* s = CityBuildingDevelopment(); return s && s->ClaimConstructionResources(amount); }
+void NativeReleaseConstructionResources(std::uint16_t amount) { if (auto* s = CityBuildingDevelopment()) s->ReleaseConstructionResources(amount); }
+bool NativeBuildingCheat(int which) {
+    auto* s = CityBuildingDevelopment();
+    if (!s) return false;
+    return which == 0 ? s->CheatIgnorePlumbing() : which == 1 ? s->CheatIgnorePower() : s->CheatIgnoreCaps();
+}
 bool NativeIsBuildingInFamily(std::uint32_t type, std::uint32_t family) { auto* s = CityBuildingDevelopment(); return s && s->IsBuildingInFamily(type, family); }
 bool NativeRetainingWallExists(std::uint32_t id) {
     cGZPersistResourceKey key;

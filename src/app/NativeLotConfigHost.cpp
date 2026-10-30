@@ -158,11 +158,37 @@ public:
     void* SegmentFor(const cGZPersistResourceKey&) override { return nullptr; }   // version-1 exemplars are not upgraded in place
 } g_configuration;
 
+// cSC4LotConfigurationManager::Init subscribes the manager to the city-init message 0x26d31ec1 (0x100403b5a); its DoMessage then
+// gives every configuration its building styles, capacities and flag (InitBuildingInformation), which the tract developer's
+// suitability and style tests read. The port's manager is a plain class, so this target subscribes on its behalf.
+class CityInitTarget final : public cIGZMessageTarget2 {
+public:
+    bool QueryInterface(std::uint32_t iid, void** out) override {
+        if (iid != kGZIID_cIGZMessageTarget2 && iid != 1) return false;
+        *out = static_cast<cIGZMessageTarget2*>(this);
+        return true;
+    }
+    std::uint32_t AddRef() override { return 1; }
+    std::uint32_t Release() override { return 1; }
+    bool DoMessage(cIGZMessage2* message) override {
+        if (!message || message->GetType() != sc4::kMessageLotConfigurationsInit) return true;
+        cSC4City* city = HostCity();
+        cIGZUnknown* object = city ? city->GetComponent(sc4::CityComponent::LotConfigurationManager) : nullptr;
+        void* raw = nullptr;
+        if (!object || !object->QueryInterface(kGZIID_PlainObject, &raw) || !raw) return true;
+        NativeEnsureBuildingCatalogue();
+        static_cast<cSC4LotConfigurationManager*>(raw)->DoMessage(message->GetType());
+        return true;
+    }
+} g_cityInit;
+
 }  // namespace
 
 void InstallLotConfigurationHosts() {
     sc4::SetLotConfigurationManagerHost(&g_manager);
     sc4::SetLotConfigurationHost(&g_configuration);
+    static bool subscribed = false;
+    if (!subscribed && SL::spMS2) subscribed = SL::spMS2->AddNotification(&g_cityInit, sc4::kMessageLotConfigurationsInit);
 }
 
 }  // namespace native
