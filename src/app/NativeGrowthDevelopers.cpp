@@ -255,3 +255,24 @@ IGrowthDemandApi* DemandSimulatorApi::GetChannel(std::uint32_t type, std::uint32
 void InstallGrowthDeveloperHost() { sc4::SetGrowthDeveloperHost(&g_host); }
 
 }  // namespace native
+
+// ---- the demand simulator's view of the growth developers (NativeDemandHost.cpp)
+namespace native {
+std::uint32_t GrowthDeveloperKind(void* developer) {
+    return developer ? static_cast<std::uint32_t>(static_cast<sc4::cSC4GrowthDeveloper*>(developer)->GetType()) : 0;
+}
+sc4::cSC4Demand* GrowthDeveloperDemandChannel(void* developer) {
+    if (!developer) return nullptr;
+    auto* channel = dynamic_cast<DemandChannel*>(static_cast<sc4::cSC4GrowthDeveloper*>(developer)->GetSourceDemand());
+    return channel ? channel->demand : nullptr;
+}
+std::int16_t GrowthDeveloperDesirabilityAt(void* developer, unsigned x, unsigned z) {
+    sc4::cSC4SimGrid<std::int16_t>* map = developer ? static_cast<sc4::cSC4GrowthDeveloper*>(developer)->GetDesirabilityMap() : nullptr;
+    return map ? map->GetCellValue(static_cast<std::int32_t>(x), static_cast<std::int32_t>(z)) : 0;
+}
+std::vector<void*> AllGrowthDevelopers() {
+    std::vector<void*> out;
+    for (sc4::cSC4GrowthDeveloper* d : g_developers) out.push_back(d);
+    return out;
+}
+}  // namespace native

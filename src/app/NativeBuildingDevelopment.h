@@ -2,7 +2,10 @@
 #pragma once
 #include <cstdint>
 
-namespace sc4 { struct BuildingProfile; class cSC4Demand; }
+#include <vector>
+
+namespace sc4 { struct BuildingProfile; class cSC4Demand; struct DemandBuildingProfile; }
+struct cGZPersistResourceKey;
 
 namespace native {
 
@@ -14,6 +17,11 @@ void InstallBuildingDevelopmentHost();
 const sc4::BuildingProfile* NativeBuildingProfile(std::uint32_t buildingType);            // vslot 0x138
 float NativeMaxCapacity(int zoneType, std::uint32_t purpose, std::uint32_t wealth);      // vslot 0x168
 sc4::cSC4Demand* NativeDemandChannel(std::uint32_t type, std::uint32_t keyOffset);       // SL::spDemandSim vslot 0x30
+std::uint32_t NativeDeveloperType(std::uint32_t purpose, std::int32_t wealth);           // GetDeveloperType_Static
+void NativeAllBuildingTypes(std::vector<std::uint32_t>& out);
+bool NativeBuildingKeyFromType(std::uint32_t type, cGZPersistResourceKey& key);
+std::int32_t NativeDayOfLastSuccessfulBuild(std::uint32_t developerType);
+const sc4::DemandBuildingProfile* NativeDemandBuildingProfile(std::uint32_t buildingType);   // the census's copy of the profile
 bool NativeBuildingFitsInZone(std::uint32_t buildingPurpose, std::uint32_t zoneType);    // @ 0x100150a86
 
 }  // namespace native

@@ -249,6 +249,19 @@ sc4::cSC4Demand* NativeDemandChannel(std::uint32_t type, std::uint32_t keyOffset
     cSC4DemandSimulator* demand = CityComponent<cSC4DemandSimulator>(sc4::CityComponent::DemandSimulator, kGZCLSID_cSC4DemandSimulator);
     return demand ? demand->GetDemand(type, keyOffset) : nullptr;
 }
+std::uint32_t NativeDeveloperType(std::uint32_t purpose, std::int32_t wealth) { return cSC4BuildingDevelopmentSimulator::GetDeveloperType_Static(purpose, wealth); }
+void NativeAllBuildingTypes(std::vector<std::uint32_t>& out) {
+    out.clear();
+    if (cSC4BuildingDevelopmentSimulator* simulator = CityBuildingDevelopment()) simulator->GetAllBuildingTypes(out);
+}
+bool NativeBuildingKeyFromType(std::uint32_t type, cGZPersistResourceKey& key) {
+    cSC4BuildingDevelopmentSimulator* simulator = CityBuildingDevelopment();
+    return simulator && simulator->GetBuildingKeyFromType(type, key);
+}
+std::int32_t NativeDayOfLastSuccessfulBuild(std::uint32_t developerType) {
+    cSC4BuildingDevelopmentSimulator* simulator = CityBuildingDevelopment();
+    return simulator ? simulator->GetDayOfLastSuccessfulBuild(static_cast<std::int32_t>(developerType)) : 0;
+}
 bool NativeBuildingFitsInZone(std::uint32_t buildingPurpose, std::uint32_t zoneType) {
     return cSC4BuildingDevelopmentSimulator::BuildingFitsInZone(buildingPurpose, zoneType);
 }

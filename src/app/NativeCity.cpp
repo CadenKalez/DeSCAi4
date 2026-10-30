@@ -192,6 +192,7 @@ bool LoadCityFile(cSC4App& app, const std::string& path) {
         InstallBuildingDevelopmentHost();   // the real hosts replace the generated stubs before the components Init
         InstallGrowthDeveloperHost();
         InstallTractDeveloperHost();
+        InstallDemandSimulatorHost();
     }
     const bool loaded = app.LoadCity(cRZString(path.c_str()), nullptr);
     std::printf("city: %s %s (%zu classes missing)\n", path.c_str(), loaded ? "loaded" : "FAILED", factory.missing.size());
