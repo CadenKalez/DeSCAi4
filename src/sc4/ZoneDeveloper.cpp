@@ -1101,7 +1101,9 @@ bool cSC4ZoneDeveloper::CreateLot(int x, int z, int sizeX, int sizeZ, int facing
         lots_.push_front(lot);
         ++lotCount_;
     }
-    if (buildingDevelopment_) buildingDevelopment_->AddLot(lot);   // 0x120 -> 0x158
+    // SL::spBuildingDevelopmentSim vslot 0x120 is the lot developer; its vslot 0x158 gives the new lot its empty base texture.
+    if (buildingDevelopment_)
+        if (IZoneDeveloperLotDeveloperApi* developer = buildingDevelopment_->GetLotDeveloper()) developer->SetEmptyLotBaseTexture(lot);
     return out != nullptr;
 }
 
@@ -1109,9 +1111,9 @@ bool cSC4ZoneDeveloper::CreateLot(int x, int z, int sizeX, int sizeZ, int facing
 // lot deletion
 //---------------------------------------------------------------------------------------------------------------------
 
-// @ 0x10012be32. With lot changes enabled: detach from the lot developer, remove the building unit
-// occupant, clear the footprint, drop the lot-list reference, let the building development simulator
-// forget the lot, shut it down and release the caller's reference. While the changes are deferred the
+// @ 0x10012be32. With lot changes enabled: detach from the lot developer, take the lot's base-texture
+// occupant out of the occupant manager, clear the footprint, drop the lot-list reference, let the lot
+// developer release the lot's unit (when it has one), shut it down and release the caller's reference. While the changes are deferred the
 // footprint is only recorded in the pending-deletion map (+0x190, cell -> {origin, zone type}).
 void cSC4ZoneDeveloper::DeleteLot(cSC4Lot* lot) {
     if (!lot) return;
@@ -1122,10 +1124,13 @@ void cSC4ZoneDeveloper::DeleteLot(cSC4Lot* lot) {
     if (z1 < z0) z1 = z0;
 
     if (lotChangesEnabled_) {
-        if (lotDeveloper_) lotDeveloper_->RemoveLot(lot);   // lot developer vslot 0x58
-        std::uint32_t unitId = 0;
-        if (buildingDevelopment_ && buildingDevelopment_->GetLotUnitId(lot, unitId)) {
-            if (occupantManager_) occupantManager_->RemoveOccupant(unitId, 1, 0);
+        if (lotDeveloper_) lotDeveloper_->RemoveLot(lot);   // +0x90 vslot 0x58
+        // the lot's base texture leaves the occupant manager: building development vslot 0x120 (the lot developer) -> 0x148
+        IZoneDeveloperLotDeveloperApi* developer = buildingDevelopment_ ? buildingDevelopment_->GetLotDeveloper() : nullptr;
+        cISC4Occupant* texture = nullptr;
+        if (developer && developer->GetLotBaseTextureOccupant(lot, texture) && texture) {
+            if (occupantManager_) occupantManager_->RemoveOccupant(texture, true, 0);   // vslot 0xa8
+            texture->Release();
         }
         for (int x = x0; x <= x1; ++x)
             for (int z = z0; z <= z1; ++z)
@@ -1138,7 +1143,7 @@ void cSC4ZoneDeveloper::DeleteLot(cSC4Lot* lot) {
             lots_.erase(it);
             if (lotCount_ > 0) --lotCount_;   // cSC4SafeList::Remove keeps the +0xe0 count
         }
-        if (lot->GetUnit() != nullptr && buildingDevelopment_) buildingDevelopment_->ForgetLot(lot);   // 0x120 -> 0x108
+        if (lot->GetUnit() != nullptr && developer) developer->ReleaseLotUnit(lot);   // 0x120 -> 0x108
         lot->Shutdown();    // cISC4Lot vslot 0x38
         lot->Release();     // vslot 0x10: the caller's reference
         return;

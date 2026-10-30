@@ -229,6 +229,9 @@ public:
                                      std::uint32_t objectId, bool arg4) = 0;
     virtual void SetEmptyLotBaseTexture(cSC4Lot* lot) = 0;                    // vslot 0x158
     virtual bool GetForceEmptyLotBaseTextures() = 0;                          // vslot 0x170
+    // vslot 0x148 GetLotBaseTextureOccupant(lot, out, false), returned as its occupant (one reference the caller releases).
+    virtual bool GetLotBaseTextureOccupant(cSC4Lot* lot, cISC4Occupant*& out) = 0;
+    virtual void ReleaseLotUnit(cSC4Lot* lot) = 0;                            // vslot 0x108, for a lot that has a unit
     // vslot 0xa8 AttemptAreaLevelling(rect, altitude, arg3, arg4, arg5, lot): Parcellize levels the
     // footprint of every new lot to FLT_MAX before unlocking its vertices.
     virtual void AttemptAreaLevelling(const SC4Rect<int>& rect, float altitude, bool arg3, bool arg4,
@@ -269,9 +272,6 @@ public:
 // developer makes on it.
 class IZoneDeveloperBuildingDevelopmentApi : public IZoneDeveloperService {
 public:
-    virtual void ForgetLot(cSC4Lot* lot) = 0;                          // vslot 0x108
-    virtual bool GetLotUnitId(cSC4Lot* lot, std::uint32_t& unitId) = 0;  // vslot 0x148 + unit vslot 0x18
-    virtual void AddLot(cSC4Lot* lot) = 0;                             // vslot 0x158
     virtual IZoneDeveloperGrowthApi* GetGrowthDeveloper(std::uint32_t developerType) = 0;  // vslot 0x108
     virtual void GetAllBuildingTypes(std::vector<std::uint32_t>& out) = 0;                // vslot 0x58
     virtual IZoneDeveloperLotDeveloperApi* GetLotDeveloper() = 0;                          // vslot 0x120
@@ -300,7 +300,7 @@ public:
     // by occupant type id (0 = any); the returned pointers carry a reference the caller releases.
     virtual void ListOccupants(std::vector<cISC4Occupant*>& out, int x, int z, std::uint32_t typeId,
                                int maxCount) = 0;
-    virtual void RemoveOccupant(std::uint32_t occupantId, int flags, int reason) = 0;   // vslot 0xa8
+    virtual void RemoveOccupant(cISC4Occupant* occupant, bool shutdown, std::uint32_t data) = 0;   // vslot 0xa8
 };
 
 // cSC4SafeListIterator<cISC4Lot*>: only the one call CreateLot makes on the iterator the traffic

@@ -87,12 +87,19 @@ public:
 };
 }  // namespace
 
-void BindCityServices(cISC4City* cityInterface) {
+// cSC4SimGrid's city dimensions (SetTractSize reads them): bound before anything in the city view builds a grid.
+void BindSimGridCity(cISC4City* cityInterface) {
     auto* city = dynamic_cast<sc4::cSC4City*>(cityInterface);
     if (!city) return;
     static SimGridCity gridCity;
     gridCity.city_ = city;
     sc4::SetSimGridCity(&gridCity);
+}
+
+void BindCityServices(cISC4City* cityInterface) {
+    auto* city = dynamic_cast<sc4::cSC4City*>(cityInterface);
+    if (!city) return;
+    BindSimGridCity(cityInterface);
     static CitySystems* systems = nullptr;
     delete systems;
     systems = new CitySystems(city);

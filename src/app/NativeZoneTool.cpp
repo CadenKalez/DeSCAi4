@@ -6,6 +6,7 @@
 
 #include "app/NativeAudio.h"
 #include "app/NativeZoneOverlay.h"
+#include "app/NativeZoneDeveloperHost.h"
 #include "gz/cGZPersistResourceKey.h"
 #include "rz/cRZMessage2Standard.h"
 #include "sc4/BudgetSimulator.h"
@@ -158,7 +159,10 @@ void InstallZoneTool(sc4::cSC4View3DWin& view, cISC4City* city, sc4::cSC43DRende
     sc4::SetZoneToolHost(&g_toolHost);
     sc4::cSC4ZoneManager* zones = Zones();
     if (zones) zones->SetPlacementHost(&g_placement);
-    SetZoneOverlayManager(zones);
+    // With the zone developer up, zoning makes real lots that draw the game's zone textures (cSC4LotDeveloper::SetEmptyLotBaseTexture),
+    // so the native overlay keeps only the drag preview; without it the overlay still paints the zone grid.
+    const bool developer = InstallZoneDeveloperHost(g_city);
+    SetZoneOverlayManager(developer ? nullptr : zones);
     if (sc4::cSTETerrain* terrain = Terrain()) AttachZoneOverlay(render, *terrain);
     std::printf("city view: zone tool %s\n", zones ? "up" : "no zone manager");
 }

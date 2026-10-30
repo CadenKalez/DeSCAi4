@@ -94,6 +94,26 @@ public:
     virtual void OccupantBounds(void* occupant, float lo[3], float hi[3]) = 0;
 };
 
+class cISC4OccupantManager;
+class cISC4LotBaseTextureOccupant;
+// What the base-texture functions reach outside the class: SL::spZoneDeveloper (+0x40), SL::spOccupantManager (+0x48),
+// SL::spZoneManager, SL::spCity and the occupant's class factory.
+class ILotBaseTextureServices {
+public:
+    virtual ~ILotBaseTextureServices() = default;
+    virtual cSC4Lot* LotAtCell(int x, int z) = 0;                       // zone developer vslot 0x28 GetLot(x, z, false)
+    virtual cISC4OccupantManager* OccupantManager() = 0;                // +0x48 (borrowed)
+    virtual std::uint32_t ZoneDragColor(int zoneType) = 0;              // zone manager vslot 0x78 (RRGGBBAA)
+    virtual std::uint8_t ZoneDisplayAlpha() = 0;                        // zone manager vslot 0x80
+    virtual int CityCellsX() = 0;                                       // city vslot 0x2e8 (also +0x88)
+    virtual int CityCellsZ() = 0;                                       // city vslot 0x2f0 (also +0x84)
+    // this vslot 0x150 GetBoundaryLotTexture: the lot developer's rule map (+0x170) holds the same 47 rules as the zone
+    // developer's (both InitBoundaryRules build the identical table), so the host answers from the recovered one.
+    virtual void BoundaryLotTexture(const int sides[4], std::uint32_t& texture, std::uint8_t& rotation, bool& flag) = 0;
+    // GZCOM()->CreateInstance(0xc97f987c, 0x97f6d98) or new cSC4LotBaseTextureOccupant; the caller's reference
+    virtual cISC4LotBaseTextureOccupant* CreateBaseTextureOccupant() = 0;
+};
+
 // The lot developer's own interface (class id 0xa990bfe0, iid 0x4818e5d2). Only the COM identity is
 // recovered; the concrete methods are called directly, so the interface carries no extra slots.
 class cISC4LotDeveloper : public cIGZUnknown {
@@ -147,6 +167,13 @@ public:
     void SetGateServices(ILotGateServices* services) { gates_ = services; }
     std::uint32_t TestCondition(cSC4Lot& lot) const;
 
+    // ---- lot base textures (0x100145e4c..0x100148ec2)
+    static void SetBaseTextureServices(ILotBaseTextureServices* services);
+    bool GetLotBaseTextureOccupant(cSC4Lot* lot, cISC4LotBaseTextureOccupant*& out, bool create);   // @ 0x100145e4c
+    void SetEmptyLotBaseTexture(cSC4Lot* lot);                                                    // @ 0x100146066
+    void RemoveLotBaseTexture(cSC4Lot* lot);                                                      // @ 0x10014652e
+    bool GetForceEmptyLotBaseTextures() const { return forceEmptyLotBaseTextures_; }             // @ 0x100148ec2
+
 
 private:
     IBaseLotDeveloperHost* host_;
@@ -161,6 +188,7 @@ private:
     std::deque<cIGZUnknown*> constructionQueue_;                       // +0xa8 (one reference each)
     std::uint32_t queueCursor_ = 0;                                    // +0xd8/+0xe0: the iterator, as an index into the queue
     std::uint32_t stage_ = 0;                                          // +0xe8
+    bool forceEmptyLotBaseTextures_ = false;                           // +0xa0
     bool flagF4_ = false;                                              // +0xf4
 public:
     ~cSC4LotDeveloper() { for (cIGZUnknown* occupant : constructionQueue_) if (occupant) occupant->Release(); }

@@ -276,3 +276,17 @@ CreateCatalogView 0x69b9324a, SetWindowVisible 0x4bb92c20/21 (window 0xcc1a6983 
 - SAVE-1: the native save writes an incomplete city that does not load, and with no `createSavePathForCity` hook it deleted the
   city file from /tmp/sc4boot_docs. The hook is set now, and the native view host keeps the city save-disabled until saving is whole.
 - Scenario command `where HEXID` prints a window's screen rectangle (to find buttons to `tap`).
+
+## Addendum 12: the simulation runs, zoning makes real lots (2026-10-30)
+- cSC4Simulator: the city-started message releases the hidden pause (vslot 0x68), so the date advances. Simulator agents register
+  through `AddCitySimulatorAgent` (src/app/NativeSimulatorHost.cpp); never register one whose host is still neutral (the prop
+  developer crashed on a null lot manager and stays unregistered).
+- Zoning: `src/app/NativeZoneDeveloperHost.cpp` is the real IZoneDeveloperHost + ILotHost + the lot developer's base-texture
+  services. Dragging a zone now parcellizes it into lots that draw the game's zone textures (cSC4LotDeveloper::SetEmptyLotBaseTexture
+  and friends, newly recovered). The native flat-colour overlay only draws the drag preview now. Gaps between lots are the auto-street
+  cells (the street needs cSC4NetworkTool, TOOL-1).
+- Fixed porting errors in cSC4ZoneDeveloper::CreateLot / DeleteLot: building development vslot 0x120 is the lot developer (0x158 =
+  SetEmptyLotBaseTexture, 0x148 = GetLotBaseTextureOccupant), not "AddLot" / "GetLotUnitId".
+- `SetDBSegmentMessageServer(SL::spMS2)` was never called natively: every occupant message after load was dropped (new occupants never
+  got models). Bound in NativeCityView right after the model maker's initial pass.
+- Next for growth: GROWTH-1 and LEDGER-LOTDEV (the lot developer's construction half is not implemented despite the ledger).

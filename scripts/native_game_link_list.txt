@@ -575,6 +575,7 @@ src/audio/platform/AudioPlatform.cpp
 src/sc4/ViewInputControlZone.cpp
 src/app/NativeZoneTool.cpp
 src/app/NativeZoneOverlay.cpp
+src/app/NativeZoneDeveloperHost.cpp
 src/app/NativeCatalogUi.cpp
 src/sc4/WinCalloutBox.cpp
 src/app/NativeAudio.cpp
@@ -681,3 +682,4 @@ src/gz/gzcom_creators/cSC4AnimationTickManager.cpp
 src/app/NativeAnimationTicks.cpp
 src/app/NativeCityQueries.cpp
 src/app/NativeCityViewQueries.cpp
+src/sc4/GamePreferencesWinProc.cpp

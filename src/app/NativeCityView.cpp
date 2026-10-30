@@ -30,6 +30,7 @@
 #include "sc4/OccupantManager.h"
 #include "rz/cRZMessage2Standard.h"
 #include "sc4/ServiceLocator.h"
+#include "sc4/DBSegment.h"
 #include "sc4/ViewInputControlCityScroll.h"
 #include <CoreGraphics/CoreGraphics.h>
 #include <map>
@@ -280,6 +281,9 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     if (auto* city = dynamic_cast<sc4::cSC4City*>(cityInterface); city && ok) {
         native::InstallModelResources(driver);
         native::AttachModelMaker(*render, *city);
+        // Occupant messages (inserted / shown / changed / removed: cSC4Occupant::PostOccupantMessage) go to SL::spMS2. Bound only
+        // now: the model maker has just built every loaded occupant itself, so announcing them during the load would double them.
+        sc4::SetDBSegmentMessageServer(SL::spMS2);
         native::SetAutomataRenderer(render, city);
         native::PostCityInitToAutomataManagers(city);
     }
@@ -293,6 +297,7 @@ bool AttachCityRenderStack(sc4::cSC4View3DWin& view, cISC4City* cityInterface, g
     sc4::SetCityScrollHost(input);
     view.AttachRenderStack(adapter, nullptr, control);
     view.EnablePainting(true);
+    native::BindSimGridCity(cityInterface);   // the zone developer's Init (in InstallZoneTool) sizes a grid through SimGridCity()
     native::InstallZoneTool(view, cityInterface, *render);
     native::InstallCatalogUi(view.GetWindowManager());
     native::SetBudgetViewWindow(view.AsIGZWin());

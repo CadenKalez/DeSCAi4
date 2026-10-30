@@ -179,6 +179,15 @@ struct FakeLotDeveloper : IZoneDeveloperLotDeveloperApi {
     }
     void SetEmptyLotBaseTexture(cSC4Lot* lot) override { emptyTextured.push_back(lot); }
     bool GetForceEmptyLotBaseTextures() override { return forceEmptyTextures; }
+    std::map<cSC4Lot*, cISC4Occupant*> textures;
+    std::vector<cSC4Lot*> unitsReleased;
+    bool GetLotBaseTextureOccupant(cSC4Lot* lot, cISC4Occupant*& out) override {
+        auto it = textures.find(lot);
+        out = it == textures.end() ? nullptr : it->second;
+        if (out) out->AddRef();
+        return out != nullptr;
+    }
+    void ReleaseLotUnit(cSC4Lot* lot) override { unitsReleased.push_back(lot); }
     void AttemptAreaLevelling(const SC4Rect<int>& rect, float altitude, bool, bool, float,
                               cSC4Lot*) override {
         levelledAreas.push_back(rect);
@@ -219,22 +228,11 @@ struct FakeGrowthDeveloper : IZoneDeveloperGrowthApi {
 
 struct FakeBuildingDevelopment : IZoneDeveloperBuildingDevelopmentApi {
     FAKE_SERVICE_BOILERPLATE
-    std::map<cSC4Lot*, std::uint32_t> units;
-    std::vector<cSC4Lot*> added;
-    std::vector<cSC4Lot*> forgotten;
     std::map<std::uint32_t, FakeGrowthDeveloper*> developers;
     std::vector<std::uint32_t> buildingTypes;
     std::map<std::uint32_t, std::vector<std::uint32_t>> families;
     std::map<std::uint32_t, BuildingProfile> profiles;
     FakeLotDeveloper* lotDeveloper = nullptr;
-    void ForgetLot(cSC4Lot* lot) override { forgotten.push_back(lot); }
-    bool GetLotUnitId(cSC4Lot* lot, std::uint32_t& unitId) override {
-        auto it = units.find(lot);
-        if (it == units.end()) return false;
-        unitId = it->second;
-        return true;
-    }
-    void AddLot(cSC4Lot* lot) override { added.push_back(lot); }
     IZoneDeveloperGrowthApi* GetGrowthDeveloper(std::uint32_t developerType) override {
         auto it = developers.find(developerType);
         return it == developers.end() ? nullptr : it->second;
@@ -353,7 +351,7 @@ struct FakeOccupant : cISC4Occupant {
 struct FakeOccupantManager : IZoneDeveloperOccupantManagerApi {
     FAKE_SERVICE_BOILERPLATE
     std::map<std::pair<int, int>, std::vector<FakeOccupant*>> occupants;
-    std::vector<std::uint32_t> removed;
+    std::vector<cISC4Occupant*> removed;
     void ListOccupants(std::vector<cISC4Occupant*>& out, int x, int z, std::uint32_t typeId,
                        int maxCount) override {
         auto it = occupants.find({x, z});
@@ -365,7 +363,7 @@ struct FakeOccupantManager : IZoneDeveloperOccupantManagerApi {
             out.push_back(occupant);
         }
     }
-    void RemoveOccupant(std::uint32_t occupantId, int, int) override { removed.push_back(occupantId); }
+    void RemoveOccupant(cISC4Occupant* occupant, bool, std::uint32_t) override { removed.push_back(occupant); }
 };
 
 // cISC4Lot's host, as far as the zone developer needs it: the zone grid lookup that gives a lot its
@@ -811,8 +809,8 @@ void TestLotCreationAndQueries() {
     CHECK(developer->DoesCellHaveLot(2, 3));
     CHECK(developer->DoesCellHaveLot(3, 3));
     CHECK(!developer->DoesCellHaveLot(4, 3));
-    CHECK(host.buildingDevelopment.added.size() == 1);
-    CHECK(host.buildingDevelopment.added[0] == a);
+    // CreateLot: building development vslot 0x120 (the lot developer) -> 0x158 SetEmptyLotBaseTexture
+    CHECK(!host.lotDeveloper.emptyTextured.empty() && host.lotDeveloper.emptyTextured.back() == a);
 
     CreateLotChecked(developer, 6, 2, 1, 2, 0);   // lot B (x 6, z 2..3)
     CHECK(developer->GetLotCount() == 2);
@@ -939,7 +937,7 @@ void TestLotCreationAndQueries() {
     cSC4Lot* shared = nullptr;
     CHECK(developer->CreateLot(10, 10, 1, 1, 0, shared));
     CHECK(host.useSafeList == false);
-    CHECK(host.buildingDevelopment.added.back() == shared);
+    CHECK(host.lotDeveloper.emptyTextured.back() == shared);
 
     // --- delete --------------------------------------------------------------------------------
     const std::size_t removedBefore = host.lotDeveloper.removed.size();
@@ -951,11 +949,14 @@ void TestLotCreationAndQueries() {
     CHECK(developer->GetLot(10, 10, false) == nullptr);
     CHECK(developer->GetLotCount() == 3);
 
-    // Deleting a lot with a building unit removes the occupant id.
-    host.buildingDevelopment.units[a] = 0x1234;
+    // Deleting a lot takes its base-texture occupant (lot developer vslot 0x148) out of the occupant manager.
+    FakeOccupant texture;
+    texture.refs = 1;
+    host.lotDeveloper.textures[a] = &texture;
     developer->DeleteLots(2, 3, 3, 3);
-    CHECK(host.occupantManager.removed.size() == 1 && host.occupantManager.removed[0] == 0x1234);
-    CHECK(host.buildingDevelopment.forgotten.empty());   // the lot has no unit, so it is not forgotten
+    CHECK(host.occupantManager.removed.size() == 1 && host.occupantManager.removed[0] == &texture);
+    CHECK(texture.refs == 1);                              // the reference GetLotBaseTextureOccupant gave is released
+    CHECK(host.lotDeveloper.unitsReleased.empty());       // the lot has no unit
 
     // --- ClearLotMap through Shutdown ----------------------------------------------------------
     developer->Shutdown();
