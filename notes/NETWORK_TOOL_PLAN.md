@@ -41,5 +41,8 @@ previews and highlights, the construction crew's animation.
 ## Progress
 - cSC4NetworkWorldCache recovered (src/sc4/NetworkWorldCache.cpp, test sc4_networkworldcache); cSC4NetworkCellInfo's constructor
   default (solvedCellIndex -1) and RecomputeEdgesFromAllTypes. Not yet returned by the native INetworkToolHost::CreateWorldCache.
-- Next: cSC4TileInfo (Read, GetCell, GetRotationalEquivalent, ConvertMetaToRelativePos) and cSC4TileEvaluator (the RUL2 tile-rule
-  set: AddRulesFromResource, TransmogrifyRuleSet, Lookup), which need cSC4FileTokenizer.
+- The tile-rule engine (src/sc4/TileRules.cpp, test sc4_tilerules): cSC4FileTokenizer (text through SetTileRuleResourceLoader
+  instead of SC4GetResourceAsFile), cSC4TileInfo, tCompactNeighborInfo (its rotate / mirror were not decompiled: transcribed from the
+  disassembly), cSC4TileRule, cSC4TileNeighborhood, cSC4TileEvaluator (incl. TransmogrifyRuleSet).
+- Next: cSC4NetworkTypeInfo (LoadEvaluator / LoadTileConflictRules / LoadPlacementParams ...) and cSC4NetworkTool::ReloadRules /
+  ReloadNetworkTypeInfo, so the game's rule files load; then cSC4NetworkTileNeighborhood (reads the tool's cell infos) and phase B.
